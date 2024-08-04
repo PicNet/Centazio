@@ -8,23 +8,22 @@ public interface IStagedEntityStore {
   Task<List<StagedEntity>> Get(DateTime since, SystemName source, ObjectName obj);
 }
 
-public abstract class AbstractStagedEntityStore(IUtcDate dt) : IStagedEntityStore {
+public abstract class AbstractStagedEntityStore : IStagedEntityStore {
 
   public abstract Task Save(DateTime stageddt, SystemName source, ObjectName obj, string data);
   public abstract Task Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
   
-  protected abstract Task<List<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj);
+  // gurantee that staged entities are returned only if > since and
+  // sorted correctly even if implementation is wrong
+  public async Task<List<StagedEntity>> Get(DateTime since, SystemName source, ObjectName obj) => (await GetImpl(since, source, obj))
+      .Where(s => s.DateStaged > since && s.Source == source && s.Object == obj)
+      .OrderBy(s => s.DateStaged)
+      .ToList();
   
-  public async Task<List<StagedEntity>> Get(DateTime since, SystemName source, ObjectName obj) {
-    var raw = await GetImpl(since, source, obj);
-    // gurantee that staged entities are returned only if > since and
-    // sorted correctly even if implementer gets this wrong
-    return raw.Where(s => s.DateStaged > since).OrderBy(s => s.DateStaged).ToList();
-  }
-
+  protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj);
 }
 
-public class InMemoryStagedEntityStore(IUtcDate dt) : AbstractStagedEntityStore(dt) {
+public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
 
   private readonly List<StagedEntity> saved = [];
   
@@ -38,7 +37,9 @@ public class InMemoryStagedEntityStore(IUtcDate dt) : AbstractStagedEntityStore(
     return Task.CompletedTask;
   }
 
-  protected override Task<List<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => 
-      Task.FromResult(saved.Where(s => s.DateStaged > since && s.Source == source && s.Object == obj).OrderBy(s => s.DateStaged).ToList());
+  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => Task.FromResult(saved
+          .Where(s => s.DateStaged > since && s.Source == source && s.Object == obj)
+          .OrderBy(s => s.DateStaged)
+          .AsEnumerable());
 
 }
