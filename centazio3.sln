@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Test.Lib", "src\Centazio.Test.Lib\Centazio.Test.Lib.csproj", "{2B592DCA-AD65-487B-8683-0442411D2AFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}"
+	ProjectSection(SolutionItems) = preProject
+		tests\settings.json = tests\settings.json
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Test.Lib.Tests", "tests\Centazio.Test.Lib.Tests\Centazio.Test.Lib.Tests.csproj", "{C6AD33BA-8B16-400C-976C-7B8312D1D9DE}"
 EndProject

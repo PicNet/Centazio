@@ -14,9 +14,6 @@ public abstract class AbstractUtcDate : IUtcDate {
 
 }
 
-public class UtcDate(Func<DateTime>? now = null) : AbstractUtcDate {
-  private readonly Func<DateTime> now = now ?? (() => DateTime.UtcNow);
-  
-  public override DateTime Now => now();
-  
+public class UtcDate() : AbstractUtcDate {
+  public override DateTime Now => DateTime.UtcNow;
 }

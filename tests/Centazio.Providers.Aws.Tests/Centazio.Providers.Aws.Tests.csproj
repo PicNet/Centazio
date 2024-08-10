@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
+      <ProjectReference Include="..\Centazio.Core.Tests\Centazio.Core.Tests.csproj" />
     </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Settings;
 
-public interface ISettingsLoader<T> {
+public interface ISettingsLoader<out T> where T : new() {
   T Load(string environment = "");
 }
 

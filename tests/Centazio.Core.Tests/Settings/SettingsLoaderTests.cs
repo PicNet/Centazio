@@ -35,8 +35,8 @@ public class SettingsLoaderTests {
       File.Delete(Path.Combine(dir, $"test_settings.{environment}.json"));
     }
   }
-}
 
-public record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string MissingSetting) {
-  public TestSettingsObj() : this("", "", "", "") {}
+  private record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string MissingSetting) {
+    public TestSettingsObj() : this("", "", "", "") {}
+  }
 }
