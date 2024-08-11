@@ -1,4 +1,6 @@
-﻿using Centazio.Core.Secrets;
+﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using centazio.core.tests;
@@ -26,6 +28,12 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     
     public override async ValueTask DisposeAsync() {
       await client.DeleteTableAsync(TABLE_NAME);
+      while (true) {
+        try { 
+          await client.DescribeTableAsync(TABLE_NAME);
+          await Task.Delay(TimeSpan.FromMilliseconds(500));
+        } catch (ResourceNotFoundException) { break; }
+      }
       await base.DisposeAsync(); 
     }
   }

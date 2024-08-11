@@ -15,7 +15,7 @@ public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
 
   public override Task Update(IEnumerable<StagedEntity> staged) {
     staged.ForEachIdx(se => {
-      var idx = saved.FindIndex(s => s.Key == se.Key);
+      var idx = saved.FindIndex(s => s.SourceSystem == se.SourceSystem && s.Object == se.Object && s.DateStaged == se.DateStaged);
       if (idx < 0) throw new Exception($"could not find [{se}]");
       saved[idx] = se;
     });

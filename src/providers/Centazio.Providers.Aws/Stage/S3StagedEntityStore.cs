@@ -35,14 +35,14 @@ public class S3StagedEntityStore(string key, string secret, S3StagedEntityStoreC
   protected override async Task SaveImpl(StagedEntity se) => 
       await client.PutObjectAsync(new PutObjectRequest {
         BucketName = config.MainBucket,
-        Key = se.ToAwsStagedEntity().RangeKey,
+        Key = se.ToDynamoStagedEntity().RangeKey,
         FilePath = $"{se.SourceSystem}|{se.Object}",
         ContentBody = ""
       });
 
   protected override async Task SaveImpl(IEnumerable<StagedEntity> ses) => 
       await ses
-          .Select(se => new PutObjectRequest { BucketName = config.MainBucket, Key = se.ToAwsStagedEntity().RangeKey, FilePath = $"{se.SourceSystem}|{se.Object}", ContentBody = "" })
+          .Select(se => new PutObjectRequest { BucketName = config.MainBucket, Key = se.ToDynamoStagedEntity().RangeKey, FilePath = $"{se.SourceSystem}|{se.Object}", ContentBody = "" })
           .Chunk(chunksz: 5)
           .Select(chunk => Task.WhenAll(chunk.Select(req => client.PutObjectAsync(req))))
           .Synchronous();

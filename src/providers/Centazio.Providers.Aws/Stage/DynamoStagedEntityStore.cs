@@ -11,11 +11,10 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
+// todo: consider adding TTL to these records, maybe to only after promoted?
 public record DynamoStagedEntityStoreConfiguration(string Table, int PageSize=100, int MaxPages=1);
 
-// dynamo limitations:
-// item: 400kb
-// batch size: 25
+// dynamo limitations: item: 400kb, batch size: 25
 public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
 
   public static readonly string KEY_FIELD_NAME = $"{nameof(StagedEntity.SourceSystem)}|{nameof(StagedEntity.Object)}";
@@ -35,18 +34,29 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
 
     Log.Debug($"table[{config.Table}] not found, creating");
     
-    await client.CreateTableAsync(new CreateTableRequest(config.Table, [ new(KEY_FIELD_NAME, KeyType.HASH), new(nameof(StagedEntity.DateStaged), KeyType.RANGE) ]) {
-      AttributeDefinitions = [ new (KEY_FIELD_NAME, ScalarAttributeType.S), new (nameof(StagedEntity.DateStaged), ScalarAttributeType.S) ],
-      BillingMode = BillingMode.PAY_PER_REQUEST 
-    });
+    var status = (await client.CreateTableAsync(
+        new CreateTableRequest(config.Table, [ new(KEY_FIELD_NAME, KeyType.HASH), new(nameof(DynamoStagedEntity.RangeKey), KeyType.RANGE) ]) {
+          AttributeDefinitions = [ new (KEY_FIELD_NAME, ScalarAttributeType.S), new (nameof(DynamoStagedEntity.RangeKey), ScalarAttributeType.S) ],
+          BillingMode = BillingMode.PAY_PER_REQUEST 
+        })).TableDescription.TableStatus;
+    
+    while (status != TableStatus.ACTIVE) {
+      await Task.Delay(TimeSpan.FromMilliseconds(500));
+      status = (await client.DescribeTableAsync(config.Table)).Table.TableStatus;
+    }
+    
     return this;
   }
   
-  public override async Task Update(StagedEntity se) => await SaveImpl(se);
-  public override async Task Update(IEnumerable<StagedEntity> ses) => await SaveImpl(ses);
+  public override async Task Update(StagedEntity se) => await SaveImpl(CheckStagedEntityIsDynamoStagedEntity(se));
+  public override async Task Update(IEnumerable<StagedEntity> ses) => await SaveImpl(ses.Select(CheckStagedEntityIsDynamoStagedEntity));
+  
+  private DynamoStagedEntity CheckStagedEntityIsDynamoStagedEntity(StagedEntity e) => 
+      e as DynamoStagedEntity ?? throw new Exception("Expected StagedEntity to be a DynamoStagedEntity");
 
-  protected override async Task SaveImpl(StagedEntity se) => 
-      await client.PutItemAsync(new PutItemRequest(config.Table, se.ToDynamoDict()));
+  protected override async Task SaveImpl(StagedEntity se) {
+    await client.PutItemAsync(new PutItemRequest(config.Table, se.ToDynamoDict()));
+  }
 
   protected override async Task SaveImpl(IEnumerable<StagedEntity> ses) => 
       await ses
@@ -56,44 +66,50 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
           .Synchronous();
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
-    var tbl = Table.LoadTable(client, config.Table);
-    var key = new StagedEntity(source, obj, since, "").ToDynamoKey();
+    var filter = new QueryFilter();
+    filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
+    filter.AddCondition(nameof(DynamoStagedEntity.RangeKey), QueryOperator.GreaterThan, $"{since:o}|z");
     var queryconf = new QueryOperationConfig {
       Limit = config.PageSize,
       ConsistentRead = true,
-      KeyExpression = new Expression { ExpressionStatement = $"{KEY_FIELD_NAME}={key}" },
-      FilterExpression = new Expression { ExpressionStatement = $"{nameof(StagedEntity.DateStaged)} > {since:o}"}
+      Filter = filter
     };
-    var search = tbl.Query(queryconf);
+    var search = Table.LoadTable(client, config.Table).Query(queryconf);
     // todo: implement pagination and use MaxPages
     var results = await search.GetRemainingAsync();
-    return results.AwsDocumentsToStagedEntities();
+    return results
+        .Where(d => !d.ContainsKey(nameof(StagedEntity.Ignore)) || String.IsNullOrEmpty(d[nameof(StagedEntity.Ignore)].AsString()))
+        .AwsDocumentsToDynamoStagedEntities();
   }
 
-  protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) => throw new NotImplementedException();
+  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+    var filter = new QueryFilter();
+    filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
+    filter.AddCondition(
+        promoted ? nameof(StagedEntity.DatePromoted) : nameof(DynamoStagedEntity.RangeKey), 
+        QueryOperator.LessThan, 
+        promoted ? $"{before:o}" : $"{before:o}|z");
+    var queryconf = new QueryOperationConfig {
+      Limit = config.PageSize,
+      ConsistentRead = true,
+      Filter = filter
+    };
+    var table = Table.LoadTable(client, config.Table);
+    var batch = table.CreateBatchWrite();
+    var search = table.Query(queryconf);
+    var results = await search.GetRemainingAsync();
+    if (results.Any()) {
+      // todo: do we need batching
+      /*
+      await results
+          .Chunk()
+          .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { config.Table, chunk.ToList() } })))
+          .Synchronous();
+      */
+      results.ForEachIdx(d => batch.AddItemToDelete(d));
+      await batch.ExecuteAsync();
+    }
+  }
 
 }
 
-internal static class DynamoStagedEntityStore_StagedEntityExtensions {
-  public static string ToDynamoKey(this StagedEntity e) => $"{e.SourceSystem.Value}|{e.Object.Value}";
-  
-  public static Dictionary<string, AttributeValue> ToDynamoKeyDict(this StagedEntity e) => new() { 
-    { DynamoStagedEntityStore.KEY_FIELD_NAME, new AttributeValue(e.ToDynamoKey()) },
-    { nameof(StagedEntity.DateStaged), new AttributeValue($"{e.DateStaged:o}") }
-  };
-  
-  public static Dictionary<string, AttributeValue> ToDynamoDict(this StagedEntity e) => new() { 
-    { DynamoStagedEntityStore.KEY_FIELD_NAME, new AttributeValue(e.ToDynamoKey()) },
-    { nameof(StagedEntity.DateStaged), new AttributeValue($"{e.DateStaged:o}") },
-    { nameof(StagedEntity.Data), new AttributeValue(e.Data) },
-    { nameof(StagedEntity.Ignore), new AttributeValue(e.Ignore) },
-    { nameof(StagedEntity.DatePromoted), new AttributeValue(e.DatePromoted.HasValue ? $"{e.DatePromoted:o}" : null) },
-  };
-  
-  public static IList<StagedEntity> AwsDocumentsToStagedEntities(this List<Document> docs) {
-    return docs.Select(d => {
-      var (system, entity, _) = d[DynamoStagedEntityStore.KEY_FIELD_NAME].AsString().Split('|');
-      return new StagedEntity(system, entity, DateTime.Parse(d[nameof(StagedEntity.DateStaged)]), d[nameof(StagedEntity.Data)], DateTime.Parse(d[nameof(StagedEntity.DatePromoted)]), d[nameof(StagedEntity.Ignore)]);
-    }).ToList();
-  }
-}
