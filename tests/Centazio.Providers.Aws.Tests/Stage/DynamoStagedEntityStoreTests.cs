@@ -1,5 +1,4 @@
-﻿using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
+﻿using Amazon.DynamoDBv2.Model;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
@@ -24,8 +23,8 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
   
   class TestingDynamoStagedEntityStore(string key, string secret) : DynamoStagedEntityStore(key, secret, new DynamoStagedEntityStoreConfiguration(TABLE_NAME)) {
 
-    private static readonly string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
-    
+    private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
+
     public override async ValueTask DisposeAsync() {
       await client.DeleteTableAsync(TABLE_NAME);
       while (true) {
