@@ -29,10 +29,11 @@ public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
     return Task.FromResult(lst.AsEnumerable());
   }
 
-  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => Task.FromResult(saved
-      .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
-      .OrderBy(s => s.DateStaged)
-      .AsEnumerable());
+  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => 
+      Task.FromResult(saved
+          .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
+          .OrderBy(s => s.DateStaged)
+          .AsEnumerable());
 
   protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     var toremove = saved

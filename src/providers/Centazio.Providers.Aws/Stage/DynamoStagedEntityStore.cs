@@ -8,7 +8,8 @@ using Centazio.Core.Entities.Ctl;
 using Centazio.Core.Helpers;
 using Centazio.Core.Stage;
 using Serilog;
-
+using C = Centazio.Providers.Aws.Stage.DynamoConstants; 
+    
 namespace Centazio.Providers.Aws.Stage;
 
 // todo: consider adding TTL to these records, maybe to only after promoted?
@@ -17,8 +18,6 @@ public record DynamoStagedEntityStoreConfiguration(string Table, int PageSize=10
 // dynamo limitations: item: 400kb, batch size: 25
 public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
 
-  public static readonly string KEY_FIELD_NAME = $"{nameof(StagedEntity.SourceSystem)}|{nameof(StagedEntity.Object)}";
-  
   protected readonly IAmazonDynamoDB client = new AmazonDynamoDBClient(
       new BasicAWSCredentials(key, secret), 
       new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
@@ -35,8 +34,8 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
     Log.Debug($"table[{config.Table}] not found, creating");
     
     var status = (await client.CreateTableAsync(
-        new CreateTableRequest(config.Table, [ new(KEY_FIELD_NAME, KeyType.HASH), new(nameof(DynamoStagedEntity.RangeKey), KeyType.RANGE) ]) {
-          AttributeDefinitions = [ new (KEY_FIELD_NAME, ScalarAttributeType.S), new (nameof(DynamoStagedEntity.RangeKey), ScalarAttributeType.S) ],
+        new CreateTableRequest(config.Table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE) ]) {
+          AttributeDefinitions = [ new (C.HASH_KEY, ScalarAttributeType.S), new (C.RANGE_KEY, ScalarAttributeType.S) ],
           BillingMode = BillingMode.PAY_PER_REQUEST 
         })).TableDescription.TableStatus;
     
@@ -77,8 +76,8 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
       KeyExpression = new Expression {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
         ExpressionAttributeNames = new Dictionary<string, string> {
-          { "#haskey", KEY_FIELD_NAME },
-          { "#rangekey", nameof(DynamoStagedEntity.RangeKey) },
+          { "#haskey", C.HASH_KEY },
+          { "#rangekey", C.RANGE_KEY },
         },
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry> {
           { ":hashval", new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey() },
@@ -90,7 +89,8 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
         ExpressionAttributeNames = new Dictionary<string, string> {
           { "#ignore_attr", nameof(StagedEntity.Ignore)}
         }
-      } 
+      },
+      // BackwardSearch = true
     };
     var search = Table.LoadTable(client, config.Table).Query(queryconf);
     var results = await search.GetRemainingAsync();
@@ -103,14 +103,14 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
     var table = Table.LoadTable(client, config.Table);
     
     var filter = new QueryFilter();
-    filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
-    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : nameof(DynamoStagedEntity.RangeKey), QueryOperator.LessThan, $"{before:o}");
+    filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       Limit = config.PageSize, 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
-      AttributesToGet = [KEY_FIELD_NAME, nameof(DynamoStagedEntity.RangeKey)]
+      AttributesToGet = [C.HASH_KEY, C.RANGE_KEY]
     };
     var search = table.Query(queryconf);
     var results = await search.GetRemainingAsync();

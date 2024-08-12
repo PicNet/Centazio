@@ -7,13 +7,12 @@ namespace centazio.core.tests.Stage;
 
 public abstract class StagedEntityStoreDefaultTests {
 
-  private const string NAME = nameof(StagedEntityStoreDefaultTests);
-  private const int LARGE_BATCH_SIZE = 100;
+  protected const string NAME = nameof(StagedEntityStoreDefaultTests);
+  protected const int LARGE_BATCH_SIZE = 100;
   
   protected abstract Task<IStagedEntityStore> GetStore();
-  
-  private IStagedEntityStore store;
-  private TestingUtcDate dt;
+  protected IStagedEntityStore store;
+  protected TestingUtcDate dt;
   
   [SetUp] public async Task SetUp() {
     store = await GetStore();

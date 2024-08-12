@@ -73,8 +73,8 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
   
   public static IList<StagedEntity> AwsBucketsToStagedEntities(this List<Document> docs) {
     return docs.Select(d => {
-      var (system, entity, _) = d[DynamoStagedEntityStore.KEY_FIELD_NAME].AsString().Split('|');
-      return new StagedEntity(system, entity, DateTime.Parse(d[nameof(StagedEntity.DateStaged)]), d[nameof(StagedEntity.Data)], DateTime.Parse(d[nameof(StagedEntity.DatePromoted)])) { Ignore = d[nameof(StagedEntity.Ignore)] };
+      var (system, entity, _) = d[DynamoConstants.HASH_KEY].AsString().Split('|');
+      return new StagedEntity(system, entity, DateTime.Parse(d[nameof(StagedEntity.DateStaged)]), d[nameof(StagedEntity.Data)], DateTime.Parse(d[nameof(StagedEntity.DatePromoted)]), d[nameof(StagedEntity.Ignore)]);
     }).ToList();
   }
 }

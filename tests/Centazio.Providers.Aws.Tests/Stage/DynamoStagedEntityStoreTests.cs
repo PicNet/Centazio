@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2.Model;
+using Centazio.Core.Entities.Ctl;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
@@ -10,19 +11,27 @@ namespace Centazio.Providers.Aws.Tests.Stage;
 
 public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
 
-  protected override async Task<IStagedEntityStore> GetStore() {
+  protected override async Task<IStagedEntityStore> GetStore() => await GetTestDynamoStagedEntityStore();
+
+  private static async Task<IStagedEntityStore> GetTestDynamoStagedEntityStore(int pgsz=100) {
     var settings = new SettingsLoader<TestSettings>().Load();
     var secrets = new NetworkLocationEnvFileSecretsLoader<TestSecrets>(settings.SecretsFolder, "dev").Load();
-    return await new TestingDynamoStagedEntityStore(secrets.AWS_KEY, secrets.AWS_SECRET).Initalise();
+    return await new TestingDynamoStagedEntityStore(secrets.AWS_KEY, secrets.AWS_SECRET, pgsz).Initalise();
   }
-  
-  [Test] public async Task Test_DynamoStagedEntityStore_initialises() {
-    var store = await GetStore();
-    Assert.That(store, Is.Not.Null);
-  }
-  
-  class TestingDynamoStagedEntityStore(string key, string secret) : DynamoStagedEntityStore(key, secret, new DynamoStagedEntityStoreConfiguration(TABLE_NAME)) {
 
+  [Test] public async Task Test_get_returns_oldest_first_page_as_expected() {
+    var pgsz = 10;
+    var dynstore = await GetTestDynamoStagedEntityStore(pgsz);
+    var start = dt.Now;
+    var created = new List<StagedEntity>();
+    foreach (var _ in Enumerable.Range(0, LARGE_BATCH_SIZE)) created.Add(await dynstore.Save(dt.Tick(), NAME, NAME, NAME));
+    var page1 = await dynstore.Get(start, NAME, NAME);
+    var exppage1 = created.Take(pgsz).ToList();
+    Console.WriteLine("PAGE1: " + page1.Count + "EXPECTED: " + exppage1.Count);
+    Assert.That(page1, Is.EquivalentTo(exppage1));
+  }
+  
+  class TestingDynamoStagedEntityStore(string key, string secret, int pgsz = 100) : DynamoStagedEntityStore(key, secret, new DynamoStagedEntityStoreConfiguration(TABLE_NAME, pgsz)) {
     private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
 
     public override async ValueTask DisposeAsync() {
