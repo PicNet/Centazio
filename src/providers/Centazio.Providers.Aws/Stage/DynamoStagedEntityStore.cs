@@ -1,4 +1,5 @@
-﻿using Amazon;
+﻿using System.Text.Json;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -83,32 +84,20 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+    var table = Table.LoadTable(client, config.Table);
+    
     var filter = new QueryFilter();
     filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
-    filter.AddCondition(
-        promoted ? nameof(StagedEntity.DatePromoted) : nameof(DynamoStagedEntity.RangeKey), 
-        QueryOperator.LessThan, 
-        promoted ? $"{before:o}" : $"{before:o}|z");
-    var queryconf = new QueryOperationConfig {
-      Limit = config.PageSize,
-      ConsistentRead = true,
-      Filter = filter
-    };
-    var table = Table.LoadTable(client, config.Table);
-    var batch = table.CreateBatchWrite();
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : nameof(DynamoStagedEntity.RangeKey), QueryOperator.LessThan, $"{before:o}");
+    var queryconf = new QueryOperationConfig { Limit = config.PageSize, ConsistentRead = true, Filter = filter };
     var search = table.Query(queryconf);
     var results = await search.GetRemainingAsync();
-    if (results.Any()) {
-      // todo: do we need batching
-      /*
-      await results
-          .Chunk()
-          .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { config.Table, chunk.ToList() } })))
-          .Synchronous();
-      */
-      results.ForEachIdx(d => batch.AddItemToDelete(d));
-      await batch.ExecuteAsync();
-    }
+    
+    if (!results.Any()) { return; }
+    
+    var batch = table.CreateBatchWrite();
+    results.ForEachIdx(d => batch.AddItemToDelete(d));
+    await batch.ExecuteAsync();
   }
 
 }
