@@ -105,7 +105,13 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
     var filter = new QueryFilter();
     filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : nameof(DynamoStagedEntity.RangeKey), QueryOperator.LessThan, $"{before:o}");
-    var queryconf = new QueryOperationConfig { Limit = config.PageSize, ConsistentRead = true, Filter = filter };
+    var queryconf = new QueryOperationConfig { 
+      Limit = config.PageSize, 
+      ConsistentRead = true, 
+      Filter = filter,
+      Select = SelectValues.SpecificAttributes,
+      AttributesToGet = [KEY_FIELD_NAME, nameof(DynamoStagedEntity.RangeKey)]
+    };
     var search = table.Query(queryconf);
     var results = await search.GetRemainingAsync();
     
