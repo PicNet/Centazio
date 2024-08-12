@@ -7,9 +7,10 @@ public interface IStagedEntityStore : IAsyncDisposable {
   Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
   
   Task Update(StagedEntity staged);
-  Task Update(IEnumerable<StagedEntity> se);
+  Task Update(IEnumerable<StagedEntity> staged);
   
   Task<List<StagedEntity>> Get(DateTime since, SystemName source, ObjectName obj);
+  
   Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj);
   Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj);
 }
@@ -26,7 +27,7 @@ public abstract class AbstractStagedEntityStore : IStagedEntityStore {
   protected abstract Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses);
   
   public abstract Task Update(StagedEntity staged);
-  public abstract Task Update(IEnumerable<StagedEntity> se);
+  public abstract Task Update(IEnumerable<StagedEntity> staged);
 
   // gurantee that staged entities are returned only if > since and
   // sorted correctly even if implementation is wrong
@@ -37,7 +38,6 @@ public abstract class AbstractStagedEntityStore : IStagedEntityStore {
   
   public async Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, true);
   public async Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, false);
-
   
   protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj);
   protected abstract Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted);

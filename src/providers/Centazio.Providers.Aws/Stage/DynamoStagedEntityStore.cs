@@ -12,14 +12,13 @@ using C = Centazio.Providers.Aws.Stage.DynamoConstants;
     
 namespace Centazio.Providers.Aws.Stage;
 
-// todo: consider adding TTL to these records, maybe to only after promoted?
-public record DynamoStagedEntityStoreConfiguration(string Table, int PageSize=100, int MaxPages=1);
-
 // dynamo limitations: item: 400kb, batch size: 25
-public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
+public record DynamoStagedEntityStoreConfiguration(string Key, string Secret, string Table, int Limit=100);
+
+public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
 
   protected readonly IAmazonDynamoDB client = new AmazonDynamoDBClient(
-      new BasicAWSCredentials(key, secret), 
+      new BasicAWSCredentials(config.Key, config.Secret), 
       new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
 
   public override ValueTask DisposeAsync() {
@@ -48,7 +47,7 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
   }
   
   public override async Task<StagedEntity> Update(StagedEntity se) => await SaveImpl(CheckStagedEntityIsDynamoStagedEntity(se));
-  public override async Task<IEnumerable<StagedEntity>> Update(IEnumerable<StagedEntity> ses) => await SaveImpl(ses.Select(CheckStagedEntityIsDynamoStagedEntity));
+  public override async Task<IEnumerable<StagedEntity>> Update(IEnumerable<StagedEntity> staged) => await SaveImpl(staged.Select(CheckStagedEntityIsDynamoStagedEntity));
   
   private DynamoStagedEntity CheckStagedEntityIsDynamoStagedEntity(StagedEntity e) => 
       e as DynamoStagedEntity ?? throw new Exception("Expected StagedEntity to be a DynamoStagedEntity");
@@ -71,7 +70,7 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {
-      Limit = config.PageSize,
+      Limit = config.Limit,
       ConsistentRead = true,
       KeyExpression = new Expression {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
@@ -89,14 +88,12 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
         ExpressionAttributeNames = new Dictionary<string, string> {
           { "#ignore_attr", nameof(StagedEntity.Ignore)}
         }
-      },
-      // BackwardSearch = true
+      }
     };
     var search = Table.LoadTable(client, config.Table).Query(queryconf);
-    var results = await search.GetRemainingAsync();
+    var results = await search.GetNextSetAsync();
     
-    return results
-        .AwsDocumentsToDynamoStagedEntities();
+    return results.AwsDocumentsToDynamoStagedEntities();
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
@@ -106,7 +103,7 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
     filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
-      Limit = config.PageSize, 
+      Limit = config.Limit, 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,

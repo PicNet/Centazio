@@ -53,7 +53,7 @@ public class S3StagedEntityStore(string key, string secret, S3StagedEntityStoreC
   }
 
   public override Task Update(StagedEntity staged) => throw new NotImplementedException();
-  public override Task Update(IEnumerable<StagedEntity> se) => throw new NotImplementedException();
+  public override Task Update(IEnumerable<StagedEntity> staged) => throw new NotImplementedException();
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var response = await client.ListObjectsV2Async(new ListObjectsV2Request {
