@@ -3,8 +3,8 @@
 namespace Centazio.Core.Stage;
 
 public interface IStagedEntityStore : IAsyncDisposable {
-  Task Save(DateTime stageddt, SystemName source, ObjectName obj, string data);
-  Task Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
+  Task<StagedEntity> Save(DateTime stageddt, SystemName source, ObjectName obj, string data);
+  Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
   
   Task Update(StagedEntity staged);
   Task Update(IEnumerable<StagedEntity> se);
@@ -16,11 +16,14 @@ public interface IStagedEntityStore : IAsyncDisposable {
 
 public abstract class AbstractStagedEntityStore : IStagedEntityStore {
 
-  public Task Save(DateTime stageddt, SystemName source, ObjectName obj, string data) => SaveImpl(new StagedEntity(source, obj, stageddt, data));
-  public Task Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) => SaveImpl(datas.Select(data => new StagedEntity(source, obj, stageddt, data)));
+  public Task<StagedEntity> Save(DateTime stageddt, SystemName source, ObjectName obj, string data) => 
+      SaveImpl(new StagedEntity(source, obj, stageddt, data));
+
+  public Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) => 
+      SaveImpl(datas.Select(data => new StagedEntity(source, obj, stageddt, data)));
   
-  protected abstract Task SaveImpl(StagedEntity se);
-  protected abstract Task SaveImpl(IEnumerable<StagedEntity> ses);
+  protected abstract Task<StagedEntity> SaveImpl(StagedEntity se);
+  protected abstract Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses);
   
   public abstract Task Update(StagedEntity staged);
   public abstract Task Update(IEnumerable<StagedEntity> se);

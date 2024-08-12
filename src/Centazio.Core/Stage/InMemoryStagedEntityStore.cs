@@ -14,26 +14,23 @@ public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
   }
 
   public override Task Update(IEnumerable<StagedEntity> staged) {
-    staged.ForEachIdx(se => {
-      var idx = saved.FindIndex(s => s.SourceSystem == se.SourceSystem && s.Object == se.Object && s.DateStaged == se.DateStaged);
-      if (idx < 0) throw new Exception($"could not find [{se}]");
-      saved[idx] = se;
-    });
+    staged.ForEachIdx(se => Update(se));
     return Task.CompletedTask;
   }
   
-  protected override Task SaveImpl(StagedEntity se) {
+  protected override Task<StagedEntity> SaveImpl(StagedEntity se) {
     saved.Add(se);
-    return Task.CompletedTask;
+    return Task.FromResult(se);
   }
 
-  protected override Task SaveImpl(IEnumerable<StagedEntity> ses) {
-    saved.AddRange(ses);
-    return Task.CompletedTask;
+  protected override Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
+    var lst = ses.ToList();
+    saved.AddRange(lst);
+    return Task.FromResult(lst.AsEnumerable());
   }
 
   protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => Task.FromResult(saved
-      .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj)
+      .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
       .OrderBy(s => s.DateStaged)
       .AsEnumerable());
 

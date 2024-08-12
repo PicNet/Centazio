@@ -48,22 +48,27 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
     return this;
   }
   
-  public override async Task Update(StagedEntity se) => await SaveImpl(CheckStagedEntityIsDynamoStagedEntity(se));
-  public override async Task Update(IEnumerable<StagedEntity> ses) => await SaveImpl(ses.Select(CheckStagedEntityIsDynamoStagedEntity));
+  public override async Task<StagedEntity> Update(StagedEntity se) => await SaveImpl(CheckStagedEntityIsDynamoStagedEntity(se));
+  public override async Task<IEnumerable<StagedEntity>> Update(IEnumerable<StagedEntity> ses) => await SaveImpl(ses.Select(CheckStagedEntityIsDynamoStagedEntity));
   
   private DynamoStagedEntity CheckStagedEntityIsDynamoStagedEntity(StagedEntity e) => 
       e as DynamoStagedEntity ?? throw new Exception("Expected StagedEntity to be a DynamoStagedEntity");
 
-  protected override async Task SaveImpl(StagedEntity se) {
-    await client.PutItemAsync(new PutItemRequest(config.Table, se.ToDynamoDict()));
+  protected override async Task<StagedEntity> SaveImpl(StagedEntity se) {
+    var dse = se.ToDynamoStagedEntity();
+    await client.PutItemAsync(new PutItemRequest(config.Table, dse.ToDynamoDict()));
+    return dse;
   }
 
-  protected override async Task SaveImpl(IEnumerable<StagedEntity> ses) => 
-      await ses
-          .Select(se => new WriteRequest(new PutRequest(se.ToDynamoDict())))
+  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
+      var dses = ses.Select(se => se.ToDynamoStagedEntity()).ToList();
+      await dses
+          .Select(dse => new WriteRequest(new PutRequest(dse.ToDynamoDict())))
           .Chunk()
           .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { config.Table, chunk.ToList() } })))
           .Synchronous();
+      return dses;
+  }
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {

@@ -98,20 +98,21 @@ public abstract class StagedEntityStoreDefaultTests {
     var (start, staged1, staged2) = (dt.Now, dt.Tick(), dt.Tick());
     var (name1, name2, name3) = (NAME + 1, NAME + 2 , NAME + 3);
     
-    await store.Save(staged1, name1, name1, name1);
-    await store.Save(staged2, name1, name1, name1);
-    await store.Save(staged2, name2, name2, name2);
-    await store.Save(staged2, name3, name3, name3);
+    var notignore = new List<StagedEntity> {
+      await store.Save(staged1, name1, name1, name1) with { Ignore = "" },
+      await store.Save(staged2, name1, name1, name1) with { Ignore = " " },
+      await store.Save(staged2, name2, name2, name2) with { Ignore = "\r" },
+      await store.Save(staged2, name3, name3, name3) with { Ignore = null },
+    };
+    await store.Update(notignore);
     
-    // add again, and then ignore them
-    await store.Save(staged1.AddMinutes(1), name1, name1, name1);
-    await store.Save(staged2.AddMinutes(1), name1, name1, name1);
-    await store.Save(staged2.AddMinutes(1), name2, name2, name2);
-    await store.Save(staged2.AddMinutes(1), name3, name3, name3);
-    var toignore = (await store.Get(staged1.AddMinutes(1).AddMilliseconds(-1), name1, name1))
-        .Concat(await store.Get(staged1.AddMinutes(1).AddMilliseconds(-1), name2, name2))
-        .Concat(await store.Get(staged1.AddMinutes(1).AddMilliseconds(-1), name3, name3));
-    await store.Update(toignore.Select(se => se with { Ignore = "Ignore" }));
+    var toignore = new List<StagedEntity> {
+      await store.Save(staged1.AddMinutes(1), name1, name1, name1) with { Ignore = nameof(StagedEntity.Ignore) },
+      await store.Save(staged2.AddMinutes(1), name1, name1, name1) with { Ignore = nameof(StagedEntity.Ignore) },
+      await store.Save(staged2.AddMinutes(1), name2, name2, name2) with { Ignore = nameof(StagedEntity.Ignore) },
+      await store.Save(staged2.AddMinutes(1), name3, name3, name3) with { Ignore = nameof(StagedEntity.Ignore) }
+    };
+    await store.Update(toignore);
     
     await Assert.ThatAsync(() => GetAsSes(staged2, name1, name1), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name2, name1), Is.Empty);

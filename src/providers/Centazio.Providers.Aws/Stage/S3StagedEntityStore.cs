@@ -32,20 +32,25 @@ public class S3StagedEntityStore(string key, string secret, S3StagedEntityStoreC
     }
   }
 
-  protected override async Task SaveImpl(StagedEntity se) => 
-      await client.PutObjectAsync(new PutObjectRequest {
-        BucketName = config.MainBucket,
-        Key = se.ToDynamoStagedEntity().RangeKey,
-        FilePath = $"{se.SourceSystem}|{se.Object}",
-        ContentBody = ""
-      });
+  protected override async Task<StagedEntity> SaveImpl(StagedEntity se) {
+    await client.PutObjectAsync(new PutObjectRequest {
+      BucketName = config.MainBucket,
+      Key = se.ToDynamoStagedEntity().RangeKey,
+      FilePath = $"{se.SourceSystem}|{se.Object}",
+      ContentBody = ""
+    });
+    return se;
+  }
 
-  protected override async Task SaveImpl(IEnumerable<StagedEntity> ses) => 
-      await ses
-          .Select(se => new PutObjectRequest { BucketName = config.MainBucket, Key = se.ToDynamoStagedEntity().RangeKey, FilePath = $"{se.SourceSystem}|{se.Object}", ContentBody = "" })
-          .Chunk(chunksz: 5)
-          .Select(chunk => Task.WhenAll(chunk.Select(req => client.PutObjectAsync(req))))
-          .Synchronous();
+  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
+    var lst = ses.ToList();
+    await lst
+        .Select(se => new PutObjectRequest { BucketName = config.MainBucket, Key = se.ToDynamoStagedEntity().RangeKey, FilePath = $"{se.SourceSystem}|{se.Object}", ContentBody = "" })
+        .Chunk(chunksz: 5)
+        .Select(chunk => Task.WhenAll(chunk.Select(req => client.PutObjectAsync(req))))
+        .Synchronous();
+    return lst.AsEnumerable();
+  }
 
   public override Task Update(StagedEntity staged) => throw new NotImplementedException();
   public override Task Update(IEnumerable<StagedEntity> se) => throw new NotImplementedException();
@@ -69,7 +74,7 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
   public static IList<StagedEntity> AwsBucketsToStagedEntities(this List<Document> docs) {
     return docs.Select(d => {
       var (system, entity, _) = d[DynamoStagedEntityStore.KEY_FIELD_NAME].AsString().Split('|');
-      return new StagedEntity(system, entity, DateTime.Parse(d[nameof(StagedEntity.DateStaged)]), d[nameof(StagedEntity.Data)], DateTime.Parse(d[nameof(StagedEntity.DatePromoted)]), d[nameof(StagedEntity.Ignore)]);
+      return new StagedEntity(system, entity, DateTime.Parse(d[nameof(StagedEntity.DateStaged)]), d[nameof(StagedEntity.Data)], DateTime.Parse(d[nameof(StagedEntity.DatePromoted)])) { Ignore = d[nameof(StagedEntity.Ignore)] };
     }).ToList();
   }
 }
