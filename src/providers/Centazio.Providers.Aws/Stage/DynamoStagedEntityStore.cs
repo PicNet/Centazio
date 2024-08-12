@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Amazon;
+﻿using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -67,19 +66,31 @@ public class DynamoStagedEntityStore(string key, string secret, DynamoStagedEnti
           .Synchronous();
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
-    var filter = new QueryFilter();
-    filter.AddCondition(KEY_FIELD_NAME, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
-    filter.AddCondition(nameof(DynamoStagedEntity.RangeKey), QueryOperator.GreaterThan, $"{since:o}|z");
     var queryconf = new QueryOperationConfig {
       Limit = config.PageSize,
       ConsistentRead = true,
-      Filter = filter
+      KeyExpression = new Expression {
+        ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
+        ExpressionAttributeNames = new Dictionary<string, string> {
+          { "#haskey", KEY_FIELD_NAME },
+          { "#rangekey", nameof(DynamoStagedEntity.RangeKey) },
+        },
+        ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry> {
+          { ":hashval", new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey() },
+          { ":rangeval", $"{since:o}|z" }
+        }
+      },
+      FilterExpression = new Expression {
+        ExpressionStatement = $"attribute_not_exists(#ignore_attr)",
+        ExpressionAttributeNames = new Dictionary<string, string> {
+          { "#ignore_attr", nameof(StagedEntity.Ignore)}
+        }
+      } 
     };
     var search = Table.LoadTable(client, config.Table).Query(queryconf);
-    // todo: implement pagination and use MaxPages
     var results = await search.GetRemainingAsync();
+    
     return results
-        .Where(d => !d.ContainsKey(nameof(StagedEntity.Ignore)) || String.IsNullOrEmpty(d[nameof(StagedEntity.Ignore)].AsString()))
         .AwsDocumentsToDynamoStagedEntities();
   }
 
