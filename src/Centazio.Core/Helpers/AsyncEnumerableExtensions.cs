@@ -17,5 +17,10 @@ public static class AsyncEnumerableExtensions {
             .Select(g => g.Select(x => x.item).ToList())
             .ToList();
   }
+  
+  public static async Task<List<T>> ChunkedSynchronousCall<T>(this IEnumerable<Task<T>> ops, int chunksz = 25) {
+    return (await ops.Chunk(chunksz).Select(Task.WhenAll).Synchronous())
+          .SelectMany(lst => lst).ToList();
+  }
 
 }

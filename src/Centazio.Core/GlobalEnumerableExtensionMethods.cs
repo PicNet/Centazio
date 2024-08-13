@@ -22,4 +22,10 @@ public static class GlobalEnumerableExtensionMethods {
     rest = list.Skip(2).ToList();
   }
 
+  public static void Deconstruct<T>(this IList<T> list, out T first, out T second, out T third, out IList<T> rest) {
+    first = list.Count > 0 ? list[0] : throw new Exception();
+    second = list.Count > 1 ? list[1] : throw new Exception();
+    third = list.Count > 2 ? list[2] : throw new Exception();
+    rest = list.Skip(3).ToList();
+  }
 }

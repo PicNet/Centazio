@@ -16,7 +16,7 @@ namespace Centazio.Providers.Aws.Stage;
 public record DynamoStagedEntityStoreConfiguration(string Key, string Secret, string Table, int Limit=100);
 
 public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
-
+  
   protected readonly IAmazonDynamoDB client = new AmazonDynamoDBClient(
       new BasicAWSCredentials(config.Key, config.Secret), 
       new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
@@ -70,7 +70,7 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {
-      Limit = config.Limit,
+      Limit = config.Limit > 0 ? config.Limit : Int32.MaxValue,
       ConsistentRead = true,
       KeyExpression = new Expression {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
@@ -103,7 +103,6 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
     filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
-      Limit = config.Limit, 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
