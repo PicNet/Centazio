@@ -12,13 +12,10 @@ using C = Centazio.Providers.Aws.Stage.DynamoConstants;
     
 namespace Centazio.Providers.Aws.Stage;
 
-// dynamo limitations: item: 400kb, batch size: 25
-public record DynamoStagedEntityStoreConfiguration(string Key, string Secret, string Table, int Limit=100);
-
-public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
+public class DynamoStagedEntityStore(string key, string secret, string table, int limit) : AbstractStagedEntityStore(limit) {
   
   protected readonly IAmazonDynamoDB client = new AmazonDynamoDBClient(
-      new BasicAWSCredentials(config.Key, config.Secret), 
+      new BasicAWSCredentials(key, secret), 
       new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
 
   public override ValueTask DisposeAsync() {
@@ -28,19 +25,19 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
 
   public async Task<IStagedEntityStore> Initalise() {
     if ((await client.ListTablesAsync()).TableNames
-        .Contains(config.Table, StringComparer.OrdinalIgnoreCase)) return this;
+        .Contains(table, StringComparer.OrdinalIgnoreCase)) return this;
 
-    Log.Debug($"table[{config.Table}] not found, creating");
+    Log.Debug($"table[{table}] not found, creating");
     
     var status = (await client.CreateTableAsync(
-        new CreateTableRequest(config.Table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE) ]) {
+        new CreateTableRequest(table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE) ]) {
           AttributeDefinitions = [ new (C.HASH_KEY, ScalarAttributeType.S), new (C.RANGE_KEY, ScalarAttributeType.S) ],
           BillingMode = BillingMode.PAY_PER_REQUEST 
         })).TableDescription.TableStatus;
     
     while (status != TableStatus.ACTIVE) {
       await Task.Delay(TimeSpan.FromMilliseconds(500));
-      status = (await client.DescribeTableAsync(config.Table)).Table.TableStatus;
+      status = (await client.DescribeTableAsync(table)).Table.TableStatus;
     }
     
     return this;
@@ -54,7 +51,7 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
 
   protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
     var dse = staged.ToDynamoStagedEntity();
-    await client.PutItemAsync(new PutItemRequest(config.Table, dse.ToDynamoDict()));
+    await client.PutItemAsync(new PutItemRequest(table, dse.ToDynamoDict()));
     return dse;
   }
 
@@ -63,14 +60,14 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
       await dses
           .Select(dse => new WriteRequest(new PutRequest(dse.ToDynamoDict())))
           .Chunk()
-          .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { config.Table, chunk.ToList() } })))
+          .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { table, chunk.ToList() } })))
           .Synchronous();
       return dses;
   }
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {
-      Limit = config.Limit > 0 ? config.Limit : Int32.MaxValue,
+      Limit = Limit > 0 ? Limit : Int32.MaxValue,
       ConsistentRead = true,
       KeyExpression = new Expression {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
@@ -90,15 +87,13 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
         }
       }
     };
-    var search = Table.LoadTable(client, config.Table).Query(queryconf);
+    var search = Table.LoadTable(client, table).Query(queryconf);
     var results = await search.GetNextSetAsync();
     
     return results.AwsDocumentsToDynamoStagedEntities();
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
-    var table = Table.LoadTable(client, config.Table);
-    
     var filter = new QueryFilter();
     filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
@@ -108,12 +103,13 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
       Select = SelectValues.SpecificAttributes,
       AttributesToGet = [C.HASH_KEY, C.RANGE_KEY]
     };
-    var search = table.Query(queryconf);
+    var tbl = Table.LoadTable(client, table);
+    var search = tbl.Query(queryconf);
     var results = await search.GetRemainingAsync();
     
     if (!results.Any()) { return; }
     
-    var batch = table.CreateBatchWrite();
+    var batch = tbl.CreateBatchWrite();
     results.ForEachIdx(d => batch.AddItemToDelete(d));
     await batch.ExecuteAsync();
   }

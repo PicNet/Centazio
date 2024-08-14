@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Centazio.Core.Secrets;
+﻿using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using centazio.core.tests;
@@ -18,14 +17,14 @@ public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     return await new TestingSqlServerStagedEntityStore(secrets.SQL_CONN_STR, limit).Initalise();
   }
   
-  class TestingSqlServerStagedEntityStore(string connstr, int limit = 100) : SqlServerStagedEntityStore(new SqlServerStagedEntityStoreConfiguration(connstr, TABLE_NAME, limit)) {
+  class TestingSqlServerStagedEntityStore(string connstr, int limit) : SqlServerStagedEntityStore(connstr, TABLE_NAME, limit) {
     
     private static readonly string TABLE_NAME = nameof(TestingSqlServerStagedEntityStore);
     
-    public string ConnStr => connstr;
+    public string ConnStr { get; } = connstr;
 
     public override async ValueTask DisposeAsync() {
-      await using var conn = new SqlConnection(connstr);
+      await using var conn = new SqlConnection(ConnStr);
       await conn.ExecuteAsync($"DROP TABLE IF EXISTS {TABLE_NAME}");
       await base.DisposeAsync(); 
     }

@@ -17,7 +17,7 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
     return await new TestingS3StagedEntityStore(secrets.AWS_KEY, secrets.AWS_SECRET, limit).Initalise();
   }
 
-  class TestingS3StagedEntityStore(string key, string secret, int limit = 100) : S3StagedEntityStore(new S3StagedEntityStoreConfiguration(key, secret, BUCKET_NAME, limit)) {
+  class TestingS3StagedEntityStore(string key, string secret, int limit = 100) : S3StagedEntityStore(key, secret, BUCKET_NAME, limit) {
     
     private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityStore).ToLower(CultureInfo.InvariantCulture);
 

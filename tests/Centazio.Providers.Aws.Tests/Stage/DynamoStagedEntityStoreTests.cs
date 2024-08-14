@@ -16,7 +16,7 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     return await new TestingDynamoStagedEntityStore(secrets.AWS_KEY, secrets.AWS_SECRET, limit).Initalise();
   }
   
-  class TestingDynamoStagedEntityStore(string key, string secret, int limit = 100) : DynamoStagedEntityStore(new DynamoStagedEntityStoreConfiguration(key, secret, TABLE_NAME, limit)) {
+  class TestingDynamoStagedEntityStore(string key, string secret, int limit = 100) : DynamoStagedEntityStore(key, secret, TABLE_NAME, limit) {
     private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
 
     public override async ValueTask DisposeAsync() {

@@ -7,9 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SQLServer.Stage;
 
-public record SqlServerStagedEntityStoreConfiguration(string ConnectionString, string Table, int Limit);
-
-public class SqlServerStagedEntityStore(SqlServerStagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
+public class SqlServerStagedEntityStore(string connstr, string table, int limit) : AbstractStagedEntityStore(limit) {
   
   static SqlServerStagedEntityStore() {
     SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<SystemName>());
@@ -22,11 +20,11 @@ public class SqlServerStagedEntityStore(SqlServerStagedEntityStoreConfiguration 
   public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
 
   public async Task<SqlServerStagedEntityStore> Initalise() {
-    await using var conn = new SqlConnection(config.ConnectionString);
+    await using var conn = GetConn();
     await conn.ExecuteAsync($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{config.Table}' AND xtype='U')
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
 BEGIN
-  CREATE TABLE {config.Table} (
+  CREATE TABLE {table} (
     Id uniqueidentifier NOT NULL PRIMARY KEY, 
     SourceSystem nvarchar (64) NOT NULL, 
     Object nvarchar (64) NOT NULL, 
@@ -35,8 +33,8 @@ BEGIN
     DatePromoted datetime2 NULL,
     Ignore nvarchar (256) NULL)
 
-ALTER TABLE dbo.{config.Table} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
-CREATE INDEX ix_{config.Table}_source_obj_staged ON dbo.{config.Table} (SourceSystem, Object, DateStaged);
+ALTER TABLE dbo.{table} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
+CREATE INDEX ix_{table}_source_obj_staged ON dbo.{table} (SourceSystem, Object, DateStaged);
 END
 ");
     return this;
@@ -46,12 +44,12 @@ END
   protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) => await DoSqlUpsert(staged.Select(SqlServerStagedEntity.FromStagedEntity));
 
   private async Task<T> DoSqlUpsert<T>(T staged) {
-    await using var conn = new SqlConnection(config.ConnectionString);
+    await using var conn = GetConn();
     await conn.ExecuteAsync(
-        $@"MERGE INTO {config.Table}
+        $@"MERGE INTO {table}
 USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore))
   AS se (Id, SourceSystem, Object, DateStaged, Data, DatePromoted, Ignore)
-ON {config.Table}.Id = se.Id
+ON {table}.Id = se.Id
 WHEN MATCHED THEN
  UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore
 WHEN NOT MATCHED THEN
@@ -65,16 +63,18 @@ WHEN NOT MATCHED THEN
   public override Task Update(IEnumerable<StagedEntity> staged) => SaveImpl(staged);
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
-    await using var conn = new SqlConnection(config.ConnectionString);
-    var limit = config.Limit > 0 ? $" TOP {config.Limit}" : "";
-    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {config.Table} WHERE DateStaged > @since AND Ignore IS NULL ORDER BY DateStaged", new { since });
+    await using var conn = GetConn();
+    var limit = Limit > 0 ? $" TOP {Limit}" : "";
+    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {table} WHERE DateStaged > @since AND Ignore IS NULL ORDER BY DateStaged", new { since });
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
-    await using var conn = new SqlConnection(config.ConnectionString);
+    await using var conn = GetConn();
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
-    await conn.ExecuteAsync($"DELETE FROM {config.Table} WHERE {col} < @before AND SourceSystem = @source AND Object = @obj", new { before, source, obj });
+    await conn.ExecuteAsync($"DELETE FROM {table} WHERE {col} < @before AND SourceSystem = @source AND Object = @obj", new { before, source, obj });
   }
+  
+  private SqlConnection GetConn() => new(connstr);
 }
 
 public class StringValueSqlTypeHandler<T> : SqlMapper.TypeHandler<T> where T : IStringValue, new() {

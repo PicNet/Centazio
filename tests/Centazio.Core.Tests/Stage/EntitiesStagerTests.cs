@@ -13,7 +13,7 @@ public class EntitiesStagerTests {
   
   [SetUp] public void SetUp() {
     dt = new TestingUtcDate();
-    store = new InMemoryStagedEntityStore();
+    store = new InMemoryStagedEntityStore(100);
     stager = new EntitiesStager(store, dt);
   }
   

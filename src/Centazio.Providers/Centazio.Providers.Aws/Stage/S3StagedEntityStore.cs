@@ -10,15 +10,13 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public record S3StagedEntityStoreConfiguration(string Key, string Secret, string BucketName, int Limit);
-
-public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : AbstractStagedEntityStore {
+public class S3StagedEntityStore(string key, string secret, string bucket, int limit) : AbstractStagedEntityStore(limit) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
 
   protected readonly IAmazonS3 client = new AmazonS3Client(
-      new BasicAWSCredentials(config.Key, config.Secret), 
+      new BasicAWSCredentials(key, secret), 
       new AmazonS3Config { RegionEndpoint = RegionEndpoint.APSoutheast2 });
 
   public override ValueTask DisposeAsync() {
@@ -28,22 +26,22 @@ public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : Abst
 
   public async Task<S3StagedEntityStore> Initalise() {
     var tables = (await client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
-    if (tables.Contains(config.BucketName, StringComparer.OrdinalIgnoreCase)) return this;
+    if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
-    Log.Debug($"bucket[{config.BucketName}] not found, creating");
-    await client.PutBucketAsync(new PutBucketRequest { BucketName = config.BucketName });
+    Log.Debug($"bucket[{bucket}] not found, creating");
+    await client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
     return this;
   }
 
   protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
     var s3se = staged.ToS3StagedEntity();
-    await client.PutObjectAsync(s3se.ToPutObjectRequest(config.BucketName));
+    await client.PutObjectAsync(s3se.ToPutObjectRequest(bucket));
     return s3se;
   }
 
   protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
     var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
-    await lst.Select(s3se => client.PutObjectAsync(s3se.ToPutObjectRequest(config.BucketName))).ChunkedSynchronousCall(5);
+    await lst.Select(s3se => client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
     return lst.AsEnumerable();
   }
 
@@ -56,11 +54,11 @@ public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : Abst
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
         .ToList();
     // note: S3 does not support querying by metadata so 'Ignore' is is handled here
-    var objs = await list.Select(i => client.GetObjectAsync(new GetObjectRequest { BucketName = config.BucketName, Key = i.Key }))
+    var objs = await list.Select(i => client.GetObjectAsync(new GetObjectRequest { BucketName = bucket, Key = i.Key }))
           .ChunkedSynchronousCall(5);
     var notignored = objs
           .Where(r => r.Metadata[IGNORE_META_KEY] == null)
-          .Take(config.Limit > 0 ? config.Limit : Int32.MaxValue)
+          .Take(Limit > 0 ? Limit : Int32.MaxValue)
           .ToList();
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged);
   }
@@ -73,7 +71,7 @@ public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : Abst
         .ToList();
     // promoted date is always after staged date so we start with `stagedbefore` to reduce the number of objects to query for metadata
     if (todelete.Any() && promoted) {
-      var metas = await todelete.Select(key => client.GetObjectMetadataAsync(config.BucketName, key)).ChunkedSynchronousCall(5);
+      var metas = await todelete.Select(key => client.GetObjectMetadataAsync(bucket, key)).ChunkedSynchronousCall(5);
       var mks = metas.Select((m, idx) => (Key: todelete[idx], Meta: m));
       todelete = mks
           .Where(mk => mk.Meta.Metadata[DATE_PROMOTED_META_KEY] != null && String.CompareOrdinal(mk.Meta.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY], $"{before:o}") < 0)
@@ -83,14 +81,14 @@ public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : Abst
     if (!todelete.Any()) return;
     
     await client.DeleteObjectsAsync(new DeleteObjectsRequest {
-        BucketName = config.BucketName, 
+        BucketName = bucket, 
         Objects = todelete.Select(key => new KeyVersion {Key = key }).ToList() });
   }
   
   
   private async Task<List<S3Object>> ListAll(SystemName source, ObjectName obj) =>
       (await client.ListObjectsV2Async(new ListObjectsV2Request { 
-        BucketName = config.BucketName, 
+        BucketName = bucket, 
         Prefix = $"{source.Value}/{obj.Value}" })).S3Objects;
 
 }
