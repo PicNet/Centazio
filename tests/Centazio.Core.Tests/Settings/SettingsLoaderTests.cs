@@ -36,6 +36,7 @@ public class SettingsLoaderTests {
     }
   }
 
+  // ReSharper disable NotAccessedPositionalProperty.Local
   private record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string MissingSetting) {
     public TestSettingsObj() : this("", "", "", "") {}
   }

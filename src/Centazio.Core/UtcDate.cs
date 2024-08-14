@@ -14,6 +14,6 @@ public abstract class AbstractUtcDate : IUtcDate {
 
 }
 
-public class UtcDate() : AbstractUtcDate {
+public class UtcDate : AbstractUtcDate {
   public override DateTime Now => DateTime.UtcNow;
 }

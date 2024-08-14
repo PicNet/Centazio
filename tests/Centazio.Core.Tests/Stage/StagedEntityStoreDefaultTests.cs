@@ -10,7 +10,7 @@ public abstract class StagedEntityStoreDefaultTests {
   protected const string NAME = nameof(StagedEntityStoreDefaultTests);
   protected const int LARGE_BATCH_SIZE = 100;
   
-  protected abstract Task<IStagedEntityStore> GetStore();
+  protected abstract Task<IStagedEntityStore> GetStore(int limit=0);
   protected IStagedEntityStore store;
   protected TestingUtcDate dt;
   
@@ -81,6 +81,7 @@ public abstract class StagedEntityStoreDefaultTests {
     await store.Save(staged2, name1, name1, name1);
     await store.Save(staged2, name2, name2, name2);
     await store.Save(staged2, name3, name3, name3);
+    
     await Assert.ThatAsync(() => GetAsSes(staged2, name1, name1), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name2, name1), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name1, name2), Is.Empty);
@@ -112,11 +113,7 @@ public abstract class StagedEntityStoreDefaultTests {
       await store.Save(staged2.AddMinutes(1), name3, name3, "ignore: 3") with { Ignore = name3 }
     };
     await store.Update(toignore);
-
-    Console.WriteLine("GETTING LIST WITH IGNORES");
-    var items = await GetAsSes(staged2, name1, name1);
-    Console.WriteLine($"IGNORES[{String.Join("],[", items.Select(i => i.Ignore))}] DATAS[{String.Join("],[", items.Select(i => i.Data))}]");
-    /*
+    
     await Assert.ThatAsync(() => GetAsSes(staged2, name1, name1), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name2, name1), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name1, name2), Is.Empty);
@@ -127,7 +124,30 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(async () => (await GetAsSes(start, name1, name1)).Count, Is.EqualTo(2));
     await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, name2) }));
     await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, name3) }));
-    */
+  }
+  
+  [Test] public async Task Test_get_returns_oldest_first_page_as_expected() {
+    var limit = 10;
+    var dynstore = await GetStore(limit);
+    var start = dt.Now;
+    var created = new List<StagedEntity>();
+    foreach (var _ in Enumerable.Range(0, 25)) created.Add(await dynstore.Save(dt.Tick(), NAME, NAME, NAME));
+    
+    var exppage1 = created.Take(limit).ToList();
+    var page1 = await dynstore.Get(start, NAME, NAME);
+    
+    var exppage2 = created.Skip(limit).Take(limit).ToList();
+    var page2 = await dynstore.Get(exppage1.Last().DateStaged, NAME, NAME);
+    
+    var exppage3 = created.Skip(limit * 2).Take(limit).ToList();
+    var page3 = await dynstore.Get(exppage2.Last().DateStaged, NAME, NAME);
+    
+    var page4 = await dynstore.Get(exppage3.Last().DateStaged, NAME, NAME);
+    
+    Assert.That(page1, Is.EquivalentTo(exppage1));
+    Assert.That(page2, Is.EquivalentTo(exppage2));
+    Assert.That(page3, Is.EquivalentTo(exppage3));
+    Assert.That(page4, Is.Empty);
   }
   
   [Test] public async Task Test_delete_staged_before() {

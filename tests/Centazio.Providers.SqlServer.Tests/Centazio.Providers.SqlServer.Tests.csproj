@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -20,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.SqlServer\Centazio.Providers.SqlServer.csproj" />
       <ProjectReference Include="..\Centazio.Core.Tests\Centazio.Core.Tests.csproj" />
     </ItemGroup>
 

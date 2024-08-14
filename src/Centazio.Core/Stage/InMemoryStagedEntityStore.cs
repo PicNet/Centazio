@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Stage;
 
-public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
+public class InMemoryStagedEntityStore(int Limit = 0) : AbstractStagedEntityStore {
 
   private readonly List<StagedEntity> saved = [];
   
@@ -33,6 +33,7 @@ public class InMemoryStagedEntityStore : AbstractStagedEntityStore {
       Task.FromResult(saved
           .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
           .OrderBy(s => s.DateStaged)
+          .Take(Limit > 0 ? Limit : Int32.MaxValue)
           .AsEnumerable());
 
   protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {

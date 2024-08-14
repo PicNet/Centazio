@@ -16,10 +16,11 @@ public class NetworkLocationEnvFileSecretsLoader<T>(string dir, string environme
     return File.ReadAllLines(path)
         .Select(l => l.Split("#")[0].Trim())
         .Where(l => !String.IsNullOrEmpty(l))
-        .Select(l => l.Split('='))
-        .ToDictionary(
-            kvp => kvp[0].Trim(), 
-            kvp => kvp[1].Trim().TrimEnd(';'));
+        .Select(l => {
+          var (Key, Value) = l.Split('=');
+          return (key: Key, rest: Value);
+        })
+        .ToDictionary(kvp => kvp.key, kvp => String.Join('=', kvp.rest));
   }
 
   private T ValidateAndSetLoadedSecrets(Dictionary<string, string> secrets) {

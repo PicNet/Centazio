@@ -5,8 +5,8 @@ namespace Centazio.Test.Lib.Api;
 
 public class MockApi : IDisposable {
   private bool disposed; 
-  private MockHttpMessageHandler mock = new();
-  private List<Operation> operations = [];
+  private readonly MockHttpMessageHandler mock = new();
+  private readonly List<Operation> operations = [];
   
   public MockHttpMessageHandler Mock => mock;
 
@@ -26,8 +26,7 @@ public class MockApi : IDisposable {
   private void Parse(string file) {
     if (disposed) throw new("MockApi should be created independently for each test.  Current MockApi has been disposed.");
     
-    File.ReadAllLines(file).ToList().ForEach(line => {
-      
+    File.ReadAllLines(file).ToList().ForEach(_ => {
       operations.Add(new()); // todo
     });
   }

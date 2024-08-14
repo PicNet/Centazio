@@ -2,16 +2,19 @@
 
 public interface IStringValue { 
   string Value { get; init; }
-  
-  public string ToString() => Value;
 }
 
 public record SystemName(string Value) : IStringValue {
+  public SystemName() : this("") {}
   public static implicit operator SystemName(string value) => new(value);
-};
+}
+
 public record ObjectName(string Value) : IStringValue {
+  public ObjectName() : this("") {}
   public static implicit operator ObjectName(string value) => new(value);
 }
+
 public record LifecycleStage(string Value) : IStringValue {
+  public LifecycleStage() : this("") {}
   public static implicit operator LifecycleStage(string value) => new(value);
 }

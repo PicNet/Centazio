@@ -107,10 +107,7 @@ public record S3StagedEntity(Guid KeySuffix, SystemName SourceSystem, ObjectName
       ContentBody = Data
     };
     if (DatePromoted != null) req.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] = $"{DatePromoted:o}";
-    if (Ignore != null) {
-      Console.WriteLine($"SET [{S3StagedEntityStore.IGNORE_META_KEY}] to [{Ignore}]");
-      req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = Ignore;
-    }
+    if (Ignore != null) { req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = Ignore; }
     return req;
   }
 }
@@ -136,19 +133,5 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
   public static S3StagedEntity ToS3StagedEntity(this StagedEntity se) {
     return se as S3StagedEntity ?? 
         new S3StagedEntity(Guid.NewGuid(), se.SourceSystem, se.Object, se.DateStaged, se.Data, se.DatePromoted, se.Ignore);
-  }
-  
-  public static PutObjectRequest ToPutObjectRequest(this S3StagedEntity se, string bucket) {
-    var req = new PutObjectRequest { 
-      BucketName = bucket, 
-      Key = se.ToS3StagedEntity().Key, 
-      ContentBody = se.Data
-    };
-    if (se.DatePromoted != null) req.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] = $"{se.DatePromoted:o}";
-    if (se.Ignore != null) {
-      Console.WriteLine($"SET [{S3StagedEntityStore.IGNORE_META_KEY}] to [{se.Ignore}]");
-      req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = se.Ignore;
-    }
-    return req;
   }
 }
