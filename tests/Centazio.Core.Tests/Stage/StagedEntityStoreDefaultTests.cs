@@ -120,10 +120,10 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(() => GetAsSes(start, name2, name3), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name3, name2), Is.Empty);
 
-    Assert.That(await GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, name1)));
+    await Assert.ThatAsync(() => GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, "not ignore: 1.2")));
     await Assert.ThatAsync(async () => (await GetAsSes(start, name1, name1)).Count, Is.EqualTo(2));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, name2) }));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, name3) }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, "not ignore: 2") }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, "not ignore: 3") }));
   }
   
   [Test] public async Task Test_get_returns_oldest_first_page_as_expected() {

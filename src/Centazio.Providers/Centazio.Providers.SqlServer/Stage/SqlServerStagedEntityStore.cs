@@ -62,9 +62,7 @@ ELSE
     await using var conn = new SqlConnection(config.ConnectionString);
     await conn.ExecuteAsync(
 $@"MERGE INTO {config.Table}
-USING (VALUES 
-    (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore),
-    (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore)) 
+USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore))
   AS se (Id, SourceSystem, Object, DateStaged, Data, DatePromoted, Ignore)
 ON {config.Table}.Id = se.Id
 WHEN MATCHED THEN
@@ -72,7 +70,7 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
  INSERT (Id, SourceSystem, Object, DateStaged, Data)
  VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data);
-");
+", lst);
     return lst.AsEnumerable();
   }
 
@@ -88,7 +86,7 @@ WHEN NOT MATCHED THEN
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     await using var conn = new SqlConnection(config.ConnectionString);
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
-    await conn.ExecuteAsync($"DELETE FROM {config.Table} WHERE {col} < @before AND Ignore IS NULL ORDER BY DateStaged", new { before });
+    await conn.ExecuteAsync($"DELETE FROM {config.Table} WHERE {col} < @before AND SourceSystem = @source AND Object = @obj", new { before, source, obj });
   }
 }
 
