@@ -52,14 +52,14 @@ public class DynamoStagedEntityStore(DynamoStagedEntityStoreConfiguration config
   private DynamoStagedEntity CheckStagedEntityIsDynamoStagedEntity(StagedEntity e) => 
       e as DynamoStagedEntity ?? throw new Exception("Expected StagedEntity to be a DynamoStagedEntity");
 
-  protected override async Task<StagedEntity> SaveImpl(StagedEntity se) {
-    var dse = se.ToDynamoStagedEntity();
+  protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
+    var dse = staged.ToDynamoStagedEntity();
     await client.PutItemAsync(new PutItemRequest(config.Table, dse.ToDynamoDict()));
     return dse;
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
-      var dses = ses.Select(se => se.ToDynamoStagedEntity()).ToList();
+  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
+      var dses = staged.Select(se => se.ToDynamoStagedEntity()).ToList();
       await dses
           .Select(dse => new WriteRequest(new PutRequest(dse.ToDynamoDict())))
           .Chunk()

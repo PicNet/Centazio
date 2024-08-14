@@ -35,14 +35,14 @@ public class S3StagedEntityStore(S3StagedEntityStoreConfiguration config) : Abst
     return this;
   }
 
-  protected override async Task<StagedEntity> SaveImpl(StagedEntity se) {
-    var s3se = se.ToS3StagedEntity();
+  protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
+    var s3se = staged.ToS3StagedEntity();
     await client.PutObjectAsync(s3se.ToPutObjectRequest(config.BucketName));
     return s3se;
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
-    var lst = ses.Select(se => se.ToS3StagedEntity()).ToList();
+  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
+    var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
     await lst.Select(s3se => client.PutObjectAsync(s3se.ToPutObjectRequest(config.BucketName))).ChunkedSynchronousCall(5);
     return lst.AsEnumerable();
   }

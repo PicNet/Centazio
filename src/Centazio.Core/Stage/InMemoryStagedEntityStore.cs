@@ -18,13 +18,13 @@ public class InMemoryStagedEntityStore(int Limit = 0) : AbstractStagedEntityStor
     return Task.CompletedTask;
   }
   
-  protected override Task<StagedEntity> SaveImpl(StagedEntity se) {
-    saved.Add(se);
-    return Task.FromResult(se);
+  protected override Task<StagedEntity> SaveImpl(StagedEntity staged) {
+    saved.Add(staged);
+    return Task.FromResult(staged);
   }
 
-  protected override Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
-    var lst = ses.ToList();
+  protected override Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
+    var lst = staged.ToList();
     saved.AddRange(lst);
     return Task.FromResult(lst.AsEnumerable());
   }

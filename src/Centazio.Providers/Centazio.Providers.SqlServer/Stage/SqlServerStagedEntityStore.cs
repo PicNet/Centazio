@@ -36,32 +36,13 @@ public class SqlServerStagedEntityStore(SqlServerStagedEntityStoreConfiguration 
     return this;
   }
 
-  protected override async Task<StagedEntity> SaveImpl(StagedEntity se) {
-    var sqlse = SqlServerStagedEntity.FromStagedEntity(se);
-    await using var conn = new SqlConnection(config.ConnectionString);
-    
-    await conn.ExecuteAsync(
-$@"IF ((SELECT COUNT(*) FROM {config.Table} where Id=@Id)=1)
-  BEGIN
-    UPDATE {config.Table}
-      SET
-        DatePromoted = @DatePromoted,
-        Ignore = @Ignore
-      WHERE ID = @Id;
-  END
-ELSE
-  BEGIN
-    INSERT INTO {config.Table} (Id, SourceSystem, Object, DateStaged, Data)
-      VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data)
-  END", sqlse);
-    return sqlse;
-  }
+  protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) => await DoSqlUpsert(SqlServerStagedEntity.FromStagedEntity(staged));
+  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) => await DoSqlUpsert(staged.Select(SqlServerStagedEntity.FromStagedEntity));
 
-  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses) {
-    var lst = ses.Select(SqlServerStagedEntity.FromStagedEntity).ToList();
+  private async Task<T> DoSqlUpsert<T>(T staged) {
     await using var conn = new SqlConnection(config.ConnectionString);
     await conn.ExecuteAsync(
-$@"MERGE INTO {config.Table}
+        $@"MERGE INTO {config.Table}
 USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore))
   AS se (Id, SourceSystem, Object, DateStaged, Data, DatePromoted, Ignore)
 ON {config.Table}.Id = se.Id
@@ -70,8 +51,8 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
  INSERT (Id, SourceSystem, Object, DateStaged, Data)
  VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data);
-", lst);
-    return lst.AsEnumerable();
+", staged);
+    return staged;
   }
 
   public override Task Update(StagedEntity staged) => SaveImpl(staged);

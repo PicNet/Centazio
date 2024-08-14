@@ -23,8 +23,8 @@ public abstract class AbstractStagedEntityStore : IStagedEntityStore {
   public Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) => 
       SaveImpl(datas.Select(data => new StagedEntity(source, obj, stageddt, data)));
   
-  protected abstract Task<StagedEntity> SaveImpl(StagedEntity se);
-  protected abstract Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> ses);
+  protected abstract Task<StagedEntity> SaveImpl(StagedEntity staged);
+  protected abstract Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged);
   
   public abstract Task Update(StagedEntity staged);
   public abstract Task Update(IEnumerable<StagedEntity> staged);
