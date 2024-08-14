@@ -23,16 +23,22 @@ public class SqlServerStagedEntityStore(SqlServerStagedEntityStoreConfiguration 
 
   public async Task<SqlServerStagedEntityStore> Initalise() {
     await using var conn = new SqlConnection(config.ConnectionString);
-    await conn.ExecuteAsync($@"IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{config.Table}' AND xtype='U')
-    CREATE TABLE {config.Table} (
-      Id uniqueidentifier NOT NULL PRIMARY KEY, 
-      SourceSystem nvarchar (64) NOT NULL, 
-      Object nvarchar (64) NOT NULL, 
-      DateStaged datetime2 NOT NULL, 
-      Data nvarchar (max) NOT NULL,
-      DatePromoted datetime2 NULL,
-      Ignore nvarchar (256) NULL
-    )");
+    await conn.ExecuteAsync($@"
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{config.Table}' AND xtype='U')
+BEGIN
+  CREATE TABLE {config.Table} (
+    Id uniqueidentifier NOT NULL PRIMARY KEY, 
+    SourceSystem nvarchar (64) NOT NULL, 
+    Object nvarchar (64) NOT NULL, 
+    DateStaged datetime2 NOT NULL, 
+    Data nvarchar (max) NOT NULL,
+    DatePromoted datetime2 NULL,
+    Ignore nvarchar (256) NULL)
+
+ALTER TABLE dbo.{config.Table} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
+CREATE INDEX ix_{config.Table}_source_obj_staged ON dbo.{config.Table} (SourceSystem, Object, DateStaged);
+END
+");
     return this;
   }
 
