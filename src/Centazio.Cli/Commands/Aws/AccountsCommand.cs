@@ -9,39 +9,35 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : AbstractAwsCentazioCommand<AccountsCommand, AccountsCommand.AccountsCommandSettings>("accounts") {
+public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : AbstractCentazioCommand<AccountsCommand, AccountsCommand.AccountsCommandSettings>("accounts") {
   
   private readonly AccountsCommandImpl impl = new(secrets);
   
-  public override Task<int> RunInteractiveCommand(CommandContext ctx) {
-    var op = AnsiConsole.Prompt(new SelectionPrompt<string>()
-        .Title("Select Operation:")
-        .AddChoices(["list", "create"]));
-    
-    if (op == "list") return ExecuteAsync(ctx, new AccountsCommandSettings { List = true });
-    return ExecuteAsync(ctx, new AccountsCommandSettings { 
-      Create = op == "create",
-      AccountName = AnsiConsole.Ask("Account Name:", clisetts.DefaultAccountName)  
-    });
+  public override bool RunInteractiveCommand() {
+    switch (PromptCommandOptions(["list", "create"])) {
+      case "back": return false;
+      case "list": ExecuteImpl(new AccountsCommandSettings { List = true });
+        break;
+      case "create": ExecuteImpl(new AccountsCommandSettings { Create = true, AccountName = AnsiConsole.Ask("Account Name:", clisetts.DefaultAccountName) });
+        break;
+      default: throw new Exception();
+    }
+    return true;
   }
 
-  public override Task<int> ExecuteAsync(CommandContext context, AccountsCommandSettings settings) {
-    if (settings.List) return ListAccounts();
-    if (settings.Create) return CreateAccount(settings.AccountName);
-    throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
+  protected override void ExecuteImpl(AccountsCommandSettings settings) {
+    if (settings.List) ListAccounts();
+    else if (settings.Create) CreateAccount(settings.AccountName);
+    else throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
   }
 
-  private async Task<int> ListAccounts() {
-    return await Progress("Loading account list", async () => {
-      var table = new Table().AddColumns(["Name", "Id", "Arn", "Status", "Email"]);
-      (await impl.ListAccounts())
-          .ForEachIdx(a => table.AddRow([a.Name, a.Id, a.Arn, a.Status, a.Email]));
-      AnsiConsole.Write(table);
-      return 0;
-    });
-  }
+  private async void ListAccounts() => 
+      await Progress("Loading account list", async () => 
+          AnsiConsole.Write(new Table()
+              .AddColumns(["Name", "Id", "Arn", "Status", "Email"])
+              .AddRows((await impl.ListAccounts()).Select(a => new [] { a.Name, a.Id, a.Arn, a.Status, a.Email }))));
 
-  private async Task<int> CreateAccount(string name) => await ProgressWithErrorMessage("Loading account list", async () => await impl.CreateAccount(name));
+  private void CreateAccount(string name) => ProgressWithErrorMessage("Loading account list", async () => await impl.CreateAccount(name));
 
   public class AccountsCommandSettings : CommonSettings {
     [CommandArgument(0, "<ACCOUNT_NAME>")] public string AccountName { get; init; } = null!;
@@ -59,9 +55,9 @@ public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : Abstrac
           : response.CreateAccountStatus.FailureReason.Value ?? "Unknown failure";  
     }
     
-    public async Task<IEnumerable<(string Name, string Id, string Arn, AccountStatus Status, string Email)>> ListAccounts() => 
+    public async Task<IEnumerable<(string Id, string Name, string Arn, string Status, string Email)>> ListAccounts() => 
         (await GetClient().ListAccountsAsync(new ListAccountsRequest()))
-            .Accounts.Select(a => (a.Name, a.Id, a.Arn, a.Status, a.Email));
+            .Accounts.Select(a => (a.Id, a.Name, a.Arn, a.Status.Value, a.Email));
 
     private AmazonOrganizationsClient GetClient() => new(
         new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), 

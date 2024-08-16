@@ -8,13 +8,12 @@ namespace Centazio.Cli;
 
 public class Cli(ICliSplash splash, ICommandTree commands, IInteractiveMenu menu, IServiceProvider svcs) {
 
-  public async Task<int> Start(string[] args) {
+  public int Start(string[] args) {
     splash.Show();
-    var app = new CommandApp();
-    app.SetDefaultCommand<FallbackMenuCommand>()
-        .WithData(menu);
+    var app = new CommandApp<InteractiveCliCommand>().WithData(menu);
     app.Configure(cfg => commands.Initialise(cfg, svcs));
-    return await app.RunAsync(args);
+    app.Run(args);
+    return 0;
   }
 
   public void ReportException(Exception ex, bool terminate) {

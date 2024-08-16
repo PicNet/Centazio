@@ -10,6 +10,6 @@ public class CliSplash : ICliSplash {
   public void Show() {
     AnsiConsole.Write(new CanvasImage("swirl.png").MaxWidth(32));
     AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
-    AnsiConsole.Markup("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet Pty Ltd[/][/]\n\n");
+    AnsiConsole.MarkupLine("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 }

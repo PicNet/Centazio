@@ -7,7 +7,7 @@ using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
-return await new CliBootstrapper().Initialise().Start(args);
+return new CliBootstrapper().Initialise().Start(args);
 
 internal class CliBootstrapper {
 
