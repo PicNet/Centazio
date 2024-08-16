@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Commands.Aws;
-using Centazio.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -12,7 +11,6 @@ public abstract class AbstractCentazioCommand<T, S>(string id) : AsyncCommand<S>
   public string Id => id;
   public void AddToBranch(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(id);
   public abstract Task<int> RunInteractiveCommand();
-
 }
 
 public interface ICentazioCommand {
@@ -22,19 +20,25 @@ public interface ICentazioCommand {
 
 }
 
-public static class CommandTree {
+public interface ICommandTree {
+  IDictionary<string, List<ICentazioCommand>> Tree { get; }
+  void Initialise(IConfigurator cfg, IServiceProvider svcs);
+}
 
-  internal static readonly IDictionary<string, List<ICentazioCommand>> Tree = new Dictionary<string, List<ICentazioCommand>> {
-    {"aws", [new ResourceGroupCommand()] },
-    {"az", [new ResourceGroupCommand()] },
-  };
+public class CommandTree : ICommandTree {
+
+  public IDictionary<string, List<ICentazioCommand>> Tree { get; } = new Dictionary<string, List<ICentazioCommand>>();
   
-  public static void Initialise(IConfigurator cfg, ServiceCollection svcs) {
-    
-    Tree.Keys.ForEachIdx(branch => cfg.AddBranch(branch, b => {
-      Tree[branch].ForEachIdx(cmd => cmd.AddToBranch(b));
-      b.SetDefaultCommand<FallbackMenuCommand>();
-    }));
+  public void Initialise(IConfigurator cfg, IServiceProvider svcs) {
+    AddBranch(cfg, "aws", [svcs.GetRequiredService<ResourceGroupCommand>()]);
+    AddBranch(cfg, "az", []);
+  }
+
+  private void AddBranch(IConfigurator cfg, string name, List<ICentazioCommand> commands) {
+    cfg.AddBranch(name, branch => {
+      (Tree[name] = commands).ForEach(cmd => cmd.AddToBranch(branch));
+      branch.SetDefaultCommand<FallbackMenuCommand>();
+    });
   }
 
 }

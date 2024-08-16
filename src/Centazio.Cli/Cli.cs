@@ -6,12 +6,14 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
-public class Cli(ICliSplash splash) {
+public class Cli(ICliSplash splash, ICommandTree commands, IInteractiveMenu menu, IServiceProvider svcs) {
 
   public async Task<int> Start(string[] args) {
     splash.Show();
-    var app = new CommandApp<FallbackMenuCommand>();
-    app.Configure(CommandTree.Initialise);
+    var app = new CommandApp();
+    app.SetDefaultCommand<FallbackMenuCommand>()
+        .WithData(menu);
+    app.Configure(cfg => commands.Initialise(cfg, svcs));
     return await app.RunAsync(args);
   }
 
