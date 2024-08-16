@@ -15,7 +15,7 @@ public class ResourceGroupCommand(CliSettings clisetts) : AbstractCentazioComman
     return ExecuteAsync(ctx, new ResourceGroupSettings { 
       Create = op == "Create",
       Delete = op == "Delete",
-      ResourceGroupName = AnsiConsole.Ask("Resource Group Name:", clisetts.DefaultResourceGroup)  
+      ResourceGroupName = AnsiConsole.Ask("Resource Group Name:", clisetts.DefaultAccountName)  
     });
   }
 
