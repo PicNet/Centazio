@@ -1,13 +1,18 @@
-﻿using Centazio.Cli.Utils;
+﻿using Centazio.Cli.Commands;
+using Centazio.Cli.Utils;
 using Serilog;
 using Spectre.Console;
+using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
 public class Cli(ICliSplash splash) {
 
-  public void Start() {
+  public async Task<int> Start(string[] args) {
     splash.Show();
+    var app = new CommandApp<FallbackMenuCommand>();
+    app.Configure(CommandTree.Initialise);
+    return await app.RunAsync(args);
   }
 
   public void ReportException(Exception ex, bool terminate) {

@@ -3,16 +3,16 @@ using Centazio.Cli.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
-await new CliBootstrapper().Initialise();
+return await new CliBootstrapper().Initialise().Start(args);
 
 internal class CliBootstrapper {
 
-  public async Task Initialise() { 
+  public Cli Initialise() { 
     InitialiseLogger();
     var services = InitialiseDi();
     var cli = services.GetRequiredService<Cli>();
     InitialiseExceptionHandler(cli);
-    cli.Start();
+    return cli;
   }
 
   private static void InitialiseLogger() => Log.Logger = new LoggerConfiguration()
@@ -26,9 +26,8 @@ internal class CliBootstrapper {
       .AddSingleton<Cli>()
       .BuildServiceProvider();
 
-  private static void InitialiseExceptionHandler(Cli cli) {
-    AppDomain.CurrentDomain.UnhandledException += (_, e) => cli.ReportException((Exception) e.ExceptionObject, e.IsTerminating);
-  }
+  private void InitialiseExceptionHandler(Cli cli) => AppDomain.CurrentDomain.UnhandledException += 
+      (_, e) => cli.ReportException((Exception) e.ExceptionObject, e.IsTerminating);
 
 }
 

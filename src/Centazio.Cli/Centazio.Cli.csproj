@@ -24,4 +24,17 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Centazio.Core\Centazio.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Commands\Az\" />
+      <Folder Include="Commands\Bus\" />
+      <Folder Include="Commands\Db\" />
+      <Folder Include="Commands\Dev\" />
+      <Folder Include="Commands\Func\" />
+      <Folder Include="Commands\Gen\" />
+    </ItemGroup>
+
 </Project>
