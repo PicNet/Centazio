@@ -27,10 +27,16 @@ public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
 
   public async Task<int> ShowTopLevelMenu(string message, CommandContext ctx) {
     AnsiConsole.WriteLine();
+    
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title(message)
-        .AddChoices(tree.Tree.Keys.Concat(new [] { "exit" })));
-    return String.IsNullOrWhiteSpace(branch) || branch == "exit" ? 0 : await ShowBranch(branch, ctx);
+        .AddChoices(tree.Tree.Keys.Concat(new [] { "back" })));
+    
+    return String.IsNullOrWhiteSpace(branch) || branch == "back" 
+        ? await ShowTopLevelMenu("Please select one of the following supported options:", new CommandContext(
+            Array.Empty<string>(), 
+            new EmptyRemainingArgs(), String.Empty, default)) 
+        : await ShowBranch(branch, ctx);
   }
 
   public async Task<int> ShowBranch(string branch, CommandContext ctx) {
@@ -52,4 +58,13 @@ public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
     return await cmd.RunInteractiveCommand(ctx);
   }
 
+  public class EmptyRemainingArgs : IRemainingArguments {
+    
+    public IReadOnlyList<string> Raw { get; } = Array.Empty<string>();
+    
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+    public ILookup<string, string?> Parsed { get; } = Array.Empty<string>().ToLookup(_ => String.Empty);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+
+  }
 }

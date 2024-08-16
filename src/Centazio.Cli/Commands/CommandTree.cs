@@ -19,6 +19,18 @@ public abstract class AbstractCentazioCommand<T, S>(string id) : AsyncCommand<S>
         ctx.AddTask($"[green]{description}[/]");
         return await action();
       });
+  
+  protected async Task<int> ProgressWithErrorMessage(string description, Func<Task<string>> action) {
+    var error = await AnsiConsole.Progress()
+      .Columns([new SpinnerColumn(), new TaskDescriptionColumn()])
+      .StartAsync(async ctx => {
+        ctx.AddTask($"[green]{description}[/]");
+        return await action();
+      });
+    if (String.IsNullOrWhiteSpace(error)) return 0;
+    AnsiConsole.WriteLine($"[red]{error}[/]");
+    return -1;
+  }
 
 }
 
