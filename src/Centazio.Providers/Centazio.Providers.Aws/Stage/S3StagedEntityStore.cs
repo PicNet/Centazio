@@ -58,7 +58,7 @@ public class S3StagedEntityStore(string key, string secret, string bucket, int l
           .ChunkedSynchronousCall(5);
     var notignored = objs
           .Where(r => r.Metadata[IGNORE_META_KEY] == null)
-          .Take(Limit > 0 ? Limit : Int32.MaxValue)
+          .Take(Limit)
           .ToList();
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged);
   }

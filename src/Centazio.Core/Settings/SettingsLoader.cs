@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 
 namespace Centazio.Core.Settings;
 
@@ -28,7 +30,10 @@ public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_
   private string? SearchForSettingsFile(string file) {
     string? Impl(string dir) {
       var path = Path.Combine(dir, file);
-      if (File.Exists(path)) return path;
+      if (File.Exists(path)) {
+        Log.Debug("loading settings from path {path}", path);
+        return path;
+      }
       var parent = Directory.GetParent(dir)?.FullName;
       return parent == null ? null : Impl(parent);
     }

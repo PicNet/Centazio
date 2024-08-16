@@ -67,7 +67,7 @@ public class DynamoStagedEntityStore(string key, string secret, string table, in
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {
-      Limit = Limit > 0 ? Limit : Int32.MaxValue,
+      Limit = Limit,
       ConsistentRead = true,
       KeyExpression = new Expression {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",

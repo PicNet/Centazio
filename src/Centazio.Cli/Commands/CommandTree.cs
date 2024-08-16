@@ -10,13 +10,14 @@ public abstract class AbstractCentazioCommand<T, S>(string id) : AsyncCommand<S>
 
   public string Id => id;
   public void AddToBranch(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(id);
-  public abstract Task<int> RunInteractiveCommand();
+  public abstract Task<int> RunInteractiveCommand(CommandContext ctx);
+
 }
 
 public interface ICentazioCommand {
   public string? Id { get; }
   public void AddToBranch(IConfigurator<CommandSettings> branch);
-  Task<int> RunInteractiveCommand();
+  Task<int> RunInteractiveCommand(CommandContext ctx);
 
 }
 

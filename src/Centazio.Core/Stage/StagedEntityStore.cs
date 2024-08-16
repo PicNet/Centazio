@@ -17,7 +17,7 @@ public interface IStagedEntityStore : IAsyncDisposable {
 
 public abstract class AbstractStagedEntityStore(int limit) : IStagedEntityStore {
 
-  public int Limit => limit;
+  protected int Limit => limit > 0 ? limit : Int32.MaxValue;
   
   public Task<StagedEntity> Save(DateTime stageddt, SystemName source, ObjectName obj, string data) => 
       SaveImpl(new StagedEntity(source, obj, stageddt, data));
@@ -36,7 +36,7 @@ public abstract class AbstractStagedEntityStore(int limit) : IStagedEntityStore 
   public async Task<List<StagedEntity>> Get(DateTime since, SystemName source, ObjectName obj) => (await GetImpl(since, source, obj))
       .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj)
       .OrderBy(s => s.DateStaged)
-      .Take(Limit > 0 ? Limit : Int32.MaxValue)
+      .Take(Limit)
       .ToList();
   
   public async Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, true);

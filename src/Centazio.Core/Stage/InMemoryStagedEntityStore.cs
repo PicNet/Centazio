@@ -33,7 +33,7 @@ public class InMemoryStagedEntityStore(int limit) : AbstractStagedEntityStore(li
       Task.FromResult(saved
           .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
           .OrderBy(s => s.DateStaged)
-          .Take(limit > 0 ? limit : Int32.MaxValue)
+          .Take(Limit)
           .AsEnumerable());
 
   protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {

@@ -2,6 +2,8 @@
 using Centazio.Cli.Commands;
 using Centazio.Cli.Utils;
 using Centazio.Core;
+using Centazio.Core.Secrets;
+using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -32,6 +34,16 @@ internal class CliBootstrapper {
     
     return svcs
         .AddSingleton<IServiceCollection>(svcs)
+        
+        .AddSingleton<ISettingsLoader<CliSettings>, SettingsLoader<CliSettings>>()
+        .AddSingleton<CliSettings>(provider => provider.GetRequiredService<ISettingsLoader<CliSettings>>().Load())
+        
+        .AddSingleton<ISecretsLoader<CliSecrets>>(provider => {
+          var settings = provider.GetRequiredService<CliSettings>();
+          return new NetworkLocationEnvFileSecretsLoader<CliSecrets>(settings.SecretsFolder, "dev");
+        }) 
+        .AddSingleton<CliSecrets>(provider => provider.GetRequiredService<ISecretsLoader<CliSecrets>>().Load())
+        
         .AddSingleton<ICliSplash, CliSplash>()
         .AddSingleton<Cli>()
         .AddSingleton<IInteractiveMenu, InteractiveMenu>()

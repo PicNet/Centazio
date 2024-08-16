@@ -1,14 +1,10 @@
 ﻿using System.Text.Json;
-using Amazon;
-using Amazon.Organizations;
-using Amazon.Organizations.Model;
-using Amazon.Runtime;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Centazio.Cli.Commands.Aws;
+namespace Centazio.Cli.Commands.Az;
 
-public class ResourceGroupCommand(CliSettings clisetts, CliSecrets secrets) : AbstractCentazioCommand<ResourceGroupCommand, ResourceGroupCommand.ResourceGroupSettings>("rg") {
+public class ResourceGroupCommand(CliSettings clisetts) : AbstractCentazioCommand<ResourceGroupCommand, ResourceGroupCommand.ResourceGroupSettings>("rg") {
   
   public override Task<int> RunInteractiveCommand(CommandContext ctx) {
     var op = AnsiConsole.Prompt(new SelectionPrompt<string>()
@@ -30,16 +26,6 @@ public class ResourceGroupCommand(CliSettings clisetts, CliSecrets secrets) : Ab
     throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
   }
 
-  private async Task<int> ListResourceGroups() {
-    var client =  new AmazonOrganizationsClient(
-      new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), 
-      new AmazonOrganizationsConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
-    var response = await client.ListAccountsAsync(new ListAccountsRequest());
-    var accounts = response.Accounts.Select(a => $"{a.Name} ({a.Id} - {a.Arn}): Status: {a.Status} Email: {a.Email}");
-    AnsiConsole.WriteLine(String.Join("\n", accounts));
-    return 0;
-  }
-
   private Task<int> CreateResourceGroup(string name) {
     
     return Task.FromResult(0);
@@ -52,6 +38,8 @@ public class ResourceGroupCommand(CliSettings clisetts, CliSecrets secrets) : Ab
 
     return Task.FromResult(0);
   }
+
+  private Task<int> ListResourceGroups() { throw new NotImplementedException(); }
 
   public class ResourceGroupSettings : CommonSettings {
     [CommandArgument(0, "<RESOURCE_GROUP_NAME>")] public string ResourceGroupName { get; set; } = null!;

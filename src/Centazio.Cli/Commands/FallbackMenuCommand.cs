@@ -6,35 +6,35 @@ namespace Centazio.Cli.Commands;
 public class FallbackMenuCommand : AsyncCommand {
   public override Task<int> ExecuteAsync(CommandContext context) {
     var menu = context.Data as IInteractiveMenu ?? throw new Exception();
-    return menu.ShowMenu(context.Arguments);
+    return menu.ShowMenu(context);
   }
 }
 
 public interface IInteractiveMenu {
-  Task<int> ShowMenu(IReadOnlyList<string> contextArguments);
+  Task<int> ShowMenu(CommandContext ctx);
 }
 
 public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
 
-  public Task<int> ShowMenu(IReadOnlyList<string> args) {
-    var branch = args.FirstOrDefault();
+  public Task<int> ShowMenu(CommandContext ctx) {
+    var branch = ctx.Arguments.FirstOrDefault();
     if (String.IsNullOrWhiteSpace(branch) || !tree.Tree.ContainsKey(branch)) return ShowTopLevelMenu(String.IsNullOrWhiteSpace(branch) 
           ? "No command specified.  Please select one of the following supported options:" 
-          : $"Top level command [{branch}] is not supported.  Please select one of the following supported options:");
+          : $"Top level command [{branch}] is not supported.  Please select one of the following supported options:", ctx);
 
-    return ShowBranch(branch, args.Skip(1).ToList());
+    return ShowBranch(branch, ctx);
   }
 
-  public async Task<int> ShowTopLevelMenu(string message) {
+  public async Task<int> ShowTopLevelMenu(string message, CommandContext ctx) {
     AnsiConsole.WriteLine();
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title(message)
         .AddChoices(tree.Tree.Keys.Concat(new [] { "exit" })));
-    return String.IsNullOrWhiteSpace(branch) || branch == "exit" ? 0 : await ShowBranch(branch, []);
+    return String.IsNullOrWhiteSpace(branch) || branch == "exit" ? 0 : await ShowBranch(branch, ctx);
   }
 
-  public async Task<int> ShowBranch(string branch, List<string> args) {
-    var id = args.FirstOrDefault();
+  public async Task<int> ShowBranch(string branch, CommandContext ctx) {
+    var id = ctx.Arguments.Skip(1).FirstOrDefault();
     var cmds = tree.Tree[branch];
     var cmd = cmds.Find(c => c.Id == id);
     if (cmd == null) {
@@ -49,7 +49,7 @@ public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
       cmd = cmds.Find(c => c.Id == newid) 
           ?? throw new Exception($"Error finding command [{newid}] in branch [{branch}]. Available commands in branch are [{String.Join(',', cmdids)}]");
     }
-    return await cmd.RunInteractiveCommand();
+    return await cmd.RunInteractiveCommand(ctx);
   }
 
 }
