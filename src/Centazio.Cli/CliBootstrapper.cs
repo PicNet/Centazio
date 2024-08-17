@@ -6,6 +6,7 @@ using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Spectre.Console.Cli;
 
 return new CliBootstrapper().Initialise().Start(args);
 
@@ -28,6 +29,7 @@ internal class CliBootstrapper {
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
     
+    svcs.AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs));
     svcs.AddSingleton<InteractiveCliMeneCommand>();
     GetType().Assembly.GetTypes()
         .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))

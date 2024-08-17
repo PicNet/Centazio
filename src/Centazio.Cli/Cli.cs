@@ -5,12 +5,12 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
-public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider svcs) {
+public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider svcs, ITypeRegistrar services) {
 
   public int Start(string[] args) {
     ShowSplash();
     
-    var app = new CommandApp<InteractiveCliMeneCommand>()
+    var app = new CommandApp<InteractiveCliMeneCommand>(services)
         .WithData(menu);
     app.Configure(cfg => commands.Initialise(cfg, svcs));
     app.Run(args);
