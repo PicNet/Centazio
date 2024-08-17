@@ -10,22 +10,15 @@ public interface ICentazioCommand {
 
 }
 
-public interface ITreeCompatibleCentazioCommand : ICentazioCommand {
-  void AddToBranch(IConfigurator<CommandSettings> branch);
-}
+public abstract class AbstractCentazioCommand<S>(string id) : AsyncCommand<S>, ICentazioCommand where S : CommandSettings {
 
-public abstract class AbstractCentazioCommand<T, S>(string id) : Command<S>, ITreeCompatibleCentazioCommand
-    where T : class, ICommandLimiter<CommandSettings>
-    where S : CommandSettings {
-
-  public void AddToBranch(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(id);
-  
   public string Id => id;
+  
   protected bool Interactive { get; private set; }
 
-  public override int Execute(CommandContext context, S settings) {
+  public override async Task<int> ExecuteAsync(CommandContext context, S settings) {
     Interactive = false;
-    ExecuteImpl(settings);
+    await ExecuteImpl(settings);
     return 0;
   }
   
@@ -35,7 +28,7 @@ public abstract class AbstractCentazioCommand<T, S>(string id) : Command<S>, ITr
   }
   
   protected abstract bool RunInteractiveCommandImpl();
-  protected abstract void ExecuteImpl(S settings);
+  protected abstract Task ExecuteImpl(S settings);
   
   protected string Ask(string prompt, string defaultval) {
     return String.IsNullOrWhiteSpace(defaultval) 
@@ -56,7 +49,7 @@ public abstract class AbstractCentazioCommand<T, S>(string id) : Command<S>, ITr
         await action();
       });
   
-  protected async void ProgressWithErrorMessage(string description, Func<Task<string>> action) {
+  protected async Task ProgressWithErrorMessage(string description, Func<Task<string>> action) {
     var error = await AnsiConsole.Progress()
         .Columns([new SpinnerColumn(), new TaskDescriptionColumn()])
         .StartAsync(async ctx => {

@@ -10,43 +10,43 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class ResourceGroupsCommand(CliSettings clisetts, CliSecrets secrets) : AbstractCentazioCommand<ResourceGroupsCommand, ResourceGroupsCommand.ResourceGroupsCommandSettings>("rg") {
+public class ResourceGroupsCommand(CliSettings clisetts, CliSecrets secrets) : AbstractCentazioCommand<ResourceGroupsCommand.ResourceGroupsCommandSettings>("rg") {
   
   private readonly ResourceGroupsCommandImpl impl = new(secrets);
   
   protected override bool RunInteractiveCommandImpl() {
     switch (PromptCommandOptions(["subscriptions", "list", "create"])) {
       case "back": return false;
-      case "list": ExecuteImpl(new ResourceGroupsCommandSettings { List = true }); break;
-      case "subscriptions": ExecuteImpl(new ResourceGroupsCommandSettings { ListSubscriptions = true }); break;
-      case "create": ExecuteImpl(new ResourceGroupsCommandSettings { Create = true, ResourceGroupName = Ask("Resource Group Name", clisetts.DefaultResourceGroupName) }); break;
+      case "list": _ = ExecuteImpl(new ResourceGroupsCommandSettings { List = true }); break;
+      case "subscriptions": _ = ExecuteImpl(new ResourceGroupsCommandSettings { ListSubscriptions = true }); break;
+      case "create": _ = ExecuteImpl(new ResourceGroupsCommandSettings { Create = true, ResourceGroupName = Ask("Resource Group Name", clisetts.DefaultResourceGroupName) }); break;
       default: throw new Exception();
     }
     return true;
   }
 
-  protected override void ExecuteImpl(ResourceGroupsCommandSettings settings) {
-    if (settings.ListSubscriptions) ListSubscriptions();
-    else if (settings.List) ListResourceGroups();
-    else if (settings.Create) CreateResourceGroup(settings.ResourceGroupName);
+  protected override async Task ExecuteImpl(ResourceGroupsCommandSettings settings) {
+    if (settings.ListSubscriptions) await ListSubscriptions();
+    else if (settings.List) await ListResourceGroups();
+    else if (settings.Create) await CreateResourceGroup(settings.ResourceGroupName);
     else throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
   }
 
-  private async void ListSubscriptions() => 
+  private async Task ListSubscriptions() => 
       await Progress("Loading Subscriptions list", async () => 
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "State"])
               .AddRows((await impl.ListSubscriptions())
                   .Select(a => new [] { a.Name, a.Id, a.State }))));
 
-  private async void ListResourceGroups() => 
+  private async Task ListResourceGroups() => 
       await Progress("Loading ResourceGroup list", async () => 
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "State", "ManagedBy"])
               .AddRows((await impl.ListResourceGroups())
                   .Select(a => new [] { a.Name, a.Id, a.State, a.ManagedBy }))));
   
-  private void CreateResourceGroup(string name) => ProgressWithErrorMessage("Loading ResourceGroup list", async () => await impl.CreateResourceGroup(name));
+  private async Task CreateResourceGroup(string name) => await ProgressWithErrorMessage("Loading ResourceGroup list", async () => await impl.CreateResourceGroup(name));
 
   public class ResourceGroupsCommandSettings : CommonSettings {
     [CommandArgument(0, "<RESOURCE_GROUP_NAME>")] public string ResourceGroupName { get; init; } = null!;

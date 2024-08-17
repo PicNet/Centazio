@@ -10,37 +10,37 @@ using Spectre.Console.Cli;
 namespace Centazio.Cli.Commands.Aws;
 
 public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) 
-    : AbstractCentazioCommand<AccountsCommand, AccountsCommand.AccountsCommandSettings>("accounts") {
+    : AbstractCentazioCommand<AccountsCommand.AccountsCommandSettings>("accounts") {
   
   private readonly AccountsCommandImpl impl = new(secrets);
   
   protected override bool RunInteractiveCommandImpl() {
     switch (PromptCommandOptions(["list", "create"])) {
       case "back": return false;
-      case "list": ExecuteImpl(new AccountsCommandSettings { List = true });
+      case "list": _ = ExecuteImpl(new AccountsCommandSettings { List = true });
         break;
-      case "create": ExecuteImpl(new AccountsCommandSettings { Create = true, AccountName = Ask("Account Name", clisetts.DefaultAccountName) });
+      case "create": _ = ExecuteImpl(new AccountsCommandSettings { Create = true, AccountName = Ask("Account Name", clisetts.DefaultAccountName) });
         break;
       default: throw new Exception();
     }
     return true;
   }
 
-  protected override void ExecuteImpl(AccountsCommandSettings settings) {
-    if (settings.List) ListAccounts();
+  protected override async Task ExecuteImpl(AccountsCommandSettings settings) {
+    if (settings.List) await ListAccounts();
     else if (settings.Create) {
       if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "Account Name is required" : "<ACCOUNT_NAME> is required");
-      // CreateAccount(settings.AccountName);
+      // await CreateAccount(settings.AccountName);
     } else throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
   }
 
-  private async void ListAccounts() => 
+  private async Task ListAccounts() => 
       await Progress("Loading account list", async () => 
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "Arn", "Status", "Email"])
               .AddRows((await impl.ListAccounts()).Select(a => new [] { a.Name, a.Id, a.Arn, a.Status, a.Email }))));
 
-  private void CreateAccount(string name) => ProgressWithErrorMessage("Loading account list", async () => await impl.CreateAccount(name));
+  private async Task CreateAccount(string name) => await ProgressWithErrorMessage("Loading account list", async () => await impl.CreateAccount(name));
 
   public class AccountsCommandSettings : CommonSettings {
     [CommandArgument(0, "<ACCOUNT_NAME>")] public string? AccountName { get; init; }
