@@ -3,21 +3,23 @@ using Amazon;
 using Amazon.Organizations;
 using Amazon.Organizations.Model;
 using Amazon.Runtime;
+using Centazio.Cli.Infra;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : AbstractCentazioCommand<AccountsCommand, AccountsCommand.AccountsCommandSettings>("accounts") {
+public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) 
+    : AbstractCentazioCommand<AccountsCommand, AccountsCommand.AccountsCommandSettings>("accounts") {
   
   private readonly AccountsCommandImpl impl = new(secrets);
   
-  public override bool RunInteractiveCommand() {
+  protected override bool RunInteractiveCommandImpl() {
     switch (PromptCommandOptions(["list", "create"])) {
       case "back": return false;
       case "list": ExecuteImpl(new AccountsCommandSettings { List = true });
         break;
-      case "create": ExecuteImpl(new AccountsCommandSettings { Create = true, AccountName = AnsiConsole.Ask("Account Name:", clisetts.DefaultAccountName) });
+      case "create": ExecuteImpl(new AccountsCommandSettings { Create = true, AccountName = Ask("Account Name", clisetts.DefaultAccountName) });
         break;
       default: throw new Exception();
     }
@@ -26,8 +28,10 @@ public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : Abstrac
 
   protected override void ExecuteImpl(AccountsCommandSettings settings) {
     if (settings.List) ListAccounts();
-    else if (settings.Create) CreateAccount(settings.AccountName);
-    else throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
+    else if (settings.Create) {
+      if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "Account Name is required" : "<ACCOUNT_NAME> is required");
+      // CreateAccount(settings.AccountName);
+    } else throw new Exception($"Invalid settings state: " + JsonSerializer.Serialize(settings));
   }
 
   private async void ListAccounts() => 
@@ -39,7 +43,7 @@ public class AccountsCommand(CliSettings clisetts, CliSecrets secrets) : Abstrac
   private void CreateAccount(string name) => ProgressWithErrorMessage("Loading account list", async () => await impl.CreateAccount(name));
 
   public class AccountsCommandSettings : CommonSettings {
-    [CommandArgument(0, "<ACCOUNT_NAME>")] public string AccountName { get; init; } = null!;
+    [CommandArgument(0, "<ACCOUNT_NAME>")] public string? AccountName { get; init; }
     
     [CommandOption("-l|--list")] public bool List { get; init; }
     [CommandOption("-c|--create")] public bool Create { get; init; }

@@ -7,7 +7,7 @@ namespace Centazio.Cli.Commands;
 
 public class CommandTree {
 
-  public IDictionary<string, List<ICentazioCommand>> Root { get; } = new Dictionary<string, List<ICentazioCommand>>();
+  public IDictionary<string, List<ITreeCompatibleCentazioCommand>> Root { get; } = new Dictionary<string, List<ITreeCompatibleCentazioCommand>>();
 
   public void Initialise(IConfigurator cfg, IServiceProvider svcs) {
     AddBranch("aws", [svcs.GetRequiredService<AccountsCommand>()]);
@@ -16,7 +16,7 @@ public class CommandTree {
     AddBranch("gen", [svcs.GetRequiredService<ResourceGroupsCommand>()]);
     AddBranch("dev", [svcs.GetRequiredService<ResourceGroupsCommand>()]);
     
-    void AddBranch(string name, List<ICentazioCommand> commands) => 
+    void AddBranch(string name, List<ITreeCompatibleCentazioCommand> commands) => 
       cfg.AddBranch(name, branch => (Root[name] = commands).ForEach(cmd => cmd.AddToBranch(branch)));
   }
 }

@@ -5,26 +5,43 @@ namespace Centazio.Cli.Commands;
 
 public interface ICentazioCommand {
 
-  public string Id { get; }
-  public void AddToBranch(IConfigurator<CommandSettings> branch);
+  string Id { get; }
   bool RunInteractiveCommand();
 
 }
 
-public abstract class AbstractCentazioCommand<T, S>(string id) : Command<S>, ICentazioCommand
+public interface ITreeCompatibleCentazioCommand : ICentazioCommand {
+  void AddToBranch(IConfigurator<CommandSettings> branch);
+}
+
+public abstract class AbstractCentazioCommand<T, S>(string id) : Command<S>, ITreeCompatibleCentazioCommand
     where T : class, ICommandLimiter<CommandSettings>
     where S : CommandSettings {
+
+  public void AddToBranch(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(id);
   
   public string Id => id;
-  public void AddToBranch(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(id);
-  public abstract bool RunInteractiveCommand();
+  protected bool Interactive { get; private set; }
 
   public override int Execute(CommandContext context, S settings) {
+    Interactive = false;
     ExecuteImpl(settings);
     return 0;
   }
   
+  public bool RunInteractiveCommand() {
+    Interactive = true;
+    return RunInteractiveCommandImpl();
+  }
+  
+  protected abstract bool RunInteractiveCommandImpl();
   protected abstract void ExecuteImpl(S settings);
+  
+  protected string Ask(string prompt, string defaultval) {
+    return String.IsNullOrWhiteSpace(defaultval) 
+        ? AnsiConsole.Ask<string>(prompt + ":").Trim()
+        : AnsiConsole.Ask(prompt, defaultval.Trim()).Trim();
+  }
 
   protected string PromptCommandOptions(ICollection<string> options) {
     return AnsiConsole.Prompt(new SelectionPrompt<string>()

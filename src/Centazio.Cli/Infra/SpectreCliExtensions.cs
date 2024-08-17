@@ -1,7 +1,7 @@
 ﻿using Centazio.Core;
 using Spectre.Console;
 
-namespace Centazio.Cli;
+namespace Centazio.Cli.Infra;
 
 public static class SpectreCliExtensions {
 

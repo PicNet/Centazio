@@ -1,4 +1,4 @@
-﻿namespace Centazio.Cli;
+﻿namespace Centazio.Cli.Infra;
 
 public record CliSecrets(
     string AWS_KEY, 

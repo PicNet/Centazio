@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
+using Centazio.Cli.Infra;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;

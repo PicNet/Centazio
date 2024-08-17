@@ -4,6 +4,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
+using Centazio.Cli.Infra;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -13,12 +14,12 @@ public class ResourceGroupsCommand(CliSettings clisetts, CliSecrets secrets) : A
   
   private readonly ResourceGroupsCommandImpl impl = new(secrets);
   
-  public override bool RunInteractiveCommand() {
+  protected override bool RunInteractiveCommandImpl() {
     switch (PromptCommandOptions(["subscriptions", "list", "create"])) {
       case "back": return false;
       case "list": ExecuteImpl(new ResourceGroupsCommandSettings { List = true }); break;
       case "subscriptions": ExecuteImpl(new ResourceGroupsCommandSettings { ListSubscriptions = true }); break;
-      case "create": ExecuteImpl(new ResourceGroupsCommandSettings { Create = true, ResourceGroupName = AnsiConsole.Ask("Resource Group Name:", clisetts.DefaultResourceGroupName) }); break;
+      case "create": ExecuteImpl(new ResourceGroupsCommandSettings { Create = true, ResourceGroupName = Ask("Resource Group Name", clisetts.DefaultResourceGroupName) }); break;
       default: throw new Exception();
     }
     return true;

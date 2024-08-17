@@ -10,7 +10,8 @@ public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider sv
   public int Start(string[] args) {
     ShowSplash();
     
-    var app = new CommandApp<InteractiveCliMeneCommand>().WithData(menu);
+    var app = new CommandApp<InteractiveCliMeneCommand>()
+        .WithData(menu);
     app.Configure(cfg => commands.Initialise(cfg, svcs));
     app.Run(args);
     
