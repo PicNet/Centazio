@@ -3,17 +3,15 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
-public class InteractiveCliCommand : Command {
+public class InteractiveCliMeneCommand : Command {
   public override int Execute(CommandContext context) {
-    var menu = context.Data as IInteractiveMenu ?? throw new Exception();
+    var menu = context.Data as InteractiveMenu ?? throw new Exception();
     menu.Show();
     return 0;
   }
 }
 
-public interface IInteractiveMenu { void Show(); }
-
-public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
+public class InteractiveMenu(CommandTree tree) {
 
   public void Show() {
     while (ShowTopLevelMenu()) { }
@@ -23,7 +21,7 @@ public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
   public bool ShowTopLevelMenu() {
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title("Please select one of the following supported options:")
-        .AddChoices(tree.Tree.Keys.Concat(new [] { "exit" })));
+        .AddChoices(tree.Root.Keys.Concat(new [] { "exit" })));
     if (branch == "exit") return false;
     while (ShowBranch(branch)) {}
     return true;
@@ -34,14 +32,14 @@ public class InteractiveMenu(ICommandTree tree) : IInteractiveMenu {
     return cmdid != "back" && RunCommand();
   
     string SelectCommandId() {
-      var cmdids = tree.Tree[branch].Select(c => c.Id).Concat(new [] { "back" }).ToList();
+      var cmdids = tree.Root[branch].Select(c => c.Id).Concat(new [] { "back" }).ToList();
       return AnsiConsole.Prompt(new SelectionPrompt<string>()
           .Title("Please select one of the following supported commands:")
           .AddChoices(cmdids));
     }
 
     bool RunCommand() {
-      var cmd = tree.Tree[branch].Find(c => c.Id == cmdid) ?? throw new Exception();
+      var cmd = tree.Root[branch].Find(c => c.Id == cmdid) ?? throw new Exception();
       while (cmd.RunInteractiveCommand()) {}
       return true;
     }

@@ -1,6 +1,5 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
-using Centazio.Cli.Utils;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -28,6 +27,7 @@ internal class CliBootstrapper {
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
     
+    svcs.AddSingleton<InteractiveCliMeneCommand>();
     GetType().Assembly.GetTypes()
         .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
         .ForEachIdx(t => svcs.AddSingleton(t));
@@ -44,10 +44,9 @@ internal class CliBootstrapper {
         }) 
         .AddSingleton<CliSecrets>(provider => provider.GetRequiredService<ISecretsLoader<CliSecrets>>().Load())
         
-        .AddSingleton<ICliSplash, CliSplash>()
         .AddSingleton<Cli>()
-        .AddSingleton<IInteractiveMenu, InteractiveMenu>()
-        .AddSingleton<ICommandTree, CommandTree>()
+        .AddSingleton<InteractiveMenu>()
+        .AddSingleton<CommandTree>()
         .BuildServiceProvider();
   }
 

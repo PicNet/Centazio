@@ -1,19 +1,26 @@
 ﻿using Centazio.Cli.Commands;
-using Centazio.Cli.Utils;
 using Serilog;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
-public class Cli(ICliSplash splash, ICommandTree commands, IInteractiveMenu menu, IServiceProvider svcs) {
+public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider svcs) {
 
   public int Start(string[] args) {
-    splash.Show();
-    var app = new CommandApp<InteractiveCliCommand>().WithData(menu);
+    ShowSplash();
+    
+    var app = new CommandApp<InteractiveCliMeneCommand>().WithData(menu);
     app.Configure(cfg => commands.Initialise(cfg, svcs));
     app.Run(args);
+    
     return 0;
+  }
+  
+  private void ShowSplash() {
+    AnsiConsole.Write(new CanvasImage("swirl.png").MaxWidth(32));
+    AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
+    AnsiConsole.MarkupLine("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
   public void ReportException(Exception ex, bool terminate) {

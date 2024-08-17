@@ -3,7 +3,6 @@ using Amazon;
 using Amazon.Organizations;
 using Amazon.Organizations.Model;
 using Amazon.Runtime;
-using Centazio.Core;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

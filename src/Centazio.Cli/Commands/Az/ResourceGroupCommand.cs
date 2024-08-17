@@ -4,7 +4,6 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
-using Centazio.Core;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
