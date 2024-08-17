@@ -1,5 +1,7 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
+using Centazio.Cli.Commands.Aws;
+using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Infra;
 using Centazio.Core;
 using Centazio.Core.Secrets;
@@ -31,13 +33,15 @@ internal class CliBootstrapper {
     
     svcs.AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs));
     svcs.AddSingleton<InteractiveCliMeneCommand>();
+    
     GetType().Assembly.GetTypes()
         .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
-        .ForEachIdx(t => svcs.AddSingleton(t));
+        .ForEachIdx(t => {
+          svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
+          svcs.AddSingleton(t);
+        });
     
     return svcs
-        .AddSingleton<IServiceCollection>(svcs)
-        
         .AddSingleton<ISettingsLoader<CliSettings>, SettingsLoader<CliSettings>>()
         .AddSingleton<CliSettings>(provider => provider.GetRequiredService<ISettingsLoader<CliSettings>>().Load())
         

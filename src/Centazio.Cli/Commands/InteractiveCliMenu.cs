@@ -11,7 +11,7 @@ public class InteractiveCliMeneCommand : Command {
   }
 }
 
-public class InteractiveMenu(CommandTree tree) {
+public class InteractiveMenu(CommandTree tree, IEnumerable<ICentazioCommand> commands) {
 
   public void Show() {
     while (ShowTopLevelMenu()) { }
@@ -32,14 +32,14 @@ public class InteractiveMenu(CommandTree tree) {
     return cmdid != "back" && RunCommand();
   
     string SelectCommandId() {
-      var cmdids = tree.Root[branch].Select(c => c.Id).Concat(new [] { "back" }).ToList();
+      var cmdids = tree.Root[branch].Concat(new [] { "back" }).ToList();
       return AnsiConsole.Prompt(new SelectionPrompt<string>()
           .Title("Please select one of the following supported commands:")
           .AddChoices(cmdids));
     }
 
     bool RunCommand() {
-      var cmd = tree.Root[branch].Find(c => c.Id == cmdid) ?? throw new Exception();
+      var cmd = commands.First(cmd => cmd.Id == cmdid) ?? throw new Exception();
       while (cmd.RunInteractiveCommand()) {}
       return true;
     }

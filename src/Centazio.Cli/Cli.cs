@@ -12,7 +12,13 @@ public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider sv
     
     var app = new CommandApp<InteractiveCliMeneCommand>(services)
         .WithData(menu);
-    app.Configure(cfg => commands.Initialise(cfg, svcs));
+    app.Configure(cfg => {
+#if DEBUG
+      cfg.PropagateExceptions();
+      cfg.ValidateExamples();
+#endif
+      commands.Initialise(cfg, svcs);
+    });
     app.Run(args);
     
     return 0;

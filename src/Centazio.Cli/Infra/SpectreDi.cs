@@ -12,7 +12,7 @@ public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar {
 
   public void RegisterLazy(Type service, Func<object> func) {
     ArgumentNullException.ThrowIfNull(func);
-    builder.AddSingleton(service, provider => func());
+    builder.AddSingleton(service, _ => func());
   }
 
 }
