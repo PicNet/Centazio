@@ -1,41 +1,47 @@
 ﻿using Centazio.Cli.Commands.Aws;
 using Centazio.Cli.Commands.Az;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
-public class CommandTree {
+public abstract record Node(string Id);
+public record BranchNode(string Id, string BackLbl, List<Node> Children) : Node(Id);
+public record CommandNode(string Id, ICentazioCommand cmd, Action<IConfigurator<CommandSettings>> addto) : Node(Id);
 
-  public IDictionary<string, List<string>> Root { get; } = new Dictionary<string, List<string>>();
+public class CommandTree(IServiceProvider prov) {
+
+  public readonly BranchNode RootNode = new("root", "exit", [
+    new BranchNode("aws", "back", [
+      new BranchNode("account", "back", [
+        new CommandNode("list", prov.GetRequiredService<AccountsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list")),
+        new CommandNode("add", prov.GetRequiredService<AccountsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("add"))
+      ])
+    ]),
+    new BranchNode("az", "back", [
+      new BranchNode("sub", "back", [
+        new CommandNode("list", prov.GetRequiredService<ResourceGroupsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list"))
+      ]),
+      new BranchNode("rg", "back", [
+        new CommandNode("list", prov.GetRequiredService<ResourceGroupsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list"))
+      ]),
+    ])
+  ]);
 
   public void Initialise(IConfigurator cfg, IServiceProvider svcs) {
-    AddBranch(cfg, "aws", branch => {
-      AddCommand<AccountsCommand>(branch, "accounts");
-      AddBranch(branch.Config, "aws2", branch2 => {
-        AddCommand<AccountsCommand>(branch2, "accounts2");
-      });
-    });
-    AddBranch(cfg, "az", branch => {
-      AddCommand<ResourceGroupsCommand>(branch, "rg");
-    });
-    // AddBranch("func", branch => { });
-    // AddBranch("gen", branch => { });
-    // AddBranch("dev", branch => { });
+    void AddChildren(IConfigurator<CommandSettings> parent, Node n) {
+      switch (n) {
+        case BranchNode bn:
+          parent.AddBranch(bn.Id, branch => bn.Children.ForEach(c => AddChildren(branch, c)));
+          break;
+        case CommandNode ln:
+          ln.addto(parent);
+          break;
+        default: throw new Exception();
+      }
+    }
+    RootNode.Children.ForEach(lvl1 => 
+        cfg.AddBranch(lvl1.Id, branch => ((BranchNode)lvl1).Children.ForEach(
+            lvl2 => AddChildren(branch, lvl2))));
   }
-  
-  private void AddBranch(IConfigurator cfg, string name, Action<(string Name, IConfigurator<CommandSettings> Config)> action) {
-    Root[name] = new List<string>(); 
-    cfg.AddBranch(name, brcfg => action((name, brcfg)));
-  }
-  
-  private void AddBranch(IConfigurator<CommandSettings> cfg, string name, Action<(string Name, IConfigurator<CommandSettings> Config)> action) {
-    Root[name] = new List<string>(); 
-    cfg.AddBranch(name, brcfg => action((name, brcfg)));
-  }
-  
-  private void AddCommand<T>((string Name, IConfigurator<CommandSettings> Config) branch, string id) where T : class, ICommandLimiter<CommandSettings> {
-    Root[branch.Name].Add(id);
-    branch.Config.AddCommand<T>(id);
-  }
-  
 }

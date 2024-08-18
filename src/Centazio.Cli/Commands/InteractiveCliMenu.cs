@@ -11,37 +11,32 @@ public class InteractiveCliMeneCommand : Command {
   }
 }
 
-public class InteractiveMenu(CommandTree tree, IEnumerable<ICentazioCommand> commands) {
+public class InteractiveMenu(CommandTree tree) {
 
   public void Show() {
-    while (ShowTopLevelMenu()) { }
+    while (DisplayNode(tree.RootNode)) { }
     AnsiConsole.MarkupLine("Thank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
-  public bool ShowTopLevelMenu() {
+  public bool DisplayNode(Node n) => n switch {
+    BranchNode bn => DisplayBranchNode(bn),
+    CommandNode cn => DisplayCommandNode(cn),
+    _ => throw new Exception()
+  };
+
+  private bool DisplayBranchNode(BranchNode n) {
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title("Please select one of the following supported options:")
-        .AddChoices(tree.Root.Keys.Concat(new [] { "exit" })));
-    if (branch == "exit") return false;
-    while (ShowBranch(branch)) {}
+        .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLbl })));
+    var selected = n.Children.Find(c => c.Id == branch);
+    if (selected == null) return false;
+    
+    while (DisplayNode(selected)) {}
     return true;
   }
-
-  public bool ShowBranch(string branch) {
-    var cmdid = SelectCommandId();
-    return cmdid != "back" && RunCommand();
   
-    string SelectCommandId() {
-      var cmdids = tree.Root[branch].Concat(new [] { "back" }).ToList();
-      return AnsiConsole.Prompt(new SelectionPrompt<string>()
-          .Title("Please select one of the following supported commands:")
-          .AddChoices(cmdids));
-    }
-
-    bool RunCommand() {
-      var cmd = commands.First(cmd => cmd.Id == cmdid) ?? throw new Exception();
-      while (cmd.RunInteractiveCommand()) {}
-      return true;
-    }
+  private bool DisplayCommandNode(CommandNode n) {
+    while (n.cmd.RunInteractiveCommand()) {}
+    return true;
   }
 }
