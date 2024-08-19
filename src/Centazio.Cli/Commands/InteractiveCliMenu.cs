@@ -39,6 +39,7 @@ public class InteractiveMenu(CommandTree tree) {
   
   private bool DisplayCommandNode(CommandNode n) {
     n.cmd.RunInteractiveCommand();
+    AnsiConsole.WriteLine($"Command completed - {n.Id}");
     return false;
   }
 }
