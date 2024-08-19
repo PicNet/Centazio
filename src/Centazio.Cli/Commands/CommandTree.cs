@@ -61,15 +61,13 @@ public class CommandTree(IServiceProvider prov) {
     RootNode.Children.ForEach(n => AddChildToRootCfg(RootNode, (BranchNode) n));
   }
 
-  public string GetNodeCommandShortcut(CommandNode node) {
-    List<Node> ancestry = [];
-    Node? n = node;
-    while (n != null) {
-      ancestry.Add(n);
-      n = n.Parent;
+  public string GetNodeCommandShortcut(Node? node) {
+    var ancestry = new List<Node>();
+    while (node != null) {
+      ancestry.Insert(0, node);
+      node = node.Parent;
     }
-    ancestry.Reverse();
-    return String.Join(' ', ancestry.Select(n => n.Id));
+    return String.Join(' ', ancestry.Select(n2 => n2.Id));
   }
 
 }
