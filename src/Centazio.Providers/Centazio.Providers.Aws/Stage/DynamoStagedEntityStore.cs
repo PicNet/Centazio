@@ -1,8 +1,6 @@
-﻿using Amazon;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Runtime;
 using Centazio.Core;
 using Centazio.Core.Entities.Ctl;
 using Centazio.Core.Helpers;
@@ -12,12 +10,11 @@ using C = Centazio.Providers.Aws.Stage.DynamoConstants;
     
 namespace Centazio.Providers.Aws.Stage;
 
-public class DynamoStagedEntityStore(string key, string secret, string table, int limit) : AbstractStagedEntityStore(limit) {
-  
-  protected readonly IAmazonDynamoDB client = new AmazonDynamoDBClient(
-      new BasicAWSCredentials(key, secret), 
-      new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
+public class DynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, string table, int limit) 
+    : AbstractStagedEntityStore(limit) {
 
+  protected readonly IAmazonDynamoDB client = provider.GetClient();
+  
   public override ValueTask DisposeAsync() {
     client.Dispose();
     return ValueTask.CompletedTask;

@@ -36,8 +36,9 @@ public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
   }
 
   class TestingSqlServerStagedEntityStore(string connstr, int limit) : SqlServerStagedEntityStore(connstr, TABLE_NAME, limit) {
-    private static readonly string TABLE_NAME = nameof(TestingSqlServerStagedEntityStore);
-    
+
+    private const string TABLE_NAME = nameof(TestingSqlServerStagedEntityStore);
+
     public override async ValueTask DisposeAsync() {
       await using var conn = new SqlConnection(ConnStr);
       await conn.ExecuteAsync($"DROP TABLE IF EXISTS {TABLE_NAME}");

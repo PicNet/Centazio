@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;

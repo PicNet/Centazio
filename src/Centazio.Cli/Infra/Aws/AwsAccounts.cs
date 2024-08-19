@@ -19,7 +19,6 @@ public class AwsAccounts(CliSecrets secrets) : IAwsAccounts {
       .Accounts.Select(a => (a.Id, a.Name, a.Arn, a.Status.Value, a.Email));
   
   public async Task<string> AddAccount(string name) {
-    if (1==1) return "";
     var response = await GetClient().CreateAccountAsync(new CreateAccountRequest { AccountName = name });
     var state = response.CreateAccountStatus.State;
     return state == CreateAccountState.SUCCEEDED ? "" : response.CreateAccountStatus.FailureReason.Value ?? "Unknown failure";
