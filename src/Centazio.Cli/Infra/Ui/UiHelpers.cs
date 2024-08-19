@@ -16,7 +16,7 @@ public static class UiHelpers {
 
   public static async Task Progress(string description, Func<Task> action) => 
       await AnsiConsole.Progress()
-          .HideCompleted(true)
+          .AutoClear(true)
           .Columns([new SpinnerColumn(), new TaskDescriptionColumn()])
           .StartAsync(async ctx => {
             ctx.AddTask($"[green]{description}[/]");
@@ -25,7 +25,7 @@ public static class UiHelpers {
 
   public static async Task ProgressWithErrorMessage(string description, Func<Task<string>> action) {
     var error = await AnsiConsole.Progress()
-        .HideCompleted(true)
+        .AutoClear(true)
         .Columns([new SpinnerColumn(), new TaskDescriptionColumn()])
         .StartAsync(async ctx => {
           ctx.AddTask($"[green]{description}[/]");

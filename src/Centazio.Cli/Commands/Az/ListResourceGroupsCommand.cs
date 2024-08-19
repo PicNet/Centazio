@@ -8,7 +8,7 @@ namespace Centazio.Cli.Commands.Az;
 public class ListResourceGroupsCommand(IAzResourceGroups impl) : AbstractCentazioCommand<CommonSettings> {
   
  
-  protected override void RunInteractiveCommandImpl() => _ = ExecuteImpl(new CommonSettings());
+  protected override Task RunInteractiveCommandImpl() => ExecuteImpl(new CommonSettings());
 
   protected override async Task ExecuteImpl(CommonSettings settings) => 
       await UiHelpers.Progress("Loading ResourceGroup list", async () => 

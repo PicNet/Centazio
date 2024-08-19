@@ -5,7 +5,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
-public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider svcs, ITypeRegistrar services) {
+public class Cli(CommandTree commands, InteractiveMenu menu, ITypeRegistrar services) {
 
   public int Start(string[] args) {
     ShowSplash();
@@ -17,7 +17,7 @@ public class Cli(CommandTree commands, InteractiveMenu menu, IServiceProvider sv
       cfg.PropagateExceptions();
       cfg.ValidateExamples();
 #endif
-      commands.Initialise(cfg, svcs);
+      commands.Initialise(cfg);
     });
     app.Run(args);
     

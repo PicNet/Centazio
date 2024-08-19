@@ -3,7 +3,7 @@
 namespace Centazio.Cli.Commands;
 
 public interface ICentazioCommand {
-  void RunInteractiveCommand();
+  Task RunInteractiveCommand();
 }
 
 public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCommand where S : CommandSettings {
@@ -16,11 +16,11 @@ public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCom
     return 0;
   }
   
-  public void RunInteractiveCommand() {
+  public async Task RunInteractiveCommand() {
     Interactive = true;
-    RunInteractiveCommandImpl();
+    await RunInteractiveCommandImpl();
   }
-  
-  protected abstract void RunInteractiveCommandImpl();
+
+  protected abstract Task RunInteractiveCommandImpl();
   protected abstract Task ExecuteImpl(S settings);
 }

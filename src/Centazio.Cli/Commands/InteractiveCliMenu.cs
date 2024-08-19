@@ -1,45 +1,49 @@
-﻿using Spectre.Console;
+﻿using System.Text.Json;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
-public class InteractiveCliMeneCommand : Command {
-  public override int Execute(CommandContext context) {
+public class InteractiveCliMeneCommand : AsyncCommand {
+  public override async Task<int> ExecuteAsync(CommandContext context) {
     var menu = context.Data as InteractiveMenu ?? throw new Exception();
-    menu.Show();
+    await menu.Show();
     return 0;
   }
 }
 
 public class InteractiveMenu(CommandTree tree) {
 
-  public void Show() {
-    while (DisplayNode(tree.RootNode)) { }
+  public async Task Show() {
+    while (await DisplayNode(tree.RootNode)) { }
     AnsiConsole.MarkupLine("Thank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
-  public bool DisplayNode(Node n) {
+  public async Task<bool> DisplayNode(Node n) {
     return n switch { 
-      BranchNode bn => DisplayBranchNode(bn), 
-      CommandNode cn => DisplayCommandNode(cn), 
+      BranchNode bn => await DisplayBranchNode(bn), 
+      CommandNode cn => await DisplayCommandNode(cn), 
       _ => throw new Exception() 
     };
   }
 
-  private bool DisplayBranchNode(BranchNode n) {
+  private async Task<bool> DisplayBranchNode(BranchNode n) {
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title("Please select one of the following supported options:")
-        .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLbl })));
+        .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLabel })));
     var selected = n.Children.Find(c => c.Id == branch);
     if (selected == null) return false;
 
-    while (DisplayNode(selected)) {}
+    while (await DisplayNode(selected)) {}
     return true;
   }
   
-  private bool DisplayCommandNode(CommandNode n) {
-    n.cmd.RunInteractiveCommand();
-    AnsiConsole.WriteLine($"Command completed - {n.Id}");
+  private async Task<bool> DisplayCommandNode(CommandNode n) {
+    await n.Command.RunInteractiveCommand();
+    
+    AnsiConsole.WriteLine();
+    AnsiConsole.WriteLine($"Command completed: {tree.GetNodeCommandShortcut(n)} [opts]");
+    AnsiConsole.WriteLine();
     return false;
   }
 }

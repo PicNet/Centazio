@@ -7,7 +7,7 @@ namespace Centazio.Cli.Commands.Az;
 
 public class ListSubscriptionsCommand(IAzSubscriptions impl) : AbstractCentazioCommand<CommonSettings> {
   
-  protected override void RunInteractiveCommandImpl() => _ = ExecuteImpl(new CommonSettings());
+  protected override Task RunInteractiveCommandImpl() => ExecuteImpl(new CommonSettings());
 
   protected override async Task ExecuteImpl(CommonSettings settings) => 
       await UiHelpers.Progress("Loading Subscriptions list", async () => 
@@ -16,4 +16,4 @@ public class ListSubscriptionsCommand(IAzSubscriptions impl) : AbstractCentazioC
               .AddRows((await impl.ListSubscriptions())
                   .Select(a => new [] { a.Name, a.Id, a.State }))));
   
-}
+}   

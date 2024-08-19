@@ -5,13 +5,22 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
-public abstract record Node(string Id);
-public record BranchNode(string Id, string BackLbl, List<Node> Children) : Node(Id);
-public record CommandNode(string Id, ICentazioCommand cmd, Action<IConfigurator<CommandSettings>> addto) : Node(Id);
+public abstract class Node(string id, Node? parent = null) {
+  public Node? Parent { get; set; } = parent;
+  public string Id => id;
+}
+public class BranchNode(string id, string backlbl, List<Node> children) : Node(id) {
+  public string BackLabel => backlbl;
+  public List<Node> Children => children;
+}
+public class CommandNode(string id, ICentazioCommand cmd, Action<IConfigurator<CommandSettings>> addto) : Node(id) {
+  public ICentazioCommand Command => cmd;
+  public Action<IConfigurator<CommandSettings>> AddTo => addto;
+}
 
 public class CommandTree(IServiceProvider prov) {
-
-  public readonly BranchNode RootNode = new("root", "exit", [
+  
+  public readonly BranchNode RootNode = new("centazio", "exit", [
     new BranchNode("aws", "back", [
       new BranchNode("account", "back", [
         new CommandNode("list", prov.GetRequiredService<ListAccountsCommand>(), branch => branch.AddCommand<ListAccountsCommand>("list")),
@@ -29,20 +38,38 @@ public class CommandTree(IServiceProvider prov) {
     ])
   ]);
 
-  public void Initialise(IConfigurator cfg, IServiceProvider svcs) {
-    void AddChildren(IConfigurator<CommandSettings> parent, Node n) {
+  public void Initialise(IConfigurator cfg) {
+    void AddChildToRootCfg(BranchNode root, BranchNode lvl1) {
+      lvl1.Parent = root;
+      cfg.AddBranch(lvl1.Id, branch => lvl1.Children.ForEach(
+            lvl2 => AddNodeChildToParentCfg(branch, lvl1, lvl2)));
+    }
+    
+    void AddNodeChildToParentCfg(IConfigurator<CommandSettings> parent, BranchNode parentnd, Node n) {
+      n.Parent = parentnd;
       switch (n) {
         case BranchNode bn:
-          parent.AddBranch(bn.Id, branch => bn.Children.ForEach(c => AddChildren(branch, c)));
+          parent.AddBranch(bn.Id, branch => bn.Children.ForEach(c => AddNodeChildToParentCfg(branch, bn, c)));
           break;
         case CommandNode ln:
-          ln.addto(parent);
+          ln.AddTo(parent);
           break;
         default: throw new Exception();
       }
     }
-    RootNode.Children.ForEach(lvl1 => 
-        cfg.AddBranch(lvl1.Id, branch => ((BranchNode)lvl1).Children.ForEach(
-            lvl2 => AddChildren(branch, lvl2))));
+    
+    RootNode.Children.ForEach(n => AddChildToRootCfg(RootNode, (BranchNode) n));
   }
+
+  public string GetNodeCommandShortcut(CommandNode node) {
+    List<Node> ancestry = [];
+    Node? n = node;
+    while (n != null) {
+      ancestry.Add(n);
+      n = n.Parent;
+    }
+    ancestry.Reverse();
+    return String.Join(' ', ancestry.Select(n => n.Id));
+  }
+
 }

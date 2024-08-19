@@ -6,17 +6,17 @@ using Spectre.Console.Cli;
 namespace Centazio.Cli.Commands.Aws;
 
 public class AddAccountCommand(CliSettings clisetts, IAwsAccounts impl) 
-    : AbstractCentazioCommand<AddAccountCommand.CreateAccountCommandSettings> {
+    : AbstractCentazioCommand<AddAccountCommand.AddAccountCommandSettings> {
   
-  protected override void RunInteractiveCommandImpl() => 
-      _ = ExecuteImpl(new CreateAccountCommandSettings { AccountName = UiHelpers.Ask("Account Name", clisetts.DefaultAccountName) });
+  protected override Task RunInteractiveCommandImpl() => 
+      ExecuteImpl(new AddAccountCommandSettings { AccountName = UiHelpers.Ask("Account Name", clisetts.DefaultAccountName) });
 
-  protected override async Task ExecuteImpl(CreateAccountCommandSettings settings) {
+  protected override async Task ExecuteImpl(AddAccountCommandSettings settings) {
     if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "Account Name is required" : "<ACCOUNT_NAME> is required");
-    await UiHelpers.ProgressWithErrorMessage("Creating account", async () => await impl.CreateAccount(settings.AccountName));
+    await UiHelpers.ProgressWithErrorMessage("Creating account", async () => await impl.AddAccount(settings.AccountName));
   }
 
-  public class CreateAccountCommandSettings : CommonSettings {
+  public class AddAccountCommandSettings : CommonSettings {
     [CommandArgument(0, "<ACCOUNT_NAME>")] public string? AccountName { get; init; }
   }
 }
