@@ -18,11 +18,13 @@ public class InteractiveMenu(CommandTree tree) {
     AnsiConsole.MarkupLine("Thank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
-  public bool DisplayNode(Node n) => n switch {
-    BranchNode bn => DisplayBranchNode(bn),
-    CommandNode cn => DisplayCommandNode(cn),
-    _ => throw new Exception()
-  };
+  public bool DisplayNode(Node n) {
+    return n switch { 
+      BranchNode bn => DisplayBranchNode(bn), 
+      CommandNode cn => DisplayCommandNode(cn), 
+      _ => throw new Exception() 
+    };
+  }
 
   private bool DisplayBranchNode(BranchNode n) {
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
@@ -30,13 +32,13 @@ public class InteractiveMenu(CommandTree tree) {
         .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLbl })));
     var selected = n.Children.Find(c => c.Id == branch);
     if (selected == null) return false;
-    
+
     while (DisplayNode(selected)) {}
     return true;
   }
   
   private bool DisplayCommandNode(CommandNode n) {
-    while (n.cmd.RunInteractiveCommand()) {}
-    return true;
+    n.cmd.RunInteractiveCommand();
+    return false;
   }
 }

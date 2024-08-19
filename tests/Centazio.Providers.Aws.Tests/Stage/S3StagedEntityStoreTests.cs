@@ -11,7 +11,7 @@ namespace Centazio.Providers.Aws.Tests.Stage;
 
 public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit = 100) {
+  protected override async Task<IStagedEntityStore> GetStore(int limit = 0) {
     var settings = new SettingsLoader<TestSettings>().Load();
     var secrets = new NetworkLocationEnvFileSecretsLoader<TestSecrets>(settings.SecretsFolder, "dev").Load();
     return await new TestingS3StagedEntityStore(secrets.AWS_KEY, secrets.AWS_SECRET, limit).Initalise();

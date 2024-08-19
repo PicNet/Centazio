@@ -9,6 +9,8 @@ namespace Centazio.Providers.SQLServer.Stage;
 
 public class SqlServerStagedEntityStore(string connstr, string table, int limit) : AbstractStagedEntityStore(limit) {
   
+  protected string ConnStr => connstr;
+  
   static SqlServerStagedEntityStore() {
     SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<SystemName>());
     SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<ObjectName>());

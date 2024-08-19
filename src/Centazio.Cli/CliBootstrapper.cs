@@ -1,9 +1,8 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
-using Centazio.Cli.Commands.Aws;
-using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
+using Centazio.Cli.Infra.Az;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -32,9 +31,6 @@ internal class CliBootstrapper {
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
     
-    svcs.AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs));
-    svcs.AddSingleton<InteractiveCliMeneCommand>();
-    
     GetType().Assembly.GetTypes()
         .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
         .ForEachIdx(t => {
@@ -43,6 +39,8 @@ internal class CliBootstrapper {
         });
     
     return svcs
+        .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
+        .AddSingleton<InteractiveCliMeneCommand>()
         .AddSingleton<ISettingsLoader<CliSettings>, SettingsLoader<CliSettings>>()
         .AddSingleton<CliSettings>(provider => provider.GetRequiredService<ISettingsLoader<CliSettings>>().Load())
         
@@ -56,6 +54,8 @@ internal class CliBootstrapper {
         .AddSingleton<InteractiveMenu>()
         .AddSingleton<CommandTree>()
         .AddSingleton<IAwsAccounts, AwsAccounts>()
+        .AddSingleton<IAzSubscriptions, AzSubscriptions>()
+        .AddSingleton<IAzResourceGroups, AzResourceGroups>()
         .BuildServiceProvider();
   }
 

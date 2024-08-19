@@ -4,16 +4,11 @@ using Spectre.Console.Cli;
 namespace Centazio.Cli.Commands;
 
 public interface ICentazioCommand {
-
-  string Id { get; }
   bool RunInteractiveCommand();
-
 }
 
-public abstract class AbstractCentazioCommand<S>(string id) : AsyncCommand<S>, ICentazioCommand where S : CommandSettings {
+public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCommand where S : CommandSettings {
 
-  public string Id => id;
-  
   protected bool Interactive { get; private set; }
 
   public override async Task<int> ExecuteAsync(CommandContext context, S settings) {

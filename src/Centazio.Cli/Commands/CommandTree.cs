@@ -14,16 +14,17 @@ public class CommandTree(IServiceProvider prov) {
   public readonly BranchNode RootNode = new("root", "exit", [
     new BranchNode("aws", "back", [
       new BranchNode("account", "back", [
-        new CommandNode("list", prov.GetRequiredService<AccountsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list")),
-        new CommandNode("add", prov.GetRequiredService<AccountsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("add"))
+        new CommandNode("list", prov.GetRequiredService<ListAccountsCommand>(), branch => branch.AddCommand<ListAccountsCommand>("list")),
+        new CommandNode("add", prov.GetRequiredService<AddAccountCommand>(), branch => branch.AddCommand<AddAccountCommand>("add"))
       ])
     ]),
     new BranchNode("az", "back", [
       new BranchNode("sub", "back", [
-        new CommandNode("list", prov.GetRequiredService<ResourceGroupsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list"))
+        new CommandNode("list", prov.GetRequiredService<ListSubscriptionsCommand>(), branch => branch.AddCommand<ListSubscriptionsCommand>("list"))
       ]),
       new BranchNode("rg", "back", [
-        new CommandNode("list", prov.GetRequiredService<ResourceGroupsCommand>(), branch => branch.AddCommand<ResourceGroupsCommand>("list"))
+        new CommandNode("list", prov.GetRequiredService<ListResourceGroupsCommand>(), branch => branch.AddCommand<ListResourceGroupsCommand>("list")),
+        new CommandNode("add", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
       ]),
     ])
   ]);
