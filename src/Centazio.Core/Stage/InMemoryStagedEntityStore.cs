@@ -1,4 +1,4 @@
-﻿using Centazio.Core.Entities.Ctl;
+﻿using centazio.core.Ctl.Entities;
 
 namespace Centazio.Core.Stage;
 

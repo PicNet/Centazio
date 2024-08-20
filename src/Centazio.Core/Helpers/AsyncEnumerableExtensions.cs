@@ -2,9 +2,13 @@
 
 public static class AsyncEnumerableExtensions {
 
-  public static async Task<IEnumerable<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks) {
+  public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null) {
     var results = new List<T>();
-    foreach (var task in tasks) results.Add(await task);
+    foreach (var task in tasks) {
+      var res = await task; 
+      results.Add(res);
+      if (abort is not null && abort(res)) { return results; }
+    }
     return results;
   }
   

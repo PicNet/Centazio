@@ -1,6 +1,17 @@
-﻿namespace Centazio.Core.Entities.Ctl;
+﻿using Centazio.Core;
 
-public record SystemState(SystemName System, LifecycleStage Stage, bool Active, DateTime DateCreated, DateTime? DateUpdated, DateTime? LastStarted, DateTime? LastCompleted = null, string? LastException = null);
+namespace centazio.core.Ctl.Entities;
+
+public enum EOperationReadResult { Unknown, Success, Warning, FailedRead }
+public enum EOperationAbortVote { Unknown, Continue, Abort }
+public enum EPayloadType { Empty, Single, List }
+
+public record SystemState(SystemName System, LifecycleStage Stage, bool Active, DateTime DateCreated, DateTime? DateUpdated, DateTime? LastStarted, DateTime? LastCompleted = null);
+public record ObjectState(SystemState System, ObjectName Object, DateTime LastStart, DateTime? LastCompleted, string? LastRunMessage, int LastPayLoadLength, EOperationReadResult LastResult, EOperationAbortVote LastAbortVote, string? LastRunException) {
+
+  public EPayloadType LastPayLoadType { get; set; }
+
+}
 
 public record StagedEntity {
   

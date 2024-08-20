@@ -1,4 +1,4 @@
-﻿using Centazio.Core.Entities.Ctl;
+﻿using centazio.core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
@@ -15,7 +15,7 @@ public class EntityStagerTests {
   [SetUp] public void SetUp() {
     dt = new TestingUtcDate();
     store = new InMemoryStagedEntityStore(100);
-    stager = new EntityStager(store, dt);
+    stager = new EntityStager(store);
   }
   
   [TearDown] public async Task TearDown() {
@@ -23,7 +23,7 @@ public class EntityStagerTests {
   }
 
   [Test] public async Task Test_staging_a_single_record() {
-    await stager.Stage(NAME, NAME, nameof(EntityStagerTests));
+    await stager.Stage(dt.Now, NAME, NAME, nameof(EntityStagerTests));
     
     var results1 = await store.Get(dt.Now.AddMilliseconds(-1), NAME, NAME);
     var results2 = await store.Get(dt.Now, NAME, NAME);
@@ -35,7 +35,7 @@ public class EntityStagerTests {
 
   [Test] public async Task Test_staging_a_multiple_records() {
     var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
-    await stager.Stage(NAME, NAME, datas);
+    await stager.Stage(dt.Now, NAME, NAME, datas);
     
     var results1 = await store.Get(dt.Now.AddMicroseconds(-1), NAME, NAME);
     var results2 = await store.Get(dt.Now, NAME, NAME);

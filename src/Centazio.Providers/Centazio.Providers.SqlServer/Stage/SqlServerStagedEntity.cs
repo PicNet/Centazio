@@ -1,5 +1,5 @@
 ﻿using Centazio.Core;
-using Centazio.Core.Entities.Ctl;
+using centazio.core.Ctl.Entities;
 
 namespace Centazio.Providers.SQLServer.Stage;
 

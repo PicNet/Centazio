@@ -1,7 +1,7 @@
 ﻿using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core;
-using Centazio.Core.Entities.Ctl;
+using centazio.core.Ctl.Entities;
 using C = Centazio.Providers.Aws.Stage.DynamoConstants;
 
 namespace Centazio.Providers.Aws.Stage;
