@@ -12,9 +12,10 @@ public class SqlServerStagedEntityStore(string connstr, string table, int limit)
   protected string ConnStr => connstr;
   
   static SqlServerStagedEntityStore() {
-    SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<SystemName>());
-    SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<ObjectName>());
-    SqlMapper.AddTypeHandler(new StringValueSqlTypeHandler<LifecycleStage>());
+    // SqlMapper.AddTypeHandler(new SystemNameSqlTypeHandler());
+    SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<SystemName>());
+    SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<ObjectName>());
+    SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<LifecycleStage>());
     SqlMapper.AddTypeHandler(new DateTimeSqlTypeHandler());
     SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime2);
   }
@@ -79,9 +80,13 @@ WHEN NOT MATCHED THEN
   private SqlConnection GetConn() => new(connstr);
 }
 
-public class StringValueSqlTypeHandler<T> : SqlMapper.TypeHandler<T> where T : IStringValue, new() {
-  public override void SetValue(IDbDataParameter parameter, T? value) { parameter.Value = value?.Value; }
-  public override T? Parse(object? value) => value == default ? default : new T { Value = (string) value };
+public class ValidStringSqlTypeHandler<T> : SqlMapper.TypeHandler<T> where T : ValidString {
+  public override void SetValue(IDbDataParameter parameter, T? value) => parameter.Value = value?.Value ?? throw new Exception($"{nameof(value)} must ne non-empty");
+  public override T Parse(object? value) {
+    ArgumentException.ThrowIfNullOrWhiteSpace((string?) value);
+    return (T?) Activator.CreateInstance(typeof(T), (string?) value) ?? throw new Exception();
+  }
+
 }
 
 public class DateTimeSqlTypeHandler : SqlMapper.TypeHandler<DateTime> {

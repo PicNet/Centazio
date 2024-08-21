@@ -1,7 +1,7 @@
 # todo
 - 
 - ensure all tests working
-- set up testing pipeline
+- set up testing pipeline (agent is ready)
 - CLI:
 
 - EntityStager:
