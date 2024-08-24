@@ -17,13 +17,32 @@ public class ReadFunctionComposer(
   private IReadOperationsFilterAndPrioritiser Prioritiser { get; } = prioritiser ?? new DefaultReadOperationsFilterAndPrioritiser();
   
   public async Task<string> Run() {
-    var start = utc.Now;
+    var now = utc.Now;
     ValidateConfig();
-    var ops = Prioritiser.Prioritise(await LoadOperationsStates());
-    var results = await ops
-        .Select(op => RunOperation(start, op))
+    
+    var sysstate = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
+    var states = await LoadOperationsStates(sysstate);
+    var ready = GetReadyOperations(now, states);
+    var prioritised = Prioritiser.Prioritise(ready);
+    var results = await prioritised
+        .Select(op => RunOperation(now, op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
     return CombineSummaryResults(results);
+    
+    void ValidateConfig() { if (!cfg.Operations.Any()) throw new Exception($"System {cfg.System} Read configuration has no operations defined"); }
+  }
+
+  private async Task<ReadOperationStateAndConfig[]> LoadOperationsStates(SystemState system) => 
+      await Task.WhenAll(
+          cfg.Operations.Select(async op => 
+              new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op)));
+
+  private IEnumerable<ReadOperationStateAndConfig> GetReadyOperations(DateTime now, IEnumerable<ReadOperationStateAndConfig> states) {
+    bool IsOperationReady(ReadOperationStateAndConfig op) {
+      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.UtcNow.AddYears(-10));
+      return next <= now;
+    }
+    return states.Where(IsOperationReady);
   }
 
   private async Task<ReadOperationResults> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
@@ -61,15 +80,6 @@ public class ReadFunctionComposer(
     Log.Debug("Read operation {@Operation} with results {@Results}.  New state saved {@newstate}", op, res, newstate);
     return res;
   }
-
-  private void ValidateConfig() {
-    if (!cfg.Operations.Any()) throw new Exception($"");
-  }
-
-  private async Task<ReadOperationStateAndConfig[]> LoadOperationsStates() => 
-      await Task.WhenAll(
-          cfg.Operations.Select(async op => 
-              new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(cfg.System, op.Object), op)));
 
   private string CombineSummaryResults(IEnumerable<ReadOperationResults> results) {
     var message = String.Join(';', results.Select(r => r.ToString()));

@@ -1,10 +1,15 @@
 ﻿using centazio.core.Ctl.Entities;
+using Cronos;
 
 namespace Centazio.Core.Func;
 
-public record ReadFunctionConfig(SystemName System, List<ReadOperationConfig> Operations);
+public record ReadFunctionConfig(SystemName System, LifecycleStage Stage, List<ReadOperationConfig> Operations);
 
-public record ReadOperationConfig(ObjectName Object, string Cron, int Limit);
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron);
+
+public record ValidCron(string Expression) {
+  public readonly CronExpression Value = CronExpression.Parse(Expression.Trim());
+}
 
 public record ReadOperationStateAndConfig(ObjectState State, ReadOperationConfig Settings);
 

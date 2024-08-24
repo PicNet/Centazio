@@ -8,11 +8,11 @@ namespace centazio.core.tests.Read;
 public class ReadFunctionComposerTests {
 
   [Test] public async Task Test() {
-    var config = new ReadFunctionConfig(nameof(ReadFunctionComposerTests), [
-      new ReadOperationConfig(nameof(ReadFunctionComposerTests), "", 100), 
+    var config = new ReadFunctionConfig(nameof(ReadFunctionComposerTests), nameof(ReadFunctionComposerTests), [
+      new ReadOperationConfig(nameof(ReadFunctionComposerTests), new ("* * * *")), 
     ]);
     var stager = new EntityStager(new InMemoryStagedEntityStore(100));
-    var composer = new ReadFunctionComposer(config, stager, new TestingUtcDate(), new InMemoryCtlRepository(), new TestReadOpRunner());
+    var composer = new ReadFunctionComposer(config, stager, new TestingUtcDate(), new InMemoryCtlRepository(new TestingUtcDate()), new TestReadOpRunner());
     var results = await composer.Run();
     Console.WriteLine(results);
   }

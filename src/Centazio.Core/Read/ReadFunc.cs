@@ -5,11 +5,11 @@ public interface IReadOperationRunner {
 }
 
 public interface IReadOperationsFilterAndPrioritiser {
-  ReadOperationStateAndConfig[] Prioritise(ReadOperationStateAndConfig[] ops);
+  IEnumerable<ReadOperationStateAndConfig> Prioritise(IEnumerable<ReadOperationStateAndConfig> ops);
 }
 
 public class DefaultReadOperationsFilterAndPrioritiser : IReadOperationsFilterAndPrioritiser {
 
-  public ReadOperationStateAndConfig[] Prioritise(ReadOperationStateAndConfig[] ops) => ops;
+  public IEnumerable<ReadOperationStateAndConfig> Prioritise(IEnumerable<ReadOperationStateAndConfig> ops) => ops;
 
 }
