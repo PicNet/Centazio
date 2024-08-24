@@ -10,38 +10,36 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityStore(string key, string secret, string bucket, int limit) : AbstractStagedEntityStore(limit) {
+public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : AbstractStagedEntityStore(limit) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
 
-  protected readonly IAmazonS3 client = new AmazonS3Client(
-      new BasicAWSCredentials(key, secret), 
-      new AmazonS3Config { RegionEndpoint = RegionEndpoint.APSoutheast2 });
+  protected IAmazonS3 Client => client;
 
   public override ValueTask DisposeAsync() {
-    client.Dispose();
+    Client.Dispose();
     return ValueTask.CompletedTask;
   }
 
   public async Task<S3StagedEntityStore> Initalise() {
-    var tables = (await client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
+    var tables = (await Client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
     if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
     Log.Debug($"bucket[{bucket}] not found, creating");
-    await client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
+    await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
     return this;
   }
 
   protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
     var s3se = staged.ToS3StagedEntity();
-    await client.PutObjectAsync(s3se.ToPutObjectRequest(bucket));
+    await Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket));
     return s3se;
   }
 
   protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
     var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
-    await lst.Select(s3se => client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
+    await lst.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
     return lst.AsEnumerable();
   }
 
@@ -54,7 +52,7 @@ public class S3StagedEntityStore(string key, string secret, string bucket, int l
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
         .ToList();
     // note: S3 does not support querying by metadata so 'Ignore' is is handled here
-    var objs = await list.Select(i => client.GetObjectAsync(new GetObjectRequest { BucketName = bucket, Key = i.Key }))
+    var objs = await list.Select(i => Client.GetObjectAsync(new GetObjectRequest { BucketName = bucket, Key = i.Key }))
           .ChunkedSynchronousCall(5);
     var notignored = objs
           .Where(r => r.Metadata[IGNORE_META_KEY] == null)
@@ -71,7 +69,7 @@ public class S3StagedEntityStore(string key, string secret, string bucket, int l
         .ToList();
     // promoted date is always after staged date so we start with `stagedbefore` to reduce the number of objects to query for metadata
     if (todelete.Any() && promoted) {
-      var metas = await todelete.Select(key => client.GetObjectMetadataAsync(bucket, key)).ChunkedSynchronousCall(5);
+      var metas = await todelete.Select(key => Client.GetObjectMetadataAsync(bucket, key)).ChunkedSynchronousCall(5);
       var mks = metas.Select((m, idx) => (Key: todelete[idx], Meta: m));
       todelete = mks
           .Where(mk => mk.Meta.Metadata[DATE_PROMOTED_META_KEY] != null && String.CompareOrdinal(mk.Meta.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY], $"{before:o}") < 0)
@@ -80,14 +78,14 @@ public class S3StagedEntityStore(string key, string secret, string bucket, int l
     }
     if (!todelete.Any()) return;
     
-    await client.DeleteObjectsAsync(new DeleteObjectsRequest {
+    await Client.DeleteObjectsAsync(new DeleteObjectsRequest {
         BucketName = bucket, 
         Objects = todelete.Select(key => new KeyVersion {Key = key }).ToList() });
   }
   
   
   private async Task<List<S3Object>> ListAll(SystemName source, ObjectName obj) =>
-      (await client.ListObjectsV2Async(new ListObjectsV2Request { 
+      (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
         Prefix = $"{source.Value}/{obj.Value}" })).S3Objects;
 

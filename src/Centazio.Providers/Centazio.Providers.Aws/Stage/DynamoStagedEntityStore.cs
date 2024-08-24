@@ -10,23 +10,22 @@ using C = Centazio.Providers.Aws.Stage.DynamoConstants;
     
 namespace Centazio.Providers.Aws.Stage;
 
-public class DynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, string table, int limit) 
-    : AbstractStagedEntityStore(limit) {
-
-  protected readonly IAmazonDynamoDB client = provider.GetClient();
+public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit) : AbstractStagedEntityStore(limit) {
+  
+  protected IAmazonDynamoDB Client => client;
   
   public override ValueTask DisposeAsync() {
-    client.Dispose();
+    Client.Dispose();
     return ValueTask.CompletedTask;
   }
 
   public async Task<IStagedEntityStore> Initalise() {
-    if ((await client.ListTablesAsync()).TableNames
+    if ((await Client.ListTablesAsync()).TableNames
         .Contains(table, StringComparer.OrdinalIgnoreCase)) return this;
 
     Log.Debug($"table[{table}] not found, creating");
     
-    var status = (await client.CreateTableAsync(
+    var status = (await Client.CreateTableAsync(
         new CreateTableRequest(table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE) ]) {
           AttributeDefinitions = [ new (C.HASH_KEY, ScalarAttributeType.S), new (C.RANGE_KEY, ScalarAttributeType.S) ],
           BillingMode = BillingMode.PAY_PER_REQUEST 
@@ -34,7 +33,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, str
     
     while (status != TableStatus.ACTIVE) {
       await Task.Delay(TimeSpan.FromMilliseconds(500));
-      status = (await client.DescribeTableAsync(table)).Table.TableStatus;
+      status = (await Client.DescribeTableAsync(table)).Table.TableStatus;
     }
     
     return this;
@@ -48,7 +47,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, str
 
   protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
     var dse = staged.ToDynamoStagedEntity();
-    await client.PutItemAsync(new PutItemRequest(table, dse.ToDynamoDict()));
+    await Client.PutItemAsync(new PutItemRequest(table, dse.ToDynamoDict()));
     return dse;
   }
 
@@ -57,7 +56,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, str
       await dses
           .Select(dse => new WriteRequest(new PutRequest(dse.ToDynamoDict())))
           .Chunk()
-          .Select(chunk => client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { table, chunk.ToList() } })))
+          .Select(chunk => Client.BatchWriteItemAsync(new BatchWriteItemRequest(new Dictionary<string, List<WriteRequest>> { { table, chunk.ToList() } })))
           .Synchronous();
       return dses;
   }

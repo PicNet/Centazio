@@ -21,21 +21,21 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     await container.DisposeAsync();
   }
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0) => 
-      await new TestingDynamoStagedEntityStore(new TestAmazonDynamoDBClientProvider(container), limit).Initalise();
-
-  class TestAmazonDynamoDBClientProvider(DynamoDbContainer container) : IAmazonDynamoDBClientProvider {
-    public IAmazonDynamoDB GetClient() => new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
+  protected override async Task<IStagedEntityStore> GetStore(int limit=0) {
+    // real client = new AmazonDynamoDBClient(new BasicAWSCredentials(key, secret), new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
+    var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
+    return await new TestingDynamoStagedEntityStore(client, limit).Initalise();
+    
   }
-  
-  class TestingDynamoStagedEntityStore(IAmazonDynamoDBClientProvider provider, int limit = 100) : DynamoStagedEntityStore(provider, TABLE_NAME, limit) {
+
+  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100) : DynamoStagedEntityStore(client, TABLE_NAME, limit) {
     private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
 
     public override async ValueTask DisposeAsync() {
-      await client.DeleteTableAsync(TABLE_NAME);
+      await Client.DeleteTableAsync(TABLE_NAME);
       while (true) {
         try { 
-          await client.DescribeTableAsync(TABLE_NAME);
+          await Client.DescribeTableAsync(TABLE_NAME);
           await Task.Delay(TimeSpan.FromMilliseconds(500));
         } catch (ResourceNotFoundException) { break; }
       }

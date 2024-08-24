@@ -10,7 +10,7 @@ public class SqlConn {
   
   public static readonly SqlConn Instance = new();
   
-  public bool Real { get; init; }
+  public bool Real { get; }
   public SqlConnection Conn() => String.IsNullOrWhiteSpace(connstr) ? throw new Exception() : new SqlConnection(connstr);
   
   private SqlConn(bool real=false) => Real = real;
