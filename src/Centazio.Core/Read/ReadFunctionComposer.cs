@@ -21,6 +21,8 @@ public class ReadFunctionComposer(
     ValidateConfig();
     
     var sysstate = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
+    if (!sysstate.Active) return $"System {sysstate} is innactive.  ReadFunctionComposer not running.";
+    
     var states = await LoadOperationsStates(sysstate);
     var ready = GetReadyOperations(now, states);
     var prioritised = Prioritiser.Prioritise(ready);
@@ -32,10 +34,12 @@ public class ReadFunctionComposer(
     void ValidateConfig() { if (!cfg.Operations.Any()) throw new Exception($"System {cfg.System} Read configuration has no operations defined"); }
   }
 
-  private async Task<ReadOperationStateAndConfig[]> LoadOperationsStates(SystemState system) => 
-      await Task.WhenAll(
-          cfg.Operations.Select(async op => 
-              new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op)));
+  private async Task<List<ReadOperationStateAndConfig>> LoadOperationsStates(SystemState system) => 
+      (await Task.WhenAll(
+          cfg.Operations.Select(
+              async op => new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op))))
+      .Where(op => op.State.Active)
+      .ToList();
 
   private IEnumerable<ReadOperationStateAndConfig> GetReadyOperations(DateTime now, IEnumerable<ReadOperationStateAndConfig> states) {
     bool IsOperationReady(ReadOperationStateAndConfig op) {
