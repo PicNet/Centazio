@@ -30,7 +30,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
     
     var newstate = op.State with {
       LastStart = start,
-      LastCompleted = UtcDate.Utc.Now,
+      LastCompleted = UtcDate.UtcNow,
       LastResult = res.Result,
       LastAbortVote = res.AbortVote,
       LastRunMessage = $"Read operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] - staged[{stage}] message: " + res.Message,

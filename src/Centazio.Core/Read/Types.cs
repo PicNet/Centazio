@@ -3,9 +3,15 @@ using Cronos;
 
 namespace Centazio.Core.Func;
 
-public record ReadFunctionConfig(SystemName System, LifecycleStage Stage, List<ReadOperationConfig> Operations) {
+public abstract record BaseFunctionConfig(SystemName System, LifecycleStage Stage) {
+  public abstract void Validate();
+}
 
-  public void Validate() {
+public abstract record BaseFunctionOperationResult(string Message, Exception? Exception = null);
+
+public record ReadFunctionConfig(SystemName System, LifecycleStage Stage, List<ReadOperationConfig> Operations) : BaseFunctionConfig(System, Stage) {
+
+  public override void Validate() {
     if (!Operations.Any()) throw new Exception($"System {System} Read configuration has no operations defined"); 
   }
 }
@@ -18,7 +24,8 @@ public record ValidCron(string Expression) {
 
 public record ReadOperationStateAndConfig(ObjectState State, ReadOperationConfig Settings);
 
-public abstract record ReadOperationResult(EOperationReadResult Result, string Message, EPayloadType PayloadType, int PayloadLength, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) {
+public abstract record ReadOperationResult(EOperationReadResult Result, string Message, EPayloadType PayloadType, int PayloadLength, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
+    : BaseFunctionOperationResult(Message, Exception) {
   public ReadOperationResult Validate() {
     if (PayloadType != EPayloadType.Empty && PayloadLength == 0) throw new Exception($"When a ReadOperationResult is not EPayloadType.Empty then the PayloadLength should be greater than 0");
     if (PayloadType == EPayloadType.Empty && PayloadLength != 0) throw new Exception($"When a ReadOperationResult is EPayloadType.Empty then the PayloadLength should be 0");

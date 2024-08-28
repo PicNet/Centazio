@@ -10,7 +10,7 @@ public class ApiMockingTests {
   private const string BASE_URL ="https://crm.com/api"; 
   
   [Test] public async Task Test_mocking_crm_api_works_as_expected() {
-    var since = UtcDate.Utc.Now.AddDays(-1);
+    var since = UtcDate.UtcNow.AddDays(-1);
     using var mock = new MockApi();
     var cust = new Customer("first", "last", new(2020, 1, 1));
     var response = JsonSerializer.Serialize(new [] { cust });

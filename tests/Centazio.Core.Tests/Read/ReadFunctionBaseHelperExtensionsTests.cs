@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using centazio.core.Ctl;
+using centazio.core.Ctl.Entities;
 using Centazio.Core.Func;
 using F = centazio.core.tests.Read.ReadTestFactories;
 
@@ -10,7 +11,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   private const string NAME = nameof(ReadFunctionBaseHelperExtensionsTests);
   private ICtlRepository repo;
   
-  [SetUp] public void SetUp() => repo = new InMemoryCtlRepository();
+  [SetUp] public void SetUp() => repo = ReadTestFactories.Repo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
@@ -43,7 +44,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.Utc.Now, LastCompleted: last), new(name, new (cron), F.TestingListReadOperationImplementation));
+    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (cron), F.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -60,7 +61,45 @@ public class ReadFunctionBaseHelperExtensionsTests {
     Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(new [] { "1", "2", "3" }));
   }
   
+  [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
+    var runner = ReadTestFactories.Runner(repo: repo);
+    
+    var states1 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo) };
+    var results1 = await states1.RunOperationsTillAbort(runner, UtcDate.UtcNow);
+    
+    var states2 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo) };
+    var results2 = await states2.RunOperationsTillAbort(runner, UtcDate.UtcNow);
+    
+    var states3 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo) };
+    var results3 = await states3.RunOperationsTillAbort(runner, UtcDate.UtcNow);
+    
+    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Success, "" )}));
+    Assert.That(results2, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Warning, "" )}));
+    Assert.That(results3, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.FailedRead, "", EOperationAbortVote.Abort )}));
+  }
+
+  [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
+    var runner = ReadTestFactories.Runner(repo: repo);
+    
+    var states = new List<ReadOperationStateAndConfig> {
+      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo)
+    };
+    var results = await states.RunOperationsTillAbort(runner, UtcDate.UtcNow);
+    
+    Assert.That(results, Is.EquivalentTo(new [] { 
+      new EmptyReadOperationResult(EOperationReadResult.Warning, "" ),
+      new EmptyReadOperationResult(EOperationReadResult.FailedRead, "", EOperationAbortVote.Abort )
+    }));
+  }
+  
   static class Factories {
+    public static async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(EOperationReadResult result, ICtlRepository repo) 
+        => new (
+            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
+            new (result.ToString(), new ("* * * * *"), ReadTestFactories.TestingAbortingAndEmptyReadOperationImplementation));
+    
     public static List<ReadOperationConfig> OP_CONFIGS => [
       new ReadOperationConfig("1", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
       new ReadOperationConfig("2", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),

@@ -1,7 +1,7 @@
 ﻿using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Helpers;
-using Serilog;
+using Centazio.Core.Runner;
 
 namespace Centazio.Core.Func;
 
@@ -9,35 +9,16 @@ public class ReadFunctionBase(
     ReadFunctionConfig cfg,
     ICtlRepository ctl,
     IReadOperationRunner runner,
-    IReadOperationsFilterAndPrioritiser? prioritiser = null) {
+    IReadOperationsFilterAndPrioritiser? prioritiser = null) : IFunction {
   
   private IReadOperationsFilterAndPrioritiser Prioritiser { get; } = prioritiser ?? new DefaultReadOperationsFilterAndPrioritiser();
   
-  public async Task<string> Run() {
-    cfg.Validate();
-    
-    var sysstate = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
-    if (!sysstate.Active) return $"System {sysstate} is innactive.  ReadFunctionComposer not running.";
-    
-    var ops = (await cfg.Operations
-        .LoadOperationsStates(sysstate, ctl))
-        .GetReadyOperations(UtcDate.Utc.Now)
-        .Prioritise(Prioritiser);
-        
-    var results = await RunOperationsTillAbort(UtcDate.Utc.Now, ops);
-    return CombineSummaryResults(results);
-  }
-  
-  internal async Task<IEnumerable<ReadOperationResult>> RunOperationsTillAbort(DateTime start, IEnumerable<ReadOperationStateAndConfig> ops) 
-      => await ops
-          .Select(op => runner.RunOperation(start, op))
-          .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
-
-  private string CombineSummaryResults(IEnumerable<ReadOperationResult> results) {
-    var message = String.Join(';', results.Select(r => r.ToString()));
-    Log.Information("Read Function for system {@System} completed: {message}", cfg.System, message);
-    return message;
-  }
+  public async Task<IEnumerable<BaseFunctionOperationResult>> Run(SystemState state, DateTime start) => 
+      await (await cfg.Operations
+          .LoadOperationsStates(state, ctl))
+          .GetReadyOperations(UtcDate.UtcNow)
+          .Prioritise(Prioritiser)
+          .RunOperationsTillAbort(runner, start);
 }
 
 internal static class ReadFunctionBaseHelperExtensions {
@@ -57,4 +38,9 @@ internal static class ReadFunctionBaseHelperExtensions {
   
   internal static IEnumerable<ReadOperationStateAndConfig> Prioritise(this IEnumerable<ReadOperationStateAndConfig> states, IReadOperationsFilterAndPrioritiser prioritiser) 
       => prioritiser.Prioritise(states); 
+  
+  internal static async Task<IEnumerable<ReadOperationResult>> RunOperationsTillAbort(this IEnumerable<ReadOperationStateAndConfig> ops, IReadOperationRunner runner, DateTime start) 
+      => await ops
+          .Select(op => runner.RunOperation(start, op))
+          .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
 }

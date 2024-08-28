@@ -15,8 +15,11 @@ public abstract class AbstractUtcDate : IUtcDate {
 }
 
 public class UtcDate : AbstractUtcDate {
-
+  
+  public override DateTime Now => DateTime.UtcNow;
+  
+  // Static Helpers:
   private static IUtcDate? instance;
   public static IUtcDate Utc { get => instance ?? throw new Exception($"UtcDate.Utc has not been initialised"); set => instance = value ?? throw new ArgumentNullException(nameof(Utc)); }
-  public override DateTime Now => DateTime.UtcNow;
+  public static DateTime UtcNow => Utc.Now;
 }

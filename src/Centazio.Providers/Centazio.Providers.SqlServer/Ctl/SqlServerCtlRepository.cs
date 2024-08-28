@@ -65,7 +65,7 @@ END
 
   public async Task<SystemState> SaveSystemState(SystemState state) {
     await using var conn = newconn();
-    var updated = state with { DateUpdated = UtcDate.Utc.Now };
+    var updated = state with { DateUpdated = UtcDate.UtcNow };
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{SYSTEM_STATE_TBL} 
 SET Active=@Active, DateUpdated=@DateUpdated, LastStarted=@LastStarted, LastCompleted=@LastCompleted
@@ -75,7 +75,7 @@ WHERE System=@System AND Stage=@Stage", updated);
   
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var created = new SystemState(system, stage, true, UtcDate.Utc.Now);
+    var created = new SystemState(system, stage, true, UtcDate.UtcNow);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{SYSTEM_STATE_TBL} 
 (System, Stage, Active, DateCreated)
@@ -93,7 +93,7 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, 
 
   public async Task<ObjectState> SaveObjectState(ObjectState state) {
     await using var conn = newconn();
-    var updated = state with { DateUpdated = UtcDate.Utc.Now };
+    var updated = state with { DateUpdated = UtcDate.UtcNow };
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
 SET Active=@Active, LastResult=@LastResult, LastAbortVote=@LastAbortVote, DateUpdated=@DateUpdated, LastStart=@LastStart, LastCompleted=@LastCompleted, LastRunMessage=@LastRunMessage, LastPayLoadLength=@LastPayLoadLength, LastRunException=@LastRunException
@@ -104,7 +104,7 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", updated);
   public async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
     await using var conn = newconn();
     
-    var created = new ObjectState(system.System, system.Stage, obj, true, UtcDate.Utc.Now);
+    var created = new ObjectState(system.System, system.Stage, obj, true, UtcDate.UtcNow);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
 (System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)

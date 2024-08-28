@@ -1,5 +1,7 @@
 # todo
 - set up testing pipeline (agent is ready)
+- careful testing of date handling
+- standardise all logging and exception messaging
 
 - CLI:
 
@@ -11,3 +13,11 @@
 
 - Promote:
   - support full promote (entire list), i.e. delete all and recreate
+
+# Developer Guidelines:
+
+## Logging
+
+## Exception
+
+## Unit Testing
