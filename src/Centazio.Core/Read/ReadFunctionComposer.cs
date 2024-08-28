@@ -7,7 +7,6 @@ namespace Centazio.Core.Func;
 
 public class ReadFunctionComposer(
     ReadFunctionConfig cfg,
-    IUtcDate utc,
     ICtlRepository ctl,
     IReadOperationRunner runner,
     IReadOperationsFilterAndPrioritiser? prioritiser = null) {
@@ -22,10 +21,10 @@ public class ReadFunctionComposer(
     
     var ops = (await cfg.Operations
         .LoadOperationsStates(sysstate, ctl))
-        .GetReadyOperations(utc.Now)
+        .GetReadyOperations(UtcDate.Utc.Now)
         .Prioritise(Prioritiser);
         
-    var results = await RunOperationsTillAbort(utc.Now, ops);
+    var results = await RunOperationsTillAbort(UtcDate.Utc.Now, ops);
     return CombineSummaryResults(results);
   }
   

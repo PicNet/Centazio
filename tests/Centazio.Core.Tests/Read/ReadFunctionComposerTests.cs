@@ -1,4 +1,5 @@
-﻿using centazio.core.Ctl;
+﻿using Centazio.Core;
+using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Func;
 using Centazio.Test.Lib;
@@ -16,13 +17,13 @@ public class ReadFunctionComposerTests {
     var composer = ReadTestFactories.Composer(utc, cfg, runner, repo);
     
     var states1 = new List<ReadOperationStateAndConfig> { await CreateReadOpStateAndConf(repo, EOperationReadResult.Success) };
-    var results1 = await composer.RunOperationsTillAbort(utc.Now, states1);
+    var results1 = await composer.RunOperationsTillAbort(UtcDate.Utc.Now, states1);
     
     var states2 = new List<ReadOperationStateAndConfig> { await CreateReadOpStateAndConf(repo, EOperationReadResult.Warning) };
-    var results2 = await composer.RunOperationsTillAbort(utc.Now, states2);
+    var results2 = await composer.RunOperationsTillAbort(UtcDate.Utc.Now, states2);
     
     var states3 = new List<ReadOperationStateAndConfig> { await CreateReadOpStateAndConf(repo, EOperationReadResult.FailedRead) };
-    var results3 = await composer.RunOperationsTillAbort(utc.Now, states3);
+    var results3 = await composer.RunOperationsTillAbort(UtcDate.Utc.Now, states3);
     
     Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Success, "" )}));
     Assert.That(results2, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Warning, "" )}));
@@ -40,7 +41,7 @@ public class ReadFunctionComposerTests {
       await CreateReadOpStateAndConf(repo, EOperationReadResult.FailedRead),
       await CreateReadOpStateAndConf(repo, EOperationReadResult.Success)
     };
-    var results = await composer.RunOperationsTillAbort(utc.Now, states);
+    var results = await composer.RunOperationsTillAbort(UtcDate.Utc.Now, states);
     
     Assert.That(results, Is.EquivalentTo(new [] { 
       new EmptyReadOperationResult(EOperationReadResult.Warning, "" ),
@@ -51,6 +52,6 @@ public class ReadFunctionComposerTests {
   private async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(ICtlRepository repo, EOperationReadResult result) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-        new (result.ToString(), new ("* * * * *")));
+        new (result.ToString(), new ("* * * * *"), ReadTestFactories.TestingAbortingAndEmptyReadOperationImplementation));
 }
 

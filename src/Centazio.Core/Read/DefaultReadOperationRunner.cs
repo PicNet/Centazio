@@ -6,15 +6,11 @@ using Serilog;
 
 namespace Centazio.Core.Func;
 
-internal class DefaultReadOperationRunner(
-    Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>> impl, 
-    IEntityStager stager, 
-    IUtcDate utc, 
-    ICtlRepository ctl) : IReadOperationRunner {
+internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository ctl) : IReadOperationRunner {
   
 
   public async Task<ReadOperationResult> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
-    var res = await impl(start, op);
+    var res = await op.Settings.Impl(start, op);
     res.Validate();
     
     switch (res.Result) {
@@ -36,7 +32,7 @@ internal class DefaultReadOperationRunner(
     
     var newstate = op.State with {
       LastStart = start,
-      LastCompleted = utc.Now,
+      LastCompleted = UtcDate.Utc.Now,
       LastResult = res.Result,
       LastAbortVote = res.AbortVote,
       LastRunMessage = $"Read operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] - staged[{stage}] message: " + res.Message,

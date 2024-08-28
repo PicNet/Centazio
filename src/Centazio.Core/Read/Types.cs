@@ -10,7 +10,7 @@ public record ReadFunctionConfig(SystemName System, LifecycleStage Stage, List<R
   }
 }
 
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron);
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>> Impl);
 
 public record ValidCron(string Expression) {
   public readonly CronExpression Value = CronExpression.Parse(Expression.Trim());

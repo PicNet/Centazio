@@ -2,7 +2,6 @@
 using centazio.core.Ctl.Entities;
 using centazio.core.tests.Stage;
 using Centazio.Providers.SqlServer.Ctl;
-using Centazio.Test.Lib;
 using Dapper;
 
 namespace Centazio.Providers.SqlServer.Tests.Ctl;
@@ -34,7 +33,7 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
       => await new TestingSqlServerCtlRepository().Initalise();
 
   class TestingSqlServerCtlRepository() 
-      : SqlServerCtlRepository(() => SqlConn.Instance.Conn(), new TestingUtcDate()) {
+      : SqlServerCtlRepository(() => SqlConn.Instance.Conn()) {
 
     public override async ValueTask DisposeAsync() {
       if (!SqlConn.Instance.Real) {

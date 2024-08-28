@@ -1,18 +1,16 @@
 ﻿using Centazio.Core;
 using centazio.core.Ctl;
 using Centazio.Core.Func;
-using Centazio.Test.Lib;
+using F = centazio.core.tests.Read.ReadTestFactories;
 
 namespace centazio.core.tests.Read;
 
 public class ReadFunctionComposerHelperExtensionsTests {
 
   private const string NAME = nameof(ReadFunctionComposerHelperExtensionsTests);
-  
-  private readonly IUtcDate utc = new TestingUtcDate();
   private ICtlRepository repo;
   
-  [SetUp] public void SetUp() => repo = new InMemoryCtlRepository(utc);
+  [SetUp] public void SetUp() => repo = new InMemoryCtlRepository();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
@@ -45,7 +43,7 @@ public class ReadFunctionComposerHelperExtensionsTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, utc.Now, LastCompleted: last), new(name, new (cron)));
+    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.Utc.Now, LastCompleted: last), new(name, new (cron), F.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -64,10 +62,10 @@ public class ReadFunctionComposerHelperExtensionsTests {
   
   static class Factories {
     public static List<ReadOperationConfig> OP_CONFIGS => [
-      new ReadOperationConfig("1", new ("* * * * *")),
-      new ReadOperationConfig("2", new ("* * * * *")),
-      new ReadOperationConfig("3", new ("* * * * *")),
-      new ReadOperationConfig("4", new ("* * * * *")),
+      new ReadOperationConfig("1", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("2", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("3", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("4", new ("* * * * *"), F.TestingEmptyReadOperationImplementation)
     ];
   }
 }
