@@ -3,20 +3,18 @@ using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Func;
 using Centazio.Core.Stage;
-using Centazio.Test.Lib;
 
 namespace centazio.core.tests.Read;
 
 public static class ReadTestFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
-  public static TestingCtlRepository Repo(TestingUtcDate utc) => new();
+  public static TestingCtlRepository Repo() => new();
   public static IReadOperationRunner Runner(
-      TestingUtcDate utc, 
       IStagedEntityStore? store = null, 
       ICtlRepository? repo = null) 
-    => new DefaultReadOperationRunner(store ?? SeStore(), repo ?? Repo(utc));
+    => new DefaultReadOperationRunner(store ?? SeStore(), repo ?? Repo());
 
-  public static ReadFunctionComposer Composer(TestingUtcDate utc, ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, repo, runner);
+  public static ReadFunctionComposer Composer(ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, repo, runner);
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) {
     var result = Enum.Parse<EOperationReadResult>(op.Settings.Object); 

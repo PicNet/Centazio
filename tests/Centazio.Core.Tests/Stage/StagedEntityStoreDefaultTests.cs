@@ -16,7 +16,7 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [SetUp] public async Task SetUp() {
     store = await GetStore();
-    dt = new TestingUtcDate();
+    dt = (TestingUtcDate) UtcDate.Utc;
   }
 
   [TearDown] public async Task TearDown() => await store.DisposeAsync();

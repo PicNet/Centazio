@@ -1,6 +1,6 @@
-﻿using centazio.core.Ctl;
+﻿using Centazio.Core;
+using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
-using Centazio.Test.Lib;
 
 namespace centazio.core.tests.Stage;
 
@@ -12,13 +12,8 @@ public abstract class CtlRepositoryDefaultTests {
   protected abstract Task<ICtlRepository> GetRepository();
   
   protected ICtlRepository repo;
-  protected TestingUtcDate dt;
   
-  [SetUp] public async Task SetUp() {
-    dt = new TestingUtcDate();
-    repo = await GetRepository();
-  }
-  
+  [SetUp] public async Task SetUp() => repo = await GetRepository();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
   
   [Test] public async Task Test_GetSystemState_returns_null_on_unknown_systems() => 
@@ -37,28 +32,28 @@ public abstract class CtlRepositoryDefaultTests {
   
   [Test] public async Task Test_SaveSystemtState_updates_existing_state() {
     var created = await repo.CreateSystemState(NAME, NAME);
-    var updated = created with { DateUpdated = dt.Now, Active = false };
+    var updated = created with { DateUpdated = UtcDate.Utc.Now, Active = false };
     var updated2 = await repo.SaveSystemState(updated);
     var current = await repo.GetSystemState(NAME, NAME);
-    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, dt.Now)));
+    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.Utc.Now)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
   
   [Test] public Task Test_SaveSystemState_fails_if_state_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(new SystemState(NAME, NAME, true, dt.Now)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(new SystemState(NAME, NAME, true, UtcDate.Utc.Now)));
     return Task.CompletedTask;
   }
   
   [Test] public async Task Test_GetOrCreateSystemState_creates_if_not_existing() {
     var prior = await repo.GetSystemState(NAME, NAME);
     var created = await repo.GetOrCreateSystemState(NAME, NAME);
-    var updated = created with { DateUpdated = dt.Now, Active = false };
+    var updated = created with { DateUpdated = UtcDate.Utc.Now, Active = false };
     var updated2 = await repo.SaveSystemState(updated);
     var current = await repo.GetSystemState(NAME, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, dt.Now)));
+    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.Utc.Now)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
@@ -76,7 +71,7 @@ public abstract class CtlRepositoryDefaultTests {
   }
   
   [Test] public void Test_CreateObjectState_fails_for_non_existing_system() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(new SystemState(NAME, NAME, true, dt.Now), NAME));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(new SystemState(NAME, NAME, true, UtcDate.Utc.Now), NAME));
   }
   
   [Test] public async Task Test_CreateObjectState_fails_for_existing_object() {
@@ -88,29 +83,29 @@ public abstract class CtlRepositoryDefaultTests {
   [Test] public async Task Test_SaveObjectState_updates_existing_state() {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var created = await repo.CreateObjectState(ss, NAME);
-    var updated = created with { LastStart = dt.Now, LastRunMessage = NAME };
+    var updated = created with { LastStart = UtcDate.Utc.Now, LastRunMessage = NAME };
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
-    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, dt.Now)));
-    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = dt.Now }));
+    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, UtcDate.Utc.Now)));
+    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = UtcDate.Utc.Now }));
     Assert.That(current, Is.EqualTo(updated2));
   }
   
   [Test] public void Test_SaveObjectState_fails_if_SystemState_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(new ObjectState(NAME, NAME, NAME, true, dt.Now)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(new ObjectState(NAME, NAME, NAME, true, UtcDate.Utc.Now)));
   }
   
   [Test] public async Task Test_GetOrCreateObjectState_creates_if_not_existing() {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var prior = await repo.GetObjectState(ss, NAME);
     var created = await repo.GetOrCreateObjectState(ss, NAME);
-    var updated = created with { LastStart = dt.Now, LastRunMessage = NAME };
+    var updated = created with { LastStart = UtcDate.Utc.Now, LastRunMessage = NAME };
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, dt.Now)));
-    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = dt.Now }));
+    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, UtcDate.Utc.Now)));
+    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = UtcDate.Utc.Now }));
     Assert.That(current, Is.EqualTo(updated2));
   }
 }

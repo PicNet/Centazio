@@ -1,21 +1,18 @@
 ﻿using Centazio.Core;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Func;
-using Centazio.Test.Lib;
 using F = centazio.core.tests.Read.ReadTestFactories;
 
 namespace centazio.core.tests.Read;
 
 public class DefaultReadOperationRunnerTests {
 
-  private TestingUtcDate utc;
   private TestingStagedEntityStore store;
   private TestingCtlRepository repo;
 
   [SetUp] public void SetUp() {
-    utc = new TestingUtcDate();
     store = new TestingStagedEntityStore();
-    repo = F.Repo(utc);
+    repo = F.Repo();
   }
   
   [TearDown] public async Task TearDown() {
@@ -24,7 +21,7 @@ public class DefaultReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = F.Runner(utc, store, repo);
+    var runner = F.Runner(store, repo);
     var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.Utc.Now, await CreateReadOpStateAndConf(EOperationReadResult.FailedRead, F.TestingSingleReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
@@ -37,7 +34,7 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = F.Runner(utc, store, repo);
+    var runner = F.Runner(store, repo);
     var actual = await runner.RunOperation(UtcDate.Utc.Now, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingEmptyReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
@@ -50,7 +47,7 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
-    var runner = F.Runner(utc, store, repo);
+    var runner = F.Runner(store, repo);
     var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.Utc.Now, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingSingleReadOperationImplementation));
     
     var staged = store.Contents.Single();
@@ -64,7 +61,7 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = F.Runner(utc, store, repo);
+    var runner = F.Runner(store, repo);
     var actual = (ListRecordReadOperationResult) await runner.RunOperation(UtcDate.Utc.Now, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingListReadOperationImplementation));
     
     var staged = store.Contents;
