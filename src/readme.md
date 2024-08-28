@@ -1,5 +1,4 @@
 # todo
-- rename all `now` with `utc`
 - set up testing pipeline (agent is ready)
 
 - CLI:

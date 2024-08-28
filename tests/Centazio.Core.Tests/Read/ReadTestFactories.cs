@@ -9,19 +9,19 @@ namespace centazio.core.tests.Read;
 
 public static class ReadTestFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
-  public static TestingCtlRepository Repo(TestingUtcDate now) => new(now);
+  public static TestingCtlRepository Repo(TestingUtcDate utc) => new(utc);
   public static IReadOperationRunner Runner(
-      TestingUtcDate now, 
+      TestingUtcDate utc, 
       IStagedEntityStore? store = null, 
       ICtlRepository? repo = null, 
       Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>>? impl = null) 
     => new DefaultReadOperationRunner(
         impl ?? TestingAbortingAndEmptyReadOperationImplementation, 
         store ?? SeStore(), 
-        now, 
-        repo ?? Repo(now));
+        utc, 
+        repo ?? Repo(utc));
 
-  public static ReadFunctionComposer Composer(TestingUtcDate now, ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, now, repo, runner);
+  public static ReadFunctionComposer Composer(TestingUtcDate utc, ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, utc, repo, runner);
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) {
     var result = Enum.Parse<EOperationReadResult>(op.Settings.Object); 
@@ -45,7 +45,7 @@ public static class ReadTestFactories {
 
 public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0) { public List<StagedEntity> Contents => saved.ToList(); }
 
-public class TestingCtlRepository(IUtcDate now) : InMemoryCtlRepository(now) {
+public class TestingCtlRepository(IUtcDate utc) : InMemoryCtlRepository(utc) {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
   public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
 }

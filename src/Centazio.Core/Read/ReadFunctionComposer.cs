@@ -15,7 +15,6 @@ public class ReadFunctionComposer(
   private IReadOperationsFilterAndPrioritiser Prioritiser { get; } = prioritiser ?? new DefaultReadOperationsFilterAndPrioritiser();
   
   public async Task<string> Run() {
-    var now = utc.Now;
     cfg.Validate();
     
     var sysstate = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
@@ -23,10 +22,10 @@ public class ReadFunctionComposer(
     
     var ops = (await cfg.Operations
         .LoadOperationsStates(sysstate, ctl))
-        .GetReadyOperations(now)
+        .GetReadyOperations(utc.Now)
         .Prioritise(Prioritiser);
         
-    var results = await RunOperationsTillAbort(now, ops);
+    var results = await RunOperationsTillAbort(utc.Now, ops);
     return CombineSummaryResults(results);
   }
   

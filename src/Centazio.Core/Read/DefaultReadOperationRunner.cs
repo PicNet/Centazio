@@ -9,7 +9,7 @@ namespace Centazio.Core.Func;
 internal class DefaultReadOperationRunner(
     Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>> impl, 
     IEntityStager stager, 
-    IUtcDate now, 
+    IUtcDate utc, 
     ICtlRepository ctl) : IReadOperationRunner {
   
 
@@ -36,7 +36,7 @@ internal class DefaultReadOperationRunner(
     
     var newstate = op.State with {
       LastStart = start,
-      LastCompleted = now.Now,
+      LastCompleted = utc.Now,
       LastResult = res.Result,
       LastAbortVote = res.AbortVote,
       LastRunMessage = $"Read operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] - staged[{stage}] message: " + res.Message,
