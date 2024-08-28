@@ -4,7 +4,7 @@ namespace Centazio.Core.Stage;
 
 public class InMemoryStagedEntityStore(int limit) : AbstractStagedEntityStore(limit) {
 
-  private readonly List<StagedEntity> saved = [];
+  protected readonly List<StagedEntity> saved = [];
   
   public override Task Update(StagedEntity staged) {
     var idx = saved.FindIndex(se => se.SourceSystem == staged.SourceSystem && se.Object == staged.Object && se.DateStaged == staged.DateStaged);

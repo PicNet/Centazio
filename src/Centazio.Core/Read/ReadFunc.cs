@@ -1,7 +1,7 @@
 ﻿namespace Centazio.Core.Func;
 
-public interface IReadOperationRunner {
-  Task<ReadOperationResults> Run(DateTime start, ReadOperationStateAndConfig op);
+public interface IReadOperationImplementation {
+  Task<ReadOperationResult> Run(DateTime now, ReadOperationStateAndConfig op);
 }
 
 public interface IReadOperationsFilterAndPrioritiser {

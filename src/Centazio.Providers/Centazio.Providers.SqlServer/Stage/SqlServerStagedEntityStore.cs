@@ -1,8 +1,6 @@
-﻿using System.Data;
-using Centazio.Core;
+﻿using Centazio.Core;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Stage;
-using Centazio.Providers.SqlServer;
 using Dapper;
 using Microsoft.Data.SqlClient;
 

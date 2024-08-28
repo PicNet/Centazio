@@ -1,14 +1,12 @@
 ﻿using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Helpers;
-using Centazio.Core.Stage;
 using Serilog;
 
 namespace Centazio.Core.Func;
 
 public class ReadFunctionComposer(
     ReadFunctionConfig cfg,
-    EntityStager stager,
     IUtcDate utc,
     ICtlRepository ctl,
     IReadOperationRunner runner,
@@ -18,76 +16,47 @@ public class ReadFunctionComposer(
   
   public async Task<string> Run() {
     var now = utc.Now;
-    ValidateConfig();
+    cfg.Validate();
     
     var sysstate = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
     if (!sysstate.Active) return $"System {sysstate} is innactive.  ReadFunctionComposer not running.";
     
-    var states = await LoadOperationsStates(sysstate);
-    var ready = GetReadyOperations(now, states);
-    var prioritised = Prioritiser.Prioritise(ready);
-    var results = await prioritised
-        .Select(op => RunOperation(now, op))
-        .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
+    var ops = (await cfg.Operations
+        .LoadOperationsStates(sysstate, ctl))
+        .GetReadyOperations(now)
+        .Prioritise(Prioritiser);
+        
+    var results = await RunOperationsTillAbort(now, ops);
     return CombineSummaryResults(results);
-    
-    void ValidateConfig() { if (!cfg.Operations.Any()) throw new Exception($"System {cfg.System} Read configuration has no operations defined"); }
+  }
+  
+  internal async Task<IEnumerable<ReadOperationResult>> RunOperationsTillAbort(DateTime start, IEnumerable<ReadOperationStateAndConfig> ops) 
+      => await ops
+          .Select(op => runner.RunOperation(start, op))
+          .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
+
+  private string CombineSummaryResults(IEnumerable<ReadOperationResult> results) {
+    var message = String.Join(';', results.Select(r => r.ToString()));
+    Log.Information("Read Function for system {@System} completed: {message}", cfg.System, message);
+    return message;
+  }
+}
+
+internal static class ReadFunctionComposerHelperExtensions {
+  internal static async Task<List<ReadOperationStateAndConfig>> LoadOperationsStates(this ICollection<ReadOperationConfig> ops, SystemState system, ICtlRepository ctl) {
+    return (await Task.WhenAll(ops.Select(async op => new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op))))
+        .Where(op => op.State.Active)
+        .ToList();
   }
 
-  private async Task<List<ReadOperationStateAndConfig>> LoadOperationsStates(SystemState system) => 
-      (await Task.WhenAll(
-          cfg.Operations.Select(
-              async op => new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op))))
-      .Where(op => op.State.Active)
-      .ToList();
-
-  private IEnumerable<ReadOperationStateAndConfig> GetReadyOperations(DateTime now, IEnumerable<ReadOperationStateAndConfig> states) {
+  internal static IEnumerable<ReadOperationStateAndConfig> GetReadyOperations(this IEnumerable<ReadOperationStateAndConfig> states, DateTime now) {
     bool IsOperationReady(ReadOperationStateAndConfig op) {
       var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.UtcNow.AddYears(-10));
       return next <= now;
     }
     return states.Where(IsOperationReady);
   }
-
-  private async Task<ReadOperationResults> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
-    var res = await runner.Run(start, op);
-    res.Validate();
-    
-    if (res.Result == EOperationReadResult.FailedRead) { 
-      Log.Error("Read operation {@Operation} failed {@Results}", op, res);
-      return res; // do not stage
-    }
-    if (res.Result == EOperationReadResult.Warning) {
-      Log.Warning("Read operation {@Operation} warning {@Results}", op, res);
-    } else {
-      Log.Debug("Read operation {@Operation} succeeded {@Results}", op, res);
-    }
-    if (res.PayloadLength > 0) {
-      await (res switch {
-        SingleRecordReadOperationResults sr => stager.Stage(start, cfg.System, op.Settings.Object, sr.Payload),
-        ListRecordReadOperationResults sr => stager.Stage(start, cfg.System, op.Settings.Object, sr.PayloadList),
-        _ => throw new Exception()
-      });
-    }
-    
-    var newstate = op.State with {
-      LastStart = start,
-      LastCompleted = utc.Now,
-      LastResult = res.Result,
-      LastAbortVote = res.AbortVote,
-      LastRunMessage = res.Message,
-      LastPayLoadType = res.PayloadType,
-      LastPayLoadLength = res.PayloadLength,
-      LastRunException = res.Exception?.ToString()
-    };
-    await ctl.SaveObjectState(newstate);
-    Log.Debug("Read operation {@Operation} with results {@Results}.  New state saved {@newstate}", op, res, newstate);
-    return res;
-  }
-
-  private string CombineSummaryResults(IEnumerable<ReadOperationResults> results) {
-    var message = String.Join(';', results.Select(r => r.ToString()));
-    Log.Information("Read Function for system {@System} completed: {message}", cfg.System, message);
-    return message;
-  }
+  
+  internal static IEnumerable<ReadOperationStateAndConfig> Prioritise(this IEnumerable<ReadOperationStateAndConfig> states, IReadOperationsFilterAndPrioritiser prioritiser) 
+      => prioritiser.Prioritise(states); 
 }

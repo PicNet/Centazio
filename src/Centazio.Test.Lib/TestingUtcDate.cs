@@ -2,8 +2,8 @@
 
 namespace Centazio.Test.Lib;
 
-public class TestingUtcDate : AbstractUtcDate {
-  private DateTime now = TestingDefaults.DefaultStartDt;
+public class TestingUtcDate(DateTime? now = null) : AbstractUtcDate {
+  private DateTime now = now ?? TestingDefaults.DefaultStartDt;
   
   public override DateTime Now => now;
   
