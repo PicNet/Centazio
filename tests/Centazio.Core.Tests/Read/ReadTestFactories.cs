@@ -8,17 +8,16 @@ using Centazio.Test.Lib;
 namespace centazio.core.tests.Read;
 
 public static class ReadTestFactories {
-  public static TestingStagedEntityStore SeStore() => new TestingStagedEntityStore(); 
-  public static EntityStager Stager(IStagedEntityStore? store = null) => new(store ?? SeStore()); 
+  public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository Repo(TestingUtcDate now) => new(now);
   public static IReadOperationRunner Runner(
       TestingUtcDate now, 
-      EntityStager? stager = null, 
+      IStagedEntityStore? store = null, 
       ICtlRepository? repo = null, 
       Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>>? impl = null) 
     => new DefaultReadOperationRunner(
         impl ?? TestingAbortingAndEmptyReadOperationImplementation, 
-        stager ?? Stager(), 
+        store ?? SeStore(), 
         now, 
         repo ?? Repo(now));
 

@@ -2,10 +2,12 @@
 
 namespace Centazio.Core.Stage;
 
-public interface IStagedEntityStore : IAsyncDisposable {
-  Task<StagedEntity> Save(DateTime stageddt, SystemName source, ObjectName obj, string data);
-  Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
-  
+public interface IEntityStager : IAsyncDisposable {
+  Task<StagedEntity> Stage(DateTime stageddt, SystemName source, ObjectName obj, string data);
+  Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
+}
+    
+public interface IStagedEntityStore : IEntityStager {
   Task Update(StagedEntity staged);
   Task Update(IEnumerable<StagedEntity> staged);
   
@@ -19,10 +21,10 @@ public abstract class AbstractStagedEntityStore(int limit) : IStagedEntityStore 
 
   protected int Limit => limit > 0 ? limit : Int32.MaxValue;
   
-  public Task<StagedEntity> Save(DateTime stageddt, SystemName source, ObjectName obj, string data) => 
+  public Task<StagedEntity> Stage(DateTime stageddt, SystemName source, ObjectName obj, string data) => 
       SaveImpl(new StagedEntity(source, obj, stageddt, data));
 
-  public Task<IEnumerable<StagedEntity>> Save(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) => 
+  public Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) => 
       SaveImpl(datas.Select(data => new StagedEntity(source, obj, stageddt, data)));
   
   protected abstract Task<StagedEntity> SaveImpl(StagedEntity staged);

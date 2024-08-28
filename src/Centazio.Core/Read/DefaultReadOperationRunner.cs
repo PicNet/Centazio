@@ -1,4 +1,5 @@
-﻿using centazio.core.Ctl;
+﻿using System.Diagnostics;
+using centazio.core.Ctl;
 using centazio.core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Serilog;
@@ -7,7 +8,7 @@ namespace Centazio.Core.Func;
 
 internal class DefaultReadOperationRunner(
     Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>> impl, 
-    EntityStager stager, 
+    IEntityStager stager, 
     IUtcDate now, 
     ICtlRepository ctl) : IReadOperationRunner {
   
@@ -26,11 +27,11 @@ internal class DefaultReadOperationRunner(
         res.PayloadLength > 0; 
     
     if (stage) {
-      await (res switch {
-        SingleRecordReadOperationResult sr => stager.Stage(start, op.State.System, op.Settings.Object, sr.Payload),
-        ListRecordReadOperationResult lr => stager.Stage(start, op.State.System, op.Settings.Object, lr.PayloadList),
-        _ => throw new Exception()
-      });
+      if (res is SingleRecordReadOperationResult sr) {
+        await stager.Stage(start, op.State.System, op.Settings.Object, sr.Payload);
+      } else if (res is ListRecordReadOperationResult lr) {
+        await stager.Stage(start, op.State.System, op.Settings.Object, lr.PayloadList);
+      } else throw new UnreachableException();
     }
     
     var newstate = op.State with {
