@@ -5,9 +5,9 @@ using F = centazio.core.tests.Read.ReadTestFactories;
 
 namespace centazio.core.tests.Read;
 
-public class ReadFunctionComposerHelperExtensionsTests {
+public class ReadFunctionBaseHelperExtensionsTests {
 
-  private const string NAME = nameof(ReadFunctionComposerHelperExtensionsTests);
+  private const string NAME = nameof(ReadFunctionBaseHelperExtensionsTests);
   private ICtlRepository repo;
   
   [SetUp] public void SetUp() => repo = new InMemoryCtlRepository();

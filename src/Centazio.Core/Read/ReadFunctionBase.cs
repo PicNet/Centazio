@@ -5,7 +5,7 @@ using Serilog;
 
 namespace Centazio.Core.Func;
 
-public class ReadFunctionComposer(
+public class ReadFunctionBase(
     ReadFunctionConfig cfg,
     ICtlRepository ctl,
     IReadOperationRunner runner,
@@ -40,7 +40,7 @@ public class ReadFunctionComposer(
   }
 }
 
-internal static class ReadFunctionComposerHelperExtensions {
+internal static class ReadFunctionBaseHelperExtensions {
   internal static async Task<List<ReadOperationStateAndConfig>> LoadOperationsStates(this ICollection<ReadOperationConfig> ops, SystemState system, ICtlRepository ctl) {
     return (await Task.WhenAll(ops.Select(async op => new ReadOperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op))))
         .Where(op => op.State.Active)

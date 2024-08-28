@@ -19,7 +19,7 @@ public record ValidCron(string Expression) {
 public record ReadOperationStateAndConfig(ObjectState State, ReadOperationConfig Settings);
 
 public abstract record ReadOperationResult(EOperationReadResult Result, string Message, EPayloadType PayloadType, int PayloadLength, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) {
-  public void Validate() {
+  public ReadOperationResult Validate() {
     if (PayloadType != EPayloadType.Empty && PayloadLength == 0) throw new Exception($"When a ReadOperationResult is not EPayloadType.Empty then the PayloadLength should be greater than 0");
     if (PayloadType == EPayloadType.Empty && PayloadLength != 0) throw new Exception($"When a ReadOperationResult is EPayloadType.Empty then the PayloadLength should be 0");
     if (Result == EOperationReadResult.Unknown) throw new Exception("ReadOperationResult should never be 'Unknown'");
@@ -28,6 +28,7 @@ public abstract record ReadOperationResult(EOperationReadResult Result, string M
     if (PayloadType == EPayloadType.Empty && this is not EmptyReadOperationResult) throw new Exception("When a ReadOperationResult is of PayloadType=Empty then the result object should be of type EmptyReadOperationResult");
     if (this is ListRecordReadOperationResult lr && !lr.PayloadList.Any()) throw new Exception("When a ReadOperationResult is of PayloadType=List then the PayloadList must have items");
     if (this is SingleRecordReadOperationResult sr && String.IsNullOrWhiteSpace(sr.Payload)) throw new Exception("When a ReadOperationResult is of PayloadType=Single then the Payload must have a valid string");
+    return this;
   }
 }
 

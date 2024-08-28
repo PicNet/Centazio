@@ -10,8 +10,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
   
 
   public async Task<ReadOperationResult> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
-    var res = await op.Settings.Impl(start, op);
-    res.Validate();
+    var res = (await op.Settings.Impl(start, op)).Validate();
     
     switch (res.Result) {
       case EOperationReadResult.Success: Log.Debug("Read operation {@Operation} succeeded {@Results}", op, res); break;
@@ -19,8 +18,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
       case EOperationReadResult.FailedRead: Log.Error("Read operation {@Operation} failed {@Results}", op, res); break;
       default: throw new Exception($"Read operation {op} resulted in an invalid result {res.Result}");
     }
-    var stage = res.Result != EOperationReadResult.FailedRead && 
-        res.PayloadLength > 0; 
+    var stage = res.Result != EOperationReadResult.FailedRead && res.PayloadLength > 0; 
     
     if (stage) {
       if (res is SingleRecordReadOperationResult sr) {
@@ -41,7 +39,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
       LastRunException = res.Exception?.ToString()
     };
     await ctl.SaveObjectState(newstate);
-    Log.Debug("Read operation {@Operation} with results {@Results}.  New state saved {@newstate}", op, res, newstate);
+    Log.Information("Read operation {@Operation} with results {@Results}.  New state saved {@newstate}", op, res, newstate);
     return res;
   }
 }

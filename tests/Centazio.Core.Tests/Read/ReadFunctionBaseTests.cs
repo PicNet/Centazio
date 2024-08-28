@@ -5,9 +5,9 @@ using Centazio.Core.Func;
 
 namespace centazio.core.tests.Read;
 
-public class ReadFunctionComposerTests {
+public class ReadFunctionBaseTests {
   
-  private readonly ReadFunctionConfig cfg = new(nameof(ReadFunctionComposerTests), nameof(ReadFunctionComposerTests), []);
+  private readonly ReadFunctionConfig cfg = new(nameof(ReadFunctionBaseTests), nameof(ReadFunctionBaseTests), []);
 
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
     var repo = ReadTestFactories.Repo();

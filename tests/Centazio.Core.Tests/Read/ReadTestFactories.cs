@@ -14,7 +14,7 @@ public static class ReadTestFactories {
       ICtlRepository? repo = null) 
     => new DefaultReadOperationRunner(store ?? SeStore(), repo ?? Repo());
 
-  public static ReadFunctionComposer Composer(ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, repo, runner);
+  public static ReadFunctionBase Composer(ReadFunctionConfig cfg, IReadOperationRunner runner, ICtlRepository repo) => new(cfg, repo, runner);
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) {
     var result = Enum.Parse<EOperationReadResult>(op.Settings.Object); 
