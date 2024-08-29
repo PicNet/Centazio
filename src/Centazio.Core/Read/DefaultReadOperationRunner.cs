@@ -13,10 +13,10 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
     var res = (await op.Settings.Impl(start, op)).Validate();
     
     switch (res.Result) {
-      case EOperationReadResult.Success: Log.Debug("Read operation {@Operation} succeeded {@Results}", op, res); break;
-      case EOperationReadResult.Warning: Log.Warning("Read operation {@Operation} warning {@Results}", op, res); break;
-      case EOperationReadResult.FailedRead: Log.Error("Read operation {@Operation} failed {@Results}", op, res); break;
-      default: throw new Exception($"Read operation {op} resulted in an invalid result {res.Result}");
+      case EOperationReadResult.Success: Log.Debug("read operation succeeded {@Operation} {@Results}", op, res); break;
+      case EOperationReadResult.Warning: Log.Warning("read operation warning {@Operation} {@Results}", op, res); break;
+      case EOperationReadResult.FailedRead: Log.Error("read operation failed {@Operation} {@Results}", op, res); break;
+      default: throw new UnreachableException();
     }
     var stage = res.Result != EOperationReadResult.FailedRead && res.PayloadLength > 0; 
     
@@ -33,13 +33,13 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
       LastCompleted = UtcDate.UtcNow,
       LastResult = res.Result,
       LastAbortVote = res.AbortVote,
-      LastRunMessage = $"Read operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] - staged[{stage}] message: " + res.Message,
+      LastRunMessage = $"read operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] - staged[{stage}] message: " + res.Message,
       LastPayLoadType = res.PayloadType,
       LastPayLoadLength = res.PayloadLength,
       LastRunException = res.Exception?.ToString()
     };
     await ctl.SaveObjectState(newstate);
-    Log.Information("Read operation {@Operation} with results {@Results}.  New state saved {@newstate}", op, res, newstate);
+    Log.Information("read operation completed {@Operation} {@Results} {@UpdatedSystemState}", op, res, newstate);
     return res;
   }
 }

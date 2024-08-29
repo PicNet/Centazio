@@ -11,12 +11,12 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
   public async Task<string> RunFunction() {
     var start = UtcDate.UtcNow;
     
-    Log.Information("RunFunction [{System}/{Stage}] started [{Start:o}]", cfg.System.Value, cfg.Stage.Value, start);
+    Log.Information("function started {@System} {@Stage}", cfg.System, cfg.Stage);
     cfg.Validate();
     
     var state = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
     if (!state.Active) {
-      Log.Information($"System {state} is inactive.  ReadFunction not running.");
+      Log.Information("system is inactive {@SystemState}", state);
       return $"Function [{state.System.Value}/{state.Stage.Value}] inactive";
     }
     var results = await func.Run(state, start);
@@ -32,10 +32,9 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
         .IfNullOrWhitespace($"Function [{state.System.Value}/{state.Stage.Value}] completed with empty results");
     var took = state.LastCompleted - state.LastStarted ?? throw new UnreachableException(); 
     Log.Information(
-        "{Stage} Function for system {System}  end: {LastCompleted:o} took: {Took:N0}ms\n\t{Message}",
-        state.Stage.Value,
-        state.System.Value, 
-        state.LastCompleted,
+        "function completed {@System} {@Stage} {Took:N0}ms {Message}",
+        state.System,
+        state.Stage,
         took.TotalMilliseconds,
         String.IsNullOrWhiteSpace(message) ? "n/a" : message);
     return message;

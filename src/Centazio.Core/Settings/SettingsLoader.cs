@@ -30,7 +30,7 @@ public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_
     string? Impl(string dir) {
       var path = Path.Combine(dir, file);
       if (File.Exists(path)) {
-        Log.Debug("loading settings from path {path}", path);
+        Log.Debug("loading settings {Path}", path);
         return path;
       }
       var parent = Directory.GetParent(dir)?.FullName;

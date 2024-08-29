@@ -1,11 +1,12 @@
-﻿using Spectre.Console;
+﻿using System.Diagnostics;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
 public class InteractiveCliMeneCommand : AsyncCommand {
   public override async Task<int> ExecuteAsync(CommandContext context) {
-    var menu = context.Data as InteractiveMenu ?? throw new Exception();
+    var menu = context.Data as InteractiveMenu ?? throw new UnreachableException();
     await menu.Show();
     return 0;
   }
@@ -22,7 +23,7 @@ public class InteractiveMenu(CommandTree tree) {
     return n switch { 
       BranchNode bn => await DisplayBranchNode(bn), 
       CommandNode cn => await DisplayCommandNode(cn), 
-      _ => throw new Exception() 
+      _ => throw new UnreachableException() 
     };
   }
 

@@ -24,7 +24,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : A
     var tables = (await Client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
     if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
-    Log.Debug($"bucket[{bucket}] not found, creating");
+    Log.Debug("creating bucket {Bucket}", bucket);
     await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
     return this;
   }
@@ -109,7 +109,7 @@ public record S3StagedEntity(Guid KeySuffix, SystemName SourceSystem, ObjectName
 internal static class S3StagedEntityStore_StagedEntityExtensions {
   
   public static async Task<S3StagedEntity> FromS3Response(this GetObjectResponse r) {
-    if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] != null) throw new Exception("S3 Objects that are marked as 'Ignore' should not be created as StagedEntities");
+    if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] != null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
     
     var (source, obj, staged_suffix, _) = r.Key.Split('/');
     var (staged, suffix, _) = staged_suffix.Split('_');

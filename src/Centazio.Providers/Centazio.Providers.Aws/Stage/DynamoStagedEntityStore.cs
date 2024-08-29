@@ -23,7 +23,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     if ((await Client.ListTablesAsync()).TableNames
         .Contains(table, StringComparer.OrdinalIgnoreCase)) return this;
 
-    Log.Debug($"table[{table}] not found, creating");
+    Log.Debug("creating table {Table}", table);
     
     var status = (await Client.CreateTableAsync(
         new CreateTableRequest(table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE) ]) {

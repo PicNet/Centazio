@@ -1,4 +1,5 @@
-﻿using Centazio.Cli.Commands.Aws;
+﻿using System.Diagnostics;
+using Centazio.Cli.Commands.Aws;
 using Centazio.Cli.Commands.Az;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
@@ -54,7 +55,7 @@ public class CommandTree(IServiceProvider prov) {
         case CommandNode ln:
           ln.AddTo(parent);
           break;
-        default: throw new Exception();
+        default: throw new UnreachableException();
       }
     }
     

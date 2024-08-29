@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Secrets;
+﻿using System.Diagnostics;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using centazio.core.tests;
 using Microsoft.Data.SqlClient;
@@ -11,7 +12,7 @@ public class SqlConn {
   public static readonly SqlConn Instance = new();
   
   public bool Real { get; }
-  public SqlConnection Conn() => String.IsNullOrWhiteSpace(connstr) ? throw new Exception() : new SqlConnection(connstr);
+  public SqlConnection Conn() => String.IsNullOrWhiteSpace(connstr) ? throw new ArgumentNullException(nameof(connstr)) : new SqlConnection(connstr);
   
   private SqlConn(bool real=false) => Real = real;
   
@@ -20,7 +21,7 @@ public class SqlConn {
 
   // note: This should only be called by TestSuiteInitialiser.cs
   internal async Task Init() {
-    if (!String.IsNullOrWhiteSpace(connstr)) throw new Exception();
+    if (!String.IsNullOrWhiteSpace(connstr)) throw new Exception("already initialised");
     
     if (Real) {
       var settings = new SettingsLoader<TestSettings>().Load();
@@ -36,7 +37,7 @@ public class SqlConn {
   // note: This should only be called by TestSuiteInitialiser.cs
   internal async Task Dispose() {
     if (Real) return;
-    if (container == null) throw new Exception();
+    if (container == null) throw new UnreachableException();
     
     await container.StopAsync();
     await container.DisposeAsync();
