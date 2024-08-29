@@ -16,7 +16,7 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
     
     var state = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
     if (!state.Active) {
-      Log.Information($"System {state} is inactive.  ReadFunctionComposer not running.");
+      Log.Information($"System {state} is inactive.  ReadFunction not running.");
       return $"Function [{state.System.Value}/{state.Stage.Value}] inactive";
     }
     var results = await func.Run(state, start);

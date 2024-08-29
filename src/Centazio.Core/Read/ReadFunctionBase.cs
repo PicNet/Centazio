@@ -5,7 +5,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Func;
 
-public class ReadFunctionBase(
+public abstract class ReadFunctionBase(
     ReadFunctionConfig cfg,
     ICtlRepository ctl,
     IReadOperationRunner runner,
