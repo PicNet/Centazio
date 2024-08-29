@@ -6,6 +6,8 @@ public record ValidString(string Value) {
   
   public static implicit operator string(ValidString value) => value.Value;
   public static explicit operator ValidString(string value) => new(value);
+  
+  public sealed override string ToString() => Value;
 }
 
 public sealed record SystemName(string Value) : ValidString(Value) {
