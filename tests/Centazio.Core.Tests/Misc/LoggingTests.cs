@@ -16,8 +16,16 @@ public class LoggingTests {
   }
   
   [Test] public void Test_destructing_SystemState() {
-    var sysempty = new SystemState(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow);
-    var sysfull = new SystemState(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow);
+    var sysempty = new SystemState(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle);
+    var sysfull = new SystemState(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow);
     Log.Information("empty[{@SysEmpty}] full[{@SysFull}]", sysempty, sysfull);
+  }
+  
+  [Test] public void Test_logging_of_exceptions() {
+    try { throw new Exception(); }
+    catch (Exception ex) {
+      Log.Warning(ex, "logging with exception override");
+      Log.Warning("logging with exception as parameter {@Exception}", ex);
+    }
   }
 }

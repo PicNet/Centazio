@@ -27,7 +27,7 @@ public class DefaultReadOperationRunnerTests {
     ValidateResult(
         new SingleRecordReadOperationResult(EOperationReadResult.FailedRead, "", actual.Payload),
         actual,
-        new SystemState(EOperationReadResult.FailedRead.ToString(), EOperationReadResult.FailedRead.ToString(), true, UtcDate.UtcNow),
+        new SystemState(EOperationReadResult.FailedRead.ToString(), EOperationReadResult.FailedRead.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationReadResult.FailedRead.ToString(), true, UtcDate.UtcNow, 
             EOperationReadResult.FailedRead, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EPayloadType.Single } );
   }
@@ -40,7 +40,7 @@ public class DefaultReadOperationRunnerTests {
     ValidateResult(
         new EmptyReadOperationResult(EOperationReadResult.Success, ""),
         actual,
-        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow),
+        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, 
            EOperationReadResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:0 ));
   }
@@ -54,7 +54,7 @@ public class DefaultReadOperationRunnerTests {
     ValidateResult(
         new SingleRecordReadOperationResult(EOperationReadResult.Success, "", actual.Payload),
         actual,
-        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow),
+        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, 
             EOperationReadResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EPayloadType.Single } );
   }
@@ -69,7 +69,7 @@ public class DefaultReadOperationRunnerTests {
     ValidateResult(
         new ListRecordReadOperationResult(EOperationReadResult.Success, "", actual.PayloadList),
         actual,
-        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow),
+        new SystemState(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationReadResult.Success.ToString(), true, UtcDate.UtcNow, 
             EOperationReadResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength: staged.Count) { LastPayLoadType = EPayloadType.List } );
   }

@@ -1,4 +1,4 @@
-# todo
+# Todo
 - set up testing pipeline (agent is ready)
 - careful testing of date handling
 
@@ -6,8 +6,7 @@
 
 - EntityStager:
   - each entity type should have its own lifecycle, i.e. keep just one copy, keep 6 months, etc 
-  - should make configureable (by entity type) if we check for duplicates using checksum or not.  I.e. do we have
-    enough data to have a checkpoint or not.  If not we just use the 'Now' used when calling the API last time
+  - should support different staging mechanisms (last staged checkpoint, checksumming, etc)
 
 - Promote:
   - support full promote (entire list), i.e. delete all and recreate
@@ -17,7 +16,9 @@
 ## Logging
 - Logging should prefer lower case.  When describing code (classes, etc) then proper casing is allowed
 - Test all structured logging and add any 'clean' versions of structured output to `LogInitialiser.cs` also override
-    class `ToString()` method where appropriate to support clean structured logging.
+    class `ToString()` method where appropriate to support clean structured logging
+- Logging of exceptions should use the exception override logging methods: `Log.Information(exception, message)` and
+    not passing the exception as an `{@Exception}` parameter
 - Consider that logs are written as follows:
   - {"@t":\<timestamp>,"@mt":\<message template>,\<property pairs>}
   - So try to keep the message template clean.  Example:
@@ -36,7 +37,7 @@
 
 ## Unit Testing
 - All complex logic should be unit tested
-- Simple logic should not be unit tested, this includes records, simple properties, etc.
-- Special care is needed when testing date related operations.
+- Simple logic should not be unit tested, this includes records, simple properties, etc
+- Special care is needed when testing date related operations
   - The `TestingUtcDate.Tick()` method can be used to increment the testing `Now` value to ensure date handling
-  is being done correctly.
+  is being done correctly

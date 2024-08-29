@@ -34,13 +34,13 @@ public abstract class CtlRepositoryDefaultTests {
     var updated = created with { DateUpdated = UtcDate.UtcNow, Active = false };
     var updated2 = await repo.SaveSystemState(updated);
     var current = await repo.GetSystemState(NAME, NAME);
-    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow)));
+    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
   
   [Test] public Task Test_SaveSystemState_fails_if_state_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(new SystemState(NAME, NAME, true, UtcDate.UtcNow)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle)));
     return Task.CompletedTask;
   }
   
@@ -52,7 +52,7 @@ public abstract class CtlRepositoryDefaultTests {
     var current = await repo.GetSystemState(NAME, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow)));
+    Assert.That(created, Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
@@ -70,7 +70,7 @@ public abstract class CtlRepositoryDefaultTests {
   }
   
   [Test] public void Test_CreateObjectState_fails_for_non_existing_system() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(new SystemState(NAME, NAME, true, UtcDate.UtcNow), NAME));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle), NAME));
   }
   
   [Test] public async Task Test_CreateObjectState_fails_for_existing_object() {

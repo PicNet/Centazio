@@ -24,7 +24,8 @@ BEGIN
     System nvarchar (32) NOT NULL,
     Stage nvarchar (32) NOT NULL,
     Active bit NOT NULL, 
-    DateCreated datetime2 NOT NULL,
+    Status tinyint NOT NULL,
+    DateCreated datetime2 NOT NULL,    
     DateUpdated datetime2 NULL,
     LastStarted datetime2 NULL,
     LastCompleted datetime2 NULL,
@@ -68,18 +69,18 @@ END
     var updated = state with { DateUpdated = UtcDate.UtcNow };
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{SYSTEM_STATE_TBL} 
-SET Active=@Active, DateUpdated=@DateUpdated, LastStarted=@LastStarted, LastCompleted=@LastCompleted
+SET Active=@Active, Status=@Status, DateUpdated=@DateUpdated, LastStarted=@LastStarted, LastCompleted=@LastCompleted
 WHERE System=@System AND Stage=@Stage", updated);
     return count == 0 ? throw new Exception("SaveSystemState failed") : updated;
   }
   
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var created = new SystemState(system, stage, true, UtcDate.UtcNow);
+    var created = new SystemState(system, stage, true, UtcDate.UtcNow, ESystemStateStatus.Idle);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{SYSTEM_STATE_TBL} 
-(System, Stage, Active, DateCreated)
-VALUES (@System, @Stage, @Active, @DateCreated)", created);
+(System, Stage, Active, Status, DateCreated)
+VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     
     return created;
   }

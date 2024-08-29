@@ -3,15 +3,20 @@
 public enum EOperationReadResult { Unknown, Success, Warning, FailedRead }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
 public enum EPayloadType { Empty, Single, List }
+public enum ESystemStateStatus { Idle, Running }
 
-public record SystemState(
+public record SystemState (
     SystemName System, 
     LifecycleStage Stage, 
     bool Active, 
-    DateTime DateCreated, 
+    DateTime DateCreated,
+    ESystemStateStatus Status,
     DateTime? DateUpdated = null, 
     DateTime? LastStarted = null, 
-    DateTime? LastCompleted = null);
+    DateTime? LastCompleted = null) {
+  
+  public SystemState() : this(nameof(SystemState), nameof(SystemState), true, DateTime.MinValue, ESystemStateStatus.Idle) {}
+}
 
 public record ObjectState(
     SystemName System, 
