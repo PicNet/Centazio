@@ -1,10 +1,9 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
 using Centazio.Core.Stage;
 
-namespace centazio.core.tests.Read;
+namespace Centazio.Core.Tests.Read;
 
 public static class ReadTestFactories {
   public static TestingStagedEntityStore SeStore() => new(); 

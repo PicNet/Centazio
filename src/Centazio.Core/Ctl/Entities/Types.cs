@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-
-namespace centazio.core.Ctl.Entities;
+﻿namespace Centazio.Core.Ctl.Entities;
 
 public enum EOperationReadResult { Unknown, Success, Warning, FailedRead }
 public enum EOperationAbortVote { Unknown, Continue, Abort }

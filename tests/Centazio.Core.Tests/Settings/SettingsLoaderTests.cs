@@ -1,6 +1,6 @@
 ﻿using Centazio.Core.Settings;
 
-namespace centazio.core.tests.Settings;
+namespace Centazio.Core.Tests.Settings;
 
 public class SettingsLoaderTests {
 

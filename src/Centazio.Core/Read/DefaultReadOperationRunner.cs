@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
+using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Serilog;
 

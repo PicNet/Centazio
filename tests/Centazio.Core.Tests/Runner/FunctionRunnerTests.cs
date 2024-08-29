@@ -1,10 +1,9 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
 using Centazio.Core.Runner;
-using centazio.core.tests.Read;
+using Centazio.Core.Tests.Read;
 
-namespace centazio.core.tests.Runner;
+namespace Centazio.Core.Tests.Runner;
 
 public class FunctionRunnerTests {
 

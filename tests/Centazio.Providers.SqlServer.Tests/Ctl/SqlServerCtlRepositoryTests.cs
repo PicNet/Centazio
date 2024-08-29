@@ -1,6 +1,6 @@
-﻿using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
-using centazio.core.tests.Stage;
+﻿using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Tests.Ctl;
 using Centazio.Providers.SqlServer.Ctl;
 using Dapper;
 

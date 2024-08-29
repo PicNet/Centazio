@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using centazio.core.tests;
+using Centazio.Test.Lib;
 using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
 

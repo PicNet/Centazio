@@ -2,7 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core.Stage;
-using centazio.core.tests.Stage;
+using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.Minio;
@@ -14,7 +14,6 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
   private MinioContainer container;
   
   [OneTimeSetUp] public async Task Init() {
-    // var config = new MinioConfiguration(nameof(S3StagedEntityStoreTests), nameof(S3StagedEntityStoreTests));
     var network = new NetworkBuilder().WithName(Guid.NewGuid().ToString("D")).Build();
     await network.CreateAsync();
     container = new MinioBuilder().WithNetwork(network).WithNetworkAliases("minio").Build();
@@ -27,7 +26,6 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
   }
   
   protected override async Task<IStagedEntityStore> GetStore(int limit = 0) {
-    // real client =  new AmazonS3Client(new BasicAWSCredentials(key, secret), new AmazonS3Config { RegionEndpoint = RegionEndpoint.APSoutheast2 });
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
     return await new TestingS3StagedEntityStore(client, limit).Initalise();

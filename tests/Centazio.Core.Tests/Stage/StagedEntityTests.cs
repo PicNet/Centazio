@@ -1,6 +1,6 @@
-﻿using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 
-namespace centazio.core.tests.Stage;
+namespace Centazio.Core.Tests.Stage;
 
 public class StagedEntityTests {
 

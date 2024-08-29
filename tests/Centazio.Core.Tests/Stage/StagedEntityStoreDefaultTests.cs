@@ -1,9 +1,8 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
-namespace centazio.core.tests.Stage;
+namespace Centazio.Core.Tests.Stage;
 
 public abstract class StagedEntityStoreDefaultTests {
 

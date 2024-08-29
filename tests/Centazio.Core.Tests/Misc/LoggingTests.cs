@@ -1,8 +1,7 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Serilog;
 
-namespace centazio.core.tests.Misc;
+namespace Centazio.Core.Tests.Misc;
 
 public class LoggingTests {
 

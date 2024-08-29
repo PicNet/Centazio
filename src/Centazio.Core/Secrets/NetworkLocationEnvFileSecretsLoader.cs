@@ -7,21 +7,20 @@ public interface ISecretsLoader<out T> where T : new() {
 }
 
 public class NetworkLocationEnvFileSecretsLoader<T>(string dir, string environment) : ISecretsLoader<T> where T : new() {
+  private readonly string path = Path.Combine(dir, $"{environment}.env");
   public T Load() {
-    var secrets = LoadSecretsFileAsDictionary(Path.Combine(dir, $"{environment}.env"));
+    var secrets = LoadSecretsFileAsDictionary();
     return ValidateAndSetLoadedSecrets(secrets); 
   }
 
-  private Dictionary<string, string> LoadSecretsFileAsDictionary(string path) {
-    return File.ReadAllLines(path)
-        .Select(l => l.Split("#")[0].Trim())
-        .Where(l => !String.IsNullOrEmpty(l))
-        .Select(l => {
-          var (Key, Value) = l.Split('=');
-          return (key: Key, rest: Value);
-        })
-        .ToDictionary(kvp => kvp.key, kvp => String.Join('=', kvp.rest));
-  }
+  private Dictionary<string, string> LoadSecretsFileAsDictionary() => File.ReadAllLines(path)
+      .Select(l => l.Split("#")[0].Trim())
+      .Where(l => !String.IsNullOrEmpty(l))
+      .Select(l => {
+        var (Key, Value) = l.Split('=');
+        return (key: Key, rest: Value);
+      })
+      .ToDictionary(kvp => kvp.key, kvp => String.Join('=', kvp.rest));
 
   private T ValidateAndSetLoadedSecrets(Dictionary<string, string> secrets) {
     var typed = new T();
@@ -30,7 +29,7 @@ public class NetworkLocationEnvFileSecretsLoader<T>(string dir, string environme
       p.SetValue(typed, Convert.ChangeType(secrets[p.Name], p.PropertyType));
       return false;
     }).ToList();
-    if (missing.Any()) throw new Exception($"secrets file has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");
+    if (missing.Any()) throw new Exception($"secrets file [{path}] has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");
     return typed;
   }
 

@@ -1,6 +1,6 @@
 ﻿using Centazio.Core;
-using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
+using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Dapper;
 using Microsoft.Data.SqlClient;
 
@@ -8,7 +8,7 @@ namespace Centazio.Providers.SqlServer.Ctl;
 
 public class SqlServerCtlRepository(Func<SqlConnection> newconn) : ICtlRepository {
 
-  internal static readonly string SCHEMA = nameof(centazio.core.Ctl).ToLower();
+  internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string SYSTEM_STATE_TBL = nameof(SystemState);
   internal const string OBJECT_STATE_TBL = nameof(ObjectState);
 

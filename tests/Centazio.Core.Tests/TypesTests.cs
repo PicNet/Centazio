@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-
-namespace centazio.core.tests;
+﻿namespace Centazio.Core.Tests;
 
 public class TypesTests {
 

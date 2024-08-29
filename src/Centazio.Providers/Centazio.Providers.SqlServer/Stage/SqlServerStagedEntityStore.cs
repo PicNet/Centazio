@@ -1,5 +1,5 @@
 ﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -8,7 +8,7 @@ namespace Centazio.Providers.SQLServer.Stage;
 
 public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit) : AbstractStagedEntityStore(limit) {
 
-  internal static readonly string SCHEMA = nameof(centazio.core.Ctl).ToLower();
+  internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);
 
   public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }

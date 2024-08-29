@@ -1,7 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core;
-using centazio.core.Ctl.Entities;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Helpers;
 using Centazio.Core.Stage;
 using Serilog;

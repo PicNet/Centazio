@@ -1,7 +1,6 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 
-namespace centazio.core.Ctl;
+namespace Centazio.Core.Ctl;
 
 public interface ICtlRepository : IAsyncDisposable {
 

@@ -7,7 +7,6 @@ public class TestSuiteInitialiser {
   public static void Initialise(IUtcDate? utc=null) {
     UtcDate.Utc = utc ?? new TestingUtcDate();
     
-    Log.Logger = LogInitialiser.GetConsoleConfig()
-        .CreateLogger();
+    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
   }
 }

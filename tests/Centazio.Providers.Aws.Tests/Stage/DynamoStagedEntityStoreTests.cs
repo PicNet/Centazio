@@ -1,7 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core.Stage;
-using centazio.core.tests.Stage;
+using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
 using Testcontainers.DynamoDb;
 
@@ -22,7 +22,6 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
   }
 
   protected override async Task<IStagedEntityStore> GetStore(int limit=0) {
-    // real client = new AmazonDynamoDBClient(new BasicAWSCredentials(key, secret), new AmazonDynamoDBConfig { RegionEndpoint = RegionEndpoint.APSoutheast2 });
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
     return await new TestingDynamoStagedEntityStore(client, limit).Initalise();
     

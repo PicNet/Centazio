@@ -1,6 +1,6 @@
-﻿using centazio.core.Ctl;
+﻿using Centazio.Core.Ctl;
 
-namespace centazio.core.tests.Stage;
+namespace Centazio.Core.Tests.Ctl;
 
 public class InMemoryCtlRepositoryTests : CtlRepositoryDefaultTests {
 

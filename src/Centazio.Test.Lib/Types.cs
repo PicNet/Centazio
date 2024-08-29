@@ -1,4 +1,4 @@
-﻿namespace centazio.core.tests;
+﻿namespace Centazio.Test.Lib;
 
 public record TestSettings(string SecretsFolder) {
   public TestSettings() : this("") {}

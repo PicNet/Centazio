@@ -1,4 +1,4 @@
-﻿using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Cronos;
 
 namespace Centazio.Core.Func;

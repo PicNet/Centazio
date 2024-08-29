@@ -1,10 +1,10 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
-using F = centazio.core.tests.Read.ReadTestFactories;
 
-namespace centazio.core.tests.Read;
+using F = Centazio.Core.Tests.Read.ReadTestFactories;
+
+namespace Centazio.Core.Tests.Read;
 
 public class ReadFunctionBaseHelperExtensionsTests {
 

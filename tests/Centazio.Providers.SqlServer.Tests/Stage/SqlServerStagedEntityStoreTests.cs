@@ -1,5 +1,5 @@
 ﻿using Centazio.Core.Stage;
-using centazio.core.tests.Stage;
+using Centazio.Core.Tests.Stage;
 using Centazio.Providers.SQLServer.Stage;
 using Centazio.Providers.SqlServer.Tests;
 using Dapper;

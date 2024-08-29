@@ -1,9 +1,8 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
-using F = centazio.core.tests.Read.ReadTestFactories;
+using F = Centazio.Core.Tests.Read.ReadTestFactories;
 
-namespace centazio.core.tests.Read;
+namespace Centazio.Core.Tests.Read;
 
 public class DefaultReadOperationRunnerTests {
 

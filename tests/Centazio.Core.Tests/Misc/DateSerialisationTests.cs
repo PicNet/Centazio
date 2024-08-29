@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-
-namespace centazio.core.tests.Misc;
+﻿namespace Centazio.Core.Tests.Misc;
 
 public class DateSerialisationTests {
 

@@ -1,8 +1,7 @@
-﻿using Centazio.Core;
-using centazio.core.Ctl;
-using centazio.core.Ctl.Entities;
+﻿using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 
-namespace centazio.core.tests.Stage;
+namespace Centazio.Core.Tests.Ctl;
 
 public abstract class CtlRepositoryDefaultTests {
 

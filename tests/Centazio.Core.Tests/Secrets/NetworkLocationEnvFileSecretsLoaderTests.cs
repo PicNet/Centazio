@@ -1,6 +1,6 @@
 ﻿using Centazio.Core.Secrets;
 
-namespace centazio.core.tests.Secrets;
+namespace Centazio.Core.Tests.Secrets;
 
 public class NetworkLocationEnvFileSecretsLoaderTests {
 
