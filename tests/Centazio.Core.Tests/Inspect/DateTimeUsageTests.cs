@@ -2,7 +2,7 @@
 
 public class DateTimeUsageTests {
 
-  [Test] public void Test_no_DateTime_usage_all_dates_should_be_from_UtcDateTime() {
+  [Test] public void Test_no_DateTime_usage_all_dates_should_be_from_UtcDate() {
     var errors = new List<string>();
     InspectUtils.CsFiles("DateTimeUsageTests.cs", "UtcDate.cs").ForEach(file => {
       var contents = File.ReadAllText(file);

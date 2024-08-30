@@ -37,6 +37,19 @@ public abstract record ReadOperationResult(EOperationReadResult Result, string M
     if (this is SingleRecordReadOperationResult sr && String.IsNullOrWhiteSpace(sr.Payload)) throw new Exception("When a ReadOperationResult is of PayloadType=Single then the Payload must have a valid string");
     return this;
   }
+  
+  public ObjectState UpdateObjectState(ObjectState state, DateTime start) {
+    return state with {
+      LastStart = start,
+      LastCompleted = UtcDate.UtcNow,
+      LastResult = Result,
+      LastAbortVote = AbortVote,
+      LastRunMessage = $"read operation [{state.System}/{state.Stage}/{state.Object}] completed [{Result}] message: " + Message,
+      LastPayLoadType = PayloadType,
+      LastPayLoadLength = PayloadLength,
+      LastRunException = Exception?.ToString()
+    };
+  }
 }
 
 public record EmptyReadOperationResult(EOperationReadResult Result, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
