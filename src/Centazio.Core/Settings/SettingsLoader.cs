@@ -19,7 +19,7 @@ public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_
     var envfile = String.IsNullOrEmpty(environment) ? 
         null : 
         SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
-    if (envfile != null) { builder.AddJsonFile(envfile, false); }
+    if (envfile is not null) { builder.AddJsonFile(envfile, false); }
     
     var obj = new T();
     builder.Build().Bind(obj);
@@ -34,7 +34,7 @@ public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_
         return path;
       }
       var parent = Directory.GetParent(dir)?.FullName;
-      return parent == null ? null : Impl(parent);
+      return parent is null ? null : Impl(parent);
     }
     return Impl(Environment.CurrentDirectory);
   }

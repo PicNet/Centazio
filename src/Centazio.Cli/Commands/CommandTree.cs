@@ -64,7 +64,7 @@ public class CommandTree(IServiceProvider prov) {
 
   public string GetNodeCommandShortcut(Node? node) {
     var ancestry = new List<Node>();
-    while (node != null) {
+    while (node is not null) {
       ancestry.Insert(0, node);
       node = node.Parent;
     }

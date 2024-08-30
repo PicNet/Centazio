@@ -20,6 +20,6 @@ public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar {
 public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IDisposable {
 
   public void Dispose() => (provider as IDisposable)?.Dispose();
-  public object? Resolve(Type? type) => type == null ? null : provider.GetService(type);
+  public object? Resolve(Type? type) => type is null ? null : provider.GetService(type);
 
 }

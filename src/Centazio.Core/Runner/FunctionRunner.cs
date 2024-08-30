@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlRepository ctl) {
+public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlRepository ctl, int maxminutes = 30) {
 
   public async Task<string> RunFunction() {
     var start = UtcDate.UtcNow;
@@ -21,12 +21,11 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
     }
     if (state.Status != ESystemStateStatus.Idle) {
       var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
-      // todo: make configureable?
-      if (minutes <= 30) {
+      if (minutes <= maxminutes) {
         Log.Information("function is not idle {@SystemState}", state);
         return $"function [{state.System.Value}/{state.Stage.Value}] is not idle";
       }
-      Log.Information("function stuck running, activating {@SystemState} {@MinutesSinceStart}", state, minutes);
+      Log.Information("function considered stuck after, activating {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, maxminutes, minutes);
     }
     state = await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Running, LastStarted = start, DateUpdated = UtcDate.UtcNow  });
     

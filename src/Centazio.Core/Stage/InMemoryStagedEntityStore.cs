@@ -31,7 +31,7 @@ public class InMemoryStagedEntityStore(int limit) : AbstractStagedEntityStore(li
 
   protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) => 
       Task.FromResult(saved
-          .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore == null)
+          .Where(s => s.DateStaged > since && s.SourceSystem == source && s.Object == obj && s.Ignore is null)
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .AsEnumerable());

@@ -15,8 +15,8 @@ public record DynamoStagedEntity(string RangeKey, SystemName SourceSystem, Objec
       { C.RANGE_KEY, new AttributeValue($"{RangeKey}") },
       { nameof(Data), new AttributeValue(Data) }
     };
-    if (Ignore != null) { dict[nameof(Ignore)] = new AttributeValue(Ignore); }
-    if (DatePromoted != null) { dict[nameof(DatePromoted)] = new AttributeValue($"{DatePromoted:o}"); }
+    if (Ignore is not null) { dict[nameof(Ignore)] = new AttributeValue(Ignore); }
+    if (DatePromoted is not null) { dict[nameof(DatePromoted)] = new AttributeValue($"{DatePromoted:o}"); }
     return dict;
   }
 }

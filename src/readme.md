@@ -11,7 +11,19 @@
 - Promote:
   - support full promote (entire list), i.e. delete all and recreate
 
+- Cloud
+  - Use Code Generators to generate Lambda/Azure function wrappers
+
 # Developer Guidelines:
+
+## Code Style 
+- 2 tab spaces
+- Braces on same line
+- Avoid long camme-case names.  Methods should be short so having ugly variableNamesThatAddNoValueInAShortContext should
+    be avoided. 
+- Class names and method names can be descriptive, allowing for short/concise variables
+- Use implicitly typed variables where possible
+- Use `is null` / `is not null` instead of `== null` / `!= null`
 
 ## Logging
 - Logging should prefer lower case.  When describing code (classes, etc) then proper casing is allowed
@@ -41,3 +53,6 @@
 - Special care is needed when testing date related operations
   - The `TestingUtcDate.Tick()` method can be used to increment the testing `Now` value to ensure date handling
   is being done correctly
+- Extension methods encourage testing of otherwise private methods so use them
+- Add unit test project as `[assembly: InternalsVisibleTo("<test_project>")]` so that testable code can be marked as 
+  internal

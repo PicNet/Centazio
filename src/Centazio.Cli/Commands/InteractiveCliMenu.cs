@@ -32,7 +32,7 @@ public class InteractiveMenu(CommandTree tree) {
         .Title("Please select one of the following supported options:")
         .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLabel })));
     var selected = n.Children.Find(c => c.Id == branch);
-    if (selected == null) return false;
+    if (selected is null) return false;
 
     while (await DisplayNode(selected)) {}
     return true;

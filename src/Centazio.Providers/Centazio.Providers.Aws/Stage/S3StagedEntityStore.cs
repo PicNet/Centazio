@@ -53,7 +53,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : A
     var objs = await list.Select(i => Client.GetObjectAsync(new GetObjectRequest { BucketName = bucket, Key = i.Key }))
           .ChunkedSynchronousCall(5);
     var notignored = objs
-          .Where(r => r.Metadata[IGNORE_META_KEY] == null)
+          .Where(r => r.Metadata[IGNORE_META_KEY] is null)
           .Take(Limit)
           .ToList();
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged);
@@ -70,7 +70,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : A
       var metas = await todelete.Select(key => Client.GetObjectMetadataAsync(bucket, key)).ChunkedSynchronousCall(5);
       var mks = metas.Select((m, idx) => (Key: todelete[idx], Meta: m));
       todelete = mks
-          .Where(mk => mk.Meta.Metadata[DATE_PROMOTED_META_KEY] != null && String.CompareOrdinal(mk.Meta.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY], $"{before:o}") < 0)
+          .Where(mk => mk.Meta.Metadata[DATE_PROMOTED_META_KEY] is not null && String.CompareOrdinal(mk.Meta.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY], $"{before:o}") < 0)
           .Select(mk => mk.Key)
           .ToList();
     }
@@ -100,8 +100,8 @@ public record S3StagedEntity(Guid KeySuffix, SystemName SourceSystem, ObjectName
       Key = Key, 
       ContentBody = Data
     };
-    if (DatePromoted != null) req.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] = $"{DatePromoted:o}";
-    if (Ignore != null) { req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = Ignore; }
+    if (DatePromoted is not null) req.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] = $"{DatePromoted:o}";
+    if (Ignore is not null) { req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = Ignore; }
     return req;
   }
 }
@@ -109,11 +109,11 @@ public record S3StagedEntity(Guid KeySuffix, SystemName SourceSystem, ObjectName
 internal static class S3StagedEntityStore_StagedEntityExtensions {
   
   public static async Task<S3StagedEntity> FromS3Response(this GetObjectResponse r) {
-    if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] != null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
+    if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
     
     var (source, obj, staged_suffix, _) = r.Key.Split('/');
     var (staged, suffix, _) = staged_suffix.Split('_');
-    var promoted = r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] == null 
+    var promoted = r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] is null 
         ? (DateTime?) null 
         : DateTime.Parse(r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY]).ToUniversalTime();
     

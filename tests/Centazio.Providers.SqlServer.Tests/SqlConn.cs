@@ -37,7 +37,7 @@ public class SqlConn {
   // note: This should only be called by TestSuiteInitialiser.cs
   internal async Task Dispose() {
     if (Real) return;
-    if (container == null) throw new UnreachableException();
+    if (container is null) throw new UnreachableException();
     
     await container.StopAsync();
     await container.DisposeAsync();

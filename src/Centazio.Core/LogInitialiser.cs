@@ -25,13 +25,13 @@ public static class LogInitialiser {
       state.Write('{');
 
       var notnulls = structure.Properties
-          .Where(prop => prop.Value is not ScalarValue sv || sv.Value != null)
+          .Where(prop => prop.Value is not ScalarValue sv || sv.Value is not null)
           .ToList();
       
       char? delim = null;
 
       for (var i = 0; i < notnulls.Count; i++) {
-        if (delim != null) state.Write(delim.Value);
+        if (delim is not null) state.Write(delim.Value);
         delim = ',';
         var prop = structure.Properties[i];
         WriteQuotedJsonString(prop.Name, state);
@@ -72,7 +72,7 @@ public static class LogInitialiser {
       output.Write(logEvent.Timestamp.UtcDateTime.ToString(DATE_TIME_FORMAT));
       output.Write("\",\"@mt\":");
       JsonValueFormatter.WriteQuotedJsonString(logEvent.MessageTemplate.Text, output);
-      var source = logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Where((Func<PropertyToken, bool>)(pt => pt.Format != null)).ToList();
+      var source = logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Where((Func<PropertyToken, bool>)(pt => pt.Format is not null)).ToList();
       if (source.Any()) {
         output.Write(",\"@r\":[");
         var str = "";
@@ -96,7 +96,7 @@ public static class LogInitialiser {
         output.Write('"');
       }
 
-      if (logEvent.Exception != null) {
+      if (logEvent.Exception is not null) {
         output.Write(",\"@x\":");
         JsonValueFormatter.WriteQuotedJsonString(logEvent.Exception.ToString(), output);
       }
