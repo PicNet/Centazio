@@ -59,7 +59,7 @@ internal static class ReadFunctionBaseHelperExtensions {
       var res = new EmptyReadOperationResult(EOperationReadResult.FailedRead, ex.Message, EOperationAbortVote.Abort, ex);
       var newstate = res.UpdateObjectState(op.State, start);
       await ctl.SaveObjectState(newstate);
-      Log.Information("read operation failed {@Operation} {@Results} {@UpdatedObjectState}", op, res, newstate);
+      Log.Information("read operation completed {@Operation} {@Results} {@UpdatedObjectState}", op, res, newstate);
       return res;
     }
     

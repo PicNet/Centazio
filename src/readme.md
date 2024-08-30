@@ -51,7 +51,7 @@
 - All complex logic should be unit tested
 - Simple logic should not be unit tested, this includes records, simple properties, etc
 - Special care is needed when testing date related operations
-  - The `TestingUtcDate.Tick()` method can be used to increment the testing `Now` value to ensure date handling
+  - The `TestingUtcDate.DoTick()` method can be used to increment the testing `Now` value to ensure date handling
   is being done correctly
 - Extension methods encourage testing of otherwise private methods so use them
 - Add unit test project as `[assembly: InternalsVisibleTo("<test_project>")]` so that testable code can be marked as 

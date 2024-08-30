@@ -7,5 +7,7 @@ public class TestingUtcDate(DateTime? now = null) : AbstractUtcDate {
   
   public override DateTime Now => now;
   
-  public DateTime Tick() => now = now.AddMilliseconds(1);
+  public DateTime Tick() => now = now.AddSeconds(1);
+  
+  public static DateTime DoTick() => ((TestingUtcDate) UtcDate.Utc).Tick();
 }

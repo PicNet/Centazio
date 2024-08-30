@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
-
+using Centazio.Test.Lib;
 using F = Centazio.Core.Tests.Read.ReadTestFactories;
 
 namespace Centazio.Core.Tests.Read;
@@ -20,23 +20,28 @@ public class ReadFunctionBaseHelperExtensionsTests {
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var obj2 = await repo.CreateObjectState(ss, "2");
+    var template = await repo.CreateObjectState(ss, "2"); 
     
     var cfg = new ReadFunctionConfig(NAME, NAME, Factories.OP_CONFIGS);
     var states = await cfg.Operations.LoadOperationsStates(ss, repo);
+    
     Assert.That(states, Has.Count.EqualTo(4));
     Enumerable.Range(0, 4).ForEachIdx(TestAtIndex);
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      Assert.That(states[idx].State, Is.EqualTo(idx == 1 ? obj2 : obj2 with { Object = name}));
-      Assert.That(states[idx].State, Is.EqualTo(await repo.GetObjectState(ss, name)));
+      var exp = template with { Object = name };
+      var actual = states[idx].State;
+      
+      Assert.That(actual, Is.EqualTo(exp));
+      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, name)));
     }
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    await repo.SaveObjectState(await repo.CreateObjectState(ss, "2") with { Active = false });
+    var updated = await repo.CreateObjectState(ss, "2") with { Active = false };
+    await repo.SaveObjectState(updated);
     
     var states = await Factories.OP_CONFIGS.LoadOperationsStates(ss, repo);
     var names = states.Select(s => s.Settings.Object.Value).ToList();
@@ -93,6 +98,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
       await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo),
       await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo)
     };
+    
     var results = await states.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
     var newstates = repo.Objects.Values.ToList();
     
