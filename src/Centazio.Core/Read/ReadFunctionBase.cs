@@ -17,7 +17,7 @@ public abstract class ReadFunctionBase(
   public async Task<IEnumerable<BaseFunctionOperationResult>> Run(SystemState state, DateTime start) => 
       await (await cfg.Operations
           .LoadOperationsStates(state, ctl))
-          .GetReadyOperations(UtcDate.UtcNow)
+          .GetReadyOperations(start)
           .Prioritise(Prioritiser)
           .RunOperationsTillAbort(runner, ctl, start);
 }

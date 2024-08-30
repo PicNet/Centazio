@@ -2,6 +2,7 @@
 using Amazon.Organizations;
 using Amazon.Organizations.Model;
 using Amazon.Runtime;
+using Centazio.Core.Secrets;
 
 namespace Centazio.Cli.Infra.Aws;
 
@@ -12,7 +13,7 @@ public interface IAwsAccounts {
 
 }
 
-public class AwsAccounts(CliSecrets secrets) : IAwsAccounts {
+public class AwsAccounts(CentazioSecrets secrets) : IAwsAccounts {
 
   private readonly IAmazonOrganizations client = new AmazonOrganizationsClient(
       new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET),

@@ -4,7 +4,7 @@ namespace Centazio.Cli.Infra.Ui;
 
 public static class UiHelpers {
 
-  public static string Ask(string prompt, string defaultval) => 
+  public static string Ask(string prompt, string? defaultval) => 
       string.IsNullOrWhiteSpace(defaultval) 
           ? AnsiConsole.Ask<string>(prompt + ":").Trim() 
           : AnsiConsole.Ask(prompt, defaultval.Trim()).Trim();

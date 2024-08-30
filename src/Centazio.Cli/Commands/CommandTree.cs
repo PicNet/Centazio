@@ -36,6 +36,11 @@ public class CommandTree(IServiceProvider prov) {
         new CommandNode("list", prov.GetRequiredService<ListResourceGroupsCommand>(), branch => branch.AddCommand<ListResourceGroupsCommand>("list")),
         new CommandNode("add", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
       ]),
+      /*new BranchNode("func", "back", [
+        new CommandNode("create-app", prov.GetRequiredService<ListResourceGroupsCommand>(), branch => branch.AddCommand<ListResourceGroupsCommand>("list")),
+        new CommandNode("create", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
+        new CommandNode("deploy", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
+      ]),*/
     ])
   ]);
 
