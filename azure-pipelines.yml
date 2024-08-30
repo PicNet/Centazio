@@ -31,6 +31,8 @@ steps:
 - task: VisualStudioTestPlatformInstaller@1
   inputs:
     packageFeedSelector: 'nugetOrg'
+    versionSelector: 'specificVersion'
+    testPlatformVersion: '17.5.0'
 
 - task: VSTest@3
   inputs:
