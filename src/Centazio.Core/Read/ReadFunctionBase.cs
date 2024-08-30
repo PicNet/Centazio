@@ -30,7 +30,7 @@ internal static class ReadFunctionBaseHelperExtensions {
 
   internal static IEnumerable<ReadOperationStateAndConfig> GetReadyOperations(this IEnumerable<ReadOperationStateAndConfig> states, DateTime now) {
     bool IsOperationReady(ReadOperationStateAndConfig op) {
-      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.UtcNow.AddYears(-10));
+      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? UtcDate.UtcNow.AddYears(-10));
       return next <= now;
     }
     return states.Where(IsOperationReady);
