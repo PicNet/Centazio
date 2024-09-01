@@ -10,39 +10,50 @@ public abstract class Node(string id, Node? parent = null) {
   public Node? Parent { get; set; } = parent;
   public string Id => id;
 }
+
 public class BranchNode(string id, string backlbl, List<Node> children) : Node(id) {
   public string BackLabel => backlbl;
   public List<Node> Children => children;
 }
-public class CommandNode(string id, ICentazioCommand cmd, Action<IConfigurator<CommandSettings>> addto) : Node(id) {
+
+public abstract class AbstractCommandNode(string id, ICentazioCommand cmd) : Node(id) {
+  public abstract void AddTo(IConfigurator<CommandSettings> branch);
   public ICentazioCommand Command => cmd;
-  public Action<IConfigurator<CommandSettings>> AddTo => addto;
 }
 
-public class CommandTree(IServiceProvider prov) {
+public class CommandNode<T>(string id, ICentazioCommand cmd) : AbstractCommandNode(id, cmd) where T : class, ICommandLimiter<CommandSettings> {
+  public override void AddTo(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(Id);
+}
+
+public class CommandTree {
+
+  internal BranchNode RootNode { get; }
+  private IServiceProvider Provider { get; }
   
-  public readonly BranchNode RootNode = new("centazio", "exit", [
-    new BranchNode("aws", "back", [
-      new BranchNode("account", "back", [
-        new CommandNode("list", prov.GetRequiredService<ListAccountsCommand>(), branch => branch.AddCommand<ListAccountsCommand>("list")),
-        new CommandNode("add", prov.GetRequiredService<AddAccountCommand>(), branch => branch.AddCommand<AddAccountCommand>("add"))
+  public CommandTree(IServiceProvider prov) {
+    Provider = prov;
+    
+    RootNode = new("centazio", "exit", [
+      new BranchNode("aws", "back", [
+        new BranchNode("account", "back", [
+          CreateCommandNode<ListAccountsCommand>("list"),
+          CreateCommandNode<AddAccountCommand>("add")
+        ])
+      ]),
+      new BranchNode("az", "back", [
+        new BranchNode("sub", "back", [
+          CreateCommandNode<ListSubscriptionsCommand>("list")
+        ]),
+        new BranchNode("rg", "back", [
+          CreateCommandNode<ListResourceGroupsCommand>("list"),
+          CreateCommandNode<AddResourceGroupCommand>("add"),
+        ]),
+        new BranchNode("func", "back", [
+          CreateCommandNode<DeployFunctionAppCommand>("deploy"),
+        ]),
       ])
-    ]),
-    new BranchNode("az", "back", [
-      new BranchNode("sub", "back", [
-        new CommandNode("list", prov.GetRequiredService<ListSubscriptionsCommand>(), branch => branch.AddCommand<ListSubscriptionsCommand>("list"))
-      ]),
-      new BranchNode("rg", "back", [
-        new CommandNode("list", prov.GetRequiredService<ListResourceGroupsCommand>(), branch => branch.AddCommand<ListResourceGroupsCommand>("list")),
-        new CommandNode("add", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
-      ]),
-      /*new BranchNode("func", "back", [
-        new CommandNode("create-app", prov.GetRequiredService<ListResourceGroupsCommand>(), branch => branch.AddCommand<ListResourceGroupsCommand>("list")),
-        new CommandNode("create", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
-        new CommandNode("deploy", prov.GetRequiredService<AddResourceGroupCommand>(), branch => branch.AddCommand<AddResourceGroupCommand>("list")),
-      ]),*/
-    ])
-  ]);
+    ]);
+  }
 
   public void Initialise(IConfigurator cfg) {
     void AddChildToRootCfg(BranchNode root, BranchNode lvl1) {
@@ -57,7 +68,7 @@ public class CommandTree(IServiceProvider prov) {
         case BranchNode bn:
           parent.AddBranch(bn.Id, branch => bn.Children.ForEach(c => AddNodeChildToParentCfg(branch, bn, c)));
           break;
-        case CommandNode ln:
+        case AbstractCommandNode ln:
           ln.AddTo(parent);
           break;
         default: throw new UnreachableException();
@@ -76,4 +87,7 @@ public class CommandTree(IServiceProvider prov) {
     return String.Join(' ', ancestry.Select(n2 => n2.Id));
   }
 
+  private CommandNode<T> CreateCommandNode<T>(string id) where T : class, ICentazioCommand, ICommandLimiter<CommandSettings> {
+    return new CommandNode<T>(id, Provider.GetRequiredService<T>());
+  }
 }

@@ -22,7 +22,7 @@ public class InteractiveMenu(CommandTree tree) {
   public async Task<bool> DisplayNode(Node n) {
     return n switch { 
       BranchNode bn => await DisplayBranchNode(bn), 
-      CommandNode cn => await DisplayCommandNode(cn), 
+      AbstractCommandNode cn => await DisplayCommandNode(cn), 
       _ => throw new UnreachableException() 
     };
   }
@@ -38,7 +38,7 @@ public class InteractiveMenu(CommandTree tree) {
     return true;
   }
   
-  private async Task<bool> DisplayCommandNode(CommandNode n) {
+  private async Task<bool> DisplayCommandNode(AbstractCommandNode n) {
     await n.Command.RunInteractiveCommand();
     
     AnsiConsole.WriteLine();
