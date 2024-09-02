@@ -210,8 +210,10 @@ public abstract class StagedEntityStoreDefaultTests {
     var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
     
     var expected = new StagedEntity(NAME, NAME, stageddt, data, Hash(data));
+    var ses = await GetAsSes(dt.Now.AddYears(-1), NAME, NAME);
+    
     Assert.That(staged?.CloneNew(), Is.EqualTo(expected));
-    await Assert.ThatAsync(() => GetAsSes(dt.Now.AddYears(-1), NAME, NAME), Is.EquivalentTo(new [] {expected}));
+    Assert.That(ses, Is.EquivalentTo(new [] {expected}));
     Assert.That(duplicate, Is.Null);
   }
   

@@ -39,17 +39,25 @@ END
   }
 
   protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
-    await using var conn = newconn();
     var sqlstaged = staged.Select(SqlServerStagedEntity.FromStagedEntity).ToList();
-    var checksums = sqlstaged.Select(e => e.Checksum).ToList();
-    var duplicates = (await conn.QueryAsync<string>($"SELECT Checksum FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE Checksum IN ({String.Join(',', checksums.Select(cs => $"'{cs}'"))})")).ToDictionary(cs => cs, _ => true);
-    var local = new Dictionary<string, bool>();
-    var tostage = sqlstaged.Where(e => !duplicates.ContainsKey(e.Checksum) && local.TryAdd(e.Checksum, true)).ToList();
-    
-    await conn.ExecuteAsync($@"INSERT INTO {SCHEMA}.{STAGED_ENTITY_TBL} (Id, SourceSystem, Object, DateStaged, Data, Checksum)
-        VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @Checksum)", tostage);
-    
-    return tostage;
+    if (!sqlstaged.Any()) return sqlstaged;
+    // all staged entities will have the same DateStaged so just use first as the id of this bulk insert
+    var dtstaged = sqlstaged.First().DateStaged;
+    await using var conn = newconn();
+    await conn.ExecuteAsync($@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
+USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @Checksum))
+  AS se (Id, SourceSystem, Object, DateStaged, Data, Checksum)
+ON 
+  T.SourceSystem = se.SourceSystem
+  AND T.Object = se.Object
+  AND T.Checksum = se.Checksum
+WHEN NOT MATCHED THEN
+ INSERT (Id, SourceSystem, Object, DateStaged, Data, Checksum)
+ VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data, se.Checksum)
+-- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
+;", sqlstaged);
+    var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
+    return sqlstaged.Where(e => ids.ContainsKey(e.Id));
   }
 
   public override async Task Update(IEnumerable<StagedEntity> staged) {
