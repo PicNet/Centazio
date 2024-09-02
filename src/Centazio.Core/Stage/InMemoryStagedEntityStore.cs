@@ -19,11 +19,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
 
   protected override Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
     var newchecksums = new Dictionary<string, bool>();
-    var lst = staged.Where(e => {
-      var cs = e.Checksum;
-      if (!checksums.ContainsKey(cs)) return newchecksums.TryAdd(cs, true);
-      return false;
-    }).ToList();
+    var lst = staged.Where(e => !checksums.ContainsKey(e.Checksum) && newchecksums.TryAdd(e.Checksum, true)).ToList();
     
     saved.AddRange(lst);
     newchecksums.Keys.ForEachIdx(cs => checksums.Add(cs, true));

@@ -27,6 +27,7 @@ BEGIN
     Object nvarchar (64) NOT NULL, 
     DateStaged datetime2 NOT NULL, 
     Data nvarchar (max) NOT NULL,
+    Checksum nvarchar (64) NOT NULL,
     DatePromoted datetime2 NULL,
     Ignore nvarchar (256) NULL)
 
@@ -37,27 +38,28 @@ END
     return this;
   }
 
-  protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) => await DoSqlUpsert(SqlServerStagedEntity.FromStagedEntity(staged));
-  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) => await DoSqlUpsert(staged.Select(SqlServerStagedEntity.FromStagedEntity));
+  protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
+    await using var conn = newconn();
+    var sqlstaged = staged.Select(SqlServerStagedEntity.FromStagedEntity).ToList();
+    var checksums = sqlstaged.Select(e => e.Checksum).ToList();
+    var duplicates = (await conn.QueryAsync<string>($"SELECT Checksum FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE Checksum IN ({String.Join(',', checksums.Select(cs => $"'{cs}'"))})")).ToDictionary(cs => cs, _ => true);
+    var local = new Dictionary<string, bool>();
+    var tostage = sqlstaged.Where(e => !duplicates.ContainsKey(e.Checksum) && local.TryAdd(e.Checksum, true)).ToList();
+    
+    await conn.ExecuteAsync($@"INSERT INTO {SCHEMA}.{STAGED_ENTITY_TBL} (Id, SourceSystem, Object, DateStaged, Data, Checksum)
+        VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @Checksum)", tostage);
+    
+    return tostage;
+  }
 
-  private async Task<T> DoSqlUpsert<T>(T staged) {
+  public override async Task Update(IEnumerable<StagedEntity> staged) {
     await using var conn = newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL}
-USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @DatePromoted, @Ignore))
-  AS se (Id, SourceSystem, Object, DateStaged, Data, DatePromoted, Ignore)
+USING (VALUES (@Id, @DatePromoted, @Ignore)) AS se (Id, DatePromoted, Ignore)
 ON {SCHEMA}.{STAGED_ENTITY_TBL}.Id = se.Id
-WHEN MATCHED THEN
- UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore
-WHEN NOT MATCHED THEN
- INSERT (Id, SourceSystem, Object, DateStaged, Data)
- VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data);
-", staged);
-    return staged;
+WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore;", staged);
   }
-
-  public override Task Update(StagedEntity staged) => SaveImpl(staged);
-  public override Task Update(IEnumerable<StagedEntity> staged) => SaveImpl(staged);
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
     await using var conn = newconn();

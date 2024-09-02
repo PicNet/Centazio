@@ -14,7 +14,7 @@ public abstract class StagedEntityStoreDefaultTests {
   protected TestingUtcDate dt;
   
   [SetUp] public async Task SetUp() {
-    store = await GetStore(0, s => s);
+    store = await GetStore(0, Hash);
     dt = (TestingUtcDate) UtcDate.Utc;
   }
 
@@ -26,7 +26,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var minus1 =  await GetSingleAsSes(dt.Now.AddMilliseconds(-1), NAME, NAME);
     
     Assert.That(fromnow, Is.Empty);
-    Assert.That(minus1, Is.EqualTo(new StagedEntity(NAME, NAME, dt.Now, NAME, NAME)));
+    Assert.That(minus1, Is.EqualTo(new StagedEntity(NAME, NAME, dt.Now, NAME, Hash(NAME))));
   }
   
   [Test] public async Task Test_updating_single_entity() {
@@ -46,7 +46,7 @@ public abstract class StagedEntityStoreDefaultTests {
     
     Assert.That(fromnow, Is.Empty);
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, NAME + idx, NAME + idx))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, NAME + idx, Hash(NAME + idx)))));
   }
 
   [Test] public async Task Test_updating_multiple_entities() {
@@ -56,7 +56,7 @@ public abstract class StagedEntityStoreDefaultTests {
     
     Assert.That(fromnow, Is.Empty);
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, NAME + idx, NAME + idx))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, NAME + idx, Hash(NAME + idx)))));
   }
 
   [Test] public async Task Test_saving_multiple_large_entities() {
@@ -69,7 +69,7 @@ public abstract class StagedEntityStoreDefaultTests {
     
     Assert.That(fromnow, Is.Empty);
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, str + idx, str + idx))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(NAME, NAME, dt.Now, str + idx, Hash(str + idx)))));
   }
   
   [Test] public async Task Test_get_returns_expected() {
@@ -87,10 +87,10 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(() => GetAsSes(start, name2, name3), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name3, name2), Is.Empty);
 
-    Assert.That(await GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, data2)));
+    Assert.That(await GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, Hash(data2))));
     await Assert.ThatAsync(async () => (await GetAsSes(start, name1, name1)).Count, Is.EqualTo(2));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, name2, name2) }));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, name3, name3) }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, name2, Hash(name2)) }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, name3, Hash(name3)) }));
   }
   
   [Test] public async Task Test_get_returns_expected_with_ignores() {
@@ -119,10 +119,10 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(() => GetAsSes(start, name2, name3), Is.Empty);
     await Assert.ThatAsync(() => GetAsSes(start, name3, name2), Is.Empty);
 
-    await Assert.ThatAsync(() => GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, "not ignore: 1.2", "not ignore: 1.2")));
+    await Assert.ThatAsync(() => GetSingleAsSes(staged1, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, "not ignore: 1.2", Hash("not ignore: 1.2"))));
     await Assert.ThatAsync(async () => (await GetAsSes(start, name1, name1)).Count, Is.EqualTo(2));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, "not ignore: 2", "not ignore: 2") }));
-    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, "not ignore: 3", "not ignore: 3") }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name2, name2), Is.EqualTo(new List<StagedEntity> { new(name2, name2, staged2, "not ignore: 2", Hash("not ignore: 2")) }));
+    await Assert.ThatAsync(() => GetAsSes(staged1, name3, name3), Is.EqualTo(new List<StagedEntity> { new(name3, name3, staged2, "not ignore: 3", Hash("not ignore: 3")) }));
     
     async Task<StagedEntity> Create(DateTime dtstaged, string name, string data, string? ignore) {
       var staged = await store.Stage(dtstaged, name, name, data) ?? throw new Exception();
@@ -132,7 +132,7 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [Test] public async Task Test_get_returns_oldest_first_page_as_expected() {
     var limit = 10;
-    var limstore = await GetStore(limit, s => s);
+    var limstore = await GetStore(limit, Hash);
     var start = dt.Now;
     var created = new List<StagedEntity>();
     foreach (var idx in Enumerable.Range(0, 25)) created.Add(await limstore.Stage(dt.Tick(), NAME, NAME, NAME + idx) ?? throw new Exception());
@@ -163,14 +163,14 @@ public abstract class StagedEntityStoreDefaultTests {
     await store.Stage(staged2, name3, name3, name3);
 
     await store.DeleteStagedBefore(staged2, name1, name1); // will delete name1@staged1
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, data2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, name2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, name3)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, Hash(data2))));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, Hash(name2))));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, Hash(name3))));
     
     await store.DeleteStagedBefore(delete_all, name1, name1); // will delete remaining name1
     await Assert.ThatAsync(() => store.Get(get_all, name1, name1), Is.Empty);
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, name2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, name3)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, Hash(name2))));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, Hash(name3))));
   }
   
   [Test] public async Task Test_delete_large_batch() {
@@ -194,40 +194,39 @@ public abstract class StagedEntityStoreDefaultTests {
     await store.Update(all);
     
     await store.DeletePromotedBefore(promoted2, name1, name1);
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, data2, promoted2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, name2, promoted2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, name3, promoted2)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name1, name1), Is.EqualTo(new StagedEntity(name1, name1, staged2, data2, Hash(data2), promoted2)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, Hash(name2), promoted2)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, Hash(name3), promoted2)));
     
     await store.DeleteStagedBefore(delete_all, name1, name1); 
     await Assert.ThatAsync(() => GetAsSes(get_all, name1, name1), Is.Empty);
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, name2, promoted2)));
-    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, name3, promoted2)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name2, name2), Is.EqualTo(new StagedEntity(name2, name2, staged2, name2, Hash(name2), promoted2)));
+    await Assert.ThatAsync(async () => await GetSingleAsSes(get_all, name3, name3), Is.EqualTo(new StagedEntity(name3, name3, staged2, name3, Hash(name3), promoted2)));
   }
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
-    store = await GetStore(0, TestingFactories.TestingChecksum);
-    
     var (data, stageddt) = (Guid.NewGuid().ToString(), dt.Tick());
     var staged = await store.Stage(stageddt, NAME, NAME, data);
     var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
     
-    var expected = new StagedEntity(NAME, NAME, stageddt, data, data.GetHashCode().ToString());
-    Assert.That(staged, Is.EqualTo(expected));
-    await Assert.ThatAsync(() => store.Get(dt.Now.AddYears(-1), NAME, NAME), Is.EquivalentTo(new [] {expected}));
+    var expected = new StagedEntity(NAME, NAME, stageddt, data, Hash(data));
+    Assert.That(staged?.CloneNew(), Is.EqualTo(expected));
+    await Assert.ThatAsync(() => GetAsSes(dt.Now.AddYears(-1), NAME, NAME), Is.EquivalentTo(new [] {expected}));
     Assert.That(duplicate, Is.Null);
   }
   
   [Test] public async Task Test_staging_multiple_entities_ignores_duplicates() {
-    store = await GetStore(0, TestingFactories.TestingChecksum);
-    
     var (start, half) = (dt.Now.AddSeconds(1), LARGE_BATCH_SIZE /  2);
-    var staged = (await store.Stage(dt.Tick(), NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => NAME + idx % half))).ToList();
+    var staged = (await store.Stage(dt.Tick(), NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => NAME + idx % half)))
+        .Select(e => e.CloneNew()).ToList();
     var staged2 = await GetAsSes(dt.Now.AddYears(-1), NAME, NAME);
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
-    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(NAME, NAME, start, NAME + idx, (NAME + idx).GetHashCode().ToString()))));
+    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(NAME, NAME, start, NAME + idx, Hash(NAME + idx)))));
   }
+  
+  public string Hash(string str) => TestingFactories.TestingChecksum(str);
   
   
   private async Task<StagedEntity> GetSingleAsSes(DateTime after, SystemName source, ObjectName obj) =>
