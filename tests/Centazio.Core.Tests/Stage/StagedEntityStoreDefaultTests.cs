@@ -206,9 +206,12 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
     var (data, stageddt) = (Guid.NewGuid().ToString(), dt.Tick());
+    Console.WriteLine("Stage 1");
     var staged = await store.Stage(stageddt, NAME, NAME, data);
+    Console.WriteLine("Stage 2");
     var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
     
+    Console.WriteLine("Queries");
     var expected = new StagedEntity(NAME, NAME, stageddt, data, Hash(data));
     var ses = await GetAsSes(dt.Now.AddYears(-1), NAME, NAME);
     
@@ -230,10 +233,12 @@ public abstract class StagedEntityStoreDefaultTests {
   
   public string Hash(string str) => TestingFactories.TestingChecksum(str);
   
-  
-  private async Task<StagedEntity> GetSingleAsSes(DateTime after, SystemName source, ObjectName obj) =>
-    (await GetAsSes(after, source, obj)).Select(se => se.CloneNew()).Single();
-  
-  private async Task<List<StagedEntity>> GetAsSes(DateTime after, SystemName source, ObjectName obj) =>
-    (await store.Get(after, source, obj)).Select(se => se.CloneNew()).ToList();
+ private async Task<StagedEntity> GetSingleAsSes(DateTime after, SystemName source, ObjectName obj) => 
+      (await GetAsSes(after, source, obj)).Single();
+
+  private async Task<List<StagedEntity>> GetAsSes(DateTime after, SystemName source, ObjectName obj) {
+    var lst = await store.Get(after, source, obj);
+    return lst.Select(se => se.CloneNew()).ToList();
+  }
+
 }

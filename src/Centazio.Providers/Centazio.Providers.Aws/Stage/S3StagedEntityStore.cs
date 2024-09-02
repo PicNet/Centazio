@@ -28,21 +28,13 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
     return this;
   }
-
-  protected override async Task<StagedEntity> SaveImpl(StagedEntity staged) {
-    var s3se = staged.ToS3StagedEntity();
-    await Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket));
-    return s3se;
-  }
-
-  protected override async Task<IEnumerable<StagedEntity>> SaveImpl(IEnumerable<StagedEntity> staged) {
+  
+  protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
     var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
     await lst.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
     return lst.AsEnumerable();
   }
-
-  public override Task Update(StagedEntity staged) => SaveImpl(staged);
-  public override Task Update(IEnumerable<StagedEntity> staged) => SaveImpl(staged);
+  public override Task Update(IEnumerable<StagedEntity> staged) => StageImpl(staged);
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
     var from = $"{source.Value}/{obj.Value}/{after:o}_z";
