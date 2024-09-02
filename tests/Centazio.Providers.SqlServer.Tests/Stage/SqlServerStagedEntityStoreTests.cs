@@ -8,11 +8,11 @@ namespace Centazio.Providers.Aws.Tests.Stage;
 
 public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0) 
-      => await new TestingSqlServerStagedEntityStore(limit).Initalise();
+  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, string>? checksum = null) 
+      => await new TestingSqlServerStagedEntityStore(limit, checksum).Initalise();
 
-  class TestingSqlServerStagedEntityStore(int limit) 
-      : SqlServerStagedEntityStore(() => SqlConn.Instance.Conn(), limit) {
+  class TestingSqlServerStagedEntityStore(int limit, Func<string, string>? checksum = null) 
+      : SqlServerStagedEntityStore(() => SqlConn.Instance.Conn(), limit, checksum ?? (s => s.GetHashCode().ToString()) ) {
 
     public override async ValueTask DisposeAsync() {
       if (!SqlConn.Instance.Real) {

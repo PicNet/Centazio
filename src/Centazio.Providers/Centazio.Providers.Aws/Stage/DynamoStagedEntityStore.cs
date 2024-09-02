@@ -10,7 +10,7 @@ using C = Centazio.Providers.Aws.Stage.DynamoConstants;
     
 namespace Centazio.Providers.Aws.Stage;
 
-public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit) : AbstractStagedEntityStore(limit) {
+public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
   
   protected IAmazonDynamoDB Client => client;
   
@@ -61,7 +61,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       return dses;
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       ConsistentRead = true,
@@ -72,8 +72,8 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
           { "#rangekey", C.RANGE_KEY },
         },
         ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry> {
-          { ":hashval", new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey() },
-          { ":rangeval", $"{since:o}|z" }
+          { ":hashval", new StagedEntity(source, obj, DateTime.MinValue, "", "").ToDynamoHashKey() },
+          { ":rangeval", $"{after:o}|z" }
         }
       },
       FilterExpression = new Expression {
@@ -91,7 +91,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     var filter = new QueryFilter();
-    filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "").ToDynamoHashKey());
+    filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "", "").ToDynamoHashKey());
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       ConsistentRead = true, 

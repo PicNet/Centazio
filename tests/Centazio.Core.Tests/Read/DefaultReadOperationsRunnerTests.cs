@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
-using F = Centazio.Core.Tests.Read.ReadTestFactories;
 
 namespace Centazio.Core.Tests.Read;
 
@@ -11,7 +10,7 @@ public class DefaultReadOperationRunnerTests {
 
   [SetUp] public void SetUp() {
     store = new TestingStagedEntityStore();
-    repo = F.Repo();
+    repo = TestingFactories.Repo();
   }
   
   [TearDown] public async Task TearDown() {
@@ -20,8 +19,8 @@ public class DefaultReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = F.Runner(store, repo);
-    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.FailedRead, F.TestingSingleReadOperationImplementation));
+    var runner = TestingFactories.Runner(store, repo);
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.FailedRead, TestingFactories.TestingSingleReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -33,8 +32,8 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = F.Runner(store, repo);
-    var actual = await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingEmptyReadOperationImplementation));
+    var runner = TestingFactories.Runner(store, repo);
+    var actual = await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, TestingFactories.TestingEmptyReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -46,11 +45,11 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
-    var runner = F.Runner(store, repo);
-    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingSingleReadOperationImplementation));
+    var runner = TestingFactories.Runner(store, repo);
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
     
     var staged = store.Contents.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), UtcDate.UtcNow, staged.Data)));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
     ValidateResult(
         new SingleRecordReadOperationResult(EOperationReadResult.Success, "", actual.Payload),
         actual,
@@ -60,12 +59,12 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = F.Runner(store, repo);
-    var actual = (ListRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, F.TestingListReadOperationImplementation));
+    var runner = TestingFactories.Runner(store, repo);
+    var actual = (ListRecordReadOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationReadResult.Success, TestingFactories.TestingListReadOperationImplementation));
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), UtcDate.UtcNow, s.Data))));
+        staged.Select(s => new StagedEntity(EOperationReadResult.Success.ToString(), EOperationReadResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.Checksum))));
     ValidateResult(
         new ListRecordReadOperationResult(EOperationReadResult.Success, "", actual.PayloadList),
         actual,

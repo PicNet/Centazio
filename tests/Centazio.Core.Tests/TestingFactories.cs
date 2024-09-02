@@ -3,9 +3,9 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
 using Centazio.Core.Stage;
 
-namespace Centazio.Core.Tests.Read;
+namespace Centazio.Core.Tests;
 
-public static class ReadTestFactories {
+public static class TestingFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository Repo() => new();
   public static IReadOperationRunner Runner(
@@ -31,9 +31,10 @@ public static class ReadTestFactories {
   public static Task<ReadOperationResult> TestingListReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
       Task.FromResult(new ListRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList()) as ReadOperationResult);
 
+  public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast 
 }
 
-public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0) { public List<StagedEntity> Contents => saved.ToList(); }
+public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, TestingFactories.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;

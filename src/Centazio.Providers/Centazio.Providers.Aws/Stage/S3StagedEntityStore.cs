@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : AbstractStagedEntityStore(limit) {
+public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
@@ -44,8 +44,8 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : A
   public override Task Update(StagedEntity staged) => SaveImpl(staged);
   public override Task Update(IEnumerable<StagedEntity> staged) => SaveImpl(staged);
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
-    var from = $"{source.Value}/{obj.Value}/{since:o}_z";
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
+    var from = $"{source.Value}/{obj.Value}/{after:o}_z";
     var list = (await ListAll(source, obj))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
         .ToList();
@@ -89,10 +89,10 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit) : A
 
 }
 
-public record S3StagedEntity(Guid KeySuffix, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, DateTime? DatePromoted = null, string? Ignore = null) 
-    : StagedEntity(SourceSystem, Object, DateStaged, Data, DatePromoted, Ignore) {
+public record S3StagedEntity(SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) 
+    : StagedEntity(SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore) {
   
-  public string Key => $"{SourceSystem.Value}/{Object.Value}/{DateStaged:o}_{KeySuffix}";
+  public string Key => $"{SourceSystem.Value}/{Object.Value}/{DateStaged:o}_{Checksum}";
   
   public PutObjectRequest ToPutObjectRequest(string bucket) {
     var req = new PutObjectRequest { 
@@ -111,8 +111,8 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
   public static async Task<S3StagedEntity> FromS3Response(this GetObjectResponse r) {
     if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
     
-    var (source, obj, staged_suffix, _) = r.Key.Split('/');
-    var (staged, suffix, _) = staged_suffix.Split('_');
+    var (source, obj, staged_checksum, _) = r.Key.Split('/');
+    var (staged, checksum, _) = staged_checksum.Split('_');
     var promoted = r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] is null 
         ? (DateTime?) null 
         : DateTime.Parse(r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY]).ToUniversalTime();
@@ -121,11 +121,11 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return new S3StagedEntity(Guid.Parse(suffix), source, obj, DateTime.Parse(staged).ToUniversalTime(), data, promoted);
+    return new S3StagedEntity(source, obj, DateTime.Parse(staged).ToUniversalTime(), data, checksum, promoted);
   }
   
   public static S3StagedEntity ToS3StagedEntity(this StagedEntity se) {
     return se as S3StagedEntity ?? 
-        new S3StagedEntity(Guid.NewGuid(), se.SourceSystem, se.Object, se.DateStaged, se.Data, se.DatePromoted, se.Ignore);
+        new S3StagedEntity(se.SourceSystem, se.Object, se.DateStaged, se.Data, se.Checksum, se.DatePromoted, se.Ignore);
   }
 }

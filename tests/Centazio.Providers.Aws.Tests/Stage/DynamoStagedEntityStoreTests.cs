@@ -21,13 +21,13 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     await container.DisposeAsync();
   }
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0) {
+  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, string>? checksum = null) {
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
-    return await new TestingDynamoStagedEntityStore(client, limit).Initalise();
+    return await new TestingDynamoStagedEntityStore(client, limit, checksum).Initalise();
     
   }
 
-  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100) : DynamoStagedEntityStore(client, TABLE_NAME, limit) {
+  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100, Func<string, string>? checksum = null) : DynamoStagedEntityStore(client, TABLE_NAME, limit, checksum ?? (s => s.GetHashCode().ToString())) {
     private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
 
     public override async ValueTask DisposeAsync() {

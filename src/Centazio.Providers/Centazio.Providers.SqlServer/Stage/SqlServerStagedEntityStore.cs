@@ -6,7 +6,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SQLServer.Stage;
 
-public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit) : AbstractStagedEntityStore(limit) {
+public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);
@@ -59,10 +59,10 @@ WHEN NOT MATCHED THEN
   public override Task Update(StagedEntity staged) => SaveImpl(staged);
   public override Task Update(IEnumerable<StagedEntity> staged) => SaveImpl(staged);
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime since, SystemName source, ObjectName obj) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
     await using var conn = newconn();
     var limit = Limit > 0 ? $" TOP {Limit}" : "";
-    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL ORDER BY DateStaged", new { since });
+    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL ORDER BY DateStaged", new { since = after });
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {

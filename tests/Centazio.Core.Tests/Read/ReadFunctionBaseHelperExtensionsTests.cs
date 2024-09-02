@@ -1,7 +1,6 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
-using F = Centazio.Core.Tests.Read.ReadTestFactories;
 
 namespace Centazio.Core.Tests.Read;
 
@@ -10,7 +9,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   private const string NAME = nameof(ReadFunctionBaseHelperExtensionsTests);
   private TestingCtlRepository repo;
   
-  [SetUp] public void SetUp() => repo = ReadTestFactories.Repo();
+  [SetUp] public void SetUp() => repo = TestingFactories.Repo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
@@ -48,7 +47,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (cron), F.TestingListReadOperationImplementation));
+    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (cron), TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -66,7 +65,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
-    var runner = ReadTestFactories.Runner(repo: repo);
+    var runner = TestingFactories.Runner(repo: repo);
     
     var states1 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo) };
     var results1 = await states1.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
@@ -90,7 +89,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
-    var runner = ReadTestFactories.Runner(repo: repo);
+    var runner = TestingFactories.Runner(repo: repo);
     
     var states = new List<ReadOperationStateAndConfig> {
       await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo),
@@ -113,7 +112,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
-    var runner = ReadTestFactories.Runner(repo: repo);
+    var runner = TestingFactories.Runner(repo: repo);
     
     var states = new List<ReadOperationStateAndConfig> {
       await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo),
@@ -146,13 +145,13 @@ public class ReadFunctionBaseHelperExtensionsTests {
     public static async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(EOperationReadResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new ("* * * * *"), ReadTestFactories.TestingAbortingAndEmptyReadOperationImplementation));
+            new (result.ToString(), new ("* * * * *"), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
     
     public static List<ReadOperationConfig> OP_CONFIGS => [
-      new ReadOperationConfig("1", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("2", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("3", new ("* * * * *"), F.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("4", new ("* * * * *"), F.TestingEmptyReadOperationImplementation)
+      new ReadOperationConfig("1", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("2", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("3", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("4", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation)
     ];
   }
 }
