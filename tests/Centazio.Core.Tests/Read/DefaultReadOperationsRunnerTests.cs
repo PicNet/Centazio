@@ -73,6 +73,25 @@ public class DefaultReadOperationRunnerTests {
             EOperationReadResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength: staged.Count) { LastPayLoadType = EPayloadType.List } );
   }
   
+  [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
+    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new ("")));
+    Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Success, "", new (new List<string>())));
+    Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Success, "", new (new List<string> { "1", "", null! })));
+    
+    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new("*")), Is.Not.Null);
+    Assert.That(new ListRecordReadOperationResult(EOperationReadResult.Success, "", new(new List<string> { "1", "2" })), Is.Not.Null);
+    Assert.That(new EmptyReadOperationResult(EOperationReadResult.Success, ""), Is.Not.Null);
+  }
+  
+  [Test] public void Test_results_cannot_be_uknown_Result() {
+    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Unknown, "", new ("*")));
+    Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Unknown, "", new (new List<string> { "*" })));
+    
+    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new("*")), Is.Not.Null);
+    Assert.That(new ListRecordReadOperationResult(EOperationReadResult.Success, "", new(new List<string> { "1", "2" })), Is.Not.Null);
+    Assert.That(new EmptyReadOperationResult(EOperationReadResult.Success, ""), Is.Not.Null);
+  }
+  
   private void ValidateResult(ReadOperationResult expected, ReadOperationResult actual, SystemState expss, ObjectState expos) {
     var actualos = repo.Objects.Single().Value;
     expos = expos with { System = expss.System, Stage = expss.Stage, LastRunMessage = actualos.LastRunMessage };
@@ -85,6 +104,6 @@ public class DefaultReadOperationRunnerTests {
   private async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(EOperationReadResult result, Func<DateTime, ReadOperationStateAndConfig, Task<ReadOperationResult>> Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-        new (result.ToString(), new ("* * * * *"), Impl));
+        new (result.ToString(), new (new ("* * * * *")), Impl));
   
 }

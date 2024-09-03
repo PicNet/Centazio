@@ -13,7 +13,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<Exception>(() => new ReadFunctionConfig(NAME, NAME, []).Validate());
+    Assert.Throws<ArgumentException>(() => _ = new ReadFunctionConfig(NAME, NAME, new ([])));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
@@ -47,7 +47,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (cron), TestingFactories.TestingListReadOperationImplementation));
+    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -145,13 +145,13 @@ public class ReadFunctionBaseHelperExtensionsTests {
     public static async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(EOperationReadResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new ("* * * * *"), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
+            new (result.ToString(), new (new ("* * * * *")), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
     
-    public static List<ReadOperationConfig> OP_CONFIGS => [
-      new ReadOperationConfig("1", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("2", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("3", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("4", new ("* * * * *"), TestingFactories.TestingEmptyReadOperationImplementation)
-    ];
+    public static ValidList<ReadOperationConfig> OP_CONFIGS => new ([
+      new ReadOperationConfig("1", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("2", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("3", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("4", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation)
+    ]);
   }
 }

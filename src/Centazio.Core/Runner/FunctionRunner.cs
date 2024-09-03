@@ -12,7 +12,6 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
     var start = UtcDate.UtcNow;
     
     Log.Information("function started {@System} {@Stage}", cfg.System, cfg.Stage);
-    cfg.Validate();
     
     var state = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
     if (!state.Active) {

@@ -10,8 +10,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
   
 
   public async Task<ReadOperationResult> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
-    // run operation (get data) and validate results
-    var res = (await op.Settings.Impl(start, op)).Validate();
+    var res = await op.Settings.Impl(start, op);
     
     switch (res.Result) {
       case EOperationReadResult.Success: Log.Debug("read operation succeeded {@Operation} {@Results}", op, res); break;
@@ -25,7 +24,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
       if (res is SingleRecordReadOperationResult sr) {
         await stager.Stage(start, op.State.System, op.Settings.Object, sr.Payload);
       } else if (res is ListRecordReadOperationResult lr) {
-        await stager.Stage(start, op.State.System, op.Settings.Object, lr.PayloadList);
+        await stager.Stage(start, op.State.System, op.Settings.Object, lr.PayloadList.Value);
       } else throw new UnreachableException();
     }
     

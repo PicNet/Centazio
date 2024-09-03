@@ -59,9 +59,7 @@ public class FunctionRunnerTests {
     Assert.That(result, Is.EqualTo("function [FunctionRunnerTests/FunctionRunnerTests] completed with empty results"));
   }
 
-  record EmptyFunctionConfig() : BaseFunctionConfig(NAME, NAME) {
-    public override void Validate() {}
-  }
+  record EmptyFunctionConfig() : BaseFunctionConfig(NAME, NAME);
   
   record SimpleFunctionOperationResult(string Message) : BaseFunctionOperationResult(Message);
   
