@@ -6,11 +6,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SQLServer.Stage;
 
-public class SqlServerStagedEntityStore(
-    Func<SqlConnection> newconn, 
-    int limit, 
-    Func<string, string> checksum,
-    Func<string, string>? transform = null) : AbstractStagedEntityStore(limit, checksum, transform) {
+public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);

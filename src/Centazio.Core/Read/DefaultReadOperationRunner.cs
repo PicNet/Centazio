@@ -10,6 +10,7 @@ internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository c
   
 
   public async Task<ReadOperationResult> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
+    // run operation (get data) and validate results
     var res = (await op.Settings.Impl(start, op)).Validate();
     
     switch (res.Result) {
