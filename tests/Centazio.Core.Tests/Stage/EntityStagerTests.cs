@@ -24,7 +24,7 @@ public class EntityStagerTests {
     var results2 = await stager.Get(UtcDate.UtcNow, NAME, NAME);
     
     var staged = results1.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(NAME, NAME, UtcDate.UtcNow, nameof(EntityStagerTests), nameof(EntityStagerTests))));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(NAME, NAME, UtcDate.UtcNow, nameof(EntityStagerTests), TestingFactories.TestingChecksum(nameof(EntityStagerTests)))));
     Assert.That(results2, Is.Empty);
   }
 
@@ -35,7 +35,7 @@ public class EntityStagerTests {
     var results1 = await stager.Get(UtcDate.UtcNow.AddMicroseconds(-1), NAME, NAME);
     var results2 = await stager.Get(UtcDate.UtcNow, NAME, NAME);
     
-    var exp = Enumerable.Range(0, 10).Select(i => i.ToString()).Select(idx => new StagedEntity(NAME, NAME, UtcDate.UtcNow, idx.ToString(), idx.ToString())).ToList();
+    var exp = Enumerable.Range(0, 10).Select(i => i.ToString()).Select(idx => new StagedEntity(NAME, NAME, UtcDate.UtcNow, idx.ToString(), TestingFactories.TestingChecksum(idx.ToString()))).ToList();
     Assert.That(results1, Is.EqualTo(exp));
     Assert.That(results2, Is.Empty);
   }
