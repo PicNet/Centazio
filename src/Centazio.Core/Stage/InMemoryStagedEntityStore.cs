@@ -2,7 +2,8 @@
 
 namespace Centazio.Core.Stage;
 
-public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum, Func<string, string>? transform = null) 
+    : AbstractStagedEntityStore(limit, checksum, transform) {
 
   private readonly Dictionary<string, bool> checksums = new();
   protected readonly List<StagedEntity> saved = [];

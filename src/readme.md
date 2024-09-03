@@ -10,13 +10,6 @@
     - check that results from the 'store' are always returned oldest to newest
           to allow getting values in batches from the store
     - check the limits of the 'stores' will dynamo with current settings handle 1000 records for instance
-  - each entity type should have its own lifecycle, i.e. keep just one copy, keep 6 months, etc 
-  - should support different staging mechanisms (last staged checkpoint, checksumming, etc)
-  - Ignore fields during checksum
-  - Remove fields when staging (save size)
-  - Select field for checkpoint (instead of last stage run time)
-  - Allow user to chose how to handle invalid json (ignore payload vs crash)
-  
 
 - Promote:
   - support full promote (entire list), i.e. delete all and recreate

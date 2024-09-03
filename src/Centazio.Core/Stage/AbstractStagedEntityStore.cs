@@ -17,17 +17,25 @@ public interface IStagedEntityStore : IEntityStager {
   Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj);
 }
 
-public abstract class AbstractStagedEntityStore(int limit, Func<string, string> checksum) : IStagedEntityStore {
+public abstract class AbstractStagedEntityStore(
+    int limit, 
+    Func<string, string> checksum,
+    Func<string, string>? transform = null) : IStagedEntityStore {
 
+  private static readonly Func<string, string> DEFAULT_TRANSFORM = s => s;
+  
   protected int Limit => limit > 0 ? limit : Int32.MaxValue;
   
   public async Task<StagedEntity?> Stage(DateTime stageddt, SystemName source, ObjectName obj, string data) {
-    var results = (await Stage(stageddt, source, obj, new[] { data })).ToList();
+    var trans = transform ?? DEFAULT_TRANSFORM;
+    var results = (await Stage(stageddt, source, obj, new[] { trans(data) })).ToList();
     return results.Any() ? results.Single() : null; 
   }
 
-  public Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) =>
-    StageImpl(datas.Select(data => new StagedEntity(source, obj, stageddt, data, checksum(data))));
+  public Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) {
+    var trimmed = datas.Select(transform ?? DEFAULT_TRANSFORM).Distinct();
+    return StageImpl(trimmed.Select(data => new StagedEntity(source, obj, stageddt, data, checksum(data))));
+  }
 
   protected abstract Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged);
   

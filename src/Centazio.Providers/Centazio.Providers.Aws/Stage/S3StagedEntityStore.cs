@@ -8,7 +8,8 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, string> checksum, Func<string, string>? transform = null) 
+    : AbstractStagedEntityStore(limit, checksum, transform) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
