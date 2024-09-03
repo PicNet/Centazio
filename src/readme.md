@@ -6,6 +6,10 @@
 - CLI:
 
 - EntityStager:
+  - unit tests:
+    - check that results from the 'store' are always returned oldest to newest
+          to allow getting values in batches from the store
+    - check the limits of the 'stores' will dynamo with current settings handle 1000 records for instance
   - each entity type should have its own lifecycle, i.e. keep just one copy, keep 6 months, etc 
   - should support different staging mechanisms (last staged checkpoint, checksumming, etc)
   - Ignore fields during checksum

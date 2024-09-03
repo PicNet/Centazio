@@ -30,11 +30,23 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   }
   
   protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
+    var uniques = staged
+        .DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}")
+        .Select(s => s.ToS3StagedEntity())
+        .ToList();
+    if (!uniques.Any()) return uniques;
+    
+    var existing = (await ListAll(uniques.First().SourceSystem, uniques.First().Object)).Select(o => o.Key.Split('/').Last().Split('_').Last()).ToDictionary(cs => cs);
+    
+    var tostage = uniques.Where(s => !existing.ContainsKey(s.Checksum)).ToList();
+    await tostage.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
+    return tostage;
+  }
+  
+  public override async Task Update(IEnumerable<StagedEntity> staged) {
     var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
     await lst.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
-    return lst.AsEnumerable();
   }
-  public override Task Update(IEnumerable<StagedEntity> staged) => StageImpl(staged);
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
     var from = $"{source.Value}/{obj.Value}/{after:o}_z";
