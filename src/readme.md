@@ -1,7 +1,7 @@
 # Todo
 - set up testing pipeline (agent is ready)
 - careful testing of date handling
-- settings and secrets records should be all nullable as cannot control user input
+- can we use an implicit or explicit case operator for ValidString, just like SystemName?
 
 - CLI:
 

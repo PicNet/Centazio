@@ -206,12 +206,9 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
     var (data, stageddt) = (Guid.NewGuid().ToString(), dt.Tick());
-    Console.WriteLine("Stage 1");
     var staged = await store.Stage(stageddt, NAME, NAME, data);
-    Console.WriteLine("Stage 2");
     var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
     
-    Console.WriteLine("Queries");
     var expected = new StagedEntity(NAME, NAME, stageddt, data, Hash(data));
     var ses = await GetAsSes(dt.Now.AddYears(-1), NAME, NAME);
     

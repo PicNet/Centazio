@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
+using Exception = System.Exception;
 
 namespace Centazio.Core.Secrets;
 
-public interface ISecretsLoader<out T> where T : new() {
+public interface ISecretsLoader<out T>  {
   T Load();
 }
 
@@ -26,7 +27,8 @@ public class NetworkLocationEnvFileSecretsLoader<T>(string dir, string environme
     var typed = new T();
     var missing = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty).Where(p => {
       if (!secrets.ContainsKey(p.Name)) return true;
-      p.SetValue(typed, Convert.ChangeType(secrets[p.Name], p.PropertyType));
+
+      p.SetValue(typed, Convert.ChangeType(secrets[p.Name], Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType));
       return false;
     }).ToList();
     if (missing.Any()) throw new Exception($"secrets file [{path}] has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");

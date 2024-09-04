@@ -22,7 +22,9 @@ public class DapperInitialiser {
   }
   
   private class ValidStringSqlTypeHandler<T> : SqlMapper.TypeHandler<T> where T : ValidString {
-    public override void SetValue(IDbDataParameter parameter, T? value) => parameter.Value = value?.Value ?? throw new Exception($"{nameof(value)} must ne non-empty");
+    public override void SetValue(IDbDataParameter parameter, T? value) => 
+        parameter.Value = value?.Value ?? throw new Exception($"{nameof(value)} must ne non-empty");
+
     public override T Parse(object? value) {
       ArgumentException.ThrowIfNullOrWhiteSpace((string?) value);
       return (T?) Activator.CreateInstance(typeof(T), (string?) value) ?? throw new UnreachableException();

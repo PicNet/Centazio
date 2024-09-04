@@ -60,8 +60,6 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
         .ToList();
     if (!uniques.Any()) return uniques;
 
-    Console.WriteLine($"KEY: {uniques.First().ToHashKey()}");
-    
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       KeyExpression = new() {
@@ -104,9 +102,6 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
             new() { { table, chunk.ToList() }
         })))
         .Synchronous();
-    Console.WriteLine($"UNIQUES: [{String.Join(',', uniques.Select(e => e.Checksum))}]");
-    Console.WriteLine($"EXISTING: [{String.Join(',', existing)}]");
-    Console.WriteLine($"TOSTAGE: [{String.Join(',', tostage.Select(e => e.Checksum))}]");
     return tostage;
   }
   

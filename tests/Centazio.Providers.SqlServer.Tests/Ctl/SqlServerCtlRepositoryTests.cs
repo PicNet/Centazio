@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Tests.Ctl;
 using Centazio.Providers.SqlServer.Ctl;
@@ -8,6 +9,8 @@ namespace Centazio.Providers.SqlServer.Tests.Ctl;
 
 public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
 
+  internal static readonly string TEST_TABLE = "dbo.TEST_TABLE";
+  
   [Test, Ignore("Dapper does not support Enum->string mapping")] public async Task Test_serialisation_of_enums() {
     await using var conn = SqlConn.Instance.Conn();
     
@@ -29,6 +32,18 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     Assert.That(lav2, Is.EqualTo(nameof(EOperationAbortVote.Continue)));
   }
   
+  [Test] public async Task Test_Dapper_is_properly_handling_ValidStrings() {
+    DapperInitialiser.Initialise(); // is not working?
+    
+    await using var conn = SqlConn.Instance.Conn();
+    await conn.ExecuteAsync($"CREATE TABLE {TEST_TABLE} (Valid nvarchar (8) NULL, Sys nvarchar (8) NULL)");
+    await conn.ExecuteAsync($"INSERT INTO {TEST_TABLE} VALUES (null, null)");
+
+    var lst = (await conn.QueryAsync<TestRecord>($"SELECT * FROM {TEST_TABLE}")).Single();
+    
+    Assert.Fail("Implement");
+  }
+  
   protected override async Task<ICtlRepository> GetRepository() 
       => await new TestingSqlServerCtlRepository().Initalise();
 
@@ -38,9 +53,15 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     public override async ValueTask DisposeAsync() {
       if (!SqlConn.Instance.Real) {
         await using var conn = SqlConn.Instance.Conn();
-        await conn.ExecuteAsync($"DROP TABLE IF EXISTS {SCHEMA}.{OBJECT_STATE_TBL}; DROP TABLE IF EXISTS {SCHEMA}.{SYSTEM_STATE_TBL};");
+        await conn.ExecuteAsync($"DROP TABLE IF EXISTS {SCHEMA}.{OBJECT_STATE_TBL}; DROP TABLE IF EXISTS {SCHEMA}.{SYSTEM_STATE_TBL}; DROP TABLE IF EXISTS {TEST_TABLE};");
       }
       await base.DisposeAsync(); 
     }
+  }
+  
+  record TestRecord {
+
+    public ValidString Valid { get; } = null!;
+    public SystemName Sys { get; } = null!;
   }
 }

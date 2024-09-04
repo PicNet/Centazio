@@ -3,11 +3,12 @@ using Serilog;
 
 namespace Centazio.Core.Settings;
 
-public interface ISettingsLoader<out T> where T : new() {
-  T Load(string environment = "");
+public interface ISettingsLoader<out TOut> {
+  TOut Load(string environment = "");
 }
 
-public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_NAME) : ISettingsLoader<T> where T : new() {
+public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_NAME) 
+    : ISettingsLoader<T> where T : class, new() {
 
   private const string DEFAULT_FILE_NAME = "settings.json";
   
