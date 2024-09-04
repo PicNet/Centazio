@@ -17,18 +17,18 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     var created = await repo.CreateObjectState(await repo.CreateSystemState(NAME, NAME), NAME);
     var lr1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var lav1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
-    var updated = await repo.SaveObjectState(created with { LastResult = EOperationReadResult.Success, LastAbortVote = EOperationAbortVote.Continue });
+    var updated = await repo.SaveObjectState(created with { LastResult = EOperationResult.Success, LastAbortVote = EOperationAbortVote.Continue });
     var lr2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var lav2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     
-    Assert.That(created.LastResult, Is.EqualTo(EOperationReadResult.Unknown));
+    Assert.That(created.LastResult, Is.EqualTo(EOperationResult.Unknown));
     Assert.That(created.LastAbortVote, Is.EqualTo(EOperationAbortVote.Unknown));
-    Assert.That(lr1, Is.EqualTo(nameof(EOperationReadResult.Unknown)));
+    Assert.That(lr1, Is.EqualTo(nameof(EOperationResult.Unknown)));
     Assert.That(lav1, Is.EqualTo(nameof(EOperationAbortVote.Unknown)));
     
-    Assert.That(updated.LastResult, Is.EqualTo(EOperationReadResult.Success));
+    Assert.That(updated.LastResult, Is.EqualTo(EOperationResult.Success));
     Assert.That(updated.LastAbortVote, Is.EqualTo(EOperationAbortVote.Continue));
-    Assert.That(lr2, Is.EqualTo(nameof(EOperationReadResult.Success)));
+    Assert.That(lr2, Is.EqualTo(nameof(EOperationResult.Success)));
     Assert.That(lav2, Is.EqualTo(nameof(EOperationAbortVote.Continue)));
   }
   

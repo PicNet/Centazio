@@ -11,4 +11,4 @@ public class DummyCrmApiConsumer(string baseurl, HttpClient http) : ICrmApiConsu
 }
 
 
-public interface ICrmApiConsumer : IApiConsumer { }
+public interface ICrmApiConsumer : IApiConsumer;

@@ -1,3 +1,3 @@
 ﻿namespace Centazio.Core.api;
 
-public interface IApiConsumer { }
+public interface IApiConsumer;

@@ -1,8 +1,9 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Func;
-using Centazio.Core.Runner;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl.Entities;
+using centazio.core.Runner;
+using Centazio.Core.Tests;
 
-namespace Centazio.Core.Tests.Runner;
+namespace centazio.core.tests.Runner;
 
 public class FunctionRunnerTests {
 
@@ -59,17 +60,17 @@ public class FunctionRunnerTests {
     Assert.That(result, Is.EqualTo("function [FunctionRunnerTests/FunctionRunnerTests] completed with empty results"));
   }
 
-  record EmptyFunctionConfig() : BaseFunctionConfig(NAME, NAME);
-  
-  record SimpleFunctionOperationResult(string Message) : BaseFunctionOperationResult(Message);
+  record EmptyFunctionConfig() : FunctionConfig(NAME, NAME, new List<OperationConfig> { 
+    new(NAME, "* * * * *", (_, _) => Task.FromResult(new EmptyOperationResult(EOperationResult.Success, "") as OperationResult))
+  });
   
   class EmptyFunction : IFunction {
-    public Task<IEnumerable<BaseFunctionOperationResult>> Run(SystemState state, DateTime start) => Task.FromResult<IEnumerable<BaseFunctionOperationResult>>(Array.Empty<BaseFunctionOperationResult>());
+    public Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start) => Task.FromResult<IEnumerable<OperationResult>>(Array.Empty<OperationResult>());
   }
   
   class SimpleFunction(int results) : IFunction {
-    public Task<IEnumerable<BaseFunctionOperationResult>> Run(SystemState state, DateTime start) => 
+    public Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start) => 
         Task.FromResult(Enumerable.Range(0, results)
-        .Select(idx => new SimpleFunctionOperationResult(idx.ToString()) as BaseFunctionOperationResult));
+        .Select(idx => new EmptyOperationResult(EOperationResult.Success, idx.ToString()) as OperationResult));
   }
 }

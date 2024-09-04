@@ -1,6 +1,6 @@
 ﻿namespace Centazio.Core.Ctl.Entities;
 
-public enum EOperationReadResult { Unknown, Success, Warning, FailedRead }
+public enum EOperationResult { Unknown, Success, Warning, Error }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
 public enum EPayloadType { Empty, Single, List }
 public enum ESystemStateStatus { Idle, Running }
@@ -42,7 +42,7 @@ public record ObjectStateRaw {
   public string? Object { get; init; }
   public bool? Active { get; init; }
   public DateTime? DateCreated { get; init; }
-  public string? LastResult { get; init; } =  EOperationReadResult.Unknown.ToString();
+  public string? LastResult { get; init; } =  EOperationResult.Unknown.ToString();
   public string? LastAbortVote { get; init; } =  EOperationAbortVote.Unknown.ToString(); 
   public DateTime? DateUpdated { get; init; }
   public DateTime? LastStart { get; init; }
@@ -57,7 +57,7 @@ public record ObjectStateRaw {
       raw.Object ?? throw new ArgumentNullException(nameof(Object)),
       raw.Active ?? throw new ArgumentNullException(nameof(Active)),
       raw.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-      Enum.Parse<EOperationReadResult>(raw.LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
+      Enum.Parse<EOperationResult>(raw.LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
       Enum.Parse<EOperationAbortVote>(raw.LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
       raw.DateUpdated,
       raw.LastStart,
@@ -73,7 +73,7 @@ public record ObjectState(
     ObjectName Object, 
     bool Active, 
     DateTime DateCreated, 
-    EOperationReadResult LastResult = EOperationReadResult.Unknown, 
+    EOperationResult LastResult = EOperationResult.Unknown, 
     EOperationAbortVote LastAbortVote = EOperationAbortVote.Unknown, 
     DateTime? DateUpdated = null, 
     DateTime? LastStart = null, 

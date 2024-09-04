@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
+using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Func;
 using Serilog;
 
-namespace Centazio.Core.Runner;
+namespace centazio.core.Runner;
 
-public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlRepository ctl, int maxminutes = 30) {
+public class FunctionRunner(IFunction func, FunctionConfig cfg, ICtlRepository ctl, int maxminutes = 30) {
 
   public async Task<string> RunFunction() {
     var start = UtcDate.UtcNow;
@@ -43,7 +43,7 @@ public class FunctionRunner(IFunction func, BaseFunctionConfig cfg, ICtlReposito
     async Task<SystemState> SaveCompletedState() => await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Idle, LastCompleted = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow }); 
   }
   
-  private string CombineSummaryResults(SystemState state, IEnumerable<BaseFunctionOperationResult> results) {
+  private string CombineSummaryResults(SystemState state, IEnumerable<OperationResult> results) {
     var message = String.Join('\n', results.Select(r => r.Message))
         .IfNullOrWhitespace($"function [{state.System.Value}/{state.Stage.Value}] completed with empty results");
     var took = state.LastCompleted - state.LastStarted ?? throw new UnreachableException(); 

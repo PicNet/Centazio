@@ -1,26 +1,28 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Func;
+using centazio.core.Runner;
+using Centazio.Core.Tests;
 
-namespace Centazio.Core.Tests.Read;
+namespace centazio.core.tests.Runner;
 
-public class ReadFunctionBaseHelperExtensionsTests {
+public class FunctionBaseHelperExtensionsTests {
 
-  private const string NAME = nameof(ReadFunctionBaseHelperExtensionsTests);
+  private const string NAME = nameof(FunctionBaseHelperExtensionsTests);
   private TestingCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = TestingFactories.Repo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentException>(() => _ = new ReadFunctionConfig(NAME, NAME, new ([])));
+    Assert.Throws<ArgumentException>(() => _ = new FunctionConfig(NAME, NAME, new ([])));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
     var template = await repo.CreateObjectState(ss, "2"); 
     
-    var cfg = new ReadFunctionConfig(NAME, NAME, Factories.OP_CONFIGS);
+    var cfg = new FunctionConfig(NAME, NAME, Factories.OP_CONFIGS);
     var states = await cfg.Operations.LoadOperationsStates(ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
@@ -47,7 +49,7 @@ public class ReadFunctionBaseHelperExtensionsTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    ReadOperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
+    OperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -67,57 +69,57 @@ public class ReadFunctionBaseHelperExtensionsTests {
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
     var runner = TestingFactories.Runner(repo: repo);
     
-    var states1 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo) };
+    var states1 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
     var results1 = await states1.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
     
-    var states2 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo) };
+    var states2 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo) };
     var results2 = await states2.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
 
-    var states3 = new List<ReadOperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo) };
+    var states3 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
     var results3 = await states3.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
     
     var newstates = repo.Objects.Values.ToList();
     
-    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Success, "" )}));
-    Assert.That(results2, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.Warning, "" )}));
-    Assert.That(results3, Is.EquivalentTo(new [] { new EmptyReadOperationResult(EOperationReadResult.FailedRead, "", EOperationAbortVote.Abort )}));
+    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Success, "" )}));
+    Assert.That(results2, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Warning, "" )}));
+    Assert.That(results3, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )}));
     
     Assert.That(newstates, Has.Count.EqualTo(3));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationReadResult.Success, EOperationAbortVote.Continue)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationReadResult.Warning, EOperationAbortVote.Continue)));
-    Assert.That(newstates[2], Is.EqualTo(ExpObjState(EOperationReadResult.FailedRead, EOperationAbortVote.Abort)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue)));
+    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
+    Assert.That(newstates[2], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
     var runner = TestingFactories.Runner(repo: repo);
     
-    var states = new List<ReadOperationStateAndConfig> {
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo)
+    var states = new List<OperationStateAndConfig> {
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     
     var results = await states.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
-      new EmptyReadOperationResult(EOperationReadResult.Warning, "" ),
-      new EmptyReadOperationResult(EOperationReadResult.FailedRead, "", EOperationAbortVote.Abort )
+      new EmptyOperationResult(EOperationResult.Warning, "" ),
+      new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )
     }));
     
     Assert.That(newstates, Has.Count.EqualTo(3));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationReadResult.Warning, EOperationAbortVote.Continue)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationReadResult.FailedRead, EOperationAbortVote.Abort)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
+    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
     Assert.That(newstates[2], Is.EqualTo(states[2].State)); // remained unchanged
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
     var runner = TestingFactories.Runner(repo: repo);
     
-    var states = new List<ReadOperationStateAndConfig> {
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Warning, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.FailedRead, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationReadResult.Success, repo)
+    var states = new List<OperationStateAndConfig> {
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
+      await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     states[1] = states[1] with { Settings = states[1].Settings with { Impl = (_, _) => throw new Exception() } }; 
     var results = (await states.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow)).ToList();
@@ -125,33 +127,33 @@ public class ReadFunctionBaseHelperExtensionsTests {
     var newstates = repo.Objects.Values.ToList(); 
     
     Assert.That(results, Has.Count.EqualTo(2));
-    Assert.That(results[0], Is.EqualTo(new EmptyReadOperationResult(EOperationReadResult.Warning, "" )));
+    Assert.That(results[0], Is.EqualTo(new EmptyOperationResult(EOperationResult.Warning, "" )));
     Assert.That(failex, Is.Not.Null);
     Assert.That(String.IsNullOrWhiteSpace(failmsg), Is.False);
-    Assert.That(results[1], Is.EqualTo(new EmptyReadOperationResult(EOperationReadResult.FailedRead, failmsg, EOperationAbortVote.Abort, failex )));
+    Assert.That(results[1], Is.EqualTo(new EmptyOperationResult(EOperationResult.Error, failmsg, EOperationAbortVote.Abort, failex )));
     
     Assert.That(newstates, Has.Count.EqualTo(3));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationReadResult.Warning, EOperationAbortVote.Continue)));
-    var exp2 = ExpObjState(EOperationReadResult.FailedRead, EOperationAbortVote.Abort);
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
+    var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
     Assert.That(newstates[1], Is.EqualTo(exp2 with { LastRunMessage = exp2.LastRunMessage + failmsg, LastRunException = failex.ToString() }));
     Assert.That(newstates[2], Is.EqualTo(states[2].State)); // remained unchanged
   }
   
-  private ObjectState ExpObjState(EOperationReadResult res, EOperationAbortVote vote) => 
+  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) => 
         new(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow, res, vote,
-            UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, $"read operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
+            UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
   
   static class Factories {
-    public static async Task<ReadOperationStateAndConfig> CreateReadOpStateAndConf(EOperationReadResult result, ICtlRepository repo) 
+    public static async Task<OperationStateAndConfig> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
             new (result.ToString(), new (new ("* * * * *")), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
     
-    public static ValidList<ReadOperationConfig> OP_CONFIGS => new ([
-      new ReadOperationConfig("1", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("2", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("3", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("4", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation)
+    public static ValidList<OperationConfig> OP_CONFIGS => new ([
+      new OperationConfig("1", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new OperationConfig("2", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new OperationConfig("3", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new OperationConfig("4", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation)
     ]);
   }
 }

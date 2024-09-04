@@ -1,29 +1,30 @@
 ﻿using System.Diagnostics;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
+using centazio.core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
 
 namespace Centazio.Core.Func;
 
-internal class DefaultReadOperationRunner(IEntityStager stager, ICtlRepository ctl) : IReadOperationRunner {
+internal class ReadOperationRunner(IEntityStager stager, ICtlRepository ctl) : IOperationRunner {
   
 
-  public async Task<ReadOperationResult> RunOperation(DateTime start, ReadOperationStateAndConfig op) {
+  public async Task<OperationResult> RunOperation(DateTime start, OperationStateAndConfig op) {
     var res = await op.Settings.Impl(start, op);
     
     switch (res.Result) {
-      case EOperationReadResult.Success: Log.Debug("read operation succeeded {@Operation} {@Results}", op, res); break;
-      case EOperationReadResult.Warning: Log.Warning("read operation warning {@Operation} {@Results}", op, res); break;
-      case EOperationReadResult.FailedRead: Log.Error("read operation failed {@Operation} {@Results}", op, res); break;
+      case EOperationResult.Success: Log.Debug("read operation succeeded {@Operation} {@Results}", op, res); break;
+      case EOperationResult.Warning: Log.Warning("read operation warning {@Operation} {@Results}", op, res); break;
+      case EOperationResult.Error: Log.Error("read operation failed {@Operation} {@Results}", op, res); break;
       default: throw new UnreachableException();
     }
-    var stage = res.Result != EOperationReadResult.FailedRead && res.PayloadLength > 0; 
+    var stage = res.Result != EOperationResult.Error && res.PayloadLength > 0; 
     
     if (stage) {
-      if (res is SingleRecordReadOperationResult sr) {
+      if (res is SingleRecordOperationResult sr) {
         await stager.Stage(start, op.State.System, op.Settings.Object, sr.Payload);
-      } else if (res is ListRecordReadOperationResult lr) {
+      } else if (res is ListRecordOperationResult lr) {
         await stager.Stage(start, op.State.System, op.Settings.Object, lr.PayloadList.Value);
       } else throw new UnreachableException();
     }

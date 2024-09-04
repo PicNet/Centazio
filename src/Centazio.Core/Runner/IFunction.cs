@@ -1,10 +1,9 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Func;
 
-namespace Centazio.Core.Runner;
+namespace centazio.core.Runner;
 
 public interface IFunction {
 
-  Task<IEnumerable<BaseFunctionOperationResult>> Run(SystemState state, DateTime start);
+  Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start);
 
 }

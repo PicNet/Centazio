@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Func;
+using centazio.core.Runner;
 using Centazio.Core.Stage;
 
 namespace Centazio.Core.Tests;
@@ -8,29 +9,29 @@ namespace Centazio.Core.Tests;
 public static class TestingFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository Repo() => new();
-  public static IReadOperationRunner Runner(
+  public static IOperationRunner Runner(
       IStagedEntityStore? store = null, 
       ICtlRepository? repo = null) 
-    => new DefaultReadOperationRunner(store ?? SeStore(), repo ?? Repo());
+    => new ReadOperationRunner(store ?? SeStore(), repo ?? Repo());
   
-  public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) {
-    var result = Enum.Parse<EOperationReadResult>(op.Settings.Object); 
-    return Task.FromResult(new EmptyReadOperationResult(
-        Enum.Parse<EOperationReadResult>(op.Settings.Object), 
+  public static Task<OperationResult> TestingAbortingAndEmptyReadOperationImplementation(DateTime now, OperationStateAndConfig op) {
+    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
+    return Task.FromResult(new EmptyOperationResult(
+        Enum.Parse<EOperationResult>(op.Settings.Object), 
         String.Empty,
-        result == EOperationReadResult.FailedRead ? EOperationAbortVote.Abort : EOperationAbortVote.Continue
-    ) as ReadOperationResult);
+        result == EOperationResult.Error ? EOperationAbortVote.Abort : EOperationAbortVote.Continue
+    ) as OperationResult);
   }
   
-  public static Task<ReadOperationResult> TestingEmptyReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
-      Task.FromResult(new EmptyReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty) as ReadOperationResult);
+  public static Task<OperationResult> TestingEmptyReadOperationImplementation(DateTime now, OperationStateAndConfig op) => 
+      Task.FromResult(new EmptyOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty) as OperationResult);
   
-  public static Task<ReadOperationResult> TestingSingleReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
-      Task.FromResult(new SingleRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, Guid.NewGuid().ToString()) as ReadOperationResult);
+  public static Task<OperationResult> TestingSingleReadOperationImplementation(DateTime now, OperationStateAndConfig op) => 
+      Task.FromResult(new SingleRecordOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty, Guid.NewGuid().ToString()) as OperationResult);
   
-  public static Task<ReadOperationResult> TestingListReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
-      Task.FromResult(new ListRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, 
-          new ValidList<string>(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList())) as ReadOperationResult);
+  public static Task<OperationResult> TestingListReadOperationImplementation(DateTime now, OperationStateAndConfig op) => 
+      Task.FromResult(new ListRecordOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty, 
+          new ValidList<string>(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList())) as OperationResult);
   
   public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast 
 }

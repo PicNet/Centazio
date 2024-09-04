@@ -6,6 +6,9 @@ public record ValidList<T>(IReadOnlyList<T> Value) {
       : Value.Any(o => EqualityComparer<T>.Default.Equals(o, default)) 
           ? throw new ArgumentException("Value must no contain any null elements", nameof(Value))
           : Value;
+  
+  public static implicit operator List<T>(ValidList<T> value) => value.Value.ToList();
+  public static implicit operator ValidList<T>(List<T> value) => new(value.AsReadOnly());
 }
 
 public record ValidString(string Value) {

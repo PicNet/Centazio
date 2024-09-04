@@ -8,6 +8,12 @@
   - unit tests:
     - check that results from the 'store' are always returned oldest to newest allowing batching 
     - check the limits of the 'stores' will dynamo with current settings handle 1000 records for instance
+  - retreiving unpromoted staged entities need to handle:
+    - deserialisation to target type
+    - filtering:
+      - get only the latest for a specific entity
+      - centazio 2 even filters out the entity if its the same as previously promoted
+  - a mechanism to mark staged entity as ignored
 
 - Promote:
   - support full promote (entire list), i.e. delete all and recreate
