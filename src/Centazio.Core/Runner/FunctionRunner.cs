@@ -6,7 +6,7 @@ using Serilog;
 
 namespace centazio.core.Runner;
 
-public class FunctionRunner(IFunction func, FunctionConfig cfg, ICtlRepository ctl, int maxminutes = 30) {
+public class FunctionRunner<T>(IFunction func, FunctionConfig<T> cfg, ICtlRepository ctl, int maxminutes = 30) where T : OperationConfig {
 
   public async Task<string> RunFunction() {
     var start = UtcDate.UtcNow;

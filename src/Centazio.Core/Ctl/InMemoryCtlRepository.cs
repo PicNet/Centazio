@@ -28,6 +28,7 @@ public class InMemoryCtlRepository : ICtlRepository {
   public Task<ObjectState> SaveObjectState(ObjectState state) {
     var key = (state.System, state.Stage, state.Object);
     if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found");
+
     return Task.FromResult(objects[key] = state with { DateUpdated = UtcDate.UtcNow });
   }
   

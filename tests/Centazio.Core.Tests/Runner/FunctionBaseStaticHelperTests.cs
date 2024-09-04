@@ -6,24 +6,24 @@ using Centazio.Core.Tests;
 
 namespace centazio.core.tests.Runner;
 
-public class FunctionBaseHelperExtensionsTests {
+public class FunctionBaseStaticHelperTests {
 
-  private const string NAME = nameof(FunctionBaseHelperExtensionsTests);
+  private const string NAME = nameof(FunctionBaseStaticHelperTests);
   private TestingCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = TestingFactories.Repo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentException>(() => _ = new FunctionConfig(NAME, NAME, new ([])));
+    Assert.Throws<ArgumentException>(() => _ = new FunctionConfig<ReadOperationConfig>(NAME, NAME, new ([])));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
     var template = await repo.CreateObjectState(ss, "2"); 
     
-    var cfg = new FunctionConfig(NAME, NAME, Factories.OP_CONFIGS);
-    var states = await cfg.Operations.LoadOperationsStates(ss, repo);
+    var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
+    var states = await FunctionBase<ReadOperationConfig>.LoadOperationsStates(cfg.Operations, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
     Enumerable.Range(0, 4).ForEachIdx(TestAtIndex);
@@ -43,13 +43,13 @@ public class FunctionBaseHelperExtensionsTests {
     var updated = await repo.CreateObjectState(ss, "2") with { Active = false };
     await repo.SaveObjectState(updated);
     
-    var states = await Factories.OP_CONFIGS.LoadOperationsStates(ss, repo);
+    var states = await FunctionBase<ReadOperationConfig>.LoadOperationsStates(Factories.READ_OP_CONFIGS, ss, repo);
     var names = states.Select(s => s.Settings.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
+    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -62,21 +62,21 @@ public class FunctionBaseHelperExtensionsTests {
       Op("5", "0 0 * * MON", Dt("2024-07-29T00:00:00Z")), // Weekly on Monday at 00:00 UTC, now is not Monday
       Op("6", "0 * * * *", Dt("2024-08-01T01:00:00Z"))    // Hourly at 00 minutes, not yet ready
     } ;
-    var ready = ops.GetReadyOperations(now); 
+    var ready = FunctionBase<ReadOperationConfig>.GetReadyOperations(ops, now); 
     Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(new [] { "1", "2", "3" }));
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
-    var runner = TestingFactories.Runner(repo: repo);
+    var runner = TestingFactories.ReadRunner();
     
-    var states1 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
-    var results1 = await states1.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
+    var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
+    var results1 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
     
-    var states2 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo) };
-    var results2 = await states2.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
+    var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo) };
+    var results2 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
 
-    var states3 = new List<OperationStateAndConfig> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
-    var results3 = await states3.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
+    var states3 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
+    var results3 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states3, runner, repo, UtcDate.UtcNow);
     
     var newstates = repo.Objects.Values.ToList();
     
@@ -91,15 +91,15 @@ public class FunctionBaseHelperExtensionsTests {
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
-    var runner = TestingFactories.Runner(repo: repo);
+    var runner = TestingFactories.ReadRunner();
     
-    var states = new List<OperationStateAndConfig> {
+    var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     
-    var results = await states.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow);
+    var results = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow);
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
@@ -114,15 +114,15 @@ public class FunctionBaseHelperExtensionsTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
-    var runner = TestingFactories.Runner(repo: repo);
+    var runner = TestingFactories.ReadRunner();
     
-    var states = new List<OperationStateAndConfig> {
+    var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     states[1] = states[1] with { Settings = states[1].Settings with { Impl = (_, _) => throw new Exception() } }; 
-    var results = (await states.RunOperationsTillAbort(runner, repo, UtcDate.UtcNow)).ToList();
+    var results = (await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
     var (failex, failmsg) = (results[1].Exception, results[1].Message);
     var newstates = repo.Objects.Values.ToList(); 
     
@@ -144,16 +144,16 @@ public class FunctionBaseHelperExtensionsTests {
             UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
   
   static class Factories {
-    public static async Task<OperationStateAndConfig> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
+    public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
             new (result.ToString(), new (new ("* * * * *")), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
     
-    public static ValidList<OperationConfig> OP_CONFIGS => new ([
-      new OperationConfig("1", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new OperationConfig("2", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new OperationConfig("3", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
-      new OperationConfig("4", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation)
+    public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
+      new ReadOperationConfig("1", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("2", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("3", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("4", new (new ("* * * * *")), TestingFactories.TestingEmptyReadOperationImplementation)
     ]);
   }
 }

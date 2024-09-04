@@ -19,7 +19,7 @@ public class ReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = TestingFactories.Runner(store, repo);
+    var runner = TestingFactories.ReadRunner(store);
     var actual = (SingleRecordOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Error, TestingFactories.TestingSingleReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
@@ -28,12 +28,13 @@ public class ReadOperationRunnerTests {
         actual,
         new SystemState(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationResult.Error.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Error, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EPayloadType.Single } );
+            EOperationResult.Error, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EResultType.Single } );
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = TestingFactories.Runner(store, repo);
-    var actual = await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingEmptyReadOperationImplementation));
+    var runner = TestingFactories.ReadRunner(store);
+    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingEmptyReadOperationImplementation);
+    var actual = await runner.RunOperation(UtcDate.UtcNow, opcfg);
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -45,7 +46,7 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
-    var runner = TestingFactories.Runner(store, repo);
+    var runner = TestingFactories.ReadRunner(store);
     var actual = (SingleRecordOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
     
     var staged = store.Contents.Single();
@@ -55,11 +56,11 @@ public class ReadOperationRunnerTests {
         actual,
         new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationResult.Success.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EPayloadType.Single } );
+            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EResultType.Single } );
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = TestingFactories.Runner(store, repo);
+    var runner = TestingFactories.ReadRunner(store);
     var actual = (ListRecordOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
     
     var staged = store.Contents;
@@ -70,7 +71,7 @@ public class ReadOperationRunnerTests {
         actual,
         new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
         new ObjectState("*", "*", EOperationResult.Success.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength: staged.Count) { LastPayLoadType = EPayloadType.List } );
+            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength: staged.Count) { LastPayLoadType = EResultType.List } );
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
@@ -93,15 +94,16 @@ public class ReadOperationRunnerTests {
   }
   
   private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss, ObjectState expos) {
-    var actualos = repo.Objects.Single().Value;
-    expos = expos with { System = expss.System, Stage = expss.Stage, LastRunMessage = actualos.LastRunMessage };
+    var msg = $"operation [{expss.System}/{expss.Stage}/{expos.Object}] completed [{expected.Result}] message: {expected.Message}";
+    expos = expos with { System = expss.System, Stage = expss.Stage, LastRunMessage = msg };
+    var actualos = actual.UpdateObjectState(expos, UtcDate.UtcNow);
     
     Assert.That(actual, Is.EqualTo(expected));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
     Assert.That(actualos, Is.EqualTo(expos));
   }
   
-  private async Task<OperationStateAndConfig> CreateReadOpStateAndConf(EOperationResult result, Func<DateTime, OperationStateAndConfig, Task<OperationResult>> Impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<DateTime, OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
         new (result.ToString(), new (new ("* * * * *")), Impl));

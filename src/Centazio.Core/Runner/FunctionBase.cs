@@ -6,64 +6,61 @@ using Serilog;
 
 namespace centazio.core.Runner;
 
-public abstract class FunctionBase(
+public abstract class FunctionBase<T>(
     ICtlRepository ctl,
-    FunctionConfig cfg,
-    IOperationRunner runner,
-    IOperationsFilterAndPrioritiser? prioritiser = null) : IFunction {
+    FunctionConfig<T> cfg,
+    IOperationRunner<T> runner,
+    IOperationsFilterAndPrioritiser<T>? prioritiser = null) 
+        : IFunction where T : OperationConfig {
   
-  private IOperationsFilterAndPrioritiser Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser();
+  private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   
-  public async Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start) => 
-      await (await cfg.Operations
-          .LoadOperationsStates(state, ctl))
-          .GetReadyOperations(start)
-          .Prioritise(Prioritiser)
-          .RunOperationsTillAbort(runner, ctl, start);
-}
+  public async Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start) {
+    var states = await LoadOperationsStates(cfg.Operations, state, ctl);
+    var ready = GetReadyOperations(states, start);
+    var priotised = Prioritiser.Prioritise(ready);
+    var results = await RunOperationsTillAbort(priotised, runner, ctl, start);
+    return results;
+  }
 
-internal static class FunctionBaseHelperExtensions {
-  internal static async Task<IReadOnlyList<OperationStateAndConfig>> LoadOperationsStates(this ValidList<OperationConfig> ops, SystemState system, ICtlRepository ctl) {
-    return (await Task.WhenAll(ops.Value.Select(async op => new OperationStateAndConfig(await ctl.GetOrCreateObjectState(system, op.Object), op))))
+  internal static async Task<IReadOnlyList<OperationStateAndConfig<T>>> LoadOperationsStates(ValidList<T> ops, SystemState system, ICtlRepository ctl) {
+    return (await Task.WhenAll(ops.Value.Select(async op => new OperationStateAndConfig<T>(await ctl.GetOrCreateObjectState(system, op.Object), op))))
         .Where(op => op.State.Active)
         .ToList();
   }
 
-  internal static IEnumerable<OperationStateAndConfig> GetReadyOperations(this IEnumerable<OperationStateAndConfig> states, DateTime now) {
-    bool IsOperationReady(OperationStateAndConfig op) {
+  internal static IEnumerable<OperationStateAndConfig<T>> GetReadyOperations(IEnumerable<OperationStateAndConfig<T>> states, DateTime now) {
+    bool IsOperationReady(OperationStateAndConfig<T> op) {
       var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? now.AddYears(-10));
       return next <= now;
     }
     return states.Where(IsOperationReady);
   }
   
-  internal static IEnumerable<OperationStateAndConfig> Prioritise(this IEnumerable<OperationStateAndConfig> states, IOperationsFilterAndPrioritiser prioritiser) 
-      => prioritiser.Prioritise(states); 
-  
-  internal static async Task<IEnumerable<OperationResult>> RunOperationsTillAbort(this IEnumerable<OperationStateAndConfig> ops, IOperationRunner runner, ICtlRepository ctl, DateTime start) {
+  internal static async Task<IEnumerable<OperationResult>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<T>> ops, IOperationRunner<T> runner, ICtlRepository ctl, DateTime start) {
     return await ops
-        .Select(async op => {
-          try { return await SaveOperationResult(op, await runner.RunOperation(start, op)); }
-          catch (Exception e) { return await SaveOperationError(op, e); }
-        })
+        .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
 
-    async Task<OperationResult> SaveOperationResult(OperationStateAndConfig op, OperationResult res) {
-      var newstate = res.UpdateObjectState(op.State, start);
-      await ctl.SaveObjectState(newstate);
-      Log.Information("read operation completed {@Operation} {@Results} {@UpdatedObjectState}", op, res, newstate);
-      return res;
-    }
-
-    async Task<OperationResult> SaveOperationError(OperationStateAndConfig op, Exception ex) {
-      var res = new EmptyOperationResult(EOperationResult.Error, ex.Message, EOperationAbortVote.Abort, ex);
-      var newstate = res.UpdateObjectState(op.State, start);
-      await ctl.SaveObjectState(newstate);
-      Log.Information("read operation completed {@Operation} {@Results} {@UpdatedObjectState}", op, res, newstate);
-      return res;
+    async Task<OperationResult> RunAndSaveOp(OperationStateAndConfig<T> op) {
+      var opstart = UtcDate.UtcNow;
+      Log.Information("operation starting {@Operation}", op);
+      
+      var result = await RunOp(op);
+      return await SaveOp(opstart, op, result);
     }
     
-     
+    async Task<OperationResult> RunOp(OperationStateAndConfig<T> op) {
+      try { return await runner.RunOperation(start, op); }
+      catch (Exception ex) { return new EmptyOperationResult(EOperationResult.Error, ex.Message, EOperationAbortVote.Abort, ex); }
+    }
+
+    async Task<OperationResult> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, OperationResult res) {
+      var newstate = res.UpdateObjectState(op.State, start);
+      await ctl.SaveObjectState(newstate);
+      Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, res, newstate, (UtcDate.UtcNow - opstart).TotalMilliseconds);
+      return res;
+    }
   }
 
 }

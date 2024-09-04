@@ -2,7 +2,7 @@
 
 public enum EOperationResult { Unknown, Success, Warning, Error }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
-public enum EPayloadType { Empty, Single, List }
+public enum EResultType { Empty, Single, List }
 public enum ESystemStateStatus { Idle, Running }
 
 public record SystemStateRaw {
@@ -81,7 +81,7 @@ public record ObjectState(
     string? LastRunMessage = null, 
     int? LastPayLoadLength = null, 
     string? LastRunException = null) {
-  public EPayloadType LastPayLoadType { get; init; }
+  public EResultType LastPayLoadType { get; init; }
 }
 
 public record StagedEntity {

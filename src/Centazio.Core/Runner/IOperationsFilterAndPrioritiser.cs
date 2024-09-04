@@ -1,10 +1,10 @@
 ﻿namespace centazio.core.Runner;
 
-public interface IOperationsFilterAndPrioritiser {
-  IEnumerable<OperationStateAndConfig> Prioritise(IEnumerable<OperationStateAndConfig> ops);
+public interface IOperationsFilterAndPrioritiser<T> where T : OperationConfig {
+  IEnumerable<OperationStateAndConfig<T>> Prioritise(IEnumerable<OperationStateAndConfig<T>> ops);
 }
 
-public class DefaultOperationsFilterAndPrioritiser : IOperationsFilterAndPrioritiser {
-  public IEnumerable<OperationStateAndConfig> Prioritise(IEnumerable<OperationStateAndConfig> ops) => ops;
+public class DefaultOperationsFilterAndPrioritiser<T> : IOperationsFilterAndPrioritiser<T> where T : OperationConfig {
+  public IEnumerable<OperationStateAndConfig<T>> Prioritise(IEnumerable<OperationStateAndConfig<T>> ops) => ops;
 
 }
