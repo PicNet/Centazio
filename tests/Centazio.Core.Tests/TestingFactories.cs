@@ -26,7 +26,7 @@ public static class TestingFactories {
       Task.FromResult(new EmptyReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty) as ReadOperationResult);
   
   public static Task<ReadOperationResult> TestingSingleReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
-      Task.FromResult(new SingleRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, new (Guid.NewGuid().ToString())) as ReadOperationResult);
+      Task.FromResult(new SingleRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, Guid.NewGuid().ToString()) as ReadOperationResult);
   
   public static Task<ReadOperationResult> TestingListReadOperationImplementation(DateTime now, ReadOperationStateAndConfig op) => 
       Task.FromResult(new ListRecordReadOperationResult(Enum.Parse<EOperationReadResult>(op.Settings.Object), String.Empty, 

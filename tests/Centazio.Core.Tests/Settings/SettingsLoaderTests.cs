@@ -25,11 +25,7 @@ public class SettingsLoaderTests {
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "Overriden", "No longer empty", "No longer missing")));
   }
   
-  [Test] public void Test_non_nullable_properies_handled() {
-    
-  }
-  
-  private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment="", string settings=test_settings_json, string envsettings= test_settings_env_json) {
+  private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment="") {
     try {
       File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);
       File.WriteAllText(Path.Combine(dir, $"test_settings.{environment}.json"), test_settings_env_json);

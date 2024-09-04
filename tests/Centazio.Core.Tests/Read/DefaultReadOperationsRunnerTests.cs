@@ -74,20 +74,20 @@ public class DefaultReadOperationRunnerTests {
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
-    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new ("")));
+    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Success, "", ""));
     Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Success, "", new (new List<string>())));
     Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Success, "", new (new List<string> { "1", "", null! })));
     
-    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new("*")), Is.Not.Null);
+    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", "*"), Is.Not.Null);
     Assert.That(new ListRecordReadOperationResult(EOperationReadResult.Success, "", new(new List<string> { "1", "2" })), Is.Not.Null);
     Assert.That(new EmptyReadOperationResult(EOperationReadResult.Success, ""), Is.Not.Null);
   }
   
   [Test] public void Test_results_cannot_be_uknown_Result() {
-    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Unknown, "", new ("*")));
+    Assert.Throws<ArgumentException>(() => _ = new SingleRecordReadOperationResult(EOperationReadResult.Unknown, "", "*"));
     Assert.Throws<ArgumentException>(() => _ = new ListRecordReadOperationResult(EOperationReadResult.Unknown, "", new (new List<string> { "*" })));
     
-    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", new("*")), Is.Not.Null);
+    Assert.That(new SingleRecordReadOperationResult(EOperationReadResult.Success, "", "*"), Is.Not.Null);
     Assert.That(new ListRecordReadOperationResult(EOperationReadResult.Success, "", new(new List<string> { "1", "2" })), Is.Not.Null);
     Assert.That(new EmptyReadOperationResult(EOperationReadResult.Success, ""), Is.Not.Null);
   }

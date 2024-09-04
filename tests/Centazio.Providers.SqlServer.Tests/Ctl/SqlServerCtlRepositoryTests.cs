@@ -32,16 +32,14 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     Assert.That(lav2, Is.EqualTo(nameof(EOperationAbortVote.Continue)));
   }
   
-  [Test] public async Task Test_Dapper_is_properly_handling_ValidStrings() {
+  [Test, Ignore("No Dapper does not handle proper validation of records, created new Raw objects to handle this")] public async Task Test_Dapper_is_properly_handling_ValidStrings() {
     DapperInitialiser.Initialise(); // is not working?
     
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync($"CREATE TABLE {TEST_TABLE} (Valid nvarchar (8) NULL, Sys nvarchar (8) NULL)");
     await conn.ExecuteAsync($"INSERT INTO {TEST_TABLE} VALUES (null, null)");
 
-    var lst = (await conn.QueryAsync<TestRecord>($"SELECT * FROM {TEST_TABLE}")).Single();
-    
-    Assert.Fail("Implement");
+    Assert.ThrowsAsync<ArgumentNullException>(() => conn.QueryAsync<TestRecord>($"SELECT * FROM {TEST_TABLE}"));
   }
   
   protected override async Task<ICtlRepository> GetRepository() 

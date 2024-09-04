@@ -13,7 +13,7 @@ public record ValidString(string Value) {
       ? Value.Trim() : throw new ArgumentException("Value must be a non-empty string", nameof(Value));
   
   public static implicit operator string(ValidString value) => value.Value;
-  public static explicit operator ValidString(string value) => new(value);
+  public static implicit operator ValidString(string value) => new(value);
   
   public sealed override string ToString() => Value;
 }

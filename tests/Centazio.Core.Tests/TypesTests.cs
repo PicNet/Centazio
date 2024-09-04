@@ -4,6 +4,7 @@ public class TypesTests {
 
   [Test] public void Test_ValidString_trims_value() {
     Assert.That(new ValidString($"\n \t{nameof(TypesTests)} \n\t\t ").Value, Is.EqualTo($"{nameof(TypesTests)}"));
+    Assert.That(((ValidString) $"\n \t{nameof(TypesTests)} \n\t\t ").Value, Is.EqualTo($"{nameof(TypesTests)}"));
   }
   
   [Test] public void Test_ValidString_fails_on_null() {

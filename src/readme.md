@@ -1,14 +1,12 @@
 # Todo
 - set up testing pipeline (agent is ready)
 - careful testing of date handling
-- can we use an implicit or explicit case operator for ValidString, just like SystemName?
 
 - CLI:
 
 - EntityStager:
   - unit tests:
-    - check that results from the 'store' are always returned oldest to newest
-          to allow getting values in batches from the store
+    - check that results from the 'store' are always returned oldest to newest allowing batching 
     - check the limits of the 'stores' will dynamo with current settings handle 1000 records for instance
 
 - Promote:
