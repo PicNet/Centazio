@@ -26,9 +26,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new SingleRecordOperationResult(EOperationResult.Error, "", actual.Payload),
         actual,
-        new SystemState(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
-        new ObjectState("*", "*", EOperationResult.Error.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Error, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EResultType.Single } );
+        new SystemState(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
@@ -40,9 +38,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new EmptyOperationResult(EOperationResult.Success, ""),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
-        new ObjectState("*", "*", EOperationResult.Success.ToString(), true, UtcDate.UtcNow, 
-           EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:0 ));
+        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle));
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
@@ -54,9 +50,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new SingleRecordOperationResult(EOperationResult.Success, "", actual.Payload),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
-        new ObjectState("*", "*", EOperationResult.Success.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength:36) { LastPayLoadType = EResultType.Single } );
+        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
@@ -69,9 +63,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new ListRecordOperationResult(EOperationResult.Success, "", actual.PayloadList),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle),
-        new ObjectState("*", "*", EOperationResult.Success.ToString(), true, UtcDate.UtcNow, 
-            EOperationResult.Success, EOperationAbortVote.Continue, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, "*", LastPayLoadLength: staged.Count) { LastPayLoadType = EResultType.List } );
+        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
@@ -93,14 +85,9 @@ public class ReadOperationRunnerTests {
     Assert.That(new EmptyOperationResult(EOperationResult.Success, ""), Is.Not.Null);
   }
   
-  private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss, ObjectState expos) {
-    var msg = $"operation [{expss.System}/{expss.Stage}/{expos.Object}] completed [{expected.Result}] message: {expected.Message}";
-    expos = expos with { System = expss.System, Stage = expss.Stage, LastRunMessage = msg };
-    var actualos = actual.UpdateObjectState(expos, UtcDate.UtcNow);
-    
+  private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss) {
     Assert.That(actual, Is.EqualTo(expected));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
-    Assert.That(actualos, Is.EqualTo(expos));
   }
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<DateTime, OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 

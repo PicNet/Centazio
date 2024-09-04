@@ -6,9 +6,9 @@ using Centazio.Core.Tests;
 
 namespace centazio.core.tests.Runner;
 
-public class FunctionBaseStaticHelperTests {
+public class AbstractFunctionStaticHelperTests {
 
-  private const string NAME = nameof(FunctionBaseStaticHelperTests);
+  private const string NAME = nameof(AbstractFunctionStaticHelperTests);
   private TestingCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = TestingFactories.Repo();
@@ -23,7 +23,7 @@ public class FunctionBaseStaticHelperTests {
     var template = await repo.CreateObjectState(ss, "2"); 
     
     var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
-    var states = await FunctionBase<ReadOperationConfig>.LoadOperationsStates(cfg.Operations, ss, repo);
+    var states = await AbstractFunction<ReadOperationConfig>.LoadOperationsStates(cfg.Operations, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
     Enumerable.Range(0, 4).ForEachIdx(TestAtIndex);
@@ -43,7 +43,7 @@ public class FunctionBaseStaticHelperTests {
     var updated = await repo.CreateObjectState(ss, "2") with { Active = false };
     await repo.SaveObjectState(updated);
     
-    var states = await FunctionBase<ReadOperationConfig>.LoadOperationsStates(Factories.READ_OP_CONFIGS, ss, repo);
+    var states = await AbstractFunction<ReadOperationConfig>.LoadOperationsStates(Factories.READ_OP_CONFIGS, ss, repo);
     var names = states.Select(s => s.Settings.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
   }
@@ -62,7 +62,7 @@ public class FunctionBaseStaticHelperTests {
       Op("5", "0 0 * * MON", Dt("2024-07-29T00:00:00Z")), // Weekly on Monday at 00:00 UTC, now is not Monday
       Op("6", "0 * * * *", Dt("2024-08-01T01:00:00Z"))    // Hourly at 00 minutes, not yet ready
     } ;
-    var ready = FunctionBase<ReadOperationConfig>.GetReadyOperations(ops, now); 
+    var ready = AbstractFunction<ReadOperationConfig>.GetReadyOperations(ops, now); 
     Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(new [] { "1", "2", "3" }));
   }
   
@@ -70,13 +70,13 @@ public class FunctionBaseStaticHelperTests {
     var runner = TestingFactories.ReadRunner();
     
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
-    var results1 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
+    var results1 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
     
     var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo) };
-    var results2 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
+    var results2 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
 
     var states3 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
-    var results3 = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states3, runner, repo, UtcDate.UtcNow);
+    var results3 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states3, runner, repo, UtcDate.UtcNow);
     
     var newstates = repo.Objects.Values.ToList();
     
@@ -99,7 +99,7 @@ public class FunctionBaseStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     
-    var results = await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow);
+    var results = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow);
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
@@ -122,7 +122,7 @@ public class FunctionBaseStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     states[1] = states[1] with { Settings = states[1].Settings with { Impl = (_, _) => throw new Exception() } }; 
-    var results = (await FunctionBase<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
+    var results = (await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
     var (failex, failmsg) = (results[1].Exception, results[1].Message);
     var newstates = repo.Objects.Values.ToList(); 
     

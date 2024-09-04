@@ -6,7 +6,7 @@ using Serilog;
 
 namespace centazio.core.Runner;
 
-public abstract class FunctionBase<T>(
+public abstract class AbstractFunction<T>(
     ICtlRepository ctl,
     FunctionConfig<T> cfg,
     IOperationRunner<T> runner,
@@ -56,7 +56,17 @@ public abstract class FunctionBase<T>(
     }
 
     async Task<OperationResult> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, OperationResult res) {
-      var newstate = res.UpdateObjectState(op.State, start);
+      var newstate = op.State with {
+        LastStart = start,
+        LastCompleted = UtcDate.UtcNow,
+        LastResult = res.Result,
+        LastAbortVote = res.AbortVote,
+        LastRunMessage = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}",
+        LastPayLoadType = res.ResultType,
+        LastPayLoadLength = res.ResultLength,
+        LastRunException = res.Exception?.ToString()
+      };
+      
       await ctl.SaveObjectState(newstate);
       Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, res, newstate, (UtcDate.UtcNow - opstart).TotalMilliseconds);
       return res;
