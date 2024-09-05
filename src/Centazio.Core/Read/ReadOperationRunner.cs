@@ -1,16 +1,15 @@
 ﻿using System.Diagnostics;
 using Centazio.Core.Ctl.Entities;
-using centazio.core.Runner;
+using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
 
 namespace Centazio.Core.Func;
 
 internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig> {
-  
 
-  public async Task<OperationResult> RunOperation(DateTime start, OperationStateAndConfig<ReadOperationConfig> op) {
-    var res = await op.Settings.Impl(start, op);
+  public async Task<OperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) {
+    var res = await op.Settings.Impl(op);
     
     switch (res.Result) {
       case EOperationResult.Success: Log.Debug("read operation succeeded {@Operation} {@Results}", op, res); break;
@@ -19,7 +18,7 @@ internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<Read
       default: throw new UnreachableException();
     }
     var stage = res.Result != EOperationResult.Error && res.ResultLength > 0;
-    if (stage) await DoStage(start, op, res);
+    if (stage) await DoStage(funcstart, op, res);
     return res;
   }
 

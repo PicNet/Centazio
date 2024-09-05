@@ -3,6 +3,7 @@
 
 using Centazio.Providers.SqlServer;
 using Centazio.Providers.SqlServer.Tests;
+using Centazio.Test.Lib;
 
 #pragma warning disable CA1050
 [SetUpFixture] public class TestSuiteInitialiser {
@@ -10,7 +11,7 @@ using Centazio.Providers.SqlServer.Tests;
   
   [OneTimeSetUp] public async Task GlobalSetUp() {
     DapperInitialiser.Initialise();
-    Centazio.Test.Lib.TestSuiteInitialiser.Initialise();
+    GlobalTestSuiteInitialiser.Init();
     await SqlConn.Instance.Init();
   }
   

@@ -1,10 +1,9 @@
-﻿using Centazio.Core;
-using Centazio.Core.Ctl;
+﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Helpers;
 using Serilog;
 
-namespace centazio.core.Runner;
+namespace Centazio.Core.Runner;
 
 public abstract class AbstractFunction<T>(
     ICtlRepository ctl,
@@ -15,8 +14,9 @@ public abstract class AbstractFunction<T>(
   
   private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   
-  public async Task<IEnumerable<OperationResult>> Run(SystemState state, DateTime start) {
-    var states = await LoadOperationsStates(cfg.Operations, state, ctl);
+  public async Task<IEnumerable<OperationResult>> Run(DateTime start) {
+    var sys = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
+    var states = await LoadOperationsStates(cfg.Operations, sys, ctl);
     var ready = GetReadyOperations(states, start);
     var priotised = Prioritiser.Prioritise(ready);
     var results = await RunOperationsTillAbort(priotised, runner, ctl, start);

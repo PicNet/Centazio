@@ -1,19 +1,19 @@
-﻿using Centazio.Core;
+﻿using System.Text.Json.Serialization;
 using Centazio.Core.Ctl.Entities;
 using Cronos;
 
-namespace centazio.core.Runner;
+namespace Centazio.Core.Runner;
 
 public record FunctionConfig<T>(SystemName System, LifecycleStage Stage, ValidList<T> Operations) where T : OperationConfig;
 
 public record OperationConfig(ObjectName Object, ValidCron Cron);
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, Func<DateTime, OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
-public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, Func<DateTime, OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
+public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
 
 public record ValidCron {
   public ValidCron(string expression) {
     ArgumentException.ThrowIfNullOrWhiteSpace(expression);
-    Value = CronExpression.Parse(expression.Trim()); 
+    Value = CronExpression.Parse(expression.Trim(), CronFormat.IncludeSeconds); 
   }
   
   public CronExpression Value {get; }
@@ -24,7 +24,14 @@ public record ValidCron {
 
 public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T : OperationConfig;
 
-public abstract record OperationResult(EOperationResult Result, string Message, EResultType ResultType, int ResultLength, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) {
+public abstract record OperationResult(
+    EOperationResult Result, 
+    string Message, 
+    EResultType ResultType, 
+    int ResultLength, 
+    EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
+    [property: JsonIgnore]
+    Exception? Exception = null) {
   
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
   

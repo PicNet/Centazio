@@ -63,3 +63,5 @@
 - Extension methods encourage testing of otherwise private methods so use them
 - Add unit test project as `[assembly: InternalsVisibleTo("<test_project>")]` so that testable code can be marked as 
   internal
+- To disable standard logging during testing edit `GlobalTestSuiteInitialiser.cs` and pass `LogEventLevel.Fatal`
+    to the `LogInitialiser.GetConsoleConfig` initialiser

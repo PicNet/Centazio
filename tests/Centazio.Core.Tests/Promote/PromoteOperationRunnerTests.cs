@@ -7,7 +7,7 @@ public class PromoteOperationRunnerTests {
 
   [SetUp] public void SetUp() {
     store = new TestingStagedEntityStore();
-    repo = TestingFactories.Repo();
+    repo = TestingFactories.CtlRepo();
   }
   
   [TearDown] public async Task TearDown() {

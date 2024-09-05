@@ -1,5 +1,8 @@
 ﻿// this class purposefully omits the namespace to ensure that the initialisation below
 //  occurs for all tests, reagardless of namespace
+
+using Centazio.Test.Lib;
+
 [SetUpFixture] public class Global {
-  [OneTimeSetUp] public void GlobalSetUp() => Centazio.Test.Lib.TestSuiteInitialiser.Initialise();
+  [OneTimeSetUp] public void GlobalSetUp() => GlobalTestSuiteInitialiser.Init();
 }

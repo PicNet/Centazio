@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using centazio.core.Runner;
+using Centazio.Core.Runner;
+using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Read;
 
@@ -10,7 +11,7 @@ public class ReadOperationRunnerTests {
 
   [SetUp] public void SetUp() {
     store = new TestingStagedEntityStore();
-    repo = TestingFactories.Repo();
+    repo = TestingFactories.CtlRepo();
   }
   
   [TearDown] public async Task TearDown() {
@@ -90,9 +91,9 @@ public class ReadOperationRunnerTests {
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }
   
-  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<DateTime, OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-        new (result.ToString(), new (new ("* * * * *")), Impl));
+        new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, Impl));
   
 }
