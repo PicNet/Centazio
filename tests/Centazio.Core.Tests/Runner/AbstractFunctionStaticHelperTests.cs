@@ -71,29 +71,23 @@ public class AbstractFunctionStaticHelperTests {
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
     var results1 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
     
-    var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo) };
-    var results2 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
-
     var states3 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
     var results3 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states3, runner, repo, UtcDate.UtcNow);
     
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results1, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Success, "" )}));
-    Assert.That(results2, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Warning, "" )}));
     Assert.That(results3, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )}));
     
-    Assert.That(newstates, Has.Count.EqualTo(3));
+    Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
-    Assert.That(newstates[2], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
+    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
     var runner = TestingFactories.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
@@ -102,45 +96,40 @@ public class AbstractFunctionStaticHelperTests {
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
-      new EmptyOperationResult(EOperationResult.Warning, "" ),
       new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )
     }));
     
-    Assert.That(newstates, Has.Count.EqualTo(3));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
-    Assert.That(newstates[2], Is.EqualTo(states[2].State)); // remained unchanged
+    Assert.That(newstates, Has.Count.EqualTo(2));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
+    Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
     var runner = TestingFactories.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Warning, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
-    states[1] = states[1] with { Settings = states[1].Settings with { Impl = _ => throw new Exception() } }; 
+    states[0] = states[0] with { Settings = states[0].Settings with { Impl = _ => throw new Exception() } }; 
     var results = (await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
-    var (failex, failmsg) = (results[1].Exception, results[1].Message);
+    var (failex, failmsg) = (results[0].Exception, results[0].Message);
     var newstates = repo.Objects.Values.ToList(); 
     
-    Assert.That(results, Has.Count.EqualTo(2));
-    Assert.That(results[0], Is.EqualTo(new EmptyOperationResult(EOperationResult.Warning, "" )));
+    Assert.That(results, Has.Count.EqualTo(1));
     Assert.That(failex, Is.Not.Null);
     Assert.That(String.IsNullOrWhiteSpace(failmsg), Is.False);
-    Assert.That(results[1], Is.EqualTo(new EmptyOperationResult(EOperationResult.Error, failmsg, EOperationAbortVote.Abort, failex )));
+    Assert.That(results[0], Is.EqualTo(new EmptyOperationResult(EOperationResult.Error, failmsg, EOperationAbortVote.Abort, failex )));
     
-    Assert.That(newstates, Has.Count.EqualTo(3));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Warning, EOperationAbortVote.Continue)));
+    Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
-    Assert.That(newstates[1], Is.EqualTo(exp2 with { LastRunMessage = exp2.LastRunMessage + failmsg, LastRunException = failex.ToString() }));
-    Assert.That(newstates[2], Is.EqualTo(states[2].State)); // remained unchanged
+    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunMessage = exp2.LastRunMessage + failmsg, LastRunException = failex.ToString() }));
+    Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) => 
         new(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow, res, vote,
-            UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow, $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
+            UtcDate.UtcNow, UtcDate.UtcNow, res == EOperationResult.Success ? UtcDate.UtcNow : null, UtcDate.UtcNow, res == EOperationResult.Success ? UtcDate.UtcNow : null, $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
   
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 

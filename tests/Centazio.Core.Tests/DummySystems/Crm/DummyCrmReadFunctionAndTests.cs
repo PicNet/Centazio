@@ -86,15 +86,15 @@ public class DummyCrmReadFunctionTests {
     Assert.That(staged0, Is.Empty);
     
     Assert.That(sys1.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, start, start, start)));
-    Assert.That(obj1.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, start, start, start, "operation [Crm/Read/CrmCustomer] completed [Success] message: 0", 0)));
+    Assert.That(obj1.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, start, start, start, start, start, "operation [Crm/Read/CrmCustomer] completed [Success] message: 0", 0)));
     Assert.That(staged1, Is.Empty);
     
     Assert.That(sys2.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, onetick, onetick, onetick)));
-    Assert.That(obj2.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
+    Assert.That(obj2.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
     Assert.That(staged2.Single(), Is.EqualTo(new StagedEntity(Constants.CrmSystemName, Constants.CrmCustomer, onetick, expjson, TestingFactories.TestingChecksum(expjson))));
     
     Assert.That(sys3.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, onetick, onetick, onetick)));
-    Assert.That(obj3.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
+    Assert.That(obj3.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
     Assert.That(staged3.Single(), Is.EqualTo(new StagedEntity(Constants.CrmSystemName, Constants.CrmCustomer, onetick, expjson, TestingFactories.TestingChecksum(expjson))));
   }
   

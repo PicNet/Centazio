@@ -23,7 +23,7 @@ public record ValidCron {
 }
 
 public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T : OperationConfig {
-  public DateTime Checkpoint => State.LastStart ?? Settings.FirstTimeCheckpoint;
+  public DateTime Checkpoint => State.LastSuccessStart ?? Settings.FirstTimeCheckpoint;
 }
 
 public abstract record OperationResult(

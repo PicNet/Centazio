@@ -56,9 +56,10 @@ public abstract class AbstractFunction<T>(
     }
 
     async Task<OperationResult> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, OperationResult res) {
+      var now = UtcDate.UtcNow;
       var newstate = op.State with {
         LastStart = start,
-        LastCompleted = UtcDate.UtcNow,
+        LastCompleted = now,
         LastResult = res.Result,
         LastAbortVote = res.AbortVote,
         LastRunMessage = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}",
@@ -66,6 +67,12 @@ public abstract class AbstractFunction<T>(
         LastPayLoadLength = res.ResultLength,
         LastRunException = res.Exception?.ToString()
       };
+      if (res.Result == EOperationResult.Success) {
+        newstate = newstate with {
+          LastSuccessStart = start,
+          LastSuccessCompleted = now
+        };
+      }
       
       await ctl.SaveObjectState(newstate);
       Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, res, newstate, (UtcDate.UtcNow - opstart).TotalMilliseconds);
