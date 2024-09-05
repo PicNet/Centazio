@@ -34,19 +34,6 @@ public abstract record OperationResult(
     Exception? Exception = null) {
   
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
-  
-  public ObjectState UpdateObjectState(ObjectState state, DateTime start) {
-    return state with {
-      LastStart = start,
-      LastCompleted = UtcDate.UtcNow,
-      LastResult = Result,
-      LastAbortVote = AbortVote,
-      LastRunMessage = $"operation [{state.System}/{state.Stage}/{state.Object}] completed [{Result}] message: {Message}",
-      LastPayLoadType = ResultType,
-      LastPayLoadLength = ResultLength,
-      LastRunException = Exception?.ToString()
-    };
-  }
 }
 
 public record EmptyOperationResult(EOperationResult Result, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 

@@ -47,13 +47,13 @@ public class DummyCrmReadFunctionTests {
       var startstate = await ctl.GetSystemState(sys, stg);
       if (isfirst) Assert.That(startstate, Is.Null);
       else Assert.That(startstate!.Status, Is.EqualTo(ESystemStateStatus.Idle));
-      // var results = await func.Run(UtcDate.UtcNow);
       var results = await funcrunner.RunFunction();
       Assert.That((await ctl.GetSystemState(sys, stg))!.Status, Is.EqualTo(ESystemStateStatus.Idle));
       return results.OpResults;
     }
     
     // run scenarios
+    // -------------
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged0 = await stager.Get(alldt, Constants.CrmSystemName, Constants.CrmCustomer);
     
@@ -73,6 +73,7 @@ public class DummyCrmReadFunctionTests {
     var staged3 = await stager.Get(alldt, Constants.CrmSystemName, Constants.CrmCustomer);
     
     // validate results
+    // ----------------
     var expjson = JsonSerializer.Serialize(NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyOperationResult(EOperationResult.Success, "0")));
     Assert.That(r2, Is.EqualTo(new ListRecordOperationResult(EOperationResult.Success, "1", r2.PayloadList)));
