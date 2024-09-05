@@ -5,14 +5,14 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionRunner<T>(IFunction func, FunctionConfig<T> cfg, ICtlRepository ctl, int maxminutes = 30) where T : OperationConfig {
+public class FunctionRunner<T>(IFunction<T> func, IOperationRunner<T> oprunner, ICtlRepository ctl, int maxminutes = 30) where T : OperationConfig {
 
   public async Task<FunctionRunResults> RunFunction() {
     var start = UtcDate.UtcNow;
     
-    Log.Information("function started {@System} {@Stage}", cfg.System, cfg.Stage);
+    Log.Information("function started {@System} {@Stage}", func.Config.System, func.Config.Stage);
     
-    var state = await ctl.GetOrCreateSystemState(cfg.System, cfg.Stage);
+    var state = await ctl.GetOrCreateSystemState(func.Config.System, func.Config.Stage);
     if (!state.Active) {
       Log.Information("function is inactive, ignoring run {@SystemState}", state);
       return new FunctionRunResults("inactive", Array.Empty<OperationResult>());
@@ -29,7 +29,7 @@ public class FunctionRunner<T>(IFunction func, FunctionConfig<T> cfg, ICtlReposi
     try {
       // not setting last start here as we need the LastStart to represent the time the function was started before this run
       state = await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Running, DateUpdated = UtcDate.UtcNow  });
-      var results = await func.Run(start);
+      var results = await func.RunOperation(start, oprunner, ctl);
       await SaveCompletedState();
       return new FunctionRunResults("success", results);
     } catch (Exception ex) {

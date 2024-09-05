@@ -1,6 +1,7 @@
 # Todo
 - set up testing pipeline (agent is ready)
 - careful testing of date handling
+- sqlite (self hosted), postgres
 
 - CLI:
 

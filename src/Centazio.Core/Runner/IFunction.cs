@@ -1,7 +1,10 @@
-﻿namespace Centazio.Core.Runner;
+﻿using Centazio.Core.Ctl;
 
-public interface IFunction {
+namespace Centazio.Core.Runner;
 
-  Task<IEnumerable<OperationResult>> Run(DateTime start);
+public interface IFunction<T> where T : OperationConfig {
+
+  FunctionConfig<T> Config { get; }
+  Task<IEnumerable<OperationResult>> RunOperation(DateTime start, IOperationRunner<T> runner, ICtlRepository ctl);
 
 }
