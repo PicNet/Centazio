@@ -65,7 +65,7 @@ public class FunctionRunnerTests {
   }
 
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, new List<ReadOperationConfig> { 
-    new(NAME, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult(new EmptyOperationResult(EOperationResult.Success, "") as OperationResult))
+    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new EmptyOperationResult(EOperationResult.Success, "") as OperationResult))
   });
   
   class EmptyFunction : IFunction {

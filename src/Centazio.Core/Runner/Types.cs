@@ -6,9 +6,9 @@ namespace Centazio.Core.Runner;
 
 public record FunctionConfig<T>(SystemName System, LifecycleStage Stage, ValidList<T> Operations) where T : OperationConfig;
 
-public record OperationConfig(ObjectName Object, ValidCron Cron);
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
-public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron);
+public abstract record OperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint);
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
 
 public record ValidCron {
   public ValidCron(string expression) {
@@ -22,7 +22,9 @@ public record ValidCron {
   public static implicit operator ValidCron(string value) => new(value);
 }
 
-public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T : OperationConfig;
+public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T : OperationConfig {
+  public DateTime Checkpoint => State.LastStart ?? Settings.FirstTimeCheckpoint;
+}
 
 public abstract record OperationResult(
     EOperationResult Result, 

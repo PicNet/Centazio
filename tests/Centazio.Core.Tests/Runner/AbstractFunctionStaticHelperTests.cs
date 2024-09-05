@@ -48,7 +48,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), TestingFactories.TestingListReadOperationImplementation));
+    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
@@ -146,13 +146,13 @@ public class AbstractFunctionStaticHelperTests {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
+            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
     
     public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
-      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), TestingFactories.TestingEmptyReadOperationImplementation)
+      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
+      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation)
     ]);
   }
 }

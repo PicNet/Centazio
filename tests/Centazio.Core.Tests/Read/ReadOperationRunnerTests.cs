@@ -94,6 +94,6 @@ public class ReadOperationRunnerTests {
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-        new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, Impl));
+        new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, Impl));
   
 }

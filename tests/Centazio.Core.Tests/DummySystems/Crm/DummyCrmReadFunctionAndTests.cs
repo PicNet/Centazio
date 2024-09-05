@@ -26,10 +26,10 @@ public class DummyCrmReadFunctionTests {
     var ctl = TestingFactories.CtlRepo();
     var stager = TestingFactories.SeStore();
     var cfg = new FunctionConfig<ReadOperationConfig>(sys, Constants.Read, new List<ReadOperationConfig> {
-      new(obj, TestingDefaults.CRON_EVERY_SECOND, async config => {
+      new(obj, TestingDefaults.CRON_EVERY_SECOND, alldt, async config => {
         Assert.That((await ctl.GetSystemState(sys, stg))!.Status, Is.EqualTo(ESystemStateStatus.Running));
         
-        var after = config.State.LastStart ?? UtcDate.UtcNow.AddYears(-1);
+        var after = config.Checkpoint;
         var customers = await api.GetCustomersUpdatedSince(after);
         
         // H.DebugWrite($"function run now[{H.SecsDiff()}] start[{H.SecsDiff(start)}] after[{H.SecsDiff(after)}] customer[{customers.Count}]");
