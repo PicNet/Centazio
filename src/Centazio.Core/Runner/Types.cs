@@ -8,7 +8,8 @@ public record FunctionConfig<T>(SystemName System, LifecycleStage Stage, ValidLi
 
 public abstract record OperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint);
 public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> GetObjectsToStage) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
-public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> PromoteObjects) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<PromoteOperationResult>> PromoteObjects) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+public record PromoteOperationResult(OperationResult OpResult, IEnumerable<StagedEntity> Promoted, IEnumerable<(StagedEntity Entity, ValidString Reason)> Ignored);
 
 public record ValidCron {
   public ValidCron(string expression) {

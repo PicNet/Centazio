@@ -7,7 +7,14 @@ internal class PromoteOperationRunner(IStagedEntityStore staged) : IOperationRun
   
   public async Task<OperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {
     var pending = await staged.Get(op.Checkpoint, op.State.System, op.State.Object);
-    return await op.Settings.PromoteObjects(op, pending); 
+    var results = await op.Settings.PromoteObjects(op, pending);
+    
+    var topromote = results.Promoted.Select(e => e with { DatePromoted = funcstart });
+    var toignore = results.Ignored.Select(e => e.Entity with { Ignore = e.Reason });
+    
+    await staged.Update(topromote.Concat(toignore));
+    
+    return results.OpResult; 
   }
 
 }

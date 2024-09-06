@@ -22,6 +22,7 @@ public class FunctionRunnerTests {
   }
   
   [Test] public async Task Test_run_functions_creates_state_if_it_does_not_exist() {
+    Assert.That(repo.Systems, Is.Empty);
     var results = await new FunctionRunner<ReadOperationConfig>(emptufunc, oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
