@@ -1,7 +1,7 @@
-﻿namespace Centazio.Core.Tests.DummySystems;
+﻿namespace Centazio.Core.Tests.IntegrationTests;
 
 public static class Constants {
-  public static readonly SystemName CrmSystemName = new(nameof(Crm));
+  public static readonly SystemName CrmSystemName = new("CRM");
   public static readonly ObjectName CrmCustomer = new(nameof(CrmCustomer));
   public static readonly LifecycleStage Read = new(nameof(Read));
 }
