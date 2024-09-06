@@ -111,7 +111,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
-    states[0] = states[0] with { Settings = states[0].Settings with { Impl = _ => throw new Exception() } }; 
+    states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = _ => throw new Exception() } }; 
     var results = (await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
     var (failex, failmsg) = (results[0].Exception, results[0].Message);
     var newstates = repo.Objects.Values.ToList(); 

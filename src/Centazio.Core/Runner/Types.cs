@@ -7,8 +7,8 @@ namespace Centazio.Core.Runner;
 public record FunctionConfig<T>(SystemName System, LifecycleStage Stage, ValidList<T> Operations) where T : OperationConfig;
 
 public abstract record OperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint);
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
-public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> Impl) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> GetObjectsToStage) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<OperationResult>> PromoteObjects) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
 
 public record ValidCron {
   public ValidCron(string expression) {
@@ -42,6 +42,7 @@ public abstract record OperationResult(
   }
   
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
+  public bool IsValid { get; } = Result != EOperationResult.Error && ResultLength > 0; 
   
   public static OperationResult Empty(EOperationAbortVote abort = EOperationAbortVote.Continue) => Create(EOperationResult.Success, String.Empty, abort);
   public static OperationResult Success(string? payload, EOperationAbortVote abort = EOperationAbortVote.Continue) => Create(EOperationResult.Success, payload, abort);
