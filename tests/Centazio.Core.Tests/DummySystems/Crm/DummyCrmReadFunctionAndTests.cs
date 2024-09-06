@@ -19,9 +19,7 @@ public class DummyCrmReadFunction : AbstractReadFunction {
   
   private async Task<OperationResult> ReadCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await api.GetCustomersUpdatedSince(config.Checkpoint);
-    return customers.Any() 
-        ? new ListRecordOperationResult(EOperationResult.Success, $"{customers.Count}", customers)
-        : new EmptyOperationResult(EOperationResult.Success, $"{customers.Count}");
+    return OperationResult.Success(customers);
   }
 }
 
@@ -47,13 +45,13 @@ public class DummyCrmReadFunctionTests {
     var staged0 = await stager.Get(UtcDate.UtcNow.AddYears(-1), Constants.CrmSystemName, Constants.CrmCustomer);
     
     // this run should be empty as no TestingUtcDate.DoTick
-    var r1 = (EmptyOperationResult) (await RunFunc(true)).Single();
+    var r1 = (await RunFunc(true)).Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged1 = await stager.Get(UtcDate.UtcNow.AddYears(-1), Constants.CrmSystemName, Constants.CrmCustomer);
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListRecordOperationResult) (await RunFunc()).Single();
+    var r2 = (await RunFunc()).Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = await stager.Get(UtcDate.UtcNow.AddYears(-1), Constants.CrmSystemName, Constants.CrmCustomer);
     
@@ -63,9 +61,8 @@ public class DummyCrmReadFunctionTests {
     
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmReadFactories.NewCust(0, onetick));
-    Assert.That(r1, Is.EqualTo(new EmptyOperationResult(EOperationResult.Success, "0")));
-    Assert.That(r2, Is.EqualTo(new ListRecordOperationResult(EOperationResult.Success, "1", r2.PayloadList)));
-    Assert.That(r2.PayloadList.Value.Single(), Is.EqualTo(expjson));
+    Assert.That(r1, Is.EqualTo(OperationResult.Success(String.Empty)));
+    Assert.That(JsonSerializer.Serialize(r2), Is.EqualTo(JsonSerializer.Serialize(OperationResult.Success(new [] { expjson }))));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -74,15 +71,15 @@ public class DummyCrmReadFunctionTests {
     Assert.That(staged0, Is.Empty);
     
     Assert.That(sys1.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, start, start, start)));
-    Assert.That(obj1.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, start, start, start, start, start, "operation [Crm/Read/CrmCustomer] completed [Success] message: 0", 0)));
+    Assert.That(obj1.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, start, start, start, start, start, "operation [Crm/Read/CrmCustomer] completed [Success] message: empty payload", 0)));
     Assert.That(staged1, Is.Empty);
     
     Assert.That(sys2.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, onetick, onetick, onetick)));
-    Assert.That(obj2.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
+    Assert.That(obj2.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: list payload", 1) { LastPayLoadType = EResultType.List }));
     Assert.That(staged2.Single(), Is.EqualTo(new StagedEntity(Constants.CrmSystemName, Constants.CrmCustomer, onetick, expjson, TestingFactories.TestingChecksum(expjson))));
     
     Assert.That(sys3.Single(), Is.EqualTo(new SystemState(Constants.CrmSystemName, Constants.Read, true, start, ESystemStateStatus.Idle, onetick, onetick, onetick)));
-    Assert.That(obj3.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: 1", 1) { LastPayLoadType = EResultType.List }));
+    Assert.That(obj3.Single(), Is.EqualTo(new ObjectState(Constants.CrmSystemName, Constants.Read, Constants.CrmCustomer, true, start, EOperationResult.Success, EOperationAbortVote.Continue, onetick, onetick, onetick, onetick, onetick, "operation [Crm/Read/CrmCustomer] completed [Success] message: list payload", 1) { LastPayLoadType = EResultType.List }));
     Assert.That(staged3.Single(), Is.EqualTo(new StagedEntity(Constants.CrmSystemName, Constants.CrmCustomer, onetick, expjson, TestingFactories.TestingChecksum(expjson))));
   }
 }

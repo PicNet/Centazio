@@ -35,14 +35,64 @@ public abstract record OperationResult(
     [property: JsonIgnore]
     Exception? Exception = null) {
   
+  static OperationResult() {
+    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(EmptyOperationResult).TypeHandle);
+    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(SingleRecordOperationResult).TypeHandle);
+    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(ListRecordOperationResult).TypeHandle);
+  }
+  
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
+  
+  public static OperationResult Empty(EOperationAbortVote abort = EOperationAbortVote.Continue) => Create(EOperationResult.Success, String.Empty, abort);
+  public static OperationResult Success(string? payload, EOperationAbortVote abort = EOperationAbortVote.Continue) => Create(EOperationResult.Success, payload, abort);
+  public static OperationResult Success(IEnumerable<string>? payload, EOperationAbortVote abort = EOperationAbortVote.Continue) => Create(EOperationResult.Success, payload, abort);
+  
+  public static OperationResult Error(EOperationAbortVote abort = EOperationAbortVote.Continue, Exception? ex = null) => EmptyOperationResultFactory(EOperationResult.Error, "error", abort, ex);
+  
+  private static OperationResult Create(EOperationResult result, string? payload, EOperationAbortVote abort = EOperationAbortVote.Continue) {
+    if (String.IsNullOrWhiteSpace(payload)) return EmptyOperationResultFactory(result, "empty payload", abort, null);
+    return SingleRecordOperationResultFactory(result, "single item payload", payload, abort) ;
+  }
+  
+  private static OperationResult Create(EOperationResult result, IEnumerable<string>? payload, EOperationAbortVote abort = EOperationAbortVote.Continue) {
+    var lst = payload?.ToList();
+    if (lst == null || !lst.Any()) return EmptyOperationResultFactory(result, "empty payload", abort, null);
+    if (lst.Any(String.IsNullOrWhiteSpace)) throw new ArgumentNullException($"payload has null or empty values"); 
+    return ListRecordOperationResultFactory(result, "list payload", lst, abort) ;
+  }
+  
+  // note: these 'Factory' hacks allow us to have private constructors in these records whilst still allowing the types themselves
+  //    to be internal (used by ReadOperationRunner)
+  private static Func<EOperationResult, string, EOperationAbortVote, Exception?, EmptyOperationResult> EmptyOperationResultFactory = null!;
+  internal record EmptyOperationResult : OperationResult {
+    static EmptyOperationResult() { EmptyOperationResultFactory = (result, message, abort, ex) => new EmptyOperationResult(result, message, abort, ex); }
+    
+    private EmptyOperationResult(EOperationResult result, string message, EOperationAbortVote abort, Exception? ex) : base(result, message, EResultType.Empty, 0, abort, ex) {}
+  }
+
+  private static Func<EOperationResult, string, string, EOperationAbortVote, SingleRecordOperationResult> SingleRecordOperationResultFactory = null!;
+  internal record SingleRecordOperationResult : OperationResult {
+    static SingleRecordOperationResult() { SingleRecordOperationResultFactory = (result, message, payload, abort) => new SingleRecordOperationResult(result, message, payload, abort); }
+    
+    internal ValidString Payload { get; } 
+    
+    private SingleRecordOperationResult(EOperationResult result, string message, ValidString payload, EOperationAbortVote abort = EOperationAbortVote.Continue) 
+      : base(result, message, EResultType.Single, payload.Value.Length, abort) {
+      Payload = payload;
+    }
+  }
+
+  private static Func<EOperationResult, string, ValidList<string>, EOperationAbortVote, ListRecordOperationResult> ListRecordOperationResultFactory = null!;
+  internal record ListRecordOperationResult : OperationResult {
+    static ListRecordOperationResult() { ListRecordOperationResultFactory = (result, message, payload, abort) => new ListRecordOperationResult(result, message, payload, abort); }
+    
+    internal ValidList<string> PayloadList { get; } 
+    
+    private ListRecordOperationResult(EOperationResult result, string message, ValidList<string> payload, EOperationAbortVote abort = EOperationAbortVote.Continue)
+      : base(result, message, EResultType.List, payload.Value.Count, abort) {
+      PayloadList = payload;
+    }
+  }
 }
 
-public record EmptyOperationResult(EOperationResult Result, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-    : OperationResult(Result, Message, EResultType.Empty, 0, AbortVote, Exception);
 
-public record SingleRecordOperationResult(EOperationResult Result, string Message, ValidString Payload, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-    : OperationResult(Result, Message, EResultType.Single, Payload.Value.Length, AbortVote, Exception);
-
-public record ListRecordOperationResult(EOperationResult Result, string Message, ValidList<string> PayloadList, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-    : OperationResult(Result, Message, EResultType.List, PayloadList.Value.Count, AbortVote, Exception);

@@ -52,7 +52,7 @@ public abstract class AbstractFunction<T>(IOperationsFilterAndPrioritiser<T>? pr
     
     async Task<OperationResult> RunOp(OperationStateAndConfig<T> op) {
       try { return await runner.RunOperation(start, op); }
-      catch (Exception ex) { return new EmptyOperationResult(EOperationResult.Error, ex.Message, EOperationAbortVote.Abort, ex); }
+      catch (Exception ex) { return OperationResult.Error(EOperationAbortVote.Abort, ex); }
     }
 
     async Task<OperationResult> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, OperationResult res) {

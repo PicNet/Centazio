@@ -15,23 +15,24 @@ public static class TestingFactories {
   
   public static Task<OperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    return Task.FromResult(new EmptyOperationResult(
-        Enum.Parse<EOperationResult>(op.Settings.Object), 
-        String.Empty,
-        result == EOperationResult.Error ? EOperationAbortVote.Abort : EOperationAbortVote.Continue
-    ) as OperationResult);
+    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error(EOperationAbortVote.Abort) : OperationResult.Empty());
   }
   
-  public static Task<OperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) => 
-      Task.FromResult(new EmptyOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty) as OperationResult);
-  
-  public static Task<OperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) => 
-      Task.FromResult(new SingleRecordOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty, Guid.NewGuid().ToString()) as OperationResult);
-  
-  public static Task<OperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) => 
-      Task.FromResult(new ListRecordOperationResult(Enum.Parse<EOperationResult>(op.Settings.Object), String.Empty, 
-          new ValidList<string>(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList())) as OperationResult);
-  
+  public static Task<OperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
+    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Empty());
+  }
+
+  public static Task<OperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
+    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Success(Guid.NewGuid().ToString()));
+  }
+
+  public static Task<OperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
+    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Success(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()))); 
+  }
+
   public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast 
 }
 

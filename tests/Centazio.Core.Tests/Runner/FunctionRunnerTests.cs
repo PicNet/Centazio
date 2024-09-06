@@ -48,7 +48,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(idx => new EmptyOperationResult(EOperationResult.Success, idx.ToString()))));
+    Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => OperationResult.Empty())));
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
@@ -69,11 +69,11 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(new OperationResult[] { new EmptyOperationResult(EOperationResult.Success, "0") }));
+    Assert.That(results.OpResults, Is.EquivalentTo(new[] { OperationResult.Empty() }));
   }
 
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, new List<ReadOperationConfig> { 
-    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new EmptyOperationResult(EOperationResult.Success, "") as OperationResult))
+    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(OperationResult.Empty()))
   });
   
   class EmptyFunction : IFunction<ReadOperationConfig> {
@@ -95,7 +95,7 @@ public class FunctionRunnerTests {
     public async Task<IEnumerable<OperationResult>> RunOperation(DateTime start, IOperationRunner<ReadOperationConfig> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
-      return Enumerable.Range(0, results).Select(idx => new EmptyOperationResult(EOperationResult.Success, idx.ToString()));
+      return Enumerable.Range(0, results).Select(_ => OperationResult.Empty());
     }
 
   }

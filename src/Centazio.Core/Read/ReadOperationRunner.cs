@@ -14,9 +14,9 @@ internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<Read
     return res;
 
     async Task DoStage() {
-      if (res is SingleRecordOperationResult sr)
+      if (res is OperationResult.SingleRecordOperationResult sr)
         await stager.Stage(funcstart, op.State.System, op.Settings.Object, sr.Payload);
-      else if (res is ListRecordOperationResult lr)
+      else if (res is OperationResult.ListRecordOperationResult lr)
         await stager.Stage(funcstart, op.State.System, op.Settings.Object, lr.PayloadList.Value);
       else throw new UnreachableException();
     }

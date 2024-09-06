@@ -76,11 +76,11 @@ public class AbstractFunctionStaticHelperTests {
     
     var newstates = repo.Objects.Values.ToList();
     
-    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Success, "" )}));
-    Assert.That(results3, Is.EquivalentTo(new [] { new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )}));
+    Assert.That(results1, Is.EquivalentTo(new [] { OperationResult.Empty()}));
+    Assert.That(results3, Is.EquivalentTo(new [] { OperationResult.Error(EOperationAbortVote.Abort) }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState( EOperationResult.Success, EOperationAbortVote.Continue)));
     Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
   }
 
@@ -96,7 +96,7 @@ public class AbstractFunctionStaticHelperTests {
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
-      new EmptyOperationResult(EOperationResult.Error, "", EOperationAbortVote.Abort )
+      OperationResult.Error(EOperationAbortVote.Abort )
     }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
@@ -119,18 +119,23 @@ public class AbstractFunctionStaticHelperTests {
     Assert.That(results, Has.Count.EqualTo(1));
     Assert.That(failex, Is.Not.Null);
     Assert.That(String.IsNullOrWhiteSpace(failmsg), Is.False);
-    Assert.That(results[0], Is.EqualTo(new EmptyOperationResult(EOperationResult.Error, failmsg, EOperationAbortVote.Abort, failex )));
+    Assert.That(results[0], Is.EqualTo(OperationResult.Error(EOperationAbortVote.Abort, failex)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
-    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunMessage = exp2.LastRunMessage + failmsg, LastRunException = failex.ToString() }));
+    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = failex.ToString() }));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
-  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) => 
-        new(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow, res, vote,
-            UtcDate.UtcNow, UtcDate.UtcNow, res == EOperationResult.Success ? UtcDate.UtcNow : null, UtcDate.UtcNow, res == EOperationResult.Success ? UtcDate.UtcNow : null, $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0);
-  
+  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) {
+    var expmsg = res == EOperationResult.Success ? "empty payload": "error";
+    return new ObjectState(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow,
+        res, vote, UtcDate.UtcNow, UtcDate.UtcNow, 
+        res == EOperationResult.Success ? UtcDate.UtcNow : null, UtcDate.UtcNow,
+        res == EOperationResult.Success ? UtcDate.UtcNow : null,
+        $"operation [{res}/{res}/{res}] completed [{res}] message: {expmsg}", 0);
+  }
+
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
