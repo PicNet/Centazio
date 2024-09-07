@@ -3,9 +3,10 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner(IStagedEntityStore staged) : IOperationRunner<PromoteOperationConfig> {
+internal class PromoteOperationRunner(IStagedEntityStore staged) 
+    : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   
-  public async Task<OperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {
+  public async Task<PromoteOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {
     var pending = await staged.Get(op.Checkpoint, op.State.System, op.State.Object);
     var results = await op.Settings.PromoteObjects(op, pending);
     
@@ -14,7 +15,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged) : IOperationRun
     
     await staged.Update(topromote.Concat(toignore));
     
-    return results.OpResult; 
+    return results; 
   }
 
 }

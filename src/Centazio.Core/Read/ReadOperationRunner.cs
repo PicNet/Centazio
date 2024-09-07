@@ -4,12 +4,13 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Read;
 
-internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig> {
+internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
-  public async Task<OperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) {
-    var res = await op.Settings.GetObjectsToStage(op);
+  public async Task<ReadOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) {
+    var res1 = await op.Settings.GetObjectsToStage(op);
+    var res = res1.ToOperationResult;
     if (res.IsValid) await DoStage();
-    return res;
+    return res1;
 
     async Task DoStage() {
       if (res is OperationResult.SingleRecordOperationResult sr)

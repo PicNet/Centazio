@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -17,7 +16,7 @@ public class PromoteFunctionSingleOpTest {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, TestingFactories.CtlRepo(), TestingFactories.SeStore());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // run scenarios
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN", "LN", new DateOnly(2000, 1, 2), UtcDate.UtcNow);

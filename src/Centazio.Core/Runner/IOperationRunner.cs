@@ -1,5 +1,7 @@
 ﻿namespace Centazio.Core.Runner;
 
-public interface IOperationRunner<T> where T : OperationConfig {
-  Task<OperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<T> op);
+public interface IOperationRunner<T, R> 
+    where T : OperationConfig 
+    where R : OperationResult {
+  Task<R> RunOperation(DateTime funcstart, OperationStateAndConfig<T> op);
 }

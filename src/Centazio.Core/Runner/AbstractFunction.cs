@@ -5,15 +5,17 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<T>(IOperationsFilterAndPrioritiser<T>? prioritiser = null) : IFunction<T> where T : OperationConfig {
+public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>? prioritiser = null) : IFunction<T, R> 
+    where T : OperationConfig
+    where R : OperationResult {
   
   private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   
   public abstract FunctionConfig<T> Config { get; }
 
-  public async Task<IEnumerable<OperationResult>> RunOperation(
+  public async Task<IEnumerable<R>> RunOperation(
       DateTime start, 
-      IOperationRunner<T> runner,
+      IOperationRunner<T, R> runner,
       ICtlRepository ctl) {
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
     var states = await LoadOperationsStates(Config.Operations, sys, ctl);
@@ -37,12 +39,12 @@ public abstract class AbstractFunction<T>(IOperationsFilterAndPrioritiser<T>? pr
     return states.Where(IsOperationReady);
   }
   
-  internal static async Task<IEnumerable<OperationResult>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<T>> ops, IOperationRunner<T> runner, ICtlRepository ctl, DateTime start) {
+  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<T>> ops, IOperationRunner<T, R> runner, ICtlRepository ctl, DateTime start) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
 
-    async Task<OperationResult> RunAndSaveOp(OperationStateAndConfig<T> op) {
+    async Task<R> RunAndSaveOp(OperationStateAndConfig<T> op) {
       var opstart = UtcDate.UtcNow;
       Log.Information("operation starting {@Operation}", op);
       
@@ -50,12 +52,13 @@ public abstract class AbstractFunction<T>(IOperationsFilterAndPrioritiser<T>? pr
       return await SaveOp(opstart, op, result);
     }
     
-    async Task<OperationResult> RunOp(OperationStateAndConfig<T> op) {
+    async Task<R> RunOp(OperationStateAndConfig<T> op) {
       try { return await runner.RunOperation(start, op); }
-      catch (Exception ex) { return OperationResult.Error(EOperationAbortVote.Abort, ex); }
+      // todo: this cast to (R) is bad
+      catch (Exception ex) { return (R) OperationResult.Error(EOperationAbortVote.Abort, ex); }
     }
 
-    async Task<OperationResult> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, OperationResult res) {
+    async Task<R> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, R res) {
       var now = UtcDate.UtcNow;
       var newstate = op.State with {
         LastStart = start,

@@ -5,9 +5,15 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionRunner<T>(IFunction<T> func, IOperationRunner<T> oprunner, ICtlRepository ctl, int maxminutes = 30) where T : OperationConfig {
+public class FunctionRunner<T, R>(
+    IFunction<T, R> func, 
+    IOperationRunner<T, R> oprunner, 
+    ICtlRepository ctl, 
+    int maxminutes = 30) 
+        where T : OperationConfig
+        where R : OperationResult {
 
-  public async Task<FunctionRunResults> RunFunction() {
+  public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;
     
     Log.Information("function started {@System} {@Stage}", func.Config.System, func.Config.Stage);
@@ -15,13 +21,13 @@ public class FunctionRunner<T>(IFunction<T> func, IOperationRunner<T> oprunner, 
     var state = await ctl.GetOrCreateSystemState(func.Config.System, func.Config.Stage);
     if (!state.Active) {
       Log.Information("function is inactive, ignoring run {@SystemState}", state);
-      return new FunctionRunResults("inactive", Array.Empty<OperationResult>());
+      return new FunctionRunResults<R>("inactive", Array.Empty<R>());
     }
     if (state.Status != ESystemStateStatus.Idle) {
       var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
       if (minutes <= maxminutes) {
         Log.Information("function is not idle, ignoring run {@SystemState}", state);
-        return new FunctionRunResults("not idle", Array.Empty<OperationResult>());
+        return new FunctionRunResults<R>("not idle", Array.Empty<R>());
       }
       Log.Information("function considered stuck, running {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, maxminutes, minutes);
     }
@@ -31,15 +37,15 @@ public class FunctionRunner<T>(IFunction<T> func, IOperationRunner<T> oprunner, 
       state = await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Running, DateUpdated = UtcDate.UtcNow  });
       var results = await func.RunOperation(start, oprunner, ctl);
       await SaveCompletedState();
-      return new FunctionRunResults("success", results);
+      return new FunctionRunResults<R>("success", results);
     } catch (Exception ex) {
       await SaveCompletedState();
       Log.Error(ex, "function encoutered error {@SystemState}", state);
-      return new FunctionRunResults($"error: {ex.Message}", Array.Empty<OperationResult>());
+      return new FunctionRunResults<R>($"error: {ex.Message}", Array.Empty<R>());
     }
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Idle, LastStarted = start, LastCompleted = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow });
   }
 }
 
-public record FunctionRunResults(string Message, IEnumerable<OperationResult> OpResults); 
+public record FunctionRunResults<R>(string Message, IEnumerable<R> OpResults) where R : OperationResult; 

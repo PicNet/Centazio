@@ -17,7 +17,7 @@ public class ReadFunctionSingleOpTests {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, TestingFactories.CtlRepo(), TestingFactories.SeStore());
     var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), TestingFactories.ReadRunner(stager));
-    var funcrunner = new FunctionRunner<ReadOperationConfig>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(func, oprunner, ctl);
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
@@ -78,8 +78,8 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractReadFunction 
     ]));
   }
   
-  private async Task<OperationResult> ReadCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
+  private async Task<ReadOperationResult> ReadCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
-    return OperationResult.Success(customers);
+    return new ReadOperationResult(OperationResult.Success(customers));
   }
 }

@@ -11,27 +11,27 @@ public static class TestingFactories {
     
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository CtlRepo() => new();
-  public static IOperationRunner<ReadOperationConfig> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
-  public static IOperationRunner<PromoteOperationConfig> PromoteRunner(IStagedEntityStore? store = null) => new PromoteOperationRunner(store ?? SeStore());
+  public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
+  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(IStagedEntityStore? store = null) => new PromoteOperationRunner(store ?? SeStore());
   
-  public static Task<OperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+  public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error(EOperationAbortVote.Abort) : OperationResult.Empty());
+    return Task.FromResult(result == EOperationResult.Error ? new ReadOperationResult(OperationResult.Error(EOperationAbortVote.Abort)) : new ReadOperationResult(OperationResult.Empty()));
   }
   
-  public static Task<OperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+  public static Task<ReadOperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Empty());
+    return Task.FromResult(result == EOperationResult.Error ? new ReadOperationResult(OperationResult.Error()) : new ReadOperationResult(OperationResult.Empty()));
   }
 
-  public static Task<OperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+  public static Task<ReadOperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Success(Guid.NewGuid().ToString()));
+    return Task.FromResult(result == EOperationResult.Error ? new ReadOperationResult(OperationResult.Error()) : new ReadOperationResult(OperationResult.Success(Guid.NewGuid().ToString())));
   }
 
-  public static Task<OperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
+  public static Task<ReadOperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    return Task.FromResult(result == EOperationResult.Error ? OperationResult.Error() : OperationResult.Success(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()))); 
+    return Task.FromResult(result == EOperationResult.Error ? new ReadOperationResult(OperationResult.Error()) : new ReadOperationResult(OperationResult.Success(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString())))); 
   }
 
   public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast 

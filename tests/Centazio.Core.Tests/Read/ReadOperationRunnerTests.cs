@@ -45,7 +45,8 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (OperationResult.SingleRecordOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
+    var actual = (OperationResult.SingleRecordOperationResult) (await runner.RunOperation(
+        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation))).ToOperationResult;
     
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
@@ -57,7 +58,8 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (OperationResult.ListRecordOperationResult) await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
+    var actual = (OperationResult.ListRecordOperationResult) (await runner.RunOperation(
+        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation))).ToOperationResult;
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
@@ -82,7 +84,7 @@ public class ReadOperationRunnerTests {
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }
   
-  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> Impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
         new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, Impl));

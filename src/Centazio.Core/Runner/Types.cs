@@ -7,9 +7,17 @@ namespace Centazio.Core.Runner;
 public record FunctionConfig<T>(SystemName System, LifecycleStage Stage, ValidList<T> Operations) where T : OperationConfig;
 
 public abstract record OperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint);
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<OperationResult>> GetObjectsToStage) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> GetObjectsToStage) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+
+// todo: clean up OperationResult hierarchy
+public record ReadOperationResult(OperationResult original) : OperationResult(original) {
+  public OperationResult ToOperationResult => original;
+}
+
 public record PromoteOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<PromoteOperationResult>> PromoteObjects) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
-public record PromoteOperationResult(OperationResult OpResult, IEnumerable<StagedEntity> Promoted, IEnumerable<(StagedEntity Entity, ValidString Reason)> Ignored);
+// todo: this is kind of ugly, is this a valid-use case for a record? 
+public record PromoteOperationResult(OperationResult OpResult, IEnumerable<StagedEntity> Promoted, IEnumerable<(StagedEntity Entity, ValidString Reason)> Ignored) : OperationResult(OpResult);
 
 public record ValidCron {
   public ValidCron(string expression) {
