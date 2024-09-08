@@ -76,8 +76,8 @@ public class AbstractFunctionStaticHelperTests {
     
     var newstates = repo.Objects.Values.ToList();
     
-    Assert.That(results1, Is.EquivalentTo(new [] { OperationResult.Empty()}));
-    Assert.That(results3, Is.EquivalentTo(new [] { OperationResult.Error(EOperationAbortVote.Abort) }));
+    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult("") }));
+    Assert.That(results3, Is.EquivalentTo(new [] { new ErrorReadOperationResult("") }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState( EOperationResult.Success, EOperationAbortVote.Continue)));
@@ -96,7 +96,7 @@ public class AbstractFunctionStaticHelperTests {
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
-      OperationResult.Error(EOperationAbortVote.Abort )
+      new ErrorReadOperationResult("", EOperationAbortVote.Abort)
     }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
@@ -119,7 +119,7 @@ public class AbstractFunctionStaticHelperTests {
     Assert.That(results, Has.Count.EqualTo(1));
     Assert.That(failex, Is.Not.Null);
     Assert.That(String.IsNullOrWhiteSpace(failmsg), Is.False);
-    Assert.That(results[0], Is.EqualTo(OperationResult.Error(EOperationAbortVote.Abort, failex)));
+    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult("", EOperationAbortVote.Abort, failex)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);

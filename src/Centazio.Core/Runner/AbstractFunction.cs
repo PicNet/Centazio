@@ -7,7 +7,7 @@ namespace Centazio.Core.Runner;
 
 public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>? prioritiser = null) : IFunction<T, R> 
     where T : OperationConfig
-    where R : OperationResult {
+    where R : IOperationResult {
   
   private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   
@@ -53,9 +53,13 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
     }
     
     async Task<R> RunOp(OperationStateAndConfig<T> op) {
-      try { return await runner.RunOperation(start, op); }
-      // todo: this cast to (R) is bad
-      catch (Exception ex) { return (R) OperationResult.Error(EOperationAbortVote.Abort, ex); }
+      try { 
+        return await runner.RunOperation(start, op); 
+      } catch (Exception ex) {
+        // todo: implement error handling
+        // return new ErrorOperationResult("", EOperationAbortVote.Abort, ex);
+        throw;
+      }
     }
 
     async Task<R> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, R res) {
@@ -66,8 +70,9 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
         LastResult = res.Result,
         LastAbortVote = res.AbortVote,
         LastRunMessage = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}",
-        LastPayLoadType = res.ResultType,
-        LastPayLoadLength = res.ResultLength,
+        // todo
+        // LastPayLoadType = res.ResultType,
+        // LastPayLoadLength = res.ResultLength,
         LastRunException = res.Exception?.ToString()
       };
       if (res.Result == EOperationResult.Success) {

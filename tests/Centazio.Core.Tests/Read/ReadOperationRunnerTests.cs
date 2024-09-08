@@ -26,7 +26,7 @@ public class ReadOperationRunnerTests {
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
-        OperationResult.Error(),
+        new ErrorReadOperationResult(""),
         actual,
         new SystemState(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
@@ -38,48 +38,44 @@ public class ReadOperationRunnerTests {
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
-        OperationResult.Success(String.Empty),
+        new EmptyReadOperationResult(""),
         actual,
         new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle));
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (OperationResult.SingleRecordOperationResult) (await runner.RunOperation(
-        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation))).ToOperationResult;
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(
+        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
     
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
     ValidateResult(
-        OperationResult.Success(actual.Payload),
+        new SingleRecordReadOperationResult(actual.Payload, ""),
         actual,
         new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (OperationResult.ListRecordOperationResult) (await runner.RunOperation(
-        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation))).ToOperationResult;
+    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(
+        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
         staged.Select(s => new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.Checksum))));
     ValidateResult(
-        OperationResult.Success(actual.PayloadList.Value),
+        new ListRecordsReadOperationResult(actual.PayloadList, ""),
         actual,
         new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
-    Assert.Throws<ArgumentNullException>(() => _ = OperationResult.Success([""]));
-    Assert.Throws<ArgumentNullException>(() => _ = OperationResult.Success([null!]));
-    
-    Assert.That(OperationResult.Success((string?)""), Is.EqualTo(OperationResult.Empty()));
-    Assert.That(OperationResult.Success((string?)null), Is.EqualTo(OperationResult.Empty()));
-    Assert.That(OperationResult.Success(Array.Empty<string>()), Is.EqualTo(OperationResult.Empty()));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult(new ([""]), ""));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult(new ([null!]), ""));
   }
   
-  private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss) {
+  private void ValidateResult(IOperationResult expected, IOperationResult actual, SystemState expss) {
     Assert.That(JsonSerializer.Serialize(actual), Is.EqualTo(JsonSerializer.Serialize(expected)));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }

@@ -2,6 +2,6 @@
 
 public interface IOperationRunner<T, R> 
     where T : OperationConfig 
-    where R : OperationResult {
+    where R : IOperationResult {
   Task<R> RunOperation(DateTime funcstart, OperationStateAndConfig<T> op);
 }

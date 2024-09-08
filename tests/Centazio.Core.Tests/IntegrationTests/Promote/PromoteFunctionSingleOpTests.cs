@@ -48,7 +48,10 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromote
   private Task<PromoteOperationResult> PromoteCustomers(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
     // todo: why do we have to pass a payload
     var lst = staged.ToList();
-    var r = new PromoteOperationResult(OperationResult.Success(Array.Empty<string>()), IgnoreNext ? [] : lst, IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : []);
-    return Task.FromResult(r);
+    return Task.FromResult(new PromoteOperationResult(
+        IgnoreNext ? [] : lst, 
+        IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : [],
+        EOperationResult.Success, 
+        "message"));
   }
 }

@@ -2,7 +2,7 @@
 
 public enum EOperationResult { Unknown, Success, Error }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
-public enum EResultType { Empty, Single, List }
+public enum EResultType { Error, Empty, Single, List }
 public enum ESystemStateStatus { Idle, Running }
 
 public record SystemStateRaw {

@@ -28,7 +28,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
   }
   
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
@@ -39,7 +39,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("inactive"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
   }
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
@@ -49,7 +49,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => OperationResult.Empty())));
+    Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult(""))));
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
@@ -60,7 +60,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running, LastStarted: UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("not idle"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
   }
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
@@ -70,11 +70,11 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(new[] { OperationResult.Empty() }));
+    Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult("") }));
   }
 
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, new List<ReadOperationConfig> { 
-    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new ReadOperationResult(OperationResult.Empty())))
+    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new EmptyReadOperationResult("") as ReadOperationResult))
   });
   
   class EmptyFunction : IFunction<ReadOperationConfig, ReadOperationResult> {
@@ -96,7 +96,7 @@ public class FunctionRunnerTests {
     public async Task<IEnumerable<ReadOperationResult>> RunOperation(DateTime start, IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
-      return Enumerable.Range(0, results).Select(_ => new ReadOperationResult(OperationResult.Empty()));
+      return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult(""));
     }
 
   }
