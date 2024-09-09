@@ -2,7 +2,7 @@
 
 public interface IOperationRunner<T, R> 
     where T : OperationConfig 
-    where R : IOperationResult {
+    where R : OperationResult {
   Task<R> RunOperation(DateTime funcstart, OperationStateAndConfig<T> op);
   R BuildErrorResult(OperationStateAndConfig<T> op, Exception ex);
 }

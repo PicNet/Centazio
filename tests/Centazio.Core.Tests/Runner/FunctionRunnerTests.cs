@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
 
@@ -28,7 +29,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
@@ -39,7 +40,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("inactive"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
@@ -60,7 +61,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running, LastStarted: UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("not idle"));
-    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<IOperationResult>()));
+    Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_stuck_running_function_runs_again() {

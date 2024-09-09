@@ -11,7 +11,7 @@ public class FunctionRunner<T, R>(
     ICtlRepository ctl, 
     int maxminutes = 30) 
         where T : OperationConfig
-        where R : IOperationResult {
+        where R : OperationResult {
 
   public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;
@@ -48,4 +48,4 @@ public class FunctionRunner<T, R>(
   }
 }
 
-public record FunctionRunResults<R>(string Message, IEnumerable<R> OpResults) where R : IOperationResult; 
+public record FunctionRunResults<R>(string Message, IEnumerable<R> OpResults) where R : OperationResult; 

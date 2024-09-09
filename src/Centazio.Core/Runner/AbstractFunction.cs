@@ -7,7 +7,7 @@ namespace Centazio.Core.Runner;
 
 public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>? prioritiser = null) : IFunction<T, R> 
     where T : OperationConfig
-    where R : IOperationResult {
+    where R : OperationResult {
   
   private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
 
@@ -76,7 +77,7 @@ public class ReadOperationRunnerTests {
     Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!], ""));
   }
   
-  private void ValidateResult(IOperationResult expected, IOperationResult actual, SystemState expss) {
+  private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss) {
     Assert.That(JsonSerializer.Serialize(actual), Is.EqualTo(JsonSerializer.Serialize(expected)));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }

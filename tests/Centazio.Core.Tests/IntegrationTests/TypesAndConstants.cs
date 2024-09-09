@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests.IntegrationTests;
+﻿using Centazio.Core.Runner;
+
+namespace Centazio.Core.Tests.IntegrationTests;
 
 public static class Constants {
   public static readonly SystemName CrmSystemName = new("CRM");
@@ -8,3 +10,10 @@ public static class Constants {
 }
 
 public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate);
+
+public record CoreCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate) : ICoreEntity {
+
+  public string SourceId => Id.ToString();
+  public DateTime LastSourceSystemUpdate => LastUpdate;
+
+}
