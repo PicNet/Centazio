@@ -34,7 +34,7 @@ public static class TestingFactories {
 
   public static Task<ReadOperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new ListRecordsReadOperationResult(new (Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList()), "");
+    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), "");
     return Task.FromResult(res); 
   }
 

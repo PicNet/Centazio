@@ -71,16 +71,16 @@ public class AbstractFunctionStaticHelperTests {
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
     var results1 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
     
-    var states3 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
-    var results3 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states3, runner, repo, UtcDate.UtcNow);
+    var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
+    var results2 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
     
     var newstates = repo.Objects.Values.ToList();
-    
+
     Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult("") }));
-    Assert.That(results3, Is.EquivalentTo(new [] { new ErrorReadOperationResult("") }));
+    Assert.That(results2, Is.EquivalentTo(new [] { new ErrorReadOperationResult("", EOperationAbortVote.Abort) }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState( EOperationResult.Success, EOperationAbortVote.Continue)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue)));
     Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
   }
 
@@ -113,27 +113,25 @@ public class AbstractFunctionStaticHelperTests {
     };
     states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = _ => throw new Exception() } }; 
     var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
-    var (failex, failmsg) = (results[0].Exception, results[0].Message);
-    var newstates = repo.Objects.Values.ToList(); 
-    
+    var newstates = repo.Objects.Values.ToList();
+
     Assert.That(results, Has.Count.EqualTo(1));
-    Assert.That(failex, Is.Not.Null);
-    Assert.That(String.IsNullOrWhiteSpace(failmsg), Is.False);
-    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult("", EOperationAbortVote.Abort, failex)));
+    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult("", EOperationAbortVote.Abort, results[0].Exception)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
-    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = failex.ToString() }));
+    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = results[0].Exception!.ToString() }));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) {
-    var expmsg = res == EOperationResult.Success ? "empty payload": "error";
     return new ObjectState(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow,
         res, vote, UtcDate.UtcNow, UtcDate.UtcNow, 
         res == EOperationResult.Success ? UtcDate.UtcNow : null, UtcDate.UtcNow,
         res == EOperationResult.Success ? UtcDate.UtcNow : null,
-        $"operation [{res}/{res}/{res}] completed [{res}] message: {expmsg}", 0);
+        $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0) { 
+      LastPayLoadType = res == EOperationResult.Error ? EResultType.Error : EResultType.Empty
+    };
   }
 
   static class Factories {

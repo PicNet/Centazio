@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Runner;
+﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
@@ -17,5 +18,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
     
     return results; 
   }
+
+  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new([], [], EOperationResult.Error, ex.Message, EResultType.Error, 0, EOperationAbortVote.Abort, ex);
 
 }

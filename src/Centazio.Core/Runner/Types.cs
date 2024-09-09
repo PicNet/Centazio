@@ -32,18 +32,22 @@ public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T 
 public interface IOperationResult {
   public EOperationResult Result { get; } 
   public string Message { get; }
+  public EResultType ResultType { get; }
+  public int ResultLength { get; }
   public EOperationAbortVote AbortVote { get; }
   [property: JsonIgnore] public Exception? Exception { get; }
 }
-public abstract record BaseOperationResult(
+
+public abstract record OperationResult(
     EOperationResult Result, 
-    string Message, 
+    string Message,
+    EResultType ResultType, 
+    int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     [property: JsonIgnore]
     Exception? Exception = null) : IOperationResult {
   
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
-  public virtual bool IsValid { get; } = Result != EOperationResult.Error; 
 }
 
 public record ErrorReadOperationResult(string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : ReadOperationResult(EOperationResult.Error, Message, EResultType.Error, 0, AbortVote, Exception);
@@ -54,9 +58,9 @@ public abstract record ReadOperationResult(
     EResultType ResultType, 
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : BaseOperationResult(Result, Message, AbortVote, Exception) {
+    Exception? Exception = null) : OperationResult(Result, Message, ResultType, ResultLength, AbortVote, Exception) {
   
-  public override bool IsValid { get; } = Result == EOperationResult.Unknown && ResultLength > 0; 
+  public bool IsValid { get; } = Result != EOperationResult.Unknown && Result != EOperationResult.Error && ResultLength > 0; 
 }
 
 public record PromoteOperationResult(
@@ -64,12 +68,24 @@ public record PromoteOperationResult(
     IEnumerable<(StagedEntity Entity, ValidString Reason)> Ignored,
     EOperationResult Result, 
     string Message, 
+    EResultType ResultType, 
+    int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : BaseOperationResult(Result, Message, AbortVote, Exception);
+    Exception? Exception = null) : OperationResult(Result, Message, ResultType, ResultLength, AbortVote, Exception);
 
 public record EmptyReadOperationResult(string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : ReadOperationResult(EOperationResult.Success, Message, EResultType.Empty, 0, AbortVote, Exception);
-public record SingleRecordReadOperationResult(ValidString Payload, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : ReadOperationResult(EOperationResult.Success, Message, EResultType.Single, 0, AbortVote, Exception);
-public record ListRecordsReadOperationResult(ValidList<string> PayloadList, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : ReadOperationResult(EOperationResult.Success, Message, EResultType.List, 0, AbortVote, Exception);
+public record SingleRecordReadOperationResult(ValidString Payload, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : ReadOperationResult(EOperationResult.Success, Message, EResultType.Single, Payload.Value.Length, AbortVote, Exception);
+public record ListRecordsReadOperationResult(IReadOnlyList<string> PayloadList, string Message, EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
+    : ReadOperationResult(
+        EOperationResult.Success, 
+        Message, 
+        EResultType.List, 
+        PayloadList.Any() ? PayloadList.Count : throw new ArgumentNullException(), 
+        AbortVote, 
+        Exception) {
+  public IReadOnlyList<string> PayloadList { get; } = PayloadList.Any() && !PayloadList.Any(String.IsNullOrWhiteSpace) 
+      ? PayloadList : throw new ArgumentNullException(nameof(PayloadList));
+}
 
 
 

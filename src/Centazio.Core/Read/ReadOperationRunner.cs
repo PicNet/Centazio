@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 
@@ -12,11 +13,15 @@ internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<Read
     return res;
 
     async Task DoStage() {
-      if (res is SingleRecordReadOperationResult sr)
+      if (res is SingleRecordReadOperationResult sr) {
         await stager.Stage(funcstart, op.State.System, op.Settings.Object, sr.Payload);
-      else if (res is ListRecordsReadOperationResult lr)
-        await stager.Stage(funcstart, op.State.System, op.Settings.Object, lr.PayloadList.Value);
-      else throw new UnreachableException();
+      } else if (res is ListRecordsReadOperationResult lr) {
+        await stager.Stage(funcstart, op.State.System, op.Settings.Object, lr.PayloadList);
+      } else throw new UnreachableException();
     }
   }
+
+  public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => 
+      new ErrorReadOperationResult("", EOperationAbortVote.Abort, ex);
+
 }

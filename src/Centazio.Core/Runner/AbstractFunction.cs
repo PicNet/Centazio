@@ -53,13 +53,8 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
     }
     
     async Task<R> RunOp(OperationStateAndConfig<T> op) {
-      try { 
-        return await runner.RunOperation(start, op); 
-      } catch (Exception ex) {
-        // todo: implement error handling
-        // return new ErrorOperationResult("", EOperationAbortVote.Abort, ex);
-        throw;
-      }
+      try { return await runner.RunOperation(start, op); } 
+      catch (Exception ex) { return runner.BuildErrorResult(op, ex); }
     }
 
     async Task<R> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, R res) {
@@ -70,9 +65,8 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
         LastResult = res.Result,
         LastAbortVote = res.AbortVote,
         LastRunMessage = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}",
-        // todo
-        // LastPayLoadType = res.ResultType,
-        // LastPayLoadLength = res.ResultLength,
+        LastPayLoadType = res.ResultType,
+        LastPayLoadLength = res.ResultLength,
         LastRunException = res.Exception?.ToString()
       };
       if (res.Result == EOperationResult.Success) {

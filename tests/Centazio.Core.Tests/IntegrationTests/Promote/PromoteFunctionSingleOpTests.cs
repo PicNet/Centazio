@@ -22,9 +22,6 @@ public class PromoteFunctionSingleOpTest {
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN", "LN", new DateOnly(2000, 1, 2), UtcDate.UtcNow);
     await stager.Stage(TestingUtcDate.DoTick(), sys, obj, J(cust1));
     var result = (await funcrunner.RunFunction()).OpResults.Single();
-    Console.WriteLine("\n\n\n");
-    Console.WriteLine(result);
-    
     
     SystemState SS(DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
     ObjectState OS(DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
@@ -46,12 +43,13 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromote
   }
   
   private Task<PromoteOperationResult> PromoteCustomers(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
-    // todo: why do we have to pass a payload
     var lst = staged.ToList();
     return Task.FromResult(new PromoteOperationResult(
         IgnoreNext ? [] : lst, 
         IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : [],
         EOperationResult.Success, 
-        "message"));
+        "message",
+        EResultType.List,
+        lst.Count));
   }
 }

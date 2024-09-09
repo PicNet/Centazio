@@ -47,7 +47,7 @@ public class ReadOperationRunnerTests {
     var runner = TestingFactories.ReadRunner(store);
     var actual = (SingleRecordReadOperationResult) await runner.RunOperation(
         UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
-    
+
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
     ValidateResult(
@@ -71,8 +71,9 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult(new ([""]), ""));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult(new ([null!]), ""));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([], ""));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([""], ""));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!], ""));
   }
   
   private void ValidateResult(IOperationResult expected, IOperationResult actual, SystemState expss) {

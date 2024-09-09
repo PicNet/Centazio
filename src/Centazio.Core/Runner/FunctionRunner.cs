@@ -40,7 +40,7 @@ public class FunctionRunner<T, R>(
       return new FunctionRunResults<R>("success", results);
     } catch (Exception ex) {
       await SaveCompletedState();
-      Log.Error(ex, "function encoutered error {@SystemState}", state);
+      Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
       return new FunctionRunResults<R>($"error: {ex.Message}", Array.Empty<R>());
     }
 

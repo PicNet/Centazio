@@ -30,7 +30,7 @@ public class ReadFunctionSingleOpTests {
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (await funcrunner.RunFunction()).OpResults.Single();
+    var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = await stager.Get(UtcDate.UtcNow.AddYears(-1), sys, obj);
     
@@ -42,7 +42,7 @@ public class ReadFunctionSingleOpTests {
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult("")));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult(new (new [] { expjson }), "").ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult(new List<string> { expjson }, "").ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -62,7 +62,9 @@ public class ReadFunctionSingleOpTests {
     
     SystemState SS(DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
     ObjectState OS(DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
-        updated, updated, updated, updated, updated, "operation [CRM/Read/CrmCustomer] completed [Success] message: " + (len == 0 ? "empty payload" : "list payload"), len) { LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty };
+        updated, updated, updated, updated, updated, "operation [CRM/Read/CrmCustomer] completed [Success] message: ", len) { 
+      LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty 
+    };
     StagedEntity SE() => new(sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
   }
 }
@@ -80,6 +82,8 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractReadFunction 
   
   private async Task<ReadOperationResult> ReadCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
-    return new ListRecordsReadOperationResult(new (customers), "");
+    return customers.Any() ? 
+        new ListRecordsReadOperationResult(customers, "")
+        : new EmptyReadOperationResult("");
   }
 }

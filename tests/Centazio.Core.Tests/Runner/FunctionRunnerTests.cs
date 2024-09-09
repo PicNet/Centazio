@@ -104,6 +104,7 @@ public class FunctionRunnerTests {
   class DoNothingOpRunner : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
     public Task<ReadOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) => throw new NotImplementedException();
+    public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => throw new NotImplementedException();
 
   }
 }
