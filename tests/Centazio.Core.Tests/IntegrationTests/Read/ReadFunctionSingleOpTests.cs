@@ -13,6 +13,10 @@ public class ReadFunctionSingleOpTests {
   private readonly LifecycleStage stg = Constants.Read;
   private readonly ObjectName obj = Constants.CrmCustomer;
   
+  [SetUp] public void SetUp() {
+    UtcDate.Utc = new TestingUtcDate();
+  }
+  
   [Test] public async Task Test_standalone_read_function() {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, TestingFactories.CtlRepo(), TestingFactories.SeStore());
