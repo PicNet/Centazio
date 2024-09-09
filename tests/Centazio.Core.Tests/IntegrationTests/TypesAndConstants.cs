@@ -1,4 +1,4 @@
-﻿using Centazio.Core.Runner;
+﻿using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Tests.IntegrationTests;
 
@@ -11,9 +11,11 @@ public static class Constants {
 
 public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate);
 
-public record CoreCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate) : ICoreEntity {
+public record CoreCustomer(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate) : ICoreEntity {
 
-  public string SourceId => Id.ToString();
+  public string SourceSystem { get; } = Constants.CrmSystemName;
+  public DateTime DateCreated { get; } = LastUpdate;
+  public DateTime DateUpdated { get; } = LastUpdate;
   public DateTime LastSourceSystemUpdate => LastUpdate;
 
 }

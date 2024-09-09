@@ -35,8 +35,3 @@ public abstract record OperationResult(
   
   public EOperationResult Result { get; } = Result == EOperationResult.Unknown ? throw new ArgumentException("Result cannot be unknown") : Result;
 }
-
-public interface ICoreEntity {
-  public string SourceId { get; }
-  public DateTime LastSourceSystemUpdate { get; }
-} 

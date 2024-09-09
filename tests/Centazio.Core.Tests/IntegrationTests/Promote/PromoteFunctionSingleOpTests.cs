@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -28,7 +29,8 @@ public class PromoteFunctionSingleOpTest {
     
     var expse = SE(json1);
     Assert.That(staged1, Is.EqualTo(expse));
-    Assert.That(result1.ToPromote.Single(), Is.EqualTo((Staged: staged1, Core: ToCore(json1))));
+    Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
     var exp = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -69,7 +71,8 @@ public class PromoteFunctionSingleOpTest {
     
     var expse = SE(json1);
     Assert.That(staged1, Is.EqualTo(expse));
-    Assert.That(result1.ToPromote.Single(), Is.EqualTo((Staged: staged1, Core: ToCore(json1))));
+    Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
     var exp = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 
@@ -26,7 +27,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
   private static void WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     // ignore multiple of the same entity staged, just promote the latest update
     var nodups = entities
-        .GroupBy(c => c.SourceId)
+        .GroupBy(c => c.Id)
         .Select(g => g.OrderByDescending(c => c.LastSourceSystemUpdate).First())
         .ToList();
     // todo: ignore entities that are already in core storage but were created (and hence owned) by other system
@@ -39,6 +40,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
        */
     if (!nodups.Any()) return;
     
+    // todo: call the repository here instead of this strategy
     op.Settings.PromoteEntities(op, nodups);
   }
 
