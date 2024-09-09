@@ -11,8 +11,7 @@ public record PromoteOperationConfig(
     ObjectName Object, 
     ValidCron Cron, 
     DateTime FirstTimeCheckpoint, 
-    Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<PromoteOperationResult>> EvaluateEntitiesToPromote,
-    Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<ICoreEntity>, Task> PromoteEntities) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+    Func<OperationStateAndConfig<PromoteOperationConfig>, IEnumerable<StagedEntity>, Task<PromoteOperationResult>> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
 
 public record PromoteOperationResult(
     IEnumerable<(StagedEntity Staged, ICoreEntity Core)> ToPromote, 

@@ -5,7 +5,7 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner(IStagedEntityStore staged) 
+internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageRepository core) 
     : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {
@@ -15,7 +15,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
     var promote = results.ToPromote.ToList();
     var ignore = results.ToIgnore.ToList();
     
-    if (promote.Any()) WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
+    if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
     
     await staged.Update(
         promote.Select(e => e.Staged with { DatePromoted = funcstart }).Concat(
@@ -24,7 +24,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
     return results; 
   }
 
-  private static void WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
+  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     // ignore multiple of the same entity staged, just promote the latest update
     var nodups = entities
         .GroupBy(c => c.Id)
@@ -39,9 +39,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged)
           ToList();
        */
     if (!nodups.Any()) return;
-    
-    // todo: call the repository here instead of this strategy
-    op.Settings.PromoteEntities(op, nodups);
+    await core.Upsert(nodups);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(ex.Message, EOperationAbortVote.Abort, ex);

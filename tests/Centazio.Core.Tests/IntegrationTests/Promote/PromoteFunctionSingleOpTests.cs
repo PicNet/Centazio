@@ -15,8 +15,8 @@ public class PromoteFunctionSingleOpTest {
   
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
-    var (ctl, stager) = (TestingFactories.CtlRepo(), TestingFactories.SeStore());
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager));
+    var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
@@ -35,7 +35,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
-    Assert.That(func.CoreDb.Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreCustomer>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // create two more entities and also include the previous one (without any changes
     var cust2 = new CrmCustomer(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
@@ -52,13 +52,13 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
-    Assert.That(func.CoreDb, Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
+    Assert.That(await core.Query<CoreCustomer>(t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
-    var (ctl, stager) = (TestingFactories.CtlRepo(), TestingFactories.SeStore());
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager));
+    var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
@@ -77,7 +77,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
-    Assert.That(func.CoreDb.Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreCustomer>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // lets ignore all staged entities from now
     func.IgnoreNext = true;
@@ -96,7 +96,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
-    Assert.That(func.CoreDb.Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreCustomer>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
   }
   
   private SystemState SS(DateTime start, DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
@@ -109,21 +109,15 @@ public class PromoteFunctionSingleOpTest {
 
 public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromoteFunction {
 
-  public List<CoreCustomer> CoreDb { get; } = new(); 
   public override FunctionConfig<PromoteOperationConfig> Config { get; }
   public bool IgnoreNext { get; set; } 
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Promote, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), EvaluateCustomersToPromote, PromoteCustomers)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), EvaluateCustomersToPromote)
     ]));
   }
-
-  public Task PromoteCustomers(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<ICoreEntity> entities) {
-    CoreDb.AddRange(entities.Select(e => (CoreCustomer) e));
-    return Task.CompletedTask;
-  }
-
+  
   private Task<PromoteOperationResult> EvaluateCustomersToPromote(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
     var lst = staged.ToList();
     var cores = lst.Select(e => {

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
@@ -11,8 +12,9 @@ public static class TestingFactories {
     
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository CtlRepo() => new();
+  public static InMemoryCoreStorageRepository CoreRepo() => new();
   public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
-  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(IStagedEntityStore? store = null) => new PromoteOperationRunner(store ?? SeStore());
+  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(IStagedEntityStore? store = null, ICoreStorageRepository? core = null) => new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo());
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object);
