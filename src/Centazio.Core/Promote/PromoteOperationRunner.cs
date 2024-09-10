@@ -5,7 +5,7 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageRepository core) 
+internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageUpserter core) 
     : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {

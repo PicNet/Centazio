@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Tests.IntegrationTests;
+﻿using Centazio.Core.Tests.IntegrationTests;
 using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.CoreRepo;
@@ -10,30 +9,25 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   private ICoreStorageRepository repo = null!;
   
-  [SetUp] public async Task SetUp() {
-    repo = await GetRepository();
-  }
-  
-  [TearDown] public async Task TearDown() {
-    await repo.DisposeAsync();
-  }
+  [SetUp] public async Task SetUp() => repo = await GetRepository();
+  [TearDown] public async Task TearDown() => await repo.DisposeAsync();
   
   protected abstract Task<ICoreStorageRepository> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreCustomer>("invalid"));
-    await repo.Upsert(new CoreCustomer(Guid.NewGuid().ToString(), "", "", DateOnly.MinValue, UtcDate.UtcNow));
+    await repo.Upsert([ new CoreCustomer(Guid.NewGuid().ToString(), "", "", DateOnly.MinValue, UtcDate.UtcNow) ]);
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreCustomer>("invalid"));
   }
   
   [Test] public async Task Test_insert_get_update_get() {
     var id = Guid.NewGuid().ToString();
     var created = new CoreCustomer(id, "N1", "N1", DateOnly.MinValue, UtcDate.UtcNow);
-    await repo.Upsert(created);
+    await repo.Upsert([ created ]);
     var retreived1 = await repo.Get<CoreCustomer>(id);
     var list1 = await QueryAll();
     var updated = retreived1 with { FirstName = "N2" };
-    await repo.Upsert(updated);
+    await repo.Upsert([ updated ]);
     var retreived2 = await repo.Get<CoreCustomer>(id);
     var list2 = await QueryAll();
     

@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Linq.Expressions;
+using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
@@ -8,65 +9,66 @@ using Dapper;
 namespace Centazio.Providers.SqlServer.Tests.Ctl;
 
 public class SqlServerCoreRepositoryTests() : CoreStorageRepositoryDefaultTests(false) {
-
-  protected override async Task<ICoreStorageRepository> GetRepository() 
-      => await new TestingSqlServerCoreStorageRepository().Initalise();
-
-  public class TestingSqlServerCoreStorageRepository() : SqlServerCoreStorageRepository(
-      SqlConn.Instance.Conn, 
-      new Dictionary<Type, string> {
-        { typeof(CoreCustomer), $@"MERGE INTO {nameof(CoreCustomer)} T
+  private readonly IDictionary<Type, string> upsertsqls = new Dictionary<Type, string> {
+      { typeof(CoreCustomer), $@"MERGE INTO {nameof(CoreCustomer)} T
 USING (VALUES (@Id, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
-  AS c (Id, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
+AS c (Id, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
 ON T.Id = c.Id
 WHEN NOT MATCHED THEN
- INSERT (Id, FirstName, LastName, DateOfBirth, DateCreated, SourceSystemDateUpdated)
- VALUES (c.Id, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.SourceSystemDateUpdated)
+INSERT (Id, FirstName, LastName, DateOfBirth, DateCreated, SourceSystemDateUpdated)
+VALUES (c.Id, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.SourceSystemDateUpdated)
 WHEN MATCHED THEN 
-  UPDATE SET FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth,
-    DateUpdated=c.DateUpdated, SourceSystemDateUpdated=c.SourceSystemDateUpdated;" }
-      }) {
+UPDATE SET FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth,
+  DateUpdated=c.DateUpdated, SourceSystemDateUpdated=c.SourceSystemDateUpdated;" }
+  };
+  
+  protected override async Task<ICoreStorageRepository> GetRepository() => await new TestingSqlServerCoreStorageRepository(upsertsqls).Initalise();
+}
 
-    public async Task<ICoreStorageRepository> Initalise() {
-      await using var conn = SqlConn.Instance.Conn();
-    await conn.ExecuteAsync($@"
+internal class TestingSqlServerCoreStorageRepository(IDictionary<Type, string> upsertsqls) 
+    : SqlServerCoreStorageUpserter (SqlConn.Instance.Conn, upsertsqls), ICoreStorageRepository {
+
+  public async Task<ICoreStorageRepository> Initalise() {
+    await using var conn = SqlConn.Instance.Conn();
+  await conn.ExecuteAsync($@"
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{nameof(CoreCustomer)}' AND xtype='U')
 BEGIN
-  CREATE TABLE {nameof(CoreCustomer)} (
-    Id nvarchar(64) NOT NULL PRIMARY KEY, 
-    FirstName nvarchar (64) NOT NULL, 
-    LastName nvarchar (64) NOT NULL, 
-    DateOfBirth date NOT NULL,
+CREATE TABLE {nameof(CoreCustomer)} (
+  Id nvarchar(64) NOT NULL PRIMARY KEY, 
+  FirstName nvarchar (64) NOT NULL, 
+  LastName nvarchar (64) NOT NULL, 
+  DateOfBirth date NOT NULL,
 
-    DateCreated datetime2 NULL,
-    DateUpdated datetime2 NULL,
-    SourceSystemDateUpdated datetime2 NULL)
+  DateCreated datetime2 NULL,
+  DateUpdated datetime2 NULL,
+  SourceSystemDateUpdated datetime2 NULL)
 END
 ");
-    return this;
-    }
-    
-    public override async Task<T> Get<T>(string id) {
-      // todo: this is a bad implementation
-      await using var conn = SqlConn.Instance.Conn();
-      var raws = (await conn.QueryAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(T).Name} WHERE Id=@Id", new { Id = id })).ToList();
-      if (!raws.Any()) throw new Exception($"Core entity [{typeof(T).Name}#{id}] not found");
-      return raws.Select(r => (CoreCustomer) r).Cast<T>().Single();
-    }
-    
-    public override async Task<IEnumerable<T>> Query<T>(string query) {
-      await using var conn = SqlConn.Instance.Conn();
-      var raws = await conn.QueryAsync<CoreCustomerRaw>(query);
-      return raws.Select(raw => (CoreCustomer) raw).Cast<T>();
-    }
+  return this;
+  }
+  
+  public async Task<T> Get<T>(string id) where T : ICoreEntity {
+    await using var conn = SqlConn.Instance.Conn();
+    var raw = await conn.QuerySingleOrDefaultAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(T).Name} WHERE Id=@Id", new { Id = id });
+    if (raw == null) throw new Exception($"Core entity [{typeof(T).Name}#{id}] not found");
+    // todo: hack to case back to `T`
+    return new [] { (CoreCustomer) raw }.Cast<T>().Single();
+  }
 
-    public override async ValueTask DisposeAsync() {
-      if (!SqlConn.Instance.Real) {
-        await using var conn = SqlConn.Instance.Conn();
-        await conn.ExecuteAsync($"DROP TABLE IF EXISTS {nameof(CoreCustomer)};");
-      }
-      await base.DisposeAsync(); 
+  public async Task<IEnumerable<T>> Query<T>(string query) where T : ICoreEntity {
+    await using var conn = SqlConn.Instance.Conn();
+    var raws = await conn.QueryAsync<CoreCustomerRaw>(query);
+    return raws.Select(raw => (CoreCustomer) raw).Cast<T>();
+  }
+  
+  public Task<IEnumerable<T>> Query<T>(Expression<Func<T, bool>> predicate) where T : ICoreEntity => throw new NotImplementedException();
+
+  public override async ValueTask DisposeAsync() {
+    if (!SqlConn.Instance.Real) {
+      await using var conn = SqlConn.Instance.Conn();
+      await conn.ExecuteAsync($"DROP TABLE IF EXISTS {nameof(CoreCustomer)};");
     }
+    await base.DisposeAsync(); 
   }
 }
 
