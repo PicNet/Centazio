@@ -15,7 +15,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageRep
     var promote = results.ToPromote.ToList();
     var ignore = results.ToIgnore.ToList();
     
-    if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
+    if (promote.Any()) await WriteEntitiesToCoreStorage(promote.Select(p => p.Core).ToList());
     
     await staged.Update(
         promote.Select(e => e.Staged with { DatePromoted = funcstart }).Concat(
@@ -24,11 +24,11 @@ internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageRep
     return results; 
   }
 
-  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
+  private async Task WriteEntitiesToCoreStorage(List<ICoreEntity> entities) {
     // ignore multiple of the same entity staged, just promote the latest update
     var nodups = entities
         .GroupBy(c => c.Id)
-        .Select(g => g.OrderByDescending(c => c.LastSourceSystemUpdate).First())
+        .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First())
         .ToList();
     // todo: ignore entities that are already in core storage but were created (and hence owned) by other system
     //  I dont understand this, was this a hack?

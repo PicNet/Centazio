@@ -27,6 +27,12 @@ public class InMemoryCoreStorageRepository : ICoreStorageRepository {
     return Task.FromResult(db[typeof(T)].Values.Cast<T>().Where(predicate.Compile()));
   }
 
-  public void Dispose() => db.Clear();
+  public Task<IEnumerable<T>> Query<T>(string query) where T : ICoreEntity => 
+      throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<T>(string query)`.  Use `Query<T>(Expression<Func<T, bool>> predicate)` instead.");
+
+  public ValueTask DisposeAsync() {
+    db.Clear();
+    return ValueTask.CompletedTask;
+  }
 
 }

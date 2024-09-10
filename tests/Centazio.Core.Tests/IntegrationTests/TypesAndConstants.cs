@@ -9,13 +9,12 @@ public static class Constants {
   public static readonly LifecycleStage Promote = new(nameof(Promote));
 }
 
-public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate);
+public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated);
 
-public record CoreCustomer(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdate) : ICoreEntity {
+public record CoreCustomer(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 
   public string SourceSystem { get; } = Constants.CrmSystemName;
-  public DateTime DateCreated { get; } = LastUpdate;
-  public DateTime DateUpdated { get; } = LastUpdate;
-  public DateTime LastSourceSystemUpdate => LastUpdate;
+  public DateTime DateCreated { get; } = DateUpdated;
+  public DateTime SourceSystemDateUpdated => DateUpdated;
 
 }
