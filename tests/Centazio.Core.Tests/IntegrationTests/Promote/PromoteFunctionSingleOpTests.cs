@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -17,7 +16,7 @@ public class PromoteFunctionSingleOpTest {
     // set up
     var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -31,7 +30,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
-    var exp = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
+    var exp = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
@@ -48,7 +47,7 @@ public class PromoteFunctionSingleOpTest {
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2), SE(json3) }));
     Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { (Staged: SE(json2), Core: ToCore(json2)), (Staged: SE(json3), Core: ToCore(json3)) }));
-    var exp23 = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 2) { ToPromote = result23.ToPromote };
+    var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToPromote = result23.ToPromote };
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
@@ -59,7 +58,7 @@ public class PromoteFunctionSingleOpTest {
     // set up
     var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -73,7 +72,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
-    var exp = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
+    var exp = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
@@ -92,7 +91,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2), SE(json3) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
     Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2), (ValidString) "ignore"), (SE(json3), (ValidString) "ignore") }));
-    var exp23 = new PromoteOperationResult([], [], EOperationResult.Success, "", EResultType.List, 2) { ToIgnore = result23.ToIgnore, ToPromote = result23.ToPromote };
+    var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToIgnore = result23.ToIgnore, ToPromote = result23.ToPromote };
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
@@ -107,9 +106,9 @@ public class PromoteFunctionSingleOpTest {
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromoteFunction {
+public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromoteFunction<CoreCustomer> {
 
-  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig<CoreCustomer>> Config { get; }
   public bool IgnoreNext { get; set; } 
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
@@ -118,13 +117,13 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromote
     ]));
   }
   
-  private Task<PromoteOperationResult> EvaluateCustomersToPromote(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
+  private Task<PromoteOperationResult<CoreCustomer>> EvaluateCustomersToPromote(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> config, IEnumerable<StagedEntity> staged) {
     var lst = staged.ToList();
     var cores = lst.Select(e => {
-      ICoreEntity core = JsonSerializer.Deserialize<CoreCustomer>(e.Data) ?? throw new Exception();
+      var core = JsonSerializer.Deserialize<CoreCustomer>(e.Data) ?? throw new Exception();
       return (Staged: e, Core: core);
     });
-    return Task.FromResult(new PromoteOperationResult(
+    return Task.FromResult(new PromoteOperationResult<CoreCustomer>(
         IgnoreNext ? [] : cores, 
         IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : [],
         EOperationResult.Success, 

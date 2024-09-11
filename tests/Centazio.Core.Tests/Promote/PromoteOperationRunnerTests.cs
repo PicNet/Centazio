@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Promote;
+﻿using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
@@ -11,13 +10,14 @@ public class PromoteOperationRunnerTests {
   private TestingStagedEntityStore staged;
   private TestingCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
-  private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
+  private IOperationRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>> promoter;
 
   [SetUp] public void SetUp() {
     staged = new TestingStagedEntityStore();
     ctl = TestingFactories.CtlRepo();
     core = TestingFactories.CoreRepo();
     promoter = TestingFactories.PromoteRunner(staged, core);
+    throw new Exception("todo implement test: " + promoter);
   }
   
   [TearDown] public async Task TearDown() {

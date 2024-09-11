@@ -17,7 +17,7 @@ public static class TestingFactories {
   public static TestingCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
   public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
-  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(IStagedEntityStore? store = null, ICoreStorageUpserter? core = null) => new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo());
+  public static IOperationRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>> PromoteRunner(IStagedEntityStore? store = null, ICoreStorageUpserter? core = null) => new PromoteOperationRunner<CoreCustomer>(store ?? SeStore(), core ?? CoreRepo());
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object);

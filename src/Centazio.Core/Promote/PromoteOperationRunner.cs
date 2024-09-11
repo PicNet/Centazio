@@ -5,10 +5,10 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageUpserter core) 
-    : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
+internal class PromoteOperationRunner<C>(IStagedEntityStore staged, ICoreStorageUpserter core) 
+    : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
   
-  public async Task<PromoteOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig> op) {
+  public async Task<PromoteOperationResult<C>> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig<C>> op) {
     var pending = await staged.Get(op.Checkpoint, op.State.System, op.State.Object);
     var results = await op.Settings.EvaluateEntitiesToPromote(op, pending);
     
@@ -24,7 +24,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageUps
     return results; 
   }
 
-  private async Task WriteEntitiesToCoreStorage(List<ICoreEntity> entities) {
+  private async Task WriteEntitiesToCoreStorage<T>(List<T> entities) where T : ICoreEntity {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
         .IgnoreNonMeaninfulChanges(core))
@@ -34,7 +34,7 @@ internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageUps
     await core.Upsert(toupsert);
   }
 
-  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(ex.Message, EOperationAbortVote.Abort, ex);
+  public PromoteOperationResult<C> BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig<C>> op, Exception ex) => new ErrorPromoteOperationResult<C>(ex.Message, EOperationAbortVote.Abort, ex);
 
 }
 
