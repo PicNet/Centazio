@@ -228,9 +228,9 @@ public abstract class StagedEntityStoreDefaultTests {
     Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(NAME, NAME, start, NAME + idx, Hash(NAME + idx)))));
   }
   
-  public string Hash(string str) => TestingFactories.TestingChecksum(str);
+  private string Hash(string str) => TestingFactories.TestingChecksum(str);
   
- private async Task<StagedEntity> GetSingleAsSes(DateTime after, SystemName source, ObjectName obj) => 
+  private async Task<StagedEntity> GetSingleAsSes(DateTime after, SystemName source, ObjectName obj) => 
       (await GetAsSes(after, source, obj)).Single();
 
   private async Task<List<StagedEntity>> GetAsSes(DateTime after, SystemName source, ObjectName obj) {

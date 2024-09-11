@@ -1,9 +1,18 @@
-﻿namespace Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core;
+
+namespace Centazio.Core.Ctl.Entities;
 
 public enum EOperationResult { Unknown, Success, Error }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
 public enum EResultType { Error, Empty, Single, List }
 public enum ESystemStateStatus { Idle, Running }
+public enum EEntityMappingStatus { 
+  Pending, 
+  Error, 
+  Success,
+  Orphaned, // no longer has the 'Core' entitiy that this TSE was originaly created for
+  MissingTarget // could not find the 'Target' entity in the target system to create link
+}
 
 public record SystemStateRaw {
   public string? System { get; init; }
@@ -42,8 +51,8 @@ public record ObjectStateRaw {
   public string? Object { get; init; }
   public bool? Active { get; init; }
   public DateTime? DateCreated { get; init; }
-  public string? LastResult { get; init; } =  EOperationResult.Unknown.ToString();
-  public string? LastAbortVote { get; init; } =  EOperationAbortVote.Unknown.ToString(); 
+  public string? LastResult { get; init; } 
+  public string? LastAbortVote { get; init; }  
   public DateTime? DateUpdated { get; init; }
   public DateTime? LastStart { get; init; }
   public DateTime? LastSuccessStart { get; init; }
@@ -116,3 +125,34 @@ public record StagedEntity {
 
   internal StagedEntity CloneNew() => new(SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);
 }
+
+public record EntityIntraSystemMappingRaw {
+  public string? Id { get; init; }
+  public string? Status { get; init; }
+  public string? CoreEntity { get; init; }
+  public string? CoreId { get; init; }
+  public string? SourceSystem { get; init; }
+  public string? SourcePk { get; init; }
+  public string? TargetSystem { get; init; }
+  public string? TargetPk { get; init; }
+  public DateTime? DateCreated { get; init; }
+  public DateTime? DateUpdated { get; init; }
+  public DateTime? DateLastSuccess { get; init; }
+  public string? LastError { get; init; }
+  
+  public static explicit operator EntityIntraSystemMapping(EntityIntraSystemMappingRaw raw) => new(
+      raw.Id ?? throw new ArgumentNullException(nameof(Id)),
+      Enum.Parse<EEntityMappingStatus>(raw.Status ?? throw new ArgumentNullException(nameof(Status))),
+      raw.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity)),
+      raw.CoreId ?? throw new ArgumentNullException(nameof(CoreId)),
+      raw.SourceSystem ?? throw new ArgumentNullException(nameof(SourceSystem)),
+      raw.SourcePk ?? throw new ArgumentNullException(nameof(SourcePk)),
+      raw.TargetSystem ?? throw new ArgumentNullException(nameof(TargetSystem)),
+      raw.TargetPk ?? throw new ArgumentNullException(nameof(TargetPk)),
+      raw.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
+      raw.DateUpdated,
+      raw.DateLastSuccess,
+      raw.LastError);
+}
+
+public record EntityIntraSystemMapping(ValidString Id, EEntityMappingStatus Status, ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourcePk, SystemName TargetSystem, ValidString TargetPk, DateTime DateCreated, DateTime? DateUpdated, DateTime? DateLastSuccess, string? LastError);

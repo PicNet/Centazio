@@ -5,8 +5,9 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner<C>(IStagedEntityStore staged, ICoreStorageUpserter core) 
-    : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
+internal class PromoteOperationRunner<C>(
+    IStagedEntityStore staged, 
+    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
   
   public async Task<PromoteOperationResult<C>> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig<C>> op) {
     var pending = await staged.Get(op.Checkpoint, op.State.System, op.State.Object);
@@ -57,10 +58,16 @@ public static class PromoteOperationRunnerHelperExtensions {
     //  written (and hence created again) in another system, say sys2.  Now, since its created in sys2 the entity
     //  will try to be promoted again here.  It needs to be ignored.
     /*
-      var externalids = db.TargetSystemEntity.
-          Where(tse => tse.CoreEntity == typeof(C).Name && tse.TargetSystem == state.System && tse.TargetPk != null && ids.Contains(tse.TargetPk)).
-          Select(tse => tse.TargetPk!).
-          ToList();
+TargetSystemEntity:
+  Id, Status, CoreEntity, CoreId, SourceSystem, SourcePk, TargetSystem, TargetPk, DateCreated, DateUpdated, DateLastSuccess, LastError
+
+
+// ids is the list of source ids we are about to promote
+var ids = staged.Select(s => s.SourceId).Distinct().ToList();
+var externalids = db.TargetSystemEntity.
+    Where(tse => tse.CoreEntity == typeof(C).Name && tse.TargetSystem == state.System && tse.TargetPk != null && ids.Contains(tse.TargetPk)).
+    Select(tse => tse.TargetPk!).
+    ToList();
        */
     return Task.FromResult(lst);
   }
