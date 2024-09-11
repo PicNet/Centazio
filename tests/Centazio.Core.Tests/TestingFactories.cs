@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
@@ -6,6 +7,7 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Core.Tests.CoreRepo;
+using Centazio.Core.Tests.IntegrationTests;
 
 namespace Centazio.Core.Tests;
 
@@ -40,8 +42,16 @@ public static class TestingFactories {
     ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), "");
     return Task.FromResult(res); 
   }
+  
+  public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast
+  public static string TestingChecksum(object obj) => TestingChecksum(JsonSerializer.Serialize(obj));
 
-  public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast 
+  public static CoreCustomer NewCoreCust(string first, string last, string? id = null, string? checksum = null) {
+    id ??= Guid.NewGuid().ToString();
+    var dob = DateOnly.MinValue;
+    checksum ??= TestingChecksum(new { id, first, last, dob });
+    return new CoreCustomer(id, checksum, first, last, dob, UtcDate.UtcNow);
+  }
 }
 
 public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, TestingFactories.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }

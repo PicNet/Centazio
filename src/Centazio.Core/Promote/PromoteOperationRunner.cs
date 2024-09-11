@@ -25,23 +25,43 @@ internal class PromoteOperationRunner(IStagedEntityStore staged, ICoreStorageUps
   }
 
   private async Task WriteEntitiesToCoreStorage(List<ICoreEntity> entities) {
-    // ignore multiple of the same entity staged, just promote the latest update
-    var nodups = entities
-        .GroupBy(c => c.Id)
-        .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First())
+    var toupsert = await (await entities
+        .IgnoreMultipleUpdatesToSameEntity()
+        .IgnoreNonMeaninfulChanges(core))
+        .IgnoreEntitiesBouncingBack(core);
+    
+    if (!toupsert.Any()) return;
+    await core.Upsert(toupsert);
+  }
+
+  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(ex.Message, EOperationAbortVote.Abort, ex);
+
+}
+
+public static class PromoteOperationRunnerHelperExtensions {
+  public static List<T> IgnoreMultipleUpdatesToSameEntity<T>(this List<T> lst) where T : ICoreEntity => 
+        lst.GroupBy(c => c.Id)
+        // take latest only
+        .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First()) 
         .ToList();
-    // todo: ignore entities that are already in core storage but were created (and hence owned) by other system
-    //  I dont understand this, was this a hack?
+  
+  public static async Task<List<T>> IgnoreNonMeaninfulChanges<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
+    var checksums = await core.GetChecksums(lst);
+    return lst.Where(e => String.IsNullOrWhiteSpace(e.Checksum)
+        || !checksums.ContainsKey(e.Id)
+        || e.Checksum != checksums[e.Id]).ToList();
+  } 
+  
+  public static Task<List<T>> IgnoreEntitiesBouncingBack<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
+    // todo: when an entity is created in sys1, it will be promoted to core storage.  This entity can then be
+    //  written (and hence created again) in another system, say sys2.  Now, since its created in sys2 the entity
+    //  will try to be promoted again here.  It needs to be ignored.
     /*
       var externalids = db.TargetSystemEntity.
           Where(tse => tse.CoreEntity == typeof(C).Name && tse.TargetSystem == state.System && tse.TargetPk != null && ids.Contains(tse.TargetPk)).
           Select(tse => tse.TargetPk!).
           ToList();
        */
-    if (!nodups.Any()) return;
-    await core.Upsert(nodups);
+    return Task.FromResult(lst);
   }
-
-  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(ex.Message, EOperationAbortVote.Abort, ex);
-
 }

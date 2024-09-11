@@ -11,7 +11,7 @@ public static class Constants {
 
 public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated);
 
-public record CoreCustomer(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
+public record CoreCustomer(string Id, string Checksum, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 
   public string SourceSystem { get; } = Constants.CrmSystemName;
   public DateTime DateCreated { get; } = DateUpdated;
