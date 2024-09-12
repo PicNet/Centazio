@@ -42,7 +42,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
     var list1 = await QueryAll();
     
     var batch2 = new [] { 
-      TestingFactories.NewCoreCust("N1.1", "N1.1") with { Id = batch1[0].Id }, // update not create 
+      batch1[0] with { FirstName = "Updated entity" }, 
       TestingFactories.NewCoreCust("N3", "N3") };
     await repo.Upsert(batch2);
     var list2 = await QueryAll();

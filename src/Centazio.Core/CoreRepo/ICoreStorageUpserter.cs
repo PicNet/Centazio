@@ -8,9 +8,15 @@ public interface ICoreEntity {
   public string SourceSystem { get; }
   
   /// <summary>
-  /// The id of the entity.  Ideally this should be the same id as used in the source system.
-  /// If this is not possible then this should be a short string representation of a unique
-  /// identifier that can be used to map back to the source system 
+  /// The id of the entity in the source system 
+  /// </summary>
+  public string SourceId { get; }
+  
+  /// <summary>
+  /// The id of the entity.  Ideally this should be the same id as used in the source
+  /// system (i.e. same as `SourceId`). If this is not possible then this should be a
+  /// short string representation of a unique identifier that can be used to map back
+  /// to the source system 
   /// </summary>
   public string Id { get; }
   
@@ -18,7 +24,7 @@ public interface ICoreEntity {
   /// A checksum used to check for unnecessary updates to already existing entities in
   /// core storage.  If this is empty then checksum comparisons will not be made and all
   /// updates from the source system will be replicated to core storage even if nothing
-  /// meaningful has changed.
+  /// meaningful has changed
   /// </summary>
   public string Checksum { get; }
   

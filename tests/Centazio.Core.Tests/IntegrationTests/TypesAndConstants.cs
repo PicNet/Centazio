@@ -13,6 +13,7 @@ public record CrmCustomer(Guid Id, string FirstName, string LastName, DateOnly D
 
 public record CoreCustomer(string Id, string Checksum, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 
+  public string SourceId { get; init; } = Id;
   public string SourceSystem { get; } = Constants.CrmSystemName;
   public DateTime DateCreated { get; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;

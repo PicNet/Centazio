@@ -2,6 +2,8 @@
 - set up testing pipeline (agent is ready)
 - careful testing of date handling
 - sqlite (self hosted), postgres
+- entity creation / update should be closely controlled.  Some fields (like DateCreated) should not be updateable
+  and others (like DateUpdated) should not be set when creating.  Use factory methods, etc to control this.
 
 - CLI:
 

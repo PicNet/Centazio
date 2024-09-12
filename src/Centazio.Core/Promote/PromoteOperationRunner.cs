@@ -7,6 +7,7 @@ namespace Centazio.Core.Promote;
 
 internal class PromoteOperationRunner<C>(
     IStagedEntityStore staged, 
+    IEntityIntraSystemMappingStore entitymap,
     ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
   
   public async Task<PromoteOperationResult<C>> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig<C>> op) {
@@ -16,7 +17,7 @@ internal class PromoteOperationRunner<C>(
     var promote = results.ToPromote.ToList();
     var ignore = results.ToIgnore.ToList();
     
-    if (promote.Any()) await WriteEntitiesToCoreStorage(promote.Select(p => p.Core).ToList());
+    if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
     
     await staged.Update(
         promote.Select(e => e.Staged with { DatePromoted = funcstart }).Concat(
@@ -25,11 +26,11 @@ internal class PromoteOperationRunner<C>(
     return results; 
   }
 
-  private async Task WriteEntitiesToCoreStorage<T>(List<T> entities) where T : ICoreEntity {
+  private async Task WriteEntitiesToCoreStorage<T>(OperationStateAndConfig<PromoteOperationConfig<C>> op, List<T> entities) where T : ICoreEntity {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
         .IgnoreNonMeaninfulChanges(core))
-        .IgnoreEntitiesBouncingBack(core);
+        .IgnoreEntitiesBouncingBack(entitymap, op.State.System);
     
     if (!toupsert.Any()) return;
     await core.Upsert(toupsert);
@@ -40,12 +41,20 @@ internal class PromoteOperationRunner<C>(
 }
 
 public static class PromoteOperationRunnerHelperExtensions {
+  /// <summary>
+  /// It is possible for several changes to an entity to be staged prior to promotion.  If this happens then
+  /// simply take the latest snapshot of the entity to promote as there is no benefit to promoting the same
+  /// entity multiple times to only end up in the latest state anyway. 
+  /// </summary>
   public static List<T> IgnoreMultipleUpdatesToSameEntity<T>(this List<T> lst) where T : ICoreEntity => 
         lst.GroupBy(c => c.Id)
-        // take latest only
         .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First()) 
         .ToList();
   
+  /// <summary>
+  /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
+  /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
+  /// </summary>
   public static async Task<List<T>> IgnoreNonMeaninfulChanges<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
     var checksums = await core.GetChecksums(lst);
     return lst.Where(e => String.IsNullOrWhiteSpace(e.Checksum)
@@ -53,22 +62,12 @@ public static class PromoteOperationRunnerHelperExtensions {
         || e.Checksum != checksums[e.Id]).ToList();
   } 
   
-  public static Task<List<T>> IgnoreEntitiesBouncingBack<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
-    // todo: when an entity is created in sys1, it will be promoted to core storage.  This entity can then be
-    //  written (and hence created again) in another system, say sys2.  Now, since its created in sys2 the entity
-    //  will try to be promoted again here.  It needs to be ignored.
-    /*
-TargetSystemEntity:
-  Id, Status, CoreEntity, CoreId, SourceSystem, SourcePk, TargetSystem, TargetPk, DateCreated, DateUpdated, DateLastSuccess, LastError
-
-
-// ids is the list of source ids we are about to promote
-var ids = staged.Select(s => s.SourceId).Distinct().ToList();
-var externalids = db.TargetSystemEntity.
-    Where(tse => tse.CoreEntity == typeof(C).Name && tse.TargetSystem == state.System && tse.TargetPk != null && ids.Contains(tse.TargetPk)).
-    Select(tse => tse.TargetPk!).
-    ToList();
-       */
-    return Task.FromResult(lst);
+  /// <summary>
+  /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back. 
+  /// </summary>
+  public static async Task<List<T>> IgnoreEntitiesBouncingBack<T>(this List<T> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys) where T : ICoreEntity {
+    var ids = lst.Select(e => e.SourceId).ToList();
+    var valid = (await entitymap.FilterOutBouncedBackIds<T>(thissys, ids)).ToDictionary(id => id);
+    return lst.Where(e => valid.ContainsKey(e.SourceId)).ToList();
   }
-}
+} 

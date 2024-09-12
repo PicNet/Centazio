@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-
-namespace Centazio.Core.Ctl.Entities;
+﻿namespace Centazio.Core.Ctl.Entities;
 
 public enum EOperationResult { Unknown, Success, Error }
 public enum EOperationAbortVote { Unknown, Continue, Abort }
@@ -127,32 +125,34 @@ public record StagedEntity {
 }
 
 public record EntityIntraSystemMappingRaw {
-  public string? Id { get; init; }
-  public string? Status { get; init; }
   public string? CoreEntity { get; init; }
   public string? CoreId { get; init; }
   public string? SourceSystem { get; init; }
-  public string? SourcePk { get; init; }
+  public string? SourceId { get; init; }
   public string? TargetSystem { get; init; }
-  public string? TargetPk { get; init; }
+  public string? TargetId { get; init; }
+  public string? Status { get; init; }
   public DateTime? DateCreated { get; init; }
   public DateTime? DateUpdated { get; init; }
   public DateTime? DateLastSuccess { get; init; }
   public string? LastError { get; init; }
   
   public static explicit operator EntityIntraSystemMapping(EntityIntraSystemMappingRaw raw) => new(
-      raw.Id ?? throw new ArgumentNullException(nameof(Id)),
-      Enum.Parse<EEntityMappingStatus>(raw.Status ?? throw new ArgumentNullException(nameof(Status))),
       raw.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity)),
       raw.CoreId ?? throw new ArgumentNullException(nameof(CoreId)),
       raw.SourceSystem ?? throw new ArgumentNullException(nameof(SourceSystem)),
-      raw.SourcePk ?? throw new ArgumentNullException(nameof(SourcePk)),
+      raw.SourceId ?? throw new ArgumentNullException(nameof(SourceId)),
       raw.TargetSystem ?? throw new ArgumentNullException(nameof(TargetSystem)),
-      raw.TargetPk ?? throw new ArgumentNullException(nameof(TargetPk)),
+      raw.TargetId ?? throw new ArgumentNullException(nameof(TargetId)),
+      Enum.Parse<EEntityMappingStatus>(raw.Status ?? throw new ArgumentNullException(nameof(Status))),
       raw.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       raw.DateUpdated,
       raw.DateLastSuccess,
       raw.LastError);
 }
 
-public record EntityIntraSystemMapping(ValidString Id, EEntityMappingStatus Status, ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourcePk, SystemName TargetSystem, ValidString TargetPk, DateTime DateCreated, DateTime? DateUpdated, DateTime? DateLastSuccess, string? LastError);
+public record EntityIntraSystemMapping(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status, DateTime DateCreated, DateTime? DateUpdated, DateTime? DateLastSuccess, string? LastError) {
+  public record MappingKey(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId);
+  
+  public MappingKey Key => new MappingKey(CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId); 
+}

@@ -3,6 +3,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
+using F = Centazio.Core.Tests.TestingFactories;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
 
@@ -14,8 +15,8 @@ public class PromoteFunctionSingleOpTest {
   
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
-    var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
+    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.EntitySysMap());
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>(func, oprunner, ctl);
     
     // create single entity
@@ -56,8 +57,8 @@ public class PromoteFunctionSingleOpTest {
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
-    var (ctl, stager, core) = (TestingFactories.CtlRepo(), TestingFactories.SeStore(), TestingFactories.CoreRepo());
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), TestingFactories.PromoteRunner(stager, core));
+    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.EntitySysMap());
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>(func, oprunner, ctl);
     
     // create single entity
@@ -101,7 +102,7 @@ public class PromoteFunctionSingleOpTest {
   private SystemState SS(DateTime start, DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
   private ObjectState OS(DateTime start, DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
       updated, updated, updated, updated, updated, "operation [CRM/Promote/CrmCustomer] completed [Success] message: ", len) { LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty };
-  private StagedEntity SE(string json) => new(sys, obj, UtcDate.UtcNow, json, TestingFactories.TestingChecksum(json));
+  private StagedEntity SE(string json) => new(sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }
