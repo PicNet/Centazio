@@ -3,7 +3,8 @@
 - careful testing of date handling
 - sqlite (self hosted), postgres
 - entity creation / update should be closely controlled.  Some fields (like DateCreated) should not be updateable
-  and others (like DateUpdated) should not be set when creating.  Use factory methods, etc to control this.
+  and others (like DateUpdated) should not be set when creating.  Use factory methods, etc to control this.  All stores
+  should manage these internal fields without requiring the caller to worry about setting things like dateupdated, etc.
 
 - CLI:
 

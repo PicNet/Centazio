@@ -1,6 +1,6 @@
 ﻿using Centazio.Core.Ctl.Entities;
 
-namespace Centazio.Core.Stage;
+namespace Centazio.Core.EntitySysMapping;
 
 public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMappingStore {
 

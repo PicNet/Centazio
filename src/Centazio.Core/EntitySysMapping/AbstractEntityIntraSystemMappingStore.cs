@@ -1,9 +1,11 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 
-namespace Centazio.Core.Stage;
+namespace Centazio.Core.EntitySysMapping;
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
+  
+  // todo: Upsert should be split into create/update so we can automatically set DateCreate/DateUpdated, etc.
   Task Upsert(EntityIntraSystemMapping map);
   Task Upsert(IEnumerable<EntityIntraSystemMapping> maps);
   
@@ -26,6 +28,9 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   ///   the EntityIntraSystemMapping for any entities that:
   ///     - TargetSystem is System 2
   ///     - TargetID is the current entities SourceId
+  ///
+  /// Sample scenario diagram:
+  /// https://sequencediagram.org/index.html#initialData=C4S2BsFMAIGECUCy0C0A+aAxEA7AhjgMYh7gDOAXNAEID2ArkTNXoQNbQDKeAtgA5QAUAmTo4SKgEkcAN1ohCMABQiAjACYAzAEpohAE6Q8wSABNhSVBliQcwPAC8QtKbPmLoKpBp3Qy9gHMzYVt7J1p0GztHZ1c5BRg+fVoeWhNzKLDndGx8IhJyOPcYAHd9MBMcTzUtaAAjSEIUyDIsXE11VWhcNrziUjJtAB0cAFE7MABPRDw+PlwAr0QAGmhJH1XczfbO7UFcgn7ySNCYl16Orv88IIzT8JPo8KkAnFpDaCSUtIWLzug8K0wK08NBTPQBApjJAAHQjAAitBwMDqkz0AAtGmxfuNQMBprN5jgAtAAGbvXrLXKXIA
   /// </summary>
   /// <returns>The list of IDs that are not bouce backs and should be promoted</returns>
   Task<List<string>> FilterOutBouncedBackIds<C>(SystemName thissys, List<string> ids) where C : ICoreEntity;

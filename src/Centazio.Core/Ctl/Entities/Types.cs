@@ -151,8 +151,8 @@ public record EntityIntraSystemMappingRaw {
       raw.LastError);
 }
 
-public record EntityIntraSystemMapping(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status, DateTime DateCreated, DateTime? DateUpdated, DateTime? DateLastSuccess, string? LastError) {
+public record EntityIntraSystemMapping(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status, DateTime DateCreated, DateTime? DateUpdated = null, DateTime? DateLastSuccess = null, string? LastError = null) {
   public record MappingKey(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId);
   
-  public MappingKey Key => new MappingKey(CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId); 
+  public MappingKey Key => new(CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId); 
 }
