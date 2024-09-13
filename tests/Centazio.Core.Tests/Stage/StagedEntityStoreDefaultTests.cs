@@ -22,7 +22,7 @@ public abstract class StagedEntityStoreDefaultTests {
 
   [Test] public async Task Test_saving_single_entity() {
     await store.Stage(dt.Now, NAME, NAME, NAME);
-    var fromnow = await store.GetAll(dt.Now, NAME, NAME);
+    var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
     var minus1 =  await GetSingle(dt.Now.AddMilliseconds(-1), NAME, NAME);
     
     Assert.That(fromnow, Is.Empty);
@@ -43,7 +43,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception()).
         OrderBy(e => Int32.Parse(e.Data)).
         ToList();
-    var fromnow = await store.GetAll(dt.Now, NAME, NAME);
+    var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
     var minus1 =  (await store.GetAll(dt.Now.AddMilliseconds(-1), NAME, NAME))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -58,7 +58,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception())
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
-    var fromnow = await store.GetAll(dt.Now, NAME, NAME);
+    var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
     var minus1 = (await store.GetAll(dt.Now.AddMilliseconds(-1), NAME, NAME))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -118,10 +118,10 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(() => store.GetAll(start, name3, name2), Is.Empty);
     
     var se1_2 = await GetSingle(staged1, name1, name1);
-    var ses1 = await store.GetAll(start, name1, name1);
-    var ses2 = await store.GetAll(staged1, name2, name2);
-    var ses3 = await store.GetAll(staged1, name3, name3);
-    Assert.That(ses1, Has.Count.EqualTo(2));
+    var ses1 = (await store.GetAll(start, name1, name1)).ToList();
+    var ses2 = (await store.GetAll(staged1, name2, name2)).ToList();
+    var ses3 = (await store.GetAll(staged1, name3, name3)).ToList();
+    Assert.That(ses1.Count(), Is.EqualTo(2));
     Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, name1, staged2, data2, Hash(data2))));
     Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, name2, staged2, name2, Hash(name2)) }));
     Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, name3, staged2, name3, Hash(name3)) }));
@@ -155,10 +155,10 @@ public abstract class StagedEntityStoreDefaultTests {
 
     var ses1 = await store.GetAll(start, name1, name1);
     var se1_2 = await GetSingle(staged1, name1, name1);
-    var ses2 = await store.GetAll(staged1, name2, name2);
-    var ses3 = await store.GetAll(staged1, name3, name3);
+    var ses2 = (await store.GetAll(staged1, name2, name2)).ToList();
+    var ses3 = (await store.GetAll(staged1, name3, name3)).ToList();
     Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, name1, staged2, "not ignore: 1.2", Hash("not ignore: 1.2"))));
-    Assert.That(ses1, Has.Count.EqualTo(2));
+    Assert.That(ses1.Count(), Is.EqualTo(2));
     Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, name2, staged2, "not ignore: 2", Hash("not ignore: 2")) }));
     Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, name3, staged2, "not ignore: 3", Hash("not ignore: 3")) }));
     
@@ -176,15 +176,15 @@ public abstract class StagedEntityStoreDefaultTests {
     foreach (var idx in Enumerable.Range(0, 25)) created.Add(await limstore.Stage(dt.Tick(), NAME, NAME, idx.ToString()) ?? throw new Exception());
     
     var exppage1 = created.Take(limit).ToList();
-    var page1 = await limstore.GetAll(start, NAME, NAME);
+    var page1 = (await limstore.GetAll(start, NAME, NAME)).ToList();
     
     var exppage2 = created.Skip(limit).Take(limit).ToList();
-    var page2 = await limstore.GetAll(exppage1.Last().DateStaged, NAME, NAME);
+    var page2 = (await limstore.GetAll(exppage1.Last().DateStaged, NAME, NAME)).ToList();
     
     var exppage3 = created.Skip(limit * 2).Take(limit).ToList();
-    var page3 = await limstore.GetAll(exppage2.Last().DateStaged, NAME, NAME);
+    var page3 = (await limstore.GetAll(exppage2.Last().DateStaged, NAME, NAME)).ToList();
     
-    var page4 = await limstore.GetAll(exppage3.Last().DateStaged, NAME, NAME);
+    var page4 = (await limstore.GetAll(exppage3.Last().DateStaged, NAME, NAME)).ToList();
     
     Assert.That(page1, Is.EquivalentTo(exppage1));
     Assert.That(page2, Is.EquivalentTo(exppage2));
@@ -262,7 +262,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
     
     var expected = new StagedEntity(staged.Id, NAME, NAME, stageddt, data, Hash(data));
-    var ses = await store.GetAll(dt.Today, NAME, NAME);
+    var ses = (await store.GetAll(dt.Today, NAME, NAME)).ToList();
     
     Assert.That(duplicate, Is.Null);
     Assert.That(staged.CloneNew(), Is.EqualTo(expected));
@@ -273,7 +273,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var (start, half) = (dt.Now.AddSeconds(1), LARGE_BATCH_SIZE /  2);
     var staged = (await store.Stage(dt.Tick(), NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString())))
         .Select(e => e.CloneNew()).ToList();
-    var staged2 = await store.GetAll(dt.Now.AddYears(-1), NAME, NAME);
+    var staged2 = (await store.GetAll(dt.Now.AddYears(-1), NAME, NAME)).ToList();
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
@@ -286,8 +286,8 @@ public abstract class StagedEntityStoreDefaultTests {
     var s3 = await store.Stage(dt.Now, NAME, NAME, "3") ?? throw new Exception();
     
     await store.Update(s2 = s2 with { DatePromoted = dt.Now });
-    var all = await store.GetAll(dt.Today, NAME, NAME);
-    var unpromoted = await store.GetUnpromoted(dt.Today, NAME, NAME);
+    var all = (await store.GetAll(dt.Today, NAME, NAME)).ToList();
+    var unpromoted = (await store.GetUnpromoted(dt.Today, NAME, NAME)).ToList();
 
     Assert.That(all, Is.EquivalentTo(new [] {s1, s2, s3}));
     Assert.That(unpromoted, Is.EquivalentTo(new [] {s1, s3}));

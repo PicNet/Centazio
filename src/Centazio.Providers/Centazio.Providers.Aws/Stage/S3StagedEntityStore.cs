@@ -32,8 +32,9 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
-    // todo: all this string magic (splitting by '/', taking [1], etc) should be abstracted
-    var existing = (await ListAll(se.SourceSystem, se.Object)).Select(o => o.Key.Split('/').Last().Split('_')[1]).ToDictionary(cs => cs);
+    var existing = (await ListAll(se.SourceSystem, se.Object))
+        .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).Checksum)
+        .ToDictionary(cs => cs);
     
     var tostage = staged.Where(s => !existing.ContainsKey(s.Checksum)).ToList();
     await tostage.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
@@ -105,9 +106,7 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
   
   public static async Task<StagedEntity> FromS3Response(this GetObjectResponse r) {
     if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
-    
-    var (source, obj, staged_checksum_id, _) = r.Key.Split('/');
-    var (staged, checksum, id, _) = staged_checksum_id.Split('_');
+    var details = AwsStagedEntityStoreHelpers.ParseS3Key(r.Key);
     var promoted = r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] is null 
         ? (DateTime?) null 
         : DateTime.Parse(r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY]).ToUniversalTime();
@@ -116,6 +115,6 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return new StagedEntity(Guid.Parse(id), source, obj, DateTime.Parse(staged).ToUniversalTime(), data, checksum, promoted);
+    return new StagedEntity(details.Id, details.System, details.Object, details.DateStaged.ToUniversalTime(), data, details.Checksum, promoted);
   }
 }

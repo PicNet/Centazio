@@ -36,10 +36,10 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     Log.Debug("creating table {Table}", table);
     
     var status = (await Client.CreateTableAsync(
-        new(table, [ new(AwsStagedEntityStoreHelpers.HASH_KEY, KeyType.HASH), new(AwsStagedEntityStoreHelpers.RANGE_KEY, KeyType.RANGE)]) {
+        new(table, [ new(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, KeyType.HASH), new(AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, KeyType.RANGE)]) {
             AttributeDefinitions = [ 
-              new (AwsStagedEntityStoreHelpers.HASH_KEY, ScalarAttributeType.S), 
-              new (AwsStagedEntityStoreHelpers.RANGE_KEY, ScalarAttributeType.S)],
+              new (AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, ScalarAttributeType.S), 
+              new (AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, ScalarAttributeType.S)],
 
             BillingMode = BillingMode.PAY_PER_REQUEST
           })).TableDescription.TableStatus;
@@ -59,7 +59,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval",
         ExpressionAttributeNames = new() {
-          { "#haskey", AwsStagedEntityStoreHelpers.HASH_KEY }
+          { "#haskey", AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY }
         },
         ExpressionAttributeValues = new() {
           { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(template.SourceSystem, template.Object) }
@@ -116,8 +116,8 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
         ExpressionAttributeNames = new() {
-          { "#haskey", AwsStagedEntityStoreHelpers.HASH_KEY },
-          { "#rangekey", AwsStagedEntityStoreHelpers.RANGE_KEY },
+          { "#haskey", AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY },
+          { "#rangekey", AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY },
         },
         ExpressionAttributeValues = new() {
           { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj) },
@@ -140,13 +140,13 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     var filter = new QueryFilter();
-    filter.AddCondition(AwsStagedEntityStoreHelpers.HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj));
-    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
+    filter.AddCondition(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj));
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
-      AttributesToGet = [AwsStagedEntityStoreHelpers.HASH_KEY, AwsStagedEntityStoreHelpers.RANGE_KEY]
+      AttributesToGet = [AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY]
     };
     var tbl = Table.LoadTable(client, table);
     var search = tbl.Query(queryconf);

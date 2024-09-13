@@ -11,8 +11,8 @@ public interface IStagedEntityStore : IEntityStager {
   Task Update(StagedEntity staged);
   Task Update(IEnumerable<StagedEntity> staged);
   
-  Task<List<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj);
-  Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj);
+  Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj);
+  Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj);
   
   Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj);
   Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj);
@@ -41,11 +41,8 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   public Task Update(StagedEntity staged) => Update(new [] { staged });
   public abstract Task Update(IEnumerable<StagedEntity> staged);
 
-  // todo: this should return IEnumerable to allow providers to stream data
-  public async Task<List<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, true)).ToList();
-  
-  // todo: this should return IEnumerable to allow providers to stream data
-  public async Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, false)).ToList();
+  public Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => GetImpl(after, source, obj, true);
+  public Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj) => GetImpl(after, source, obj, false);
 
   /// <summary>
   /// Implementing providers must ensure the following:

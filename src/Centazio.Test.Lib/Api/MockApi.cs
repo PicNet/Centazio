@@ -27,7 +27,8 @@ public class MockApi : IDisposable {
     if (disposed) throw new("MockApi should be created independently for each test.  Current MockApi has been disposed.");
     
     File.ReadAllLines(file).ToList().ForEach(_ => {
-      operations.Add(new()); // todo
+      operations.Add(new()); 
+      throw new NotImplementedException();
     });
   }
   
