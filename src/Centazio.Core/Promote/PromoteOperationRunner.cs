@@ -12,7 +12,7 @@ internal class PromoteOperationRunner<C>(
     ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
   
   public async Task<PromoteOperationResult<C>> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig<C>> op) {
-    var pending = await staged.Get(op.Checkpoint, op.State.System, op.State.Object);
+    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.Object);
     var results = await op.Settings.EvaluateEntitiesToPromote(op, pending);
     
     var promote = results.ToPromote.ToList();

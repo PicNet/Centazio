@@ -2,7 +2,6 @@
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
-using C = Centazio.Providers.Aws.Stage.DynamoConstants;
 
 namespace Centazio.Providers.Aws.Stage;
 
@@ -12,8 +11,8 @@ public static class DynamoStagedEntityExtensionMethods {
   public static Dictionary<string, AttributeValue> ToDynamoDict(this StagedEntity e) {
     var dse = (DynamoStagedEntity) e;
     var dict = new Dictionary<string, AttributeValue> {
-      { C.HASH_KEY, new AttributeValue(dse.ToHashKey()) },
-      { C.RANGE_KEY, new AttributeValue(dse.ToRangeKey()) },
+      { DynamoHelpers.HASH_KEY, new AttributeValue(DynamoHelpers.ToHashKey(dse.SourceSystem, dse.Object)) },
+      { DynamoHelpers.RANGE_KEY, new AttributeValue(DynamoHelpers.ToRangeKey(dse.DateStaged, dse.Id)) },
       { nameof(e.Checksum), new AttributeValue(e.Checksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
     };
@@ -22,13 +21,10 @@ public static class DynamoStagedEntityExtensionMethods {
     return dict;
   }
   
-  public static string ToHashKey(this StagedEntity e) => $"{e.SourceSystem.Value}|{e.Object.Value}";
-  public static string ToRangeKey(this DynamoStagedEntity e) => $"{e.DateStaged:o}|{e.RangeSuffix}";
-  
   public static IList<DynamoStagedEntity> AwsDocumentsToDynamoStagedEntities(this IEnumerable<Document> docs) {
     return docs.Select(d => {
-      var (system, entity, _) = d[C.HASH_KEY].AsString().Split('|');
-      var (staged, suffix, _) = d[C.RANGE_KEY].AsString().Split('|');
+      var (system, entity, _) = d[DynamoHelpers.HASH_KEY].AsString().Split('|');
+      var (staged, suffix, _) = d[DynamoHelpers.RANGE_KEY].AsString().Split('|');
       return new DynamoStagedEntity(
           Guid.Parse(suffix),
           system, 
@@ -42,5 +38,6 @@ public static class DynamoStagedEntityExtensionMethods {
   }
 }
 
-public record DynamoStagedEntity(Guid RangeSuffix, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) 
-    : StagedEntity(SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);
+// todo: is this still required?
+public record DynamoStagedEntity(Guid Id, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) 
+    : StagedEntity(Id, SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);

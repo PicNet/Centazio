@@ -99,7 +99,9 @@ public record ObjectState(
 
 public record StagedEntity {
   
-  public StagedEntity(SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) {
+  // todo: use ValidString?
+  public StagedEntity(Guid Id, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) {
+    this.Id = Id;
     this.SourceSystem = SourceSystem;
     this.Object = Object;
     this.DateStaged = DateStaged;
@@ -109,11 +111,12 @@ public record StagedEntity {
     this.Ignore = Ignore;
   }
   
-  public SystemName SourceSystem { get; init; }
-  public ObjectName Object { get; init; }
-  public DateTime DateStaged { get; init; }
+  public Guid Id { get; }
+  public SystemName SourceSystem { get; }
+  public ObjectName Object { get; }
+  public DateTime DateStaged { get; }
   public DateTime? DatePromoted { get; init; }
-  public string Checksum { get; init; }
+  public string Checksum { get; }
   
   // need the backing fields to support object initializers and the `with` syntax which cannot have validators
   private readonly string data = "";
@@ -121,7 +124,7 @@ public record StagedEntity {
   public string Data { get => data; init => data = value.Trim(); }
   public string? Ignore { get => ignore; init => ignore = String.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
 
-  internal StagedEntity CloneNew() => new(SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);
+  internal StagedEntity CloneNew() => new(Id, SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);
 }
 
 public record EntityIntraSystemMappingRaw {

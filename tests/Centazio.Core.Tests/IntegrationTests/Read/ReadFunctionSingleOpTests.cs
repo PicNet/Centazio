@@ -25,23 +25,23 @@ public class ReadFunctionSingleOpTests {
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged0 = await stager.Get(UtcDate.UtcNow.AddYears(-1), sys, obj);
+    var staged0 = await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj);
     
     // this run should be empty as no TestingUtcDate.DoTick
     var r1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged1 = await stager.Get(UtcDate.UtcNow.AddYears(-1), sys, obj);
+    var staged1 = await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj);
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
     var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged2 = await stager.Get(UtcDate.UtcNow.AddYears(-1), sys, obj);
+    var staged2 = await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj);
     
     // should be empty as no time has passed and Cron expects max 1/sec
     var r3 = (await funcrunner.RunFunction()).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged3 = await stager.Get(UtcDate.UtcNow.AddYears(-1), sys, obj);
+    var staged3 = await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj);
     
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
@@ -58,18 +58,18 @@ public class ReadFunctionSingleOpTests {
     
     Assert.That(sys2.Single(), Is.EqualTo(SS(onetick)));
     Assert.That(obj2.Single(), Is.EqualTo(OS(onetick, 1)));
-    Assert.That(staged2.Single(), Is.EqualTo(SE()));
+    Assert.That(staged2.Single(), Is.EqualTo(SE(staged2.Single().Id)));
     
     Assert.That(sys3.Single(), Is.EqualTo(SS(onetick)));
     Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, 1)));
-    Assert.That(staged3.Single(), Is.EqualTo(SE()));
+    Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
     ObjectState OS(DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
         updated, updated, updated, updated, updated, "operation [CRM/Read/CrmCustomer] completed [Success] message: ", len) { 
       LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty 
     };
-    StagedEntity SE() => new(sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
+    StagedEntity SE(Guid? id = null) => new(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
   }
 }
 

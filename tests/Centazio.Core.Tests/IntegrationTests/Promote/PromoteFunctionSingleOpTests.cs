@@ -23,11 +23,11 @@ public class PromoteFunctionSingleOpTest {
     var start = TestingUtcDate.DoTick();
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(start, sys, obj, json1);
+    var staged1 = await stager.Stage(start, sys, obj, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
-    var expse = SE(json1);
+    var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
@@ -46,8 +46,8 @@ public class PromoteFunctionSingleOpTest {
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
-    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2), SE(json3) }));
-    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { (Staged: SE(json2), Core: ToCore(json2)), (Staged: SE(json3), Core: ToCore(json3)) }));
+    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
+    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { (Staged: SE(json2, staged23[0].Id), Core: ToCore(json2)), (Staged: SE(json3, staged23[1].Id), Core: ToCore(json3)) }));
     var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToPromote = result23.ToPromote };
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -65,11 +65,11 @@ public class PromoteFunctionSingleOpTest {
     var start = TestingUtcDate.DoTick();
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(start, sys, obj, json1);
+    var staged1 = await stager.Stage(start, sys, obj, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
-    var expse = SE(json1);
+    var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
@@ -89,9 +89,9 @@ public class PromoteFunctionSingleOpTest {
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
-    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2), SE(json3) }));
+    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
-    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2), (ValidString) "ignore"), (SE(json3), (ValidString) "ignore") }));
+    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2, staged23[0].Id), (ValidString) "ignore"), (SE(json3, staged23[1].Id), (ValidString) "ignore") }));
     var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToIgnore = result23.ToIgnore, ToPromote = result23.ToPromote };
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -102,7 +102,7 @@ public class PromoteFunctionSingleOpTest {
   private SystemState SS(DateTime start, DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
   private ObjectState OS(DateTime start, DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
       updated, updated, updated, updated, updated, "operation [CRM/Promote/CrmCustomer] completed [Success] message: ", len) { LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty };
-  private StagedEntity SE(string json) => new(sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => new(id ?? Guid.NewGuid(), sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }

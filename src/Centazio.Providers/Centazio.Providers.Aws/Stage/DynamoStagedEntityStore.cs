@@ -6,8 +6,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Helpers;
 using Centazio.Core.Stage;
 using Serilog;
-using C = Centazio.Providers.Aws.Stage.DynamoConstants; 
-    
+
 namespace Centazio.Providers.Aws.Stage;
 
 /// <summary>
@@ -37,10 +36,10 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     Log.Debug("creating table {Table}", table);
     
     var status = (await Client.CreateTableAsync(
-        new(table, [ new(C.HASH_KEY, KeyType.HASH), new(C.RANGE_KEY, KeyType.RANGE)]) {
+        new(table, [ new(DynamoHelpers.HASH_KEY, KeyType.HASH), new(DynamoHelpers.RANGE_KEY, KeyType.RANGE)]) {
             AttributeDefinitions = [ 
-              new (C.HASH_KEY, ScalarAttributeType.S), 
-              new (C.RANGE_KEY, ScalarAttributeType.S)],
+              new (DynamoHelpers.HASH_KEY, ScalarAttributeType.S), 
+              new (DynamoHelpers.RANGE_KEY, ScalarAttributeType.S)],
 
             BillingMode = BillingMode.PAY_PER_REQUEST
           })).TableDescription.TableStatus;
@@ -56,19 +55,20 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
   protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
     var uniques = staged
         .DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}")
-        .Select(e => new DynamoStagedEntity(Guid.NewGuid(), e.SourceSystem, e.Object, e.DateStaged, e.Data, e.Checksum))
+        .Select(e => new DynamoStagedEntity(e.Id, e.SourceSystem, e.Object, e.DateStaged, e.Data, e.Checksum))
         .ToList();
     if (!uniques.Any()) return uniques;
 
+    var template = uniques.First();
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval",
         ExpressionAttributeNames = new() {
-          { "#haskey", C.HASH_KEY }
+          { "#haskey", DynamoHelpers.HASH_KEY }
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", uniques.First().ToHashKey() }
+          { ":hashval", DynamoHelpers.ToHashKey(template.SourceSystem, template.Object) }
         }
       },
       // this is not efficient, but there is no way to use the 'IN'
@@ -115,18 +115,18 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return uniques;
   }
   
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       ConsistentRead = true,
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
         ExpressionAttributeNames = new() {
-          { "#haskey", C.HASH_KEY },
-          { "#rangekey", C.RANGE_KEY },
+          { "#haskey", DynamoHelpers.HASH_KEY },
+          { "#rangekey", DynamoHelpers.RANGE_KEY },
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", new StagedEntity(source, obj, DateTime.MinValue, "", "").ToHashKey() },
+          { ":hashval", DynamoHelpers.ToHashKey(source, obj) },
           { ":rangeval", $"{after:o}|z" }
         }
       },
@@ -140,18 +140,19 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     var search = Table.LoadTable(client, table).Query(queryconf);
     var results = await search.GetNextSetAsync();
     
-    return results.AwsDocumentsToDynamoStagedEntities();
+    return results.AwsDocumentsToDynamoStagedEntities()
+        .Where(se => incpromoted || !se.DatePromoted.HasValue);
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     var filter = new QueryFilter();
-    filter.AddCondition(C.HASH_KEY, QueryOperator.Equal, new StagedEntity(source, obj, DateTime.MinValue, "", "").ToHashKey());
-    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : C.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
+    filter.AddCondition(DynamoHelpers.HASH_KEY, QueryOperator.Equal, DynamoHelpers.ToHashKey(source, obj));
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : DynamoHelpers.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
-      AttributesToGet = [C.HASH_KEY, C.RANGE_KEY]
+      AttributesToGet = [DynamoHelpers.HASH_KEY, DynamoHelpers.RANGE_KEY]
     };
     var tbl = Table.LoadTable(client, table);
     var search = tbl.Query(queryconf);

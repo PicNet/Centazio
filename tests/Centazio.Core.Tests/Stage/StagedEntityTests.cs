@@ -7,10 +7,10 @@ public class StagedEntityTests {
   private static readonly string NAME = nameof(StagedEntityTests);
   
   [Test] public void Test_initialisation_handles_ignore_correctly() {
-    Assert.That(new StagedEntity(NAME, NAME, UtcDate.UtcNow, "", "", Ignore: null).Ignore, Is.Null);
-    Assert.That(new StagedEntity(NAME, NAME, UtcDate.UtcNow, "", "", Ignore: "").Ignore, Is.Null);
-    Assert.That(new StagedEntity(NAME, NAME, UtcDate.UtcNow, "", "", Ignore: " ").Ignore, Is.Null);
-    Assert.That(new StagedEntity(NAME, NAME, UtcDate.UtcNow, "", "", Ignore: "\n\t ").Ignore, Is.Null);
+    Assert.That(new StagedEntity(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, "", "", Ignore: null).Ignore, Is.Null);
+    Assert.That(new StagedEntity(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, "", "", Ignore: "").Ignore, Is.Null);
+    Assert.That(new StagedEntity(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, "", "", Ignore: " ").Ignore, Is.Null);
+    Assert.That(new StagedEntity(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, "", "", Ignore: "\n\t ").Ignore, Is.Null);
   }
   
   [Test] public void Test_subclass_initialisation_handles_ignore_correctly() {
@@ -35,5 +35,5 @@ public class StagedEntityTests {
     Assert.That((new SubClassSE() with { Ignore = "\n\t " }).Ignore, Is.Null);
   }
   
-  private record SubClassSE(string? Ignore = null) : StagedEntity(NAME, NAME, UtcDate.UtcNow, "", "", Ignore: Ignore);
+  private record SubClassSE(string? Ignore = null) : StagedEntity(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, "", "", Ignore: Ignore);
 }

@@ -9,10 +9,10 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
   protected readonly List<StagedEntity> saved = [];
 
   public override Task Update(IEnumerable<StagedEntity> staged) {
-    staged.ForEachIdx(se2 => {
-      var idx = saved.FindIndex(se => se.SourceSystem == se2.SourceSystem && se.Object == se2.Object && se.DateStaged == se2.DateStaged);
-      if (idx < 0) throw new Exception($"could not find [{se2}]");
-      saved[idx] = se2;
+    staged.ForEachIdx(s => {
+      var idx = saved.FindIndex(e => e.SourceSystem == s.SourceSystem && e.Object == s.Object && e.Id == s.Id);
+      if (idx < 0) throw new Exception($"could not find StagedEntity[{s.Id}]");
+      saved[idx] = s;
     });
     return Task.CompletedTask;
   }
@@ -28,9 +28,9 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
     return Task.FromResult(lst.AsEnumerable());
   }
 
-  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) => 
+  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) => 
       Task.FromResult(saved
-          .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.Ignore is null)
+          .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.Ignore is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .AsEnumerable());

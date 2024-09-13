@@ -1,10 +1,13 @@
 # Todo
 - set up testing pipeline (agent is ready)
-- careful testing of date handling
-- sqlite (self hosted), postgres
 - entity creation / update should be closely controlled.  Some fields (like DateCreated) should not be updateable
   and others (like DateUpdated) should not be set when creating.  Use factory methods, etc to control this.  All stores
   should manage these internal fields without requiring the caller to worry about setting things like dateupdated, etc.
+  Create/Update methods should not take in entities, but raw fields where possible?
+- sqlite (self hosted), postgres
+
+- code todos
+- replace all dt.Now.AddYear(-1) with dt.Today which is a bit tidier
 
 - CLI:
 

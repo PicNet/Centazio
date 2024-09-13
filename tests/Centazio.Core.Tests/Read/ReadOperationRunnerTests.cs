@@ -50,7 +50,7 @@ public class ReadOperationRunnerTests {
         UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
 
     var staged = store.Contents.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
     ValidateResult(
         new SingleRecordReadOperationResult(actual.Payload, ""),
         actual,
@@ -64,7 +64,7 @@ public class ReadOperationRunnerTests {
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.Checksum))));
+        staged.Select(s => new StagedEntity(s.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.Checksum))));
     ValidateResult(
         new ListRecordsReadOperationResult(actual.PayloadList, ""),
         actual,

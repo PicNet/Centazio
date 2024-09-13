@@ -63,16 +63,20 @@ WHEN NOT MATCHED THEN
   public override async Task Update(IEnumerable<StagedEntity> staged) {
     await using var conn = newconn();
     await conn.ExecuteAsync(
-        $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL}
-USING (VALUES (@Id, @DatePromoted, @Ignore)) AS se (Id, DatePromoted, Ignore)
-ON {SCHEMA}.{STAGED_ENTITY_TBL}.Id = se.Id
+        $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
+USING (VALUES (@Id, @SourceSystem, @Object, @DatePromoted, @Ignore)) AS se (Id, SourceSystem, Object, DatePromoted, Ignore)
+ON 
+  T.SourceSystem = se.SourceSystem
+  AND T.Object = se.Object
+  AND T.Id = se.Id
 WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore;", staged);
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
     await using var conn = newconn();
     var limit = Limit > 0 ? $" TOP {Limit}" : "";
-    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL ORDER BY DateStaged", new { since = after });
+    var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
+    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL {promotedpredicate} ORDER BY DateStaged", new { since = after });
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
