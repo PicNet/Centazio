@@ -57,6 +57,8 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
   public static async Task<List<T>> IgnoreNonMeaninfulChanges<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
+    if (lst.All(e => String.IsNullOrWhiteSpace(e.Checksum))) return lst;
+    
     var checksums = await core.GetChecksums(lst);
     return lst.Where(e => String.IsNullOrWhiteSpace(e.Checksum)
         || !checksums.ContainsKey(e.Id)
