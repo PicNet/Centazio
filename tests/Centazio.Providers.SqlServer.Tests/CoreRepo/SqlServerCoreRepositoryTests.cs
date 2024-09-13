@@ -2,7 +2,7 @@
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
 
-namespace Centazio.Providers.SqlServer.Tests.Ctl;
+namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
 public class SqlServerCoreRepositoryTests() : CoreStorageRepositoryDefaultTests(false) {
   

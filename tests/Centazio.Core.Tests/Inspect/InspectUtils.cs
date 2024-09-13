@@ -6,7 +6,7 @@ internal static class InspectUtils {
   internal static string SolnDir => solndir ??= GetSolutionRootDirectory();
   
   private static List<string>? csfiles;
-  internal static List<string> CsFiles(params string[] ignore) => (csfiles ??= GetSolnCsFiles()).Where(f => !ignore.Any(f.EndsWith)).ToList();
+  internal static List<string> CsFiles(params string[] ignore) => (csfiles ??= GetSolnCsFiles()).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
 
   private static string GetSolutionRootDirectory() {
     var file = "azure-pipelines.yml";

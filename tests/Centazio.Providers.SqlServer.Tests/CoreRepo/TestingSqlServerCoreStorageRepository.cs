@@ -4,7 +4,7 @@ using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
 using Dapper;
 
-namespace Centazio.Providers.SqlServer.Tests.Ctl;
+namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
 internal class TestingSqlServerCoreStorageRepository : ICoreStorageRepository {
 

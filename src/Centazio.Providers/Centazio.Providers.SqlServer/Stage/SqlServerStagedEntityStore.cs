@@ -4,7 +4,7 @@ using Centazio.Core.Stage;
 using Dapper;
 using Microsoft.Data.SqlClient;
 
-namespace Centazio.Providers.SQLServer.Stage;
+namespace Centazio.Providers.SqlServer.Stage;
 
 public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
 

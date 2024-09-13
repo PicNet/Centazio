@@ -1,11 +1,10 @@
 ﻿using Centazio.Core.Stage;
 using Centazio.Core.Tests;
 using Centazio.Core.Tests.Stage;
-using Centazio.Providers.SQLServer.Stage;
-using Centazio.Providers.SqlServer.Tests;
+using Centazio.Providers.SqlServer.Stage;
 using Dapper;
 
-namespace Centazio.Providers.Aws.Tests.Stage;
+namespace Centazio.Providers.SqlServer.Tests.Stage;
 
 public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
 

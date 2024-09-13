@@ -6,10 +6,6 @@
   Create/Update methods should not take in entities, but raw fields where possible?
 - sqlite (self hosted), postgres
 
-- code todos
-- replace all dt.Now.AddYear(-1) with dt.Today which is a bit tidier
-- unit test to scan code for invalid namespaces
-
 - CLI:
 
 - EntityStager:
