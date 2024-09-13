@@ -3,8 +3,10 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.EntitySysMapping;
 
-public abstract record NewEntityIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
-  public EntityIntraSystemMapping CreateEntityIntraSystemMapping() => new(
+public abstract record CreateEntityIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
+  public EntityIntraSystemMapping.MappingKey Key => new EntityIntraSystemMapping.MappingKey(CoreEntity.GetType().Name, CoreEntity.Id, CoreEntity.SourceSystem, CoreEntity.SourceId, TargetSystem, TargetId);
+  
+  public EntityIntraSystemMapping ToMapping() => new(
       CoreEntity.GetType().Name, 
       CoreEntity.Id, 
       CoreEntity.SourceSystem, 
@@ -16,15 +18,16 @@ public abstract record NewEntityIntraSystemMapping(ICoreEntity CoreEntity, Syste
       null,
       Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : null);
 }
-public record NewSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : 
-    NewEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
+public record CreateSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : CreateEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
 
-public record UpdateEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status, string? Error = null);
+public abstract record UpdateEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status, string? Error = null);
+public record UpdateSuccessEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.Success);
+public record UpdateErrorEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, string Error) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.Error, Error);
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   
-  Task<EntityIntraSystemMapping> Create(NewEntityIntraSystemMapping create);
-  Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<NewEntityIntraSystemMapping> maps);
+  Task<EntityIntraSystemMapping> Create(CreateEntityIntraSystemMapping create);
+  Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> maps);
   
   Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping map);
   Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> maps);
@@ -59,8 +62,8 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
 
 public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystemMappingStore {
   
-  public async Task<EntityIntraSystemMapping> Create(NewEntityIntraSystemMapping create) => (await Create([create])).Single();
-  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<NewEntityIntraSystemMapping> creates);
+  public async Task<EntityIntraSystemMapping> Create(CreateEntityIntraSystemMapping create) => (await Create([create])).Single();
+  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> creates);
   
   public async Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping update) => (await Update([update])).Single();
   public abstract Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates);

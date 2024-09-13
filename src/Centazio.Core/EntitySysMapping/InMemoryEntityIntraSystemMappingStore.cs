@@ -8,9 +8,9 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   
   public override Task<List<EntityIntraSystemMapping>> Get() => Task.FromResult(saved.Values.ToList());
   
-  public override Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<NewEntityIntraSystemMapping> news) => 
+  public override Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> news) => 
       Task.FromResult(news.Select(n => {
-        var map = n.CreateEntityIntraSystemMapping();
+        var map = n.ToMapping();
         return saved[map.Key] = map;
       }));
 
@@ -21,6 +21,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
           Status = update.Status,
           DateUpdated = UtcDate.UtcNow,
           DateLastSuccess = update.Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : map.DateLastSuccess,
+          DateLastError = update.Status == EEntityMappingStatus.Error ? UtcDate.UtcNow : map.DateLastError,
           LastError = update.Status == EEntityMappingStatus.Error ? update.Error : map.LastError,
         };
       }));

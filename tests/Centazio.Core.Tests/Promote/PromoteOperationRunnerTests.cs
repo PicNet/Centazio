@@ -73,7 +73,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var store = F.EntitySysMap();
     var core = F.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(new NewSuccessIntraSystemMapping(core, "FIN", "FIN321"));
+    await store.Create(new CreateSuccessIntraSystemMapping(core, "FIN", "FIN321"));
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
     var entities = new List<CoreCustomer> {
       F.NewCoreCust("N", "N", "FIN1"),

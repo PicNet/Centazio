@@ -170,6 +170,7 @@ public record EntityIntraSystemMappingRaw {
   public DateTime? DateCreated { get; init; }
   public DateTime? DateUpdated { get; init; }
   public DateTime? DateLastSuccess { get; init; }
+  public DateTime? DateLastError { get; init; }
   public string? LastError { get; init; }
   
   public static explicit operator EntityIntraSystemMapping(EntityIntraSystemMappingRaw raw) => new(
@@ -183,10 +184,24 @@ public record EntityIntraSystemMappingRaw {
       raw.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       raw.DateUpdated,
       raw.DateLastSuccess,
+      raw.DateLastError,
       raw.LastError);
 }
 
-public record EntityIntraSystemMapping(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status, DateTime DateCreated, DateTime? DateUpdated = null, DateTime? DateLastSuccess = null, string? LastError = null) {
+public record EntityIntraSystemMapping(
+    ObjectName CoreEntity, 
+    ValidString CoreId, 
+    SystemName SourceSystem, 
+    ValidString SourceId, 
+    SystemName TargetSystem, 
+    ValidString TargetId, 
+    EEntityMappingStatus Status, 
+    DateTime DateCreated, 
+    DateTime? DateUpdated = null, 
+    DateTime? DateLastSuccess = null, 
+    DateTime? DateLastError = null,
+    string? LastError = null) {
+  
   public record MappingKey(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId);
   
   public MappingKey Key => new(CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId); 

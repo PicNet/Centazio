@@ -16,29 +16,29 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = new NewSuccessIntraSystemMapping(core, STR, STR); 
+    var original = new CreateSuccessIntraSystemMapping(core, STR, STR); 
     var created = await store.Create(original);
     var list1 = await store.Get();
-    var updated = await store.Update(new UpdateEntityIntraSystemMapping(created.Key, EEntityMappingStatus.Error));
+    var updated = await store.Update(new UpdateErrorEntityIntraSystemMapping(created.Key, "Error"));
     var list2 = await store.Get();
     
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
-    var exp = created with { Status = EEntityMappingStatus.Error, DateUpdated = UtcDate.UtcNow };
+    var exp = created with { Status = EEntityMappingStatus.Error, DateUpdated = UtcDate.UtcNow, DateLastError = UtcDate.UtcNow, LastError = "Error"};
     Assert.That(updated, Is.EqualTo(exp));
     Assert.That(list2, Is.EquivalentTo(new [] { exp }));
   }
   
   [Test] public async Task Test_upsert_enum() {
     var original = new [] { 
-      new NewSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR, STR), STR, STR),
-      new NewSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2)
+      new CreateSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR, STR), STR, STR),
+      new CreateSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2)
     }; 
     var created = (await store.Create(original)).ToList();
     var list1 = await store.Get();
-    var updatecmd = created.Select(e => new UpdateEntityIntraSystemMapping(e.Key, EEntityMappingStatus.Error )).ToList();
+    var updatecmd = created.Select(e => new UpdateErrorEntityIntraSystemMapping(e.Key, "Error")).ToList();
     var updated2 = (await store.Update(updatecmd)).ToList();
     var list2 = await store.Get();
-    var exp = created.Select(e => e with { DateUpdated = UtcDate.UtcNow, Status = EEntityMappingStatus.Error }).ToList();
+    var exp = created.Select(e => e with { DateUpdated = UtcDate.UtcNow, Status = EEntityMappingStatus.Error, DateLastError = UtcDate.UtcNow, LastError = "Error"}).ToList();
         
     Assert.That(list1, Is.EquivalentTo(created));
     Assert.That(updated2, Is.EquivalentTo(exp));
@@ -50,7 +50,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(new NewSuccessIntraSystemMapping(core, "FIN", "FIN321"));
+    await store.Create(new CreateSuccessIntraSystemMapping(core, "FIN", "FIN321"));
     var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
     var filtered = await store.FilterOutBouncedBackIds<CoreCustomer>("FIN", ids);
