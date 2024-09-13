@@ -8,6 +8,7 @@ public interface IEntityStager : IAsyncDisposable {
 }
     
 public interface IStagedEntityStore : IEntityStager {
+  int Limit { get; set; }
   Task Update(StagedEntity staged);
   Task Update(IEnumerable<StagedEntity> staged);
   
@@ -20,8 +21,11 @@ public interface IStagedEntityStore : IEntityStager {
 
 public abstract class AbstractStagedEntityStore(int limit, Func<string, string> checksum) : IStagedEntityStore {
   
-  protected int Limit => limit > 0 ? limit : Int32.MaxValue;
-  
+  public int Limit {
+    get => limit > 0 ? limit : Int32.MaxValue;
+    set => limit = value;
+  }
+
   public async Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data) {
     var results = (await Stage(source, obj, new[] { data })).ToList();
     return results.Any() ? results.Single() : null; 

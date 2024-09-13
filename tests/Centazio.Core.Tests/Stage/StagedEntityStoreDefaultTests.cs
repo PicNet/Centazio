@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Helpers;
 using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
@@ -53,7 +54,41 @@ public abstract class StagedEntityStoreDefaultTests {
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, NAME, NAME, dt.Now, idx.ToString(), Hash(idx)))));
   }
+  
+  [Test] public async Task Test_get_returns_in_sorted_order() {
+    var ordered = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => dt.Tick()).ToList();
+    var random = ordered.OrderBy(_ => Guid.NewGuid()).ToList();
+    await random.Select((rand, idx) => {
+      using var _ = new ShortLivedUtcDateOverride(rand);
+      return store.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception();
+    }).Synchronous();
+    var retreived = await store.GetAll(TestingDefaults.DefaultStartDt, NAME, NAME);
+    var expdates = String.Join(",", ordered);
+    var actdates = String.Join(",", retreived.Select(e => e.DateStaged));
+    Assert.That(actdates, Is.EqualTo(expdates));
+  }
 
+  [Test] public async Task Test_get_returns_in_sorted_order_with_limit() {
+    var pgsz = 10;
+    store.Limit = pgsz;
+    var ordered = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => dt.Tick()).ToList();
+    var random = ordered.OrderBy(_ => Guid.NewGuid()).ToList();
+    await Task.WhenAll(random.Select((rand, idx) => {
+      using var _ = new ShortLivedUtcDateOverride(rand);
+      return store.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception();
+    }));
+    var start = TestingDefaults.DefaultStartDt;
+    for (var pgstart = 0; pgstart < LARGE_BATCH_SIZE; pgstart+=pgsz) {
+      var page = (await store.GetAll(start, NAME, NAME)).ToList();
+      start = page.Last().DateStaged;
+      var (actual, exp) = (StrSes(page), StrDts(ordered.Skip(pgstart).Take(pgsz)));
+      Assert.That(actual, Is.EqualTo(exp)); 
+    }
+    
+    string StrSes(IEnumerable<StagedEntity> ses) => StrDts(ses.Select(se => se.DateStaged));
+    string StrDts(IEnumerable<DateTime> dts) => String.Join(",", dts);
+  }
+  
   [Test] public async Task Test_updating_multiple_entities() {
     var staged = (await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception())
         .OrderBy(e => Int32.Parse(e.Data))
@@ -166,25 +201,25 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_get_returns_oldest_first_page_as_expected() {
-    var limit = 10;
-    var limstore = await GetStore(limit, Hash);
+    var pgsz = 10;
+    store.Limit = pgsz;
     var start = dt.Now;
     var created = new List<StagedEntity>();
     foreach (var idx in Enumerable.Range(0, 25)) { 
       dt.Tick();
-      created.Add(await limstore.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception());
+      created.Add(await store.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception());
     }
     
-    var exppage1 = created.Take(limit).ToList();
-    var page1 = (await limstore.GetAll(start, NAME, NAME)).ToList();
+    var exppage1 = created.Take(pgsz).ToList();
+    var page1 = (await store.GetAll(start, NAME, NAME)).ToList();
     
-    var exppage2 = created.Skip(limit).Take(limit).ToList();
-    var page2 = (await limstore.GetAll(exppage1.Last().DateStaged, NAME, NAME)).ToList();
+    var exppage2 = created.Skip(pgsz).Take(pgsz).ToList();
+    var page2 = (await store.GetAll(exppage1.Last().DateStaged, NAME, NAME)).ToList();
     
-    var exppage3 = created.Skip(limit * 2).Take(limit).ToList();
-    var page3 = (await limstore.GetAll(exppage2.Last().DateStaged, NAME, NAME)).ToList();
+    var exppage3 = created.Skip(pgsz * 2).Take(pgsz).ToList();
+    var page3 = (await store.GetAll(exppage2.Last().DateStaged, NAME, NAME)).ToList();
     
-    var page4 = (await limstore.GetAll(exppage3.Last().DateStaged, NAME, NAME)).ToList();
+    var page4 = (await store.GetAll(exppage3.Last().DateStaged, NAME, NAME)).ToList();
     
     Assert.That(page1, Is.EquivalentTo(exppage1));
     Assert.That(page2, Is.EquivalentTo(exppage2));
