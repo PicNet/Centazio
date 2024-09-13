@@ -7,16 +7,16 @@ namespace Centazio.Core.Read;
 
 internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
-  public async Task<ReadOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) {
+  public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
     var res = await op.Settings.GetObjectsToStage(op);
     if (res.IsValid) await DoStage();
     return res;
 
     async Task DoStage() {
       if (res is SingleRecordReadOperationResult sr) {
-        await stager.Stage(funcstart, op.State.System, op.Settings.Object, sr.Payload);
+        await stager.Stage(op.State.System, op.Settings.Object, sr.Payload);
       } else if (res is ListRecordsReadOperationResult lr) {
-        await stager.Stage(funcstart, op.State.System, op.Settings.Object, lr.PayloadList);
+        await stager.Stage(op.State.System, op.Settings.Object, lr.PayloadList);
       } else throw new UnreachableException();
     }
   }

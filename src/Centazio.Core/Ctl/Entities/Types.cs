@@ -155,8 +155,6 @@ public record StagedEntity {
   private readonly string? ignore;
   public ValidString Data { get => data; init => data = value; }
   public string? Ignore { get => ignore; init => ignore = String.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
-
-  internal StagedEntity CloneNew() => new(Id, SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);
 }
 
 public record EntityIntraSystemMappingRaw {

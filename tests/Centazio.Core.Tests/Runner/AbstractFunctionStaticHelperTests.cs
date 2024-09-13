@@ -52,7 +52,9 @@ public class AbstractFunctionStaticHelperTests {
     OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
-    var now = Dt("2024-08-01T01:30:00Z");                 // 01:30 UTC on August 1st, 2024 
+    using var _ = new ShortLivedUtcDateOverride(
+        Dt("2024-08-01T01:30:00Z"));                        // 01:30 UTC on August 1st, 2024
+    
     var ops = new [] {
       Op("1", "0 0 0 * * *", Dt("2024-07-31T23:59:59Z")),   // Daily at 00:00 UTC, ready for 01:00 UTC
       Op("2", "0 0 * * * *", Dt("2024-08-01T00:00:00Z")),   // Hourly at 00 minutes, ready for 01:00 UTC
@@ -62,7 +64,7 @@ public class AbstractFunctionStaticHelperTests {
       Op("5", "0 0 0 * * MON", Dt("2024-07-29T00:00:00Z")), // Weekly on Monday at 00:00 UTC, now is not Monday
       Op("6", "0 0 * * * *", Dt("2024-08-01T01:00:00Z"))    // Hourly at 00 minutes, not yet ready
     } ;
-    var ready = AbstractFunction<ReadOperationConfig, ReadOperationResult>.GetReadyOperations(ops, now); 
+    var ready = AbstractFunction<ReadOperationConfig, ReadOperationResult>.GetReadyOperations(ops); 
     Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(new [] { "1", "2", "3" }));
   }
   
@@ -70,10 +72,10 @@ public class AbstractFunctionStaticHelperTests {
     var runner = TestingFactories.ReadRunner();
     
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
-    var results1 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states1, runner, repo, UtcDate.UtcNow);
+    var results1 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states1, runner, repo);
     
     var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
-    var results2 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states2, runner, repo, UtcDate.UtcNow);
+    var results2 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states2, runner, repo);
     
     var newstates = repo.Objects.Values.ToList();
 
@@ -93,7 +95,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     
-    var results = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow);
+    var results = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo);
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
@@ -113,7 +115,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = _ => throw new Exception() } }; 
-    var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, UtcDate.UtcNow)).ToList();
+    var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo)).ToList();
     var newstates = repo.Objects.Values.ToList();
 
     Assert.That(results, Has.Count.EqualTo(1));

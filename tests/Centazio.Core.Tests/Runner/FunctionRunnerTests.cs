@@ -82,7 +82,7 @@ public class FunctionRunnerTests {
 
     public FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public async Task<IEnumerable<ReadOperationResult>> RunOperation(DateTime start, IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Array.Empty<ReadOperationResult>();
@@ -94,7 +94,7 @@ public class FunctionRunnerTests {
 
     public FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public async Task<IEnumerable<ReadOperationResult>> RunOperation(DateTime start, IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult(""));
@@ -104,7 +104,7 @@ public class FunctionRunnerTests {
   
   class DoNothingOpRunner : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
-    public Task<ReadOperationResult> RunOperation(DateTime funcstart, OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
+    public Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
     public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => throw new Exception();
 
   }

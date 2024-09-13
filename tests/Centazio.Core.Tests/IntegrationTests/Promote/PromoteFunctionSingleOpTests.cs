@@ -23,7 +23,7 @@ public class PromoteFunctionSingleOpTest {
     var start = TestingUtcDate.DoTick();
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(start, sys, obj, json1) ?? throw new Exception();
+    var staged1 = await stager.Stage(sys, obj, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -41,7 +41,8 @@ public class PromoteFunctionSingleOpTest {
     var cust2 = new CrmCustomer(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
     var cust3 = new CrmCustomer(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json(cust2), Json(cust3));
-    var staged23 = (await stager.Stage(TestingUtcDate.DoTick(), sys, obj, [json1, json2, json3])).ToList();
+    TestingUtcDate.DoTick();
+    var staged23 = (await stager.Stage(sys, obj, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
@@ -65,7 +66,7 @@ public class PromoteFunctionSingleOpTest {
     var start = TestingUtcDate.DoTick();
     var cust1 = new CrmCustomer(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(start, sys, obj, json1) ?? throw new Exception();
+    var staged1 = await stager.Stage(sys, obj, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -84,7 +85,8 @@ public class PromoteFunctionSingleOpTest {
     var cust2 = new CrmCustomer(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
     var cust3 = new CrmCustomer(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json(cust2), Json(cust3));
-    var staged23 = (await stager.Stage(TestingUtcDate.DoTick(), sys, obj, [json1, json2, json3])).ToList();
+    TestingUtcDate.DoTick();
+    var staged23 = (await stager.Stage(sys, obj, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 

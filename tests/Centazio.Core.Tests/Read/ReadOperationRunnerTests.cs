@@ -23,7 +23,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = await runner.RunOperation(UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Error, TestingFactories.TestingSingleReadOperationImplementation));
+    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, TestingFactories.TestingSingleReadOperationImplementation));
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -35,7 +35,7 @@ public class ReadOperationRunnerTests {
   [Test] public async Task Test_empty_results_are_not_staged() {
     var runner = TestingFactories.ReadRunner(store);
     var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingEmptyReadOperationImplementation);
-    var actual = await runner.RunOperation(UtcDate.UtcNow, opcfg);
+    var actual = await runner.RunOperation(opcfg);
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -46,8 +46,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(
-        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
 
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
@@ -59,8 +58,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(
-        UtcDate.UtcNow, await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
+    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(

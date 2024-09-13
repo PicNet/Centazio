@@ -12,17 +12,13 @@ public class TestingUtcDate(DateTime? start = null) : AbstractUtcDate {
   public static DateTime DoTick() => ((TestingUtcDate) UtcDate.Utc).Tick();
 }
 
-public class TestingIncrementingUtcDate(DateTime? start = null) : AbstractUtcDate {
-  private DateTime now = start ?? TestingDefaults.DefaultStartDt;
+public class ShortLivedUtcDateOverride : IDisposable {
+  private readonly IUtcDate original;
   
-  public override DateTime Now {
-    get {
-      var current = now; 
-      now = now.AddSeconds(1);
-      return current;
-    }
+  public ShortLivedUtcDateOverride(DateTime dtoverride) {
+    original = UtcDate.Utc;
+    UtcDate.Utc = new TestingUtcDate(dtoverride);
   }
   
-  public DateTime NowNoIncrement => now;
-
+  public void Dispose() => UtcDate.Utc = original; 
 }

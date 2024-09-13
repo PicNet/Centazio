@@ -21,7 +21,7 @@ public abstract class StagedEntityStoreDefaultTests {
   [TearDown] public async Task TearDown() => await store.DisposeAsync();
 
   [Test] public async Task Test_saving_single_entity() {
-    await store.Stage(dt.Now, NAME, NAME, NAME);
+    await store.Stage(NAME, NAME, NAME);
     var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
     var minus1 =  await GetSingle(dt.Now.AddMilliseconds(-1), NAME, NAME);
     
@@ -30,7 +30,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_updating_single_entity() {
-    await store.Stage(dt.Now, NAME, NAME, NAME);
+    await store.Stage(NAME, NAME, NAME);
     var created = (await store.GetAll(dt.Now.AddMilliseconds(-1), NAME, NAME)).Single();
     var updated = created with { DatePromoted = dt.Now.AddYears(1) };
     await store.Update(updated);
@@ -40,7 +40,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
 
   [Test] public async Task Test_saving_multiple_entities() {
-    var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception()).
+    var staged = (await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception()).
         OrderBy(e => Int32.Parse(e.Data)).
         ToList();
     var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
@@ -55,7 +55,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
 
   [Test] public async Task Test_updating_multiple_entities() {
-    var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception())
+    var staged = (await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception())
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     var fromnow = (await store.GetAll(dt.Now, NAME, NAME)).ToList();
@@ -74,8 +74,8 @@ public abstract class StagedEntityStoreDefaultTests {
     var sz = 10000;
     var str = new String('*', sz) + "_";
     
-    var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx)) ?? throw new Exception())
-        .Select(e => e.CloneNew() with { Data = e.Data.Value.Split('_')[1] }) // make it easier to debug without all the noise
+    var staged = (await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx)) ?? throw new Exception())
+        .Select(e => e with { Data = e.Data.Value.Split('_')[1] }) // make it easier to debug without all the noise
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     var fromnow = (await store.GetAll(dt.Now, NAME, NAME))
@@ -100,18 +100,16 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_get_returns_expected() {
-    var (start, staged1, staged2) = (dt.Now, dt.Tick(), dt.Tick());
+    var (start, staged1) = (dt.Now, dt.Tick());
     var (name1, name2, name3, data2) = (NAME + 1, NAME + 2 , NAME + 3, Guid.NewGuid().ToString());
     
-    await store.Stage(staged1, name1, name1, name1);
-    await store.Stage(staged2, name1, name1, data2);
-    await store.Stage(staged2, name2, name2, name2);
-    await store.Stage(staged2, name3, name3, name3);
+    await store.Stage(name1, name1, name1);
+    var staged2 = dt.Tick();
+    await store.Stage(name1, name1, data2);
+    await store.Stage(name2, name2, name2);
+    await store.Stage(name3, name3, name3);
     
     await Assert.ThatAsync(() => store.GetAll(staged2, name1, name1), Is.Empty);
-
-
-    Console.WriteLine($"start: {start:o} staged1: {staged1:o} staged2: {staged2:o}");
     await Assert.ThatAsync(() => store.GetAll(start, name2, name1), Is.Empty);
     await Assert.ThatAsync(() => store.GetAll(start, name1, name2), Is.Empty);
     await Assert.ThatAsync(() => store.GetAll(start, name2, name3), Is.Empty);
@@ -128,22 +126,21 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_get_returns_expected_with_ignores() {
-    var (start, staged1, staged2) = (dt.Now, dt.Tick(), dt.Tick());
+    var (start, staged1) = (dt.Now, dt.Tick());
     var (name1, name2, name3) = (NAME + 1, NAME + 2 , NAME + 3);
     
-    var notignore = new List<StagedEntity> {
-      await Create(staged1, name1, "not ignore: 1.1", ""),
-      await Create(staged2, name1, "not ignore: 1.2", " "),
-      await Create(staged2, name2, "not ignore: 2", "\r"),
-      await Create(staged2, name3, "not ignore: 3", null)
-    };
+    var notignore = new List<StagedEntity> { await Create(name1, "not ignore: 1.1", "") };
+    var staged2 = dt.Tick();
+    notignore.Add(await Create(name1, "not ignore: 1.2", " "));
+    notignore.Add(await Create(name2, "not ignore: 2", "\r"));
+    notignore.Add(await Create(name3, "not ignore: 3", null));
     await store.Update(notignore);
     
     var toignore = new List<StagedEntity> {
-      await Create(staged1.AddMinutes(1), name1, "ignore: 1.1", "ignore: 1.1"),
-      await Create(staged2.AddMinutes(1), name1, "ignore: 1.2", "ignore: 1.2"),
-      await Create(staged2.AddMinutes(1), name2, "ignore: 2", "ignore: 2"),
-      await Create(staged2.AddMinutes(1), name3, "ignore: 3", "ignore: 3")
+      await Create(name1, "ignore: 1.1", "ignore: 1.1"),
+      await Create(name1, "ignore: 1.2", "ignore: 1.2"),
+      await Create(name2, "ignore: 2", "ignore: 2"),
+      await Create(name3, "ignore: 3", "ignore: 3")
     };
     await store.Update(toignore);
     
@@ -162,8 +159,8 @@ public abstract class StagedEntityStoreDefaultTests {
     Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, name2, staged2, "not ignore: 2", Hash("not ignore: 2")) }));
     Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, name3, staged2, "not ignore: 3", Hash("not ignore: 3")) }));
     
-    async Task<StagedEntity> Create(DateTime dtstaged, string name, string data, string? ignore) {
-      var staged = await store.Stage(dtstaged, name, name, data) ?? throw new Exception();
+    async Task<StagedEntity> Create(string name, string data, string? ignore) {
+      var staged = await store.Stage(name, name, data) ?? throw new Exception();
       return staged with { Ignore = ignore};
     }
   }
@@ -173,7 +170,10 @@ public abstract class StagedEntityStoreDefaultTests {
     var limstore = await GetStore(limit, Hash);
     var start = dt.Now;
     var created = new List<StagedEntity>();
-    foreach (var idx in Enumerable.Range(0, 25)) created.Add(await limstore.Stage(dt.Tick(), NAME, NAME, idx.ToString()) ?? throw new Exception());
+    foreach (var idx in Enumerable.Range(0, 25)) { 
+      dt.Tick();
+      created.Add(await limstore.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception());
+    }
     
     var exppage1 = created.Take(limit).ToList();
     var page1 = (await limstore.GetAll(start, NAME, NAME)).ToList();
@@ -193,12 +193,13 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_delete_staged_before() {
-    var (get_all, delete_all, staged1, staged2) = (dt.Today, dt.Now.AddHours(1), dt.Tick(), dt.Tick());
+    var (get_all, delete_all) = (dt.Today, dt.Now.AddHours(1));
     var (name1, name2, name3, data2) = (NAME + 1, NAME + 2 , NAME + 3, Guid.NewGuid().ToString());
-    await store.Stage(staged1, name1, name1, name1);
-    await store.Stage(staged2, name1, name1, data2);
-    await store.Stage(staged2, name2, name2, name2);
-    await store.Stage(staged2, name3, name3, name3);
+    await store.Stage(name1, name1, name1);
+    var staged2 = dt.Tick();
+    await store.Stage(name1, name1, data2);
+    await store.Stage(name2, name2, name2);
+    await store.Stage(name3, name3, name3);
 
     await store.DeleteStagedBefore(staged2, name1, name1); // will delete name1@staged1
     var se1 = await GetSingle(get_all, name1, name1);
@@ -218,18 +219,19 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_delete_large_batch() {
-    await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => NAME));
+    await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => NAME));
     await store.DeleteStagedBefore(dt.Tick(), NAME, NAME); 
     await Assert.ThatAsync(async () => await store.GetAll(dt.Now.AddHours(-1), NAME, NAME), Is.Empty);
   }
     
   [Test] public async Task Test_delete_promoted_before() {
-    var (get_all, delete_all, staged1, staged2, promoted2) = (dt.Now.AddHours(-1), dt.Now.AddHours(1), dt.Tick(), dt.Tick(), dt.Now.AddDays(1));
+    var (get_all, delete_all) = (dt.Now.AddHours(-1), dt.Now.AddHours(1));
     var (name1, name2, name3, data2) = (NAME + 1, NAME + 2 , NAME + 3, Guid.NewGuid().ToString());
-    await store.Stage(staged1, name1, name1, name1);
-    await store.Stage(staged2, name1, name1, data2);
-    await store.Stage(staged2, name2, name2, name2);
-    await store.Stage(staged2, name3, name3, name3);
+    await store.Stage(name1, name1, name1);
+    var (staged2, promoted2) = (dt.Tick(), dt.Now.AddDays(1));
+    await store.Stage(name1, name1, data2);
+    await store.Stage(name2, name2, name2);
+    await store.Stage(name3, name3, name3);
     
     var all = (await store.GetAll(get_all, name1, name1))
         .Concat(await store.GetAll(get_all, name2, name2))
@@ -258,32 +260,32 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
     var (data, stageddt) = (Guid.NewGuid().ToString(), dt.Tick());
-    var staged = await store.Stage(stageddt, NAME, NAME, data) ?? throw new Exception();
-    var duplicate = await store.Stage(dt.Tick(), NAME, NAME, data);
+    var staged = await store.Stage(NAME, NAME, data) ?? throw new Exception();
+    dt.Tick();
+    var duplicate = await store.Stage(NAME, NAME, data);
     
     var expected = new StagedEntity(staged.Id, NAME, NAME, stageddt, data, Hash(data));
     var ses = (await store.GetAll(dt.Today, NAME, NAME)).ToList();
     
     Assert.That(duplicate, Is.Null);
-    Assert.That(staged.CloneNew(), Is.EqualTo(expected));
+    Assert.That(staged, Is.EqualTo(expected));
     Assert.That(ses, Is.EquivalentTo(new [] {expected}));
   }
   
   [Test] public async Task Test_staging_multiple_entities_ignores_duplicates() {
-    var (start, half) = (dt.Now.AddSeconds(1), LARGE_BATCH_SIZE /  2);
-    var staged = (await store.Stage(dt.Tick(), NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString())))
-        .Select(e => e.CloneNew()).ToList();
+    var half = LARGE_BATCH_SIZE;
+    var staged = (await store.Stage(NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString()))).ToList();
     var staged2 = (await store.GetAll(dt.Now.AddYears(-1), NAME, NAME)).ToList();
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
-    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, NAME, NAME, start, idx.ToString(), Hash(idx)))));
+    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, NAME, NAME, dt.Now, idx.ToString(), Hash(idx)))));
   }
   
   [Test] public async Task Test_GetAll_GetUnpromoted_respect_DatePromoted_state() {
-    var s1 = await store.Stage(dt.Now, NAME, NAME, "1") ?? throw new Exception();
-    var s2 = await store.Stage(dt.Now, NAME, NAME, "2") ?? throw new Exception();
-    var s3 = await store.Stage(dt.Now, NAME, NAME, "3") ?? throw new Exception();
+    var s1 = await store.Stage(NAME, NAME, "1") ?? throw new Exception();
+    var s2 = await store.Stage(NAME, NAME, "2") ?? throw new Exception();
+    var s3 = await store.Stage(NAME, NAME, "3") ?? throw new Exception();
     
     await store.Update(s2 = s2 with { DatePromoted = dt.Now });
     var all = (await store.GetAll(dt.Today, NAME, NAME)).ToList();

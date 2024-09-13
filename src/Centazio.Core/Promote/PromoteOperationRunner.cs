@@ -11,17 +11,15 @@ internal class PromoteOperationRunner<C>(
     IEntityIntraSystemMappingStore entitymap,
     ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
   
-  public async Task<PromoteOperationResult<C>> RunOperation(DateTime funcstart, OperationStateAndConfig<PromoteOperationConfig<C>> op) {
+  public async Task<PromoteOperationResult<C>> RunOperation(OperationStateAndConfig<PromoteOperationConfig<C>> op) {
+    var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.Object);
     var results = await op.Settings.EvaluateEntitiesToPromote(op, pending);
-    
-    var promote = results.ToPromote.ToList();
-    var ignore = results.ToIgnore.ToList();
-    
+    var (promote, ignore) = (results.ToPromote.ToList(), results.ToIgnore.ToList());
     if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
     
     await staged.Update(
-        promote.Select(e => e.Staged with { DatePromoted = funcstart }).Concat(
+        promote.Select(e => e.Staged with { DatePromoted = start }).Concat(
             ignore.Select(e => e.Entity with { Ignore = e.Reason })));
     
     return results; 

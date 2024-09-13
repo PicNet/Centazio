@@ -14,14 +14,13 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
   public abstract FunctionConfig<T> Config { get; }
 
   public async Task<IEnumerable<R>> RunOperation(
-      DateTime start, 
       IOperationRunner<T, R> runner,
       ICtlRepository ctl) {
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
     var states = await LoadOperationsStates(Config.Operations, sys, ctl);
-    var ready = GetReadyOperations(states, start);
+    var ready = GetReadyOperations(states);
     var priotised = Prioritiser.Prioritise(ready);
-    var results = await RunOperationsTillAbort(priotised, runner, ctl, start);
+    var results = await RunOperationsTillAbort(priotised, runner, ctl);
     return results;
   }
 
@@ -31,15 +30,15 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
         .ToList();
   }
 
-  internal static IEnumerable<OperationStateAndConfig<T>> GetReadyOperations(IEnumerable<OperationStateAndConfig<T>> states, DateTime now) {
+  internal static IEnumerable<OperationStateAndConfig<T>> GetReadyOperations(IEnumerable<OperationStateAndConfig<T>> states) {
     bool IsOperationReady(OperationStateAndConfig<T> op) {
-      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? now.AddYears(-10));
-      return next <= now;
+      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
+      return next <= UtcDate.UtcNow;
     }
     return states.Where(IsOperationReady);
   }
   
-  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<T>> ops, IOperationRunner<T, R> runner, ICtlRepository ctl, DateTime start) {
+  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<T>> ops, IOperationRunner<T, R> runner, ICtlRepository ctl) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
@@ -49,15 +48,19 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
       Log.Information("operation starting {@Operation}", op);
       
       var result = await RunOp(op);
-      return await SaveOp(opstart, op, result);
+      var saved = await SaveOp(op, opstart, result);
+      
+      Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, result, saved, (UtcDate.UtcNow - opstart).TotalMilliseconds);
+      
+      return result;
     }
     
     async Task<R> RunOp(OperationStateAndConfig<T> op) {
-      try { return await runner.RunOperation(start, op); } 
+      try { return await runner.RunOperation(op); } 
       catch (Exception ex) { return runner.BuildErrorResult(op, ex); }
     }
 
-    async Task<R> SaveOp(DateTime opstart, OperationStateAndConfig<T> op, R res) {
+    async Task<ObjectState> SaveOp(OperationStateAndConfig<T> op, DateTime start, R res) {
       var now = UtcDate.UtcNow;
       var newstate = op.State with {
         LastStart = start,
@@ -77,8 +80,7 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
       }
       
       await ctl.SaveObjectState(newstate);
-      Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, res, newstate, (UtcDate.UtcNow - opstart).TotalMilliseconds);
-      return res;
+      return newstate;
     }
   }
 

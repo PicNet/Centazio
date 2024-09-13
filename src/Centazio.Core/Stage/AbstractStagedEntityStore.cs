@@ -3,8 +3,8 @@
 namespace Centazio.Core.Stage;
 
 public interface IEntityStager : IAsyncDisposable {
-  Task<StagedEntity?> Stage(DateTime stageddt, SystemName source, ObjectName obj, string data);
-  Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas);
+  Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data);
+  Task<IEnumerable<StagedEntity>> Stage(SystemName source, ObjectName obj, IEnumerable<string> datas);
 }
     
 public interface IStagedEntityStore : IEntityStager {
@@ -22,13 +22,14 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   
   protected int Limit => limit > 0 ? limit : Int32.MaxValue;
   
-  public async Task<StagedEntity?> Stage(DateTime stageddt, SystemName source, ObjectName obj, string data) {
-    var results = (await Stage(stageddt, source, obj, new[] { data })).ToList();
+  public async Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data) {
+    var results = (await Stage(source, obj, new[] { data })).ToList();
     return results.Any() ? results.Single() : null; 
   }
 
-  public async Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) {
-    var ses = datas.Distinct().Select(data => new StagedEntity(Guid.CreateVersion7(), source, obj, stageddt, data, checksum(data))).ToList();
+  public async Task<IEnumerable<StagedEntity>> Stage(SystemName source, ObjectName obj, IEnumerable<string> datas) {
+    var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
+    var ses = datas.Distinct().Select(data => new StagedEntity(Guid.CreateVersion7(), source, obj, now, data, checksum(data))).ToList();
     if (!ses.Any()) return ses;
     return await StageImpl(ses);
   }

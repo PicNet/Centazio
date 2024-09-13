@@ -80,11 +80,11 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractReadFunction 
   
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Read, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), ReadCustomers)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), GetCustomersToStage)
     ]));
   }
   
-  private async Task<ReadOperationResult> ReadCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
+  private async Task<ReadOperationResult> GetCustomersToStage(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListRecordsReadOperationResult(customers, "")

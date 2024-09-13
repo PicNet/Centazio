@@ -3,6 +3,6 @@
 public interface IOperationRunner<T, R> 
     where T : OperationConfig 
     where R : OperationResult {
-  Task<R> RunOperation(DateTime funcstart, OperationStateAndConfig<T> op);
+  Task<R> RunOperation(OperationStateAndConfig<T> op);
   R BuildErrorResult(OperationStateAndConfig<T> op, Exception ex);
 }
