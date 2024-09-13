@@ -27,11 +27,16 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
     return results.Any() ? results.Single() : null; 
   }
 
-  public Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) {
-    return StageImpl(datas.Distinct().Select(data => new StagedEntity(Guid.CreateVersion7(), source, obj, stageddt, data, checksum(data))));
+  public async Task<IEnumerable<StagedEntity>> Stage(DateTime stageddt, SystemName source, ObjectName obj, IEnumerable<string> datas) {
+    var ses = datas.Distinct().Select(data => new StagedEntity(Guid.CreateVersion7(), source, obj, stageddt, data, checksum(data))).ToList();
+    if (!ses.Any()) return ses;
+    return await StageImpl(ses);
   }
 
-  protected abstract Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged);
+  /// <summary>
+  /// Implementing provider can assume that `staged` has already been de-duped and has at least 1 entity.
+  /// </summary>
+  protected abstract Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged);
   
   public Task Update(StagedEntity staged) => Update(new [] { staged });
   public abstract Task Update(IEnumerable<StagedEntity> staged);

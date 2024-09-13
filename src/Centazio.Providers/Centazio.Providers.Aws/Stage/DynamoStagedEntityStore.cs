@@ -36,10 +36,10 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     Log.Debug("creating table {Table}", table);
     
     var status = (await Client.CreateTableAsync(
-        new(table, [ new(DynamoHelpers.HASH_KEY, KeyType.HASH), new(DynamoHelpers.RANGE_KEY, KeyType.RANGE)]) {
+        new(table, [ new(AwsStagedEntityStoreHelpers.HASH_KEY, KeyType.HASH), new(AwsStagedEntityStoreHelpers.RANGE_KEY, KeyType.RANGE)]) {
             AttributeDefinitions = [ 
-              new (DynamoHelpers.HASH_KEY, ScalarAttributeType.S), 
-              new (DynamoHelpers.RANGE_KEY, ScalarAttributeType.S)],
+              new (AwsStagedEntityStoreHelpers.HASH_KEY, ScalarAttributeType.S), 
+              new (AwsStagedEntityStoreHelpers.RANGE_KEY, ScalarAttributeType.S)],
 
             BillingMode = BillingMode.PAY_PER_REQUEST
           })).TableDescription.TableStatus;
@@ -52,23 +52,17 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return this;
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
-    var uniques = staged
-        .DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}")
-        .Select(e => new DynamoStagedEntity(e.Id, e.SourceSystem, e.Object, e.DateStaged, e.Data, e.Checksum))
-        .ToList();
-    if (!uniques.Any()) return uniques;
-
-    var template = uniques.First();
+  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+    var template = staged.First();
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval",
         ExpressionAttributeNames = new() {
-          { "#haskey", DynamoHelpers.HASH_KEY }
+          { "#haskey", AwsStagedEntityStoreHelpers.HASH_KEY }
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", DynamoHelpers.ToHashKey(template.SourceSystem, template.Object) }
+          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(template.SourceSystem, template.Object) }
         }
       },
       // this is not efficient, but there is no way to use the 'IN'
@@ -76,17 +70,17 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       //    either main or in a GSI does not work.
       // Also, IN expression does not work for single item, so change single
       //    item to `=` expression :(
-      FilterExpression = uniques.Count > 1 
+      FilterExpression = staged.Count > 1 
           ? new() {
             ExpressionStatement = $"{nameof(StagedEntity.Checksum)} IN (:checksums)",
             ExpressionAttributeValues = new() {
-              { ":checksums", uniques.Select(u => u.Checksum).ToList() }
+              { ":checksums", staged.Select(u => u.Checksum.Value).ToList() }
             } 
           } 
           : new() {
             ExpressionStatement = $"{nameof(StagedEntity.Checksum)} = :checksum",
             ExpressionAttributeValues = new() {
-              { ":checksum", uniques.Single().Checksum }
+              { ":checksum", staged.Single().Checksum.Value }
             }
           }
     };
@@ -94,7 +88,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     var results = await search.GetNextSetAsync();
     
     var existing  = results.ToDictionary(d => d[nameof(StagedEntity.Checksum)].AsString());
-    var tostage = uniques.Where(e => !existing.ContainsKey(e.Checksum)).ToList();
+    var tostage = staged.Where(e => !existing.ContainsKey(e.Checksum)).ToList();
     await tostage
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
         .Chunk()
@@ -122,11 +116,11 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
         ExpressionAttributeNames = new() {
-          { "#haskey", DynamoHelpers.HASH_KEY },
-          { "#rangekey", DynamoHelpers.RANGE_KEY },
+          { "#haskey", AwsStagedEntityStoreHelpers.HASH_KEY },
+          { "#rangekey", AwsStagedEntityStoreHelpers.RANGE_KEY },
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", DynamoHelpers.ToHashKey(source, obj) },
+          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj) },
           { ":rangeval", $"{after:o}|z" }
         }
       },
@@ -146,13 +140,13 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
     var filter = new QueryFilter();
-    filter.AddCondition(DynamoHelpers.HASH_KEY, QueryOperator.Equal, DynamoHelpers.ToHashKey(source, obj));
-    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : DynamoHelpers.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
+    filter.AddCondition(AwsStagedEntityStoreHelpers.HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj));
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
-      AttributesToGet = [DynamoHelpers.HASH_KEY, DynamoHelpers.RANGE_KEY]
+      AttributesToGet = [AwsStagedEntityStoreHelpers.HASH_KEY, AwsStagedEntityStoreHelpers.RANGE_KEY]
     };
     var tbl = Table.LoadTable(client, table);
     var search = tbl.Query(queryconf);

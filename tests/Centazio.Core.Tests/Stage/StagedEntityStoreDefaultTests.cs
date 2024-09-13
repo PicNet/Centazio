@@ -75,15 +75,15 @@ public abstract class StagedEntityStoreDefaultTests {
     var str = new String('*', sz) + "_";
     
     var staged = (await store.Stage(dt.Now, NAME, NAME, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx)) ?? throw new Exception())
-        .Select(e => e.CloneNew() with { Data = e.Data.Split('_')[1] }) // make it easier to debug without all the noise
+        .Select(e => e.CloneNew() with { Data = e.Data.Value.Split('_')[1] }) // make it easier to debug without all the noise
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     var fromnow = (await GetAsSes(dt.Now, NAME, NAME))
-        .Select(e => e with { Data = e.Data.Split('_')[1] })
+        .Select(e => e with { Data = e.Data.Value.Split('_')[1] })
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     var minus1 =  (await GetAsSes(dt.Now.AddMilliseconds(-1), NAME, NAME))
-        .Select(e => e with { Data = e.Data.Split('_')[1] })
+        .Select(e => e with { Data = e.Data.Value.Split('_')[1] })
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     
@@ -93,7 +93,7 @@ public abstract class StagedEntityStoreDefaultTests {
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(staged));
     var exp = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, NAME, NAME, dt.Now, str + idx, Hash(str + idx)))
-        .Select(e => e with { Data = e.Data.Split('_')[1] })
+        .Select(e => e with { Data = e.Data.Value.Split('_')[1] })
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     Assert.That(minus1, Is.EquivalentTo(exp));

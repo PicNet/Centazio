@@ -18,14 +18,14 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
   }
   
 
-  protected override Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
+  protected override Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var newchecksums = new Dictionary<string, bool>();
     var lst = staged.Where(e => !checksums.ContainsKey(e.Checksum) && newchecksums.TryAdd(e.Checksum, true)).ToList();
     
     saved.AddRange(lst);
     newchecksums.Keys.ForEachIdx(cs => checksums.Add(cs, true));
     
-    return Task.FromResult(lst.AsEnumerable());
+    return Task.FromResult(lst);
   }
 
   protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) => 

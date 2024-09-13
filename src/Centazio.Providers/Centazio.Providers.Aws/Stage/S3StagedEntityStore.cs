@@ -30,27 +30,19 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return this;
   }
   
-  protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
-    var uniques = staged
-         // todo: move this to AbstractStagedEntityStore to be reused
-        .DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}")
-        .Select(s => s.ToS3StagedEntity())
-        .ToList();
-    if (!uniques.Any()) return uniques;
-    var se = uniques.First();
+  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+    var se = staged.First();
     // todo: all this string magic (splitting by '/', taking [1], etc) should be abstracted
     var existing = (await ListAll(se.SourceSystem, se.Object)).Select(o => o.Key.Split('/').Last().Split('_')[1]).ToDictionary(cs => cs);
     
-    var tostage = uniques.Where(s => !existing.ContainsKey(s.Checksum)).ToList();
-    await tostage.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
-
-    Console.WriteLine($"\n\n\n\nSTAGING[{staged.Count()}] UNIQUES[{uniques.Count}] EXISTING[{existing.Count}] TOSTAGE[{tostage.Count}]");
+    var tostage = staged.Where(s => !existing.ContainsKey(s.Checksum)).ToList();
+    await tostage.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
+    
     return tostage;
   }
   
   public override async Task Update(IEnumerable<StagedEntity> staged) {
-    var lst = staged.Select(se => se.ToS3StagedEntity()).ToList();
-    await lst.Select(s3se => Client.PutObjectAsync(s3se.ToPutObjectRequest(bucket))).ChunkedSynchronousCall(5);
+    await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
@@ -95,30 +87,23 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
       (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
         Prefix = $"{source.Value}/{obj.Value}" })).S3Objects;
-
-}
-
-// todo: is this class still required?  can just use an exntesion method for ToPutObjectRequest
-public record S3StagedEntity(Guid Id, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) 
-    : StagedEntity(Id, SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore) {
   
-  public string Key => $"{SourceSystem.Value}/{Object.Value}/{DateStaged:o}_{Checksum}_{Id}";
-  
-  public PutObjectRequest ToPutObjectRequest(string bucket) {
+  public PutObjectRequest ToPutObjectRequest(StagedEntity se) {
     var req = new PutObjectRequest { 
       BucketName = bucket, 
-      Key = Key, 
-      ContentBody = Data
+      Key = AwsStagedEntityStoreHelpers.ToS3Key(se), 
+      ContentBody = se.Data
     };
-    if (DatePromoted is not null) req.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] = $"{DatePromoted:o}";
-    if (Ignore is not null) { req.Metadata[S3StagedEntityStore.IGNORE_META_KEY] = Ignore; }
+    if (se.DatePromoted is not null) req.Metadata[DATE_PROMOTED_META_KEY] = $"{se.DatePromoted:o}";
+    if (se.Ignore is not null) { req.Metadata[IGNORE_META_KEY] = se.Ignore; }
     return req;
   }
+
 }
 
 internal static class S3StagedEntityStore_StagedEntityExtensions {
   
-  public static async Task<S3StagedEntity> FromS3Response(this GetObjectResponse r) {
+  public static async Task<StagedEntity> FromS3Response(this GetObjectResponse r) {
     if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
     
     var (source, obj, staged_checksum_id, _) = r.Key.Split('/');
@@ -131,11 +116,6 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return new S3StagedEntity(Guid.Parse(id), source, obj, DateTime.Parse(staged).ToUniversalTime(), data, checksum, promoted);
-  }
-  
-  public static S3StagedEntity ToS3StagedEntity(this StagedEntity se) {
-    return se as S3StagedEntity ?? 
-        new S3StagedEntity(se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data, se.Checksum, se.DatePromoted, se.Ignore);
+    return new StagedEntity(Guid.Parse(id), source, obj, DateTime.Parse(staged).ToUniversalTime(), data, checksum, promoted);
   }
 }

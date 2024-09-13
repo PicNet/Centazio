@@ -9,10 +9,9 @@ namespace Centazio.Providers.Aws.Stage;
 public static class DynamoStagedEntityExtensionMethods {
 
   public static Dictionary<string, AttributeValue> ToDynamoDict(this StagedEntity e) {
-    var dse = (DynamoStagedEntity) e;
     var dict = new Dictionary<string, AttributeValue> {
-      { DynamoHelpers.HASH_KEY, new AttributeValue(DynamoHelpers.ToHashKey(dse.SourceSystem, dse.Object)) },
-      { DynamoHelpers.RANGE_KEY, new AttributeValue(DynamoHelpers.ToRangeKey(dse.DateStaged, dse.Id)) },
+      { AwsStagedEntityStoreHelpers.HASH_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoHashKey(e.SourceSystem, e.Object)) },
+      { AwsStagedEntityStoreHelpers.RANGE_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoRangeKey(e.DateStaged, e.Id)) },
       { nameof(e.Checksum), new AttributeValue(e.Checksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
     };
@@ -21,11 +20,11 @@ public static class DynamoStagedEntityExtensionMethods {
     return dict;
   }
   
-  public static IList<DynamoStagedEntity> AwsDocumentsToDynamoStagedEntities(this IEnumerable<Document> docs) {
+  public static IList<StagedEntity> AwsDocumentsToDynamoStagedEntities(this IEnumerable<Document> docs) {
     return docs.Select(d => {
-      var (system, entity, _) = d[DynamoHelpers.HASH_KEY].AsString().Split('|');
-      var (staged, suffix, _) = d[DynamoHelpers.RANGE_KEY].AsString().Split('|');
-      return new DynamoStagedEntity(
+      var (system, entity, _) = d[AwsStagedEntityStoreHelpers.HASH_KEY].AsString().Split('|');
+      var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.RANGE_KEY].AsString().Split('|');
+      return new StagedEntity(
           Guid.Parse(suffix),
           system, 
           entity, 
@@ -37,7 +36,3 @@ public static class DynamoStagedEntityExtensionMethods {
       }).ToList();
   }
 }
-
-// todo: is this still required?
-public record DynamoStagedEntity(Guid Id, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, string Data, string Checksum, DateTime? DatePromoted = null, string? Ignore = null) 
-    : StagedEntity(Id, SourceSystem, Object, DateStaged, Data, Checksum, DatePromoted, Ignore);

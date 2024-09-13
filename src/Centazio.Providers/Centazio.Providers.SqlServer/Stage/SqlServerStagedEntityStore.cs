@@ -38,11 +38,9 @@ END
     return this;
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> StageImpl(IEnumerable<StagedEntity> staged) {
-    var sqlstaged = staged.Select(SqlServerStagedEntity.FromStagedEntity).ToList();
-    if (!sqlstaged.Any()) return sqlstaged;
+  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     // all staged entities will have the same DateStaged so just use first as the id of this bulk insert
-    var dtstaged = sqlstaged.First().DateStaged;
+    var dtstaged = staged.First().DateStaged;
     await using var conn = newconn();
     await conn.ExecuteAsync($@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
 USING (VALUES (@Id, @SourceSystem, @Object, @DateStaged, @Data, @Checksum))
@@ -55,9 +53,9 @@ WHEN NOT MATCHED THEN
  INSERT (Id, SourceSystem, Object, DateStaged, Data, Checksum)
  VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data, se.Checksum)
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
-;", sqlstaged);
+;", staged.Select(e => (StagedEntityRaw) e).ToList());
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
-    return sqlstaged.Where(e => ids.ContainsKey(e.Id));
+    return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
 
   public override async Task Update(IEnumerable<StagedEntity> staged) {
@@ -76,7 +74,8 @@ WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore;",
     await using var conn = newconn();
     var limit = Limit > 0 ? $" TOP {Limit}" : "";
     var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
-    return await conn.QueryAsync<SqlServerStagedEntity>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL {promotedpredicate} ORDER BY DateStaged", new { since = after });
+    return (await conn.QueryAsync<StagedEntityRaw>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL {promotedpredicate} ORDER BY DateStaged", new { since = after }))
+        .Select(e => (StagedEntity) e).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {

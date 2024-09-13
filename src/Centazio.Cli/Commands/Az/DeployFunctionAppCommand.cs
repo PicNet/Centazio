@@ -15,7 +15,6 @@ public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazi
         // ResourceGroupName = UiHelpers.Ask("Function Name", clisetts.AzureSettings?.Functions) 
       });
 
-  // todo: implement
   protected override async Task ExecuteImpl(DeployFunctionAppCommandSettings settings) {
     // ArgumentException.ThrowIfNullOrWhiteSpace(settings.ResourceGroupName);
     // await UiHelpers.ProgressWithErrorMessage("Loading resource group list", async () => await impl.AddResourceGroup(settings.ResourceGroupName));
@@ -25,9 +24,11 @@ public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazi
     var app = (await rg.GetWebSiteAsync("your-function-app-name")).Value;
     var function = (await app.GetSiteFunctions().GetAsync("func-name")).Value;
     var op = (await function.UpdateAsync(WaitUntil.Completed, new FunctionEnvelopeData {
-      // todo
+      
     })).Value;
     if (op == null) throw new Exception($"");
+    
+    throw new NotImplementedException();
 
   }
 
