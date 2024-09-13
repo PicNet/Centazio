@@ -41,26 +41,24 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   public Task Update(StagedEntity staged) => Update(new [] { staged });
   public abstract Task Update(IEnumerable<StagedEntity> staged);
 
-  public async Task<List<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, true))
-      // todo: remove this and add to unit tests to ensure implementations are correct
-      .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj)
-      .OrderBy(s => s.DateStaged)
-      .Take(Limit)
-      .ToList();
+  // todo: this should return IEnumerable to allow providers to stream data
+  public async Task<List<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, true)).ToList();
   
-  // gurantee that staged entities are returned only if > after and
-  // sorted correctly even if implementation is wrong
-  // todo: remove this and add to unit tests to ensure implementations are correct
-  public async Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, false))
-      .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj)
-      .OrderBy(s => s.DateStaged)
-      .Take(Limit)
-      .ToList();
+  // todo: this should return IEnumerable to allow providers to stream data
+  public async Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj) => (await GetImpl(after, source, obj, false)).ToList();
+
+  /// <summary>
+  /// Implementing providers must ensure the following:
+  /// - Only data where DateStaged > after is returned
+  /// - Data is returned sorted in ascending order by DateStaged (oldest to newest)
+  /// - If Limit is specified, at most that number of records is returned.  Note: This is a performance
+  ///   feature and the provider should ensure they only query the underlying data source for maximum this
+  ///   amount of records. 
+  /// </summary>
+  protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted);
   
   public async Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, true);
   public async Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, false);
-  
-  protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted);
   protected abstract Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted);
   
   public abstract ValueTask DisposeAsync();

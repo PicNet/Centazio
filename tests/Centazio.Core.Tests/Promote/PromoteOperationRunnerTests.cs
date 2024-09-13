@@ -6,7 +6,7 @@ using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
 using F = Centazio.Core.Tests.TestingFactories;
 
-namespace Centazio.Core.Tests.Read;
+namespace Centazio.Core.Tests.Promote;
 
 public class PromoteOperationRunnerTests {
 

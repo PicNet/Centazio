@@ -72,9 +72,20 @@ WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore;",
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
     await using var conn = newconn();
-    var limit = Limit > 0 ? $" TOP {Limit}" : "";
+    var limit = Limit > 0 ? $"TOP {Limit}" : "";
     var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
-    return (await conn.QueryAsync<StagedEntityRaw>($"SELECT{limit} * FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged > @since AND Ignore IS NULL {promotedpredicate} ORDER BY DateStaged", new { since = after }))
+    var sql = @$"
+SELECT {limit} * 
+FROM {SCHEMA}.{STAGED_ENTITY_TBL} 
+WHERE 
+  DateStaged > @after
+  AND SourceSystem = @source
+  AND Object = @obj  
+  AND Ignore IS NULL 
+  {promotedpredicate} 
+ORDER BY DateStaged
+";
+    return (await conn.QueryAsync<StagedEntityRaw>(sql, new { after, source, obj }))
         .Select(e => (StagedEntity) e).ToList();
   }
 

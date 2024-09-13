@@ -8,6 +8,7 @@
 
 - code todos
 - replace all dt.Now.AddYear(-1) with dt.Today which is a bit tidier
+- unit test to scan code for invalid namespaces
 
 - CLI:
 

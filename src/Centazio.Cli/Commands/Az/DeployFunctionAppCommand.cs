@@ -23,9 +23,7 @@ public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazi
     var rg = (await client.GetResourceGroupResource(new ResourceIdentifier($"/subscriptions/your-subscription-id/resourceGroups/your-resource-group-name")).GetAsync()).Value;
     var app = (await rg.GetWebSiteAsync("your-function-app-name")).Value;
     var function = (await app.GetSiteFunctions().GetAsync("func-name")).Value;
-    var op = (await function.UpdateAsync(WaitUntil.Completed, new FunctionEnvelopeData {
-      
-    })).Value;
+    var op = (await function.UpdateAsync(WaitUntil.Completed, new FunctionEnvelopeData())).Value;
     if (op == null) throw new Exception($"");
     
     throw new NotImplementedException();
