@@ -155,7 +155,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     if (!results.Any()) { return; }
     
     var batch = tbl.CreateBatchWrite();
-    results.ForEachIdx(d => batch.AddItemToDelete(d));
+    GlobalEnumerableExtensionMethods.ForEach(results, d => batch.AddItemToDelete(d));
     await batch.ExecuteAsync();
   }
 

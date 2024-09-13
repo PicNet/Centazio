@@ -26,7 +26,7 @@ public class AbstractFunctionStaticHelperTests {
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg.Operations, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
-    Enumerable.Range(0, 4).ForEachIdx(TestAtIndex);
+    Enumerable.Range(0, 4).ForEach(TestAtIndex);
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();

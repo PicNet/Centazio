@@ -3,11 +3,31 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.EntitySysMapping;
 
+public abstract record NewEntityIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
+  public EntityIntraSystemMapping CreateEntityIntraSystemMapping() => new(
+      CoreEntity.GetType().Name, 
+      CoreEntity.Id, 
+      CoreEntity.SourceSystem, 
+      CoreEntity.SourceId, 
+      TargetSystem, 
+      TargetId, 
+      Status, 
+      UtcDate.UtcNow,
+      null,
+      Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : null);
+}
+public record NewSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : 
+    NewEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
+
+public record UpdateEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status, string? Error = null);
+
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   
-  // todo: Upsert should be split into create/update so we can automatically set DateCreate/DateUpdated, etc.
-  Task Upsert(EntityIntraSystemMapping map);
-  Task Upsert(IEnumerable<EntityIntraSystemMapping> maps);
+  Task<EntityIntraSystemMapping> Create(NewEntityIntraSystemMapping create);
+  Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<NewEntityIntraSystemMapping> maps);
+  
+  Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping map);
+  Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> maps);
   
   Task<List<EntityIntraSystemMapping>> Get();
   
@@ -39,9 +59,12 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
 
 public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystemMappingStore {
   
-  public Task Upsert(EntityIntraSystemMapping map) => Upsert([map]);
+  public async Task<EntityIntraSystemMapping> Create(NewEntityIntraSystemMapping create) => (await Create([create])).Single();
+  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<NewEntityIntraSystemMapping> creates);
   
-  public abstract Task Upsert(IEnumerable<EntityIntraSystemMapping> maps);
+  public async Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping update) => (await Update([update])).Single();
+  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates);
+  
   public abstract Task<List<EntityIntraSystemMapping>> Get();
   public abstract Task<List<string>> FilterOutBouncedBackIds<C>(SystemName thissys, List<string> ids) where C : ICoreEntity;
   

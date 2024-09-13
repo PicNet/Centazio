@@ -9,7 +9,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
   protected readonly List<StagedEntity> saved = [];
 
   public override Task Update(IEnumerable<StagedEntity> staged) {
-    staged.ForEachIdx(s => {
+    staged.ForEach(s => {
       var idx = saved.FindIndex(e => e.SourceSystem == s.SourceSystem && e.Object == s.Object && e.Id == s.Id);
       if (idx < 0) throw new Exception($"could not find StagedEntity[{s.Id}]");
       saved[idx] = s;
@@ -23,7 +23,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
     var lst = staged.Where(e => !checksums.ContainsKey(e.Checksum) && newchecksums.TryAdd(e.Checksum, true)).ToList();
     
     saved.AddRange(lst);
-    newchecksums.Keys.ForEachIdx(cs => checksums.Add(cs, true));
+    newchecksums.Keys.ForEach(cs => checksums.Add(cs, true));
     
     return Task.FromResult(lst);
   }

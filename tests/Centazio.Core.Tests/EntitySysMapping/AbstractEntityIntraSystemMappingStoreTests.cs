@@ -15,46 +15,42 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
   [TearDown] public async Task TearDown() => await store.DisposeAsync();
 
   [Test] public async Task Test_upsert_single() {
-    var original = new EntityIntraSystemMapping(STR, STR, STR, STR, STR, STR, EEntityMappingStatus.Success, UtcDate.UtcNow); 
-    await store.Upsert(original);
+    var core = TestingFactories.NewCoreCust(STR, STR);
+    var original = new NewSuccessIntraSystemMapping(core, STR, STR); 
+    var created = await store.Create(original);
     var list1 = await store.Get();
-    var updated = original with { Status = EEntityMappingStatus.Error };
-    await store.Upsert(updated);
+    var updated = await store.Update(new UpdateEntityIntraSystemMapping(created.Key, EEntityMappingStatus.Error));
     var list2 = await store.Get();
-    var changedkey = original with { TargetSystem = STR2 };
-    await store.Upsert(changedkey);
-    var list3 = await store.Get();
     
-    Assert.That(list1, Is.EquivalentTo(new [] { original }));
-    Assert.That(list2, Is.EquivalentTo(new [] { updated }));
-    Assert.That(list3, Is.EquivalentTo(new [] { updated, changedkey }));
+    Assert.That(list1, Is.EquivalentTo(new [] { created }));
+    var exp = created with { Status = EEntityMappingStatus.Error, DateUpdated = UtcDate.UtcNow };
+    Assert.That(updated, Is.EqualTo(exp));
+    Assert.That(list2, Is.EquivalentTo(new [] { exp }));
   }
   
   [Test] public async Task Test_upsert_enum() {
     var original = new [] { 
-      new EntityIntraSystemMapping(STR, STR, STR, STR, STR, STR, EEntityMappingStatus.Success, UtcDate.UtcNow),
-      new EntityIntraSystemMapping(STR2, STR2, STR2, STR2, STR2, STR2, EEntityMappingStatus.Orphaned, UtcDate.UtcNow)
+      new NewSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR, STR), STR, STR),
+      new NewSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2)
     }; 
-    await store.Upsert(original);
+    var created = (await store.Create(original)).ToList();
     var list1 = await store.Get();
-    var updated = original.Select(e => e with { Status = EEntityMappingStatus.Error }).ToList();
-    await store.Upsert(updated);
+    var updatecmd = created.Select(e => new UpdateEntityIntraSystemMapping(e.Key, EEntityMappingStatus.Error )).ToList();
+    var updated2 = (await store.Update(updatecmd)).ToList();
     var list2 = await store.Get();
-    var changedkey = updated.ToList();
-    changedkey[0] = changedkey[0] with { TargetSystem = "***" }; 
-    await store.Upsert(changedkey);
-    var list3 = await store.Get();
-    
-    Assert.That(list1, Is.EquivalentTo(original));
-    Assert.That(list2, Is.EquivalentTo(updated));
-    Assert.That(list3, Is.EquivalentTo(updated.Concat(changedkey.Take(1))));
+    var exp = created.Select(e => e with { DateUpdated = UtcDate.UtcNow, Status = EEntityMappingStatus.Error }).ToList();
+        
+    Assert.That(list1, Is.EquivalentTo(created));
+    Assert.That(updated2, Is.EquivalentTo(exp));
+    Assert.That(list2, Is.EquivalentTo(exp));
   }
   
   [Test] public async Task Test_FilterOutBouncedBackIds() {
     // testing this scenario: https://sequencediagram.org/index.html#initialData=C4S2BsFMAIGECUCy0C0A+aAxEA7AhjgMYh7gDOAXNAEID2ArkTNXoQNbQDKeAtgA5QAUAmTo4SKgEkcAN1ohCMABQiAjACYAzAEpohAE6Q8wSABNhSVBliQcwPAC8QtKbPmLoKpBp3Qy9gHMzYVt7J1p0GztHZ1c5BRg+fVoeWhNzKLDndGx8IhJyOPcYAHd9MBMcTzUtaAAjSEIUyDIsXE11VWhcNrziUjJtAB0cAFE7MABPRDw+PlwAr0QAGmhJH1XczfbO7UFcgn7ySNCYl16Orv88IIzT8JPo8KkAnFpDaCSUtIWLzug8K0wK08NBTPQBApjJAAHQjAAitBwMDqkz0AAtGmxfuNQMBprN5jgAtAAGbvXrLXKXIA
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
-    await store.Upsert(new EntityIntraSystemMapping(nameof(CoreCustomer), "coreid", "CRM", "CRM123", "FIN", "FIN321", EEntityMappingStatus.Success, UtcDate.UtcNow));
+    var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
+    await store.Create(new NewSuccessIntraSystemMapping(core, "FIN", "FIN321"));
     var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
     var filtered = await store.FilterOutBouncedBackIds<CoreCustomer>("FIN", ids);

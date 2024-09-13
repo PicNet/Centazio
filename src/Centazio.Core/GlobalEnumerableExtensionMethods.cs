@@ -2,11 +2,11 @@
 
 public static class GlobalEnumerableExtensionMethods {
 
-  public static void ForEachIdx<T>(this IEnumerable<T> e, Action<T> action) {
+  public static void ForEach<T>(this IEnumerable<T> e, Action<T> action) {
     foreach (var t in e) action(t);
   }
   
-  public static void ForEachIdx<T>(this IEnumerable<T> e, Action<T, int> action) {
+  public static void ForEach<T>(this IEnumerable<T> e, Action<T, int> action) {
     var lst = e.ToList();
     for (var i = 0; i < lst.Count; i++) action(lst[i], i);
   }

@@ -20,7 +20,7 @@ internal class DummyCrmApi {
     var start = customers.Count;
     var missing = expcount - start;
     Enumerable.Range(0, missing)
-        .ForEachIdx(missidx => {
+        .ForEach(missidx => {
           var idx = start + missidx;
           customers.Add(NewCust(idx));
         });

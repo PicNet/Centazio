@@ -32,7 +32,7 @@ internal class CliBootstrapper {
     
     GetType().Assembly.GetTypes()
         .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
-        .ForEachIdx(t => {
+        .ForEach(t => {
           svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
           svcs.AddSingleton(t);
         });

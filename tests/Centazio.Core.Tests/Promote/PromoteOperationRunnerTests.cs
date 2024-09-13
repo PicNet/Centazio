@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
+﻿using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Core.Tests.CoreRepo;
@@ -73,7 +72,8 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var store = F.EntitySysMap();
-    await store.Upsert(new EntityIntraSystemMapping(nameof(CoreCustomer), "coreid", "CRM", "CRM123", "FIN", "FIN321", EEntityMappingStatus.Success, UtcDate.UtcNow));
+    var core = F.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
+    await store.Create(new NewSuccessIntraSystemMapping(core, "FIN", "FIN321"));
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
     var entities = new List<CoreCustomer> {
       F.NewCoreCust("N", "N", "FIN1"),
