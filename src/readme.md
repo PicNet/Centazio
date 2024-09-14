@@ -82,6 +82,8 @@ public sealed record StagedEntity {
 
 - Any change of internal state should be done using mutator methods that return a new instance of the mutated object
 - Fields that do require mutation will need `private` `init` only setters
+- These mutators and factory methods should handle all internal infrastructure logic such as setting the
+created/updated dates, etc.
 ```
 public sealed record StagedEntity {
   ...

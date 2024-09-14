@@ -26,18 +26,18 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems, Is.Empty);
     var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add((NAME, NAME), new SystemState(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle));
+    repo.Systems.Add((NAME, NAME), (SystemState) new SystemState.Dto(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()));
     
     var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle)));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString())));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("inactive"));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
@@ -47,28 +47,28 @@ public class FunctionRunnerTests {
     var count = 10;
     var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new SimpleFunction(count), oprunner, repo).RunFunction();
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
     Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult(""))));
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add((NAME, NAME), new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running, LastStarted: UtcDate.UtcNow));
+    repo.Systems.Add((NAME, NAME), (SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow));
     
     var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running, LastStarted: UtcDate.UtcNow)));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("not idle"));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
-    repo.Systems.Add((NAME, NAME), new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running, LastStarted: UtcDate.UtcNow.AddHours(-1)));
+    repo.Systems.Add((NAME, NAME), (SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)));
     var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new SimpleFunction(1), oprunner, repo).RunFunction();
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle, UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo("success"));
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult("") }));

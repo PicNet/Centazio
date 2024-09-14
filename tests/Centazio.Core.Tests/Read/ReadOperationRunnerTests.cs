@@ -29,7 +29,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new ErrorReadOperationResult(""),
         actual,
-        new SystemState(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
+        (SystemState) new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
@@ -41,7 +41,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new EmptyReadOperationResult(""),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle));
+        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()));
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
@@ -53,7 +53,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new SingleRecordReadOperationResult(actual.Payload, ""),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
+        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
@@ -66,7 +66,7 @@ public class ReadOperationRunnerTests {
     ValidateResult(
         new ListRecordsReadOperationResult(actual.PayloadList, ""),
         actual,
-        new SystemState(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle) );
+        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {

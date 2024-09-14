@@ -19,7 +19,7 @@ public class InMemoryCtlRepository : ICtlRepository {
   public Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     var key = (system, stage);
     if (systems.ContainsKey(key)) throw new Exception($"SystemState [{key}] already exists");
-    return Task.FromResult(systems[key] = new SystemState(system, stage, true, UtcDate.UtcNow, ESystemStateStatus.Idle));
+    return Task.FromResult(systems[key] = SystemState.Create(system, stage, true, ESystemStateStatus.Idle));
   }
 
   public Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj)

@@ -35,7 +35,7 @@ public record ObjectState(
     public int? LastPayLoadLength { get; init; }
     public string? LastRunException { get; init; }
     
-    public static explicit operator ObjectState(ObjectState.Dto dto) => new(
+    public static explicit operator ObjectState(Dto dto) => new(
         dto.System ?? throw new ArgumentNullException(nameof(System)),
         dto.Stage ?? throw new ArgumentNullException(nameof(Stage)),
         dto.Object ?? throw new ArgumentNullException(nameof(Object)),

@@ -34,7 +34,7 @@ public class FunctionRunner<T, R>(
     
     try {
       // not setting last start here as we need the LastStart to represent the time the function was started before this run
-      state = await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Running, DateUpdated = UtcDate.UtcNow  });
+      state = await ctl.SaveSystemState(state.Running());
       var results = await func.RunOperation(oprunner, ctl);
       await SaveCompletedState();
       return new FunctionRunResults<R>("success", results);
@@ -44,7 +44,7 @@ public class FunctionRunner<T, R>(
       return new FunctionRunResults<R>($"error: {ex.Message}", Array.Empty<R>());
     }
 
-    async Task SaveCompletedState() => await ctl.SaveSystemState(state with { Status = ESystemStateStatus.Idle, LastStarted = start, LastCompleted = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow });
+    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
 }
 

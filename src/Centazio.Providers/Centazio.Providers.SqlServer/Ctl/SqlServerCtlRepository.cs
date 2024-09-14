@@ -67,17 +67,16 @@ END
 
   public async Task<SystemState> SaveSystemState(SystemState state) {
     await using var conn = newconn();
-    var updated = state with { DateUpdated = UtcDate.UtcNow };
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{SYSTEM_STATE_TBL} 
 SET Active=@Active, Status=@Status, DateUpdated=@DateUpdated, LastStarted=@LastStarted, LastCompleted=@LastCompleted
-WHERE System=@System AND Stage=@Stage", updated);
-    return count == 0 ? throw new Exception("SaveSystemState failed") : updated;
+WHERE System=@System AND Stage=@Stage", state);
+    return count == 0 ? throw new Exception("SaveSystemState failed") : state;
   }
   
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var created = new SystemState(system, stage, true, UtcDate.UtcNow, ESystemStateStatus.Idle);
+    var created = SystemState.Create(system, stage, true, ESystemStateStatus.Idle);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{SYSTEM_STATE_TBL} 
 (System, Stage, Active, Status, DateCreated)

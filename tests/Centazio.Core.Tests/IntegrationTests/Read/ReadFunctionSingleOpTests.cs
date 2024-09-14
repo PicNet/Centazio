@@ -64,7 +64,7 @@ public class ReadFunctionSingleOpTests {
     Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, 1)));
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
-    SystemState SS(DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
+    SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
     ObjectState OS(DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
         updated, updated, updated, updated, updated, "operation [CRM/Read/CrmCustomer] completed [Success] message: ", len) { 
       LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty 
