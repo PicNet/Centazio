@@ -61,7 +61,7 @@ END
   
   public async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<SystemStateRaw>($"SELECT * FROM {SCHEMA}.{SYSTEM_STATE_TBL} WHERE System=@System AND Stage=@Stage", new { System=system, Stage=stage });
+    var raw = await conn.QuerySingleOrDefaultAsync<SystemState.Dto>($"SELECT * FROM {SCHEMA}.{SYSTEM_STATE_TBL} WHERE System=@System AND Stage=@Stage", new { System=system, Stage=stage });
     return raw == null ? null : (SystemState) raw;
   }
 
@@ -88,7 +88,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
 
   public async Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
     await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<ObjectStateRaw>(@$"
+    var raw = await conn.QuerySingleOrDefaultAsync<ObjectState.Dto>(@$"
 SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
 WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, system.Stage, Object=obj });
     return raw == null ? null : (ObjectState) raw;

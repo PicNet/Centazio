@@ -55,47 +55,80 @@
 Data integration is all about getting data from one source, converting it and writing it to another target.  This source
 or target could be an API, database, files, etc. and the quality and reliability of the data and its schema cannot be 
 trusted.  As such, you should *not* assume that fields exist, have valid values, etc. when reading data from an external
-source.  A pattern used in Centazio to handle this is to have the concept of `Raw` objects which are then converted
-to their expected types with all required validation.  For instance, when reading the `SystemState` from a staging store, 
-since this entity may need to be deserialised, and deserialisation skips most init time validations we need to use the 
-following steps:
+source.  A pattern used in Centazio to handle this is to have the concept of `Dto` objects which are then converted
+to their expected types with all required validation.  
 
-- Deserialise the entity into a `Raw` dto.  This dto needs to have all fields nullable:
+This pattern has the following characteristics:
+- Main record type should have a private constructor with the minimal set of fields required for creation of the record
+- Since there is no private primary constructors, all properties must be declared (with no setters)
 ```
-public record SystemStateRaw {
-  // all fields nullable
-  
-  public string? System { get; init; }
-  public string? Stage { get; init; }
-  public bool? Active { get; init; } 
+public sealed record StagedEntity {
+  public Guid Id { get; }
+  public SystemName SourceSystem { get; }
+  public ObjectName Object { get; }
   ...
-  
-  // validity of fields is done here  
-  public static explicit operator SystemState(SystemStateRaw raw) => new(
-      raw.System ?? throw new ArgumentNullException(nameof(System)), 
-      raw.Stage ?? throw new ArgumentNullException(nameof(Stage)), 
-      raw.Active ?? throw new ArgumentNullException(nameof(Active)),
-      ...);
 }
-
-// usage
-var raw = JsonSerializer.Deserialize<SystemStateRaw>(json);
 ```
 
-- Use the explicit casting operator override to properly validate the deserialised entity:
+- A `public static` factory `Create` method needs to be added to set these minimal fields.  This factory method should
+do all required data and field validation.  However, complex validations should be avoided and custom factory methods
+should be provided to provide support for different creation scenarios.
 ```
-public record SystemState (
-    // fields no longer nullable, and correct data types used
-    
-    SystemName System, 
-    LifecycleStage Stage, 
-    bool Active,
-    ...);
-    
-var state = (SystemState) raw; // forces validation (explicit operator override)
+public sealed record StagedEntity {
+  ...
+  public static StagedEntity Create(SystemName source, ObjectName obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
+  ...
 ```
-- This `state` object can now be trusted to have valid contents.
 
-This pattern also allows you to apply any required transformations when creating the final entities.  For instance, it
-is possible that the source/sink may not support enumeration serialisation, so these could be stored as strings in these
-systems and then converted to an `Enum` in the explicit operator override.
+- Any change of internal state should be done using mutator methods that return a new instance of the mutated object
+- Fields that do require mutation will need `private` `init` only setters
+```
+public sealed record StagedEntity {
+  ...
+  public DateTime? DatePromoted { get; private init; }
+  ...
+  public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
+  ...
+```
+
+- Deserialise and serialisation shoud be done via an inner `Dto` class
+- This class must be an inner class to access the private init only setters
+- This class needs a parameterless constructor and all fields must be nullable
+```
+public sealed record StagedEntity {
+  ...
+  public record Dto {
+    public Guid? Id { get; init; }
+    ...
+  }
+```
+
+- Explicit cast operator overrides can then be used to convert between this `Dto` and main record type.  
+- All field validation must happen in these methods
+```
+  public sealed record StagedEntity {
+  ...
+  public record Dto {
+    public static explicit operator StagedEntity(Dto dto) => new(...) { ... };
+    public static explicit operator Dto(StagedEntity se) => new { ... };    
+  }
+```
+
+- This pattern allows Enums to be serialised/deserialised as strings and converted to Enums in the converter methods
+and other more complex transformations and validations.
+- See `StagedEntity.cs` for an implementation example of this pattern
+
+- Example consumption of this pattern:
+```
+// serialise StagedEntity as StagedEntity.Dto
+JsonSerializer.Serialize(staged.Select(e => (StagedEntity.Dto)e));
+
+// deserialise from unsafe StagedEntity.Dto to StagedEntity
+JsonSerializer.Deserialize<List<StagedEntity.Dto>>(json).Select(e => (StagedEntity) e).ToList()
+```
+
+- For unit tests that require modifying inner state to test edge cases then this `Dto` can also be used to circumvent
+these safety measures:
+```
+var x = (StagedEntity) new StagedEntity.Dto { ... };
+```

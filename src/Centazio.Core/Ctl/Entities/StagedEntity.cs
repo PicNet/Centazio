@@ -1,7 +1,7 @@
 ﻿namespace Centazio.Core.Ctl.Entities;
 
 public sealed record StagedEntity {
-
+  
   public static StagedEntity Create(SystemName source, ObjectName obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(string reason) => this with { IgnoreReason = !String.IsNullOrWhiteSpace(reason.Trim()) ? reason.Trim() : throw new ArgumentNullException(nameof(reason)) };

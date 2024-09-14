@@ -25,7 +25,7 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
   }
 
   internal static async Task<IReadOnlyList<OperationStateAndConfig<T>>> LoadOperationsStates(ValidList<T> ops, SystemState system, ICtlRepository ctl) {
-    return (await Task.WhenAll(ops.Value.Select(async op => new OperationStateAndConfig<T>(await ctl.GetOrCreateObjectState(system, op.Object), op))))
+    return (await ops.Value.Select(async op => new OperationStateAndConfig<T>(await ctl.GetOrCreateObjectState(system, op.Object), op)).Synchronous())
         .Where(op => op.State.Active)
         .ToList();
   }

@@ -73,10 +73,10 @@ public abstract class StagedEntityStoreDefaultTests {
     store.Limit = pgsz;
     var ordered = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => dt.Tick()).ToList();
     var random = ordered.OrderBy(_ => Guid.NewGuid()).ToList();
-    await Task.WhenAll(random.Select((rand, idx) => {
+    await random.Select((rand, idx) => {
       using var _ = new ShortLivedUtcDateOverride(rand);
       return store.Stage(NAME, NAME, idx.ToString()) ?? throw new Exception();
-    }));
+    }).Synchronous();
     var start = TestingDefaults.DefaultStartDt;
     for (var pgstart = 0; pgstart < LARGE_BATCH_SIZE; pgstart+=pgsz) {
       var page = (await store.GetAll(start, NAME, NAME)).ToList();
