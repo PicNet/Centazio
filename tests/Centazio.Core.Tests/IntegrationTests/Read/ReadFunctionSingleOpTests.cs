@@ -69,7 +69,7 @@ public class ReadFunctionSingleOpTests {
         updated, updated, updated, updated, updated, "operation [CRM/Read/CrmCustomer] completed [Success] message: ", len) { 
       LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty 
     };
-    StagedEntity SE(Guid? id = null) => new(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
+    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
   }
 }
 

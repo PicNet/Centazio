@@ -33,7 +33,7 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
 
   public async Task<IEnumerable<StagedEntity>> Stage(SystemName source, ObjectName obj, IEnumerable<string> datas) {
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
-    var ses = datas.Distinct().Select(data => new StagedEntity(Guid.CreateVersion7(), source, obj, now, data, checksum(data))).ToList();
+    var ses = datas.Distinct().Select(data => StagedEntity.Create(source, obj, now, data, checksum(data))).ToList();
     if (!ses.Any()) return ses;
     return await StageImpl(ses);
   }

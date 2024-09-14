@@ -127,7 +127,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       FilterExpression = new() {
         ExpressionStatement = $"attribute_not_exists(#ignore_attr)",
         ExpressionAttributeNames = new() {
-          { "#ignore_attr", nameof(StagedEntity.Ignore)}
+          { "#ignore_attr", nameof(StagedEntity.IgnoreReason)}
         }
       }
     };

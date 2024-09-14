@@ -97,66 +97,6 @@ public record ObjectState(
   public EResultType LastPayLoadType { get; init; }
 }
 
-public record StagedEntityRaw {
-  public Guid? Id { get; init; }
-  public string? SourceSystem { get; init; }
-  public string? Object { get; init; }
-  public DateTime? DateStaged { get; init; }
-  public string? Data { get; init; }
-  public string? Checksum { get; init; }
-  public DateTime? DatePromoted { get; init; }
-  public string? Ignore { get; init; }
-  
-  public static explicit operator StagedEntity(StagedEntityRaw raw) => new(
-      raw.Id ?? throw new ArgumentNullException(nameof(Id)),
-      raw.SourceSystem ?? throw new ArgumentNullException(nameof(SourceSystem)),
-      raw.Object ?? throw new ArgumentNullException(nameof(Object)),
-      raw.DateStaged ?? throw new ArgumentNullException(nameof(DateStaged)),
-      raw.Data ?? throw new ArgumentNullException(nameof(Data)),
-      raw.Checksum ?? throw new ArgumentNullException(nameof(Checksum)),
-      raw.DatePromoted,
-      raw.Ignore);
-  
-  public static explicit operator StagedEntityRaw(StagedEntity se) => new() {
-    Id = se.Id,
-    SourceSystem = se.SourceSystem.Value,
-    Object = se.Object.Value,
-    DateStaged = se.DateStaged,
-    Data = se.Data.Value,
-    Checksum = se.Checksum.Value,
-    DatePromoted = se.DatePromoted,
-    Ignore = se.Ignore
-  };
-}
-
-
-public record StagedEntity {
-  
-  public StagedEntity(Guid Id, SystemName SourceSystem, ObjectName Object, DateTime DateStaged, ValidString Data, ValidString Checksum, DateTime? DatePromoted = null, string? Ignore = null) {
-    this.Id = Id;
-    this.SourceSystem = SourceSystem;
-    this.Object = Object;
-    this.DateStaged = DateStaged;
-    this.Data = Data;
-    this.Checksum = Checksum;
-    this.DatePromoted = DatePromoted;
-    this.Ignore = Ignore;
-  }
-  
-  public Guid Id { get; }
-  public SystemName SourceSystem { get; }
-  public ObjectName Object { get; }
-  public DateTime DateStaged { get; }
-  public DateTime? DatePromoted { get; init; }
-  public ValidString Checksum { get; }
-  
-  // need the backing fields to support object initializers and the `with` syntax which cannot have validators
-  private readonly string data = "";
-  private readonly string? ignore;
-  public ValidString Data { get => data; init => data = value; }
-  public string? Ignore { get => ignore; init => ignore = String.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
-}
-
 public record EntityIntraSystemMappingRaw {
   public string? CoreEntity { get; init; }
   public string? CoreId { get; init; }

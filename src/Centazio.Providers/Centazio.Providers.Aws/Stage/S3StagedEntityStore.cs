@@ -96,7 +96,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
       ContentBody = se.Data
     };
     if (se.DatePromoted is not null) req.Metadata[DATE_PROMOTED_META_KEY] = $"{se.DatePromoted:o}";
-    if (se.Ignore is not null) { req.Metadata[IGNORE_META_KEY] = se.Ignore; }
+    if (se.IgnoreReason is not null) { req.Metadata[IGNORE_META_KEY] = se.IgnoreReason; }
     return req;
   }
 
@@ -115,6 +115,6 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return new StagedEntity(details.Id, details.System, details.Object, details.DateStaged.ToUniversalTime(), data, details.Checksum, promoted);
+    return (StagedEntity) new StagedEntity.Dto(details.Id, details.System, details.Object, details.DateStaged.ToUniversalTime(), data, details.Checksum, promoted);
   }
 }

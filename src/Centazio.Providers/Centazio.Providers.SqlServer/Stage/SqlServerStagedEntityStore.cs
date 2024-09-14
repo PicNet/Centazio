@@ -29,7 +29,7 @@ BEGIN
     Data nvarchar (max) NOT NULL,
     Checksum nvarchar (64) NOT NULL,
     DatePromoted datetime2 NULL,
-    Ignore nvarchar (256) NULL)
+    IgnoreReason nvarchar (256) NULL)
 
 ALTER TABLE {SCHEMA}.{STAGED_ENTITY_TBL} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
 CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON {SCHEMA}.{STAGED_ENTITY_TBL} (SourceSystem, Object, DateStaged);
@@ -53,7 +53,7 @@ WHEN NOT MATCHED THEN
  INSERT (Id, SourceSystem, Object, DateStaged, Data, Checksum)
  VALUES (se.Id, se.SourceSystem, se.Object, se.DateStaged, se.Data, se.Checksum)
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
-;", staged.Select(e => (StagedEntityRaw) e).ToList());
+;", staged.Select(e => (StagedEntity.Dto) e).ToList());
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
@@ -62,12 +62,12 @@ WHEN NOT MATCHED THEN
     await using var conn = newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
-USING (VALUES (@Id, @SourceSystem, @Object, @DatePromoted, @Ignore)) AS se (Id, SourceSystem, Object, DatePromoted, Ignore)
+USING (VALUES (@Id, @SourceSystem, @Object, @DatePromoted, @IgnoreReason)) AS se (Id, SourceSystem, Object, DatePromoted, IgnoreReason)
 ON 
   T.SourceSystem = se.SourceSystem
   AND T.Object = se.Object
   AND T.Id = se.Id
-WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, Ignore=se.Ignore;", staged);
+WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.IgnoreReason;", staged);
   }
 
   protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
@@ -81,11 +81,11 @@ WHERE
   DateStaged > @after
   AND SourceSystem = @source
   AND Object = @obj  
-  AND Ignore IS NULL 
+  AND IgnoreReason IS NULL 
   {promotedpredicate} 
 ORDER BY DateStaged
 ";
-    return (await conn.QueryAsync<StagedEntityRaw>(sql, new { after, source, obj }))
+    return (await conn.QueryAsync<StagedEntity.Dto>(sql, new { after, source, obj }))
         .Select(e => (StagedEntity) e).ToList();
   }
 

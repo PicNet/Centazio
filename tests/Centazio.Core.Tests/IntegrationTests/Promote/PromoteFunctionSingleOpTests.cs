@@ -104,7 +104,7 @@ public class PromoteFunctionSingleOpTest {
   private SystemState SS(DateTime start, DateTime updated) => new(sys, stg, true, start, ESystemStateStatus.Idle, updated, updated, updated);
   private ObjectState OS(DateTime start, DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
       updated, updated, updated, updated, updated, "operation [CRM/Promote/CrmCustomer] completed [Success] message: ", len) { LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty };
-  private StagedEntity SE(string json, Guid? id = null) => new(id ?? Guid.NewGuid(), sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }

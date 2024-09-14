@@ -15,7 +15,7 @@ public static class DynamoStagedEntityExtensionMethods {
       { nameof(e.Checksum), new AttributeValue(e.Checksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
     };
-    if (e.Ignore is not null) { dict[nameof(e.Ignore)] = new AttributeValue(e.Ignore); }
+    if (e.IgnoreReason is not null) { dict[nameof(e.IgnoreReason)] = new AttributeValue(e.IgnoreReason); }
     if (e.DatePromoted is not null) { dict[nameof(e.DatePromoted)] = new AttributeValue($"{e.DatePromoted:o}"); }
     return dict;
   }
@@ -24,15 +24,16 @@ public static class DynamoStagedEntityExtensionMethods {
     return docs.Select(d => {
       var (system, entity, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
       var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
-      return new StagedEntity(
-          Guid.Parse(suffix),
-          system, 
-          entity, 
-          DateTime.Parse(staged).ToUniversalTime(), 
-          d[nameof(StagedEntity.Data)].AsString(),
-          d[nameof(StagedEntity.Checksum)].AsString(),
-          d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
-          d.ContainsKey(nameof(StagedEntity.Ignore)) ? d[nameof(StagedEntity.Ignore)].AsString() : null);
-      }).ToList();
+      return (StagedEntity) new StagedEntity.Dto(
+        Guid.Parse(suffix),
+        system, 
+        entity, 
+        DateTime.Parse(staged).ToUniversalTime(), 
+        d[nameof(StagedEntity.Data)].AsString(),
+        d[nameof(StagedEntity.Checksum)].AsString(),
+        d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
+        d.ContainsKey(nameof(StagedEntity.IgnoreReason)) ? d[nameof(StagedEntity.IgnoreReason)].AsString() : null 
+      );
+    }).ToList();
   }
 }

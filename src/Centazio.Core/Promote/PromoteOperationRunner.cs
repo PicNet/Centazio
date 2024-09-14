@@ -19,8 +19,8 @@ internal class PromoteOperationRunner<C>(
     if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
     
     await staged.Update(
-        promote.Select(e => e.Staged with { DatePromoted = start }).Concat(
-            ignore.Select(e => e.Entity with { Ignore = e.Reason })));
+        promote.Select(e => e.Staged.Promote(start))
+            .Concat(ignore.Select(e => e.Entity.Ignore(e.Reason))));
     
     return results; 
   }

@@ -30,7 +30,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
 
   protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) => 
       Task.FromResult(saved
-          .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.Ignore is null && (incpromoted || !s.DatePromoted.HasValue))
+          .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .AsEnumerable());
