@@ -82,29 +82,29 @@ public abstract class CtlRepositoryDefaultTests {
   [Test] public async Task Test_SaveObjectState_updates_existing_state() {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var created = await repo.CreateObjectState(ss, NAME);
-    var updated = created with { LastStart = UtcDate.UtcNow, LastRunMessage = NAME };
+    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME, EResultType.Empty, 0);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
-    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, UtcDate.UtcNow)));
-    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = UtcDate.UtcNow }));
+    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME, true)));
+    Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }
   
   [Test] public void Test_SaveObjectState_fails_if_SystemState_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(new ObjectState(NAME, NAME, NAME, true, UtcDate.UtcNow)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(NAME, NAME, NAME, true)));
   }
   
   [Test] public async Task Test_GetOrCreateObjectState_creates_if_not_existing() {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var prior = await repo.GetObjectState(ss, NAME);
     var created = await repo.GetOrCreateObjectState(ss, NAME);
-    var updated = created with { LastStart = UtcDate.UtcNow, LastRunMessage = NAME };
+    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME, EResultType.Empty, 0);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(new ObjectState(NAME2, NAME2, NAME, true, UtcDate.UtcNow)));
-    Assert.That(updated2, Is.EqualTo(updated with { DateUpdated = UtcDate.UtcNow }));
+    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME, true)));
+    Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }
 }

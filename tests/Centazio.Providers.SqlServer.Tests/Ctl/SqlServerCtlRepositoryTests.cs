@@ -17,7 +17,7 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     var created = await repo.CreateObjectState(await repo.CreateSystemState(NAME, NAME), NAME);
     var lr1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var lav1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
-    var updated = await repo.SaveObjectState(created with { LastResult = EOperationResult.Success, LastAbortVote = EOperationAbortVote.Continue });
+    var updated = await repo.SaveObjectState(created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, "", EResultType.Single, 1));
     var lr2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var lav2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     

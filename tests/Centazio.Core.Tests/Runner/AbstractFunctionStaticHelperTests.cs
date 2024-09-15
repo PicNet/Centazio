@@ -30,7 +30,7 @@ public class AbstractFunctionStaticHelperTests {
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      var exp = template with { Object = name };
+      var exp = (ObjectState) ((ObjectState.Dto) template with { Object = name });
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
@@ -40,7 +40,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var updated = await repo.CreateObjectState(ss, "2") with { Active = false };
+    var updated = (await repo.CreateObjectState(ss, "2")).SetActive(false);
     await repo.SaveObjectState(updated);
     
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(Factories.READ_OP_CONFIGS, ss, repo);
@@ -49,7 +49,12 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new(name, name, name, true, UtcDate.UtcNow, LastCompleted: last), new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
+    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new((ObjectState) new ObjectState.Dto(name, name, name, true) { 
+      LastCompleted = last,
+      LastResult = EOperationResult.Success.ToString(),
+      LastAbortVote = EOperationAbortVote.Continue.ToString(),
+      LastPayLoadType = EResultType.Empty.ToString()
+    }, new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -123,17 +128,23 @@ public class AbstractFunctionStaticHelperTests {
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
-    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = results[0].Exception!.ToString() }));
+    Assert.That(newstates[0], Is.EqualTo((ObjectState) ((ObjectState.Dto) exp2 with { LastRunException = results[0].Exception!.ToString() })));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) {
-    return new ObjectState(res.ToString(), res.ToString(), res.ToString(), true, UtcDate.UtcNow,
-        res, vote, UtcDate.UtcNow, UtcDate.UtcNow, 
-        res == EOperationResult.Success ? UtcDate.UtcNow : null, UtcDate.UtcNow,
-        res == EOperationResult.Success ? UtcDate.UtcNow : null,
-        $"operation [{res}/{res}/{res}] completed [{res}] message: ", 0) { 
-      LastPayLoadType = res == EOperationResult.Error ? EResultType.Error : EResultType.Empty
+    return (ObjectState) new ObjectState.Dto(res.ToString(), res.ToString(), res.ToString(), true) {
+      DateCreated = UtcDate.UtcNow,
+      LastResult = res.ToString(), 
+      LastAbortVote = vote.ToString(), 
+      DateUpdated = UtcDate.UtcNow, 
+      LastStart = UtcDate.UtcNow, 
+      LastSuccessStart = res == EOperationResult.Success ? UtcDate.UtcNow : null, 
+      LastCompleted = UtcDate.UtcNow,
+      LastSuccessCompleted = res == EOperationResult.Success ? UtcDate.UtcNow : null,
+      LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: ", 
+      LastPayLoadLength = 0, 
+      LastPayLoadType = res == EOperationResult.Error ? EResultType.Error.ToString() : EResultType.Empty.ToString()
     };
   }
 

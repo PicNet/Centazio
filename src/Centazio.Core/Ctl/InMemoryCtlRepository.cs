@@ -29,14 +29,14 @@ public class InMemoryCtlRepository : ICtlRepository {
     var key = (state.System, state.Stage, state.Object);
     if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found");
 
-    return Task.FromResult(objects[key] = state with { DateUpdated = UtcDate.UtcNow });
+    return Task.FromResult(objects[key] = state);
   }
   
   public Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
     if (!systems.ContainsKey((system.System, system.Stage))) throw new Exception($"SystemState [{system}] does not exist");
     var key = (system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    return Task.FromResult(objects[key] = new ObjectState(system.System, system.Stage, obj, true, UtcDate.UtcNow));
+    return Task.FromResult(objects[key] = ObjectState.Create(system.System, system.Stage, obj, true));
   }
 
   public ValueTask DisposeAsync() {

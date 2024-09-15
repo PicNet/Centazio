@@ -102,8 +102,19 @@ public class PromoteFunctionSingleOpTest {
   }
   
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState OS(DateTime start, DateTime updated, int len) => new(sys, stg, obj, true, start, EOperationResult.Success, EOperationAbortVote.Continue, 
-      updated, updated, updated, updated, updated, "operation [CRM/Promote/CrmCustomer] completed [Success] message: ", len) { LastPayLoadType = len > 0 ? EResultType.List : EResultType.Empty };
+  private ObjectState OS(DateTime start, DateTime updated, int len) => (ObjectState) new ObjectState.Dto(sys, stg, obj, true) {
+    DateCreated = start,
+    LastResult = EOperationResult.Success.ToString(),
+    LastAbortVote = EOperationAbortVote.Continue.ToString(),
+    DateUpdated = updated,
+    LastStart = updated,
+    LastSuccessStart = updated,
+    LastSuccessCompleted = updated,
+    LastCompleted = updated,
+    LastRunMessage = "operation [CRM/Promote/CrmCustomer] completed [Success] message: ",
+    LastPayLoadLength = len,
+    LastPayLoadType = len > 0 ? EResultType.List.ToString() : EResultType.Empty.ToString()
+  };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();

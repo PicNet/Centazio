@@ -40,7 +40,8 @@ public record SystemState {
     public DateTime? LastCompleted { get; init; }
     
     public Dto() {}
-    public Dto(string? system, string? stage, bool? active, DateTime? created, string? status, DateTime? updated = null, DateTime? laststart = null, DateTime? lastcomplete = null) {
+    
+    internal Dto(string? system, string? stage, bool? active, DateTime? created, string? status, DateTime? updated = null, DateTime? laststart = null, DateTime? lastcomplete = null) {
       System = system;
       Stage = stage;
       Active = active; 

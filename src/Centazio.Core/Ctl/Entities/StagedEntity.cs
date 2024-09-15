@@ -36,8 +36,9 @@ public sealed record StagedEntity {
     public DateTime? DatePromoted { get; init; }
     public string? IgnoreReason { get; init; }
     
-    public Dto() {} 
-    public Dto(Guid? id, string syste, string obj, DateTime? staged, string? data, string? checksum, DateTime? promoted = null, string? ignoreres = null) {
+    public Dto() {}
+    
+    internal Dto(Guid? id, string syste, string obj, DateTime? staged, string? data, string? checksum, DateTime? promoted = null, string? ignoreres = null) {
       Id = id;
       SourceSystem = syste;
       Object = obj;

@@ -47,9 +47,12 @@ BEGIN
 
     LastStart datetime2 NULL,
     LastCompleted datetime2 NULL,
+    LastSuccessStart datetime2 NULL,
+    LastSuccessCompleted datetime2 NULL,
     LastRunMessage nvarchar(256) NULL,
     LastPayLoadLength int NULL,
     LastRunException nvarchar(max) NULL,
+    LastPayLoadType nvarchar (64) NOT NULL,
 
     PRIMARY KEY (System, Stage, Object),
     FOREIGN KEY  (System, Stage) REFERENCES {SCHEMA}.{SYSTEM_STATE_TBL} (System, Stage)  
@@ -95,22 +98,33 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, 
 
   public async Task<ObjectState> SaveObjectState(ObjectState state) {
     await using var conn = newconn();
-    var updated = state with { DateUpdated = UtcDate.UtcNow };
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
-SET Active=@Active, LastResult=@LastResult, LastAbortVote=@LastAbortVote, DateUpdated=@DateUpdated, LastStart=@LastStart, LastCompleted=@LastCompleted, LastRunMessage=@LastRunMessage, LastPayLoadLength=@LastPayLoadLength, LastRunException=@LastRunException
-WHERE System=@System AND Stage=@Stage AND Object=@Object", updated);
-    return count == 0 ? throw new Exception("SaveObjectState failed") : updated;
+SET 
+  Active=@Active, 
+  LastResult=@LastResult, 
+  LastAbortVote=@LastAbortVote, 
+  DateUpdated=@DateUpdated, 
+  LastStart=@LastStart,  
+  LastCompleted=@LastCompleted,
+  LastSuccessStart=@LastSuccessStart,
+  LastSuccessCompleted=@LastSuccessCompleted,
+  LastRunMessage=@LastRunMessage, 
+  LastPayLoadLength=@LastPayLoadLength, 
+  LastRunException=@LastRunException, 
+  LastPayLoadType=@LastPayLoadType
+WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
+    return count == 0 ? throw new Exception("SaveObjectState failed") : state;
   }
   
   public async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
     await using var conn = newconn();
     
-    var created = new ObjectState(system.System, system.Stage, obj, true, UtcDate.UtcNow);
+    var created = ObjectState.Create(system.System, system.Stage, obj, true);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
-(System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)
-VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote)
+(System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote, LastPayLoadType)
+VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote, @LastPayLoadType)
 ", created);
     
     return created;

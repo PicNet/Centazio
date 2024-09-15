@@ -115,6 +115,14 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return (StagedEntity) new StagedEntity.Dto(details.Id, details.System, details.Object, details.DateStaged.ToUniversalTime(), data, details.Checksum, promoted);
+    return (StagedEntity) new StagedEntity.Dto {
+      Id = details.Id,
+      SourceSystem = details.System,
+      Object = details.Object,
+      DateStaged = details.DateStaged.ToUniversalTime(),
+      Data = data, 
+      Checksum = details.Checksum,
+      DatePromoted = promoted
+    };
   }
 }
