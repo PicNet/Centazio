@@ -6,7 +6,8 @@ internal static class InspectUtils {
   internal static string SolnDir => solndir ??= GetSolutionRootDirectory();
   
   private static List<string>? csfiles;
-  internal static List<string> CsFiles(params string[] ignore) => (csfiles ??= GetSolnCsFiles()).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
+  internal static List<string> CsFiles(string? dir, params string[] ignore) => (csfiles ??= GetSolnCsFiles(dir)).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
+  private static List<string> GetSolnCsFiles(string? dir) => Directory.GetFiles(dir ?? SolnDir, "*.cs", SearchOption.AllDirectories).ToList();
 
   private static string GetSolutionRootDirectory() {
     var file = "azure-pipelines.yml";
@@ -21,7 +22,4 @@ internal static class InspectUtils {
 
     return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
   }
-  
-  private static List<string> GetSolnCsFiles() => Directory.GetFiles(SolnDir, "*.cs", SearchOption.AllDirectories).ToList();
-
 }

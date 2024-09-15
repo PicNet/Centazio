@@ -23,7 +23,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     var list2 = await store.Get();
     
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
-    var exp = created with { Status = EEntityMappingStatus.Error, DateUpdated = UtcDate.UtcNow, DateLastError = UtcDate.UtcNow, LastError = "Error"};
+    var exp = created.Error("Error");
     Assert.That(updated, Is.EqualTo(exp));
     Assert.That(list2, Is.EquivalentTo(new [] { exp }));
   }
@@ -38,7 +38,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     var updatecmd = created.Select(e => new UpdateErrorEntityIntraSystemMapping(e.Key, "Error")).ToList();
     var updated2 = (await store.Update(updatecmd)).ToList();
     var list2 = await store.Get();
-    var exp = created.Select(e => e with { DateUpdated = UtcDate.UtcNow, Status = EEntityMappingStatus.Error, DateLastError = UtcDate.UtcNow, LastError = "Error"}).ToList();
+    var exp = created.Select(e => e.Error("Error")).ToList();
         
     Assert.That(list1, Is.EquivalentTo(created));
     Assert.That(updated2, Is.EquivalentTo(exp));

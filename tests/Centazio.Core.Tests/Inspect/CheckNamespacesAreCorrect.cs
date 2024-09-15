@@ -7,7 +7,7 @@ public class CheckNamespacesAreCorrect {
   [Test] public void Test_all_namespace_declarations_are_correct() {
     var roots = new [] { "Centazio.Providers", "src", "tests"};
     var errors = new List<string>();
-    InspectUtils.CsFiles("CliBootstrapper.cs", "Assembly.cs", "TestSuiteInitialiser.cs", "Properties.cs").ForEach(file => {
+    InspectUtils.CsFiles(null, "CliBootstrapper.cs", "Assembly.cs", "TestSuiteInitialiser.cs", "Properties.cs").ForEach(file => {
       var contents = File.ReadAllText(file);
       var m = Regex.Match(contents, "namespace (.*);");
       var ns = m.Groups[1].Value;

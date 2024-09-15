@@ -4,19 +4,9 @@ using Centazio.Core.Ctl.Entities;
 namespace Centazio.Core.EntitySysMapping;
 
 public abstract record CreateEntityIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
-  public EntityIntraSystemMapping.MappingKey Key => new EntityIntraSystemMapping.MappingKey(CoreEntity.GetType().Name, CoreEntity.Id, CoreEntity.SourceSystem, CoreEntity.SourceId, TargetSystem, TargetId);
+  //public EntityIntraSystemMapping.MappingKey Key => new(CoreEntity.GetType().Name, CoreEntity.Id, CoreEntity.SourceSystem, CoreEntity.SourceId, TargetSystem, TargetId);
   
-  public EntityIntraSystemMapping ToMapping() => new(
-      CoreEntity.GetType().Name, 
-      CoreEntity.Id, 
-      CoreEntity.SourceSystem, 
-      CoreEntity.SourceId, 
-      TargetSystem, 
-      TargetId, 
-      Status, 
-      UtcDate.UtcNow,
-      null,
-      Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : null);
+  
 }
 public record CreateSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : CreateEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
 

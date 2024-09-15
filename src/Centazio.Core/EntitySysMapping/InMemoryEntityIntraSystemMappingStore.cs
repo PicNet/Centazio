@@ -10,20 +10,14 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   
   public override Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> news) => 
       Task.FromResult(news.Select(n => {
-        var map = n.ToMapping();
+        var map = EntityIntraSystemMapping.Create(n);
         return saved[map.Key] = map;
       }));
 
   public override Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates) => 
       Task.FromResult(updates.Select(update => {
         var map = saved[update.Key];
-        return saved[update.Key] = map with { 
-          Status = update.Status,
-          DateUpdated = UtcDate.UtcNow,
-          DateLastSuccess = update.Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : map.DateLastSuccess,
-          DateLastError = update.Status == EEntityMappingStatus.Error ? UtcDate.UtcNow : map.DateLastError,
-          LastError = update.Status == EEntityMappingStatus.Error ? update.Error : map.LastError,
-        };
+        return saved[update.Key] = update.Status == EEntityMappingStatus.Success ? map.Success() : map.Error(update.Error);
       }));
 
   public override Task<List<string>> FilterOutBouncedBackIds<C>(SystemName promotingsys, List<string> ids) {
