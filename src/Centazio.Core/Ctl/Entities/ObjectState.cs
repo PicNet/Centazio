@@ -3,7 +3,7 @@
 public record ObjectState {
   
   public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName obj, bool active = true) => new(system, stage, obj, active);
-  public ObjectState Success(DateTime start, EOperationAbortVote abort, string message, EResultType restype, int length) {
+  public ObjectState Success(DateTime start, EOperationAbortVote abort, string message) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
       LastStart = start,
@@ -11,8 +11,6 @@ public record ObjectState {
       LastResult = EOperationResult.Success,
       LastAbortVote = abort,
       LastRunMessage = message,
-      LastPayLoadType = restype,
-      LastPayLoadLength = length,
       LastSuccessStart = start,
       LastSuccessCompleted = UtcDate.UtcNow
     };
@@ -25,8 +23,6 @@ public record ObjectState {
       LastResult = EOperationResult.Error,
       LastAbortVote = abort,
       LastRunMessage = message,
-      LastPayLoadType = EResultType.Error,
-      LastPayLoadLength = 0,
       LastRunException = exception
     };
   }
@@ -59,9 +55,7 @@ public record ObjectState {
   public DateTime? LastCompleted { get; private init; }
   public DateTime? LastSuccessCompleted { get; private init; }
   public string? LastRunMessage { get; private init; } 
-  public int? LastPayLoadLength { get; private init; } 
   public string? LastRunException { get; private init; }
-  public EResultType LastPayLoadType { get; private init; } = EResultType.Empty;
   
   public record Dto {
     public string? System { get; init; }
@@ -101,9 +95,7 @@ public record ObjectState {
       LastCompleted = os.LastCompleted,
       LastSuccessCompleted = os.LastSuccessCompleted,
       LastRunMessage = os.LastRunMessage,
-      LastPayLoadLength = os.LastPayLoadLength,
-      LastRunException = os.LastRunException,
-      LastPayLoadType = os.LastPayLoadType.ToString()
+      LastRunException = os.LastRunException
     };
     
     public static explicit operator ObjectState(Dto dto) => new(
@@ -121,9 +113,7 @@ public record ObjectState {
       LastCompleted = dto.LastCompleted,
       LastSuccessCompleted = dto.LastSuccessCompleted,
       LastRunMessage = dto.LastRunMessage,
-      LastPayLoadLength = dto.LastPayLoadLength,
-      LastRunException = dto.LastRunException,
-      LastPayLoadType = Enum.Parse<EResultType>(dto.LastPayLoadType ?? throw new ArgumentNullException(nameof(LastPayLoadType)))
+      LastRunException = dto.LastRunException
     };
   }
 }

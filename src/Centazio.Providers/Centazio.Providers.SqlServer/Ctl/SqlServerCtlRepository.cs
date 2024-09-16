@@ -50,9 +50,7 @@ BEGIN
     LastSuccessStart datetime2 NULL,
     LastSuccessCompleted datetime2 NULL,
     LastRunMessage nvarchar(256) NULL,
-    LastPayLoadLength int NULL,
     LastRunException nvarchar(max) NULL,
-    LastPayLoadType nvarchar (64) NOT NULL,
 
     PRIMARY KEY (System, Stage, Object),
     FOREIGN KEY  (System, Stage) REFERENCES {SCHEMA}.{SYSTEM_STATE_TBL} (System, Stage)  
@@ -110,9 +108,7 @@ SET
   LastSuccessStart=@LastSuccessStart,
   LastSuccessCompleted=@LastSuccessCompleted,
   LastRunMessage=@LastRunMessage, 
-  LastPayLoadLength=@LastPayLoadLength, 
-  LastRunException=@LastRunException, 
-  LastPayLoadType=@LastPayLoadType
+  LastRunException=@LastRunException 
 WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
     return count == 0 ? throw new Exception("SaveObjectState failed") : state;
   }
@@ -123,8 +119,8 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
     var created = ObjectState.Create(system.System, system.Stage, obj);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
-(System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote, LastPayLoadType)
-VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote, @LastPayLoadType)
+(System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)
+VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote)
 ", created);
     
     return created;

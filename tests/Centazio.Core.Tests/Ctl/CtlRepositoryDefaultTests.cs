@@ -82,7 +82,7 @@ public abstract class CtlRepositoryDefaultTests {
   [Test] public async Task Test_SaveObjectState_updates_existing_state() {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var created = await repo.CreateObjectState(ss, NAME);
-    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME, EResultType.Empty, 0);
+    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
     Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME)));
@@ -98,7 +98,7 @@ public abstract class CtlRepositoryDefaultTests {
     var ss = await repo.CreateSystemState(NAME2, NAME2);
     var prior = await repo.GetObjectState(ss, NAME);
     var created = await repo.GetOrCreateObjectState(ss, NAME);
-    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME, EResultType.Empty, 0);
+    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
     

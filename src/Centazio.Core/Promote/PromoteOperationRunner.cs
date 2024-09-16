@@ -42,7 +42,7 @@ internal class PromoteOperationRunner<C>(
     await core.Upsert(toupsert);
   }
 
-  public PromoteOperationResult<C> BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig<C>> op, Exception ex) => new ErrorPromoteOperationResult<C>(ex.Message, EOperationAbortVote.Abort, ex);
+  public PromoteOperationResult<C> BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig<C>> op, Exception ex) => new ErrorPromoteOperationResult<C>(EOperationAbortVote.Abort, ex);
 
 }
 

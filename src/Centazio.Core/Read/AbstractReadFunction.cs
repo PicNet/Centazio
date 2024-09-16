@@ -15,7 +15,7 @@ public abstract record ReadOperationResult(
     EResultType ResultType, 
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : OperationResult(Result, Message, ResultType, ResultLength, AbortVote, Exception) {
+    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception) {
   
   public bool IsValid { get; } = Result != EOperationResult.Unknown && Result != EOperationResult.Error && ResultLength > 0; 
 }

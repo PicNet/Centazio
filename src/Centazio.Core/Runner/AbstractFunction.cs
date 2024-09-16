@@ -63,7 +63,7 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
     async Task<ObjectState> SaveOp(OperationStateAndConfig<T> op, DateTime start, R res) {
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
-          op.State.Success(start, res.AbortVote, message, res.ResultType, res.ResultLength) :
+          op.State.Success(start, res.AbortVote, message) :
           op.State.Error(start, res.AbortVote, message, res.Exception?.ToString());
       return await ctl.SaveObjectState(newstate);
     }

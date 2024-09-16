@@ -31,7 +31,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
-    var exp = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
+    var exp = new SuccessPromoteOperationResult<CoreCustomer>(result1.ToPromote, []);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
@@ -49,7 +49,7 @@ public class PromoteFunctionSingleOpTest {
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { (Staged: SE(json2, staged23[0].Id), Core: ToCore(json2)), (Staged: SE(json3, staged23[1].Id), Core: ToCore(json3)) }));
-    var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToPromote = result23.ToPromote };
+    var exp23 = new SuccessPromoteOperationResult<CoreCustomer>(result23.ToPromote, []);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
@@ -74,7 +74,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
-    var exp = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 1) { ToPromote = result1.ToPromote };
+    var exp = new SuccessPromoteOperationResult<CoreCustomer>(result1.ToPromote, []);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1)));
@@ -94,7 +94,7 @@ public class PromoteFunctionSingleOpTest {
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
     Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2, staged23[0].Id), (ValidString) "ignore"), (SE(json3, staged23[1].Id), (ValidString) "ignore") }));
-    var exp23 = new PromoteOperationResult<CoreCustomer>([], [], EOperationResult.Success, "", EResultType.List, 2) { ToIgnore = result23.ToIgnore, ToPromote = result23.ToPromote };
+    var exp23 = new SuccessPromoteOperationResult<CoreCustomer>(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2)));
@@ -137,12 +137,9 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromote
       var core = JsonSerializer.Deserialize<CoreCustomer>(e.Data) ?? throw new Exception();
       return (Staged: e, Core: core);
     });
-    return Task.FromResult(new PromoteOperationResult<CoreCustomer>(
+    PromoteOperationResult<CoreCustomer> res = new SuccessPromoteOperationResult<CoreCustomer>(
         IgnoreNext ? [] : cores, 
-        IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : [],
-        EOperationResult.Success, 
-        "",
-        EResultType.List,
-        lst.Count));
+        IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")) : []); 
+    return Task.FromResult(res);
   }
 }
