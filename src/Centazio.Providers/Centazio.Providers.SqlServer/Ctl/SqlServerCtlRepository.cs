@@ -79,7 +79,7 @@ WHERE System=@System AND Stage=@Stage", state);
   
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var created = SystemState.Create(system, stage, true, ESystemStateStatus.Idle);
+    var created = SystemState.Create(system, stage);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{SYSTEM_STATE_TBL} 
 (System, Stage, Active, Status, DateCreated)
@@ -120,7 +120,7 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
   public async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
     await using var conn = newconn();
     
-    var created = ObjectState.Create(system.System, system.Stage, obj, true);
+    var created = ObjectState.Create(system.System, system.Stage, obj);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
 (System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote, LastPayLoadType)

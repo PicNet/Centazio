@@ -19,7 +19,7 @@ public class InMemoryCtlRepository : ICtlRepository {
   public Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     var key = (system, stage);
     if (systems.ContainsKey(key)) throw new Exception($"SystemState [{key}] already exists");
-    return Task.FromResult(systems[key] = SystemState.Create(system, stage, true, ESystemStateStatus.Idle));
+    return Task.FromResult(systems[key] = SystemState.Create(system, stage));
   }
 
   public Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj)
@@ -36,7 +36,7 @@ public class InMemoryCtlRepository : ICtlRepository {
     if (!systems.ContainsKey((system.System, system.Stage))) throw new Exception($"SystemState [{system}] does not exist");
     var key = (system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    return Task.FromResult(objects[key] = ObjectState.Create(system.System, system.Stage, obj, true));
+    return Task.FromResult(objects[key] = ObjectState.Create(system.System, system.Stage, obj));
   }
 
   public ValueTask DisposeAsync() {

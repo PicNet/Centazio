@@ -34,13 +34,13 @@ public abstract class CtlRepositoryDefaultTests {
     var updated = created.SetActive(false);
     var updated2 = await repo.SaveSystemState(updated);
     var current = await repo.GetSystemState(NAME, NAME);
-    Assert.That(created, Is.EqualTo(SystemState.Create(NAME, NAME, true, ESystemStateStatus.Idle)));
+    Assert.That(created, Is.EqualTo(SystemState.Create(NAME, NAME)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
   
   [Test] public Task Test_SaveSystemState_fails_if_state_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(SystemState.Create(NAME, NAME, true, ESystemStateStatus.Idle)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveSystemState(SystemState.Create(NAME, NAME)));
     return Task.CompletedTask;
   }
   
@@ -52,7 +52,7 @@ public abstract class CtlRepositoryDefaultTests {
     var current = await repo.GetSystemState(NAME, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(SystemState.Create(NAME, NAME, true, ESystemStateStatus.Idle)));
+    Assert.That(created, Is.EqualTo(SystemState.Create(NAME, NAME)));
     Assert.That(updated, Is.EqualTo(updated2));
     Assert.That(updated, Is.EqualTo(current));
   }
@@ -70,7 +70,7 @@ public abstract class CtlRepositoryDefaultTests {
   }
   
   [Test] public void Test_CreateObjectState_fails_for_non_existing_system() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(SystemState.Create(NAME, NAME, true, ESystemStateStatus.Idle), NAME));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(SystemState.Create(NAME, NAME), NAME));
   }
   
   [Test] public async Task Test_CreateObjectState_fails_for_existing_object() {
@@ -85,13 +85,13 @@ public abstract class CtlRepositoryDefaultTests {
     var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME, EResultType.Empty, 0);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, NAME);
-    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME, true)));
+    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME)));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }
   
   [Test] public void Test_SaveObjectState_fails_if_SystemState_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(NAME, NAME, NAME, true)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(NAME, NAME, NAME)));
   }
   
   [Test] public async Task Test_GetOrCreateObjectState_creates_if_not_existing() {
@@ -103,7 +103,7 @@ public abstract class CtlRepositoryDefaultTests {
     var current = await repo.GetObjectState(ss, NAME);
     
     Assert.That(prior, Is.Null);
-    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME, true)));
+    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, NAME)));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }

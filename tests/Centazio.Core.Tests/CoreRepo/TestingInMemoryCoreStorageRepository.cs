@@ -11,7 +11,7 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   }
   
   public Task<IEnumerable<T>> Query<T>(Expression<Func<T, bool>> predicate) where T : class, ICoreEntity {
-    if (!db.ContainsKey(typeof(T))) throw new Exception($"Core entity type [{typeof(T).Name}] not found");
+    if (!db.ContainsKey(typeof(T))) return Task.FromResult<IEnumerable<T>>(Array.Empty<T>());
     return Task.FromResult(db[typeof(T)].Values.Cast<T>().Where(predicate.Compile()));
   }
 

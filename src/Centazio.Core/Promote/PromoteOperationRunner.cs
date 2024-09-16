@@ -3,6 +3,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
+using Serilog;
 
 namespace Centazio.Core.Promote;
 
@@ -15,6 +16,12 @@ internal class PromoteOperationRunner<C>(
     var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.Object);
     var results = await op.Settings.EvaluateEntitiesToPromote(op, pending);
+    
+    if (results.Result == EOperationResult.Error) {
+      Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
+      return results;  
+    }
+    
     var (promote, ignore) = (results.ToPromote.ToList(), results.ToIgnore.ToList());
     if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
     

@@ -1,14 +1,19 @@
-﻿using Centazio.Core.EntitySysMapping;
+﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
+using Centazio.Test.Lib;
 using F = Centazio.Core.Tests.TestingFactories;
 
 namespace Centazio.Core.Tests.Promote;
 
 public class PromoteOperationRunnerTests {
 
+  private readonly string NAME = nameof(PromoteOperationRunnerTests);
+  private readonly int RECORDS_COUNT = 100;
+  
   private TestingStagedEntityStore staged;
   private TestingCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
@@ -26,9 +31,65 @@ public class PromoteOperationRunnerTests {
     await core.DisposeAsync();
   } 
   
-  [Test] public void Todo_implement_tests() {
-    Assert.Fail("todo: implement");
-    Assert.That(promoter, Is.Not.Null);
+  [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
+    await staged.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
+        ObjectState.Create(NAME, NAME, NAME),
+        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, EvaluateEntitiesToPromoteSuccess)));
+    var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
+    
+    Assert.That(staged.Contents, Has.Count.EqualTo(RECORDS_COUNT));
+    staged.Contents.ForEach((se, idx) => {
+      if (idx % 2 == 0) {
+        Assert.That(se.DatePromoted, Is.EqualTo(UtcDate.UtcNow));
+        Assert.That(se.IgnoreReason, Is.Null);
+        Assert.That(saved.ContainsKey(se.Data), Is.True);
+      } else {
+        Assert.That(se.DatePromoted, Is.Null);
+        Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {se.Data}"));
+        Assert.That(saved.ContainsKey(se.Data), Is.False);
+      }
+    });
+  }
+  
+  [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
+    await staged.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
+        ObjectState.Create(NAME, NAME, NAME),
+        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, EvaluateEntitiesToPromoteError)));
+    var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
+    Assert.That(saved, Is.Empty);
+    
+    Assert.That(staged.Contents, Has.Count.EqualTo(RECORDS_COUNT));
+    
+    staged.Contents.ForEach(se => {
+      Assert.That(se.IgnoreReason, Is.Null);
+      Assert.That(se.DatePromoted, Is.Null);
+    });
+    
+  }
+  
+  private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteSuccess(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
+    var lst = staged.ToList();
+    // todo: better factory for this
+    return Task.FromResult(new PromoteOperationResult<CoreCustomer>(
+        lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))),
+        lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")),
+        EOperationResult.Success, 
+        "success",
+        EResultType.Empty,
+        0));
+  }
+  
+  private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteError(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
+    var lst = staged.ToList();
+    return Task.FromResult(new PromoteOperationResult<CoreCustomer>(
+        lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))),
+        lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")),
+        EOperationResult.Error, 
+        "error",
+        EResultType.Empty,
+        0));
   }
 }
 

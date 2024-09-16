@@ -2,7 +2,7 @@
 
 public record ObjectState {
   
-  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName obj, bool active) => new(system, stage, obj, active);
+  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName obj, bool active = true) => new(system, stage, obj, active);
   public ObjectState Success(DateTime start, EOperationAbortVote abort, string message, EResultType restype, int length) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
