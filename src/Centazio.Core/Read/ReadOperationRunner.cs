@@ -22,6 +22,6 @@ internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<Read
   }
 
   public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => 
-      new ErrorReadOperationResult("", EOperationAbortVote.Abort, ex);
+      new ErrorReadOperationResult(EOperationAbortVote.Abort, ex);
 
 }

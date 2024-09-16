@@ -26,7 +26,6 @@ public record OperationStateAndConfig<T>(ObjectState State, T Settings) where T 
 
 public abstract record OperationResult(
     EOperationResult Result,
-    // todo: message should be created by subclasses and be consistent
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     [property: JsonIgnore]

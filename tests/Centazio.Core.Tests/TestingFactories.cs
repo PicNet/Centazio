@@ -27,25 +27,25 @@ public static class TestingFactories {
   
   public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object);
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("", EOperationAbortVote.Abort) : new EmptyReadOperationResult(""); 
+    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult(EOperationAbortVote.Abort) : new EmptyReadOperationResult(); 
     return Task.FromResult(res);
   }
   
   public static Task<ReadOperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object);
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new EmptyReadOperationResult("");
+    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
     return Task.FromResult(res);
   }
 
   public static Task<ReadOperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new SingleRecordReadOperationResult(Guid.NewGuid().ToString(), "");
+    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
     return Task.FromResult(res);
   }
 
   public static Task<ReadOperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
     var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult("") : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), "");
+    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
     return Task.FromResult(res); 
   }
   

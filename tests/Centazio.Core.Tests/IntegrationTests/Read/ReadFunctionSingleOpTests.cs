@@ -45,8 +45,8 @@ public class ReadFunctionSingleOpTests {
     
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
-    Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult("")));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult(new List<string> { expjson }, "").ToString()));
+    Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult(new List<string> { expjson }).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -74,9 +74,8 @@ public class ReadFunctionSingleOpTests {
     LastSuccessStart = updated,
     LastSuccessCompleted = updated,
     LastCompleted = updated,
-    LastRunMessage = "operation [CRM/Read/CrmCustomer] completed [Success] message: ",
-    LastPayLoadLength = len,
-    LastPayLoadType = len > 0 ? EResultType.List.ToString() : EResultType.Empty.ToString()
+    LastRunMessage = "operation [CRM/Read/CrmCustomer] completed [Success] message: " + 
+        (len == 0 ? "read empty results" : $"read list results[{len}]")
   };
     StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
   }
@@ -96,7 +95,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractReadFunction 
   private async Task<ReadOperationResult> GetCustomersToStage(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
-        new ListRecordsReadOperationResult(customers, "")
-        : new EmptyReadOperationResult("");
+        new ListRecordsReadOperationResult(customers)
+        : new EmptyReadOperationResult();
   }
 }

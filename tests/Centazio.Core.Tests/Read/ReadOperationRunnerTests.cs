@@ -27,7 +27,7 @@ public class ReadOperationRunnerTests {
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
-        new ErrorReadOperationResult(""),
+        new ErrorReadOperationResult(),
         actual,
         (SystemState) new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
@@ -39,7 +39,7 @@ public class ReadOperationRunnerTests {
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
-        new EmptyReadOperationResult(""),
+        new EmptyReadOperationResult(),
         actual,
         (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()));
   }
@@ -51,7 +51,7 @@ public class ReadOperationRunnerTests {
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo((StagedEntity) new StagedEntity.Dto(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
     ValidateResult(
-        new SingleRecordReadOperationResult(actual.Payload, ""),
+        new SingleRecordReadOperationResult(actual.Payload),
         actual,
         (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
@@ -64,15 +64,15 @@ public class ReadOperationRunnerTests {
     Assert.That(staged, Is.EquivalentTo(
         staged.Select(s => (StagedEntity) new StagedEntity.Dto(s.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.Checksum))));
     ValidateResult(
-        new ListRecordsReadOperationResult(actual.PayloadList, ""),
+        new ListRecordsReadOperationResult(actual.PayloadList),
         actual,
         (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([], ""));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([""], ""));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!], ""));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([]));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([""]));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!]));
   }
   
   private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss) {

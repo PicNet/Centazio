@@ -72,8 +72,8 @@ public class PromoteOperationRunnerTests {
   private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteSuccess(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
     var lst = staged.ToList();
     return Task.FromResult((PromoteOperationResult<CoreCustomer>) new SuccessPromoteOperationResult<CoreCustomer>(
-        lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))),
-        lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}"))));
+        lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+        lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")).ToList()));
   }
   
   private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteError(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {

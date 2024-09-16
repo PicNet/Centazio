@@ -71,9 +71,7 @@ public record ObjectState {
     public DateTime? LastSuccessCompleted { get; init; }
     public DateTime? LastCompleted { get; init; }
     public string? LastRunMessage { get; init; }
-    public int? LastPayLoadLength { get; init; }
     public string? LastRunException { get; init; }
-    public string? LastPayLoadType { get; init; }
     
     public Dto() { }
     

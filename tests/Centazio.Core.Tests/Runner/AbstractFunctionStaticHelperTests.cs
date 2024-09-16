@@ -52,8 +52,7 @@ public class AbstractFunctionStaticHelperTests {
     OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new((ObjectState) new ObjectState.Dto(name, name, name, true) { 
       LastCompleted = last,
       LastResult = EOperationResult.Success.ToString(),
-      LastAbortVote = EOperationAbortVote.Continue.ToString(),
-      LastPayLoadType = EResultType.Empty.ToString()
+      LastAbortVote = EOperationAbortVote.Continue.ToString()
     }, new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
@@ -84,12 +83,12 @@ public class AbstractFunctionStaticHelperTests {
     
     var newstates = repo.Objects.Values.ToList();
 
-    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult("") }));
-    Assert.That(results2, Is.EquivalentTo(new [] { new ErrorReadOperationResult("", EOperationAbortVote.Abort) }));
+    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult() }));
+    Assert.That(results2, Is.EquivalentTo(new [] { new ErrorReadOperationResult(EOperationAbortVote.Abort) }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue, 0)));
+    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0)));
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
@@ -104,11 +103,11 @@ public class AbstractFunctionStaticHelperTests {
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
-      new ErrorReadOperationResult("", EOperationAbortVote.Abort)
+      new ErrorReadOperationResult(EOperationAbortVote.Abort)
     }));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0)));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
@@ -122,17 +121,18 @@ public class AbstractFunctionStaticHelperTests {
     states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = _ => throw new Exception() } }; 
     var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo)).ToList();
     var newstates = repo.Objects.Values.ToList();
+    var ex = results[0].Exception ?? throw new Exception();
 
     Assert.That(results, Has.Count.EqualTo(1));
-    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult("", EOperationAbortVote.Abort, results[0].Exception)));
+    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult(EOperationAbortVote.Abort, ex)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort);
-    Assert.That(newstates[0], Is.EqualTo((ObjectState) ((ObjectState.Dto) exp2 with { LastRunException = results[0].Exception!.ToString() })));
+    var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, ex.Message);
+    Assert.That(newstates[0], Is.EqualTo((ObjectState) ((ObjectState.Dto) exp2 with { LastRunException = ex.ToString() })));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
-  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote) {
+  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
     return (ObjectState) new ObjectState.Dto(res.ToString(), res.ToString(), res.ToString(), true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res.ToString(), 
@@ -142,9 +142,10 @@ public class AbstractFunctionStaticHelperTests {
       LastSuccessStart = res == EOperationResult.Success ? UtcDate.UtcNow : null, 
       LastCompleted = UtcDate.UtcNow,
       LastSuccessCompleted = res == EOperationResult.Success ? UtcDate.UtcNow : null,
-      LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: ", 
-      LastPayLoadLength = 0, 
-      LastPayLoadType = res == EOperationResult.Error ? EResultType.Error.ToString() : EResultType.Empty.ToString()
+      LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: " +
+          (len == 0 
+              ? res == EOperationResult.Error ? $"read error results[{exmessage}] - abort[Abort]" : "read empty results" 
+              : "")
     };
   }
 
