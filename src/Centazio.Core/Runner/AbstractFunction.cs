@@ -5,11 +5,9 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>? prioritiser = null) : IFunction<T, R> 
+public abstract class AbstractFunction<T, R> : IFunction<T, R> 
     where T : OperationConfig
     where R : OperationResult {
-  
-  private IOperationsFilterAndPrioritiser<T> Prioritiser { get; } = prioritiser ?? new DefaultOperationsFilterAndPrioritiser<T>();
   
   public abstract FunctionConfig<T> Config { get; }
 
@@ -19,8 +17,7 @@ public abstract class AbstractFunction<T, R>(IOperationsFilterAndPrioritiser<T>?
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
     var states = await LoadOperationsStates(Config.Operations, sys, ctl);
     var ready = GetReadyOperations(states);
-    var priotised = Prioritiser.Prioritise(ready);
-    var results = await RunOperationsTillAbort(priotised, runner, ctl);
+    var results = await RunOperationsTillAbort(ready, runner, ctl);
     return results;
   }
 

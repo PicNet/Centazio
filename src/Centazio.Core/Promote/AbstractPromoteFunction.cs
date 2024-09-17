@@ -4,8 +4,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
-public abstract class AbstractPromoteFunction<C>(IOperationsFilterAndPrioritiser<PromoteOperationConfig<C>>? prioritiser = null) 
-    : AbstractFunction<PromoteOperationConfig<C>, PromoteOperationResult<C>>(prioritiser) where C : ICoreEntity;
+public abstract class AbstractPromoteFunction<C> : AbstractFunction<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity;
 
 public record PromoteOperationConfig<C>(
     ObjectName Object, 

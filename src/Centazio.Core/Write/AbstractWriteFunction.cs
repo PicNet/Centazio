@@ -4,8 +4,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
-public abstract class AbstractWriteFunction<C>(IOperationsFilterAndPrioritiser<WriteOperationConfig>? prioritiser = null) 
-    : AbstractFunction<WriteOperationConfig, WriteOperationResult<C>>(prioritiser) where C : ICoreEntity;
+public abstract class AbstractWriteFunction<C> : AbstractFunction<WriteOperationConfig, WriteOperationResult<C>> where C : ICoreEntity;
 
 public abstract record WriteOperationConfig(
     ObjectName Object, 
