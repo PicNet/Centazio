@@ -6,57 +6,17 @@ using Serilog;
 
 namespace Centazio.Core.Write;
 
-public interface IWriteEntitysToTargetSystemImpl<C> where C : ICoreEntity {
-  public Task<WriteOperationResult<C>> Run(List<C> pending);
-} 
-
-
-public interface IWriteSingleEntityToTargetSystemCallback<C> : IWriteEntitysToTargetSystemImpl<C> where C : ICoreEntity {
-  Task EntityWritten((C Core, EntityIntraSystemMapping Map) map);
-}
-
-public interface IWriteBatchEntiiestToTargetSystemCallback<C> : IWriteEntitysToTargetSystemImpl<C> where C : ICoreEntity {
-  Task EntitiesWritten(List<(C Core, EntityIntraSystemMapping Map)> maps);
-}
-
-
-
-public class WriteSingleEntityToTargetSystemCallback<C>(SingleWriteOperationConfig<C> op) 
-    : IWriteSingleEntityToTargetSystemCallback<C> where C : ICoreEntity {
-  
-  public Task<WriteOperationResult<C>> Run(List<C> pending) {
-    return op.WriteEntitiesToTargetSystem(op, pending, this);
-  }
-  
-  public Task EntityWritten((C Core, EntityIntraSystemMapping Map) map) {
-    return Task.CompletedTask;
-  }
-  
-
-}
-
-public class WriteBatchEntiiestToTargetSystemCallback<C>(BatchWriteOperationConfig<C> op) 
-    : IWriteBatchEntiiestToTargetSystemCallback<C> where C : ICoreEntity {
-
-  public Task<WriteOperationResult<C>> Run(List<C> pending) {
-    return op.WriteEntitiesToTargetSystem(op, pending, this);
-  }
-  
-  public Task EntitiesWritten(List<(C Core, EntityIntraSystemMapping Map)> cores) {
-    return Task.CompletedTask;
-  }
-}
-
 internal class WriteOperationRunner<C>(
       IEntityIntraSystemMappingStore entitymap,
       ICoreStorageGetter core) : 
-    IOperationRunner<WriteOperationConfig<C>, WriteOperationResult<C>> where C : ICoreEntity {
+    IOperationRunner<WriteOperationConfig, WriteOperationResult<C>> where C : ICoreEntity {
   
-  public async Task<WriteOperationResult<C>> RunOperation(OperationStateAndConfig<WriteOperationConfig<C>> op) {
+  public async Task<WriteOperationResult<C>> RunOperation(OperationStateAndConfig<WriteOperationConfig> op) {
     var pending = await core.Get<C>(op.Checkpoint);
+    var maps = await entitymap.Get(pending, op.State.System);
     var results = op.Settings switch {
-      SingleWriteOperationConfig<C> swo => await new WriteSingleEntityToTargetSystemCallback<C>(swo).Run(pending),
-      BatchWriteOperationConfig<C> bwo => await new WriteBatchEntiiestToTargetSystemCallback<C>(bwo).Run(pending),
+      SingleWriteOperationConfig<C> swo => await swo.WriteEntitiesToTargetSystem(swo, maps),
+      BatchWriteOperationConfig<C> bwo => await bwo.WriteEntitiesToTargetSystem(bwo, maps),
       _ => throw new NotSupportedException()
     };
     
@@ -66,13 +26,12 @@ internal class WriteOperationRunner<C>(
     }
     if (!results.EntitiesWritten.Any()) return results;
     
-    var maps = await entitymap.Get(results.EntitiesWritten, op.State.System);
-    var created = maps.Where(m => m.Map.Status == EEntityMappingStatus.Pending).ToList();
-    var updated = maps.Where(m => m.Map.Status != EEntityMappingStatus.Pending).ToList();
-    if (created.Any()) await entitymap.Create(created.Select(m => new CreateSuccessIntraSystemMapping(m.Core, op.State.System, m.Map.TargetId)));
-    if (updated.Any()) await entitymap.Update(updated.Select(m => new UpdateSuccessEntityIntraSystemMapping(m.Map.Key)));
+    var created = results.EntitiesWritten.Where(e => e.Map.Status == EEntityMappingStatus.Pending).ToList();
+    var updated = results.EntitiesWritten.Where(e => e.Map.Status != EEntityMappingStatus.Pending).ToList();
+    if (created.Any()) await entitymap.Create(created.Select(e => new CreateSuccessIntraSystemMapping(e.Core, op.State.System, e.Map.TargetId)));
+    if (updated.Any()) await entitymap.Update(updated.Select(e => new UpdateSuccessEntityIntraSystemMapping(e.Map.Key, e.Map.Status)));
     return results;
   }
 
-  public WriteOperationResult<C> BuildErrorResult(OperationStateAndConfig<WriteOperationConfig<C>> op, Exception ex) => new ErrorWriteOperationResult<C>(EOperationAbortVote.Abort, ex);
+  public WriteOperationResult<C> BuildErrorResult(OperationStateAndConfig<WriteOperationConfig> op, Exception ex) => new ErrorWriteOperationResult<C>(EOperationAbortVote.Abort, ex);
 }

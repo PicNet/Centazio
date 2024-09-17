@@ -11,7 +11,7 @@ public abstract record CreateEntityIntraSystemMapping(ICoreEntity CoreEntity, Sy
 public record CreateSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : CreateEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
 
 public abstract record UpdateEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status, string? Error = null);
-public record UpdateSuccessEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.Success);
+public record UpdateSuccessEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status = EEntityMappingStatus.Success) : UpdateEntityIntraSystemMapping (Key, Status);
 public record UpdateErrorEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, string Error) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.Error, Error);
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
