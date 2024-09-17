@@ -1,10 +1,7 @@
 # Todo
 - set up testing pipeline (agent is ready)
-- entity creation / update should be closely controlled.  Some fields (like DateCreated) should not be updateable
-  and others (like DateUpdated) should not be set when creating.  Use factory methods, etc to control this.  All stores
-  should manage these internal fields without requiring the caller to worry about setting things like dateupdated, etc.
-  Create/Update methods should not take in entities, but raw fields where possible?
 - sqlite (self hosted), postgres
+- write function
 
 # Developer Guidelines:
 

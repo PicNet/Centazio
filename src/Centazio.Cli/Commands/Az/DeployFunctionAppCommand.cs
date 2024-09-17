@@ -26,7 +26,7 @@ public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazi
     var op = (await function.UpdateAsync(WaitUntil.Completed, new FunctionEnvelopeData())).Value;
     if (op == null) throw new Exception($"");
     
-    throw new NotImplementedException();
+    throw new Exception("implement");
 
   }
 
