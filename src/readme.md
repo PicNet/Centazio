@@ -2,6 +2,7 @@
 - set up testing pipeline (agent is ready)
 - sqlite (self hosted), postgres
 - write function
+- consider not having `Message` or `Description` fields.  Instead save a generic results object serialised as Json
 
 # Developer Guidelines:
 
@@ -131,3 +132,22 @@ these safety measures:
 ```
 var x = (StagedEntity) new StagedEntity.Dto { ... };
 ```
+
+## Functions
+
+A central facet of Centazio is the concept of 'Functions'.  The three main common functions are read, promote and write.
+Each source system should have a read and promote function.  Each target (or sink) system should have a write function.
+
+Read: Read functions read data from the source system, via an api, database, etc.  This data is written in its raw format
+to the staging area.
+
+Promote: Promote functions read newly added data from the staging area and 'promote' this data into the core storage.
+
+Write: Write functions read newly updated data in core storage to the target systems.
+
+### Function Technical Details
+
+#### FunctionRunner:
+
+The `FunctionRunner` class is the main controller that executes a function.  This class will be called by the host
+container, whether that is an AWS Lambda Function, Azure Function or a local process.  The `FunctionRunner` 

@@ -22,7 +22,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping map);
   Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> maps);
   
-  Task<List<EntityIntraSystemMapping>> Get();
+  Task<List<(C Core, EntityIntraSystemMapping Map)>> Get<C>(ICollection<C> cores, SystemName target) where C : ICoreEntity;
   
   /// <summary>
   /// Bounce backs are when an entity is created in System 1 and written to
@@ -57,8 +57,8 @@ public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystem
   
   public async Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping update) => (await Update([update])).Single();
   public abstract Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates);
-  
-  public abstract Task<List<EntityIntraSystemMapping>> Get();
+  public abstract Task<List<(C Core, EntityIntraSystemMapping Map)>> Get<C>(ICollection<C> cores, SystemName target) where C : ICoreEntity;
+  public abstract Task<List<EntityIntraSystemMapping>> GetAll();
   public abstract Task<List<string>> FilterOutBouncedBackIds<C>(SystemName thissys, List<string> ids) where C : ICoreEntity;
   
   public abstract ValueTask DisposeAsync();

@@ -7,7 +7,11 @@ public record EntityIntraSystemMapping {
   
   public static EntityIntraSystemMapping Create(CreateEntityIntraSystemMapping op) => Create(op.CoreEntity, op.TargetSystem, op.TargetId, op.Status);
   
-  public static EntityIntraSystemMapping Create(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
+  public static EntityIntraSystemMapping CreatePending(ICoreEntity CoreEntity, SystemName TargetSystem) {
+    return Create(CoreEntity, TargetSystem, EEntityMappingStatus.Pending.ToString(), EEntityMappingStatus.Pending);
+  }
+  
+  private static EntityIntraSystemMapping Create(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId, EEntityMappingStatus Status) {
     return new(
         CoreEntity.GetType().Name, 
         CoreEntity.Id, 

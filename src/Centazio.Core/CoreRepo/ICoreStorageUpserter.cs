@@ -1,5 +1,12 @@
 ﻿namespace Centazio.Core.CoreRepo;
 
+public interface ICoreStorageGetter : IAsyncDisposable {
+  /// <summary>
+  /// Gets all core entities that have been created/updated after the given `after` parameter.
+  /// </summary>
+  Task<List<C>> Get<C>(DateTime after) where C : ICoreEntity;
+}
+
 public interface ICoreStorageUpserter : IAsyncDisposable {
   
   /// <summary>
@@ -10,10 +17,10 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
   /// <returns>An id to checksim mapping of entities already in core storage</returns>
-  Task<Dictionary<string, string>> GetChecksums<T>(List<T> entities) where T : ICoreEntity;
+  Task<Dictionary<string, string>> GetChecksums<C>(List<C> entities) where C : ICoreEntity;
   
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<IEnumerable<T>> Upsert<T>(IEnumerable<T> entities) where T : ICoreEntity;
+  Task<IEnumerable<C>> Upsert<C>(IEnumerable<C> entities) where C : ICoreEntity;
 }

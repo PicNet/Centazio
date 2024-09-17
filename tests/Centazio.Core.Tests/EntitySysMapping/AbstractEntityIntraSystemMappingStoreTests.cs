@@ -18,9 +18,9 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     var core = TestingFactories.NewCoreCust(STR, STR);
     var original = new CreateSuccessIntraSystemMapping(core, STR, STR); 
     var created = await store.Create(original);
-    var list1 = await store.Get();
+    var list1 = await store.GetAll();
     var updated = await store.Update(new UpdateErrorEntityIntraSystemMapping(created.Key, "Error"));
-    var list2 = await store.Get();
+    var list2 = await store.GetAll();
     
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
     var exp = created.Error("Error");
@@ -34,10 +34,10 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
       new CreateSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2)
     }; 
     var created = (await store.Create(original)).ToList();
-    var list1 = await store.Get();
+    var list1 = await store.GetAll();
     var updatecmd = created.Select(e => new UpdateErrorEntityIntraSystemMapping(e.Key, "Error")).ToList();
     var updated2 = (await store.Update(updatecmd)).ToList();
-    var list2 = await store.Get();
+    var list2 = await store.GetAll();
     var exp = created.Select(e => e.Error("Error")).ToList();
         
     Assert.That(list1, Is.EquivalentTo(created));

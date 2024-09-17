@@ -5,17 +5,17 @@ namespace Centazio.Core.Tests.CoreRepo;
 
 public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository {
   
-  public Task<T> Get<T>(string id) where T : class, ICoreEntity {
-    if (!db.ContainsKey(typeof(T)) || !db[typeof(T)].ContainsKey(id)) throw new Exception($"Core entity [{typeof(T).Name}#{id}] not found");
-    return Task.FromResult((T)db[typeof(T)][id]);
+  public Task<C> Get<C>(string id) where C : class, ICoreEntity {
+    if (!db.ContainsKey(typeof(C)) || !db[typeof(C)].ContainsKey(id)) throw new Exception($"Core entity [{typeof(C).Name}#{id}] not found");
+    return Task.FromResult((C)db[typeof(C)][id]);
   }
   
-  public Task<IEnumerable<T>> Query<T>(Expression<Func<T, bool>> predicate) where T : class, ICoreEntity {
-    if (!db.ContainsKey(typeof(T))) return Task.FromResult<IEnumerable<T>>(Array.Empty<T>());
-    return Task.FromResult(db[typeof(T)].Values.Cast<T>().Where(predicate.Compile()));
+  public Task<IEnumerable<C>> Query<C>(Expression<Func<C, bool>> predicate) where C : class, ICoreEntity {
+    if (!db.ContainsKey(typeof(C))) return Task.FromResult<IEnumerable<C>>(Array.Empty<C>());
+    return Task.FromResult(db[typeof(C)].Values.Cast<C>().Where(predicate.Compile()));
   }
 
-  public Task<IEnumerable<T>> Query<T>(string query) where T : class, ICoreEntity => 
+  public Task<IEnumerable<C>> Query<C>(string query) where C : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<T>(string query)`.  Use `Query<T>(Expression<Func<T, bool>> predicate)` instead.");
   
 }

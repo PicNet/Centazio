@@ -5,6 +5,7 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
+// todo: this is such a convoluted design (FunctionRunner, IFunction, IOperationRunner, etc).  Simplify greatly.
 public class FunctionRunner<T, R>(
     IFunction<T, R> func, 
     IOperationRunner<T, R> oprunner, 
