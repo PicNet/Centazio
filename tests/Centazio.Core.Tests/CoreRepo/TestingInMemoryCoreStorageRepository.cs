@@ -21,7 +21,6 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult(db[typeof(E)].Values.Cast<E>().Where(predicate.Compile()));
   }
 
-  // todo: why do we need class constraint
   public Task<IEnumerable<E>> Query<E>(string query) where E : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<T>(string query)`.  Use `Query<T>(Expression<Func<T, bool>> predicate)` instead.");
 }
