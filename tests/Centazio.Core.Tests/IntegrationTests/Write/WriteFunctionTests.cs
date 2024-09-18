@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -13,7 +14,7 @@ public class WriteFunctionTests {
 
 }
 
-public class WriteFunctionWithSingleWriteCustomerOperation : AbstractWriteFunction<CoreCustomer> {
+public class WriteFunctionWithSingleWriteCustomerOperation : AbstractFunction<WriteOperationConfig, ReadOperationResult> {
 
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   

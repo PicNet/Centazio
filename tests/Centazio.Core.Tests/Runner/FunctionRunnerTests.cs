@@ -78,11 +78,11 @@ public class FunctionRunnerTests {
     new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new EmptyReadOperationResult() as ReadOperationResult))
   });
   
-  class EmptyFunction : IFunction<ReadOperationConfig, ReadOperationResult> {
+  class EmptyFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
 
-    public FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Array.Empty<ReadOperationResult>();
@@ -90,11 +90,11 @@ public class FunctionRunnerTests {
 
   }
   
-  class SimpleFunction(int results) : IFunction<ReadOperationConfig, ReadOperationResult> {
+  class SimpleFunction(int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
 
-    public FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult());

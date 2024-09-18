@@ -121,7 +121,7 @@ public class PromoteFunctionSingleOpTest {
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractPromoteFunction<CoreCustomer> {
+public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>> {
 
   public override FunctionConfig<PromoteOperationConfig<CoreCustomer>> Config { get; }
   public bool IgnoreNext { get; set; } 

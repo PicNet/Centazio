@@ -4,11 +4,10 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
-public abstract class AbstractPromoteFunction<C> : AbstractFunction<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity;
-
 public record PromoteOperationConfig<C>(
     ObjectName Object, 
     ValidCron Cron, 
-    DateTime FirstTimeCheckpoint, 
+    DateTime FirstTimeCheckpoint,
+    // todo: these Func signatures are so ugly, think of a better approach (interface perhaps)
     Func<OperationStateAndConfig<PromoteOperationConfig<C>>, IEnumerable<StagedEntity>, Task<PromoteOperationResult<C>>> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron, FirstTimeCheckpoint) where C : ICoreEntity;
 

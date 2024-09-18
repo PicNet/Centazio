@@ -81,7 +81,7 @@ public class ReadFunctionSingleOpTests {
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation : AbstractReadFunction {
+public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   private readonly DummyCrmApi crmApi = new();

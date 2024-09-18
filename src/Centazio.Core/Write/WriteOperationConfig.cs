@@ -4,8 +4,6 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
-public abstract class AbstractWriteFunction<C> : AbstractFunction<WriteOperationConfig, WriteOperationResult<C>> where C : ICoreEntity;
-
 public abstract record WriteOperationConfig(
     ObjectName Object, 
     ValidCron Cron, 

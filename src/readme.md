@@ -150,4 +150,16 @@ Write: Write functions read newly updated data in core storage to the target sys
 #### FunctionRunner:
 
 The `FunctionRunner` class is the main controller that executes a function.  This class will be called by the host
-container, whether that is an AWS Lambda Function, Azure Function or a local process.  The `FunctionRunner` 
+container, whether that is an AWS Lambda Function, Azure Function or a local process.  The `FunctionRunner` needs to
+be initialised with the following components:
+
+- An instance of `AbstractFunction` which is the function to be executed
+- An instance of `IOperationRunner` which is a specialised implementation of this interface that knows how to 
+  perform the required operations of this function
+
+The `RunFunction` method is the method that the host will call to execute this function and all child operations.
+
+
+#### AbstractFunction<C, R>:
+
+todo: expand 
