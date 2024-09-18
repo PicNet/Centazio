@@ -8,21 +8,21 @@ public abstract record CreateEntityIntraSystemMapping(ICoreEntity CoreEntity, Sy
   
   
 }
-public record CreateSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : CreateEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.Success);
+public record CreateSuccessIntraSystemMapping(ICoreEntity CoreEntity, SystemName TargetSystem, ValidString TargetId) : CreateEntityIntraSystemMapping(CoreEntity, TargetSystem, TargetId, EEntityMappingStatus.SuccessCreate);
 
 public abstract record UpdateEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status, string? Error = null);
-public record UpdateSuccessEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, EEntityMappingStatus Status = EEntityMappingStatus.Success) : UpdateEntityIntraSystemMapping (Key, Status);
+public record UpdateSuccessEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.SuccessUpdate);
 public record UpdateErrorEntityIntraSystemMapping(EntityIntraSystemMapping.MappingKey Key, string Error) : UpdateEntityIntraSystemMapping (Key, EEntityMappingStatus.Error, Error);
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   
   Task<EntityIntraSystemMapping> Create(CreateEntityIntraSystemMapping create);
-  Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> maps);
+  Task<List<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> maps);
   
   Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping map);
-  Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> maps);
+  Task<List<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> maps);
   
-  Task<List<(C Core, EntityIntraSystemMapping Map)>> Get<C>(ICollection<C> cores, SystemName target) where C : ICoreEntity;
+  Task<List<(E Core, EntityIntraSystemMapping Map)>> Get<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
   
   /// <summary>
   /// Bounce backs are when an entity is created in System 1 and written to
@@ -46,20 +46,20 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   /// https://sequencediagram.org/index.html#initialData=C4S2BsFMAIGECUCy0C0A+aAxEA7AhjgMYh7gDOAXNAEID2ArkTNXoQNbQDKeAtgA5QAUAmTo4SKgEkcAN1ohCMABQiAjACYAzAEpohAE6Q8wSABNhSVBliQcwPAC8QtKbPmLoKpBp3Qy9gHMzYVt7J1p0GztHZ1c5BRg+fVoeWhNzKLDndGx8IhJyOPcYAHd9MBMcTzUtaAAjSEIUyDIsXE11VWhcNrziUjJtAB0cAFE7MABPRDw+PlwAr0QAGmhJH1XczfbO7UFcgn7ySNCYl16Orv88IIzT8JPo8KkAnFpDaCSUtIWLzug8K0wK08NBTPQBApjJAAHQjAAitBwMDqkz0AAtGmxfuNQMBprN5jgAtAAGbvXrLXKXIA
   /// </summary>
   /// <returns>The list of IDs that are not bouce backs and should be promoted</returns>
-  Task<List<string>> FilterOutBouncedBackIds<C>(SystemName thissys, List<string> ids) where C : ICoreEntity;
+  Task<List<string>> FilterOutBouncedBackIds<E>(SystemName thissys, List<string> ids) where E : ICoreEntity;
 
 }
 
 public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystemMappingStore {
   
   public async Task<EntityIntraSystemMapping> Create(CreateEntityIntraSystemMapping create) => (await Create([create])).Single();
-  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> creates);
+  public abstract Task<List<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> creates);
   
   public async Task<EntityIntraSystemMapping> Update(UpdateEntityIntraSystemMapping update) => (await Update([update])).Single();
-  public abstract Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates);
-  public abstract Task<List<(C Core, EntityIntraSystemMapping Map)>> Get<C>(ICollection<C> cores, SystemName target) where C : ICoreEntity;
+  public abstract Task<List<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates);
+  public abstract Task<List<(E Core, EntityIntraSystemMapping Map)>> Get<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
   public abstract Task<List<EntityIntraSystemMapping>> GetAll();
-  public abstract Task<List<string>> FilterOutBouncedBackIds<C>(SystemName thissys, List<string> ids) where C : ICoreEntity;
+  public abstract Task<List<string>> FilterOutBouncedBackIds<E>(SystemName thissys, List<string> ids) where E : ICoreEntity;
   
   public abstract ValueTask DisposeAsync();
 

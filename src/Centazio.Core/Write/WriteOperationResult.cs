@@ -4,28 +4,28 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
-public abstract record WriteOperationResult<C>(
-        ICollection<(C Core, EntityIntraSystemMapping Map)> EntitiesWritten,
+public abstract record WriteOperationResult<E>(
+        ICollection<(E Core, EntityIntraSystemMapping Map)> EntitiesWritten,
         EOperationResult Result,
         string Message,
         EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
         Exception? Exception = null)
         : OperationResult(Result, Message, AbortVote, Exception)
-        where C : ICoreEntity;
+        where E : ICoreEntity;
 
-public record SuccessWriteOperationResult<C>(
-    ICollection<(C Core, EntityIntraSystemMapping Map)> EntitiesWritten,
+public record SuccessWriteOperationResult<E>(
+    ICollection<(E Core, EntityIntraSystemMapping Map)> EntitiesWritten,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
-    : WriteOperationResult<C>(
+    : WriteOperationResult<E>(
         EntitiesWritten, 
         EOperationResult.Success, 
         $"Write success results ({EntitiesWritten.Count})", 
-        AbortVote) where C : ICoreEntity;
+        AbortVote) where E : ICoreEntity;
 
-public record ErrorWriteOperationResult<C>(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-        : WriteOperationResult<C>(
-                Array.Empty<(C Core, EntityIntraSystemMapping Map)>(), 
+public record ErrorWriteOperationResult<E>(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
+        : WriteOperationResult<E>(
+                Array.Empty<(E Core, EntityIntraSystemMapping Map)>(), 
                 EOperationResult.Error, 
                 $"Write error results[{Exception?.Message ?? "na"}] - abort[{AbortVote}]", 
                 AbortVote, 
-                Exception) where C : ICoreEntity;
+                Exception) where E : ICoreEntity;

@@ -28,23 +28,23 @@ END
     return this;
   }
   
-  public async Task<C> Get<C>(string id) where C : class, ICoreEntity {
+  public async Task<E> Get<E>(string id) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
-    var raw = await conn.QuerySingleOrDefaultAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(C).Name} WHERE Id=@Id", new { Id = id });
-    if (raw == null) throw new Exception($"Core entity [{typeof(C).Name}#{id}] not found");
-    return (CoreCustomer) raw as C ?? throw new Exception();
+    var raw = await conn.QuerySingleOrDefaultAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(E).Name} WHERE Id=@Id", new { Id = id });
+    if (raw == null) throw new Exception($"Core entity [{typeof(E).Name}#{id}] not found");
+    return (CoreCustomer) raw as E ?? throw new Exception();
   }
 
-  public async Task<IEnumerable<C>> Query<C>(string query) where C : class, ICoreEntity {
+  public async Task<IEnumerable<E>> Query<E>(string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var raws = await conn.QueryAsync<CoreCustomerRaw>(query);
-    return raws.Select(raw => (CoreCustomer) raw).Cast<C>();
+    return raws.Select(raw => (CoreCustomer) raw).Cast<E>();
   }
   
-  public Task<IEnumerable<C>> Query<C>(Expression<Func<C, bool>> predicate) where C : class, ICoreEntity => throw new NotSupportedException();
+  public Task<IEnumerable<E>> Query<E>(Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<string, string>> GetChecksums<C>(List<C> entities) where C : ICoreEntity {
-    if (typeof(C) != typeof(CoreCustomer)) throw new NotSupportedException(typeof(C).Name);
+  public async Task<Dictionary<string, string>> GetChecksums<E>(List<E> entities) where E : ICoreEntity {
+    if (typeof(E) != typeof(CoreCustomer)) throw new NotSupportedException(typeof(E).Name);
 
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();

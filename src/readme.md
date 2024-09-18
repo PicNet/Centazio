@@ -1,8 +1,9 @@
 # Todo
 - set up testing pipeline (agent is ready)
 - sqlite (self hosted), postgres
-- write function
 - consider not having `Message` or `Description` fields.  Instead save a generic results object serialised as Json
+- move timeout and FirstTimeCheckpoint to FunctionConfig and allow override in OpConfig but not mandatory
+- errors in functions are swallowed making it hard to debug/test
 
 # Developer Guidelines:
 

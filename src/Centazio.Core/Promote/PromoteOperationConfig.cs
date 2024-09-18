@@ -4,10 +4,13 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
-public record PromoteOperationConfig<C>(
+public interface IEvaluateEntitiesToPromote<E> where E : ICoreEntity {
+  Task<PromoteOperationResult<E>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<E>> config, IEnumerable<StagedEntity> staged);
+}
+
+public record PromoteOperationConfig<E>(
     ObjectName Object, 
     ValidCron Cron, 
     DateTime FirstTimeCheckpoint,
-    // todo: these Func signatures are so ugly, think of a better approach (interface perhaps)
-    Func<OperationStateAndConfig<PromoteOperationConfig<C>>, IEnumerable<StagedEntity>, Task<PromoteOperationResult<C>>> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron, FirstTimeCheckpoint) where C : ICoreEntity;
+    IEvaluateEntitiesToPromote<E> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;
 

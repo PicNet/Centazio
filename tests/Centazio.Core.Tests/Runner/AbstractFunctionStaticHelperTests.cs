@@ -53,7 +53,7 @@ public class AbstractFunctionStaticHelperTests {
       LastCompleted = last,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString()
-    }, new(name, new (new (cron)), DateTime.MinValue, TestingFactories.TestingListReadOperationImplementation));
+    }, new(name, new (new (cron)), DateTime.MinValue, new TestingListReadOperationImplementation()));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -118,7 +118,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
-    states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = _ => throw new Exception() } }; 
+    states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = new ErrorReadOperationImplementation() } }; 
     var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo)).ToList();
     var newstates = repo.Objects.Values.ToList();
     var ex = results[0].Exception ?? throw new Exception();
@@ -153,13 +153,43 @@ public class AbstractFunctionStaticHelperTests {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingAbortingAndEmptyReadOperationImplementation));
+            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingAbortingAndEmptyReadOperationImplementation()));
     
     public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
-      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation),
-      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, TestingFactories.TestingEmptyReadOperationImplementation)
+      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation())
     ]);
+  }
+  
+  private class TestingListReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object); 
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
+      return Task.FromResult(res); 
+    }
+  }
+  
+  private class TestingAbortingAndEmptyReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object);
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult(EOperationAbortVote.Abort) : new EmptyReadOperationResult(); 
+      return Task.FromResult(res);
+    }
+  }
+  
+  private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object);
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
+      return Task.FromResult(res);
+    }
+  }
+  
+  private class ErrorReadOperationImplementation : IGetObjectsToStage {
+
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => throw new Exception();
+
   }
 }

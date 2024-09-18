@@ -7,7 +7,7 @@ using F = Centazio.Core.Tests.TestingFactories;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
 
-public class PromoteFunctionSingleOpTest {
+public class PromoteFunctionTests {
 
   private readonly SystemName sys = Constants.CrmSystemName;
   private readonly LifecycleStage stg = Constants.Promote;
@@ -121,18 +121,18 @@ public class PromoteFunctionSingleOpTest {
   private CoreCustomer ToCore(string json) => JsonSerializer.Deserialize<CoreCustomer>(json) ?? throw new Exception();
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>> {
+public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>, IEvaluateEntitiesToPromote<CoreCustomer> {
 
   public override FunctionConfig<PromoteOperationConfig<CoreCustomer>> Config { get; }
-  public bool IgnoreNext { get; set; } 
+  public bool IgnoreNext { get; set; }
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Promote, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), EvaluateCustomersToPromote)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), this)
     ]));
   }
   
-  private Task<PromoteOperationResult<CoreCustomer>> EvaluateCustomersToPromote(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> config, IEnumerable<StagedEntity> staged) {
+  public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> config, IEnumerable<StagedEntity> staged) {
     var lst = staged.ToList();
     var cores = lst.Select(e => {
       var core = JsonSerializer.Deserialize<CoreCustomer>(e.Data) ?? throw new Exception();

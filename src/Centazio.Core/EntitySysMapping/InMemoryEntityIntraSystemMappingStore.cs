@@ -15,17 +15,15 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
         (Core: c, Map: memdb[existing]);
   }).ToList());
   
-  public override Task<IEnumerable<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> news) => 
-      Task.FromResult(news.Select(n => {
-        var map = EntityIntraSystemMapping.Create(n);
-        return memdb[map.Key] = map;
-      }));
+  public override Task<List<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> news) => Task.FromResult(news.Select(n => {
+    var map = EntityIntraSystemMapping.Create(n);
+    return memdb[map.Key] = map;
+  }).ToList());
 
-  public override Task<IEnumerable<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates) => 
-      Task.FromResult(updates.Select(update => {
-        var map = memdb[update.Key];
-        return memdb[update.Key] = update.Status == EEntityMappingStatus.Success ? map.Success() : map.Error(update.Error);
-      }));
+  public override Task<List<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates) => Task.FromResult(updates.Select(update => {
+    var map = memdb[update.Key];
+    return memdb[update.Key] = update.Status == EEntityMappingStatus.SuccessUpdate ? map.SuccessUpdate() : map.Error(update.Error);
+  }).ToList());
 
   public override Task<List<string>> FilterOutBouncedBackIds<C>(SystemName promotingsys, List<string> ids) {
     var bounces = memdb.Values.

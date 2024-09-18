@@ -9,6 +9,7 @@ using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
+using Centazio.Core.Write;
 
 namespace Centazio.Core.Tests;
 
@@ -25,30 +26,6 @@ public static class TestingFactories {
       ICoreStorageUpserter? core = null) => 
       new PromoteOperationRunner<CoreCustomer>(store ?? SeStore(), entitymap ?? EntitySysMap(), core ?? CoreRepo());
   
-  public static Task<ReadOperationResult> TestingAbortingAndEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
-    var result = Enum.Parse<EOperationResult>(op.Settings.Object);
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult(EOperationAbortVote.Abort) : new EmptyReadOperationResult(); 
-    return Task.FromResult(res);
-  }
-  
-  public static Task<ReadOperationResult> TestingEmptyReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
-    var result = Enum.Parse<EOperationResult>(op.Settings.Object);
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
-    return Task.FromResult(res);
-  }
-
-  public static Task<ReadOperationResult> TestingSingleReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
-    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
-    return Task.FromResult(res);
-  }
-
-  public static Task<ReadOperationResult> TestingListReadOperationImplementation(OperationStateAndConfig<ReadOperationConfig> op) {
-    var result = Enum.Parse<EOperationResult>(op.Settings.Object); 
-    ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
-    return Task.FromResult(res); 
-  }
-  
   public static string TestingChecksum(string data) => data.GetHashCode().ToString(); // simple fast
   public static string TestingChecksum(object obj) => TestingChecksum(JsonSerializer.Serialize(obj));
 
@@ -58,6 +35,10 @@ public static class TestingFactories {
     checksum ??= TestingChecksum(new { id, first, last, dob });
     return new CoreCustomer(id, checksum, first, last, dob, UtcDate.UtcNow);
   }
+
+  public static WriteOperationRunner<CoreCustomer, C> WriteRunner<C>(InMemoryEntityIntraSystemMappingStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+      => new(entitymap ?? EntitySysMap(), core ?? CoreRepo());
+
 }
 
 public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, TestingFactories.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }

@@ -35,7 +35,7 @@ public class PromoteOperationRunnerTests {
     await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
         ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, EvaluateEntitiesToPromoteSuccess)));
+        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, new EvaluateEntitiesToPromoteSuccess())));
     var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -56,7 +56,7 @@ public class PromoteOperationRunnerTests {
     await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
         ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, EvaluateEntitiesToPromoteError)));
+        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, new EvaluateEntitiesToPromoteError())));
     var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
     Assert.That(saved, Is.Empty);
     
@@ -69,15 +69,19 @@ public class PromoteOperationRunnerTests {
     
   }
   
-  private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteSuccess(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
-    var lst = staged.ToList();
-    return Task.FromResult((PromoteOperationResult<CoreCustomer>) new SuccessPromoteOperationResult<CoreCustomer>(
-        lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
-        lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")).ToList()));
+  private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote<CoreCustomer> {
+    public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
+      var lst = staged.ToList();
+      return Task.FromResult((PromoteOperationResult<CoreCustomer>) new SuccessPromoteOperationResult<CoreCustomer>(
+          lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+          lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")).ToList()));
+    }
   }
-  
-  private Task<PromoteOperationResult<CoreCustomer>> EvaluateEntitiesToPromoteError(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
-    return Task.FromResult((PromoteOperationResult<CoreCustomer>) new ErrorPromoteOperationResult<CoreCustomer>());
+
+  public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote<CoreCustomer> {
+    public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
+      return Task.FromResult((PromoteOperationResult<CoreCustomer>) new ErrorPromoteOperationResult<CoreCustomer>());
+    }
   }
 }
 

@@ -74,9 +74,13 @@ public class FunctionRunnerTests {
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }
 
-  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, new List<ReadOperationConfig> { 
-    new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, _ => Task.FromResult(new EmptyReadOperationResult() as ReadOperationResult))
-  });
+  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, 
+      new List<ReadOperationConfig> { new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, new EmptyResults()) }) {
+    
+    private class EmptyResults : IGetObjectsToStage {
+      public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
+    }
+  }
   
   class EmptyFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
 

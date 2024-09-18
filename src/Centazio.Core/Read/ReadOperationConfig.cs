@@ -2,6 +2,10 @@
 
 namespace Centazio.Core.Read;
 
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> GetObjectsToStage) 
+public interface IGetObjectsToStage {
+  Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config);
+}
+
+public record ReadOperationConfig(ObjectName Object, ValidCron Cron, DateTime FirstTimeCheckpoint, IGetObjectsToStage GetObjectsToStage) 
         : OperationConfig(Object, Cron, FirstTimeCheckpoint);
         

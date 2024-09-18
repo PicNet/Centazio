@@ -7,15 +7,15 @@ using Serilog;
 
 namespace Centazio.Core.Promote;
 
-internal class PromoteOperationRunner<C>(
+internal class PromoteOperationRunner<E>(
     IStagedEntityStore staged, 
     IEntityIntraSystemMappingStore entitymap,
-    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<C>, PromoteOperationResult<C>> where C : ICoreEntity {
+    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig<E>, PromoteOperationResult<E>> where E : ICoreEntity {
   
-  public async Task<PromoteOperationResult<C>> RunOperation(OperationStateAndConfig<PromoteOperationConfig<C>> op) {
+  public async Task<PromoteOperationResult<E>> RunOperation(OperationStateAndConfig<PromoteOperationConfig<E>> op) {
     var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.Object);
-    var results = await op.Settings.EvaluateEntitiesToPromote(op, pending);
+    var results = await op.Settings.EvaluateEntitiesToPromote.Evaluate(op, pending);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
@@ -32,7 +32,7 @@ internal class PromoteOperationRunner<C>(
     return results; 
   }
 
-  private async Task WriteEntitiesToCoreStorage<T>(OperationStateAndConfig<PromoteOperationConfig<C>> op, List<T> entities) where T : ICoreEntity {
+  private async Task WriteEntitiesToCoreStorage<T>(OperationStateAndConfig<PromoteOperationConfig<E>> op, List<T> entities) where T : ICoreEntity {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
         .IgnoreNonMeaninfulChanges(core))
@@ -42,7 +42,7 @@ internal class PromoteOperationRunner<C>(
     await core.Upsert(toupsert);
   }
 
-  public PromoteOperationResult<C> BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig<C>> op, Exception ex) => new ErrorPromoteOperationResult<C>(EOperationAbortVote.Abort, ex);
+  public PromoteOperationResult<E> BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig<E>> op, Exception ex) => new ErrorPromoteOperationResult<E>(EOperationAbortVote.Abort, ex);
 
 }
 

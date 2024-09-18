@@ -7,7 +7,7 @@ using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.IntegrationTests.Read;
 
-public class ReadFunctionSingleOpTests {
+public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.CrmSystemName;
   private readonly LifecycleStage stg = Constants.Read;
@@ -81,21 +81,22 @@ public class ReadFunctionSingleOpTests {
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
+public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Read, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), GetCustomersToStage)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), this)
     ]));
   }
   
-  private async Task<ReadOperationResult> GetCustomersToStage(OperationStateAndConfig<ReadOperationConfig> config) {
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListRecordsReadOperationResult(customers)
         : new EmptyReadOperationResult();
   }
+
 }

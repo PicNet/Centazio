@@ -21,11 +21,12 @@ public record EntityIntraSystemMapping {
         TargetId, 
         Status) {
       DateCreated = UtcDate.UtcNow,
-      DateLastSuccess = Status == EEntityMappingStatus.Success ? UtcDate.UtcNow : null
+      DateLastSuccess = Status == EEntityMappingStatus.SuccessCreate || Status == EEntityMappingStatus.SuccessUpdate ? UtcDate.UtcNow : null
     };
   }
   
-  public EntityIntraSystemMapping Success() => this with { Status = EEntityMappingStatus.Success, DateUpdated = UtcDate.UtcNow, DateLastSuccess = UtcDate.UtcNow };
+  public EntityIntraSystemMapping SuccessCreate(string targetid) => this with { Status = EEntityMappingStatus.SuccessCreate, DateUpdated = UtcDate.UtcNow, DateLastSuccess = UtcDate.UtcNow, TargetId = targetid };
+  public EntityIntraSystemMapping SuccessUpdate() => this with { Status = EEntityMappingStatus.SuccessUpdate, DateUpdated = UtcDate.UtcNow, DateLastSuccess = UtcDate.UtcNow };
   public EntityIntraSystemMapping Error(string? error) => this with { Status = EEntityMappingStatus.Error, DateUpdated = UtcDate.UtcNow, DateLastError = UtcDate.UtcNow, LastError = error };
 
   private EntityIntraSystemMapping(ObjectName coreentity, ValidString coreid, SystemName sourcesys, ValidString sourceid, SystemName targetsys, ValidString targetid, EEntityMappingStatus status) {
@@ -35,7 +36,7 @@ public record EntityIntraSystemMapping {
     SourceId = sourceid; 
     TargetSystem = targetsys; 
     TargetId = targetid; 
-    Status = status; 
+    Status = status;
   }
   
   public ObjectName CoreEntity { get; } 
@@ -43,7 +44,7 @@ public record EntityIntraSystemMapping {
   public SystemName SourceSystem { get; } 
   public ValidString SourceId { get; } 
   public SystemName TargetSystem { get; } 
-  public ValidString TargetId { get; } 
+  public ValidString TargetId { get; private init; } 
   
   public DateTime DateCreated { get; private init; } 
   public EEntityMappingStatus Status { get; private init; }

@@ -9,19 +9,26 @@ public abstract record WriteOperationConfig(
     ValidCron Cron, 
     DateTime FirstTimeCheckpoint) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
 
+// SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
-public record SingleWriteOperationConfig<C>(ObjectName Object, 
+public interface IWriteSingleEntityToTargetSystem<E> where E : ICoreEntity {
+  Task<WriteOperationResult<E>> WriteEntities(SingleWriteOperationConfig<E> config, List<(E Core, EntityIntraSystemMapping Map)> maps);
+}
+
+public record SingleWriteOperationConfig<E>(
+    ObjectName Object, 
     ValidCron Cron, 
     DateTime FirstTimeCheckpoint,
-    Func<
-        SingleWriteOperationConfig<C>, 
-        List<(C Core, EntityIntraSystemMapping Map)>, 
-        Task<WriteOperationResult<C>>> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where C : ICoreEntity;
+    IWriteSingleEntityToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;
 
-public record BatchWriteOperationConfig<C>(ObjectName Object, 
+// BatchWriteOperationConfig/IWriteBatchEntitiesToTargetSystem - used when target system handles batches of entities
+
+public interface IWriteBatchEntitiesToTargetSystem<E> where E : ICoreEntity {
+    Task<WriteOperationResult<E>> WriteEntities(BatchWriteOperationConfig<E> config, List<(E Core, EntityIntraSystemMapping Map)> maps);
+}
+
+public record BatchWriteOperationConfig<E>(
+    ObjectName Object, 
     ValidCron Cron, 
     DateTime FirstTimeCheckpoint,
-    Func<
-        BatchWriteOperationConfig<C>, 
-        List<(C Core, EntityIntraSystemMapping Map)>,
-        Task<WriteOperationResult<C>>> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where C : ICoreEntity;
+    IWriteBatchEntitiesToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;

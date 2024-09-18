@@ -23,7 +23,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, TestingFactories.TestingSingleReadOperationImplementation));
+    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, new TestingSingleReadOperationImplementation()));
     
     Assert.That(store.Contents, Is.Empty);
     ValidateResult(
@@ -34,7 +34,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_empty_results_are_not_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingEmptyReadOperationImplementation);
+    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, new TestingEmptyReadOperationImplementation());
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(store.Contents, Is.Empty);
@@ -46,7 +46,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingSingleReadOperationImplementation));
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingSingleReadOperationImplementation()));
 
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo((StagedEntity) new StagedEntity.Dto(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.Checksum)));
@@ -58,7 +58,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = TestingFactories.ReadRunner(store);
-    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, TestingFactories.TestingListReadOperationImplementation));
+    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingListReadOperationImplementation()));
     
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
@@ -80,9 +80,32 @@ public class ReadOperationRunnerTests {
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }
   
-  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> Impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
         new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, Impl));
   
+  private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object);
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
+      return Task.FromResult(res);
+    }
+  }
+  
+  private class TestingSingleReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object); 
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
+      return Task.FromResult(res);
+    }
+  }
+  
+  private class TestingListReadOperationImplementation : IGetObjectsToStage {
+    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+      var result = Enum.Parse<EOperationResult>(config.Settings.Object); 
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
+      return Task.FromResult(res); 
+    }
+  }
 }
