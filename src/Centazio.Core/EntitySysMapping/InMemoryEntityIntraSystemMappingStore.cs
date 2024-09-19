@@ -4,26 +4,27 @@ namespace Centazio.Core.EntitySysMapping;
 
 public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMappingStore {
 
-  protected readonly Dictionary<EntityIntraSystemMapping.MappingKey, EntityIntraSystemMapping> memdb = new();
+  protected readonly Dictionary<EntityIntraSysMap.MappingKey, EntityIntraSysMap> memdb = new();
   
-  public override Task<List<EntityIntraSystemMapping>> GetAll() => Task.FromResult(memdb.Values.ToList());
-  
-  public override Task<List<(C Core, EntityIntraSystemMapping Map)>> Get<C>(ICollection<C> cores, SystemName target) => Task.FromResult(cores.Select(c => {
-    var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == typeof(C).Name && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
-    return existing == default ? 
-        (Core: c, Map: EntityIntraSystemMapping.CreatePending(c, target)) : 
-        (Core: c, Map: memdb[existing]);
-  }).ToList());
-  
-  public override Task<List<EntityIntraSystemMapping>> Create(IEnumerable<CreateEntityIntraSystemMapping> news) => Task.FromResult(news.Select(n => {
-    var map = EntityIntraSystemMapping.Create(n);
-    return memdb[map.Key] = map;
-  }).ToList());
+  public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
+  public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  public override Task<List<EntityIntraSystemMapping>> Update(IEnumerable<UpdateEntityIntraSystemMapping> updates) => Task.FromResult(updates.Select(update => {
-    var map = memdb[update.Key];
-    return memdb[update.Key] = update.Status == EEntityMappingStatus.SuccessUpdate ? map.SuccessUpdate() : map.Error(update.Error);
-  }).ToList());
+  public override Task<GetForCoresResult<E>> GetForCores<E>(ICollection<E> cores, SystemName target) {
+    var news = new List<(E Core, EntityIntraSysMap.PendingCreate Map)>();
+    var updates = new List<(E Core, EntityIntraSysMap.PendingUpdate Map)>();
+    cores.ForEach(c => {
+      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == typeof(E).Name && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
+      if (existing == default) news.Add((c, EntityIntraSysMap.Create(c, target)));
+      else updates.Add((c, memdb[existing].Update()));
+    });
+    return Task.FromResult(new GetForCoresResult<E>(news, updates));
+  }
+
+  public override Task<List<EntityIntraSysMap.Created>> Create(IEnumerable<EntityIntraSysMap.Created> news) => 
+      Task.FromResult(news.Select(map => (EntityIntraSysMap.Created) (memdb[map.Key] = map)).ToList());
+
+  public override Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> updates) => 
+      Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated) (memdb[map.Key] = map)).ToList());
 
   public override Task<List<string>> FilterOutBouncedBackIds<C>(SystemName promotingsys, List<string> ids) {
     var bounces = memdb.Values.

@@ -5,26 +5,33 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Write;
 
 public abstract record WriteOperationResult<E>(
-        ICollection<(E Core, EntityIntraSystemMapping Map)> EntitiesWritten,
-        EOperationResult Result,
-        string Message,
-        EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-        Exception? Exception = null)
-        : OperationResult(Result, Message, AbortVote, Exception)
-        where E : ICoreEntity;
+    ICollection<(E Core, EntityIntraSysMap.Created Map)> EntitiesCreated,
+    ICollection<(E Core, EntityIntraSysMap.Updated Map)> EntitiesUpdated,
+    EOperationResult Result,
+    string Message,
+    EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
+    Exception? Exception = null)
+    : OperationResult(Result, Message, AbortVote, Exception)
+        where E : ICoreEntity {
+  
+  public int TotalChanges => EntitiesCreated.Count + EntitiesUpdated.Count;
+}
 
 public record SuccessWriteOperationResult<E>(
-    ICollection<(E Core, EntityIntraSystemMapping Map)> EntitiesWritten,
+    ICollection<(E Core, EntityIntraSysMap.Created Map)> EntitiesCreated,
+    ICollection<(E Core, EntityIntraSysMap.Updated Map)> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : WriteOperationResult<E>(
-        EntitiesWritten, 
+        EntitiesCreated, 
+        EntitiesUpdated,
         EOperationResult.Success, 
-        $"Write success results ({EntitiesWritten.Count})", 
+        $"Write success created ({EntitiesCreated.Count}) updated ({EntitiesUpdated.Count})", 
         AbortVote) where E : ICoreEntity;
 
 public record ErrorWriteOperationResult<E>(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
         : WriteOperationResult<E>(
-                Array.Empty<(E Core, EntityIntraSystemMapping Map)>(), 
+                Array.Empty<(E Core, EntityIntraSysMap.Created Map)>(),
+                Array.Empty<(E Core, EntityIntraSysMap.Updated Map)>(),
                 EOperationResult.Error, 
                 $"Write error results[{Exception?.Message ?? "na"}] - abort[{AbortVote}]", 
                 AbortVote, 

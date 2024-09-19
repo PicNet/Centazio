@@ -8,7 +8,7 @@ namespace Centazio.Core.Tests.EntitySysMapping;
 public abstract class AbstractEntityIntraSystemMappingStoreTests {
 
   private readonly string STR = nameof(AbstractEntityIntraSystemMappingStoreTests);
-  private readonly string STR2 = nameof(EntityIntraSystemMapping);
+  private readonly string STR2 = nameof(EntityIntraSysMap);
   
   private AbstractEntityIntraSystemMappingStore store;
   [SetUp] public void SetUp() => store = GetStore();
@@ -16,29 +16,31 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = new CreateSuccessIntraSystemMapping(core, STR, STR); 
-    var created = await store.Create(original);
+    var original = EntityIntraSysMap.Create(core, STR); 
+    var created = await store.Create(original.SuccessCreate(STR));
+    var created2 = (await store.GetSingle(created.Key)).Update();
+    
     var list1 = await store.GetAll();
-    var updated = await store.Update(new UpdateErrorEntityIntraSystemMapping(created.Key, "Error"));
+    var updated = await store.Update(created2.Error("Error"));
     var list2 = await store.GetAll();
     
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
-    var exp = created.Error("Error");
+    var exp = created2.Error("Error");
     Assert.That(updated, Is.EqualTo(exp));
     Assert.That(list2, Is.EquivalentTo(new [] { exp }));
   }
   
   [Test] public async Task Test_upsert_enum() {
     var original = new [] { 
-      new CreateSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR, STR), STR, STR),
-      new CreateSuccessIntraSystemMapping(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2)
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR),
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2)
     }; 
     var created = (await store.Create(original)).ToList();
     var list1 = await store.GetAll();
-    var updatecmd = created.Select(e => new UpdateErrorEntityIntraSystemMapping(e.Key, "Error")).ToList();
+    var updatecmd = created.Select(e => e.Update().Error("Error")).ToList();
     var updated2 = (await store.Update(updatecmd)).ToList();
     var list2 = await store.GetAll();
-    var exp = created.Select(e => e.Error("Error")).ToList();
+    var exp = created.Select(e => e.Update().Error("Error")).ToList();
         
     Assert.That(list1, Is.EquivalentTo(created));
     Assert.That(updated2, Is.EquivalentTo(exp));
@@ -50,10 +52,11 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(new CreateSuccessIntraSystemMapping(core, "FIN", "FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.FinSystemName).SuccessCreate("FIN321"));
+    
     var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var filtered = await store.FilterOutBouncedBackIds<CoreCustomer>("FIN", ids);
+    var filtered = await store.FilterOutBouncedBackIds<CoreCustomer>(Constants.FinSystemName, ids);
     
     Assert.That(filtered, Is.EquivalentTo(ids.Where(id => id != "FIN321")));
   }

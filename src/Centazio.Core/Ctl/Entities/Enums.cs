@@ -5,7 +5,7 @@ public enum EOperationAbortVote { Unknown, Continue, Abort }
 public enum EResultType { Error, Empty, Single, List }
 public enum ESystemStateStatus { Idle, Running }
 public enum EEntityMappingStatus { 
-  Pending, 
+  PendingCreate, 
   Error, 
   SuccessCreate,
   SuccessUpdate,
