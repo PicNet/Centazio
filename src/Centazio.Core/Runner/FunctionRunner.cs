@@ -8,14 +8,13 @@ namespace Centazio.Core.Runner;
 public class FunctionRunner<C, R>(
     AbstractFunction<C, R> func, 
     IOperationRunner<C, R> oprunner, 
-    ICtlRepository ctl, 
-    int maxminutes = 30) 
+    ICtlRepository ctl) 
         where C : OperationConfig
         where R : OperationResult {
 
   public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;
-
+    
     Log.Information("function started {@System} {@Stage}", func.Config.System, func.Config.Stage);
     
     var state = await ctl.GetOrCreateSystemState(func.Config.System, func.Config.Stage);
@@ -25,17 +24,17 @@ public class FunctionRunner<C, R>(
     }
     if (state.Status != ESystemStateStatus.Idle) {
       var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
-      if (minutes <= maxminutes) {
+      if (minutes <= func.Config.TimeoutMinutes) {
         Log.Information("function is not idle, ignoring run {@SystemState}", state);
         return new FunctionRunResults<R>("not idle", Array.Empty<R>());
       }
-      Log.Information("function considered stuck, running {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, maxminutes, minutes);
+      Log.Information("function considered stuck, running {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, func.Config.TimeoutMinutes, minutes);
     }
     
     try {
       // not setting last start here as we need the LastStart to represent the time the function was started before this run
       state = await ctl.SaveSystemState(state.Running());
-      var results = await func.RunOperation(oprunner, ctl);
+      var results = await func.RunFunctionOperations(oprunner, ctl);
       await SaveCompletedState();
       return new FunctionRunResults<R>("success", results);
     } catch (Exception ex) {

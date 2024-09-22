@@ -11,6 +11,5 @@ public interface IEvaluateEntitiesToPromote<E> where E : ICoreEntity {
 public record PromoteOperationConfig<E>(
     ObjectName Object, 
     ValidCron Cron, 
-    DateTime FirstTimeCheckpoint,
-    IEvaluateEntitiesToPromote<E> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;
+    IEvaluateEntitiesToPromote<E> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron) where E : ICoreEntity;
 

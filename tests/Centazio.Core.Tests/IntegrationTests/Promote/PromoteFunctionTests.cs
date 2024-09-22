@@ -128,7 +128,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Promote, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), this)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   

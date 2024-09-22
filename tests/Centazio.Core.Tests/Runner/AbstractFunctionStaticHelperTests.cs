@@ -23,7 +23,7 @@ public class AbstractFunctionStaticHelperTests {
     var template = await repo.CreateObjectState(ss, "2"); 
     
     var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
-    var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg.Operations, ss, repo);
+    var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
     Enumerable.Range(0, 4).ForEach(TestAtIndex);
@@ -43,7 +43,8 @@ public class AbstractFunctionStaticHelperTests {
     var updated = (await repo.CreateObjectState(ss, "2")).SetActive(false);
     await repo.SaveObjectState(updated);
     
-    var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(Factories.READ_OP_CONFIGS, ss, repo);
+    var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
+    var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.Settings.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
   }
@@ -53,7 +54,7 @@ public class AbstractFunctionStaticHelperTests {
       LastCompleted = last,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString()
-    }, new(name, new (new (cron)), DateTime.MinValue, new TestingListReadOperationImplementation()));
+    }, new(name, new (new (cron)), new TestingListReadOperationImplementation()));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -153,13 +154,13 @@ public class AbstractFunctionStaticHelperTests {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingAbortingAndEmptyReadOperationImplementation()));
+            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
     
     public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
-      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), DateTime.MinValue, new TestingEmptyReadOperationImplementation())
+      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
     ]);
   }
   

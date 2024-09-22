@@ -11,20 +11,25 @@ public abstract class AbstractFunction<C, R>
   
   public abstract FunctionConfig<C> Config { get; }
 
-  public virtual async Task<IEnumerable<R>> RunOperation(
+  public virtual async Task<IEnumerable<R>> RunFunctionOperations(
       IOperationRunner<C, R> runner,
       ICtlRepository ctl) {
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
-    var states = await LoadOperationsStates(Config.Operations, sys, ctl);
+    var states = await LoadOperationsStates(Config, sys, ctl);
     var ready = GetReadyOperations(states);
     var results = await RunOperationsTillAbort(ready, runner, ctl);
     return results;
   }
 
-  internal static async Task<IReadOnlyList<OperationStateAndConfig<C>>> LoadOperationsStates(ValidList<C> ops, SystemState system, ICtlRepository ctl) {
-    return (await ops.Value.Select(async op => new OperationStateAndConfig<C>(await ctl.GetOrCreateObjectState(system, op.Object), op)).Synchronous())
-        .Where(op => op.State.Active)
-        .ToList();
+  internal static async Task<IReadOnlyList<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
+    return (await conf.Operations.Value
+            .Select(async op => {
+      var state = await ctl.GetOrCreateObjectState(system, op.Object);
+      var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
+      return new OperationStateAndConfig<C>(state, op, checkpoint);
+    }).Synchronous())
+    .Where(op => op.State.Active)
+    .ToList();
   }
 
   internal static IEnumerable<OperationStateAndConfig<C>> GetReadyOperations(IEnumerable<OperationStateAndConfig<C>> states) {
@@ -54,7 +59,11 @@ public abstract class AbstractFunction<C, R>
     
     async Task<R> RunOp(OperationStateAndConfig<C> op) {
       try { return await runner.RunOperation(op); } 
-      catch (Exception ex) { return runner.BuildErrorResult(op, ex); }
+      catch (Exception ex) {
+        var res = runner.BuildErrorResult(op, ex);
+        Log.Error(ex, "unhandled RunOperation exception, {@ErrorResults}", res);
+        return res;
+      }
     }
 
     async Task<ObjectState> SaveOp(OperationStateAndConfig<C> op, DateTime start, R res) {

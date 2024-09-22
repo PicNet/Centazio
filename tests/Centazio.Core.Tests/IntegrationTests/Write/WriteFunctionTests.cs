@@ -43,7 +43,33 @@ public class WriteFunctionTests {
     Assert.That(created2, Is.Empty);
     Assert.That(updated2, Is.EquivalentTo(expresults2));
   }
+  
+  [Test] public async Task Test_WriteFunction_error_handling() {
+    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig<CoreCustomer>>(entitymap, core));
+    func.Throws = true;
+    var funcrunner = new FunctionRunner<BatchWriteOperationConfig<CoreCustomer>, WriteOperationResult<CoreCustomer>>(func, oprunner, ctl);
+    
+    var result = (ErrorWriteOperationResult<CoreCustomer>) (await funcrunner.RunFunction()).OpResults.Single();
+    var sys = ctl.Systems.Single();
+    var obj = ctl.Objects.Single();
+    var allcusts = await core.Query<CoreCustomer>(c => true);
+    var maps = await entitymap.GetAll();
 
+    Assert.That(result.EntitiesUpdated, Is.Empty);
+    Assert.That(result.EntitiesCreated, Is.Empty);
+    Assert.That(result.Exception, Is.EqualTo(func.Thrown));
+    Assert.That(result.TotalChanges, Is.EqualTo(0));
+    Assert.That(result.AbortVote, Is.EqualTo(EOperationAbortVote.Abort));
+    Assert.That(result.Result, Is.EqualTo(EOperationResult.Error));
+    
+    Assert.That(sys.Key, Is.EqualTo((Constants.FinSystemName, Constants.Write)));
+    Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.FinSystemName, Constants.Write).Completed(UtcDate.UtcNow)));
+    Assert.That(obj.Key, Is.EqualTo((Constants.FinSystemName, Constants.Write, Constants.CrmCustomer)));
+    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(Constants.FinSystemName, Constants.Write, Constants.CrmCustomer).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
+    Assert.That(allcusts, Is.Empty);
+    Assert.That(maps, Is.Empty);
+  }
 }
 
 public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig<CoreCustomer>, WriteOperationResult<CoreCustomer>> {
@@ -52,19 +78,23 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
   public List<(CoreCustomer Core, EntityIntraSysMap.Created Map)> Created { get => writer.Created; set => writer.Created = value; }
   public List<(CoreCustomer Core, EntityIntraSysMap.Updated Map)> Updated { get => writer.Updated; set => writer.Updated = value; }
   public void Reset() => writer.Reset();
+  public bool Throws { set => writer.Throws = value; }
+  public Exception? Thrown { get => writer.Thrown; }
   
   public override FunctionConfig<BatchWriteOperationConfig<CoreCustomer>> Config { get; }
 
   public TestingBatchWriteFunction() {
     Config = new(Constants.FinSystemName, Constants.Write, new ([
-      new BatchWriteOperationConfig<CoreCustomer>(Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), writer)
+      new BatchWriteOperationConfig<CoreCustomer>(Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, writer)
     ]));
   }
 
-  private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem<CoreCustomer> {
+  private class WriteEntitiesToTargetSystem() : IWriteBatchEntitiesToTargetSystem<CoreCustomer> {
 
     internal List<(CoreCustomer Core, EntityIntraSysMap.Created Map)> Created { get; set; } = new();
     internal List<(CoreCustomer Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = new();
+    internal bool Throws { get; set; }
+    internal Exception? Thrown { get; private set; } 
     
     internal void Reset() {
       Created.Clear();
@@ -72,6 +102,7 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
     }
 
     public Task<WriteOperationResult<CoreCustomer>> WriteEntities(BatchWriteOperationConfig<CoreCustomer> config, List<(CoreCustomer Core, EntityIntraSysMap.PendingCreate Map)> created, List<(CoreCustomer Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
+      if (Throws) throw Thrown = new Exception("mock function error");
       var news = created.Select(m => (m.Core, m.Map.SuccessCreate(m.Core.SourceId))).ToList();
       var updates = updated.Select(m => (m.Core, m.Map.SuccessUpdate())).ToList();
       Created.AddRange(news);

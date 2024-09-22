@@ -75,7 +75,7 @@ public class FunctionRunnerTests {
   }
 
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, 
-      new List<ReadOperationConfig> { new(NAME, TestingDefaults.CRON_EVERY_SECOND, DateTime.MinValue, new EmptyResults()) }) {
+      new List<ReadOperationConfig> { new(NAME, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
     
     private class EmptyResults : IGetObjectsToStage {
       public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
@@ -86,7 +86,7 @@ public class FunctionRunnerTests {
 
     public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public override async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<IEnumerable<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Array.Empty<ReadOperationResult>();
@@ -98,7 +98,7 @@ public class FunctionRunnerTests {
 
     public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
     
-    public override async Task<IEnumerable<ReadOperationResult>> RunOperation(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<IEnumerable<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult());

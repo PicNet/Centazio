@@ -88,7 +88,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.CrmSystemName, Constants.Read, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, UtcDate.UtcNow.AddYears(-1), this)
+      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   

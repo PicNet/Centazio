@@ -6,8 +6,7 @@ namespace Centazio.Core.Write;
 
 public abstract record WriteOperationConfig(
     ObjectName Object, 
-    ValidCron Cron, 
-    DateTime FirstTimeCheckpoint) : OperationConfig(Object, Cron, FirstTimeCheckpoint);
+    ValidCron Cron) : OperationConfig(Object, Cron);
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
@@ -21,8 +20,7 @@ public interface IWriteSingleEntityToTargetSystem<E> where E : ICoreEntity {
 public record SingleWriteOperationConfig<E>(
     ObjectName Object, 
     ValidCron Cron, 
-    DateTime FirstTimeCheckpoint,
-    IWriteSingleEntityToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;
+    IWriteSingleEntityToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron) where E : ICoreEntity;
 
 // BatchWriteOperationConfig/IWriteBatchEntitiesToTargetSystem - used when target system handles batches of entities
 
@@ -36,5 +34,4 @@ public interface IWriteBatchEntitiesToTargetSystem<E> where E : ICoreEntity {
 public record BatchWriteOperationConfig<E>(
     ObjectName Object, 
     ValidCron Cron, 
-    DateTime FirstTimeCheckpoint,
-    IWriteBatchEntitiesToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron, FirstTimeCheckpoint) where E : ICoreEntity;
+    IWriteBatchEntitiesToTargetSystem<E> WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron) where E : ICoreEntity;
