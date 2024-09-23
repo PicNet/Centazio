@@ -145,7 +145,7 @@ public class AbstractFunctionStaticHelperTests {
       LastSuccessCompleted = res == EOperationResult.Success ? UtcDate.UtcNow : null,
       LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: " +
           (len == 0 
-              ? res == EOperationResult.Error ? $"read error results[{exmessage}] - abort[Abort]" : "read empty results" 
+              ? res == EOperationResult.Error ? $"ErrorReadOperationResult[{exmessage}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
               : "")
     };
   }

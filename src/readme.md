@@ -1,8 +1,8 @@
 # Todo
-- consider not having `Message` or `Description` fields.  Instead save a generic results object serialised as Json
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
+- add unit tests for style (== null, != null, string Message \[only on abstracts records], etc)
 
 # Developer Guidelines:
 

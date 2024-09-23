@@ -75,7 +75,7 @@ public class ReadFunctionTests {
     LastSuccessCompleted = updated,
     LastCompleted = updated,
     LastRunMessage = "operation [CRM/Read/CrmCustomer] completed [Success] message: " + 
-        (len == 0 ? "read empty results" : $"read list results[{len}]")
+        (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
   };
     StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
   }

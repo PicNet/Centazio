@@ -114,7 +114,7 @@ public class PromoteFunctionTests {
     LastSuccessStart = updated,
     LastSuccessCompleted = updated,
     LastCompleted = updated,
-    LastRunMessage = $"operation [CRM/Promote/CrmCustomer] completed [Success] message: promote success results ({promoted}/{ignored})"
+    LastRunMessage = $"operation [CRM/Promote/CrmCustomer] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, obj, UtcDate.UtcNow, json, F.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);

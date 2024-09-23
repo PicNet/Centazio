@@ -28,7 +28,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo("success"));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -39,7 +39,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString())));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo("inactive"));
+    Assert.That(results.Message, Is.EqualTo(nameof(InactiveFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -49,7 +49,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo("success"));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
   }
   
@@ -60,7 +60,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo("not idle"));
+    Assert.That(results.Message, Is.EqualTo(nameof(AlreadyRunningFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -70,10 +70,10 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo("success"));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }
-
+  
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, 
       new List<ReadOperationConfig> { new(NAME, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
     

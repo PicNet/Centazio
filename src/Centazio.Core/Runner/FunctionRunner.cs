@@ -20,15 +20,15 @@ public class FunctionRunner<C, R>(
     var state = await ctl.GetOrCreateSystemState(func.Config.System, func.Config.Stage);
     if (!state.Active) {
       Log.Information("function is inactive, ignoring run {@SystemState}", state);
-      return new FunctionRunResults<R>("inactive", Array.Empty<R>());
+      return new InactiveFunctionRunResults<R>();
     }
     if (state.Status != ESystemStateStatus.Idle) {
       var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
       if (minutes <= func.Config.TimeoutMinutes) {
-        Log.Information("function is not idle, ignoring run {@SystemState}", state);
-        return new FunctionRunResults<R>("not idle", Array.Empty<R>());
+        Log.Information("function is already running, ignoring run {@SystemState}", state);
+        return new AlreadyRunningFunctionRunResults<R>();
       }
-      Log.Information("function considered stuck, running {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, func.Config.TimeoutMinutes, minutes);
+      Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, func.Config.TimeoutMinutes, minutes);
     }
     
     try {
@@ -36,15 +36,20 @@ public class FunctionRunner<C, R>(
       state = await ctl.SaveSystemState(state.Running());
       var results = await func.RunFunctionOperations(oprunner, ctl);
       await SaveCompletedState();
-      return new FunctionRunResults<R>("success", results);
+      return new SuccessFunctionRunResults<R>(results);
     } catch (Exception ex) {
       await SaveCompletedState();
       Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
-      return new FunctionRunResults<R>($"error: {ex.Message}", Array.Empty<R>());
+      return new ErrorFunctionRunResults<R>(ex);
     }
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
 }
 
-public record FunctionRunResults<R>(string Message, IEnumerable<R> OpResults) where R : OperationResult; 
+public abstract record FunctionRunResults<R>(IEnumerable<R> OpResults, string Message) where R : OperationResult; 
+public record SuccessFunctionRunResults<R>(IEnumerable<R> OpResults) : FunctionRunResults<R>(OpResults, "SuccessFunctionRunResults") where R : OperationResult;
+public record AlreadyRunningFunctionRunResults<R>() : FunctionRunResults<R>(Array.Empty<R>(), "AlreadyRunningFunctionRunResults") where R : OperationResult;
+public record InactiveFunctionRunResults<R>() : FunctionRunResults<R>(Array.Empty<R>(), "InactiveFunctionRunResults") where R : OperationResult;
+// ReSharper disable once NotAccessedPositionalProperty.Global
+public record ErrorFunctionRunResults<R>(Exception Exception) : FunctionRunResults<R>(Array.Empty<R>(), Exception.ToString()) where R : OperationResult;
