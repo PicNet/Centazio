@@ -25,7 +25,7 @@ public record SuccessWriteOperationResult<E>(
         EntitiesCreated, 
         EntitiesUpdated,
         EOperationResult.Success, 
-        $"Write success created ({EntitiesCreated.Count}) updated ({EntitiesUpdated.Count})", 
+        $"SuccessWriteOperationResult Created[{EntitiesCreated.Count}] Updated[{EntitiesUpdated.Count}]",
         AbortVote) where E : ICoreEntity;
 
 public record ErrorWriteOperationResult<E>(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
@@ -33,6 +33,6 @@ public record ErrorWriteOperationResult<E>(EOperationAbortVote AbortVote = EOper
                 Array.Empty<(E Core, EntityIntraSysMap.Created Map)>(),
                 Array.Empty<(E Core, EntityIntraSysMap.Updated Map)>(),
                 EOperationResult.Error, 
-                $"Write error results[{Exception?.Message ?? "na"}] - abort[{AbortVote}]", 
+                $"ErrorWriteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 
                 AbortVote, 
                 Exception) where E : ICoreEntity;

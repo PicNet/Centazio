@@ -89,7 +89,7 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
     ]));
   }
 
-  private class WriteEntitiesToTargetSystem() : IWriteBatchEntitiesToTargetSystem<CoreCustomer> {
+  private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem<CoreCustomer> {
 
     internal List<(CoreCustomer Core, EntityIntraSysMap.Created Map)> Created { get; set; } = new();
     internal List<(CoreCustomer Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = new();

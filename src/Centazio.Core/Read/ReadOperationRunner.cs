@@ -9,7 +9,7 @@ internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<Read
 
   public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
     var res = await op.Settings.GetObjectsToStage.GetObjects(op);
-    if (res.IsValid) await DoStage();
+    if (res.ResultLength > 0) await DoStage();
     return res;
 
     async Task DoStage() {

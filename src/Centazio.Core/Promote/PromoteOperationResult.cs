@@ -22,7 +22,7 @@ public record SuccessPromoteOperationResult<E>(
         ToPromote, 
         ToIgnore, 
         EOperationResult.Success, 
-        $"promote success results ({ToPromote.Count}/{ToIgnore.Count})", 
+        $"SuccessPromoteOperationResult Promote[{ToPromote.Count}] Ignore[{ToIgnore.Count}]", 
         AbortVote) where E : ICoreEntity;
 
 public record ErrorPromoteOperationResult<E>(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
@@ -30,6 +30,6 @@ public record ErrorPromoteOperationResult<E>(EOperationAbortVote AbortVote = EOp
                 Array.Empty<(StagedEntity Staged, E Core)>(), 
                 Array.Empty<(StagedEntity Entity, ValidString Reason)>(), 
                 EOperationResult.Error, 
-                $"promote error results[{Exception?.Message ?? "na"}] - abort[{AbortVote}]", 
+                $"ErrorPromoteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 
                 AbortVote, 
                 Exception) where E : ICoreEntity;
