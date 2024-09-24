@@ -2,7 +2,6 @@
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
-- check settings dtos and secrets dtos for 'Dto' pattern usage
 
 # Developer Guidelines:
 

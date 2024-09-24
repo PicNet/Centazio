@@ -16,14 +16,15 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     var types = typeof(StagedEntity).Assembly.GetTypes()
         .Where(t => IsRecord(t) && !t.IsAbstract && t.Namespace != "Centazio.Core.Settings" && t.Namespace != "Centazio.Core.Secrets" && !t.FullName!.EndsWith("+Dto"))
         .ToList();
+    var errors = new List<string>();
     types.ForEach(type => {
       var ignore = ALLOWED.TryGetValue(type.Name, out var value) ? value : [];
       var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
           .Where(p => p.PropertyType == typeof(string) && !ignore.Contains(p.Name))
           .ToList();
-      if (props.Any()) Console.WriteLine("Type: " + type.FullName + " PROPS: " + String.Join(", ", props.Select(p => p.Name)));
+      if (props.Any()) errors.Add($"Type[{type.FullName}] PROPS[{String.Join(", ", props.Select(p => p.Name))}]");
     });
-    
+    Assert.That(errors, Is.Empty, String.Join("\n", errors));
     bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
   }
 }
