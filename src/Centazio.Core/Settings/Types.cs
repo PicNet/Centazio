@@ -38,8 +38,8 @@ public record CentazioSettingsRaw {
   
   public static explicit operator CentazioSettings(CentazioSettingsRaw raw) => new (
           raw.SecretsFolder ?? throw new ArgumentNullException(nameof(SecretsFolder)),
-          raw.AwsSettings == null ? null : (AwsSettings) raw.AwsSettings,
-          raw.AzureSettings == null ? null : (AzureSettings) raw.AzureSettings);
+          raw.AwsSettings is null ? null : (AwsSettings) raw.AwsSettings,
+          raw.AzureSettings is null ? null : (AzureSettings) raw.AzureSettings);
 }
 
 public record AzureFunctionSettings(string FunctionAppId, string FunctionClassName);

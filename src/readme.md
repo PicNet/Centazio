@@ -2,7 +2,7 @@
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
-- add unit tests for style (== null, != null, string Message \[only on abstracts records], etc)
+- check settings dtos and secrets dtos for 'Dto' pattern usage
 
 # Developer Guidelines:
 
