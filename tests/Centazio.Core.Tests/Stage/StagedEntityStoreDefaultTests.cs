@@ -1,5 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Helpers;
+using Centazio.Core.Extensions;
 using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
@@ -331,7 +331,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   private StagedEntity SetData(StagedEntity e, string data) => (StagedEntity) ((StagedEntity.Dto) e with { Data = data });
-  private string Hash(object o) => TestingFactories.TestingChecksum(o.ToString() ?? throw new Exception());
+  private string Hash(object o) => Helpers.TestingChecksum(o.ToString() ?? throw new Exception());
   
   private async Task<StagedEntity> GetSingle(DateTime after, SystemName source, ObjectName obj) => (await store.GetAll(after, source, obj)).Single();
 

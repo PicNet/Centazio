@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -18,7 +19,7 @@ public class PromoteOperationRunnerTests {
   private TestingCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
   private InMemoryEntityIntraSystemMappingStore entitymap;
-  private IOperationRunner<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>> promoter;
+  private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
     (stager, ctl, core, entitymap) = (F.SeStore(), F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
@@ -33,10 +34,10 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
     await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
-    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
-    var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
+        new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
+    var saved = (await core.Query<CoreEntity>(t => true)).ToDictionary(c => c.Id);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
@@ -54,10 +55,10 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
     await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
-    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>>(
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig<CoreCustomer>(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
-    var saved = (await core.Query<CoreCustomer>(t => true)).ToDictionary(c => c.Id);
+        new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
+    var saved = (await core.Query<CoreEntity>(t => true)).ToDictionary(c => c.Id);
     Assert.That(saved, Is.Empty);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -69,18 +70,21 @@ public class PromoteOperationRunnerTests {
     
   }
   
-  private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote<CoreCustomer> {
-    public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
+  private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, IEnumerable<StagedEntity> staged) {
       var lst = staged.ToList();
-      return Task.FromResult((PromoteOperationResult<CoreCustomer>) new SuccessPromoteOperationResult<CoreCustomer>(
-          lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: new CoreCustomer(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+      return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
+          // todo: this cast to (ICoreEntity) is ugly, create a `record` for these types instead of named tuples
+          lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: (ICoreEntity) new CoreEntity(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
           lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")).ToList()));
     }
+    
+
   }
 
-  public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote<CoreCustomer> {
-    public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> op, IEnumerable<StagedEntity> staged) {
-      return Task.FromResult((PromoteOperationResult<CoreCustomer>) new ErrorPromoteOperationResult<CoreCustomer>());
+  public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, IEnumerable<StagedEntity> staged) {
+      return Task.FromResult((PromoteOperationResult) new ErrorPromoteOperationResult());
     }
   }
 }
@@ -88,7 +92,7 @@ public class PromoteOperationRunnerTests {
 public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
     var id = Guid.NewGuid().ToString();
-    var entities = new List<CoreCustomer> {
+    var entities = new List<CoreEntity> {
       F.NewCoreCust("N1", "N1", id),
       F.NewCoreCust("N2", "N2", id),
       F.NewCoreCust("N3", "N3", id),
@@ -101,7 +105,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
-    var entities1 = new List<CoreCustomer> {
+    var entities1 = new List<CoreEntity> {
       F.NewCoreCust("N1", "N1", "1", "c1"),
       F.NewCoreCust("N2", "N2", "2", "c2"),
       F.NewCoreCust("N3", "N3", "3", "c3"),
@@ -109,7 +113,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     };
     await core.Upsert(entities1);
     
-    var entities2 = new List<CoreCustomer> {
+    var entities2 = new List<CoreEntity> {
       F.NewCoreCust("N12", "N12", "1", "c1"),
       F.NewCoreCust("N22", "N22", "2", "c2"),
       F.NewCoreCust("N32", "N32", "3", "c32"), // only this one gets updated as the checksum changed
@@ -126,15 +130,15 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var store = F.EntitySysMap();
     var core = F.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.FinSystemName).SuccessCreate("FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name).SuccessCreate("FIN321"));
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var entities = new List<CoreCustomer> {
+    var entities = new List<CoreEntity> {
       F.NewCoreCust("N", "N", "FIN1"),
       F.NewCoreCust("N", "N", "FIN2"),
       F.NewCoreCust("N", "N", "FIN3"),
       F.NewCoreCust("N", "N", "FIN321")
     };
-    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.FinSystemName);
+    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.System2Name);
     Assert.That(filtered, Is.EquivalentTo(entities.Take(3)));
   }
 }

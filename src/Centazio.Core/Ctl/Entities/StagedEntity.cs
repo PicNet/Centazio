@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Ctl.Entities;
+﻿using System.Text.Json;
+
+namespace Centazio.Core.Ctl.Entities;
 
 public sealed record StagedEntity {
   
@@ -25,7 +27,8 @@ public sealed record StagedEntity {
   
   public DateTime? DatePromoted { get; private init; }
   
-  
+  public T Deserialise<T>() => JsonSerializer.Deserialize<T>(Data) ?? throw new Exception();
+
   public record Dto {
     public Guid? Id { get; init; }
     public string? SourceSystem { get; init; }

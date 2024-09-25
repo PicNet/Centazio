@@ -1,15 +1,14 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
-public interface IEvaluateEntitiesToPromote<E> where E : ICoreEntity {
-  Task<PromoteOperationResult<E>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<E>> config, IEnumerable<StagedEntity> staged);
+public interface IEvaluateEntitiesToPromote {
+  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged);
 }
 
-public record PromoteOperationConfig<E>(
+public record PromoteOperationConfig(
     ObjectName Object, 
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote<E> EvaluateEntitiesToPromote) : OperationConfig(Object, Cron) where E : ICoreEntity;
+    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(Object, Cron);
 

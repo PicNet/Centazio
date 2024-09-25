@@ -1,9 +1,9 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests;
 using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
+using Centazio.Test.Lib;
 using Testcontainers.DynamoDb;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
@@ -28,7 +28,7 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     
   }
 
-  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100, Func<string, string>? checksum = null) : DynamoStagedEntityStore(client, TABLE_NAME, limit, checksum ?? TestingFactories.TestingChecksum) {
+  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100, Func<string, string>? checksum = null) : DynamoStagedEntityStore(client, TABLE_NAME, limit, checksum ?? Helpers.TestingChecksum) {
     private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
 
     public override async ValueTask DisposeAsync() {

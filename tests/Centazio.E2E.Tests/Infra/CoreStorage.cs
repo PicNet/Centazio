@@ -1,21 +1,123 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
+using Centazio.E2E.Tests.Systems.Crm;
+using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Infra;
 
-public record CoreCustomer : ICoreEntity {
-
-  public string SourceSystem { get; }
-  public string SourceId { get; }
-  public string Id { get; }
-  public string Checksum { get; }
-  public DateTime DateCreated { get; }
-  public DateTime DateUpdated { get; }
-  public DateTime SourceSystemDateUpdated { get; }
-
+public record CoreCustomer : CoreEntityBase {
+  
+  public string Name { get; private init; }
+  public CoreMembershipType Membership { get; private init; }
+  public List<CoreInvoice> Invoices { get; private init; }
+  
+  private CoreCustomer(string id, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, sourceupdate, checksum) {
+    Name = name;
+    Membership = membership;
+    Invoices = invoices;
+  }
+  
+  public static CoreCustomer FromCrmCustomer(CrmCustomer c, CoreStorage db) {
+    var (id, updated, membership, invoices) = (c.Id.ToString(), c.Updated, db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
+    var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
+    return new CoreCustomer(id, updated, c.Name, membership, invoices, checksum);
+  }
 }
 
-public class CoreStorage {
+public record CoreMembershipType : CoreEntityBase {
 
+  public string Name { get; private init; }
   
+  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, sourceupdate, checksum) {
+    Name = name;
+  }
+  
+  public static CoreMembershipType FromCrmMembershipType(CrmMembershipType m, CoreStorage db) {
+    var (id, updated, name) = (m.Id.ToString(), m.Updated, m.Name);
+    return new CoreMembershipType(id, updated, name, db.Checksum(new { id, name }));
+  }
+
+}
+public record CoreInvoice : CoreEntityBase {
+  
+  public string CustomerId { get; private set; }
+  public int Cents { get; private set; }
+  public DateOnly DueDate { get; private set; }
+  public DateTime? PaidDate { get; private set; }
+  
+  private CoreInvoice(string id, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, sourceupdate, checksum) {
+    CustomerId = customerid;
+    Cents = cents;
+    DueDate = due;
+    PaidDate = paid;
+  }
+  
+  public static CoreInvoice FromCrmInvoice(CrmInvoice i, CoreStorage db) {
+    var (id, updated, customer, cents, due, paid) = (i.Id.ToString(), i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate);
+    return new CoreInvoice(id, updated, customer, cents, due, paid, db.Checksum(new { id, customer, cents, due, paid }));
+  }
+}
+
+public abstract record CoreEntityBase : ICoreEntity {
+  public string SourceSystem { get; } = nameof(CrmSystem);
+  public string SourceId { get; protected init; }
+  public string Id { get; protected init; }
+  public string Checksum { get; protected init; }
+  public DateTime DateCreated { get; protected init; }
+  public DateTime DateUpdated { get; protected init; }
+  public DateTime SourceSystemDateUpdated { get; protected init; }
+  
+  protected CoreEntityBase(string id, DateTime sourceupdate, string checksum) {
+    SourceId = id;
+    SourceSystemDateUpdated = sourceupdate;
+        
+    Id = id;
+    DateCreated = UtcDate.UtcNow;
+    DateUpdated = UtcDate.UtcNow;
+    
+    Checksum = checksum;
+  }
+}
+
+public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
+
+  private readonly List<ICoreEntity> types = [];
+  private readonly List<ICoreEntity> customers = [];
+  private readonly List<ICoreEntity> invoices = [];
+  
+  public string Checksum(object o) => Helpers.TestingChecksum(o);
+  
+  public CoreMembershipType GetMembershipType(string id) => (CoreMembershipType) types.Single(e => e.Id == id); 
+  public CoreCustomer GetCustomer(string id) => (CoreCustomer) customers.Single(e => e.Id == id);
+  public CoreInvoice GetInvoice(string id) => (CoreInvoice) invoices.Single(e => e.Id == id);
+  public List<CoreInvoice> GetInvoicesForCustomer(string id) => invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
+  
+  public Task<List<E>> Get<E>(DateTime after) where E : ICoreEntity => 
+      Task.FromResult(GetList<E>().Where(e => e.DateUpdated > after).Cast<E>().ToList());
+
+  public async Task<Dictionary<string, string>> GetChecksums<E>(List<E> entities) where E : ICoreEntity {
+    var ids = entities.ToDictionary(e => e.Id);
+    return (await Get<E>(DateTime.MinValue))
+        .Where(e => ids.ContainsKey(e.Id))
+        .ToDictionary(e => e.Id, e => e.Checksum);
+  }
+  public Task<IEnumerable<E>> Upsert<E>(IEnumerable<E> entities) where E : ICoreEntity {
+    var lst = GetList<E>();
+    return Task.FromResult(entities.Select(e => {
+      var idx = lst.FindIndex(e2 => e2.Id == e.Id);
+      if (idx < 0) lst.Add(e);
+      else lst[idx] = e;
+      return e;
+    }));
+  }
+  
+  public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+  
+  private List<ICoreEntity> GetList<E>() {
+    if (typeof(E) == typeof(CoreMembershipType)) return types;
+    if (typeof(E) == typeof(CoreCustomer)) return customers;
+    if (typeof(E) == typeof(CoreInvoice)) return invoices;
+    throw new Exception();
+  }
 
 }

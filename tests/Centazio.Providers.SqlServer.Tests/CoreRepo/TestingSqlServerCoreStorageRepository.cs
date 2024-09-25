@@ -11,9 +11,9 @@ internal class TestingSqlServerCoreStorageRepository : ICoreStorageRepository {
   public async Task<ICoreStorageRepository> Initalise() {
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{nameof(CoreCustomer)}' AND xtype='U')
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{nameof(CoreEntity)}' AND xtype='U')
 BEGIN
-CREATE TABLE {nameof(CoreCustomer)} (
+CREATE TABLE {nameof(CoreEntity)} (
   Id nvarchar(64) NOT NULL PRIMARY KEY,
   Checksum nvarchar(64) NOT NULL, 
   FirstName nvarchar (64) NOT NULL, 
@@ -32,30 +32,30 @@ END
     await using var conn = SqlConn.Instance.Conn();
     var raw = await conn.QuerySingleOrDefaultAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(E).Name} WHERE Id=@Id", new { Id = id });
     if (raw is null) throw new Exception($"Core entity [{typeof(E).Name}#{id}] not found");
-    return (CoreCustomer) raw as E ?? throw new Exception();
+    return (CoreEntity) raw as E ?? throw new Exception();
   }
 
   public async Task<IEnumerable<E>> Query<E>(string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var raws = await conn.QueryAsync<CoreCustomerRaw>(query);
-    return raws.Select(raw => (CoreCustomer) raw).Cast<E>();
+    return raws.Select(raw => (CoreEntity) raw).Cast<E>();
   }
   
   public Task<IEnumerable<E>> Query<E>(Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
   public async Task<Dictionary<string, string>> GetChecksums<E>(List<E> entities) where E : ICoreEntity {
-    if (typeof(E) != typeof(CoreCustomer)) throw new NotSupportedException(typeof(E).Name);
+    if (typeof(E) != typeof(CoreEntity)) throw new NotSupportedException(typeof(E).Name);
 
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
-    var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {nameof(CoreCustomer)} WHERE Id IN (@ids)", new { ids });
+    var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {nameof(CoreEntity)} WHERE Id IN (@ids)", new { ids });
     return mapping.ToDictionary(t => t.Id, t => t.Checksum);
   }
 
   public async Task<IEnumerable<T>> Upsert<T>(IEnumerable<T> entities) where T : ICoreEntity {
-    if (typeof(T) != typeof(CoreCustomer)) throw new NotSupportedException(typeof(T).Name);
+    if (typeof(T) != typeof(CoreEntity)) throw new NotSupportedException(typeof(T).Name);
     
-    var sql = $@"MERGE INTO {nameof(CoreCustomer)} T
+    var sql = $@"MERGE INTO {nameof(CoreEntity)} T
 USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
 ON T.Id = c.Id
@@ -74,7 +74,7 @@ UPDATE SET Checksum=c.Checksum, FirstName=c.FirstName, LastName=c.LastName, Date
   public async ValueTask DisposeAsync() {
     if (!SqlConn.Instance.Real) {
       await using var conn = SqlConn.Instance.Conn();
-      await conn.ExecuteAsync($"DROP TABLE IF EXISTS {nameof(CoreCustomer)};");
+      await conn.ExecuteAsync($"DROP TABLE IF EXISTS {nameof(CoreEntity)};");
     }
   }
 }

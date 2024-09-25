@@ -14,19 +14,19 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   protected abstract Task<ICoreStorageRepository> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
-    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreCustomer>("invalid"));
+    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>("invalid"));
     await repo.Upsert([ TestingFactories.NewCoreCust("", "") ]);
-    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreCustomer>("invalid"));
+    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>("invalid"));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
     var created = TestingFactories.NewCoreCust("N1", "N1");
     await repo.Upsert([ created ]);
-    var retreived1 = await repo.Get<CoreCustomer>(created.Id);
+    var retreived1 = await repo.Get<CoreEntity>(created.Id);
     var list1 = await QueryAll();
     var updated = retreived1 with { FirstName = "N2" };
     await repo.Upsert([ updated ]);
-    var retreived2 = await repo.Get<CoreCustomer>(created.Id);
+    var retreived2 = await repo.Get<CoreEntity>(created.Id);
     var list2 = await QueryAll();
     
     Assert.That(retreived1, Is.EqualTo(created));
@@ -64,15 +64,15 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
   
   
-  private async Task<List<CoreCustomer>> QueryAll() {
+  private async Task<List<CoreEntity>> QueryAll() {
     return (SupportsExpressionBasedQuery 
-        ? await repo.Query<CoreCustomer>(e => true)
-        : await repo.Query<CoreCustomer>($"SELECT * FROM {nameof(CoreCustomer)}")).ToList();
+        ? await repo.Query<CoreEntity>(e => true)
+        : await repo.Query<CoreEntity>($"SELECT * FROM {nameof(CoreEntity)}")).ToList();
   }
 
-  private async Task<List<CoreCustomer>> QueryEvenOdd(bool even) {
+  private async Task<List<CoreEntity>> QueryEvenOdd(bool even) {
     return (SupportsExpressionBasedQuery 
-        ? await repo.Query<CoreCustomer>(e => Int32.Parse(e.FirstName) % 2 == (even ? 0 : 1))
-        : await repo.Query<CoreCustomer>($"SELECT * FROM {nameof(CoreCustomer)} WHERE FirstName % 2 = " + (even ? 0 : 1))).ToList();
+        ? await repo.Query<CoreEntity>(e => Int32.Parse(e.FirstName) % 2 == (even ? 0 : 1))
+        : await repo.Query<CoreEntity>($"SELECT * FROM {nameof(CoreEntity)} WHERE FirstName % 2 = " + (even ? 0 : 1))).ToList();
   }
 }

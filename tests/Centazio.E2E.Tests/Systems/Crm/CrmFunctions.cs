@@ -18,30 +18,43 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   public CrmReadFunction(ICrmSystemApi api) {
     this.api = api;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Read, new ([
-      new (nameof(CMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (nameof(CrmMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CrmCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CrmInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   
   public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => 
     config.State.Object.Value switch { 
-      nameof(CMembershipType) => ReadOperationResult.Create(await api.GetMembershipTypes(config.Checkpoint)), 
-      nameof(CCustomer) => ReadOperationResult.Create(await api.GetCustomers(config.Checkpoint)), 
-      nameof(CInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
+      nameof(CrmMembershipType) => ReadOperationResult.Create(await api.GetMembershipTypes(config.Checkpoint)), 
+      nameof(CrmCustomer) => ReadOperationResult.Create(await api.GetCustomers(config.Checkpoint)), 
+      nameof(CrmInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
 }
 
-public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig<CoreCustomer>, PromoteOperationResult<CoreCustomer>>, IEvaluateEntitiesToPromote<CoreCustomer> {
+public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+  
+  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+  
+  private readonly CoreStorage db;
 
-  public override FunctionConfig<PromoteOperationConfig<CoreCustomer>> Config { get; }
-  public Task<PromoteOperationResult<CoreCustomer>> Evaluate(OperationStateAndConfig<PromoteOperationConfig<CoreCustomer>> config, IEnumerable<StagedEntity> staged) => throw new NotImplementedException();
-
-  public CrmPromoteFunction() {
+  public CrmPromoteFunction(CoreStorage db) {
+    this.db = db;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Promote, new ([
-      new (nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (nameof(CoreMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CoreInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
+  }
+
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
+    var topromote = config.State.Object.Value switch { 
+      nameof(CoreMembershipType) => staged.Select(s => (s, (ICoreEntity) CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
+      nameof(CrmCustomer) => staged.Select(s => (s, (ICoreEntity) CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
+      nameof(CoreInvoice) => staged.Select(s => (s, (ICoreEntity) CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
+      _ => throw new Exception() };
+    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
   }
 
 }

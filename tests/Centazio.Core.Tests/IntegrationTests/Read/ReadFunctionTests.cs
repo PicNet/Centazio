@@ -9,9 +9,9 @@ namespace Centazio.Core.Tests.IntegrationTests.Read;
 
 public class ReadFunctionTests {
   
-  private readonly SystemName sys = Constants.CrmSystemName;
+  private readonly SystemName sys = Constants.System1Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
-  private readonly ObjectName obj = Constants.CrmCustomer;
+  private readonly ObjectName obj = Constants.System1Entity;
   
   [SetUp] public void SetUp() {
     UtcDate.Utc = new TestingUtcDate();
@@ -77,7 +77,7 @@ public class ReadFunctionTests {
     LastRunMessage = "operation [CRM/Read/CrmCustomer] completed [Success] message: " + 
         (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
   };
-    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, TestingFactories.TestingChecksum(expjson));
+    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, Helpers.TestingChecksum(expjson));
   }
 }
 
@@ -87,8 +87,8 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
-    Config = new(Constants.CrmSystemName, LifecycleStage.Defaults.Read, new ([
-      new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, this)
+    Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, new ([
+      new (Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   

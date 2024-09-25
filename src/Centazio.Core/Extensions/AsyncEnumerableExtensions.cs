@@ -1,7 +1,11 @@
-﻿namespace Centazio.Core.Helpers;
+﻿namespace Centazio.Core.Extensions;
 
 public static class AsyncEnumerableExtensions {
 
+  public static async Task Synchronous(this IEnumerable<Task> tasks) {
+    foreach (var task in tasks) await task;
+  }
+  
   public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null) {
     var results = new List<T>();
     foreach (var task in tasks) {

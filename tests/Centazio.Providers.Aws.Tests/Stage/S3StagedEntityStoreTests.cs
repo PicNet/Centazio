@@ -2,9 +2,9 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests;
 using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
+using Centazio.Test.Lib;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.Minio;
 
@@ -32,7 +32,7 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
     return await new TestingS3StagedEntityStore(client, limit).Initalise();
   }
 
-  class TestingS3StagedEntityStore(IAmazonS3 client, int limit = 100) : S3StagedEntityStore(client, BUCKET_NAME, limit, TestingFactories.TestingChecksum) {
+  class TestingS3StagedEntityStore(IAmazonS3 client, int limit = 100) : S3StagedEntityStore(client, BUCKET_NAME, limit, Helpers.TestingChecksum) {
     
     private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityStore).ToLower(CultureInfo.InvariantCulture);
 

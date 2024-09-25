@@ -20,7 +20,7 @@ public record CoreCustomerRaw {
   public DateTime? DateCreated { get; init; } 
   public DateTime? SourceSystemDateUpdated { get; init; }
   
-  public static explicit operator CoreCustomer(CoreCustomerRaw raw) => new(
+  public static explicit operator CoreEntity(CoreCustomerRaw raw) => new(
       raw.Id ?? throw new ArgumentNullException(nameof(Id)),
       raw.Checksum ?? "",
       raw.FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
