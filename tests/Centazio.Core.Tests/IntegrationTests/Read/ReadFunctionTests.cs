@@ -10,7 +10,7 @@ namespace Centazio.Core.Tests.IntegrationTests.Read;
 public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.CrmSystemName;
-  private readonly LifecycleStage stg = LifecycleStage.Defaults.Promote;
+  private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
   private readonly ObjectName obj = Constants.CrmCustomer;
   
   [SetUp] public void SetUp() {
