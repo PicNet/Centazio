@@ -7,9 +7,9 @@ public class TestingUtcDate(DateTime? start = null) : AbstractUtcDate {
   
   public override DateTime Now => now;
   
-  public DateTime Tick() => now = now.AddSeconds(1);
+  public DateTime Tick(TimeSpan? interval = null) => now = now.Add(interval ?? TimeSpan.FromSeconds(1));
   
-  public static DateTime DoTick() => ((TestingUtcDate) UtcDate.Utc).Tick();
+  public static DateTime DoTick(TimeSpan? interval = null) => ((TestingUtcDate) UtcDate.Utc).Tick(interval);
 }
 
 public class ShortLivedUtcDateOverride : IDisposable {

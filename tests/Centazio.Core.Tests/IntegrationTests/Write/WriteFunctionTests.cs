@@ -63,10 +63,10 @@ public class WriteFunctionTests {
     Assert.That(result.AbortVote, Is.EqualTo(EOperationAbortVote.Abort));
     Assert.That(result.Result, Is.EqualTo(EOperationResult.Error));
     
-    Assert.That(sys.Key, Is.EqualTo((Constants.FinSystemName, Constants.Write)));
-    Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.FinSystemName, Constants.Write).Completed(UtcDate.UtcNow)));
-    Assert.That(obj.Key, Is.EqualTo((Constants.FinSystemName, Constants.Write, Constants.CrmCustomer)));
-    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(Constants.FinSystemName, Constants.Write, Constants.CrmCustomer).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
+    Assert.That(sys.Key, Is.EqualTo((Constants.FinSystemName, LifecycleStage.Defaults.Write)));
+    Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.FinSystemName, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
+    Assert.That(obj.Key, Is.EqualTo((Constants.FinSystemName, LifecycleStage.Defaults.Write, Constants.CrmCustomer)));
+    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(Constants.FinSystemName, LifecycleStage.Defaults.Write, Constants.CrmCustomer).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
     Assert.That(allcusts, Is.Empty);
     Assert.That(maps, Is.Empty);
   }
@@ -84,7 +84,7 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
   public override FunctionConfig<BatchWriteOperationConfig<CoreCustomer>> Config { get; }
 
   public TestingBatchWriteFunction() {
-    Config = new(Constants.FinSystemName, Constants.Write, new ([
+    Config = new(Constants.FinSystemName, LifecycleStage.Defaults.Write, new ([
       new BatchWriteOperationConfig<CoreCustomer>(Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, writer)
     ]));
   }

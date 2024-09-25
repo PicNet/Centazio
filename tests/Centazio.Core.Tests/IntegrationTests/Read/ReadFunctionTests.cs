@@ -10,7 +10,7 @@ namespace Centazio.Core.Tests.IntegrationTests.Read;
 public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.CrmSystemName;
-  private readonly LifecycleStage stg = Constants.Read;
+  private readonly LifecycleStage stg = LifecycleStage.Defaults.Promote;
   private readonly ObjectName obj = Constants.CrmCustomer;
   
   [SetUp] public void SetUp() {
@@ -87,7 +87,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
-    Config = new(Constants.CrmSystemName, Constants.Read, new ([
+    Config = new(Constants.CrmSystemName, LifecycleStage.Defaults.Read, new ([
       new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }

@@ -8,8 +8,8 @@
 ## Code Style 
 - 2 tab spaces
 - Braces on same line
-- Avoid long camme-case names.  Methods should be short so having ugly variableNamesThatAddNoValueInAShortContext should
-    be avoided. 
+- Avoid long cammel-case names.  Methods should be short so having ugly variableNamesThatAddNoValueInAShortContext 
+    should be avoided. 
 - Class names and method names can be descriptive, allowing for short/concise variables
 - Use implicitly typed variables where possible
 - Use `is null` / `is not null` instead of `== null` / `!= null`

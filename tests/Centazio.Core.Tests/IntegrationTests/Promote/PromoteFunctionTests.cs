@@ -10,7 +10,7 @@ namespace Centazio.Core.Tests.IntegrationTests.Promote;
 public class PromoteFunctionTests {
 
   private readonly SystemName sys = Constants.CrmSystemName;
-  private readonly LifecycleStage stg = Constants.Promote;
+  private readonly LifecycleStage stg = LifecycleStage.Defaults.Promote;
   private readonly ObjectName obj = Constants.CrmCustomer;
   
   [Test] public async Task Test_standalone_Promote_function() {
@@ -127,7 +127,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public bool IgnoreNext { get; set; }
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
-    Config = new(Constants.CrmSystemName, Constants.Promote, new ([
+    Config = new(Constants.CrmSystemName, LifecycleStage.Defaults.Promote, new ([
       new (Constants.CrmCustomer, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }

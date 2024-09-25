@@ -20,10 +20,12 @@ public interface IStagedEntityStore : IEntityStager {
 }
 
 public abstract class AbstractStagedEntityStore(int limit, Func<string, string> checksum) : IStagedEntityStore {
+
+  private int lim = limit;
   
   public int Limit {
-    get => limit > 0 ? limit : Int32.MaxValue;
-    set => limit = value;
+    get => lim > 0 ? lim : Int32.MaxValue;
+    set => lim = value;
   }
 
   public async Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data) {

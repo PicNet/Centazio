@@ -5,7 +5,7 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Read;
 
-internal class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
+public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
   public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
     var res = await op.Settings.GetObjectsToStage.GetObjects(op);

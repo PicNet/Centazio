@@ -8,7 +8,13 @@ public abstract record ReadOperationResult(
     string Message, 
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception);
+    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception) {
+  
+  public static ReadOperationResult Create(List<string> lst) {
+    if (!lst.Any()) return new EmptyReadOperationResult();
+    return new ListRecordsReadOperationResult(lst);
+  }
+}
 
 public record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
         : ReadOperationResult(
