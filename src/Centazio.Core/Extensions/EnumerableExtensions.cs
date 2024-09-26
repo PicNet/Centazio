@@ -1,6 +1,6 @@
 ﻿namespace Centazio.Core.Extensions;
 
-public static class AsyncEnumerableExtensions {
+public static class EnumerableExtensions {
 
   public static async Task Synchronous(this IEnumerable<Task> tasks) {
     foreach (var task in tasks) await task;
@@ -27,5 +27,14 @@ public static class AsyncEnumerableExtensions {
   
   public static async Task<List<T>> ChunkedSynchronousCall<T>(this IEnumerable<Task<T>> ops, int chunksz = 25) => 
       (await ops.Chunk(chunksz).Select(Task.WhenAll).Synchronous()).SelectMany(lst => lst).ToList();
-
+  
+  public static IList<T> Shuffle<T>(this IList<T> list) {
+    var n = list.Count;
+    while (n > 1) {
+      n--;
+      var k = Random.Shared.Next(n + 1);
+      (list[k], list[n]) = (list[n], list[k]);
+    }
+    return list;
+  }
 }

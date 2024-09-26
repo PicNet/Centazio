@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.E2E.Tests.Systems.Crm;
+using Centazio.E2E.Tests.Systems.Fin;
 using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -21,6 +22,12 @@ public record CoreCustomer : CoreEntityBase {
     var (id, updated, membership, invoices) = (c.Id.ToString(), c.Updated, db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
     var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
     return new CoreCustomer(id, updated, c.Name, membership, invoices, checksum);
+  }
+  
+  public static CoreCustomer FromFinAccount(FinAccount a, CoreStorage db) {
+    var (id, updated, pending, invoices) = (a.Id.ToString(), a.Updated, db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
+    var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
+    return new CoreCustomer(id, updated, a.Name, pending, invoices, checksum);
   }
 }
 
@@ -56,6 +63,11 @@ public record CoreInvoice : CoreEntityBase {
     var (id, updated, customer, cents, due, paid) = (i.Id.ToString(), i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate);
     return new CoreInvoice(id, updated, customer, cents, due, paid, db.Checksum(new { id, customer, cents, due, paid }));
   }
+  
+  public static CoreInvoice FromFinInvoice(FinInvoice i, CoreStorage db) {
+    var (id, updated, account, amt, due, paid) = (i.Id.ToString(), i.Updated, i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate);
+    return new CoreInvoice(id, updated, account, (int) (amt * 100), DateOnly.FromDateTime(due), paid, db.Checksum(new { id, customer = account, amt, due, paid }));
+  }
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
@@ -80,17 +92,17 @@ public abstract record CoreEntityBase : ICoreEntity {
 }
 
 public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
-
-  private readonly List<ICoreEntity> types = [];
-  private readonly List<ICoreEntity> customers = [];
-  private readonly List<ICoreEntity> invoices = [];
+  
+  internal List<ICoreEntity> Types => [];
+  internal List<ICoreEntity> Customers => [];
+  internal List<ICoreEntity> Invoices => [];
   
   public string Checksum(object o) => Helpers.TestingChecksum(o);
   
-  public CoreMembershipType GetMembershipType(string id) => (CoreMembershipType) types.Single(e => e.Id == id); 
-  public CoreCustomer GetCustomer(string id) => (CoreCustomer) customers.Single(e => e.Id == id);
-  public CoreInvoice GetInvoice(string id) => (CoreInvoice) invoices.Single(e => e.Id == id);
-  public List<CoreInvoice> GetInvoicesForCustomer(string id) => invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
+  public CoreMembershipType GetMembershipType(string id) => (CoreMembershipType) Types.Single(e => e.Id == id); 
+  public CoreCustomer GetCustomer(string id) => (CoreCustomer) Customers.Single(e => e.Id == id);
+  public CoreInvoice GetInvoice(string id) => (CoreInvoice) Invoices.Single(e => e.Id == id);
+  public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
   public Task<List<E>> Get<E>(DateTime after) where E : ICoreEntity => 
       Task.FromResult(GetList<E>().Where(e => e.DateUpdated > after).Cast<E>().ToList());
@@ -114,9 +126,9 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
   private List<ICoreEntity> GetList<E>() {
-    if (typeof(E) == typeof(CoreMembershipType)) return types;
-    if (typeof(E) == typeof(CoreCustomer)) return customers;
-    if (typeof(E) == typeof(CoreInvoice)) return invoices;
+    if (typeof(E) == typeof(CoreMembershipType)) return Types;
+    if (typeof(E) == typeof(CoreCustomer)) return Customers;
+    if (typeof(E) == typeof(CoreInvoice)) return Invoices;
     throw new Exception();
   }
 

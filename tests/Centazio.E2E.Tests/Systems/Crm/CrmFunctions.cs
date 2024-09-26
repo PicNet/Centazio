@@ -64,7 +64,7 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
   
   public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
   
-  private CrmSystem api;
+  private readonly CrmSystem api;
   
   public CrmWriteFunction(CrmSystem api) {
     this.api = api;
@@ -83,7 +83,7 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
     if (config.Object == nameof(CoreCustomer)) {
       // todo: these casts are ugly
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, (CoreCustomer) m.Core)).ToList());
-      await api.UpdateCustomers(created.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreCustomer) m.Core)).ToList());
+      await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreCustomer) m.Core)).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(c => c.Id.ToString())).Select(m => (m.First.Core, Map: m.First.Map.SuccessCreate(m.Second))).ToList(),
           updated.Select(m => (m.Core, Map: m.Map.SuccessUpdate())).ToList());
@@ -91,7 +91,7 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
     
     if (config.Object == nameof(CoreInvoice)) {
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, (CoreInvoice) m.Core)).ToList());
-      await api.UpdateInvoices(created.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreInvoice) m.Core)).ToList());
+      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreInvoice) m.Core)).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => (m.First.Core, Map: m.First.Map.SuccessCreate(m.Second))).ToList(),
           updated.Select(m => (m.Core, Map: m.Map.SuccessUpdate())).ToList());
@@ -100,8 +100,7 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
     throw new NotSupportedException(config.Object);
   }
   
-  // todo: handle relationships
-  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Empty, c.Name);
-  private CrmInvoice FromCore(Guid id, CoreInvoice i) => new(id, UtcDate.UtcNow, Guid.Empty, i.Cents, i.DueDate, i.PaidDate);
+  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
+  private CrmInvoice FromCore(Guid id, CoreInvoice i) => new(id, UtcDate.UtcNow, Guid.Parse(i.CustomerId), i.Cents, i.DueDate, i.PaidDate);
 
 }
