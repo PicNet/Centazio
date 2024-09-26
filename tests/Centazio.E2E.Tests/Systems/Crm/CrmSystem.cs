@@ -77,9 +77,38 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     
     private T RandomItem<T>(List<T> lst) => lst[rng.Next(lst.Count)];
   }
+
+  public Task<List<CrmCustomer>> CreateCustomers(List<CrmCustomer> news) { 
+    var created = news.Select(c => c with { Id = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    Customers.AddRange(created);
+    return Task.FromResult(created);
+  }
+  public Task<List<CrmCustomer>> UpdateCustomers(List<CrmCustomer> updates) {
+    return Task.FromResult(updates.Select(c => {
+      var idx = Customers.FindIndex(c2 => c2.Id == c.Id);
+      if (idx < 0) throw new Exception();
+      var update = c with { Updated = UtcDate.UtcNow };
+      return Customers[idx] = update;
+    }).ToList());
+  }
+
+  public Task<List<CrmInvoice>> CreateInvoices(List<CrmInvoice> news) {
+    var created = news.Select(i => i with { Id = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    Invoices.AddRange(created);
+    return Task.FromResult(created);
+  }
+  
+  public Task<List<CrmInvoice>> UpdateInvoices(List<CrmInvoice> updates) {
+    return Task.FromResult(updates.Select(i => {
+      var idx = Invoices.FindIndex(i2 => i2.Id == i.Id);
+      if (idx < 0) throw new Exception();
+      var update = i with { Updated = UtcDate.UtcNow };
+      return Invoices[idx] = update;
+    }).ToList());
+  }
 }
 
 
 public record CrmMembershipType(Guid Id, DateTime Updated, string Name);
 public record CrmInvoice(Guid Id, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null);
-public record CrmCustomer(Guid Id, DateTime Updated, Guid MembershipTypeId, string Name) {}
+public record CrmCustomer(Guid Id, DateTime Updated, Guid MembershipTypeId, string Name);

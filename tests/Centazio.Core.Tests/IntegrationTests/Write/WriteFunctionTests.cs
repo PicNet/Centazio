@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -9,8 +10,8 @@ namespace Centazio.Core.Tests.IntegrationTests.Write;
 public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig<CoreEntity>>(entitymap, core));
-    var funcrunner = new FunctionRunner<BatchWriteOperationConfig<CoreEntity>, WriteOperationResult<CoreEntity>>(func, oprunner, ctl);
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig>(entitymap, core));
+    var funcrunner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
@@ -46,11 +47,11 @@ public class WriteFunctionTests {
   
   [Test] public async Task Test_WriteFunction_error_handling() {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig<CoreEntity>>(entitymap, core));
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig>(entitymap, core));
     func.Throws = true;
-    var funcrunner = new FunctionRunner<BatchWriteOperationConfig<CoreEntity>, WriteOperationResult<CoreEntity>>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
-    var result = (ErrorWriteOperationResult<CoreEntity>) (await funcrunner.RunFunction()).OpResults.Single();
+    var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
     var allcusts = await core.Query<CoreEntity>(c => true);
@@ -72,27 +73,26 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig<CoreEntity>, WriteOperationResult<CoreEntity>> {
+public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult> {
 
   private readonly WriteEntitiesToTargetSystem writer = new();
-  public List<(CoreEntity Core, EntityIntraSysMap.Created Map)> Created { get => writer.Created; set => writer.Created = value; }
-  public List<(CoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get => writer.Updated; set => writer.Updated = value; }
+  public List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get => writer.Created; set => writer.Created = value; }
+  public List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get => writer.Updated; set => writer.Updated = value; }
   public void Reset() => writer.Reset();
   public bool Throws { set => writer.Throws = value; }
-  public Exception? Thrown { get => writer.Thrown; }
-  
-  public override FunctionConfig<BatchWriteOperationConfig<CoreEntity>> Config { get; }
+  public Exception? Thrown => writer.Thrown;
+  public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
 
   public TestingBatchWriteFunction() {
-    Config = new(Constants.System2Name, LifecycleStage.Defaults.Write, new ([
-      new BatchWriteOperationConfig<CoreEntity>(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, writer)
-    ]));
+    Config = new FunctionConfig<BatchWriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<BatchWriteOperationConfig> {
+      new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, writer)
+    });
   }
 
-  private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem<CoreEntity> {
+  private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem {
 
-    internal List<(CoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; set; } = new();
-    internal List<(CoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = new();
+    internal List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; set; } = new();
+    internal List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = new();
     internal bool Throws { get; set; }
     internal Exception? Thrown { get; private set; } 
     
@@ -101,13 +101,13 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
       Updated.Clear();
     }
 
-    public Task<WriteOperationResult<CoreEntity>> WriteEntities(BatchWriteOperationConfig<CoreEntity> config, List<(CoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, List<(CoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
+    public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
       if (Throws) throw Thrown = new Exception("mock function error");
       var news = created.Select(m => (m.Core, m.Map.SuccessCreate(m.Core.SourceId))).ToList();
       var updates = updated.Select(m => (m.Core, m.Map.SuccessUpdate())).ToList();
       Created.AddRange(news);
       Updated.AddRange(updates);
-      return Task.FromResult<WriteOperationResult<CoreEntity>>(new SuccessWriteOperationResult<CoreEntity>(news, updates));
+      return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
     }
   }
 

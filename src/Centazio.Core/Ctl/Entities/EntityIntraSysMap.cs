@@ -85,13 +85,13 @@ public record EntityIntraSysMap {
   public record PendingUpdate : EntityIntraSysMap {
     internal PendingUpdate(EntityIntraSysMap e) : base(e.CoreEntity, e.CoreId, e.SourceSystem, e.SourceId, e.TargetSystem, e.TargetId, e.Status) {}
     
-    internal Updated SuccessUpdate() => new(this with { 
+    public Updated SuccessUpdate() => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
       DateUpdated = UtcDate.UtcNow, 
       DateLastSuccess = UtcDate.UtcNow 
     });
     
-    internal Updated Error(string? error) => new(this with { 
+    public Updated Error(string? error) => new(this with { 
       Status = EEntityMappingStatus.Error, 
       DateUpdated = UtcDate.UtcNow, 
       DateLastError = UtcDate.UtcNow, 

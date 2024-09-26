@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.EntitySysMapping;
 
@@ -9,15 +10,15 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
   public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  public override Task<GetForCoresResult<E>> GetForCores<E>(ICollection<E> cores, SystemName target) {
-    var news = new List<(E Core, EntityIntraSysMap.PendingCreate Map)>();
-    var updates = new List<(E Core, EntityIntraSysMap.PendingUpdate Map)>();
+  public override Task<GetForCoresResult> GetForCores<E>(ICollection<E> cores, SystemName target) {
+    var news = new List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)>();
+    var updates = new List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)>();
     cores.ForEach(c => {
       var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == typeof(E).Name && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
       if (existing == default) news.Add((c, EntityIntraSysMap.Create(c, target)));
       else updates.Add((c, memdb[existing].Update()));
     });
-    return Task.FromResult(new GetForCoresResult<E>(news, updates));
+    return Task.FromResult(new GetForCoresResult(news, updates));
   }
 
   public override Task<List<EntityIntraSysMap.Created>> Create(IEnumerable<EntityIntraSysMap.Created> news) => 

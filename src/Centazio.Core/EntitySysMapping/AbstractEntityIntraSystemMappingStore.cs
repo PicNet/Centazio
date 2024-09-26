@@ -3,7 +3,7 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.EntitySysMapping;
 
-public record GetForCoresResult<E>(List<(E Core, EntityIntraSysMap.PendingCreate Map)> Created, List<(E Core, EntityIntraSysMap.PendingUpdate Map)> Updated) where E : ICoreEntity;
+public record GetForCoresResult(List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> Created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> Updated);
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   
@@ -14,7 +14,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> maps);
   
   Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key);
-  Task<GetForCoresResult<E>> GetForCores<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
+  Task<GetForCoresResult> GetForCores<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
   
   /// <summary>
   /// Bounce backs are when an entity is created in System 1 and written to
@@ -51,7 +51,7 @@ public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystem
   public abstract Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> updates);
   
   public abstract Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key);
-  public abstract Task<GetForCoresResult<E>> GetForCores<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
+  public abstract Task<GetForCoresResult> GetForCores<E>(ICollection<E> cores, SystemName target) where E : ICoreEntity;
   public abstract Task<List<EntityIntraSysMap>> GetAll();
   
   public abstract Task<List<string>> FilterOutBouncedBackIds<E>(SystemName thissys, List<string> ids) where E : ICoreEntity;
