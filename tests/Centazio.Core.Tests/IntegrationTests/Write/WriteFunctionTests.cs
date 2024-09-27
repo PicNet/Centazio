@@ -73,43 +73,32 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult> {
+public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult>, IWriteBatchEntitiesToTargetSystem {
 
-  private readonly WriteEntitiesToTargetSystem writer = new();
-  public List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get => writer.Created; set => writer.Created = value; }
-  public List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get => writer.Updated; set => writer.Updated = value; }
-  public void Reset() => writer.Reset();
-  public bool Throws { set => writer.Throws = value; }
-  public Exception? Thrown => writer.Thrown;
+  public List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; } = new();
+  public List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; } = new();
+  public bool Throws { get; set; }
+  public Exception? Thrown { get; private set; }
   public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
 
   public TestingBatchWriteFunction() {
     Config = new FunctionConfig<BatchWriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<BatchWriteOperationConfig> {
-      new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, writer)
+      new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, this)
     }) { ThrowExceptions = false };
   }
 
-  // todo: remove this class, above class `TestingBatchWriteFunction` should implement `IWriteBatchEntitiesToTargetSystem`
-  private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem {
+  public void Reset() {
+    Created.Clear();
+    Updated.Clear();
+  }
 
-    internal List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; set; } = [];
-    internal List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = [];
-    internal bool Throws { get; set; }
-    internal Exception? Thrown { get; private set; } 
-    
-    internal void Reset() {
-      Created.Clear();
-      Updated.Clear();
-    }
-
-    public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
-      if (Throws) throw Thrown = new Exception("mock function error");
-      var news = created.Select(m => (m.Core, m.Map.SuccessCreate(m.Core.SourceId))).ToList();
-      var updates = updated.Select(m => (m.Core, m.Map.SuccessUpdate())).ToList();
-      Created.AddRange(news);
-      Updated.AddRange(updates);
-      return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
-    }
+  public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
+    if (Throws) throw Thrown = new Exception("mock function error");
+    var news = created.Select(m => (m.Core, m.Map.SuccessCreate(m.Core.SourceId))).ToList();
+    var updates = updated.Select(m => (m.Core, m.Map.SuccessUpdate())).ToList();
+    Created.AddRange(news);
+    Updated.AddRange(updates);
+    return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
   }
 
 }
