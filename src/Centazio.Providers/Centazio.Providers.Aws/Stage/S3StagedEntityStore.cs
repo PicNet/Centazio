@@ -32,7 +32,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
-    var existing = (await ListAll(se.SourceSystem, se.ExternalEntityType))
+    var existing = (await ListAll(se.SourceSystem, se.Object))
         .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).Checksum)
         .ToDictionary(cs => cs);
     

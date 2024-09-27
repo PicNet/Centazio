@@ -144,10 +144,10 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private ObjectState<ExternalEntityType> ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
-    return new ObjectState<ExternalEntityType>.Dto(res.ToString(), res.ToString(), (ObjectName) res.ToString(), true) {
+    return new ObjectState<ExternalEntityType>(res.ToString(), res.ToString(), new ExternalEntityType(res.ToString()), true) {
       DateCreated = UtcDate.UtcNow,
-      LastResult = res.ToString(), 
-      LastAbortVote = vote.ToString(), 
+      LastResult = res, 
+      LastAbortVote = vote, 
       DateUpdated = UtcDate.UtcNow, 
       LastStart = UtcDate.UtcNow, 
       LastSuccessStart = res == EOperationResult.Success ? UtcDate.UtcNow : null, 
@@ -157,7 +157,7 @@ public class AbstractFunctionStaticHelperTests {
           (len == 0 
               ? res == EOperationResult.Error ? $"ErrorReadOperationResult[{exmessage}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
               : "")
-    }.ToObjectState<ExternalEntityType>();
+    };
   }
 
   static class Factories {

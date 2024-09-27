@@ -117,7 +117,7 @@ public class PromoteFunctionTests {
     LastCompleted = updated,
     LastRunMessage = $"operation [{sys}/{stg}/{corename}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   }.ToObjectState<CoreEntityType>();
-  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, corename, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, externalname, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();
 }
