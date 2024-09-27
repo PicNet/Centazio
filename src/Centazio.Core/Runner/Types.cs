@@ -57,13 +57,12 @@ public record ValidCron {
   public static implicit operator ValidCron(string value) => new(value);
 }
 
-// todo: rename Settings -> Config
-public record OperationStateAndConfig<C, O>(ObjectState<O> State, C Settings, DateTime Checkpoint) 
+public record OperationStateAndConfig<C, O>(ObjectState<O> State, C Config, DateTime Checkpoint) 
     where C : OperationConfig<O> 
     where O : ObjectName {
   
   // This constructor is mainly used for unit testing where Checkpoint is not usually a factor (hence internal) 
-  internal OperationStateAndConfig(ObjectState<O> State, C Settings) : this(State, Settings, DateTime.MinValue) {}
+  internal OperationStateAndConfig(ObjectState<O> State, C Config) : this(State, Config, DateTime.MinValue) {}
 }
 
 public abstract record OperationResult(

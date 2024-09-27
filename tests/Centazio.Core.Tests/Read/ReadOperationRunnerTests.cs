@@ -87,7 +87,7 @@ public class ReadOperationRunnerTests {
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Settings.Object);
+      var result = Enum.Parse<EOperationResult>(config.Config.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
       return Task.FromResult(res);
     }
@@ -95,7 +95,7 @@ public class ReadOperationRunnerTests {
   
   private class TestingSingleReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Settings.Object); 
+      var result = Enum.Parse<EOperationResult>(config.Config.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
       return Task.FromResult(res);
     }
@@ -103,7 +103,7 @@ public class ReadOperationRunnerTests {
   
   private class TestingListReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Settings.Object); 
+      var result = Enum.Parse<EOperationResult>(config.Config.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
       return Task.FromResult(res); 
     }

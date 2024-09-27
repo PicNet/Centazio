@@ -14,8 +14,8 @@ public class PromoteOperationRunner(
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.Settings.ExternalEntityType);
-    var results = await op.Settings.EvaluateEntitiesToPromote.Evaluate(op, pending);
+    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.Config.ExternalEntityType);
+    var results = await op.Config.EvaluateEntitiesToPromote.Evaluate(op, pending);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");

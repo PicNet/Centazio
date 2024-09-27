@@ -35,7 +35,7 @@ public abstract class AbstractFunction<C, O, R>
 
   internal static IEnumerable<OperationStateAndConfig<C, O>> GetReadyOperations(IEnumerable<OperationStateAndConfig<C, O>> states) {
     bool IsOperationReady(OperationStateAndConfig<C, O> op) {
-      var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
+      var next = op.Config.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
       return next <= UtcDate.UtcNow;
     }
     return states.Where(IsOperationReady);
