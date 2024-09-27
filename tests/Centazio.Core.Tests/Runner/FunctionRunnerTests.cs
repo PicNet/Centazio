@@ -28,7 +28,7 @@ public class FunctionRunnerTests {
     var results = await new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
-    Assert.That(repo.Objects, Is.Empty);
+    Assert.That(repo.GetObjects<ExternalEntityType>(), Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
@@ -39,7 +39,7 @@ public class FunctionRunnerTests {
     var results = await new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, false, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString())));
-    Assert.That(repo.Objects, Is.Empty);
+    Assert.That(repo.GetObjects<ExternalEntityType>(), Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(InactiveFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
@@ -49,7 +49,7 @@ public class FunctionRunnerTests {
     var results = await new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new SimpleFunction(count), oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
-    Assert.That(repo.Objects, Is.Empty);
+    Assert.That(repo.GetObjects<ExternalEntityType>(), Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
   }
@@ -60,7 +60,7 @@ public class FunctionRunnerTests {
     var results = await new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow)));
-    Assert.That(repo.Objects, Is.Empty);
+    Assert.That(repo.GetObjects<ExternalEntityType>(), Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(AlreadyRunningFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
@@ -70,7 +70,7 @@ public class FunctionRunnerTests {
     var results = await new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new SimpleFunction(1), oprunner, repo).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo((SystemState) new SystemState.Dto(NAME, NAME, true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow)));
-    Assert.That(repo.Objects, Is.Empty);
+    Assert.That(repo.GetObjects<ExternalEntityType>(), Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }

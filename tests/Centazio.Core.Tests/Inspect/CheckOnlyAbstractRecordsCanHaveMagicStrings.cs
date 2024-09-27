@@ -8,9 +8,10 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
     { "ValidString", ["Value"] },
     { "EntityIntraSysMap", ["LastError"] },
-    { "ObjectState", ["LastRunMessage", "LastRunException"] },
+    { "ObjectState`1", ["LastRunMessage", "LastRunException"] },
     { "StagedEntity", ["IgnoreReason"] },
-    { "CoreEntityName", ["Name"] }
+    { "CoreEntityType", ["Name"] },
+    { "ExternalEntityType", ["Name"] },
   };
   
   [Test] public void Test_string_description_pattern() {

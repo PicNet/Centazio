@@ -25,7 +25,7 @@ public abstract class AbstractFunction<C, O, R>
   internal static async Task<IReadOnlyList<OperationStateAndConfig<C, O>>> LoadOperationsStates(FunctionConfig<C, O> conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations.Value
             .Select(async op => {
-      var state = await ctl.GetOrCreateObjectState(system, op.Object);
+      var state = await ctl.GetObjectStateRepo<O>().GetOrCreateObjectState(system, op.Object);
       var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
       return new OperationStateAndConfig<C, O>(state, op, checkpoint);
     }).Synchronous())
@@ -73,7 +73,7 @@ public abstract class AbstractFunction<C, O, R>
       var newstate = res.Result == EOperationResult.Success ? 
           op.State.Success(start, res.AbortVote, message) :
           op.State.Error(start, res.AbortVote, message, res.Exception?.ToString());
-      return await ctl.SaveObjectState(newstate);
+      return await ctl.GetObjectStateRepo<O>().SaveObjectState(newstate);
     }
   }
 

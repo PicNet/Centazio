@@ -26,7 +26,7 @@ public class PromoteFunctionTests {
     var json1 = Json(cust1);
     var staged1 = await stager.Stage(sys, externalname, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -46,7 +46,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(sys, externalname, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
@@ -71,7 +71,7 @@ public class PromoteFunctionTests {
     var json1 = Json(cust1);
     var staged1 = await stager.Stage(sys, externalname, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -92,7 +92,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(sys, externalname, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
@@ -106,7 +106,7 @@ public class PromoteFunctionTests {
   }
   
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState<ExternalEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new ObjectStateDto(sys, stg, corename, true) {
+  private ObjectState<CoreEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new ObjectState<CoreEntityType>.Dto(sys, stg, corename, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success.ToString(),
     LastAbortVote = EOperationAbortVote.Continue.ToString(),
@@ -116,7 +116,7 @@ public class PromoteFunctionTests {
     LastSuccessCompleted = updated,
     LastCompleted = updated,
     LastRunMessage = $"operation [{sys}/{stg}/{corename}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
-  }.ToObjectState<ExternalEntityType>();
+  }.ToObjectState<CoreEntityType>();
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, corename, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();

@@ -41,5 +41,5 @@ public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Test.Lib.
 
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
-  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectStateDto> Objects => objects;
+  public Dictionary<(SystemName, LifecycleStage, O), ObjectState<O>> GetObjects<O>() where O : ObjectName=> ((InMemoryObjectStateRepository<O>)GetObjectStateRepo<O>()).objects;
 }

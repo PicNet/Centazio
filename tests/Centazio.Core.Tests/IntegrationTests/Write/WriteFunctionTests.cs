@@ -52,7 +52,7 @@ public class WriteFunctionTests {
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
-    var obj = ctl.Objects.Single();
+    var obj = ctl.GetObjects<CoreEntityType>().Single();
     var allcusts = await core.Query<CoreEntity>(Constants.CoreEntityName, c => true);
     var maps = await entitymap.GetAll();
 

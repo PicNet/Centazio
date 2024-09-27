@@ -10,9 +10,17 @@ public class AbstractFunctionStaticHelperTests {
 
   private const string NAME = nameof(AbstractFunctionStaticHelperTests);
   private TestingCtlRepository repo;
+  private IObjectStateRepo<ExternalEntityType> objrepo;
   
-  [SetUp] public void SetUp() => repo = TestingFactories.CtlRepo();
-  [TearDown] public async Task TearDown() => await repo.DisposeAsync();
+  [SetUp] public void SetUp() {
+    repo = TestingFactories.CtlRepo();
+    objrepo = repo.GetObjectStateRepo<ExternalEntityType>();
+  }
+
+  [TearDown] public async Task TearDown() {
+    await objrepo.DisposeAsync();
+    await repo.DisposeAsync();
+  }
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
     Assert.Throws<ArgumentException>(() => _ = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, new ([])));
@@ -20,7 +28,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var template = await repo.CreateObjectState(ss, new ExternalEntityType("2")); 
+    var template = await objrepo.CreateObjectState(ss, new ExternalEntityType("2")); 
     
     var cfg = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
@@ -30,18 +38,18 @@ public class AbstractFunctionStaticHelperTests {
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      var exp = (ObjectStateDto.FromObjectState(template) with { Object = new ExternalEntityType(name) }).ToObjectState<ExternalEntityType>();
+      var exp = (ObjectState<ExternalEntityType>.Dto.FromObjectState(template) with { Object = new ExternalEntityType(name) }).ToObjectState<ExternalEntityType>();
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
-      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new ExternalEntityType(name))));
+      Assert.That(actual, Is.EqualTo(await objrepo.GetObjectState(ss, new ExternalEntityType(name))));
     }
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var updated = (await repo.CreateObjectState(ss, new ExternalEntityType("2"))).SetActive(false);
-    await repo.SaveObjectState(updated);
+    var updated = (await objrepo.CreateObjectState(ss, new ExternalEntityType("2"))).SetActive(false);
+    await objrepo.SaveObjectState(updated);
     
     var config = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
@@ -50,7 +58,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(new ObjectStateDto(name, name, new ExternalEntityType(name), true) { 
+    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(new ObjectState<ExternalEntityType>.Dto(name, name, new ExternalEntityType(name), true) { 
       LastCompleted = last,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString()
@@ -82,7 +90,7 @@ public class AbstractFunctionStaticHelperTests {
     var states2 = new List<OperationStateAndConfig<ReadOperationConfig, ExternalEntityType>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
     var results2 = await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.RunOperationsTillAbort(states2, runner, repo);
     
-    var newstates = repo.Objects.Values.ToList();
+    var newstates = repo.GetObjects<ExternalEntityType>().Values.ToList();
 
     Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult() }));
     Assert.That(results2, Is.EquivalentTo(new [] { new ErrorReadOperationResult(EOperationAbortVote.Abort) }));
@@ -101,7 +109,7 @@ public class AbstractFunctionStaticHelperTests {
     };
     
     var results = await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo);
-    var newstates = repo.Objects.Values.ToList();
+    var newstates = repo.GetObjects<ExternalEntityType>().Values.ToList();
     
     Assert.That(results, Is.EquivalentTo(new [] { 
       new ErrorReadOperationResult(EOperationAbortVote.Abort)
@@ -122,7 +130,7 @@ public class AbstractFunctionStaticHelperTests {
     };
     states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = new ErrorReadOperationImplementation() } }; 
     var results = (await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, false)).ToList();
-    var newstates = repo.Objects.Values.ToList();
+    var newstates = repo.GetObjects<ExternalEntityType>().Values.ToList();
     var ex = results[0].Exception ?? throw new Exception();
 
     Assert.That(results, Has.Count.EqualTo(1));
@@ -130,12 +138,13 @@ public class AbstractFunctionStaticHelperTests {
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, ex.Message);
-    Assert.That(newstates[0], Is.EqualTo((ObjectStateDto.FromObjectState(exp2) with { LastRunException = ex.ToString() }).ToObjectState<ExternalEntityType>()));
+    // todo:is this From/ToObject state really required?
+    Assert.That(newstates[0], Is.EqualTo((ObjectState<ExternalEntityType>.Dto.FromObjectState(exp2) with { LastRunException = ex.ToString() }).ToObjectState<ExternalEntityType>()));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   private ObjectState<ExternalEntityType> ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
-    return new ObjectStateDto(res.ToString(), res.ToString(), (ObjectName) res.ToString(), true) {
+    return new ObjectState<ExternalEntityType>.Dto(res.ToString(), res.ToString(), (ObjectName) res.ToString(), true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res.ToString(), 
       LastAbortVote = vote.ToString(), 
@@ -154,7 +163,7 @@ public class AbstractFunctionStaticHelperTests {
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig, ExternalEntityType>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
-            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
+            await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
             new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
     
     public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([

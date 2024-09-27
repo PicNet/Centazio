@@ -10,7 +10,7 @@ public class SqlServerCtlRepository(Func<SqlConnection> newconn) : ICtlRepositor
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string SYSTEM_STATE_TBL = nameof(SystemState);
-  internal const string OBJECT_STATE_TBL = nameof(ObjectStateDto);
+  internal const string OBJECT_STATE_TBL = "ObjectState";
 
   public async Task<SqlServerCtlRepository> Initalise() {
     await using var conn = newconn();
@@ -74,7 +74,11 @@ SET Active=@Active, Status=@Status, DateUpdated=@DateUpdated, LastStarted=@LastS
 WHERE System=@System AND Stage=@Stage", state);
     return count == 0 ? throw new Exception("SaveSystemState failed") : state;
   }
-  
+
+  public IObjectStateRepo<O> GetObjectStateRepo<O>() where O : ObjectName {
+    return new SqlObjectStateRepository<O>(newconn);
+  }
+
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
     var created = SystemState.Create(system, stage);
@@ -86,46 +90,52 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
 
-  public async Task<ObjectState<T>?> GetObjectState<T>(SystemState system, T obj) where T : ObjectName {
-    await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<ObjectStateDto>(@$"
-SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
-WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, system.Stage, Object=obj });
-    return raw?.ToObjectState<T>();
-  }
-
-  public async Task<ObjectState<T>> SaveObjectState<T>(ObjectState<T> state) where T : ObjectName {
-    await using var conn = newconn();
-    var count = await conn.ExecuteAsync($@"
-UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
-SET 
-  Active=@Active, 
-  LastResult=@LastResult, 
-  LastAbortVote=@LastAbortVote, 
-  DateUpdated=@DateUpdated, 
-  LastStart=@LastStart,  
-  LastCompleted=@LastCompleted,
-  LastSuccessStart=@LastSuccessStart,
-  LastSuccessCompleted=@LastSuccessCompleted,
-  LastRunMessage=@LastRunMessage, 
-  LastRunException=@LastRunException 
-WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
-    return count == 0 ? throw new Exception("SaveObjectState failed") : state;
-  }
-  
-  public async Task<ObjectState<T>> CreateObjectState<T>(SystemState system, T obj) where T : ObjectName {
-    await using var conn = newconn();
-    
-    var created = ObjectState<T>.Create(system.System, system.Stage, obj);
-    await conn.ExecuteAsync($@"
-INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
-(System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)
-VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote)
-", created);
-    
-    return created;
-  }
-
   public virtual ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
+  
+  class SqlObjectStateRepository<O>(Func<SqlConnection> newconn) : IObjectStateRepo<O> where O : ObjectName {
+    
+    public async Task<ObjectState<O>?> GetObjectState(SystemState system, O obj) {
+      await using var conn = newconn();
+      var raw = await conn.QuerySingleOrDefaultAsync<ObjectState<O>.Dto>(@$"
+  SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
+  WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, system.Stage, Object=obj });
+      return raw?.ToObjectState<O>();
+    }
+
+    public async Task<ObjectState<O>> SaveObjectState(ObjectState<O> state) {
+      await using var conn = newconn();
+      var count = await conn.ExecuteAsync($@"
+  UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
+  SET 
+    Active=@Active, 
+    LastResult=@LastResult, 
+    LastAbortVote=@LastAbortVote, 
+    DateUpdated=@DateUpdated, 
+    LastStart=@LastStart,  
+    LastCompleted=@LastCompleted,
+    LastSuccessStart=@LastSuccessStart,
+    LastSuccessCompleted=@LastSuccessCompleted,
+    LastRunMessage=@LastRunMessage, 
+    LastRunException=@LastRunException 
+  WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
+      return count == 0 ? throw new Exception("SaveObjectState failed") : state;
+    }
+    
+    public async Task<ObjectState<O>> CreateObjectState(SystemState system, O obj) {
+      await using var conn = newconn();
+      
+      var created = ObjectState<O>.Create(system.System, system.Stage, obj);
+      await conn.ExecuteAsync($@"
+  INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
+  (System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)
+  VALUES (@System, @System, @Object, @Active, @DateCreated, @LastResult, @LastAbortVote)
+  ", created);
+      
+      return created;
+    }
+    
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+  }
 }
 

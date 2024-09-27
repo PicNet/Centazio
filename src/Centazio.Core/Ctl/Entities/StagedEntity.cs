@@ -3,7 +3,6 @@ using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Ctl.Entities;
 
-// todo: we may need StagedEntity subclasses to support CoreEntityType / ExternalEntityType
 public sealed record StagedEntity {
   
   public static StagedEntity Create(SystemName source, ExternalEntityType obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum) { ExternalEntityType = obj };

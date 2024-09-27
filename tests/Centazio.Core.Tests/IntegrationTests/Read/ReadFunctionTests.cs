@@ -24,23 +24,23 @@ public class ReadFunctionTests {
     var funcrunner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(func, oprunner, ctl);
     
     // run scenarios
-    var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.GetObjects<ExternalEntityType>().Values.ToList());
     var staged0 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // this run should be empty as no TestingUtcDate.DoTick
     var r1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.GetObjects<ExternalEntityType>().Values.ToList());
     var staged1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
     var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.GetObjects<ExternalEntityType>().Values.ToList());
     var staged2 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
     var r3 = (await funcrunner.RunFunction()).OpResults; 
-    var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.GetObjects<ExternalEntityType>().Values.ToList());
     var staged3 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // validate results
@@ -65,7 +65,7 @@ public class ReadFunctionTests {
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-    ObjectState<ExternalEntityType> OS(DateTime updated, int len) => new ObjectStateDto(sys, stg, externalname, true) {
+    ObjectState<ExternalEntityType> OS(DateTime updated, int len) => new ObjectState<ExternalEntityType>.Dto(sys, stg, externalname, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString(),
