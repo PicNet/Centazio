@@ -40,6 +40,7 @@ public class FunctionRunner<C, R>(
     } catch (Exception ex) {
       await SaveCompletedState();
       Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
+      if (func.Config.ThrowExceptions) throw;
       return new ErrorFunctionRunResults<R>(ex);
     }
 

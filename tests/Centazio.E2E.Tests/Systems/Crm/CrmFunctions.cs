@@ -42,18 +42,19 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
   public CrmPromoteFunction(CoreStorage db) {
     this.db = db;
+    // todo: find a way of preventing using wrong system names (like CoreMembershipType instead of CrmMembershipType)
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Promote, new ([
-      new (nameof(CoreMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CoreInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (nameof(CrmMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CrmCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(CrmInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
     var topromote = config.State.Object.Value switch { 
-      nameof(CoreMembershipType) => staged.Select(s => (s, (ICoreEntity) CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
-      nameof(CoreCustomer) => staged.Select(s => (s, (ICoreEntity) CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CoreInvoice) => staged.Select(s => (s, (ICoreEntity) CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
+      nameof(CrmMembershipType) => staged.Select(s => (s, (ICoreEntity) CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
+      nameof(CrmCustomer) => staged.Select(s => (s, (ICoreEntity) CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
+      nameof(CrmInvoice) => staged.Select(s => (s, (ICoreEntity) CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
       _ => throw new Exception() };
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
   }

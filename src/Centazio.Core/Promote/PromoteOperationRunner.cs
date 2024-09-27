@@ -22,12 +22,11 @@ public class PromoteOperationRunner(
       return results;  
     }
     
-    var (promote, ignore) = (results.ToPromote.ToList(), results.ToIgnore.ToList());
-    if (promote.Any()) await WriteEntitiesToCoreStorage(op, promote.Select(p => p.Core).ToList());
+    if (results.ToPromote.Any()) await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     
     await staged.Update(
-        promote.Select(e => e.Staged.Promote(start))
-            .Concat(ignore.Select(e => e.Entity.Ignore(e.Reason))));
+        results.ToPromote.Select(e => e.Staged.Promote(start))
+            .Concat(results.ToIgnore.Select(e => e.Entity.Ignore(e.Reason))));
     
     return results; 
   }

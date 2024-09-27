@@ -37,4 +37,6 @@ public static class EnumerableExtensions {
     }
     return list;
   }
+  
+  public static T RandomItem<T>(this IList<T> lst) => lst[Random.Shared.Next(lst.Count)];
 }

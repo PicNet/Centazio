@@ -1,4 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Extensions;
@@ -13,6 +13,7 @@ using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 using Centazio.Test.Lib;
 using Serilog;
+using Serilog.Events;
 
 namespace Centazio.E2E.Tests;
 
@@ -46,16 +47,17 @@ public class E2EEnvironment : IAsyncDisposable {
   // Infra
   private readonly ICtlRepository ctl = new InMemoryCtlRepository();
   private readonly IEntityIntraSystemMappingStore entitymap = new InMemoryEntityIntraSystemMappingStore();
-  private readonly IStagedEntityStore sestore = new InMemoryStagedEntityStore(0, s => s.GetHashCode().ToString());
+  private readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, s => s.GetHashCode().ToString());
   private readonly List<ISystem> Systems;
 
   public E2EEnvironment() {
+    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; // disable logging (todo: not working)
     Systems = [crm, fin];
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(crm_read = new CrmReadFunction(crm),
-        new ReadOperationRunner(sestore),
+        new ReadOperationRunner(stage),
         ctl);
     crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(crm_promote = new CrmPromoteFunction(core),
-        new PromoteOperationRunner(sestore, entitymap, core),
+        new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
     crm_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
@@ -63,10 +65,10 @@ public class E2EEnvironment : IAsyncDisposable {
         ctl);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(fin_read = new FinReadFunction(fin),
-        new ReadOperationRunner(sestore),
+        new ReadOperationRunner(stage),
         ctl);
     fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(fin_promote = new FinPromoteFunction(core),
-        new PromoteOperationRunner(sestore, entitymap, core),
+        new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
     fin_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
@@ -75,7 +77,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   public async ValueTask DisposeAsync() {
-    await sestore.DisposeAsync();
+    await stage.DisposeAsync();
     await ctl.DisposeAsync();
   }
 
@@ -97,13 +99,15 @@ public class E2EEnvironment : IAsyncDisposable {
     await fin_write_runner.RunFunction();
     
     Log.Information($"Epoch[{epoch}] Functions Completed - Validating");
-    ValidateEpoch();
+    await ValidateEpoch();
   }
 
   
-  private void ValidateEpoch() {
-    // these `.Cast<>` calls are ugly
+  private async Task ValidateEpoch() {
+    var staged_types = (await stage.GetAll(DateTime.MinValue, nameof(CrmSystem), nameof(CrmMembershipType))).ToList();
     var core_types = core.Types.Cast<CoreMembershipType>().ToList();
+    throw new Exception($"staged_types[{staged_types.Count}] core_types[{core_types.Count}]");
+    
     var core_customers = core.Customers.Cast<CoreCustomer>().ToList();
     var core_invoices = core.Invoices.Cast<CoreInvoice>().ToList();
     

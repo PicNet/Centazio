@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
+using Centazio.Core.Extensions;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
@@ -87,7 +88,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var count = rng.Next(MAX_NEW_CUSTOMERS);
       Log.Debug($"CrmSimulation - AddCustomers count[{count}]");
       customers.AddRange(Enumerable.Range(0, count)
-          .Select(_ => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, RandomItem(types).Id, Guid.NewGuid().ToString())));
+          .Select(_ => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, Guid.NewGuid().ToString())));
     }
 
     private void EditCustomers() {
@@ -96,15 +97,16 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       Log.Debug($"CrmSimulation - EditCustomers count[{count}]");
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(customers.Count);
-        customers[idx] = customers[idx] with { MembershipTypeId = RandomItem(types).Id, Name = Guid.NewGuid().ToString(), Updated = UtcDate.UtcNow };
+        customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = Guid.NewGuid().ToString(), Updated = UtcDate.UtcNow };
       });
     }
 
     private void AddInvoices() {
+      if (!customers.Any()) return;
       var count = rng.Next(MAX_NEW_INVOICES);
       Log.Debug($"CrmSimulation - AddInvoices count[{count}]");
       Enumerable.Range(0, count).ForEach(_ => 
-          invoices.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, RandomItem(customers).Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
+          invoices.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
     }
 
     private void EditInvoices() {
@@ -126,8 +128,6 @@ public class CrmSystem : ICrmSystemApi, ISystem {
         types[idx] = types[idx] with { Name = $"{old[0]}:{Int32.Parse(old[1]) + 1}", Updated = UtcDate.UtcNow };
       });
     }
-
-    private T RandomItem<T>(List<T> lst) => lst[rng.Next(lst.Count)];
   }
 }
 

@@ -129,7 +129,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
     if (typeof(E) == typeof(CoreMembershipType)) return Types;
     if (typeof(E) == typeof(CoreCustomer)) return Customers;
     if (typeof(E) == typeof(CoreInvoice)) return Invoices;
-    throw new Exception();
+    throw new NotSupportedException($"Type[{typeof(E).Name}] is not supported");
   }
 
 }

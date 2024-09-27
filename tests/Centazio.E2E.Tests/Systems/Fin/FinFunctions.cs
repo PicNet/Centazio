@@ -41,8 +41,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public FinPromoteFunction(CoreStorage db) {
     this.db = db;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, new ([
-      new (nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CoreInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (nameof(FinAccount), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (nameof(FinInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 

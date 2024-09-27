@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
+using Centazio.Core.Extensions;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
@@ -83,10 +84,11 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
 
     private void AddInvoices() {
+      if (!accounts.Any()) return;
       var count = rng.Next(MAX_NEW_INVOICES);
       Log.Debug($"FinSimulation - AddInvoices count[{count}]");
       Enumerable.Range(0, count).ForEach(_ => 
-          invoices.Add(new FinInvoice(rng.Next(Int32.MaxValue), RandomItem(accounts).Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
+          invoices.Add(new FinInvoice(rng.Next(Int32.MaxValue), accounts.RandomItem().Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
     }
 
     private void EditInvoices() {
@@ -98,8 +100,6 @@ public class FinSystem : IFinSystemApi, ISystem {
         invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = rng.Next(100, 10000) / 100.0m, Updated = UtcDate.UtcNow };
       });
     }
-
-    private T RandomItem<T>(List<T> lst) => lst[rng.Next(lst.Count)];
   }
 }
 

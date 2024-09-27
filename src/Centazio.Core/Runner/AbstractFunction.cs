@@ -17,7 +17,7 @@ public abstract class AbstractFunction<C, R>
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
     var states = await LoadOperationsStates(Config, sys, ctl);
     var ready = GetReadyOperations(states);
-    var results = await RunOperationsTillAbort(ready, runner, ctl);
+    var results = await RunOperationsTillAbort(ready, runner, ctl, Config.ThrowExceptions);
     return results;
   }
 
@@ -40,7 +40,7 @@ public abstract class AbstractFunction<C, R>
     return states.Where(IsOperationReady);
   }
   
-  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<C>> ops, IOperationRunner<C, R> runner, ICtlRepository ctl) {
+  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<C>> ops, IOperationRunner<C, R> runner, ICtlRepository ctl, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
@@ -62,6 +62,7 @@ public abstract class AbstractFunction<C, R>
       catch (Exception ex) {
         var res = runner.BuildErrorResult(op, ex);
         Log.Error(ex, "unhandled RunOperation exception, {@ErrorResults}", res);
+        if (throws) throw;
         return res;
       }
     }

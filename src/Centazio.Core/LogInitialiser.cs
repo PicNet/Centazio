@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Json;
@@ -11,10 +12,14 @@ public static class LogInitialiser {
 
   private static readonly string DATE_TIME_FORMAT = "yyyy-MM-ddTHH:mm:ssZ";
   public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
+  public static LoggingLevelSwitch LevelSwitch => new(LogEventLevel.Debug); 
 
-  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug) => new LoggerConfiguration()
-      .Destructure.ByTransformingWhere<ValidString>(typeof(ValidString).IsAssignableFrom, obj => obj.Value)
-      .MinimumLevel.Is(level);
+  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug) {
+    LevelSwitch.MinimumLevel = level;
+    return new LoggerConfiguration()
+        .Destructure.ByTransformingWhere<ValidString>(typeof(ValidString).IsAssignableFrom, obj => obj.Value)
+        .MinimumLevel.ControlledBy(LevelSwitch);
+  }
 
   public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug) => GetBaseConfig(level)
       .WriteTo.Console(Formatter);
