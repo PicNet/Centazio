@@ -20,7 +20,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var template = await repo.CreateObjectState(ss, "2"); 
+    var template = await repo.CreateObjectState(ss, new ExternalEntityType("2")); 
     
     var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
@@ -30,17 +30,17 @@ public class AbstractFunctionStaticHelperTests {
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      var exp = (ObjectState) ((ObjectState.Dto) template with { Object = name });
+      var exp = ((ObjectState.Dto) template with { Object = new ExternalEntityType(name) }).ToObjectState(false);
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
-      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, name)));
+      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new ExternalEntityType(name))));
     }
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var updated = (await repo.CreateObjectState(ss, "2")).SetActive(false);
+    var updated = (await repo.CreateObjectState(ss, new ExternalEntityType("2"))).SetActive(false);
     await repo.SaveObjectState(updated);
     
     var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
@@ -50,11 +50,11 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new((ObjectState) new ObjectState.Dto(name, name, name, true) { 
+    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(new ObjectState.Dto(name, name, new ExternalEntityType(name), true) { 
       LastCompleted = last,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString()
-    }, new(name, new (new (cron)), new TestingListReadOperationImplementation()));
+    }.ToObjectState(false), new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -130,12 +130,12 @@ public class AbstractFunctionStaticHelperTests {
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, ex.Message);
-    Assert.That(newstates[0], Is.EqualTo((ObjectState) ((ObjectState.Dto) exp2 with { LastRunException = ex.ToString() })));
+    Assert.That(newstates[0], Is.EqualTo(((ObjectState.Dto) exp2 with { LastRunException = ex.ToString() }).ToObjectState(false)));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
-    return (ObjectState) new ObjectState.Dto(res.ToString(), res.ToString(), res.ToString(), true) {
+    return new ObjectState.Dto(res.ToString(), res.ToString(), (ObjectName) res.ToString(), true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res.ToString(), 
       LastAbortVote = vote.ToString(), 
@@ -148,20 +148,20 @@ public class AbstractFunctionStaticHelperTests {
           (len == 0 
               ? res == EOperationResult.Error ? $"ErrorReadOperationResult[{exmessage}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
               : "")
-    };
+    }.ToObjectState(false);
   }
 
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
-            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-            new (result.ToString(), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
+            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
+            new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
     
     public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
-      new ReadOperationConfig("1", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("2", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("3", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig("4", new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
+      new ReadOperationConfig(new ExternalEntityType("1"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig(new ExternalEntityType("2"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig(new ExternalEntityType("3"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new ReadOperationConfig(new ExternalEntityType("4"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
     ]);
   }
   

@@ -28,14 +28,14 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
     return Task.FromResult(lst);
   }
 
-  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) => 
+  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) => 
       Task.FromResult(saved
           .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .AsEnumerable());
 
-  protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+  protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {
     var toremove = saved
         .Where(se => se.SourceSystem == source && se.Object == obj && 
             ((promoted && se.DatePromoted < before) || 

@@ -18,8 +18,8 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   public FinReadFunction(IFinSystemApi api) {
     this.api = api;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, new ([
-      new (nameof(FinAccount), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(FinInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   
@@ -40,8 +40,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public FinPromoteFunction(CoreStorage db) {
     this.db = db;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, new ([
-      new (nameof(FinAccount), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(FinInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 
@@ -64,8 +64,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public FinWriteFunction(FinSystem api) {
     this.api = api;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, new ([
-      new(nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(nameof(CoreInvoice), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this),
     ]));
   }
 

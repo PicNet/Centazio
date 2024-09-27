@@ -31,9 +31,13 @@ public record CoreAndUpdatedMap {
 }
 
 public record WriteOperationConfig(
-    ObjectName Object, 
+    CoreEntityType CoreEntityType, 
     ValidCron Cron,
-    IWriteEntitiesToTargetSystem WriteEntitiesesToTargetSystem) : OperationConfig(Object, Cron);
+    IWriteEntitiesToTargetSystem WriteEntitiesesToTargetSystem) : OperationConfig(CoreEntityType, Cron) {
+
+  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
+  public CoreEntityType CoreEntityType { get; init; } = CoreEntityType;
+}
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 

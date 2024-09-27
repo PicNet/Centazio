@@ -18,9 +18,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   public CrmReadFunction(ICrmSystemApi api) {
     this.api = api;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Read, new ([
-      new (nameof(CrmMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CrmCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CrmInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new ExternalEntityType(nameof(CrmMembershipType)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new ExternalEntityType(nameof(CrmCustomer)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new ExternalEntityType(nameof(CrmInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   
@@ -41,11 +41,10 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
   public CrmPromoteFunction(CoreStorage db) {
     this.db = db;
-    // todo: find a way of preventing using wrong system names (like CoreMembershipType instead of CrmMembershipType)
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Promote, new ([
-      new (nameof(CrmMembershipType), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CrmCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (nameof(CrmInvoice), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(CrmMembershipType)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(CrmCustomer)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(CrmInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 
@@ -69,8 +68,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public CrmWriteFunction(CrmSystem api) {
     this.api = api;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Write, new ([
-      new(nameof(CoreCustomer), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(nameof(CoreInvoice), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this),
     ]));
   }
 

@@ -5,7 +5,7 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// <summary>
   /// Gets all core entities that have been created/updated after the given `after` parameter.
   /// </summary>
-  Task<List<ICoreEntity>> Get(ObjectName obj, DateTime after);
+  Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {
@@ -18,10 +18,10 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
   /// <returns>An id to checksim mapping of entities already in core storage</returns>
-  Task<Dictionary<string, string>> GetChecksums(ObjectName obj, List<ICoreEntity> entities);
+  Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities);
   
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<IEnumerable<ICoreEntity>> Upsert(ObjectName obj, IEnumerable<ICoreEntity> entities);
+  Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities);
 }

@@ -109,7 +109,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return uniques;
   }
   
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       ConsistentRead = true,
@@ -138,7 +138,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
         .Where(se => incpromoted || !se.DatePromoted.HasValue);
   }
 
-  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {
     var filter = new QueryFilter();
     filter.AddCondition(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(source, obj));
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, QueryOperator.LessThan, $"{before:o}");

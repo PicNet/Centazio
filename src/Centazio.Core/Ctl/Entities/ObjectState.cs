@@ -1,8 +1,24 @@
-﻿namespace Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
 
+namespace Centazio.Core.Ctl.Entities;
+
+// todo: we may need ObjectState subclasses to support CoreEntityType / ExternalEntityType
 public record ObjectState {
   
-  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName obj, bool active = true) => new(system, stage, obj, active);
+  public static ObjectState Create<T>(SystemName system, LifecycleStage stage, bool active = true) where T : ICoreEntity => new(system, stage, CoreEntityType.From<T>(), active) {
+    CoreEntityType = CoreEntityType.From<T>()
+  };
+  
+  public static ObjectState Create(SystemName system, LifecycleStage stage, CoreEntityType name, bool active = true) => new(system, stage, name, active) {
+    CoreEntityType = name
+  };
+  
+  public static ObjectState Create(SystemName system, LifecycleStage stage, ExternalEntityType name, bool active = true) => new(system, stage, name, active) {
+    ExternalEntityType = name
+  };
+  
+  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName name, bool active = true) => new(system, stage, name, active);
+  
   public ObjectState Success(DateTime start, EOperationAbortVote abort, string message) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
@@ -35,13 +51,20 @@ public record ObjectState {
   
   public SystemName System { get; } 
   public LifecycleStage Stage { get; } 
-  public ObjectName Object { get; } 
+  public ObjectName Object { get; }
+  
   public bool Active { get; private init; } 
   public DateTime DateCreated { get; private init; } 
   public EOperationResult LastResult { get; private init; } = EOperationResult.Unknown;
   public EOperationAbortVote LastAbortVote { get; private init; } = EOperationAbortVote.Unknown;
   
-  private ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
+  private readonly CoreEntityType? cet;
+  internal CoreEntityType CoreEntityType { get => cet ?? throw new Exception("CoreEntityTypeName is not specified"); private init => cet = value; }
+  
+  private readonly ExternalEntityType? eet;
+  internal ExternalEntityType ExternalEntityType { get => eet ?? throw new Exception("ExternalEntityType is not specified"); private init => eet = value; }
+  
+  internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
     System = system;
     Stage = stage;
     Object = obj;
@@ -78,7 +101,7 @@ public record ObjectState {
     internal Dto(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
       System = system;
       Stage = stage;
-      Object = obj;
+      Object = obj.Value;
       Active = active;
       DateCreated = UtcDate.UtcNow;
     }
@@ -96,22 +119,25 @@ public record ObjectState {
       LastRunException = os.LastRunException
     };
     
-    public static explicit operator ObjectState(Dto dto) => new(
-        dto.System ?? throw new ArgumentNullException(nameof(System)),
-        dto.Stage ?? throw new ArgumentNullException(nameof(Stage)),
-        dto.Object ?? throw new ArgumentNullException(nameof(Object)),
-        dto.Active ?? throw new ArgumentNullException(nameof(Active))) {
+    public ObjectState ToObjectState(bool iscore) => new(
+        System ?? throw new ArgumentNullException(nameof(System)),
+        Stage ?? throw new ArgumentNullException(nameof(Stage)),
+        new(Object ?? throw new ArgumentNullException(nameof(Object))),
+        Active ?? throw new ArgumentNullException(nameof(Active))) {
       
-      LastResult =  Enum.Parse<EOperationResult>(dto.LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
-      LastAbortVote =   Enum.Parse<EOperationAbortVote>(dto.LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
-      DateCreated = dto.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-      DateUpdated = dto.DateUpdated,
-      LastStart = dto.LastStart,
-      LastSuccessStart = dto.LastSuccessStart,
-      LastCompleted = dto.LastCompleted,
-      LastSuccessCompleted = dto.LastSuccessCompleted,
-      LastRunMessage = dto.LastRunMessage,
-      LastRunException = dto.LastRunException
+      LastResult =  Enum.Parse<EOperationResult>(LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
+      LastAbortVote =   Enum.Parse<EOperationAbortVote>(LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
+      DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
+      DateUpdated = DateUpdated,
+      LastStart = LastStart,
+      LastSuccessStart = LastSuccessStart,
+      LastCompleted = LastCompleted,
+      LastSuccessCompleted = LastSuccessCompleted,
+      LastRunMessage = LastRunMessage,
+      LastRunException = LastRunException,
+      
+      CoreEntityType = iscore ? new CoreEntityType(Object) : null!,
+      ExternalEntityType = iscore ? null! : new ExternalEntityType(Object)
     };
   }
 }

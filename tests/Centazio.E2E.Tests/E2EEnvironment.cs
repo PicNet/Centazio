@@ -100,7 +100,7 @@ public class E2EEnvironment : IAsyncDisposable {
 
   
   private async Task ValidateEpoch() {
-    var staged_types = (await stage.GetAll(DateTime.MinValue, nameof(CrmSystem), nameof(CrmMembershipType))).ToList();
+    var staged_types = (await stage.GetAll(DateTime.MinValue, nameof(CrmSystem), new(nameof(CrmMembershipType)))).ToList();
     var core_types = core.Types.Cast<CoreMembershipType>().ToList();
     throw new Exception($"staged_types[{staged_types.Count}] core_types[{core_types.Count}]");
     

@@ -104,16 +104,16 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<ICoreEntity>> Get(ObjectName obj, DateTime after) => 
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after) => 
       Task.FromResult(GetList(obj).Where(e => e.DateUpdated > after).ToList());
 
-  public async Task<Dictionary<string, string>> GetChecksums(ObjectName obj, List<ICoreEntity> entities) {
+  public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue))
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
-  public Task<IEnumerable<ICoreEntity>> Upsert(ObjectName obj, IEnumerable<ICoreEntity> entities) {
+  public Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
     var lst = GetList(obj);
     return Task.FromResult(entities.Select(e => {
       var idx = lst.FindIndex(e2 => e2.Id == e.Id);
@@ -125,11 +125,11 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
-  private List<ICoreEntity> GetList(ObjectName obj) {
-    if (obj == nameof(CoreMembershipType)) return Types;
-    if (obj == nameof(CoreCustomer)) return Customers;
-    if (obj == nameof(CoreInvoice)) return Invoices;
-    throw new NotSupportedException($"ObjectName[{obj}] is not supported");
+  private List<ICoreEntity> GetList(CoreEntityType obj) {
+    if (obj.Name == nameof(CoreMembershipType)) return Types;
+    if (obj.Name == nameof(CoreCustomer)) return Customers;
+    if (obj.Name == nameof(CoreInvoice)) return Invoices;
+    throw new NotSupportedException($"CoreEntityType[{obj}] is not supported");
   }
 
 }

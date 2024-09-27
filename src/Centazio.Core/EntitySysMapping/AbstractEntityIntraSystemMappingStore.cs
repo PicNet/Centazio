@@ -15,7 +15,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> maps);
   
   Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key);
-  Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, ObjectName obj);
+  Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj);
   
   /// <summary>
   /// Bounce backs are when an entity is created in System 1 and written to
@@ -39,7 +39,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   /// https://sequencediagram.org/index.html#initialData=C4S2BsFMAIGECUCy0C0A+aAxEA7AhjgMYh7gDOAXNAEID2ArkTNXoQNbQDKeAtgA5QAUAmTo4SKgEkcAN1ohCMABQiAjACYAzAEpohAE6Q8wSABNhSVBliQcwPAC8QtKbPmLoKpBp3Qy9gHMzYVt7J1p0GztHZ1c5BRg+fVoeWhNzKLDndGx8IhJyOPcYAHd9MBMcTzUtaAAjSEIUyDIsXE11VWhcNrziUjJtAB0cAFE7MABPRDw+PlwAr0QAGmhJH1XczfbO7UFcgn7ySNCYl16Orv88IIzT8JPo8KkAnFpDaCSUtIWLzug8K0wK08NBTPQBApjJAAHQjAAitBwMDqkz0AAtGmxfuNQMBprN5jgAtAAGbvXrLXKXIA
   /// </summary>
   /// <returns>The list of IDs that are not bouce backs and should be promoted</returns>
-  Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, ObjectName obj, List<string> ids);
+  Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, CoreEntityType obj, List<string> ids);
 
 }
 
@@ -52,10 +52,10 @@ public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystem
   public abstract Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> updates);
   
   public abstract Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key);
-  public abstract Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, ObjectName obj);
+  public abstract Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj);
   public abstract Task<List<EntityIntraSysMap>> GetAll();
   
-  public abstract Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, ObjectName obj, List<string> ids);
+  public abstract Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, CoreEntityType obj, List<string> ids);
   
   public abstract ValueTask DisposeAsync();
 

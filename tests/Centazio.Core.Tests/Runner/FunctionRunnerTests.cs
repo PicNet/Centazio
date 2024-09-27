@@ -2,6 +2,7 @@
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
+using Centazio.Core.Tests.IntegrationTests;
 using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Runner;
@@ -75,7 +76,7 @@ public class FunctionRunnerTests {
   }
   
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, 
-      new List<ReadOperationConfig> { new(NAME, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
+      new List<ReadOperationConfig> { new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
     
     private class EmptyResults : IGetObjectsToStage {
       public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());

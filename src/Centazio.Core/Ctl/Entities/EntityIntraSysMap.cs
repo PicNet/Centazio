@@ -4,9 +4,9 @@ namespace Centazio.Core.Ctl.Entities;
 
 public record EntityIntraSysMap {
 
-  public static PendingCreate Create(ICoreEntity e, SystemName target, ObjectName obj) => new(e, target, obj);
+  public static PendingCreate Create(ICoreEntity e, SystemName target, CoreEntityType obj) => new(e, target, obj);
   
-  private EntityIntraSysMap(ObjectName coreentity, ValidString coreid, SystemName sourcesys, ValidString sourceid, SystemName targetsys, ValidString targetid, EEntityMappingStatus status) {
+  private EntityIntraSysMap(CoreEntityType coreentity, ValidString coreid, SystemName sourcesys, ValidString sourceid, SystemName targetsys, ValidString targetid, EEntityMappingStatus status) {
     CoreEntity = coreentity; 
     CoreId = coreid; 
     SourceSystem = sourcesys; 
@@ -16,7 +16,7 @@ public record EntityIntraSysMap {
     Status = status;
   }
   
-  public ObjectName CoreEntity { get; } 
+  public CoreEntityType CoreEntity { get; } 
   public ValidString CoreId { get; } 
   public SystemName SourceSystem { get; } 
   public ValidString SourceId { get; } 
@@ -30,7 +30,7 @@ public record EntityIntraSysMap {
   public DateTime? DateLastError { get; protected init; }
   public string? LastError { get; protected init; }
   
-  public record MappingKey(ObjectName CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId);
+  public record MappingKey(CoreEntityType CoreEntity, ValidString CoreId, SystemName SourceSystem, ValidString SourceId, SystemName TargetSystem, ValidString TargetId);
   
   public MappingKey Key => new(CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId);
   public PendingUpdate Update() => new(this);
@@ -50,7 +50,7 @@ public record EntityIntraSysMap {
     public string? LastError { get; init; }
     
     public static explicit operator EntityIntraSysMap(Dto dto) => new(
-        dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity)),
+        new CoreEntityType(dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity))),
         dto.CoreId ?? throw new ArgumentNullException(nameof(CoreId)),
         dto.SourceSystem ?? throw new ArgumentNullException(nameof(SourceSystem)),
         dto.SourceId ?? throw new ArgumentNullException(nameof(SourceId)),
@@ -67,7 +67,7 @@ public record EntityIntraSysMap {
   }
   
   public record PendingCreate : EntityIntraSysMap {
-    internal PendingCreate(ICoreEntity e, SystemName targetsys, ObjectName obj) : 
+    internal PendingCreate(ICoreEntity e, SystemName targetsys, CoreEntityType obj) : 
         base(obj, e.Id, e.SourceSystem, e.SourceId, targetsys, EEntityMappingStatus.PendingCreate.ToString(), EEntityMappingStatus.PendingCreate) {
       DateCreated = UtcDate.UtcNow;
     }

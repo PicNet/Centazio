@@ -27,16 +27,18 @@ public sealed record SystemName(string Value) : ValidString(Value) {
   public static implicit operator SystemName(string value) => new(value);
 }
 
-public sealed record ObjectName(string Value) : ValidString(Value) {
-  public static implicit operator ObjectName(string value) => new((ValidString) value);
+public record ObjectName : ValidString {
+  internal ObjectName(string name) : base(name) {}
 }
 
-public sealed record CoreEntityName {
+public sealed record ExternalEntityType(string Name) : ObjectName(Name);
+
+public sealed record CoreEntityType : ObjectName {
   public string Name { get;}
   
-  private CoreEntityName(ValidString name) { Name = name; }
+  internal CoreEntityType(ValidString name) : base(name) { Name = name; }
   
-  public static CoreEntityName From<T>() where T : ICoreEntity => new(typeof(T).Name);
+  public static CoreEntityType From<T>() where T : ICoreEntity => new(typeof(T).Name);
 }
 
 public sealed record LifecycleStage(string Value) : ValidString(Value) {

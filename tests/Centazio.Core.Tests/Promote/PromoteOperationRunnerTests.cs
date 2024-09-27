@@ -33,11 +33,11 @@ public class PromoteOperationRunnerTests {
   } 
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
-    await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(NAME, t => true)).ToDictionary(c => c.Id);
+        ObjectState.Create<CoreEntity>(NAME, NAME),
+        new PromoteOperationConfig(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
+    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.Id);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
@@ -54,11 +54,11 @@ public class PromoteOperationRunnerTests {
   }
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
-    await stager.Stage(NAME, NAME, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(NAME, NAME, NAME),
-        new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(NAME, t => true)).ToDictionary(c => c.Id);
+        ObjectState.Create<CoreEntity>(NAME, NAME),
+        new PromoteOperationConfig(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
+    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.Id);
     Assert.That(saved, Is.Empty);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));

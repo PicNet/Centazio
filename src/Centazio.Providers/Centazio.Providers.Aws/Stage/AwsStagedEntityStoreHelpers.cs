@@ -13,10 +13,10 @@ public class AwsStagedEntityStoreHelpers {
   
   public static string ToS3Key(StagedEntity e) => $"{e.SourceSystem.Value}/{e.Object.Value}/{e.DateStaged:o}_{e.Checksum}_{e.Id}";
   public static S3KeyComponents ParseS3Key(string key) {
-    var (system, obj, rest, _) = key.Split('/');
+    var (system, entity, rest, _) = key.Split('/');
     var (stagedstr, checksum, idstr, _) = rest.Split('_');
-    return new S3KeyComponents(system, obj, DateTime.Parse(stagedstr).ToUniversalTime(), checksum, Guid.Parse(idstr));
+    return new S3KeyComponents(system, new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), checksum, Guid.Parse(idstr));
   } 
 }
 
-public record S3KeyComponents(SystemName System, ObjectName Object, DateTime DateStaged, ValidString Checksum, Guid Id);
+public record S3KeyComponents(SystemName System, ExternalEntityType Object, DateTime DateStaged, ValidString Checksum, Guid Id);

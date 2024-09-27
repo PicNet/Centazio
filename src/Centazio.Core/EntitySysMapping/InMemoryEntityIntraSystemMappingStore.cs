@@ -11,7 +11,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
   public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  public override Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, ObjectName obj) {
+  public override Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj) {
     var news = new List<CoreAndPendingCreateMap>();
     var updates = new List<CoreAndPendingUpdateMap>();
     cores.ForEach(c => {
@@ -28,7 +28,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> updates) => 
       Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated) (memdb[map.Key] = map)).ToList());
 
-  public override Task<List<string>> FilterOutBouncedBackIds(SystemName promotingsys, ObjectName obj, List<string> ids) {
+  public override Task<List<string>> FilterOutBouncedBackIds(SystemName promotingsys, CoreEntityType obj, List<string> ids) {
     var bounces = memdb.Values.
       Where(tse => tse.CoreEntity == obj && tse.TargetSystem == promotingsys && ids.Contains(tse.TargetId)).
       Select(tse => tse.TargetId.Value).

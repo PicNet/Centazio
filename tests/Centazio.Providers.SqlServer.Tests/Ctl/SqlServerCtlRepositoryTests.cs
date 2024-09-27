@@ -14,7 +14,7 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
   [Test, Ignore("Dapper does not support Enum->string mapping")] public async Task Test_serialisation_of_enums() {
     await using var conn = SqlConn.Instance.Conn();
     
-    var created = await repo.CreateObjectState(await repo.CreateSystemState(NAME, NAME), NAME);
+    var created = await repo.CreateObjectState(await repo.CreateSystemState(NAME, NAME), new ExternalEntityType(NAME));
     var lr1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var lav1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
     var updated = await repo.SaveObjectState(created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, ""));

@@ -11,7 +11,7 @@ public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.System1Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
-  private readonly ObjectName obj = Constants.CoreEntityName;
+  private readonly ExternalEntityType externalname = Constants.ExternalEntityName;
   
   [SetUp] public void SetUp() {
     UtcDate.Utc = new TestingUtcDate();
@@ -25,23 +25,23 @@ public class ReadFunctionTests {
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged0 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj)).ToList();
+    var staged0 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // this run should be empty as no TestingUtcDate.DoTick
     var r1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj)).ToList();
+    var staged1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
     var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged2 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj)).ToList();
+    var staged2 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
     var r3 = (await funcrunner.RunFunction()).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged3 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, obj)).ToList();
+    var staged3 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddYears(-1), sys, externalname)).ToList();
     
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
@@ -65,19 +65,19 @@ public class ReadFunctionTests {
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-    ObjectState OS(DateTime updated, int len) => (ObjectState) new ObjectState.Dto(sys, stg, obj, true) {
-    DateCreated = start,
-    LastResult = EOperationResult.Success.ToString(),
-    LastAbortVote = EOperationAbortVote.Continue.ToString(),
-    DateUpdated = updated,
-    LastStart = updated,
-    LastSuccessStart = updated,
-    LastSuccessCompleted = updated,
-    LastCompleted = updated,
-    LastRunMessage = $"operation [{sys}/{stg}/{obj}] completed [Success] message: " + 
-        (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
-  };
-    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, obj, onetick, expjson, Helpers.TestingChecksum(expjson));
+    ObjectState OS(DateTime updated, int len) => new ObjectState.Dto(sys, stg, externalname, true) {
+      DateCreated = start,
+      LastResult = EOperationResult.Success.ToString(),
+      LastAbortVote = EOperationAbortVote.Continue.ToString(),
+      DateUpdated = updated,
+      LastStart = updated,
+      LastSuccessStart = updated,
+      LastSuccessCompleted = updated,
+      LastCompleted = updated,
+      LastRunMessage = $"operation [{sys}/{stg}/{externalname}] completed [Success] message: " + 
+          (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
+    }.ToObjectState(false);
+    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, externalname, onetick, expjson, Helpers.TestingChecksum(expjson));
   }
 }
 
@@ -88,7 +88,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, new ([
-      new (Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+      new (Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   

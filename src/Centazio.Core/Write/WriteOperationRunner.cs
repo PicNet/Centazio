@@ -9,8 +9,8 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
     IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    var pending = await core.Get(op.Settings.Object, op.Checkpoint);
-    var maps = await entitymap.GetForCores(pending, op.State.System, op.Settings.Object);
+    var pending = await core.Get(op.State.CoreEntityType, op.Checkpoint);
+    var maps = await entitymap.GetForCores(pending, op.State.System, op.State.CoreEntityType);
     var results = await op.Settings.WriteEntitiesesToTargetSystem.WriteEntities(op.Settings, maps.Created, maps.Updated);
     
     if (results.Result == EOperationResult.Error) {

@@ -14,7 +14,7 @@ public class PromoteOperationRunner(
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.Object);
+    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.ExternalEntityType);
     var results = await op.Settings.EvaluateEntitiesToPromote.Evaluate(op, pending);
     
     if (results.Result == EOperationResult.Error) {
@@ -34,11 +34,11 @@ public class PromoteOperationRunner(
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
-        .IgnoreNonMeaninfulChanges(op.State.Object, core))
-        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
+        .IgnoreNonMeaninfulChanges(op.State.CoreEntityType, core))
+        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.CoreEntityType);
     
     if (!toupsert.Any()) return;
-    await core.Upsert(op.Settings.Object, toupsert);
+    await core.Upsert(op.State.CoreEntityType, toupsert);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
@@ -60,7 +60,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, ObjectName obj, ICoreStorageUpserter core) {
+  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, CoreEntityType obj, ICoreStorageUpserter core) {
     if (lst.All(e => String.IsNullOrWhiteSpace(e.Checksum))) return lst;
     
     var checksums = await core.GetChecksums(obj, lst);
@@ -72,7 +72,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// <summary>
   /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back. 
   /// </summary>
-  public static async Task<List<ICoreEntity>> IgnoreEntitiesBouncingBack(this List<ICoreEntity> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys, ObjectName obj)  {
+  public static async Task<List<ICoreEntity>> IgnoreEntitiesBouncingBack(this List<ICoreEntity> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys, CoreEntityType obj)  {
     var ids = lst.Select(e => e.SourceId).ToList();
     var valid = (await entitymap.FilterOutBouncedBackIds(thissys, obj, ids)).ToDictionary(id => id);
     return lst.Where(e => valid.ContainsKey(e.SourceId)).ToList();

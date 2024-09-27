@@ -3,8 +3,8 @@
 namespace Centazio.Core.Stage;
 
 public interface IEntityStager : IAsyncDisposable {
-  Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data);
-  Task<IEnumerable<StagedEntity>> Stage(SystemName source, ObjectName obj, IEnumerable<string> datas);
+  Task<StagedEntity?> Stage(SystemName source, ExternalEntityType obj, string data);
+  Task<IEnumerable<StagedEntity>> Stage(SystemName source, ExternalEntityType obj, IEnumerable<string> datas);
 }
     
 public interface IStagedEntityStore : IEntityStager {
@@ -12,11 +12,11 @@ public interface IStagedEntityStore : IEntityStager {
   Task Update(StagedEntity staged);
   Task Update(IEnumerable<StagedEntity> staged);
   
-  Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj);
-  Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj);
+  Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ExternalEntityType obj);
+  Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ExternalEntityType obj);
   
-  Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj);
-  Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj);
+  Task DeletePromotedBefore(DateTime before, SystemName source, ExternalEntityType obj);
+  Task DeleteStagedBefore(DateTime before, SystemName source, ExternalEntityType obj);
 }
 
 public abstract class AbstractStagedEntityStore(int limit, Func<string, string> checksum) : IStagedEntityStore {
@@ -28,12 +28,12 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
     set => lim = value;
   }
 
-  public async Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data) {
+  public async Task<StagedEntity?> Stage(SystemName source, ExternalEntityType obj, string data) {
     var results = (await Stage(source, obj, [data])).ToList();
     return results.Any() ? results.Single() : null; 
   }
 
-  public async Task<IEnumerable<StagedEntity>> Stage(SystemName source, ObjectName obj, IEnumerable<string> datas) {
+  public async Task<IEnumerable<StagedEntity>> Stage(SystemName source, ExternalEntityType obj, IEnumerable<string> datas) {
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
     var ses = datas.Distinct().Select(data => StagedEntity.Create(source, obj, now, data, checksum(data))).ToList();
     if (!ses.Any()) return ses;
@@ -48,8 +48,8 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   public Task Update(StagedEntity staged) => Update([staged]);
   public abstract Task Update(IEnumerable<StagedEntity> staged);
 
-  public Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => GetImpl(after, source, obj, true);
-  public Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ObjectName obj) => GetImpl(after, source, obj, false);
+  public Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ExternalEntityType obj) => GetImpl(after, source, obj, true);
+  public Task<IEnumerable<StagedEntity>> GetUnpromoted(DateTime after, SystemName source, ExternalEntityType obj) => GetImpl(after, source, obj, false);
 
   /// <summary>
   /// Implementing providers must ensure the following:
@@ -59,11 +59,11 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   ///   feature and the provider should ensure they only query the underlying data source for maximum this
   ///   amount of records. 
   /// </summary>
-  protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted);
+  protected abstract Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted);
   
-  public async Task DeletePromotedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, true);
-  public async Task DeleteStagedBefore(DateTime before, SystemName source, ObjectName obj) => await DeleteBeforeImpl(before, source, obj, false);
-  protected abstract Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted);
+  public async Task DeletePromotedBefore(DateTime before, SystemName source, ExternalEntityType obj) => await DeleteBeforeImpl(before, source, obj, true);
+  public async Task DeleteStagedBefore(DateTime before, SystemName source, ExternalEntityType obj) => await DeleteBeforeImpl(before, source, obj, false);
+  protected abstract Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted);
   
   public abstract ValueTask DisposeAsync();
 

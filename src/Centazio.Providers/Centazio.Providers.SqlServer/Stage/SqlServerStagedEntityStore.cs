@@ -70,7 +70,7 @@ ON
 WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.IgnoreReason;", staged);
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     await using var conn = newconn();
     var limit = Limit > 0 ? $"TOP {Limit}" : "";
     var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
@@ -89,7 +89,7 @@ ORDER BY DateStaged
         .Select(e => (StagedEntity) e).ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {
     await using var conn = newconn();
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
     await conn.ExecuteAsync($"DELETE FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE {col} < @before AND SourceSystem = @source AND Object = @obj", new { before, source, obj });

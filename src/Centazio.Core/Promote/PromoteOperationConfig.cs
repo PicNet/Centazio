@@ -8,7 +8,11 @@ public interface IEvaluateEntitiesToPromote {
 }
 
 public record PromoteOperationConfig(
-    ObjectName Object, 
+    ExternalEntityType ExternalEntityType, 
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(Object, Cron);
+    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(ExternalEntityType, Cron) {
+
+  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
+  public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;
+}
 

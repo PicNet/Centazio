@@ -82,8 +82,8 @@ public class ReadOperationRunnerTests {
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
     => new (
-        await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), result.ToString()), 
-        new (result.ToString(), TestingDefaults.CRON_EVERY_SECOND, Impl));
+        await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
+        new (new ExternalEntityType(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl));
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {

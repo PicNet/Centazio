@@ -6,6 +6,10 @@ public interface IGetObjectsToStage {
   Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config);
 }
 
-public record ReadOperationConfig(ObjectName Object, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
-        : OperationConfig(Object, Cron);
+public record ReadOperationConfig(ExternalEntityType ExternalEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
+        : OperationConfig(ExternalEntityType, Cron) {
+
+  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
+  public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;
+}
         

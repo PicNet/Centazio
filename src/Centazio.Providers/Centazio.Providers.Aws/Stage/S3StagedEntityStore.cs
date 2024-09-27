@@ -32,7 +32,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
-    var existing = (await ListAll(se.SourceSystem, se.Object))
+    var existing = (await ListAll(se.SourceSystem, se.ExternalEntityType))
         .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).Checksum)
         .ToDictionary(cs => cs);
     
@@ -46,7 +46,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ObjectName obj, bool incpromoted) {
+  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     var from = $"{source.Value}/{obj.Value}/{after:o}_z";
     var list = (await ListAll(source, obj))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
@@ -61,7 +61,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged);
   }
 
-  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ObjectName obj, bool promoted) {
+  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {
     var beforestr = $"{source.Value}/{obj.Value}/{before:o}";
     var todelete = (await ListAll(source, obj))
         .Where(o => String.CompareOrdinal(o.Key, beforestr) < 0)
@@ -84,7 +84,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   }
   
   
-  private async Task<List<S3Object>> ListAll(SystemName source, ObjectName obj) =>
+  private async Task<List<S3Object>> ListAll(SystemName source, ExternalEntityType obj) =>
       (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
         Prefix = $"{source.Value}/{obj.Value}" })).S3Objects;
@@ -118,7 +118,7 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     return (StagedEntity) new StagedEntity.Dto {
       Id = details.Id,
       SourceSystem = details.System,
-      Object = details.Object,
+      Object = details.Object.Value,
       DateStaged = details.DateStaged.ToUniversalTime(),
       Data = data, 
       Checksum = details.Checksum,

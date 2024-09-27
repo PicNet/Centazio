@@ -16,7 +16,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = EntityIntraSysMap.Create(core, STR, STR); 
+    var original = EntityIntraSysMap.Create(core, STR, Constants.CoreEntityName); 
     var created = await store.Create(original.SuccessCreate(STR));
     var created2 = (await store.GetSingle(created.Key)).Update();
     
@@ -32,8 +32,8 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new [] { 
-      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR, STR).SuccessCreate(STR),
-      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2).SuccessCreate(STR2)
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR, Constants.CoreEntityName).SuccessCreate(STR),
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2, Constants.CoreEntityName2).SuccessCreate(STR2)
     }; 
     var created = (await store.Create(original)).ToList();
     var list1 = await store.GetAll();
