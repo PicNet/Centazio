@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Tests.CoreRepo;
 using Centazio.Core.Tests.IntegrationTests;
@@ -28,34 +29,31 @@ END
     return this;
   }
   
-  public async Task<E> Get<E>(string id) where E : class, ICoreEntity {
+  public async Task<E> Get<E>(ObjectName obj, string id) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
-    var raw = await conn.QuerySingleOrDefaultAsync<CoreCustomerRaw>($"SELECT * FROM {typeof(E).Name} WHERE Id=@Id", new { Id = id });
-    if (raw is null) throw new Exception($"Core entity [{typeof(E).Name}#{id}] not found");
+    var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {obj} WHERE Id=@Id", new { Id = id });
+    if (raw is null) throw new Exception($"Core entity [{obj}#{id}] not found");
     return (CoreEntity) raw as E ?? throw new Exception();
   }
 
-  public async Task<IEnumerable<E>> Query<E>(string query) where E : class, ICoreEntity {
+  
+  public async Task<IEnumerable<E>> Query<E>(ObjectName obj, string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
-    var raws = await conn.QueryAsync<CoreCustomerRaw>(query);
+    var raws = await conn.QueryAsync<CoreEntity.Dto>(query);
     return raws.Select(raw => (CoreEntity) raw).Cast<E>();
   }
   
-  public Task<IEnumerable<E>> Query<E>(Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
+  public Task<IEnumerable<E>> Query<E>(ObjectName obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<string, string>> GetChecksums<E>(List<E> entities) where E : ICoreEntity {
-    if (typeof(E) != typeof(CoreEntity)) throw new NotSupportedException(typeof(E).Name);
-
+  public async Task<Dictionary<string, string>> GetChecksums(ObjectName obj, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
-    var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {nameof(CoreEntity)} WHERE Id IN (@ids)", new { ids });
+    var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {obj} WHERE Id IN (@ids)", new { ids });
     return mapping.ToDictionary(t => t.Id, t => t.Checksum);
   }
 
-  public async Task<IEnumerable<T>> Upsert<T>(IEnumerable<T> entities) where T : ICoreEntity {
-    if (typeof(T) != typeof(CoreEntity)) throw new NotSupportedException(typeof(T).Name);
-    
-    var sql = $@"MERGE INTO {nameof(CoreEntity)} T
+  public async Task<IEnumerable<ICoreEntity>> Upsert(ObjectName obj, IEnumerable<ICoreEntity> entities) {
+    var sql = $@"MERGE INTO {obj} T
 USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
 ON T.Id = c.Id

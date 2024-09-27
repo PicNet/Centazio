@@ -30,7 +30,7 @@ public class InteractiveMenu(CommandTree tree) {
   private async Task<bool> DisplayBranchNode(BranchNode n) {
     var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
         .Title("Please select one of the following supported options:")
-        .AddChoices(n.Children.Select(c => c.Id).Concat(new [] { n.BackLabel })));
+        .AddChoices(n.Children.Select(c => c.Id).Concat([n.BackLabel])));
     var selected = n.Children.Find(c => c.Id == branch);
     if (selected is null) return false;
 

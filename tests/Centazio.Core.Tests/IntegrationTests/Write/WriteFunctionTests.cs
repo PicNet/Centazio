@@ -15,18 +15,18 @@ public class WriteFunctionTests {
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var upsert1 = await core.Upsert(new [] { customer1, customer2 });
+    var upsert1 = await core.Upsert(Constants.System1Entity, [customer1, customer2]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      (Core: customer1, Map: EntityIntraSysMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
-      (Core: customer2, Map: EntityIntraSysMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId) ) };
+      (Core: customer1, Map: EntityIntraSysMap.Create(customer1, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer1.SourceId) ), 
+      (Core: customer2, Map: EntityIntraSysMap.Create(customer2, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer2.SourceId) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
     TestingUtcDate.DoTick();
     
     var customer22 = customer2 with { Checksum = Guid.NewGuid().ToString(), FirstName = "22", DateUpdated = UtcDate.UtcNow };
-    var upsert2 = await core.Upsert(new [] { customer22 });
+    var upsert2 = await core.Upsert(Constants.System1Entity, [customer22]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { (Core: customer22, Map: expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
@@ -54,7 +54,7 @@ public class WriteFunctionTests {
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
-    var allcusts = await core.Query<CoreEntity>(c => true);
+    var allcusts = await core.Query<CoreEntity>(Constants.System1Entity, c => true);
     var maps = await entitymap.GetAll();
 
     Assert.That(result.EntitiesUpdated, Is.Empty);
@@ -86,13 +86,14 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
   public TestingBatchWriteFunction() {
     Config = new FunctionConfig<BatchWriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<BatchWriteOperationConfig> {
       new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, writer)
-    });
+    }) { ThrowExceptions = false };
   }
 
+  // todo: remove this class, above class `TestingBatchWriteFunction` should implement `IWriteBatchEntitiesToTargetSystem`
   private class WriteEntitiesToTargetSystem : IWriteBatchEntitiesToTargetSystem {
 
-    internal List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; set; } = new();
-    internal List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = new();
+    internal List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; set; } = [];
+    internal List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; set; } = [];
     internal bool Throws { get; set; }
     internal Exception? Thrown { get; private set; } 
     

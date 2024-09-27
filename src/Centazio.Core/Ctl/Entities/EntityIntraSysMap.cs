@@ -4,7 +4,7 @@ namespace Centazio.Core.Ctl.Entities;
 
 public record EntityIntraSysMap {
 
-  public static PendingCreate Create(ICoreEntity e, SystemName target) => new(e, target);
+  public static PendingCreate Create(ICoreEntity e, SystemName target, ObjectName obj) => new(e, target, obj);
   
   private EntityIntraSysMap(ObjectName coreentity, ValidString coreid, SystemName sourcesys, ValidString sourceid, SystemName targetsys, ValidString targetid, EEntityMappingStatus status) {
     CoreEntity = coreentity; 
@@ -67,8 +67,8 @@ public record EntityIntraSysMap {
   }
   
   public record PendingCreate : EntityIntraSysMap {
-    internal PendingCreate(ICoreEntity e, SystemName targetsys) : 
-        base(e.GetType().Name, e.Id, e.SourceSystem, e.SourceId, targetsys, EEntityMappingStatus.PendingCreate.ToString(), EEntityMappingStatus.PendingCreate) {
+    internal PendingCreate(ICoreEntity e, SystemName targetsys, ObjectName obj) : 
+        base(obj, e.Id, e.SourceSystem, e.SourceId, targetsys, EEntityMappingStatus.PendingCreate.ToString(), EEntityMappingStatus.PendingCreate) {
       DateCreated = UtcDate.UtcNow;
     }
     

@@ -104,17 +104,17 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public CoreInvoice GetInvoice(string id) => (CoreInvoice) Invoices.Single(e => e.Id == id);
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<E>> Get<E>(DateTime after) where E : ICoreEntity => 
-      Task.FromResult(GetList<E>().Where(e => e.DateUpdated > after).Cast<E>().ToList());
+  public Task<List<ICoreEntity>> Get(ObjectName obj, DateTime after) => 
+      Task.FromResult(GetList(obj).Where(e => e.DateUpdated > after).ToList());
 
-  public async Task<Dictionary<string, string>> GetChecksums<E>(List<E> entities) where E : ICoreEntity {
+  public async Task<Dictionary<string, string>> GetChecksums(ObjectName obj, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
-    return (await Get<E>(DateTime.MinValue))
+    return (await Get(obj, DateTime.MinValue))
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
-  public Task<IEnumerable<E>> Upsert<E>(IEnumerable<E> entities) where E : ICoreEntity {
-    var lst = GetList<E>();
+  public Task<IEnumerable<ICoreEntity>> Upsert(ObjectName obj, IEnumerable<ICoreEntity> entities) {
+    var lst = GetList(obj);
     return Task.FromResult(entities.Select(e => {
       var idx = lst.FindIndex(e2 => e2.Id == e.Id);
       if (idx < 0) lst.Add(e);
@@ -125,11 +125,11 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
-  private List<ICoreEntity> GetList<E>() {
-    if (typeof(E) == typeof(CoreMembershipType)) return Types;
-    if (typeof(E) == typeof(CoreCustomer)) return Customers;
-    if (typeof(E) == typeof(CoreInvoice)) return Invoices;
-    throw new NotSupportedException($"Type[{typeof(E).Name}] is not supported");
+  private List<ICoreEntity> GetList(ObjectName obj) {
+    if (obj == nameof(CoreMembershipType)) return Types;
+    if (obj == nameof(CoreCustomer)) return Customers;
+    if (obj == nameof(CoreInvoice)) return Invoices;
+    throw new NotSupportedException($"ObjectName[{obj}] is not supported");
   }
 
 }

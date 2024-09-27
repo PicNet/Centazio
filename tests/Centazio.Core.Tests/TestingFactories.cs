@@ -32,7 +32,7 @@ public static class TestingFactories {
     return new CoreEntity(id, checksum, first, last, dob, UtcDate.UtcNow);
   }
 
-  public static WriteOperationRunner<CoreEntity, C> WriteRunner<C>(InMemoryEntityIntraSystemMappingStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+  public static WriteOperationRunner<C> WriteRunner<C>(InMemoryEntityIntraSystemMappingStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
       => new(entitymap ?? EntitySysMap(), core ?? CoreRepo());
 
 }

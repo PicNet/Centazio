@@ -37,7 +37,7 @@ public class PromoteFunctionTests {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // create two more entities and also include the previous one (without any changes
     var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
@@ -56,7 +56,7 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2, 0)));
-    Assert.That(await core.Query<CoreEntity>(t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
+    Assert.That(await core.Query<CoreEntity>(obj, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
@@ -82,7 +82,7 @@ public class PromoteFunctionTests {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(sys1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // lets ignore all staged entities from now
     func.IgnoreNext = true;
@@ -102,7 +102,7 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 0, 2)));
-    Assert.That((await core.Query<CoreEntity>(t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
   }
   
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);

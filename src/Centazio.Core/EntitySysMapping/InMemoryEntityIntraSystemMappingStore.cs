@@ -10,12 +10,12 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
   public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  public override Task<GetForCoresResult> GetForCores<E>(ICollection<E> cores, SystemName target) {
+  public override Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, ObjectName obj) {
     var news = new List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)>();
     var updates = new List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)>();
     cores.ForEach(c => {
-      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == typeof(E).Name && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
-      if (existing == default) news.Add((c, EntityIntraSysMap.Create(c, target)));
+      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
+      if (existing == default) news.Add((c, EntityIntraSysMap.Create(c, target, obj)));
       else updates.Add((c, memdb[existing].Update()));
     });
     return Task.FromResult(new GetForCoresResult(news, updates));
@@ -27,9 +27,9 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap.Updated>> Update(IEnumerable<EntityIntraSysMap.Updated> updates) => 
       Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated) (memdb[map.Key] = map)).ToList());
 
-  public override Task<List<string>> FilterOutBouncedBackIds<C>(SystemName promotingsys, List<string> ids) {
+  public override Task<List<string>> FilterOutBouncedBackIds(SystemName promotingsys, ObjectName obj, List<string> ids) {
     var bounces = memdb.Values.
-      Where(tse => tse.CoreEntity == typeof(C).Name && tse.TargetSystem == promotingsys && ids.Contains(tse.TargetId)).
+      Where(tse => tse.CoreEntity == obj && tse.TargetSystem == promotingsys && ids.Contains(tse.TargetId)).
       Select(tse => tse.TargetId.Value).
       ToList();
     return Task.FromResult(ids.Except(bounces).ToList());

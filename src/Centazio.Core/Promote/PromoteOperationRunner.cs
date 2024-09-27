@@ -31,14 +31,14 @@ public class PromoteOperationRunner(
     return results; 
   }
 
-  private async Task WriteEntitiesToCoreStorage<T>(OperationStateAndConfig<PromoteOperationConfig> op, List<T> entities) where T : ICoreEntity {
+  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
-        .IgnoreNonMeaninfulChanges(core))
-        .IgnoreEntitiesBouncingBack(entitymap, op.State.System);
+        .IgnoreNonMeaninfulChanges(op.State.Object, core))
+        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
     
     if (!toupsert.Any()) return;
-    await core.Upsert(toupsert);
+    await core.Upsert(op.Settings.Object, toupsert);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
@@ -51,7 +51,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// simply take the latest snapshot of the entity to promote as there is no benefit to promoting the same
   /// entity multiple times to only end up in the latest state anyway. 
   /// </summary>
-  public static List<T> IgnoreMultipleUpdatesToSameEntity<T>(this List<T> lst) where T : ICoreEntity => 
+  public static List<ICoreEntity> IgnoreMultipleUpdatesToSameEntity(this List<ICoreEntity> lst) => 
         lst.GroupBy(c => c.Id)
         .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First()) 
         .ToList();
@@ -60,10 +60,10 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<T>> IgnoreNonMeaninfulChanges<T>(this List<T> lst, ICoreStorageUpserter core) where T : ICoreEntity {
+  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, ObjectName obj, ICoreStorageUpserter core) {
     if (lst.All(e => String.IsNullOrWhiteSpace(e.Checksum))) return lst;
     
-    var checksums = await core.GetChecksums(lst);
+    var checksums = await core.GetChecksums(obj, lst);
     return lst.Where(e => String.IsNullOrWhiteSpace(e.Checksum)
         || !checksums.ContainsKey(e.Id)
         || e.Checksum != checksums[e.Id]).ToList();
@@ -72,9 +72,9 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// <summary>
   /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back. 
   /// </summary>
-  public static async Task<List<T>> IgnoreEntitiesBouncingBack<T>(this List<T> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys) where T : ICoreEntity {
+  public static async Task<List<ICoreEntity>> IgnoreEntitiesBouncingBack(this List<ICoreEntity> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys, ObjectName obj)  {
     var ids = lst.Select(e => e.SourceId).ToList();
-    var valid = (await entitymap.FilterOutBouncedBackIds<T>(thissys, ids)).ToDictionary(id => id);
+    var valid = (await entitymap.FilterOutBouncedBackIds(thissys, obj, ids)).ToDictionary(id => id);
     return lst.Where(e => valid.ContainsKey(e.SourceId)).ToList();
   }
 } 

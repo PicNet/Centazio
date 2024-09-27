@@ -12,7 +12,7 @@ public static class UiHelpers {
   public static string PromptCommandOptions(ICollection<string> options) => 
       AnsiConsole.Prompt(new SelectionPrompt<string>()
           .Title("Select Operation:")
-          .AddChoices(options.Concat(new[] { "back" })));
+          .AddChoices(options.Concat(["back"])));
 
   public static async Task Progress(string description, Func<Task> action) => 
       await AnsiConsole.Progress()

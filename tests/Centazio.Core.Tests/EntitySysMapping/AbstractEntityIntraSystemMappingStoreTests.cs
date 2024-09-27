@@ -16,7 +16,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = EntityIntraSysMap.Create(core, STR); 
+    var original = EntityIntraSysMap.Create(core, STR, STR); 
     var created = await store.Create(original.SuccessCreate(STR));
     var created2 = (await store.GetSingle(created.Key)).Update();
     
@@ -32,8 +32,8 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new [] { 
-      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR),
-      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2)
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR, STR).SuccessCreate(STR),
+      EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2, STR2).SuccessCreate(STR2)
     }; 
     var created = (await store.Create(original)).ToList();
     var list1 = await store.GetAll();
@@ -52,11 +52,11 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name).SuccessCreate("FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.System1Entity).SuccessCreate("FIN321"));
     
     var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var filtered = await store.FilterOutBouncedBackIds<CoreEntity>(Constants.System2Name, ids);
+    var filtered = await store.FilterOutBouncedBackIds(Constants.System2Name, Constants.System1Entity, ids);
     
     Assert.That(filtered, Is.EquivalentTo(ids.Where(id => id != "FIN321")));
   }

@@ -37,7 +37,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(NAME, NAME, NAME),
         new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(t => true)).ToDictionary(c => c.Id);
+    var saved = (await core.Query<CoreEntity>(NAME, t => true)).ToDictionary(c => c.Id);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
@@ -58,7 +58,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(NAME, NAME, NAME),
         new PromoteOperationConfig(NAME, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(t => true)).ToDictionary(c => c.Id);
+    var saved = (await core.Query<CoreEntity>(NAME, t => true)).ToDictionary(c => c.Id);
     Assert.That(saved, Is.Empty);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -92,7 +92,7 @@ public class PromoteOperationRunnerTests {
 public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
     var id = Guid.NewGuid().ToString();
-    var entities = new List<CoreEntity> {
+    var entities = new List<ICoreEntity> {
       F.NewCoreCust("N1", "N1", id),
       F.NewCoreCust("N2", "N2", id),
       F.NewCoreCust("N3", "N3", id),
@@ -111,16 +111,16 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       F.NewCoreCust("N3", "N3", "3", "c3"),
       F.NewCoreCust("N4", "N4", "4", "c4"),
     };
-    await core.Upsert(entities1);
+    await core.Upsert(Constants.System1Entity, entities1);
     
-    var entities2 = new List<CoreEntity> {
+    var entities2 = new List<ICoreEntity> {
       F.NewCoreCust("N12", "N12", "1", "c1"),
       F.NewCoreCust("N22", "N22", "2", "c2"),
       F.NewCoreCust("N32", "N32", "3", "c32"), // only this one gets updated as the checksum changed
       F.NewCoreCust("N42", "N42", "4", "c4"),
     };
     // ideally these methods should be strongly typed using generics 
-    var uniques = await entities2.IgnoreNonMeaninfulChanges(core);
+    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.System1Entity, core);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
   }
   
@@ -130,15 +130,15 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var store = F.EntitySysMap();
     var core = F.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name).SuccessCreate("FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.System1Entity).SuccessCreate("FIN321"));
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var entities = new List<CoreEntity> {
+    var entities = new List<ICoreEntity> {
       F.NewCoreCust("N", "N", "FIN1"),
       F.NewCoreCust("N", "N", "FIN2"),
       F.NewCoreCust("N", "N", "FIN3"),
       F.NewCoreCust("N", "N", "FIN321")
     };
-    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.System2Name);
+    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.System2Name, Constants.System1Entity);
     Assert.That(filtered, Is.EquivalentTo(entities.Take(3)));
   }
 }

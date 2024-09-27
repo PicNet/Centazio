@@ -29,7 +29,7 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   }
 
   public async Task<StagedEntity?> Stage(SystemName source, ObjectName obj, string data) {
-    var results = (await Stage(source, obj, new[] { data })).ToList();
+    var results = (await Stage(source, obj, [data])).ToList();
     return results.Any() ? results.Single() : null; 
   }
 
@@ -45,7 +45,7 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, string> 
   /// </summary>
   protected abstract Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged);
   
-  public Task Update(StagedEntity staged) => Update(new [] { staged });
+  public Task Update(StagedEntity staged) => Update([staged]);
   public abstract Task Update(IEnumerable<StagedEntity> staged);
 
   public Task<IEnumerable<StagedEntity>> GetAll(DateTime after, SystemName source, ObjectName obj) => GetImpl(after, source, obj, true);

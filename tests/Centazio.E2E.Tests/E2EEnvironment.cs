@@ -61,7 +61,7 @@ public class E2EEnvironment : IAsyncDisposable {
         ctl);
     
     crm_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
-        new WriteOperationRunner<CoreCustomer, BatchWriteOperationConfig>(entitymap, core), 
+        new WriteOperationRunner<BatchWriteOperationConfig>(entitymap, core), 
         ctl);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(fin_read = new FinReadFunction(fin),
@@ -72,7 +72,7 @@ public class E2EEnvironment : IAsyncDisposable {
         ctl);
     
     fin_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
-        new WriteOperationRunner<CoreCustomer, BatchWriteOperationConfig>(entitymap, core), 
+        new WriteOperationRunner<BatchWriteOperationConfig>(entitymap, core), 
         ctl);
   }
 

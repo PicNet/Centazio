@@ -113,6 +113,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
+    
     var runner = TestingFactories.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
@@ -120,7 +121,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
     states[0] = states[0] with { Settings = states[0].Settings with { GetObjectsToStage = new ErrorReadOperationImplementation() } }; 
-    var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo)).ToList();
+    var results = (await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, false)).ToList();
     var newstates = repo.Objects.Values.ToList();
     var ex = results[0].Exception ?? throw new Exception();
 
