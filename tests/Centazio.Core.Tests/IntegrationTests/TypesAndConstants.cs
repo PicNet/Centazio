@@ -5,7 +5,7 @@ namespace Centazio.Core.Tests.IntegrationTests;
 public static class Constants {
   public static readonly SystemName System1Name = new("CRM");
   public static readonly SystemName System2Name = new("FIN");
-  public static readonly ObjectName System1Entity = new(nameof(System1Entity));
+  public static readonly ObjectName CoreEntityName = new(nameof(CoreEntity));
 }
 
 public record System1Entity(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated);

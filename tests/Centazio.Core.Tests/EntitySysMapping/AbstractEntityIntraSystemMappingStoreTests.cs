@@ -52,11 +52,11 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     // relevant steps are: 
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.System1Entity).SuccessCreate("FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.CoreEntityName).SuccessCreate("FIN321"));
     
     var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var filtered = await store.FilterOutBouncedBackIds(Constants.System2Name, Constants.System1Entity, ids);
+    var filtered = await store.FilterOutBouncedBackIds(Constants.System2Name, Constants.CoreEntityName, ids);
     
     Assert.That(filtered, Is.EquivalentTo(ids.Where(id => id != "FIN321")));
   }

@@ -11,7 +11,7 @@ public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.System1Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
-  private readonly ObjectName obj = Constants.System1Entity;
+  private readonly ObjectName obj = Constants.CoreEntityName;
   
   [SetUp] public void SetUp() {
     UtcDate.Utc = new TestingUtcDate();
@@ -88,7 +88,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, new ([
-      new (Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, this)
+      new (Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   

@@ -14,18 +14,18 @@ public class WriteFunctionTests {
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var upsert1 = await core.Upsert(Constants.System1Entity, [customer1, customer2]);
+    var upsert1 = await core.Upsert(Constants.CoreEntityName, [customer1, customer2]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1, EntityIntraSysMap.Create(customer1, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer1.SourceId) ), 
-      new CoreAndCreatedMap(customer2, EntityIntraSysMap.Create(customer2, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer2.SourceId) ) };
+      new CoreAndCreatedMap(customer1, EntityIntraSysMap.Create(customer1, Constants.System2Name, Constants.CoreEntityName).SuccessCreate(customer1.SourceId) ), 
+      new CoreAndCreatedMap(customer2, EntityIntraSysMap.Create(customer2, Constants.System2Name, Constants.CoreEntityName).SuccessCreate(customer2.SourceId) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
     TestingUtcDate.DoTick();
     
     var customer22 = customer2 with { Checksum = Guid.NewGuid().ToString(), FirstName = "22", DateUpdated = UtcDate.UtcNow };
-    var upsert2 = await core.Upsert(Constants.System1Entity, [customer22]);
+    var upsert2 = await core.Upsert(Constants.CoreEntityName, [customer22]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
@@ -53,7 +53,7 @@ public class WriteFunctionTests {
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
-    var allcusts = await core.Query<CoreEntity>(Constants.System1Entity, c => true);
+    var allcusts = await core.Query<CoreEntity>(Constants.CoreEntityName, c => true);
     var maps = await entitymap.GetAll();
 
     Assert.That(result.EntitiesUpdated, Is.Empty);
@@ -65,8 +65,8 @@ public class WriteFunctionTests {
     
     Assert.That(sys.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write)));
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
-    Assert.That(obj.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write, Constants.System1Entity)));
-    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Write, Constants.System1Entity).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
+    Assert.That(obj.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName)));
+    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
     Assert.That(allcusts, Is.Empty);
     Assert.That(maps, Is.Empty);
   }
@@ -82,7 +82,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
 
   public TestingBatchWriteFunction() {
     Config = new FunctionConfig<WriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<WriteOperationConfig> {
-      new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, this)
+      new(Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     }) { ThrowExceptions = false };
   }
 

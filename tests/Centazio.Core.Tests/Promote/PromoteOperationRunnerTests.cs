@@ -110,7 +110,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       F.NewCoreCust("N3", "N3", "3", "c3"),
       F.NewCoreCust("N4", "N4", "4", "c4"),
     };
-    await core.Upsert(Constants.System1Entity, entities1);
+    await core.Upsert(Constants.CoreEntityName, entities1);
     
     var entities2 = new List<ICoreEntity> {
       F.NewCoreCust("N12", "N12", "1", "c1"),
@@ -119,7 +119,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       F.NewCoreCust("N42", "N42", "4", "c4"),
     };
     // ideally these methods should be strongly typed using generics 
-    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.System1Entity, core);
+    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
   }
   
@@ -129,7 +129,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
     var store = F.EntitySysMap();
     var core = F.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.System1Entity).SuccessCreate("FIN321"));
+    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.CoreEntityName).SuccessCreate("FIN321"));
     // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
     var entities = new List<ICoreEntity> {
       F.NewCoreCust("N", "N", "FIN1"),
@@ -137,7 +137,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       F.NewCoreCust("N", "N", "FIN3"),
       F.NewCoreCust("N", "N", "FIN321")
     };
-    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.System2Name, Constants.System1Entity);
+    var filtered = await entities.IgnoreEntitiesBouncingBack(store, Constants.System2Name, Constants.CoreEntityName);
     Assert.That(filtered, Is.EquivalentTo(entities.Take(3)));
   }
 }

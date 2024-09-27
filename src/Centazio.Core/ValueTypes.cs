@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core;
+﻿using Centazio.Core.CoreRepo;
+
+namespace Centazio.Core;
 
 public record ValidList<T>(IReadOnlyList<T> Value) {
   public IReadOnlyList<T> Value { get; } = !Value.Any() 
@@ -27,6 +29,14 @@ public sealed record SystemName(string Value) : ValidString(Value) {
 
 public sealed record ObjectName(string Value) : ValidString(Value) {
   public static implicit operator ObjectName(string value) => new((ValidString) value);
+}
+
+public sealed record CoreEntityName {
+  public string Name { get;}
+  
+  private CoreEntityName(ValidString name) { Name = name; }
+  
+  public static CoreEntityName From<T>() where T : ICoreEntity => new(typeof(T).Name);
 }
 
 public sealed record LifecycleStage(string Value) : ValidString(Value) {

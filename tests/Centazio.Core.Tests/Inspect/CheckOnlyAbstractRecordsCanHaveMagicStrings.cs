@@ -10,6 +10,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { "EntityIntraSysMap", ["LastError"] },
     { "ObjectState", ["LastRunMessage", "LastRunException"] },
     { "StagedEntity", ["IgnoreReason"] },
+    { "CoreEntityName", ["Name"] }
   };
   
   [Test] public void Test_string_description_pattern() {
