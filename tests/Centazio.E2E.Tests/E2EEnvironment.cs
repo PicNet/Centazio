@@ -27,18 +27,18 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly CrmPromoteFunction crm_promote;
   private readonly CrmReadFunction crm_read;
   private readonly CrmWriteFunction crm_write;
-  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner;
+  private readonly FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> crm_read_runner;
+  private readonly FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> crm_promote_runner;
+  private readonly FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult> crm_write_runner;
 
   // Fin
   private readonly FinSystem fin = new();
   private readonly FinPromoteFunction fin_promote;
   private readonly FinReadFunction fin_read;
   private readonly FinWriteFunction fin_write;
-  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner;
+  private readonly FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> fin_read_runner;
+  private readonly FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> fin_promote_runner;
+  private readonly FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult> fin_write_runner;
 
   // Infra
   private readonly ICtlRepository ctl = new InMemoryCtlRepository();
@@ -49,25 +49,25 @@ public class E2EEnvironment : IAsyncDisposable {
   public E2EEnvironment() {
     LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; // disable logging (todo: not working)
     Systems = [crm, fin];
-    crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(crm_read = new CrmReadFunction(crm),
+    crm_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(crm_read = new CrmReadFunction(crm),
         new ReadOperationRunner(stage),
         ctl);
-    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(crm_promote = new CrmPromoteFunction(core),
+    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(crm_promote = new CrmPromoteFunction(core),
         new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
-    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
+    crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
         new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
         ctl);
     
-    fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(fin_read = new FinReadFunction(fin),
+    fin_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(fin_read = new FinReadFunction(fin),
         new ReadOperationRunner(stage),
         ctl);
-    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(fin_promote = new FinPromoteFunction(core),
+    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(fin_promote = new FinPromoteFunction(core),
         new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
         new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
         ctl);
   }

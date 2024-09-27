@@ -9,9 +9,9 @@ using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
-public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; }
   
   private readonly IFinSystemApi api;
   
@@ -23,7 +23,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => 
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => 
     config.State.Object.Value switch { 
       nameof(FinAccount) => ReadOperationResult.Create(await api.GetAccounts(config.Checkpoint)), 
       nameof(FinInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
@@ -31,21 +31,21 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     };
 }
 
-public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
   
-  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly CoreStorage db;
 
   public FinPromoteFunction(CoreStorage db) {
     this.db = db;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, new ([
-      new (new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
       nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(s.Deserialise<FinInvoice>(), db))).ToList(), 
@@ -55,9 +55,9 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
 }
 
-public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<WriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly FinSystem api;
   

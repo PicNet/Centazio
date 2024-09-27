@@ -10,11 +10,11 @@ namespace Centazio.Core.Promote;
 public class PromoteOperationRunner(
     IStagedEntityStore staged, 
     IEntityIntraSystemMappingStore entitymap,
-    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
+    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
   
-  public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
+  public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.State.ExternalEntityType);
+    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.Settings.ExternalEntityType);
     var results = await op.Settings.EvaluateEntitiesToPromote.Evaluate(op, pending);
     
     if (results.Result == EOperationResult.Error) {
@@ -30,18 +30,18 @@ public class PromoteOperationRunner(
     
     return results; 
   }
-
-  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
+  
+  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
-        .IgnoreNonMeaninfulChanges(op.State.CoreEntityType, core))
-        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.CoreEntityType);
+        .IgnoreNonMeaninfulChanges(op.State.Object, core))
+        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
     
     if (!toupsert.Any()) return;
-    await core.Upsert(op.State.CoreEntityType, toupsert);
+    await core.Upsert(op.State.Object, toupsert);
   }
 
-  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
+  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
 
 }
 

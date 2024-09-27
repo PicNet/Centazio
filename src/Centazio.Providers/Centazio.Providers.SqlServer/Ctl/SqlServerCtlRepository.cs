@@ -10,7 +10,7 @@ public class SqlServerCtlRepository(Func<SqlConnection> newconn) : ICtlRepositor
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string SYSTEM_STATE_TBL = nameof(SystemState);
-  internal const string OBJECT_STATE_TBL = nameof(ObjectState);
+  internal const string OBJECT_STATE_TBL = nameof(ObjectStateDto);
 
   public async Task<SqlServerCtlRepository> Initalise() {
     await using var conn = newconn();
@@ -86,15 +86,15 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
 
-  public async Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
+  public async Task<ObjectState<T>?> GetObjectState<T>(SystemState system, T obj) where T : ObjectName {
     await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<ObjectState.Dto>(@$"
+    var raw = await conn.QuerySingleOrDefaultAsync<ObjectStateDto>(@$"
 SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
 WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, system.Stage, Object=obj });
-    return raw?.ToObjectState(false);
+    return raw?.ToObjectState<T>();
   }
 
-  public async Task<ObjectState> SaveObjectState(ObjectState state) {
+  public async Task<ObjectState<T>> SaveObjectState<T>(ObjectState<T> state) where T : ObjectName {
     await using var conn = newconn();
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
@@ -113,10 +113,10 @@ WHERE System=@System AND Stage=@Stage AND Object=@Object", state);
     return count == 0 ? throw new Exception("SaveObjectState failed") : state;
   }
   
-  public async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
+  public async Task<ObjectState<T>> CreateObjectState<T>(SystemState system, T obj) where T : ObjectName {
     await using var conn = newconn();
     
-    var created = ObjectState.Create(system.System, system.Stage, obj);
+    var created = ObjectState<T>.Create(system.System, system.Stage, obj);
     await conn.ExecuteAsync($@"
 INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
 (System, Stage, Object, Active, DateCreated, LastResult, LastAbortVote)

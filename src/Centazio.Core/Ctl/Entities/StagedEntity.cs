@@ -36,7 +36,7 @@ public sealed record StagedEntity {
   public CoreEntityType CoreEntityType { get => cet ?? throw new Exception("CoreEntityTypeName is not specified"); private init => cet = value; }
   
   private readonly ExternalEntityType? eet;
-  internal ExternalEntityType ExternalEntityType { get => eet ?? throw new Exception("ExternalEntityType is not specified"); private init => eet = value; }
+  public ExternalEntityType ExternalEntityType { get => eet ?? throw new Exception("ExternalEntityType is not specified"); private init => eet = value; }
   
   public T Deserialise<T>() => JsonSerializer.Deserialize<T>(Data) ?? throw new Exception();
 

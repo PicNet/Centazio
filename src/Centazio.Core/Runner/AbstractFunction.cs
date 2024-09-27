@@ -5,14 +5,15 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<C, R> 
-    where C : OperationConfig
+public abstract class AbstractFunction<C, O, R> 
+    where C : OperationConfig<O>
+    where O : ObjectName
     where R : OperationResult {
   
-  public abstract FunctionConfig<C> Config { get; }
+  public abstract FunctionConfig<C, O> Config { get; }
 
   public virtual async Task<IEnumerable<R>> RunFunctionOperations(
-      IOperationRunner<C, R> runner,
+      IOperationRunner<C, O, R> runner,
       ICtlRepository ctl) {
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
     var states = await LoadOperationsStates(Config, sys, ctl);
@@ -21,31 +22,31 @@ public abstract class AbstractFunction<C, R>
     return results;
   }
 
-  internal static async Task<IReadOnlyList<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
+  internal static async Task<IReadOnlyList<OperationStateAndConfig<C, O>>> LoadOperationsStates(FunctionConfig<C, O> conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations.Value
             .Select(async op => {
       var state = await ctl.GetOrCreateObjectState(system, op.Object);
       var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
-      return new OperationStateAndConfig<C>(state, op, checkpoint);
+      return new OperationStateAndConfig<C, O>(state, op, checkpoint);
     }).Synchronous())
     .Where(op => op.State.Active)
     .ToList();
   }
 
-  internal static IEnumerable<OperationStateAndConfig<C>> GetReadyOperations(IEnumerable<OperationStateAndConfig<C>> states) {
-    bool IsOperationReady(OperationStateAndConfig<C> op) {
+  internal static IEnumerable<OperationStateAndConfig<C, O>> GetReadyOperations(IEnumerable<OperationStateAndConfig<C, O>> states) {
+    bool IsOperationReady(OperationStateAndConfig<C, O> op) {
       var next = op.Settings.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
       return next <= UtcDate.UtcNow;
     }
     return states.Where(IsOperationReady);
   }
   
-  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<C>> ops, IOperationRunner<C, R> runner, ICtlRepository ctl, bool throws = true) {
+  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<C, O>> ops, IOperationRunner<C, O, R> runner, ICtlRepository ctl, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
 
-    async Task<R> RunAndSaveOp(OperationStateAndConfig<C> op) {
+    async Task<R> RunAndSaveOp(OperationStateAndConfig<C, O> op) {
       var opstart = UtcDate.UtcNow;
       Log.Information("operation starting {@Operation}", op);
       
@@ -57,7 +58,7 @@ public abstract class AbstractFunction<C, R>
       return result;
     }
     
-    async Task<R> RunOp(OperationStateAndConfig<C> op) {
+    async Task<R> RunOp(OperationStateAndConfig<C, O> op) {
       try { return await runner.RunOperation(op); } 
       catch (Exception ex) {
         var res = runner.BuildErrorResult(op, ex);
@@ -67,7 +68,7 @@ public abstract class AbstractFunction<C, R>
       }
     }
 
-    async Task<ObjectState> SaveOp(OperationStateAndConfig<C> op, DateTime start, R res) {
+    async Task<ObjectState<O>> SaveOp(OperationStateAndConfig<C, O> op, DateTime start, R res) {
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
           op.State.Success(start, res.AbortVote, message) :

@@ -18,8 +18,8 @@ public static class TestingFactories {
   public static TestingCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
   public static InMemoryEntityIntraSystemMappingStore EntitySysMap() => new();
-  public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
-  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(
+  public static IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
+  public static IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
       IEntityIntraSystemMappingStore? entitymap = null, 
       ICoreStorageUpserter? core = null) => 
@@ -41,5 +41,5 @@ public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Test.Lib.
 
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
-  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
+  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectStateDto> Objects => objects;
 }

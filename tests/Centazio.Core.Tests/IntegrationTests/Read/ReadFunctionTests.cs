@@ -21,7 +21,7 @@ public class ReadFunctionTests {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, TestingFactories.CtlRepo(), TestingFactories.SeStore());
     var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), TestingFactories.ReadRunner(stager));
-    var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(func, oprunner, ctl);
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
@@ -65,7 +65,7 @@ public class ReadFunctionTests {
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-    ObjectState OS(DateTime updated, int len) => new ObjectState.Dto(sys, stg, externalname, true) {
+    ObjectState<ExternalEntityType> OS(DateTime updated, int len) => new ObjectStateDto(sys, stg, externalname, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success.ToString(),
       LastAbortVote = EOperationAbortVote.Continue.ToString(),
@@ -76,14 +76,14 @@ public class ReadFunctionTests {
       LastCompleted = updated,
       LastRunMessage = $"operation [{sys}/{stg}/{externalname}] completed [Success] message: " + 
           (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
-    }.ToObjectState(false);
+    }.ToObjectState<ExternalEntityType>();
     StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, externalname, onetick, expjson, Helpers.TestingChecksum(expjson));
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; }
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
@@ -92,7 +92,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) {
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListRecordsReadOperationResult(customers)

@@ -5,9 +5,9 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Read;
 
-public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
+public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> {
 
-  public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
+  public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> op) {
     var res = await op.Settings.GetObjectsToStage.GetObjects(op);
     if (res.ResultLength > 0) await DoStage();
     return res;
@@ -21,7 +21,7 @@ public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOp
     }
   }
 
-  public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => 
+  public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> op, Exception ex) => 
       new ErrorReadOperationResult(EOperationAbortVote.Abort, ex);
 
 }

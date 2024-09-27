@@ -33,7 +33,7 @@ public record CoreAndUpdatedMap {
 public record WriteOperationConfig(
     CoreEntityType CoreEntityType, 
     ValidCron Cron,
-    IWriteEntitiesToTargetSystem WriteEntitiesesToTargetSystem) : OperationConfig(CoreEntityType, Cron) {
+    IWriteEntitiesToTargetSystem WriteEntitiesesToTargetSystem) : OperationConfig<CoreEntityType>(CoreEntityType, Cron) {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   public CoreEntityType CoreEntityType { get; init; } = CoreEntityType;

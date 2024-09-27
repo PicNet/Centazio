@@ -86,13 +86,13 @@ public abstract class CtlRepositoryDefaultTests {
     var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, Constants.CoreEntityName);
-    Assert.That(created, Is.EqualTo(ObjectState.Create(NAME2, NAME2, Constants.CoreEntityName)));
+    Assert.That(created, Is.EqualTo(ObjectState<CoreEntityType>.Create(NAME2, NAME2, Constants.CoreEntityName)));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }
   
   [Test] public void Test_SaveObjectState_fails_if_SystemState_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(NAME, NAME, Constants.CoreEntityName)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState<CoreEntityType>.Create(NAME, NAME, Constants.CoreEntityName)));
   }
   
   [Test] public async Task Test_GetOrCreateObjectState_creates_if_not_existing() {
@@ -104,7 +104,7 @@ public abstract class CtlRepositoryDefaultTests {
     var current = await repo.GetObjectState(ss, Constants.CoreEntityName);
     
     Assert.That(prior, Is.Null);
-    var expected = ObjectState.Create(NAME2, NAME2, Constants.CoreEntityName);
+    var expected = ObjectState<CoreEntityType>.Create(NAME2, NAME2, Constants.CoreEntityName);
     Console.WriteLine($"CREATED[{created.Object.GetType().Name}] EXPECTED[{expected.GetType().Name}]");
     Assert.That(created, Is.EqualTo(expected));
     Assert.That(updated2, Is.EqualTo(updated));

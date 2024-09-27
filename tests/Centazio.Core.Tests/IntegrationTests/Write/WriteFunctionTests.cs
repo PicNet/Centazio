@@ -10,7 +10,7 @@ public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
-    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
@@ -48,7 +48,7 @@ public class WriteFunctionTests {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     func.Throws = true;
-    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
@@ -66,22 +66,22 @@ public class WriteFunctionTests {
     Assert.That(sys.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write)));
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
     Assert.That(obj.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName)));
-    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create<CoreEntity>(Constants.System2Name, LifecycleStage.Defaults.Write).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
+    Assert.That(obj.Value, Is.EqualTo(ObjectState<CoreEntityType>.Create(Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
     Assert.That(allcusts, Is.Empty);
     Assert.That(maps, Is.Empty);
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
 
   public List<CoreAndCreatedMap> Created { get; } = new();
   public List<CoreAndUpdatedMap> Updated { get; } = new();
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
-  public override FunctionConfig<WriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
 
   public TestingBatchWriteFunction() {
-    Config = new FunctionConfig<WriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<WriteOperationConfig> {
+    Config = new FunctionConfig<WriteOperationConfig, CoreEntityType>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<WriteOperationConfig> {
       new(Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     }) { ThrowExceptions = false };
   }

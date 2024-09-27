@@ -5,11 +5,12 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionRunner<C, R>(
-    AbstractFunction<C, R> func, 
-    IOperationRunner<C, R> oprunner, 
+public class FunctionRunner<C, O, R>(
+    AbstractFunction<C, O, R> func, 
+    IOperationRunner<C, O, R> oprunner, 
     ICtlRepository ctl) 
-        where C : OperationConfig
+        where C : OperationConfig<O>
+        where O : ObjectName
         where R : OperationResult {
 
   public async Task<FunctionRunResults<R>> RunFunction() {

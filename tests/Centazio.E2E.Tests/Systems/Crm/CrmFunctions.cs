@@ -9,9 +9,9 @@ using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
-public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; }
   
   private readonly ICrmSystemApi api;
   
@@ -24,7 +24,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig> config) => 
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => 
     config.State.Object.Value switch { 
       nameof(CrmMembershipType) => ReadOperationResult.Create(await api.GetMembershipTypes(config.Checkpoint)), 
       nameof(CrmCustomer) => ReadOperationResult.Create(await api.GetCustomers(config.Checkpoint)), 
@@ -33,22 +33,22 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     };
 }
 
-public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
   
-  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly CoreStorage db;
 
   public CrmPromoteFunction(CoreStorage db) {
     this.db = db;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Promote, new ([
-      new (new(nameof(CrmMembershipType)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (new(nameof(CrmCustomer)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (new(nameof(CrmInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(CrmMembershipType)), CoreEntityType.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(CrmCustomer)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new (new(nameof(CrmInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
     var topromote = config.State.Object.Value switch { 
       nameof(CrmMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
       nameof(CrmCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
@@ -59,9 +59,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
 }
 
-public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<WriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly CrmSystem api;
   

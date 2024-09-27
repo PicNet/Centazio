@@ -10,10 +10,12 @@ public record FunctionConfigDefaults {
   public static DateTime DefaultFirstTimeCheckpoint { get; set; } = UtcDate.UtcNow.AddMonths(-1);
 }
 
-public record FunctionConfig<T>(
+public record FunctionConfig<T, O>(
     SystemName System, 
     LifecycleStage Stage, 
-    ValidList<T> Operations) where T : OperationConfig {
+    ValidList<T> Operations) 
+        where T : OperationConfig<O>
+        where O : ObjectName {
 
   /// <summary>
   /// This is the maximum number of minutes that a function can be considered `running`.  After this, we assume
@@ -37,9 +39,9 @@ public record FunctionConfig<T>(
 
 }
 
-public abstract record OperationConfig(
-    ObjectName Object, 
-    ValidCron Cron) {
+public abstract record OperationConfig<O>(
+    O Object, 
+    ValidCron Cron) where O : ObjectName {
   public DateTime? FirstTimeCheckpoint { get; init; }
 }
 
@@ -55,10 +57,13 @@ public record ValidCron {
   public static implicit operator ValidCron(string value) => new(value);
 }
 
-public record OperationStateAndConfig<T>(ObjectState State, T Settings, DateTime Checkpoint) where T : OperationConfig {
+// todo: rename Settings -> Config
+public record OperationStateAndConfig<C, O>(ObjectState<O> State, C Settings, DateTime Checkpoint) 
+    where C : OperationConfig<O> 
+    where O : ObjectName {
   
   // This constructor is mainly used for unit testing where Checkpoint is not usually a factor (hence internal) 
-  internal OperationStateAndConfig(ObjectState State, T Settings) : this(State, Settings, DateTime.MinValue) {}
+  internal OperationStateAndConfig(ObjectState<O> State, C Settings) : this(State, Settings, DateTime.MinValue) {}
 }
 
 public abstract record OperationResult(

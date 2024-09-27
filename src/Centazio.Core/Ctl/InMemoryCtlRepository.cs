@@ -5,7 +5,7 @@ namespace Centazio.Core.Ctl;
 public class InMemoryCtlRepository : ICtlRepository {
 
   internal readonly Dictionary<(SystemName, LifecycleStage), SystemState> systems = new();
-  internal readonly Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> objects = new();
+  internal readonly Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectStateDto> objects = new();
   
   public Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) 
       => Task.FromResult(systems.GetValueOrDefault((system, stage)));
@@ -22,21 +22,23 @@ public class InMemoryCtlRepository : ICtlRepository {
     return Task.FromResult(systems[key] = SystemState.Create(system, stage));
   }
 
-  public Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj)
-      => Task.FromResult(objects.GetValueOrDefault((system.System, system.Stage, obj)));
+  public Task<ObjectState<T>?> GetObjectState<T>(SystemState system, T obj) where T : ObjectName => 
+      Task.FromResult(objects.GetValueOrDefault((system.System, system.Stage, obj))?.ToObjectState<T>());
   
-  public Task<ObjectState> SaveObjectState(ObjectState state) {
+  public Task<ObjectState<T>> SaveObjectState<T>(ObjectState<T> state) where T : ObjectName {
     var key = (state.System, state.Stage, state.Object);
     if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found");
-
-    return Task.FromResult(objects[key] = state);
+    objects[key] = ObjectStateDto.FromObjectState(state);
+    return Task.FromResult(state);
   }
   
-  public Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
+  public Task<ObjectState<T>> CreateObjectState<T>(SystemState system, T obj) where T : ObjectName {
     if (!systems.ContainsKey((system.System, system.Stage))) throw new Exception($"SystemState [{system}] does not exist");
     var key = (system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    return Task.FromResult(objects[key] = new ObjectState(system.System, system.Stage, obj, true));
+    var os = new ObjectState<T>(system.System, system.Stage, obj, true);
+    objects[key] = ObjectStateDto.FromObjectState(os);
+    return Task.FromResult(os);
   }
 
   public ValueTask DisposeAsync() {

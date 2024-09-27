@@ -6,11 +6,11 @@ using Serilog;
 
 namespace Centazio.Core.Write;
 public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, ICoreStorageGetter core) : 
-    IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
+    IOperationRunner<C, CoreEntityType, WriteOperationResult> where C : WriteOperationConfig {
   
-  public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    var pending = await core.Get(op.State.CoreEntityType, op.Checkpoint);
-    var maps = await entitymap.GetForCores(pending, op.State.System, op.State.CoreEntityType);
+  public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
+    var pending = await core.Get(op.State.Object, op.Checkpoint);
+    var maps = await entitymap.GetForCores(pending, op.State.System, op.State.Object);
     var results = await op.Settings.WriteEntitiesesToTargetSystem.WriteEntities(op.Settings, maps.Created, maps.Updated);
     
     if (results.Result == EOperationResult.Error) {
@@ -22,5 +22,5 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
     return results;
   }
 
-  public WriteOperationResult BuildErrorResult(OperationStateAndConfig<C> op, Exception ex) => new ErrorWriteOperationResult(EOperationAbortVote.Abort, ex);
+  public WriteOperationResult BuildErrorResult(OperationStateAndConfig<C, CoreEntityType> op, Exception ex) => new ErrorWriteOperationResult(EOperationAbortVote.Abort, ex);
 }

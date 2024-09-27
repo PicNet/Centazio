@@ -18,7 +18,7 @@ public class PromoteFunctionTests {
     // set up
     var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.EntitySysMap());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -63,7 +63,7 @@ public class PromoteFunctionTests {
     // set up
     var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.EntitySysMap());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -106,7 +106,7 @@ public class PromoteFunctionTests {
   }
   
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new ObjectState.Dto(sys, stg, corename, true) {
+  private ObjectState<ExternalEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new ObjectStateDto(sys, stg, corename, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success.ToString(),
     LastAbortVote = EOperationAbortVote.Continue.ToString(),
@@ -116,24 +116,24 @@ public class PromoteFunctionTests {
     LastSuccessCompleted = updated,
     LastCompleted = updated,
     LastRunMessage = $"operation [{sys}/{stg}/{corename}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
-  }.ToObjectState(true);
+  }.ToObjectState<ExternalEntityType>();
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, corename, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
 
-  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
   public bool IgnoreNext { get; set; }
   
   public PromoteFunctionWithSinglePromoteCustomerOperation() {
     Config = new(Constants.System1Name, LifecycleStage.Defaults.Promote, new ([
-      new (Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+      new (Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     ]));
   }
   
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
     var lst = staged.ToList();
     var cores = lst.Select(e => {
       var core = JsonSerializer.Deserialize<CoreEntity>(e.Data) ?? throw new Exception();
