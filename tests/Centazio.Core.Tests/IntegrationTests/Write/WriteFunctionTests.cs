@@ -9,8 +9,8 @@ namespace Centazio.Core.Tests.IntegrationTests.Write;
 public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig>(entitymap, core));
-    var funcrunner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
+    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
@@ -46,9 +46,9 @@ public class WriteFunctionTests {
   
   [Test] public async Task Test_WriteFunction_error_handling() {
     var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<BatchWriteOperationConfig>(entitymap, core));
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     func.Throws = true;
-    var funcrunner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
@@ -72,16 +72,16 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult>, IWriteBatchEntitiesToTargetSystem {
+public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
 
   public List<CoreAndCreatedMap> Created { get; } = new();
   public List<CoreAndUpdatedMap> Updated { get; } = new();
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
-  public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig> Config { get; }
 
   public TestingBatchWriteFunction() {
-    Config = new FunctionConfig<BatchWriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<BatchWriteOperationConfig> {
+    Config = new FunctionConfig<WriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<WriteOperationConfig> {
       new(Constants.System1Entity, TestingDefaults.CRON_EVERY_SECOND, this)
     }) { ThrowExceptions = false };
   }
@@ -91,7 +91,7 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
     Updated.Clear();
   }
 
-  public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreAndPendingUpdateMap> updated) {
+  public Task<WriteOperationResult> WriteEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreAndPendingUpdateMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
     var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
     var updates = updated.Select(m => m.Updated()).ToList();

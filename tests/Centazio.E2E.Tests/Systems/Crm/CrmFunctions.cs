@@ -60,9 +60,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
 }
 
-public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult>, IWriteBatchEntitiesToTargetSystem {
+public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig> Config { get; }
   
   private readonly CrmSystem api;
   
@@ -75,7 +75,7 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
   }
 
   public async Task<WriteOperationResult> WriteEntities(
-      BatchWriteOperationConfig config, 
+      WriteOperationConfig config, 
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     

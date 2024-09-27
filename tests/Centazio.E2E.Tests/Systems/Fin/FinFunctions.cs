@@ -55,9 +55,9 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
 }
 
-public class FinWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult>, IWriteBatchEntitiesToTargetSystem {
+public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
+  public override FunctionConfig<WriteOperationConfig> Config { get; }
   
   private readonly FinSystem api;
   
@@ -70,7 +70,7 @@ public class FinWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
   }
 
   public async Task<WriteOperationResult> WriteEntities(
-      BatchWriteOperationConfig config, 
+      WriteOperationConfig config, 
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     

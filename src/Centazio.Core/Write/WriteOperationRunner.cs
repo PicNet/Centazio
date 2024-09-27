@@ -11,11 +11,7 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var pending = await core.Get(op.Settings.Object, op.Checkpoint);
     var maps = await entitymap.GetForCores(pending, op.State.System, op.Settings.Object);
-    var results = op.Settings switch {
-      SingleWriteOperationConfig swo => await swo.WriteEntitiesToTargetSystem.WriteEntities(swo, maps.Created, maps.Updated),
-      BatchWriteOperationConfig bwo => await bwo.WriteEntitiesToTargetSystem.WriteEntities(bwo, maps.Created, maps.Updated),
-      _ => throw new NotSupportedException()
-    };
+    var results = await op.Settings.WriteEntitiesesToTargetSystem.WriteEntities(op.Settings, maps.Created, maps.Updated);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning($"error occurred calling `WriteEntitiesToTargetSystem`");

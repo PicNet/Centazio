@@ -30,34 +30,16 @@ public record CoreAndUpdatedMap {
   }
 }
 
-public abstract record WriteOperationConfig(
+public record WriteOperationConfig(
     ObjectName Object, 
-    ValidCron Cron) : OperationConfig(Object, Cron);
+    ValidCron Cron,
+    IWriteEntitiesToTargetSystem WriteEntitiesesToTargetSystem) : OperationConfig(Object, Cron);
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
-public interface IWriteSingleEntityToTargetSystem {
+public interface IWriteEntitiesToTargetSystem {
   Task<WriteOperationResult> WriteEntities(
-          SingleWriteOperationConfig config, 
+          WriteOperationConfig config, 
           List<CoreAndPendingCreateMap> created,
           List<CoreAndPendingUpdateMap> updated);
 }
-
-public record SingleWriteOperationConfig(
-    ObjectName Object, 
-    ValidCron Cron, 
-    IWriteSingleEntityToTargetSystem WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron);
-
-// BatchWriteOperationConfig/IWriteBatchEntitiesToTargetSystem - used when target system handles batches of entities
-
-public interface IWriteBatchEntitiesToTargetSystem {
-    Task<WriteOperationResult> WriteEntities(
-            BatchWriteOperationConfig config, 
-            List<CoreAndPendingCreateMap> created,
-            List<CoreAndPendingUpdateMap> updated);
-}
-
-public record BatchWriteOperationConfig(
-    ObjectName Object, 
-    ValidCron Cron, 
-    IWriteBatchEntitiesToTargetSystem WriteEntitiesToTargetSystem) : WriteOperationConfig(Object, Cron);

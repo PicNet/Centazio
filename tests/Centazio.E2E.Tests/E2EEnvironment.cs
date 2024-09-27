@@ -29,9 +29,7 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly CrmWriteFunction crm_write;
   private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner;
   private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner;
-  // todo: function runner should allow operations of SingleWrite and Batch write combined.  Currently new
-  //    functions are required if we need to combine these
-  private readonly FunctionRunner<BatchWriteOperationConfig, WriteOperationResult> crm_write_runner;
+  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner;
 
   // Fin
   private readonly FinSystem fin = new();
@@ -40,9 +38,7 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly FinWriteFunction fin_write;
   private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner;
   private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner;
-  // todo: function runner should allow operations of SingleWrite and Batch write combined.  Currently new
-  //    functions are required if we need to combine these
-  private readonly FunctionRunner<BatchWriteOperationConfig, WriteOperationResult> fin_write_runner;
+  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner;
 
   // Infra
   private readonly ICtlRepository ctl = new InMemoryCtlRepository();
@@ -60,8 +56,8 @@ public class E2EEnvironment : IAsyncDisposable {
         new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
-    crm_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
-        new WriteOperationRunner<BatchWriteOperationConfig>(entitymap, core), 
+    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(crm_write = new CrmWriteFunction(crm),
+        new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
         ctl);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(fin_read = new FinReadFunction(fin),
@@ -71,8 +67,8 @@ public class E2EEnvironment : IAsyncDisposable {
         new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
-    fin_write_runner = new FunctionRunner<BatchWriteOperationConfig, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
-        new WriteOperationRunner<BatchWriteOperationConfig>(entitymap, core), 
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
+        new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
         ctl);
   }
 
