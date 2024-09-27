@@ -99,9 +99,9 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   
   public string Checksum(object o) => Helpers.TestingChecksum(o);
   
-  public CoreMembershipType GetMembershipType(string id) => (CoreMembershipType) Types.Single(e => e.Id == id); 
-  public CoreCustomer GetCustomer(string id) => (CoreCustomer) Customers.Single(e => e.Id == id);
-  public CoreInvoice GetInvoice(string id) => (CoreInvoice) Invoices.Single(e => e.Id == id);
+  public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>(); 
+  public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();
+  public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
   public Task<List<ICoreEntity>> Get(ObjectName obj, DateTime after) => 

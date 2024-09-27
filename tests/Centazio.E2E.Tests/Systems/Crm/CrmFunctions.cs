@@ -80,17 +80,16 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
       List<CoreAndPendingUpdateMap> updated) {
     
     if (config.Object == nameof(CoreCustomer)) {
-      // todo: these casts are ugly
-      var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, (CoreCustomer) m.Core)).ToList());
-      await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreCustomer) m.Core)).ToList());
+      var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
+      await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(c => c.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());
     }
     
     if (config.Object == nameof(CoreInvoice)) {
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, (CoreInvoice) m.Core)).ToList());
-      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreInvoice) m.Core)).ToList());
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>())).ToList());
+      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>())).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());

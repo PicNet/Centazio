@@ -44,4 +44,6 @@ public interface ICoreEntity {
   /// be set to `DateUpdated`
   /// </summary>
   public DateTime SourceSystemDateUpdated { get; }
+  
+  public T To<T>() where T : ICoreEntity => (T) this;
 }
