@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
@@ -52,9 +51,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, IEnumerable<StagedEntity> staged) {
     var topromote = config.State.Object.Value switch { 
-      nameof(CrmMembershipType) => staged.Select(s => (s, (ICoreEntity) CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
-      nameof(CrmCustomer) => staged.Select(s => (s, (ICoreEntity) CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CrmInvoice) => staged.Select(s => (s, (ICoreEntity) CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
+      nameof(CrmMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
+      nameof(CrmCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
+      nameof(CrmInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
       _ => throw new Exception() };
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
   }
@@ -77,25 +76,24 @@ public class CrmWriteFunction : AbstractFunction<BatchWriteOperationConfig, Writ
 
   public async Task<WriteOperationResult> WriteEntities(
       BatchWriteOperationConfig config, 
-      // todo: these tuples need actual record types to make working with them easier
-      List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, 
-      List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
+      List<CoreAndPendingCreateMap> created, 
+      List<CoreAndPendingUpdateMap> updated) {
     
     if (config.Object == nameof(CoreCustomer)) {
       // todo: these casts are ugly
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, (CoreCustomer) m.Core)).ToList());
       await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreCustomer) m.Core)).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.Id.ToString())).Select(m => (m.First.Core, Map: m.First.Map.SuccessCreate(m.Second))).ToList(),
-          updated.Select(m => (m.Core, Map: m.Map.SuccessUpdate())).ToList());
+          created.Zip(created2.Select(c => c.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     if (config.Object == nameof(CoreInvoice)) {
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, (CoreInvoice) m.Core)).ToList());
       await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), (CoreInvoice) m.Core)).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.Id.ToString())).Select(m => (m.First.Core, Map: m.First.Map.SuccessCreate(m.Second))).ToList(),
-          updated.Select(m => (m.Core, Map: m.Map.SuccessUpdate())).ToList());
+          created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     throw new NotSupportedException(config.Object);

@@ -1,12 +1,11 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
 public abstract record WriteOperationResult(
-    ICollection<(ICoreEntity Core, EntityIntraSysMap.Created Map)> EntitiesCreated,
-    ICollection<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> EntitiesUpdated,
+    ICollection<CoreAndCreatedMap> EntitiesCreated,
+    ICollection<CoreAndUpdatedMap> EntitiesUpdated,
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
@@ -18,8 +17,8 @@ public abstract record WriteOperationResult(
 }
 
 public record SuccessWriteOperationResult(
-    ICollection<(ICoreEntity Core, EntityIntraSysMap.Created Map)> EntitiesCreated,
-    ICollection<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> EntitiesUpdated,
+    ICollection<CoreAndCreatedMap> EntitiesCreated,
+    ICollection<CoreAndUpdatedMap> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : WriteOperationResult(EntitiesCreated,
         EntitiesUpdated,
@@ -27,10 +26,9 @@ public record SuccessWriteOperationResult(
         $"SuccessWriteOperationResult Created[{EntitiesCreated.Count}] Updated[{EntitiesUpdated.Count}]",
         AbortVote);
 
-public record ErrorWriteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null)
-    : WriteOperationResult(Array.Empty<(ICoreEntity Core, EntityIntraSysMap.Created Map)>(),
-        Array.Empty<(ICoreEntity Core, EntityIntraSysMap.Updated Map)>(),
-        EOperationResult.Error,
-        $"ErrorWriteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]",
-        AbortVote,
-        Exception);
+public record ErrorWriteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : WriteOperationResult(Array.Empty<CoreAndCreatedMap>(),
+    Array.Empty<CoreAndUpdatedMap>(),
+    EOperationResult.Error,
+    $"ErrorWriteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]",
+    AbortVote,
+    Exception);

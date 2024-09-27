@@ -1,9 +1,10 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Write;
 
 namespace Centazio.Core.EntitySysMapping;
 
-public record GetForCoresResult(List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> Created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> Updated);
+public record GetForCoresResult(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated);
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   

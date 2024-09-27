@@ -74,9 +74,8 @@ public class PromoteOperationRunnerTests {
     public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, IEnumerable<StagedEntity> staged) {
       var lst = staged.ToList();
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-          // todo: this cast to (ICoreEntity) is ugly, create a `record` for these types instead of named tuples
-          lst.Where((_, idx) => idx % 2 == 0).Select(e => (Staged: e, Core: (ICoreEntity) new CoreEntity(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
-          lst.Where((_, idx) => idx % 2 == 1).Select(e => (Entity: e, Reason: (ValidString) $"Ignore: {e.Data}")).ToList()));
+          lst.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+          lst.Where((_, idx) => idx % 2 == 1).Select(e => new StagedEntityAndIgnoreReason(e, Reason: $"Ignore: {e.Data}")).ToList()));
     }
     
 

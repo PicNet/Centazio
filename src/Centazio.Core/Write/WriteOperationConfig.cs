@@ -4,6 +4,32 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
+public record CoreAndPendingCreateMap(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map) {
+  public CoreAndCreatedMap Created(string targetid) => new(Core, Map.SuccessCreate(targetid));
+}
+public record CoreAndCreatedMap {
+  internal ICoreEntity Core { get; }
+  internal EntityIntraSysMap.Created Map { get; }
+  
+  internal CoreAndCreatedMap(ICoreEntity core, EntityIntraSysMap.Created map) {
+    Core = core;
+    Map = map;
+  }
+}
+public record CoreAndPendingUpdateMap(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map) {
+  public CoreAndUpdatedMap Updated() => new(Core, Map.SuccessUpdate());
+}
+
+public record CoreAndUpdatedMap {
+  internal ICoreEntity Core { get; }
+  internal EntityIntraSysMap.Updated Map { get; }
+  
+  internal CoreAndUpdatedMap(ICoreEntity core, EntityIntraSysMap.Updated map) {
+    Core = core;
+    Map = map;
+  }
+}
+
 public abstract record WriteOperationConfig(
     ObjectName Object, 
     ValidCron Cron) : OperationConfig(Object, Cron);
@@ -13,8 +39,8 @@ public abstract record WriteOperationConfig(
 public interface IWriteSingleEntityToTargetSystem {
   Task<WriteOperationResult> WriteEntities(
           SingleWriteOperationConfig config, 
-          List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created,
-          List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated);
+          List<CoreAndPendingCreateMap> created,
+          List<CoreAndPendingUpdateMap> updated);
 }
 
 public record SingleWriteOperationConfig(
@@ -27,8 +53,8 @@ public record SingleWriteOperationConfig(
 public interface IWriteBatchEntitiesToTargetSystem {
     Task<WriteOperationResult> WriteEntities(
             BatchWriteOperationConfig config, 
-            List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created,
-            List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated);
+            List<CoreAndPendingCreateMap> created,
+            List<CoreAndPendingUpdateMap> updated);
 }
 
 public record BatchWriteOperationConfig(

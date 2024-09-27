@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -50,7 +49,7 @@ public class PromoteFunctionTests {
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
-    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { (Staged: SE(json2, staged23[0].Id), Core: ToCore(json2)), (Staged: SE(json3, staged23[1].Id), Core: ToCore(json3)) }));
+    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { new StagedAndCoreEntity(SE(json2, staged23[0].Id), ToCore(json2)), new StagedAndCoreEntity(SE(json3, staged23[1].Id), ToCore(json3)) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
@@ -97,7 +96,7 @@ public class PromoteFunctionTests {
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
-    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2, staged23[0].Id), (ValidString) "ignore"), (SE(json3, staged23[1].Id), (ValidString) "ignore") }));
+    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { new StagedEntityAndIgnoreReason(SE(json2, staged23[0].Id), "ignore"), new StagedEntityAndIgnoreReason(SE(json3, staged23[1].Id), "ignore") }));
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -137,10 +136,10 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     var lst = staged.ToList();
     var cores = lst.Select(e => {
       var core = JsonSerializer.Deserialize<CoreEntity>(e.Data) ?? throw new Exception();
-      return (Staged: e, Core: (ICoreEntity) core);
+      return new StagedAndCoreEntity(e, core);
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
-        IgnoreNext ? lst.Select(e => (Entity: e, Reason: (ValidString) "ignore")).ToList() : []));
+        IgnoreNext ? lst.Select(e => new StagedEntityAndIgnoreReason(e, Reason: "ignore")).ToList() : []));
   }
 }

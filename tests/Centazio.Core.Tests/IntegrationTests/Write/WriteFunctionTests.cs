@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -18,8 +17,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.System1Entity, [customer1, customer2]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      (Core: customer1, Map: EntityIntraSysMap.Create(customer1, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer1.SourceId) ), 
-      (Core: customer2, Map: EntityIntraSysMap.Create(customer2, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer2.SourceId) ) };
+      new CoreAndCreatedMap(customer1, EntityIntraSysMap.Create(customer1, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer1.SourceId) ), 
+      new CoreAndCreatedMap(customer2, EntityIntraSysMap.Create(customer2, Constants.System2Name, Constants.System1Entity).SuccessCreate(customer2.SourceId) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -28,7 +27,7 @@ public class WriteFunctionTests {
     var customer22 = customer2 with { Checksum = Guid.NewGuid().ToString(), FirstName = "22", DateUpdated = UtcDate.UtcNow };
     var upsert2 = await core.Upsert(Constants.System1Entity, [customer22]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
-    var expresults2 = new [] { (Core: customer22, Map: expresults1[1].Map.Update().SuccessUpdate() ) };
+    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
 
@@ -75,8 +74,8 @@ public class WriteFunctionTests {
 
 public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationConfig, WriteOperationResult>, IWriteBatchEntitiesToTargetSystem {
 
-  public List<(ICoreEntity Core, EntityIntraSysMap.Created Map)> Created { get; } = new();
-  public List<(ICoreEntity Core, EntityIntraSysMap.Updated Map)> Updated { get; } = new();
+  public List<CoreAndCreatedMap> Created { get; } = new();
+  public List<CoreAndUpdatedMap> Updated { get; } = new();
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
   public override FunctionConfig<BatchWriteOperationConfig> Config { get; }
@@ -92,10 +91,10 @@ public class TestingBatchWriteFunction : AbstractFunction<BatchWriteOperationCon
     Updated.Clear();
   }
 
-  public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map)> created, List<(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map)> updated) {
+  public Task<WriteOperationResult> WriteEntities(BatchWriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreAndPendingUpdateMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = created.Select(m => (m.Core, m.Map.SuccessCreate(m.Core.SourceId))).ToList();
-    var updates = updated.Select(m => (m.Core, m.Map.SuccessUpdate())).ToList();
+    var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
+    var updates = updated.Select(m => m.Updated()).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
