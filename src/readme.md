@@ -2,7 +2,6 @@
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
-- use standard generic constraint names (O=ObjectName, C=Config, etc.).  Do not use <T>, <T2>, etc.
 
 # Developer Guidelines:
 

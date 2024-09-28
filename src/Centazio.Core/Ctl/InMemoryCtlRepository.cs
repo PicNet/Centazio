@@ -11,7 +11,7 @@ public class InMemoryObjectStateRepository<O> : IObjectStateRepo<O> where O : Ob
   
   public Task<ObjectState<O>> SaveObjectState(ObjectState<O> state) {
     var key = (state.System, state.Stage, state.Object);
-    if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found"); ;
+    if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found");
     return Task.FromResult(objects[key] = state);
   }
   

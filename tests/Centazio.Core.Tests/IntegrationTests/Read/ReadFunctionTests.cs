@@ -65,10 +65,10 @@ public class ReadFunctionTests {
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-    ObjectState<ExternalEntityType> OS(DateTime updated, int len) => new ObjectState<ExternalEntityType>.Dto(sys, stg, externalname, true) {
+    ObjectState<ExternalEntityType> OS(DateTime updated, int len) => new ObjectState<ExternalEntityType>(sys, stg, externalname, true) {
       DateCreated = start,
-      LastResult = EOperationResult.Success.ToString(),
-      LastAbortVote = EOperationAbortVote.Continue.ToString(),
+      LastResult = EOperationResult.Success,
+      LastAbortVote = EOperationAbortVote.Continue,
       DateUpdated = updated,
       LastStart = updated,
       LastSuccessStart = updated,
@@ -76,7 +76,7 @@ public class ReadFunctionTests {
       LastCompleted = updated,
       LastRunMessage = $"operation [{sys}/{stg}/{externalname}] completed [Success] message: " + 
           (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
-    }.ToObjectState<ExternalEntityType>();
+    };
     StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, externalname, onetick, expjson, Helpers.TestingChecksum(expjson));
   }
 }

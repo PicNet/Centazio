@@ -1,7 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.EntitySysMapping;
-using Centazio.Core.Extensions;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;

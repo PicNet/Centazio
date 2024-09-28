@@ -10,11 +10,11 @@ public record FunctionConfigDefaults {
   public static DateTime DefaultFirstTimeCheckpoint { get; set; } = UtcDate.UtcNow.AddMonths(-1);
 }
 
-public record FunctionConfig<T, O>(
+public record FunctionConfig<C, O>(
     SystemName System, 
     LifecycleStage Stage, 
-    ValidList<T> Operations) 
-        where T : OperationConfig<O>
+    ValidList<C> Operations) 
+        where C : OperationConfig<O>
         where O : ObjectName {
 
   /// <summary>

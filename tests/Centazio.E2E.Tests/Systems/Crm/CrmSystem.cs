@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
-using Centazio.Core.Extensions;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Systems.Crm;

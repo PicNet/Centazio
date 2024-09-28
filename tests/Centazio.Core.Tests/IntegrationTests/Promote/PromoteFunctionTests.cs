@@ -106,17 +106,17 @@ public class PromoteFunctionTests {
   }
   
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState<CoreEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new ObjectState<CoreEntityType>.Dto(sys, stg, corename, true) {
+  private ObjectState<CoreEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys, stg, corename, true) {
     DateCreated = start,
-    LastResult = EOperationResult.Success.ToString(),
-    LastAbortVote = EOperationAbortVote.Continue.ToString(),
+    LastResult = EOperationResult.Success,
+    LastAbortVote = EOperationAbortVote.Continue,
     DateUpdated = updated,
     LastStart = updated,
     LastSuccessStart = updated,
     LastSuccessCompleted = updated,
     LastCompleted = updated,
     LastRunMessage = $"operation [{sys}/{stg}/{corename}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
-  }.ToObjectState<CoreEntityType>();
+  };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys, externalname, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();

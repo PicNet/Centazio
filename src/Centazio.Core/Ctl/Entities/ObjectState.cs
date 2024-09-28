@@ -36,8 +36,7 @@ public record ObjectState<O> where O : ObjectName {
   
   public SystemName System { get; } 
   public LifecycleStage Stage { get; } 
-  public O Object { get; }
-  
+  public O Object { get; internal init; }
   public bool Active { get; private init; } 
   public DateTime DateCreated { get; internal init; } 
   public EOperationResult LastResult { get; internal init; } = EOperationResult.Unknown;
@@ -98,10 +97,10 @@ public record ObjectState<O> where O : ObjectName {
       LastRunException = os.LastRunException
     };
     
-    public ObjectState<T> ToObjectState<T>() where T : ObjectName  => new(
+    public ObjectState<O> ToObjectState() => new(
         System ?? throw new ArgumentNullException(nameof(System)),
         Stage ?? throw new ArgumentNullException(nameof(Stage)),
-        NameFromString<T>(Object),
+        NameFromString(Object),
         Active ?? throw new ArgumentNullException(nameof(Active))) {
       
       LastResult =  Enum.Parse<EOperationResult>(LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
@@ -116,9 +115,9 @@ public record ObjectState<O> where O : ObjectName {
       LastRunException = LastRunException
     };
     
-    private T NameFromString<T>(string? name) where T : ObjectName {
+    private O NameFromString(string? name) {
       ArgumentException.ThrowIfNullOrWhiteSpace(name);
-      return (T) (Activator.CreateInstance(typeof(T), name) ?? throw new Exception());
+      return (O) (Activator.CreateInstance(typeof(O), name) ?? throw new Exception());
     }
   }
 }

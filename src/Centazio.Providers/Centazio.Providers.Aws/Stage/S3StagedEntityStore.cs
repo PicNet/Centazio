@@ -2,7 +2,6 @@
 using Amazon.S3.Model;
 using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Extensions;
 using Centazio.Core.Stage;
 using Serilog;
 

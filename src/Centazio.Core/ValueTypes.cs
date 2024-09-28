@@ -34,7 +34,7 @@ public record ObjectName : ValidString {
 public sealed record ExternalEntityType(string Name) : ObjectName(Name);
 
 public sealed record CoreEntityType(string Name) : ObjectName(Name) {
-  public static CoreEntityType From<T>() where T : ICoreEntity => new(typeof(T).Name);
+  public static CoreEntityType From<E>() where E : ICoreEntity => new(typeof(E).Name);
 }
 
 public sealed record LifecycleStage(string Value) : ValidString(Value) {

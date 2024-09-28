@@ -22,5 +22,5 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   }
 
   public Task<IEnumerable<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity => 
-      throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<T>(string query)`.  Use `Query<T>(Expression<Func<T, bool>> predicate)` instead.");
+      throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
 }

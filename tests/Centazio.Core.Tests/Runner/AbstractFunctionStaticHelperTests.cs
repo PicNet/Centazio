@@ -38,7 +38,7 @@ public class AbstractFunctionStaticHelperTests {
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      var exp = (ObjectState<ExternalEntityType>.Dto.FromObjectState(template) with { Object = new ExternalEntityType(name) }).ToObjectState<ExternalEntityType>();
+      var exp = template with { Object = new ExternalEntityType(name) };
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
@@ -58,11 +58,11 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(new ObjectState<ExternalEntityType>.Dto(name, name, new ExternalEntityType(name), true) { 
+    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(new ObjectState<ExternalEntityType>(name, name, new ExternalEntityType(name), true) { 
       LastCompleted = last,
-      LastResult = EOperationResult.Success.ToString(),
-      LastAbortVote = EOperationAbortVote.Continue.ToString()
-    }.ToObjectState<ExternalEntityType>(), new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()));
+      LastResult = EOperationResult.Success,
+      LastAbortVote = EOperationAbortVote.Continue
+    }, new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()));
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -138,8 +138,7 @@ public class AbstractFunctionStaticHelperTests {
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, ex.Message);
-    // todo:is this From/ToObject state really required?
-    Assert.That(newstates[0], Is.EqualTo((ObjectState<ExternalEntityType>.Dto.FromObjectState(exp2) with { LastRunException = ex.ToString() }).ToObjectState<ExternalEntityType>()));
+    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = ex.ToString() }));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   

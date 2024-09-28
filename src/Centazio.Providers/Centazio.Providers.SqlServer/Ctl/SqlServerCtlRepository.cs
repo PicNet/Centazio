@@ -99,7 +99,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
       var raw = await conn.QuerySingleOrDefaultAsync<ObjectState<O>.Dto>(@$"
   SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
   WHERE System=@System AND Stage=@Stage AND Object=@Object", new { system.System, system.Stage, Object=obj });
-      return raw?.ToObjectState<O>();
+      return raw?.ToObjectState();
     }
 
     public async Task<ObjectState<O>> SaveObjectState(ObjectState<O> state) {

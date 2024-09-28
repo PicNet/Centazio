@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Extensions;
 using Centazio.Core.Stage;
 using Centazio.Core.Tests.IntegrationTests;
 using Centazio.Test.Lib;
