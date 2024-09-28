@@ -46,7 +46,7 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly List<ISystem> Systems;
 
   public E2EEnvironment() {
-    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; // disable logging (todo: not working)
+    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; 
     Systems = [crm, fin];
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(crm_read = new CrmReadFunction(crm),
         new ReadOperationRunner(stage),

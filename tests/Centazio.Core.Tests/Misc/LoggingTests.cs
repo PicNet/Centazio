@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Serilog;
+using Serilog.Events;
 
 namespace Centazio.Core.Tests.Misc;
 
@@ -27,5 +28,10 @@ public class LoggingTests {
       Log.Warning(ex, "logging with exception override");
       Log.Warning("logging with exception as parameter {@Exception}", ex);
     }
+  }
+  
+  [Test] public void Test_disabling_logging() {
+    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    Log.Information("Should not be visible");
   }
 }

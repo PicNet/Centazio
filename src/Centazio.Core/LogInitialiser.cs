@@ -12,7 +12,7 @@ public static class LogInitialiser {
 
   private static readonly string DATE_TIME_FORMAT = "yyyy-MM-ddTHH:mm:ssZ";
   public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
-  public static LoggingLevelSwitch LevelSwitch => new(LogEventLevel.Debug); 
+  public static LoggingLevelSwitch LevelSwitch { get; } = new(LogEventLevel.Debug); 
 
   public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug) {
     LevelSwitch.MinimumLevel = level;
