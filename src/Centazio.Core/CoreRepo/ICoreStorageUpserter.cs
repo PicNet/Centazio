@@ -6,6 +6,11 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// Gets all core entities that have been created/updated after the given `after` parameter.
   /// </summary>
   Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after);
+  
+  /// <summary>
+  /// Gets all core entities of the specified type with the given Ids 
+  /// </summary>
+  Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {

@@ -13,7 +13,7 @@ public record FunctionConfigDefaults {
 public record FunctionConfig<C, O>(
     SystemName System, 
     LifecycleStage Stage, 
-    ValidList<C> Operations) 
+    ValidList<C> Operations) : ILoggable 
         where C : OperationConfig<O>
         where O : ObjectName {
 
@@ -37,6 +37,7 @@ public record FunctionConfig<C, O>(
   /// </summary>
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
 
+  public object LoggableValue => $"{System}/{Stage} Operations[{Operations.Value.Count}]";
 }
 
 public abstract record OperationConfig<O>(

@@ -10,10 +10,11 @@ public abstract record WriteOperationResult(
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     Exception? Exception = null)
-    : OperationResult(Result, Message, AbortVote, Exception) {
+    : OperationResult(Result, Message, AbortVote, Exception), ILoggable {
 
   public int TotalChanges => EntitiesCreated.Count + EntitiesUpdated.Count;
-
+  
+  public object LoggableValue => $"EntitiesCreated[{EntitiesCreated.Count}] EntitiesUpdated[{EntitiesUpdated.Count}] Result[{Result}] Message[{Message}]";
 }
 
 public record SuccessWriteOperationResult(

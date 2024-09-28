@@ -11,11 +11,13 @@ public record PromoteOperationConfig(
     ExternalEntityType ExternalEntityType,
     CoreEntityType CoreEntityType, 
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig<CoreEntityType>(CoreEntityType, Cron) {
+    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig<CoreEntityType>(CoreEntityType, Cron), ILoggable {
 
   // ReSharper disable RedundantExplicitPositionalPropertyDeclaration
   public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;
   public CoreEntityType CoreEntityType { get; init; } = CoreEntityType;
+  
+  public object LoggableValue => $"{ExternalEntityType.Value} -> {CoreEntityType.Value}";
 
 }
 

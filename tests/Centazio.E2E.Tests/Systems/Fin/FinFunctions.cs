@@ -1,5 +1,7 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -60,9 +62,13 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly FinSystem api;
-  
-  public FinWriteFunction(FinSystem api) {
+  private readonly ICoreStorageGetter cores;
+  private readonly IEntityIntraSystemMappingStore intra;
+
+  public FinWriteFunction(FinSystem api, ICoreStorageGetter cores, IEntityIntraSystemMappingStore intra) {
     this.api = api;
+    this.cores = cores;
+    this.intra = intra;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, new ([
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -83,8 +89,13 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>())).ToList());
-      await api.UpdateInvoices(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>())).ToList());
+      // todo: this process of getting related entity accounts needs to be streamlined with own utility type/method
+      var allinvoices = created.Select(m => m.Core).Concat(updated.Select(m => m.Core)).Cast<CoreInvoice>().ToList();
+      var accids = allinvoices.Select(i => i.CustomerId).ToList();
+      var accounts = await cores.Get(CoreEntityType.From<CoreCustomer>(), accids);
+      var maps = await intra.GetForCores(accounts, Config.System, CoreEntityType.From<CoreCustomer>());
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), accounts, maps)).ToList());
+      await api.UpdateInvoices(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>(), accounts, maps)).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());
@@ -94,6 +105,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i) => new(id, Int32.Parse(i.CustomerId), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
+  private FinInvoice FromCore(int id, CoreInvoice i, IList<ICoreEntity> accounts, GetForCoresResult maps) {
+    var issource = i.SourceId == Config.System.Value;
+    var account = accounts.Single(acc => acc.Id == i.CustomerId);
+    var accid = Int32.Parse(issource ? account.SourceId : maps.Updated.Single(m => m.Core.Id == account.Id).Map.TargetId);
+    return new(id, accid, i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
+  }
 
 }

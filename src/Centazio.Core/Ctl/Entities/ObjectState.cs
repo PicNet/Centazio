@@ -1,6 +1,6 @@
 ﻿namespace Centazio.Core.Ctl.Entities;
 
-public record ObjectState<O> where O : ObjectName {
+public record ObjectState<O> : ILoggable where O : ObjectName {
   
   public static ObjectState<O> Create(SystemName system, LifecycleStage stage, O name, bool active = true) => new(system, stage, name, active);
   
@@ -120,4 +120,7 @@ public record ObjectState<O> where O : ObjectName {
       return (O) (Activator.CreateInstance(typeof(O), name) ?? throw new Exception());
     }
   }
+
+  public object LoggableValue => $"{System}/{Stage}/{Object}";
+
 }

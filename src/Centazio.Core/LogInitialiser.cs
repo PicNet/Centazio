@@ -8,21 +8,28 @@ using Serilog.Parsing;
 
 namespace Centazio.Core;
 
+public interface ILoggable {
+  object LoggableValue { get; }
+}
+
 public static class LogInitialiser {
 
   private static readonly string DATE_TIME_FORMAT = "yyyy-MM-ddTHH:mm:ssZ";
-  public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
+  // public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
   public static LoggingLevelSwitch LevelSwitch { get; } = new(LogEventLevel.Debug); 
 
   public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug) {
     LevelSwitch.MinimumLevel = level;
     return new LoggerConfiguration()
         .Destructure.ByTransformingWhere<ValidString>(typeof(ValidString).IsAssignableFrom, obj => obj.Value)
+        .Destructure.ByTransformingWhere<ILoggable>(typeof(ILoggable).IsAssignableFrom, obj => obj.LoggableValue)
         .MinimumLevel.ControlledBy(LevelSwitch);
   }
 
   public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug) => GetBaseConfig(level)
-      .WriteTo.Console(Formatter);
+      .WriteTo
+      // .Console(Formatter);
+      .Console();
 
   private class CustomJsonValueFormatter() : JsonValueFormatter(null) {
 

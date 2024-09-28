@@ -46,7 +46,6 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly List<ISystem> Systems;
 
   public E2EEnvironment() {
-    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; 
     Systems = [crm, fin];
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(crm_read = new CrmReadFunction(crm),
         new ReadOperationRunner(stage),
@@ -66,7 +65,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new PromoteOperationRunner(stage, entitymap, core),
         ctl);
     
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(fin_write = new FinWriteFunction(fin),
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(fin_write = new FinWriteFunction(fin, core, entitymap),
         new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
         ctl);
   }
@@ -76,7 +75,10 @@ public class E2EEnvironment : IAsyncDisposable {
     await ctl.DisposeAsync();
   }
 
-  [Test] public async Task RunSimulation() => await Enumerable.Range(0, TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
+  [Test] public async Task RunSimulation() {
+    // LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    await Enumerable.Range(0, TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
+  }
 
   private async Task RunEpoch(int epoch) {
     Log.Information($"Starting Epoch[{epoch}]");
@@ -98,11 +100,8 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   
-  private async Task ValidateEpoch() {
-    var staged_types = (await stage.GetAll(DateTime.MinValue, nameof(CrmSystem), new(nameof(CrmMembershipType)))).ToList();
+  private Task ValidateEpoch() {
     var core_types = core.Types.Cast<CoreMembershipType>().ToList();
-    throw new Exception($"staged_types[{staged_types.Count}] core_types[{core_types.Count}]");
-    
     var core_customers = core.Customers.Cast<CoreCustomer>().ToList();
     var core_invoices = core.Invoices.Cast<CoreInvoice>().ToList();
     
@@ -116,6 +115,7 @@ public class E2EEnvironment : IAsyncDisposable {
     CompareMembershipTypes(core_types, crm_types);
     CompareCustomers(core_customers, crm_customers, fin_accounts);
     CompareInvoices(core_invoices, crm_invoices, fin_invoices);
+    return Task.CompletedTask;
   }
 
   private void CompareMembershipTypes(List<CoreMembershipType> core_types, List<CrmMembershipType> crm_types) {

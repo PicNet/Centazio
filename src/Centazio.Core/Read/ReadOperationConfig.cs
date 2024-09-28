@@ -7,9 +7,12 @@ public interface IGetObjectsToStage {
 }
 
 public record ReadOperationConfig(ExternalEntityType ExternalEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
-        : OperationConfig<ExternalEntityType>(ExternalEntityType, Cron) {
+        : OperationConfig<ExternalEntityType>(ExternalEntityType, Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;
+  
+  public object LoggableValue => $"{ExternalEntityType.Value}";
+
 }
         

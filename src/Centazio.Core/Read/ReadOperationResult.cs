@@ -8,12 +8,15 @@ public abstract record ReadOperationResult(
     string Message, 
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception) {
+    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception), ILoggable {
   
   public static ReadOperationResult Create(List<string> lst) {
     if (!lst.Any()) return new EmptyReadOperationResult();
     return new ListRecordsReadOperationResult(lst);
   }
+
+  public object LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
+
 }
 
 public record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 

@@ -107,6 +107,11 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after) => 
       Task.FromResult(GetList(obj).Where(e => e.DateUpdated > after).ToList());
 
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids) {
+    var lst = GetList(obj);
+    return Task.FromResult(coreids.Select(id => lst.Single(e => e.Id == id)).ToList());
+  }
+
   public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue))

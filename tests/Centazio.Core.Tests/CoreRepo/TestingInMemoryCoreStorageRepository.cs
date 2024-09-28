@@ -15,7 +15,13 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     var lst = fulllst.Where(c => c.Value.DateCreated > after || c.Value.DateUpdated > after).Select(c => c.Value).ToList();
     return Task.FromResult(lst);
   }
-  
+
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids) {
+    if (!db.TryGetValue(obj, out var fulllst)) throw new Exception($"Core entity type [{obj}] not found");
+    var lst = coreids.Select(id => fulllst.Single(e => e.Value.Id == id).Value).ToList();
+    return Task.FromResult(lst);
+  }
+
   public Task<IEnumerable<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
     if (!db.TryGetValue(obj, out var fulllst)) return Task.FromResult<IEnumerable<E>>(Array.Empty<E>());
     return Task.FromResult(fulllst.Values.Cast<E>().Where(predicate.Compile()));
