@@ -93,13 +93,13 @@ public abstract record CoreEntityBase : ICoreEntity {
 
 public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   
-  internal List<ICoreEntity> Types => [];
-  internal List<ICoreEntity> Customers => [];
-  internal List<ICoreEntity> Invoices => [];
+  internal List<ICoreEntity> Types { get; } = [];
+  internal List<ICoreEntity> Customers { get; } = [];
+  internal List<ICoreEntity> Invoices { get; } = [];
   
   public string Checksum(object o) => Helpers.TestingChecksum(o);
   
-  public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>(); 
+  public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>();
   public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();
   public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
@@ -114,22 +114,22 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
   public Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
-    var lst = GetList(obj);
-    return Task.FromResult(entities.Select(e => {
-      var idx = lst.FindIndex(e2 => e2.Id == e.Id);
-      if (idx < 0) lst.Add(e);
-      else lst[idx] = e;
-      return e;
-    }));
+    var (source, target) = (entities.ToList(), GetList(obj));
+    source.ForEach(e => {
+      var idx = target.FindIndex(e2 => e2.Id == e.Id);
+      if (idx < 0) target.Add(e);
+      else target[idx] = e;
+    });
+    return Task.FromResult<IEnumerable<ICoreEntity>>(source);
   }
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
   private List<ICoreEntity> GetList(CoreEntityType obj) {
-    if (obj.Name == nameof(CoreMembershipType)) return Types;
-    if (obj.Name == nameof(CoreCustomer)) return Customers;
-    if (obj.Name == nameof(CoreInvoice)) return Invoices;
-    throw new NotSupportedException($"CoreEntityType[{obj}] is not supported");
+    if (obj.Value == nameof(CoreMembershipType)) return Types;
+    if (obj.Value == nameof(CoreCustomer)) return Customers;
+    if (obj.Value == nameof(CoreInvoice)) return Invoices;
+    throw new NotSupportedException(obj);
   }
 
 }

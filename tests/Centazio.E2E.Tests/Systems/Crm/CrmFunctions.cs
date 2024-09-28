@@ -50,10 +50,10 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
 
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
     var topromote = config.State.Object.Value switch { 
-      nameof(CrmMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
-      nameof(CrmCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CrmInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
-      _ => throw new Exception() };
+      nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
+      nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
+      nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
+      _ => throw new NotSupportedException(config.State.Object) };
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
   }
 
@@ -78,7 +78,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    if (config.Object == nameof(CoreCustomer)) {
+    if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
       await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
       return new SuccessWriteOperationResult(
@@ -86,7 +86,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           updated.Select(m => m.Updated()).ToList());
     }
     
-    if (config.Object == nameof(CoreInvoice)) {
+    if (config.Object.Value == nameof(CoreInvoice)) {
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>())).ToList());
       await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>())).ToList());
       return new SuccessWriteOperationResult(

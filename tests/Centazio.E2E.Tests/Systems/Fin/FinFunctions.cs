@@ -74,7 +74,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    if (config.Object == nameof(CoreCustomer)) {
+    if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await api.UpdateAccounts(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
       return new SuccessWriteOperationResult(
@@ -82,7 +82,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           updated.Select(m => m.Updated()).ToList());
     }
     
-    if (config.Object == nameof(CoreInvoice)) {
+    if (config.Object.Value == nameof(CoreInvoice)) {
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>())).ToList());
       await api.UpdateInvoices(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>())).ToList());
       return new SuccessWriteOperationResult(

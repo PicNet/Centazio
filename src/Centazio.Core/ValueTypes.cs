@@ -28,12 +28,12 @@ public sealed record SystemName(string Value) : ValidString(Value) {
 }
 
 public record ObjectName : ValidString {
-  internal ObjectName(string name) : base(name) {}
+  internal ObjectName(string Value) : base(Value) {}
 }
 
-public sealed record ExternalEntityType(string Name) : ObjectName(Name);
+public sealed record ExternalEntityType(string Value) : ObjectName(Value);
 
-public sealed record CoreEntityType(string Name) : ObjectName(Name) {
+public sealed record CoreEntityType(string Value) : ObjectName(Value) {
   public static CoreEntityType From<E>() where E : ICoreEntity => new(typeof(E).Name);
 }
 
