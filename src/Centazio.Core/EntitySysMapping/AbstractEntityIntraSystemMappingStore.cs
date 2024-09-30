@@ -21,7 +21,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   // todo: can this be removed and replaced with more explicit methods
   // such as ones below (FindTargetIds)
   Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj);
-  Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName source, SystemName target, ICollection<string> coreids);
+  Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, ICollection<string> coreids);
   
   /// <summary>
   /// Bounce backs are when an entity is created in System 1 and written to
@@ -47,6 +47,11 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   /// <returns>The list of IDs that are not bouce backs and should be promoted</returns>
   Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, CoreEntityType obj, List<string> ids);
 
+  /// <summary>
+  /// Gets the CoreId for a specific `CoreEntityType` given its `TargetId` and `TargetSystem`.
+  /// </summary>
+  Task<string?> GetCoreIdForTargetSys(CoreEntityType obj, string targetid, SystemName targetsys);
+
 }
 
 public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystemMappingStore {
@@ -59,11 +64,11 @@ public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystem
   
   public abstract Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key);
   public abstract Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj);
-  public abstract Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName source, SystemName target, ICollection<string> coreids);
+  public abstract Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, ICollection<string> coreids);
   public abstract Task<List<EntityIntraSysMap>> GetAll();
   
   public abstract Task<List<string>> FilterOutBouncedBackIds(SystemName thissys, CoreEntityType obj, List<string> ids);
-  
+  public abstract Task<string?> GetCoreIdForTargetSys(CoreEntityType obj, string targetid, SystemName targetsys);
   public abstract ValueTask DisposeAsync();
 
 }

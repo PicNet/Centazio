@@ -66,7 +66,7 @@ public class FinSystem : IFinSystemApi, ISystem {
       if (count == 0) return;
       
       var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(rng.Next(Int32.MaxValue), SimulationCtx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
-      SimulationCtx.Debug($"FinSimulation - AddAccounts[{count}] - {String.Join(',', toadd.Select(a => a.Name))}");
+      SimulationCtx.Debug($"FinSimulation - AddAccounts[{count}] - {String.Join(',', toadd.Select(a => $"{a.Id}({a.Name})"))}");
       accounts.AddRange(toadd);
     }
 
@@ -78,7 +78,7 @@ public class FinSystem : IFinSystemApi, ISystem {
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(accounts.Count);
         var (name, newname) = (accounts[idx].Name, SimulationCtx.UpdateName(accounts[idx].Name));
-        log.Add($"{name}->{newname}");
+        log.Add($"{accounts[idx].Id}({name}->{newname})");
         accounts[idx] = accounts[idx] with { Name = newname, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"FinSimulation - EditAccounts[{count}] - {String.Join(',', log)}");

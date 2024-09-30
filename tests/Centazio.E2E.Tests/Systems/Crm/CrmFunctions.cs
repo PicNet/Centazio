@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -52,14 +53,20 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
     SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>()))).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>()))).ToList(), 
+      nameof(CoreInvoice) => await staged.Select(async s => {
+        var crminv = s.Deserialise<CrmInvoice>();
+        // todo: this needs to be cleaned up 
+        var custid = await SimulationCtx.entitymap.GetCoreIdForTargetSys(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System) 
+            ?? SimulationCtx.core.Customers.Single(c => c.SourceId == crminv.CustomerId.ToString()).Id; 
+        return new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(crminv, custid));
+      }).Synchronous(), 
       _ => throw new NotSupportedException(config.State.Object) };
-    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
+    return new SuccessPromoteOperationResult(topromote, []);
   }
 
 }
@@ -108,10 +115,12 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           .ToList();
       var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
       // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
-      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.FIN_SYSTEM, SimulationCtx.CRM_SYSTEM, externalcusts);
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), targetmaps)).ToList());
+      var maps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.FIN_SYSTEM, externalcusts);
+      // todo: clean up existing cores
+      var existingcores = SimulationCtx.core.Customers.Where(c => externalcusts.Contains(c.Id)).ToList();
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
       await api.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Guid.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), targetmaps);
+        var toupdate = FromCore(Guid.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), maps, existingcores);
         var existing = api.Invoices.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
         if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
         return toupdate;
@@ -125,10 +134,18 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
-  private CrmInvoice FromCore(Guid id, CoreInvoice i, IList<EntityIntraSysMap> custmaps) {
-    var issource = i.SourceId == Config.System.Value;
-    var accid = Guid.Parse(issource ? i.CustomerId : custmaps.Single(m => m.CoreId == i.CustomerId).TargetId);
-    return new CrmInvoice(id, UtcDate.UtcNow, accid, i.Cents, i.DueDate, i.PaidDate);
+  private CrmInvoice FromCore(Guid id, CoreInvoice i, IList<EntityIntraSysMap> custmaps, List<ICoreEntity> existingcores) {
+    var potentials = custmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
+    var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.CRM_SYSTEM)?.TargetId.Value ??
+        existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
+    if (accid == null) {
+      throw new Exception($"CrmWriteFunction -\n\t" +
+          $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]\n\t" +
+          $"Potentials[{String.Join(",", potentials)}]\n\t" +
+          $"Existing Cores[{String.Join(",", existingcores.Select(c => c.Id))}]\n\t" +
+          $"In DB[{String.Join(",", SimulationCtx.core.Customers.Select(c => c.Id))}]");
+    }
+    return new CrmInvoice(id, UtcDate.UtcNow, Guid.Parse(accid), i.Cents, i.DueDate, i.PaidDate);
   }
 
 }

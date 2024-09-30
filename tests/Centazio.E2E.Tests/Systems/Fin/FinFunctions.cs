@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -49,14 +50,20 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
     SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}] Staged[{staged.Count}]");
     
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
-      nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(s.Deserialise<FinInvoice>()))).ToList(), 
+      nameof(CoreInvoice) => await staged.Select(async s => {
+        var fininv = s.Deserialise<FinInvoice>();
+        // todo: this needs to be cleaned up 
+        var custid = await SimulationCtx.entitymap.GetCoreIdForTargetSys(CoreEntityType.From<CoreCustomer>(), fininv.AccountId.ToString(), config.State.System)
+            ?? SimulationCtx.core.Customers.Single(c => c.SourceId == fininv.AccountId.ToString()).Id;
+        return new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(fininv, custid));
+      }).Synchronous(), 
       _ => throw new Exception() };
-    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
+    return new SuccessPromoteOperationResult(topromote, []);
   }
 
 }
@@ -101,17 +108,17 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       // todo: this process of getting related entity accounts needs to be streamlined with own utility type/method
       // note: to get the correct target ids for writing back to the target system, we only need to get the mapping
       //    for entities created in another system.  Those created by this target system can just use the `SourceId`
-      var externals = created.Select(m => m.Core)
-          .Concat(updated.Select(m => m.Core))
-          .Where(m => m.SourceSystem != SimulationCtx.FIN_SYSTEM.Value)
-          .Cast<CoreInvoice>()
+      var customers = created.Select(m => m.Core.To<CoreInvoice>().CustomerId)
+          .Concat(updated.Select(m => m.Core.To<CoreInvoice>().CustomerId))
+          .Distinct()
           .ToList();
-      var extaccs = externals.Select(i => i.CustomerId).Distinct().ToList();
       // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
-      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.CRM_SYSTEM, SimulationCtx.FIN_SYSTEM, extaccs);
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), targetmaps)).ToList());
+      var maps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.FIN_SYSTEM, customers);
+      // todo: clean up `existingcores`
+      var existingcores = SimulationCtx.core.Customers.Where(c => customers.Contains(c.Id)).ToList();
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
       await api.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), targetmaps);
+        var toupdate = FromCore(Int32.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), maps, existingcores);
         var existing = api.Invoices.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
         if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
         return toupdate;
@@ -125,10 +132,18 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, IList<EntityIntraSysMap> accmaps) {
-    var issource = i.SourceId == Config.System.Value;
-    var accid = Int32.Parse(issource ? i.CustomerId : accmaps.Single(m => m.CoreId == i.CustomerId).TargetId);
-    return new(id, accid, i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
+  private FinInvoice FromCore(int id, CoreInvoice i, IList<EntityIntraSysMap> accmaps, List<ICoreEntity> existingcores) {
+    var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
+    var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.FIN_SYSTEM)?.TargetId.Value ??
+        existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
+    if (accid == null) {
+      throw new Exception($"FinWriteFunction -\n\t" +
+          $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]({i})\n\t" +
+          $"Potentials[{String.Join(",", potentials)}]\n\t" +
+          $"Existing Cores[{String.Join(",", existingcores.Select(c => c.Id))}]\n\t" +
+          $"In DB[{String.Join(",", SimulationCtx.core.Customers.Select(c => c.Id))}]");
+    }
+    return new(id, Int32.Parse(accid), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
   }
 
 }

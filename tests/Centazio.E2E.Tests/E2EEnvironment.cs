@@ -39,7 +39,7 @@ internal static class SimulationCtx {
   public const int CRM_MAX_NEW_INVOICES = 4;
   public const int CRM_MAX_EDIT_INVOICES = 4;
   
-  public const int FIN_MAX_NEW_ACCOUNTS = 0;
+  public const int FIN_MAX_NEW_ACCOUNTS = 2;
   public const int FIN_MAX_EDIT_ACCOUNTS = 0;
   public const int FIN_MAX_NEW_INVOICES = 0;
   public const int FIN_MAX_EDIT_INVOICES = 0;
@@ -113,11 +113,11 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task RunEpoch(int epoch, List<ISystem> systems) {
-    SimulationCtx.Debug($"Epoch[{epoch}] Starting");
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Starting\n");
     
     TestingUtcDate.DoTick(new TimeSpan(1, Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
     systems.ForEach(s => s.Simulation.Step());
-    SimulationCtx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Simulation Step Completed - Running Functions\n");
     
     var functions = new List<Task> { 
       crm_read_runner.RunFunction(),
@@ -137,7 +137,7 @@ public class E2EEnvironment : IAsyncDisposable {
     await fin_write_runner.RunFunction();
     */
     await functions.Synchronous();
-    SimulationCtx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Functions Completed - Validating\n");
     await ValidateEpoch();
   }
 

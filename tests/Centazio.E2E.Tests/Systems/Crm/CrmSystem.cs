@@ -85,7 +85,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var toadd = Enumerable.Range(0, count)
           .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, SimulationCtx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
-      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => a.Name))}");
+      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Id}({a.Name})"))}");
       customers.AddRange(toadd);
     }
 
@@ -97,7 +97,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(customers.Count);
         var (name, newname) = (customers[idx].Name, SimulationCtx.UpdateName(customers[idx].Name));
-        log.Add($"{name}->{newname}");
+        log.Add($"{customers[idx].Id}({name}->{newname})");
         customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditCustomers[{count}] - {String.Join(',', log)}");
@@ -136,7 +136,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(types.Count);
         var (old, newnm) = (types[idx].Name, SimulationCtx.UpdateName(types[idx].Name));
-        log.Add($"{old} -> {newnm}");
+        log.Add($"{types[idx].Id}({old}->{newnm})");
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditMemberships[{count}] - {String.Join(',', log)}");

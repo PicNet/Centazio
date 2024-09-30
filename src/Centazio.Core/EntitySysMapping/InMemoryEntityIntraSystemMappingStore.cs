@@ -21,14 +21,20 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName source, SystemName target, ICollection<string> coreids) {
-    Console.WriteLine($"FindTargetIds [Core:{coretype}, Source:{source} Target: {target}] CoreIds[{String.Join(',', coreids)}]");
-    Console.WriteLine("Existing CoreIds In Mapping: " + String.Join(",", memdb.Keys.Where(k => k.CoreEntity == coretype && k.SourceSystem == source && k.TargetSystem == target).Select(k => k.CoreId)));
+  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, ICollection<string> coreids) {
     return Task.FromResult(coreids.Select(cid => {
-      var key = memdb.Keys.Single(k => k.CoreEntity == coretype && k.CoreId == cid && k.SourceSystem == source && k.TargetSystem == target);
-      return memdb[key];
+      var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.TargetSystem == target);
+      return key == null ? null : memdb[key];
     })
-    .ToList());
+        .Where(m => m != null)
+        .Cast<EntityIntraSysMap>()
+        .ToList());
+  }
+  
+  public override Task<string?> GetCoreIdForTargetSys(CoreEntityType obj, string targetid, SystemName targetsys) {
+    // try to get the core from target system first (assumes `system` is the TargetSystem)
+    var coreid = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.TargetSystem == targetsys && k.TargetId == targetid)?.CoreId.Value;
+    return Task.FromResult(coreid);
   }
 
   public override Task<List<EntityIntraSysMap.Created>> Create(ICollection<EntityIntraSysMap.Created> news) {

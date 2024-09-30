@@ -53,9 +53,9 @@ public record CoreInvoice : CoreEntityBase {
     PaidDate = paid;
   }
   
-  public static CoreInvoice FromCrmInvoice(CrmInvoice i) => new(i.Id.ToString(), SimulationCtx.CRM_SYSTEM, i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate, SimulationCtx.Checksum(i));
+  public static CoreInvoice FromCrmInvoice(CrmInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.CRM_SYSTEM, i.Updated, corecustid, i.AmountCents, i.DueDate, i.PaidDate, SimulationCtx.Checksum(i));
 
-  public static CoreInvoice FromFinInvoice(FinInvoice i) => new(i.Id.ToString(), SimulationCtx.FIN_SYSTEM, i.Updated, i.AccountId.ToString(), (int) (i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate, SimulationCtx.Checksum(i));
+  public static CoreInvoice FromFinInvoice(FinInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.FIN_SYSTEM, i.Updated, corecustid, (int) (i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate, SimulationCtx.Checksum(i));
 
 }
 
