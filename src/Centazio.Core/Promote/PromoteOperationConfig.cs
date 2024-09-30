@@ -24,7 +24,7 @@ public record PromoteOperationConfig(
   /// Care must be taken that the core entities checksum takes care of this and that the change
   /// from system 1 and its bounce back produce the same checksum.
   /// </summary>
-  public bool IsBiderectional { get; init; }
+  public bool IsBidirectional { get; init; }
   
   public object LoggableValue => $"{ExternalEntityType.Value} -> {CoreEntityType.Value}";
 

@@ -62,6 +62,8 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
     
     private void AddAccounts() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+      
       var count = rng.Next(SimulationCtx.FIN_MAX_NEW_ACCOUNTS);
       if (count == 0) return;
       
@@ -71,6 +73,8 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
 
     private void EditAccounts() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+      
       var idxs = Enumerable.Range(0, accounts.Count).Shuffle(SimulationCtx.FIN_MAX_EDIT_ACCOUNTS);
       if (!idxs.Any()) return;
       

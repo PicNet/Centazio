@@ -20,6 +20,8 @@ namespace Centazio.E2E.Tests;
 
 internal static class SimulationCtx {
   
+  public static readonly bool ALLOW_BIDIRECTIONAL = false;
+  
   public static readonly SystemName CRM_SYSTEM;
   public static readonly SystemName FIN_SYSTEM;
   

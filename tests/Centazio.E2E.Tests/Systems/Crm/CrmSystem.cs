@@ -103,6 +103,8 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }
 
     private void AddInvoices() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+      
       var count = rng.Next(SimulationCtx.CRM_MAX_NEW_INVOICES);
       if (!customers.Any() || count == 0) return;
       
@@ -114,6 +116,8 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }
 
     private void EditInvoices() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+      
       var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_INVOICES);
       if (!idxs.Any()) return;
       
