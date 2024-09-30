@@ -55,9 +55,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
     SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
-      nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
+      nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>()))).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>(), db))).ToList(), 
+      nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(s.Deserialise<CrmInvoice>()))).ToList(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(topromote, []));
   }
@@ -85,11 +85,15 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}] Created/Updated[{created.Count}/{updated.Count}]");
-    
+    SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
-      await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
+      await api.UpdateCustomers(updated.Select(e1 => {
+        var toupdate = FromCore(Guid.Parse(e1.Map.TargetId), e1.Core.To<CoreCustomer>());
+        var existing = api.Customers.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        return toupdate;
+      }).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(c => c.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());
@@ -102,11 +106,16 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           .Where(m => m.SourceSystem != SimulationCtx.CRM_SYSTEM.Value)
           .Cast<CoreInvoice>()
           .ToList();
-      var extaccs = externals.Select(i => i.CustomerId).Distinct().ToList();
+      var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
       // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
-      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreInvoice>(), SimulationCtx.FIN_SYSTEM, SimulationCtx.CRM_SYSTEM, extaccs);
+      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.FIN_SYSTEM, SimulationCtx.CRM_SYSTEM, externalcusts);
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), targetmaps)).ToList());
-      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>(), targetmaps)).ToList());
+      await api.UpdateInvoices(updated.Select(e1 => {
+        var toupdate = FromCore(Guid.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), targetmaps);
+        var existing = api.Invoices.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        return toupdate;
+      }).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());

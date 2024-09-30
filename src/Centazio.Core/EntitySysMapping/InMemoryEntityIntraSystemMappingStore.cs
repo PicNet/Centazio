@@ -21,11 +21,15 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName source, SystemName target, ICollection<string> coreids) => Task.FromResult(coreids.Select(cid => {
+  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName source, SystemName target, ICollection<string> coreids) {
     Console.WriteLine($"FindTargetIds [Core:{coretype}, Source:{source} Target: {target}] CoreIds[{String.Join(',', coreids)}]");
-    var key = memdb.Keys.Single(k => k.CoreEntity == coretype && k.CoreId == cid && k.SourceSystem == source && k.TargetSystem == target);
-    return memdb[key];
-  }).ToList());
+    Console.WriteLine("Existing CoreIds In Mapping: " + String.Join(",", memdb.Keys.Where(k => k.CoreEntity == coretype && k.SourceSystem == source && k.TargetSystem == target).Select(k => k.CoreId)));
+    return Task.FromResult(coreids.Select(cid => {
+      var key = memdb.Keys.Single(k => k.CoreEntity == coretype && k.CoreId == cid && k.SourceSystem == source && k.TargetSystem == target);
+      return memdb[key];
+    })
+    .ToList());
+  }
 
   public override Task<List<EntityIntraSysMap.Created>> Create(ICollection<EntityIntraSysMap.Created> news) {
     Console.WriteLine($"Creating EntityIntraSysMaps [{news.Count}] - {String.Join(',', news.Select(n => n.Key))}");

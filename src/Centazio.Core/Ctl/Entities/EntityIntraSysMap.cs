@@ -22,9 +22,9 @@ public record EntityIntraSysMap {
   public ValidString SourceId { get; } 
   public SystemName TargetSystem { get; } 
   public ValidString TargetId { get; protected init; } 
-  
-  public DateTime DateCreated { get; protected init; } 
   public EEntityMappingStatus Status { get; protected init; }
+  public DateTime DateCreated { get; protected init; } 
+  
   public DateTime? DateUpdated { get; protected init; } 
   public DateTime? DateLastSuccess { get; protected init; } 
   public DateTime? DateLastError { get; protected init; }
@@ -66,9 +66,20 @@ public record EntityIntraSysMap {
     };
   }
   
-  public record PendingCreate : EntityIntraSysMap {
-    internal PendingCreate(ICoreEntity e, SystemName targetsys, CoreEntityType obj) : 
-        base(obj, e.Id, e.SourceSystem, e.SourceId, targetsys, EEntityMappingStatus.PendingCreate.ToString(), EEntityMappingStatus.PendingCreate) {
+  public record PendingCreate {
+    public CoreEntityType CoreEntity { get; } 
+    public ValidString CoreId { get; } 
+    public SystemName SourceSystem { get; } 
+    public ValidString SourceId { get; } 
+    public SystemName TargetSystem { get; } 
+    public DateTime DateCreated { get; }
+    
+    internal PendingCreate(ICoreEntity e, SystemName targetsys, CoreEntityType obj) {
+      CoreEntity = obj;
+      CoreId = e.Id;
+      SourceSystem = e.SourceSystem;
+      SourceId = e.SourceId;
+      TargetSystem = targetsys;
       DateCreated = UtcDate.UtcNow;
     }
     

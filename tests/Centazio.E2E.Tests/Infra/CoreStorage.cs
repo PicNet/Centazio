@@ -2,7 +2,6 @@
 using Centazio.Core.CoreRepo;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
-using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Infra;
 
@@ -19,15 +18,13 @@ public record CoreCustomer : CoreEntityBase {
   }
   
   public static CoreCustomer FromCrmCustomer(CrmCustomer c, CoreStorage db) {
-    var (id, updated, membership, invoices) = (c.Id.ToString(), c.Updated, db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
-    var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    return new CoreCustomer(id, SimulationCtx.CRM_SYSTEM, updated, c.Name, membership, invoices, checksum);
+    var (membership, invoices) = (db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
+    return new CoreCustomer(c.Id.ToString(), SimulationCtx.CRM_SYSTEM, c.Updated, c.Name, membership, invoices, SimulationCtx.Checksum(c));
   }
   
   public static CoreCustomer FromFinAccount(FinAccount a, CoreStorage db) {
-    var (id, updated, pending, invoices) = (a.Id.ToString(), a.Updated, db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
-    var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    return new CoreCustomer(id, SimulationCtx.FIN_SYSTEM, updated, a.Name, pending, invoices, checksum);
+    var (pending, invoices) = (db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
+    return new CoreCustomer(a.Id.ToString(), SimulationCtx.FIN_SYSTEM, a.Updated, a.Name, pending, invoices, SimulationCtx.Checksum(a));
   }
 }
 
@@ -39,10 +36,7 @@ public record CoreMembershipType : CoreEntityBase {
     Name = name;
   }
   
-  public static CoreMembershipType FromCrmMembershipType(CrmMembershipType m, CoreStorage db) {
-    var (id, updated, name) = (m.Id.ToString(), m.Updated, m.Name);
-    return new CoreMembershipType(id, updated, name, db.Checksum(new { id, name }));
-  }
+  public static CoreMembershipType FromCrmMembershipType(CrmMembershipType m) => new(m.Id.ToString(), m.Updated, m.Name, SimulationCtx.Checksum(m));
 
 }
 public record CoreInvoice : CoreEntityBase {
@@ -59,15 +53,10 @@ public record CoreInvoice : CoreEntityBase {
     PaidDate = paid;
   }
   
-  public static CoreInvoice FromCrmInvoice(CrmInvoice i, CoreStorage db) {
-    var (id, updated, customer, cents, due, paid) = (i.Id.ToString(), i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate);
-    return new CoreInvoice(id, SimulationCtx.CRM_SYSTEM, updated, customer, cents, due, paid, db.Checksum(new { id, customer, cents, due, paid }));
-  }
-  
-  public static CoreInvoice FromFinInvoice(FinInvoice i, CoreStorage db) {
-    var (id, updated, account, amt, due, paid) = (i.Id.ToString(), i.Updated, i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate);
-    return new CoreInvoice(id, SimulationCtx.FIN_SYSTEM, updated, account, (int) (amt * 100), DateOnly.FromDateTime(due), paid, db.Checksum(new { id, customer = account, amt, due, paid }));
-  }
+  public static CoreInvoice FromCrmInvoice(CrmInvoice i) => new(i.Id.ToString(), SimulationCtx.CRM_SYSTEM, i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate, SimulationCtx.Checksum(i));
+
+  public static CoreInvoice FromFinInvoice(FinInvoice i) => new(i.Id.ToString(), SimulationCtx.FIN_SYSTEM, i.Updated, i.AccountId.ToString(), (int) (i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate, SimulationCtx.Checksum(i));
+
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
@@ -99,8 +88,6 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   internal List<ICoreEntity> Types { get; } = [];
   internal List<ICoreEntity> Customers { get; } = [];
   internal List<ICoreEntity> Invoices { get; } = [];
-  
-  public string Checksum(object o) => Helpers.TestingChecksum(o);
   
   public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>();
   public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();

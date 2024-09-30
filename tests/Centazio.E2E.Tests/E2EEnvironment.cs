@@ -21,17 +21,23 @@ internal static class SimulationCtx {
   
   public static readonly SystemName CRM_SYSTEM;
   public static readonly SystemName FIN_SYSTEM;
+  
+  public static readonly ICtlRepository ctl = new InMemoryCtlRepository();
+  public static readonly IEntityIntraSystemMappingStore entitymap = new InMemoryEntityIntraSystemMappingStore();
+  public static readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, Helpers.TestingChecksum);
+  public static readonly CoreStorage core = new();
       
   static SimulationCtx() {
     CRM_SYSTEM = new(nameof(CrmSystem));
     FIN_SYSTEM = new(nameof(FinSystem));
   }
   
+  public const int TOTAL_EPOCHS = 500;
   public const int CRM_MAX_NEW_CUSTOMERS = 2;
-  public const int CRM_MAX_EDIT_CUSTOMERS = 2;
-  public const int CRM_MAX_EDIT_MEMBERSHIPS = 0;
-  public const int CRM_MAX_NEW_INVOICES = 0;
-  public const int CRM_MAX_EDIT_INVOICES = 0;
+  public const int CRM_MAX_EDIT_CUSTOMERS = 4;
+  public const int CRM_MAX_EDIT_MEMBERSHIPS = 2;
+  public const int CRM_MAX_NEW_INVOICES = 4;
+  public const int CRM_MAX_EDIT_INVOICES = 4;
   
   public const int FIN_MAX_NEW_ACCOUNTS = 0;
   public const int FIN_MAX_EDIT_ACCOUNTS = 0;
@@ -43,6 +49,12 @@ internal static class SimulationCtx {
    else Helpers.DebugWrite(message);
  }
  
+ public static string Checksum(CrmMembershipType m) => Helpers.TestingChecksum(new { Id = m.Id.ToString(), m.Name });
+ public static string Checksum(CrmCustomer c) => Helpers.TestingChecksum(new { Id = c.Id.ToString(), c.Name, Membership = c.MembershipTypeId.ToString(), Invoices = core.GetInvoicesForCustomer(c.Id.ToString()).Select(e => e.Checksum).ToList() });
+ public static string Checksum(FinAccount a) => Helpers.TestingChecksum(new { Id = a.Id.ToString(), a.Name, Invoices = core.GetInvoicesForCustomer(a.Id.ToString()).Select(e => e.Checksum).ToList() });
+ public static string Checksum(CrmInvoice i) => Helpers.TestingChecksum(new { Id = i.Id.ToString(), Customer = i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate });
+ public static string Checksum(FinInvoice i) => Helpers.TestingChecksum(new { Id = i.Id.ToString(), Customer = i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate });
+ 
  public static string NewName<T>(string prefix, ICollection<T> target, int idx) => $"{prefix}_{target.Count + idx}:0";
  
  public static string UpdateName(string name) {
@@ -52,9 +64,6 @@ internal static class SimulationCtx {
 }
 
 public class E2EEnvironment : IAsyncDisposable {
-
-  private const int TOTAL_EPOCHS = 500;
-  private readonly CoreStorage core = new();
 
   // Crm
   private readonly CrmSystem crm = new();
@@ -68,52 +77,46 @@ public class E2EEnvironment : IAsyncDisposable {
   private readonly FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> fin_promote_runner;
   private readonly FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult> fin_write_runner;
 
-  // Infra
-  private readonly ICtlRepository ctl = new InMemoryCtlRepository();
-  private readonly IEntityIntraSystemMappingStore entitymap = new InMemoryEntityIntraSystemMappingStore();
-  private readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, s => s.GetHashCode().ToString());
-  private readonly List<ISystem> Systems;
-
   public E2EEnvironment() {
-    Systems = [crm, fin];
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new CrmReadFunction(crm),
-        new ReadOperationRunner(stage),
-        ctl);
-    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new CrmPromoteFunction(core),
-        new PromoteOperationRunner(stage, entitymap, core),
-        ctl);
+        new ReadOperationRunner(SimulationCtx.stage),
+        SimulationCtx.ctl);
+    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new CrmPromoteFunction(SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.entitymap, SimulationCtx.core),
+        SimulationCtx.ctl);
     
-    crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new CrmWriteFunction(crm, entitymap),
-        new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
-        ctl);
+    crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new CrmWriteFunction(crm, SimulationCtx.entitymap),
+        new WriteOperationRunner<WriteOperationConfig>(SimulationCtx.entitymap, SimulationCtx.core), 
+        SimulationCtx.ctl);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new FinReadFunction(fin),
-        new ReadOperationRunner(stage),
-        ctl);
-    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new FinPromoteFunction(core),
-        new PromoteOperationRunner(stage, entitymap, core),
-        ctl);
+        new ReadOperationRunner(SimulationCtx.stage),
+        SimulationCtx.ctl);
+    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new FinPromoteFunction(SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.entitymap, SimulationCtx.core),
+        SimulationCtx.ctl);
     
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new FinWriteFunction(fin, entitymap),
-        new WriteOperationRunner<WriteOperationConfig>(entitymap, core), 
-        ctl);
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new FinWriteFunction(fin, SimulationCtx.entitymap),
+        new WriteOperationRunner<WriteOperationConfig>(SimulationCtx.entitymap, SimulationCtx.core), 
+        SimulationCtx.ctl);
   }
 
   public async ValueTask DisposeAsync() {
-    await stage.DisposeAsync();
-    await ctl.DisposeAsync();
+    await SimulationCtx.stage.DisposeAsync();
+    await SimulationCtx.ctl.DisposeAsync();
   }
 
   [Test] public async Task RunSimulation() {
     LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
-    await Enumerable.Range(0, TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
+    var systems = new List<ISystem> { crm, fin };
+    await Enumerable.Range(0, SimulationCtx.TOTAL_EPOCHS).Select(epoch => RunEpoch(epoch, systems)).Synchronous();
   }
 
-  private async Task RunEpoch(int epoch) {
+  private async Task RunEpoch(int epoch, List<ISystem> systems) {
     SimulationCtx.Debug($"Epoch[{epoch}] Starting");
     
     TestingUtcDate.DoTick(new TimeSpan(1, Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
-    Systems.ForEach(s => s.Simulation.Step());
+    systems.ForEach(s => s.Simulation.Step());
     SimulationCtx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
     
     var functions = new List<Task> { 
@@ -124,7 +127,7 @@ public class E2EEnvironment : IAsyncDisposable {
       crm_write_runner.RunFunction(),
       fin_write_runner.RunFunction()
     };
-    // functions.AddRange(functions); // do twice to test ping backs
+    // functions.AddRange(functions); // todo: do twice to test ping backs
     /*
     await crm_read_runner.RunFunction();
     await fin_read_runner.RunFunction();
@@ -147,7 +150,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private void CompareMembershipTypes() {
-    var core_types = core.Types.Cast<CoreMembershipType>().Select(m => new { m.Name });
+    var core_types = SimulationCtx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Name } );
     
     CompareByChecksun(crm_types, core_types);
@@ -155,8 +158,8 @@ public class E2EEnvironment : IAsyncDisposable {
   
   private void CompareCustomers() {
     // todo: add invoices to comparison
-    var core_customers_for_crm = core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name, MembershipTypeId = c.Membership.Id });
-    var core_customers_for_fin = core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name });
+    var core_customers_for_crm = SimulationCtx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name, MembershipTypeId = c.Membership.Id });
+    var core_customers_for_fin = SimulationCtx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name });
     var crm_customers = crm.Customers.Select(c => new { c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { c.Name });
     
@@ -167,7 +170,7 @@ public class E2EEnvironment : IAsyncDisposable {
   private void CompareInvoices() {
     // todo: also compare account/customer name which will need to be added as a property
     // this can also be used to test what happens when a related entity updates, does it update the children? Not sure if this is valid concern
-    var core_invoices = core.Invoices.Cast<CoreInvoice>().Select(i => new { i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
+    var core_invoices = SimulationCtx.core.Invoices.Cast<CoreInvoice>().Select(i => new { i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
     var crm_invoices = crm.Invoices.Select(i => new { i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
