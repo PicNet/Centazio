@@ -33,7 +33,7 @@ public class PromoteOperationRunnerTests {
   } 
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
-    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig, CoreEntityType>(
         ObjectState<CoreEntityType>.Create(NAME, NAME, Constants.CoreEntityName),
         new PromoteOperationConfig(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
@@ -54,7 +54,7 @@ public class PromoteOperationRunnerTests {
   }
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
-    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()));
+    await stager.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig, CoreEntityType>(
         ObjectState<CoreEntityType>.Create(NAME, NAME, Constants.CoreEntityName),
         new PromoteOperationConfig(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
@@ -71,7 +71,7 @@ public class PromoteOperationRunnerTests {
   }
   
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, IEnumerable<StagedEntity> staged) {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<StagedEntity> staged) {
       var lst = staged.ToList();
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
           lst.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
@@ -82,7 +82,7 @@ public class PromoteOperationRunnerTests {
   }
 
   public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, IEnumerable<StagedEntity> staged) {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<StagedEntity> staged) {
       return Task.FromResult((PromoteOperationResult) new ErrorPromoteOperationResult());
     }
   }
@@ -104,7 +104,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
-    var entities1 = new List<CoreEntity> {
+    var entities1 = new List<ICoreEntity> {
       F.NewCoreCust("N1", "N1", "1", "c1"),
       F.NewCoreCust("N2", "N2", "2", "c2"),
       F.NewCoreCust("N3", "N3", "3", "c3"),

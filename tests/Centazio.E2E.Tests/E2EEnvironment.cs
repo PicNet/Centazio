@@ -1,5 +1,5 @@
-﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
+﻿using System.Text.Json;
+using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -140,51 +140,45 @@ public class E2EEnvironment : IAsyncDisposable {
 
   
   private Task ValidateEpoch() {
-    var core_types = core.Types.Cast<CoreMembershipType>().ToList();
-    var core_customers = core.Customers.Cast<CoreCustomer>().ToList();
-    var core_invoices = core.Invoices.Cast<CoreInvoice>().ToList();
-    
-    var crm_types = crm.MembershipTypes.ToList();
-    var crm_customers = crm.Customers.ToList();
-    var crm_invoices = crm.Invoices.ToList();
-    
-    var fin_accounts = fin.Accounts.ToList();
-    var fin_invoices = fin.Invoices.ToList();
-    
-    CompareMembershipTypes(core_types, crm_types);
-    CompareCustomers(core_customers, crm_customers, fin_accounts);
-    CompareInvoices(core_invoices, crm_invoices, fin_invoices);
+    CompareMembershipTypes();
+    CompareCustomers();
+    CompareInvoices();
     return Task.CompletedTask;
   }
 
-  private void CompareMembershipTypes(List<CoreMembershipType> core_types, List<CrmMembershipType> crm_types) {
-    var expected = crm_types.Select(c => CoreMembershipType.FromCrmMembershipType(c, core));
+  private void CompareMembershipTypes() {
+    var core_types = core.Types.Cast<CoreMembershipType>().Select(m => new { m.Name });
+    var crm_types = crm.MembershipTypes.Select(m => new { m.Name } );
     
-    CompareByChecksun(expected, core_types);
+    CompareByChecksun(crm_types, core_types);
   }
   
-  private void CompareCustomers(List<CoreCustomer> core_customers, List<CrmCustomer> crm_customers, List<FinAccount> fin_accounts) {
-    var expected1 = crm_customers.Select(c => CoreCustomer.FromCrmCustomer(c, core));
-    var expected2 = fin_accounts.Select(a => CoreCustomer.FromFinAccount(a, core));
+  private void CompareCustomers() {
+    // todo: add invoices to comparison
+    var core_customers_for_crm = core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name, MembershipTypeId = c.Membership.Id });
+    var core_customers_for_fin = core.Customers.Cast<CoreCustomer>().Select(c => new { c.Name });
+    var crm_customers = crm.Customers.Select(c => new { c.Name, c.MembershipTypeId });
+    var fin_accounts = fin.Accounts.Select(c => new { c.Name });
     
-    CompareByChecksun(expected1, core_customers);
-    CompareByChecksun(expected2, core_customers);
+    CompareByChecksun(crm_customers, core_customers_for_crm);
+    CompareByChecksun(fin_accounts, core_customers_for_fin);
   }
   
-  private void CompareInvoices(List<CoreInvoice> core_invoices, List<CrmInvoice> crm_invoices, List<FinInvoice> fin_invoices) {
-    var expected1 = crm_invoices.Select(i => CoreInvoice.FromCrmInvoice(i, core));
-    var expected2 = fin_invoices.Select(i => CoreInvoice.FromFinInvoice(i, core));
+  private void CompareInvoices() {
+    // todo: also compare account/customer name which will need to be added as a property
+    // this can also be used to test what happens when a related entity updates, does it update the children? Not sure if this is valid concern
+    var core_invoices = core.Invoices.Cast<CoreInvoice>().Select(i => new { i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
+    var crm_invoices = crm.Invoices.Select(i => new { i.PaidDate, i.DueDate, Amount = i.AmountCents });
+    var fin_invoices = fin.Invoices.Select(i => new { i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
-    CompareByChecksun(expected1, core_invoices);
-    CompareByChecksun(expected2, core_invoices);
+    CompareByChecksun(crm_invoices, core_invoices);
+    CompareByChecksun(fin_invoices, core_invoices);
   }
   
-  private void CompareByChecksun(IEnumerable<ICoreEntity> expected, IEnumerable<ICoreEntity> actual) {
-    expected = expected.OrderBy(e => e.Checksum).ToList();
-    actual = actual.OrderBy(e => e.Checksum).ToList();
-    var expsums = expected.Select(e => e.Checksum).ToList();
-    var actsums = actual.Select(e => e.Checksum).ToList();
-    Assert.That(actsums, Is.EquivalentTo(expsums), $"EXPECTED:\n\t{String.Join("\n\t", expected)}\nACTUAL:\n\t{String.Join("\n\t", actual)}");
+  private void CompareByChecksun(IEnumerable<object> expected, IEnumerable<object> actual) {
+    var expstrs = expected.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
+    var actstr = actual.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
+    Assert.That(expstrs, Is.EquivalentTo(actstr), $"EXPECTED:\n\t{String.Join("\n\t", expstrs)}\nACTUAL:\n\t{String.Join("\n\t", actstr)}");
     
   }
 }

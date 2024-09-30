@@ -4,7 +4,7 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
-  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged);
+  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged);
 }
 
 public record PromoteOperationConfig(

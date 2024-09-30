@@ -79,7 +79,7 @@ public class FunctionRunnerTests {
       new List<ReadOperationConfig> { new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
     
     private class EmptyResults : IGetObjectsToStage {
-      public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
+      public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
     }
   }
   

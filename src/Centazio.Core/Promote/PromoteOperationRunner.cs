@@ -28,7 +28,8 @@ public class PromoteOperationRunner(
     
     await staged.Update(
         results.ToPromote.Select(e => e.Staged.Promote(start))
-            .Concat(results.ToIgnore.Select(e => e.Staged.Ignore(e.Reason))));
+            .Concat(results.ToIgnore.Select(e => e.Staged.Ignore(e.Reason)))
+            .ToList());
     
     return results; 
   }

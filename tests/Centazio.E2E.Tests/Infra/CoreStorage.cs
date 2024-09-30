@@ -20,18 +20,13 @@ public record CoreCustomer : CoreEntityBase {
   
   public static CoreCustomer FromCrmCustomer(CrmCustomer c, CoreStorage db) {
     var (id, updated, membership, invoices) = (c.Id.ToString(), c.Updated, db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
-    // var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    // var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum });
-    var checksum = db.Checksum(new { id, c.Name });
-    Console.WriteLine("FromCrmCustomer: " + c.Name);
+    var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
     return new CoreCustomer(id, SimulationCtx.CRM_SYSTEM, updated, c.Name, membership, invoices, checksum);
   }
   
   public static CoreCustomer FromFinAccount(FinAccount a, CoreStorage db) {
     var (id, updated, pending, invoices) = (a.Id.ToString(), a.Updated, db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
-    // var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    var checksum = db.Checksum(new { id, a.Name });
-    Console.WriteLine("FromFinAccount: " + a.Name);
+    var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
     return new CoreCustomer(id, SimulationCtx.FIN_SYSTEM, updated, a.Name, pending, invoices, checksum);
   }
 }
@@ -126,7 +121,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
-  public Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
     if (obj == CoreEntityType.From<CoreCustomer>()) Console.WriteLine("Upserting CoreCustomer: " + String.Join(",", entities.Select(e => ((CoreCustomer)e).Name)));
     var (source, target) = (entities.ToList(), GetList(obj));
     source.ForEach(e => {
@@ -134,7 +129,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
       if (idx < 0) target.Add(e);
       else target[idx] = e;
     });
-    return Task.FromResult<IEnumerable<ICoreEntity>>(source);
+    return Task.FromResult(source);
   }
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;

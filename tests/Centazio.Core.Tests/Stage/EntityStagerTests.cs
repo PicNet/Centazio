@@ -31,7 +31,7 @@ public class EntityStagerTests {
 
   [Test] public async Task Test_staging_a_multiple_records() {
     var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
-    await stager.Stage(NAME, Constants.ExternalEntityName, datas);
+    await stager.Stage(NAME, Constants.ExternalEntityName, datas.ToList());
     
     var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMicroseconds(-1), NAME, Constants.ExternalEntityName)).ToList();
     var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.ExternalEntityName)).ToList();

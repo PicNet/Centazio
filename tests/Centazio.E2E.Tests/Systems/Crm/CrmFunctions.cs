@@ -25,14 +25,15 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-    SimulationCtx.Debug($"CrmReadFunction[{config.State.Object.Value}]");
-    return config.State.Object.Value switch { 
-      nameof(CrmMembershipType) => ReadOperationResult.Create(await api.GetMembershipTypes(config.Checkpoint)), 
-      nameof(CrmCustomer) => ReadOperationResult.Create(await api.GetCustomers(config.Checkpoint)), 
-      nameof(CrmInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
+  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    var updates = config.State.Object.Value switch { 
+      nameof(CrmMembershipType) => await api.GetMembershipTypes(config.Checkpoint), 
+      nameof(CrmCustomer) => await api.GetCustomers(config.Checkpoint), 
+      nameof(CrmInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
+    if (updates.Any()) SimulationCtx.Debug($"CrmReadFunction[{config.State.Object.Value}] Updates[{updates.Count}]");
+    return ReadOperationResult.Create(updates);
   }
 }
 
@@ -51,8 +52,8 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
-    SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}]");
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+    SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
@@ -84,7 +85,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}]");
+    SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}] Created/Updated[{created.Count}/{updated.Count}]");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());

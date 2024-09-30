@@ -41,11 +41,11 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return tostage;
   }
   
-  public override async Task Update(IEnumerable<StagedEntity> staged) {
+  public override async Task Update(List<StagedEntity> staged) {
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     var from = $"{source.Value}/{obj.Value}/{after:o}_z";
     var list = (await ListAll(source, obj))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
@@ -57,7 +57,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
           .Where(r => r.Metadata[IGNORE_META_KEY] is null && (incpromoted || r.Metadata[DATE_PROMOTED_META_KEY] is null))
           .Take(Limit)
           .ToList();
-    return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged);
+    return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {

@@ -14,10 +14,10 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
         .ToDictionary(e => e.Id, e => dbtype[e.Id].Checksum));
   }
 
-  public Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
     if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, ICoreEntity>();
     var upserted = entities.Select(e => db[obj][e.Id] = e).ToList();
-    return Task.FromResult<IEnumerable<ICoreEntity>>(upserted);
+    return Task.FromResult(upserted);
   }
 
   public ValueTask DisposeAsync() {

@@ -98,7 +98,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return tostage;
   }
   
-  public override async Task<IEnumerable<StagedEntity>> Update(IEnumerable<StagedEntity> staged) {
+  public override async Task<List<StagedEntity>> Update(List<StagedEntity> staged) {
     var uniques = staged.DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}").ToList();
     await uniques
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
@@ -108,7 +108,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return uniques;
   }
   
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       ConsistentRead = true,
@@ -134,7 +134,8 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     var results = await search.GetNextSetAsync();
     
     return results.AwsDocumentsToDynamoStagedEntities()
-        .Where(se => incpromoted || !se.DatePromoted.HasValue);
+        .Where(se => incpromoted || !se.DatePromoted.HasValue)
+        .ToList();
   }
 
   protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {

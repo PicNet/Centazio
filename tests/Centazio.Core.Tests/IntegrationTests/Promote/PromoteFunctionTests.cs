@@ -133,14 +133,13 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     ]));
   }
   
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
-    var lst = staged.ToList();
-    var cores = lst.Select(e => {
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+    var cores = staged.Select(e => {
       var core = JsonSerializer.Deserialize<CoreEntity>(e.Data) ?? throw new Exception();
       return new StagedAndCoreEntity(e, core);
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
-        IgnoreNext ? lst.Select(e => new StagedEntityAndIgnoreReason(e, Reason: "ignore")).ToList() : []));
+        IgnoreNext ? staged.Select(e => new StagedEntityAndIgnoreReason(e, Reason: "ignore")).ToList() : []));
   }
 }

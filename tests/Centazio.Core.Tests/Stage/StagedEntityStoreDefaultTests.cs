@@ -23,7 +23,7 @@ public abstract class StagedEntityStoreDefaultTests {
 
   [Test] public async Task Test_saving_single_entity() {
     await store.Stage(NAME, Constants.ExternalEntityName, NAME);
-    var fromnow = (await store.GetAll(dt.Now, NAME, Constants.ExternalEntityName)).ToList();
+    var fromnow = await store.GetAll(dt.Now, NAME, Constants.ExternalEntityName);
     var minus1 =  await GetSingle(dt.Now.AddMilliseconds(-1), NAME, Constants.ExternalEntityName);
     
     Assert.That(fromnow, Is.Empty);
@@ -41,7 +41,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
 
   [Test] public async Task Test_saving_multiple_entities() {
-    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception()).
+    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception()).
         OrderBy(e => Int32.Parse(e.Data)).
         ToList();
     var fromnow = (await store.GetAll(dt.Now, NAME, Constants.ExternalEntityName)).ToList();
@@ -79,7 +79,7 @@ public abstract class StagedEntityStoreDefaultTests {
     }).Synchronous();
     var start = TestingDefaults.DefaultStartDt;
     for (var pgstart = 0; pgstart < LARGE_BATCH_SIZE; pgstart+=pgsz) {
-      var page = (await store.GetAll(start, NAME, Constants.ExternalEntityName)).ToList();
+      var page = await store.GetAll(start, NAME, Constants.ExternalEntityName);
       start = page.Last().DateStaged;
       var (actual, exp) = (StrSes(page), StrDts(ordered.Skip(pgstart).Take(pgsz)));
       Assert.That(actual, Is.EqualTo(exp)); 
@@ -90,7 +90,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_updating_multiple_entities() {
-    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString())) ?? throw new Exception())
+    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception())
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     var fromnow = (await store.GetAll(dt.Now, NAME, Constants.ExternalEntityName)).ToList();
@@ -109,7 +109,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var sz = 10000;
     var str = new String('*', sz) + "_";
     
-    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx)) ?? throw new Exception())
+    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx).ToList()) ?? throw new Exception())
         .Select(e => SetData(e, e.Data.Value.Split('_')[1])) // make it easier to debug without all the noise
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -151,10 +151,10 @@ public abstract class StagedEntityStoreDefaultTests {
     await Assert.ThatAsync(() => store.GetAll(start, name3, new(name2)), Is.Empty);
     
     var se1_2 = await GetSingle(staged1, name1, new(name1));
-    var ses1 = (await store.GetAll(start, name1, new(name1))).ToList();
-    var ses2 = (await store.GetAll(staged1, name2, new(name2))).ToList();
-    var ses3 = (await store.GetAll(staged1, name3, new(name3))).ToList();
-    Assert.That(ses1.Count(), Is.EqualTo(2));
+    var ses1 = await store.GetAll(start, name1, new(name1));
+    var ses2 = await store.GetAll(staged1, name2, new(name2));
+    var ses3 = await store.GetAll(staged1, name3, new(name3));
+    Assert.That(ses1.Count, Is.EqualTo(2));
     Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, new(name1), staged2, data2, Hash(data2))));
     Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, new(name2), staged2, name2, Hash(name2)) }));
     Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, new(name3), staged2, name3, Hash(name3)) }));
@@ -190,7 +190,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var ses2 = (await store.GetAll(staged1, name2, new(name2))).ToList();
     var ses3 = (await store.GetAll(staged1, name3, new(name3))).ToList();
     Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, new(name1), staged2, "not ignore: 1.2", Hash("not ignore: 1.2"))));
-    Assert.That(ses1.Count(), Is.EqualTo(2));
+    Assert.That(ses1.Count, Is.EqualTo(2));
     Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, new(name2), staged2, "not ignore: 2", Hash("not ignore: 2")) }));
     Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, new(name3), staged2, "not ignore: 3", Hash("not ignore: 3")) }));
     
@@ -254,7 +254,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   [Test] public async Task Test_delete_large_batch() {
-    await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => NAME));
+    await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => NAME).ToList());
     await store.DeleteStagedBefore(dt.Tick(), NAME, Constants.ExternalEntityName); 
     await Assert.ThatAsync(async () => await store.GetAll(dt.Now.AddHours(-1), NAME, Constants.ExternalEntityName), Is.Empty);
   }
@@ -271,7 +271,8 @@ public abstract class StagedEntityStoreDefaultTests {
     var all = (await store.GetAll(get_all, name1, new(name1)))
         .Concat(await store.GetAll(get_all, name2, new(name2)))
         .Concat(await store.GetAll(get_all, name3, new(name3)))
-        .Select(se => se.Promote(se.DateStaged.AddDays(1)));
+        .Select(se => se.Promote(se.DateStaged.AddDays(1)))
+        .ToList();
     await store.Update(all);
     
     await store.DeletePromotedBefore(promoted2, name1, new(name1));
@@ -309,8 +310,8 @@ public abstract class StagedEntityStoreDefaultTests {
   
   [Test] public async Task Test_staging_multiple_entities_ignores_duplicates() {
     var half = LARGE_BATCH_SIZE;
-    var staged = (await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString()))).ToList();
-    var staged2 = (await store.GetAll(dt.Now.AddYears(-1), NAME, Constants.ExternalEntityName)).ToList();
+    var staged = await store.Stage(NAME, Constants.ExternalEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString()).ToList());
+    var staged2 = await store.GetAll(dt.Now.AddYears(-1), NAME, Constants.ExternalEntityName);
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
@@ -323,8 +324,8 @@ public abstract class StagedEntityStoreDefaultTests {
     var s3 = await store.Stage(NAME, Constants.ExternalEntityName, "3") ?? throw new Exception();
     
     await store.Update(s2 = s2.Promote(dt.Now));
-    var all = (await store.GetAll(dt.Today, NAME, Constants.ExternalEntityName)).ToList();
-    var unpromoted = (await store.GetUnpromoted(dt.Today, NAME, Constants.ExternalEntityName)).ToList();
+    var all = await store.GetAll(dt.Today, NAME, Constants.ExternalEntityName);
+    var unpromoted = await store.GetUnpromoted(dt.Today, NAME, Constants.ExternalEntityName);
 
     Assert.That(all, Is.EquivalentTo(new [] {s1, s2, s3}));
     Assert.That(unpromoted, Is.EquivalentTo(new [] {s1, s3}));

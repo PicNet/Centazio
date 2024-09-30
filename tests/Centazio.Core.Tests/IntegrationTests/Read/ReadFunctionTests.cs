@@ -92,7 +92,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListRecordsReadOperationResult(customers)

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Tests.IntegrationTests;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Tests.IntegrationTests;
 
 namespace Centazio.Core.Tests.CoreRepo;
 
@@ -37,12 +38,12 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
   
   [Test] public async Task Test_batch_upsert() {
-    var batch1 = new [] { TestingFactories.NewCoreCust("N1", "N1"), TestingFactories.NewCoreCust("N2", "N2") };
+    var batch1 = new List<ICoreEntity> { TestingFactories.NewCoreCust("N1", "N1"), TestingFactories.NewCoreCust("N2", "N2") };
     await repo.Upsert(Constants.CoreEntityName, batch1);
     var list1 = await QueryAll();
     
-    var batch2 = new [] { 
-      batch1[0] with { FirstName = "Updated entity" }, 
+    var batch2 = new List<ICoreEntity> { 
+      (CoreEntity) batch1[0] with { FirstName = "Updated entity" }, 
       TestingFactories.NewCoreCust("N3", "N3") };
     await repo.Upsert(Constants.CoreEntityName, batch2);
     var list2 = await QueryAll();
@@ -52,7 +53,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
   
   [Test] public async Task Test_query() {
-    var data = Enumerable.Range(0, 100).Select(idx => TestingFactories.NewCoreCust($"{idx}", $"{idx}")).ToList();
+    var data = Enumerable.Range(0, 100).Select(idx => (ICoreEntity) TestingFactories.NewCoreCust($"{idx}", $"{idx}")).ToList();
     await repo.Upsert(Constants.CoreEntityName, data);
     
     var (all, even, odd) = (await QueryAll(), await QueryEvenOdd(true), await QueryEvenOdd(false));

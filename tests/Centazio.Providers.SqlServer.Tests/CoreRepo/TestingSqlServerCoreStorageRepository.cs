@@ -37,13 +37,13 @@ END
   }
 
   
-  public async Task<IEnumerable<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity {
+  public async Task<List<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var raws = await conn.QueryAsync<CoreEntity.Dto>(query);
-    return raws.Select(raw => (CoreEntity) raw).Cast<E>();
+    return raws.Select(raw => (CoreEntity) raw).Cast<E>().ToList();
   }
   
-  public Task<IEnumerable<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
+  public Task<List<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
   public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
@@ -52,7 +52,7 @@ END
     return mapping.ToDictionary(t => t.Id, t => t.Checksum);
   }
 
-  public async Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
     var sql = $@"MERGE INTO {obj} T
 USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)

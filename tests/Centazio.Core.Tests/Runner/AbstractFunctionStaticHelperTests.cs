@@ -174,7 +174,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private class TestingListReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
       var result = Enum.Parse<EOperationResult>(config.Config.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
       return Task.FromResult(res); 
@@ -182,7 +182,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private class TestingAbortingAndEmptyReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
       var result = Enum.Parse<EOperationResult>(config.Config.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult(EOperationAbortVote.Abort) : new EmptyReadOperationResult(); 
       return Task.FromResult(res);
@@ -190,7 +190,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
       var result = Enum.Parse<EOperationResult>(config.Config.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
       return Task.FromResult(res);
@@ -199,7 +199,7 @@ public class AbstractFunctionStaticHelperTests {
   
   private class ErrorReadOperationImplementation : IGetObjectsToStage {
 
-    public Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => throw new Exception();
+    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => throw new Exception();
 
   }
 }

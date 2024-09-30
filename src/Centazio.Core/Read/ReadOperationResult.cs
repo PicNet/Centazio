@@ -40,12 +40,12 @@ public record SingleRecordReadOperationResult(ValidString Payload, EOperationAbo
             $"SingleRecordReadOperationResult[{Payload.Value.Length}]", 
             Payload.Value.Length, AbortVote);
 
-public record ListRecordsReadOperationResult(IReadOnlyList<string> PayloadList, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+public record ListRecordsReadOperationResult(List<string> PayloadList, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(
         EOperationResult.Success, 
         $"ListRecordsReadOperationResult[{PayloadList.Count}]", 
         PayloadList.Any() ? PayloadList.Count : throw new ArgumentNullException(), 
         AbortVote) {
-  public IReadOnlyList<string> PayloadList { get; } = PayloadList.Any() && !PayloadList.Any(String.IsNullOrWhiteSpace) 
+  public List<string> PayloadList { get; } = PayloadList.Any() && !PayloadList.Any(String.IsNullOrWhiteSpace) 
       ? PayloadList : throw new ArgumentNullException(nameof(PayloadList));
 }

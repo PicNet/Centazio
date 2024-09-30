@@ -4,7 +4,9 @@ using Centazio.Core.Write;
 
 namespace Centazio.Core.EntitySysMapping;
 
-public record GetForCoresResult(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated);
+public record GetForCoresResult(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated) {
+  public bool Empty => !Created.Any() && !Updated.Any();
+}
 
 public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
   

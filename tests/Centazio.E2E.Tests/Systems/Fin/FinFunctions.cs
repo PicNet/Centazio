@@ -24,13 +24,14 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}]");
-    return config.State.Object.Value switch { 
-      nameof(FinAccount) => ReadOperationResult.Create(await api.GetAccounts(config.Checkpoint)), 
-      nameof(FinInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
+  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    var updates = config.State.Object.Value switch { 
+      nameof(FinAccount) => await api.GetAccounts(config.Checkpoint), 
+      nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
+    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}] Updates[{updates.Count}]");
+    return ReadOperationResult.Create(updates);
   }
 }
 
@@ -48,8 +49,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]));
   }
 
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
-    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}]");
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}] Staged[{staged.Count}]");
     
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
@@ -81,7 +82,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}]");
+    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}] Created/Updated[{created.Count}/{updated.Count}]");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());

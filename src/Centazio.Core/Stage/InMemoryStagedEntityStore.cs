@@ -8,7 +8,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
   private readonly Dictionary<string, bool> checksums = new();
   protected readonly List<StagedEntity> saved = [];
 
-  public override Task Update(IEnumerable<StagedEntity> staged) {
+  public override Task Update(List<StagedEntity> staged) {
     staged.ForEach(s => {
       var idx = saved.FindIndex(e => e.SourceSystem == s.SourceSystem && e.Object == s.Object && e.Id == s.Id);
       if (idx < 0) throw new Exception($"could not find StagedEntity[{s.Id}]");
@@ -28,12 +28,12 @@ public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum)
     return Task.FromResult(lst);
   }
 
-  protected override Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) => 
+  protected override Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) => 
       Task.FromResult(saved
           .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
-          .AsEnumerable());
+          .ToList());
 
   protected override Task DeleteBeforeImpl(DateTime before, SystemName source, ExternalEntityType obj, bool promoted) {
     var toremove = saved

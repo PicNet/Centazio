@@ -49,6 +49,10 @@ public class WriteFunctionTests {
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     func.Throws = true;
     var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
+
+    // add some data, as the write function will not be called if there is nothing to 'write'
+    var entity = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    await core.Upsert(Constants.CoreEntityName, [entity]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
@@ -67,7 +71,7 @@ public class WriteFunctionTests {
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(Constants.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
     Assert.That(obj.Key, Is.EqualTo((Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName)));
     Assert.That(obj.Value, Is.EqualTo(ObjectState<CoreEntityType>.Create(Constants.System2Name, LifecycleStage.Defaults.Write, Constants.CoreEntityName).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? "", func.Thrown?.ToString())));
-    Assert.That(allcusts, Is.Empty);
+    Assert.That(allcusts, Is.EquivalentTo(new [] { entity }));
     Assert.That(maps, Is.Empty);
   }
 }

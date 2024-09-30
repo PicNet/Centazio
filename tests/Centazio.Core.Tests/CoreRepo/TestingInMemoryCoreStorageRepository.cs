@@ -22,11 +22,11 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult(lst);
   }
 
-  public Task<IEnumerable<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
-    if (!db.TryGetValue(obj, out var fulllst)) return Task.FromResult<IEnumerable<E>>(Array.Empty<E>());
-    return Task.FromResult(fulllst.Values.Cast<E>().Where(predicate.Compile()));
+  public Task<List<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
+    if (!db.TryGetValue(obj, out var fulllst)) return Task.FromResult(new List<E>());
+    return Task.FromResult(fulllst.Values.Cast<E>().Where(predicate.Compile()).ToList());
   }
 
-  public Task<IEnumerable<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity => 
+  public Task<List<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
 }

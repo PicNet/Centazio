@@ -58,7 +58,7 @@ WHEN NOT MATCHED THEN
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
 
-  public override async Task Update(IEnumerable<StagedEntity> staged) {
+  public override async Task Update(List<StagedEntity> staged) {
     await using var conn = newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
@@ -70,7 +70,7 @@ ON
 WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.IgnoreReason;", staged);
   }
 
-  protected override async Task<IEnumerable<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     await using var conn = newconn();
     var limit = Limit > 0 ? $"TOP {Limit}" : "";
     var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
