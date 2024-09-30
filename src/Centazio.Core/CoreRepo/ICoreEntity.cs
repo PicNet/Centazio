@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.CoreRepo;
+﻿using System.Text.Json.Serialization;
+
+namespace Centazio.Core.CoreRepo;
 
 public interface ICoreEntity {
   
@@ -19,16 +21,6 @@ public interface ICoreEntity {
   /// to the source system 
   /// </summary>
   public string Id { get; }
-  
-  /// <summary>
-  /// A descriptive field that can be used for debugging and displaying the
-  /// entity.  This can be any field in the real entity, and can even be
-  /// blank if there is no logical name or descriptive field.
-  ///
-  /// Try to keep the contents of this field to a small size so it does not
-  /// polute logs and displays.
-  /// </summary>
-  public string DisplayName { get; }
   
   /// <summary>
   /// A checksum used to check for unnecessary updates to already existing entities in
@@ -62,5 +54,18 @@ public interface ICoreEntity {
   /// </summary>
   public DateTime SourceSystemDateUpdated { get; }
   
+  /// <summary>
+  /// A descriptive field that can be used for debugging and displaying the
+  /// entity.  This can be any field in the real entity, and can even be
+  /// blank if there is no logical name or descriptive field.
+  ///
+  /// Try to keep the contents of this field to a small size so it does not
+  /// polute logs and displays.
+  ///
+  /// Note: This field is internal as its only used for internal logging and should
+  /// not be saved in storage.
+  /// </summary>
+  [JsonIgnore] public string DisplayName { get; }
+    
   public E To<E>() where E : ICoreEntity => (E) this;
 }

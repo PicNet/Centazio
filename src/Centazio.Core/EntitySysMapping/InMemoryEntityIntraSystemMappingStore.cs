@@ -24,9 +24,9 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, ICollection<string> coreids) {
     return Task.FromResult(coreids.Select(cid => {
       var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.TargetSystem == target);
-      return key == null ? null : memdb[key];
+      return key is null ? null : memdb[key];
     })
-        .Where(m => m != null)
+        .Where(m => m is not null)
         .Cast<EntityIntraSysMap>()
         .ToList());
   }
@@ -37,10 +37,8 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     return Task.FromResult(coreid);
   }
 
-  public override Task<List<EntityIntraSysMap.Created>> Create(ICollection<EntityIntraSysMap.Created> news) {
-    DevelDebug.WriteLine($"Creating EntityIntraSysMaps [{news.Count}] - {String.Join(',', news.Select(n => n.Key))}");
-    return Task.FromResult(news.Select(map => (EntityIntraSysMap.Created)(memdb[map.Key] = map)).ToList());
-  }
+  public override Task<List<EntityIntraSysMap.Created>> Create(ICollection<EntityIntraSysMap.Created> news) => 
+      Task.FromResult(news.Select(map => (EntityIntraSysMap.Created)(memdb[map.Key] = map)).ToList());
 
   public override Task<List<EntityIntraSysMap.Updated>> Update(ICollection<EntityIntraSysMap.Updated> updates) {
     return Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated)(memdb[map.Key] = map)).ToList());

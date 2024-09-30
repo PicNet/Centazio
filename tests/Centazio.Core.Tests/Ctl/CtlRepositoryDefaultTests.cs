@@ -106,10 +106,9 @@ public abstract class CtlRepositoryDefaultTests {
     var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, NAME);
     var updated2 = await objrepo.SaveObjectState(updated);
     var current = await objrepo.GetObjectState(ss, Constants.CoreEntityName);
+    var expected = ObjectState<CoreEntityType>.Create(NAME2, NAME2, Constants.CoreEntityName);
     
     Assert.That(prior, Is.Null);
-    var expected = ObjectState<CoreEntityType>.Create(NAME2, NAME2, Constants.CoreEntityName);
-    DevelDebug.WriteLine($"CREATED[{created.Object.GetType().Name}] EXPECTED[{expected.GetType().Name}]");
     Assert.That(created, Is.EqualTo(expected));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));

@@ -138,7 +138,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     var potentials = custmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
     var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.CRM_SYSTEM)?.TargetId.Value ??
         existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
-    if (accid == null) {
+    if (accid is null) {
       throw new Exception($"CrmWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]\n\t" +
           $"Potentials[{String.Join(",", potentials)}]\n\t" +

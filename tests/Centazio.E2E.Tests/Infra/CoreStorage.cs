@@ -2,6 +2,7 @@
 using Centazio.Core.CoreRepo;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
+using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
 
@@ -112,7 +113,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
-    DevelDebug.WriteLine($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.DisplayName}({e.Id})")));
+    Log.Information($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.DisplayName}({e.Id})")));
     var (source, target) = (entities.ToList(), GetList(obj));
     source.ForEach(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.Id);

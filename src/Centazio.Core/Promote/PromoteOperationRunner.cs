@@ -14,6 +14,7 @@ public class PromoteOperationRunner(
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
     if (op.Config.IsBidirectional) throw new NotSupportedException($"[{op.State.System}/{op.State.Object}] - IsBiderectional is currently not supported");
+    
     var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.Config.ExternalEntityType);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
@@ -25,7 +26,7 @@ public class PromoteOperationRunner(
       return results;  
     }
     
-    DevelDebug.WriteLine($"PromoteRunner[{results.ToPromote.Count}]");
+    Log.Information($"PromoteOperationRunner ToPromote[{results.ToPromote.Count}]");
     if (results.ToPromote.Any()) await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     
     await staged.Update(
@@ -42,7 +43,7 @@ public class PromoteOperationRunner(
     var toupsert = op.Config.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
     
     if (!toupsert.Any()) return;
-    DevelDebug.WriteLine($"[{op.State.System}/{op.State.Object}] PromoteOperationRunner.WriteEntitiesToCoreStorage[{entities.Count}]");
+    Log.Information($"[{op.State.System}/{op.State.Object}] PromoteOperationRunner.WriteEntitiesToCoreStorage[{entities.Count}]");
     await core.Upsert(op.State.Object, toupsert);
   }
 

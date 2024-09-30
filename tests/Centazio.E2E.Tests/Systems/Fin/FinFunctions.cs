@@ -136,7 +136,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
     var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.FIN_SYSTEM)?.TargetId.Value ??
         existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
-    if (accid == null) {
+    if (accid is null) {
       throw new Exception($"FinWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]({i})\n\t" +
           $"Potentials[{String.Join(",", potentials)}]\n\t" +
