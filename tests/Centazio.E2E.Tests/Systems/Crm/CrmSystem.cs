@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
-using Serilog;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
@@ -67,11 +66,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
   }
   
   class SimulationImpl(List<CrmMembershipType> types, List<CrmCustomer> customers, List<CrmInvoice> invoices) : ISimulation {
-    private const int MAX_NEW_CUSTOMERS = 10;
-    private const int MAX_EDIT_CUSTOMERS = 5;
-    private const int MAX_EDIT_MEMBERSHIPS = 2;
-    private const int MAX_NEW_INVOICES = 10;
-    private const int MAX_EDIT_INVOICES = 5;
+    
     
     private readonly Random rng = Random.Shared;
 
@@ -84,48 +79,67 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }
     
     private void AddCustomers() {
-      var count = rng.Next(MAX_NEW_CUSTOMERS);
-      Log.Debug($"CrmSimulation - AddCustomers count[{count}]");
-      customers.AddRange(Enumerable.Range(0, count)
-          .Select(_ => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, Guid.NewGuid().ToString())));
+      var count = rng.Next(SimulationCtx.CRM_MAX_NEW_CUSTOMERS);
+      if (count == 0) return;
+      
+      var toadd = Enumerable.Range(0, count)
+          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, SimulationCtx.NewName(nameof(CrmCustomer), customers, idx)))
+          .ToList();
+      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => a.Name))}");
+      customers.AddRange(toadd);
     }
 
     private void EditCustomers() {
-      if (!customers.Any()) return;
-      var count = rng.Next(MAX_EDIT_CUSTOMERS);
-      Log.Debug($"CrmSimulation - EditCustomers count[{count}]");
+      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_CUSTOMERS);
+      if (!customers.Any() || count == 0) return;
+      
+      var log = new List<string>();
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(customers.Count);
-        customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = Guid.NewGuid().ToString(), Updated = UtcDate.UtcNow };
+        var (name, newname) = (customers[idx].Name, SimulationCtx.UpdateName(customers[idx].Name));
+        log.Add($"{name}->{newname}");
+        customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
       });
+      SimulationCtx.Debug($"CrmSimulation - EditCustomers[{count}] - {String.Join(',', log)}");
     }
 
     private void AddInvoices() {
-      if (!customers.Any()) return;
-      var count = rng.Next(MAX_NEW_INVOICES);
-      Log.Debug($"CrmSimulation - AddInvoices count[{count}]");
+      var count = rng.Next(SimulationCtx.CRM_MAX_NEW_INVOICES);
+      if (!customers.Any() || count == 0) return;
+      
+      var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
-          invoices.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
+          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
+      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.Id}({i.AmountCents}c)"))}");
+      invoices.AddRange(toadd);
     }
 
     private void EditInvoices() {
-      if (!invoices.Any()) return;
-      var count = rng.Next(MAX_EDIT_INVOICES);
-      Log.Debug($"CrmSimulation - EditInvoices count[{count}]");
+      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_INVOICES);
+      if (!invoices.Any() || count == 0) return;
+      
+      var log = new List<string>();
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(invoices.Count);
-        invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = rng.Next(100, 10000), Updated = UtcDate.UtcNow };
+        var newamt = rng.Next(100, 10000);
+        log.Add($"{invoices[idx].Id}({invoices[idx].AmountCents}c -> {newamt}c)");
+        invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
+      SimulationCtx.Debug($"CrmSimulation - EditInvoices[{count}] - {String.Join(',', log)}");
     }
 
     private void EditMemberships() {
-      var count = rng.Next(MAX_EDIT_MEMBERSHIPS);
-      Log.Debug($"CrmSimulation - EditMemberships count[{count}]");
+      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS);
+      if (count == 0) return;
+      
+      var log = new List<string>();
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(types.Count);
-        var old = types[idx].Name.Split(':');
-        types[idx] = types[idx] with { Name = $"{old[0]}:{Int32.Parse(old[1]) + 1}", Updated = UtcDate.UtcNow };
+        var (old, newnm) = (types[idx].Name, SimulationCtx.UpdateName(types[idx].Name));
+        log.Add($"{old} -> {newnm}");
+        types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
+      SimulationCtx.Debug($"CrmSimulation - EditMemberships[{count}] - {String.Join(',', log)}");
     }
   }
 }

@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -24,13 +25,15 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => 
-    config.State.Object.Value switch { 
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    SimulationCtx.Debug($"CrmReadFunction[{config.State.Object.Value}]");
+    return config.State.Object.Value switch { 
       nameof(CrmMembershipType) => ReadOperationResult.Create(await api.GetMembershipTypes(config.Checkpoint)), 
       nameof(CrmCustomer) => ReadOperationResult.Create(await api.GetCustomers(config.Checkpoint)), 
       nameof(CrmInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
+  }
 }
 
 public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
@@ -49,6 +52,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   }
 
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
+    SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>(), db))).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
@@ -64,9 +68,11 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly CrmSystem api;
-  
-  public CrmWriteFunction(CrmSystem api) {
+  private readonly IEntityIntraSystemMappingStore intra;
+
+  public CrmWriteFunction(CrmSystem api, IEntityIntraSystemMappingStore intra) {
     this.api = api;
+    this.intra = intra;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Write, new ([
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -78,6 +84,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
+    SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}]");
+    
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
       await api.UpdateCustomers(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
@@ -87,8 +95,17 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>())).ToList());
-      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>())).ToList());
+      // simplify this very common code
+      var externals = created.Select(m => m.Core)
+          .Concat(updated.Select(m => m.Core))
+          .Where(m => m.SourceSystem != SimulationCtx.CRM_SYSTEM.Value)
+          .Cast<CoreInvoice>()
+          .ToList();
+      var extaccs = externals.Select(i => i.CustomerId).Distinct().ToList();
+      // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
+      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreInvoice>(), SimulationCtx.FIN_SYSTEM, SimulationCtx.CRM_SYSTEM, extaccs);
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), targetmaps)).ToList());
+      await api.UpdateInvoices(updated.Select(m => FromCore(Guid.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>(), targetmaps)).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());
@@ -98,6 +115,10 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
-  private CrmInvoice FromCore(Guid id, CoreInvoice i) => new(id, UtcDate.UtcNow, Guid.Parse(i.CustomerId), i.Cents, i.DueDate, i.PaidDate);
+  private CrmInvoice FromCore(Guid id, CoreInvoice i, IList<EntityIntraSysMap> custmaps) {
+    var issource = i.SourceId == Config.System.Value;
+    var accid = Guid.Parse(issource ? i.CustomerId : custmaps.Single(m => m.CoreId == i.CustomerId).TargetId);
+    return new CrmInvoice(id, UtcDate.UtcNow, accid, i.Cents, i.DueDate, i.PaidDate);
+  }
 
 }

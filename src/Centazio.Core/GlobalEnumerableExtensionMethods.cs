@@ -2,6 +2,10 @@
 
 public static class GlobalEnumerableExtensionMethods {
 
+  public static T Add2<T>(this ICollection<T> lst, T item) {
+    lst.Add(item);
+    return item;
+  }
   public static void ForEach<T>(this IEnumerable<T> e, Action<T> action) {
     foreach (var t in e) action(t);
   }

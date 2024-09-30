@@ -10,9 +10,9 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult((E) db[obj][id]);
   }
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after) {
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) {
     if (!db.TryGetValue(obj, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
-    var lst = fulllst.Where(c => c.Value.DateCreated > after || c.Value.DateUpdated > after).Select(c => c.Value).ToList();
+    var lst = fulllst.Where(c => c.Value.LastUpdateSystem != exclude.Value && c.Value.DateCreated > after || c.Value.DateUpdated > after).Select(c => c.Value).ToList();
     return Task.FromResult(lst);
   }
 

@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -25,12 +24,14 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]));
   }
   
-  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => 
-    config.State.Object.Value switch { 
+  public async Task<ReadOperationResult> GetObjects(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}]");
+    return config.State.Object.Value switch { 
       nameof(FinAccount) => ReadOperationResult.Create(await api.GetAccounts(config.Checkpoint)), 
       nameof(FinInvoice) => ReadOperationResult.Create(await api.GetInvoices(config.Checkpoint)), 
       _ => throw new NotSupportedException(config.State.Object) 
-    };
+    }; 
+  }
 }
 
 public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
@@ -48,6 +49,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   }
 
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, IEnumerable<StagedEntity> staged) {
+    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}]");
+    
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
       nameof(CoreInvoice) => staged.Select(s => new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(s.Deserialise<FinInvoice>(), db))).ToList(), 
@@ -62,12 +65,10 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly FinSystem api;
-  private readonly ICoreStorageGetter cores;
   private readonly IEntityIntraSystemMappingStore intra;
 
-  public FinWriteFunction(FinSystem api, ICoreStorageGetter cores, IEntityIntraSystemMappingStore intra) {
+  public FinWriteFunction(FinSystem api, IEntityIntraSystemMappingStore intra) {
     this.api = api;
-    this.cores = cores;
     this.intra = intra;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, new ([
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -80,6 +81,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
+    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}]");
+    
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await api.UpdateAccounts(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreCustomer>())).ToList());
@@ -90,12 +93,18 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     
     if (config.Object.Value == nameof(CoreInvoice)) {
       // todo: this process of getting related entity accounts needs to be streamlined with own utility type/method
-      var allinvoices = created.Select(m => m.Core).Concat(updated.Select(m => m.Core)).Cast<CoreInvoice>().ToList();
-      var accids = allinvoices.Select(i => i.CustomerId).ToList();
-      var accounts = await cores.Get(CoreEntityType.From<CoreCustomer>(), accids);
-      var maps = await intra.GetForCores(accounts, Config.System, CoreEntityType.From<CoreCustomer>());
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), accounts, maps)).ToList());
-      await api.UpdateInvoices(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>(), accounts, maps)).ToList());
+      // note: to get the correct target ids for writing back to the target system, we only need to get the mapping
+      //    for entities created in another system.  Those created by this target system can just use the `SourceId`
+      var externals = created.Select(m => m.Core)
+          .Concat(updated.Select(m => m.Core))
+          .Where(m => m.SourceSystem != SimulationCtx.FIN_SYSTEM.Value)
+          .Cast<CoreInvoice>()
+          .ToList();
+      var extaccs = externals.Select(i => i.CustomerId).Distinct().ToList();
+      // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
+      var targetmaps = await intra.FindTargetIds(CoreEntityType.From<CoreInvoice>(), SimulationCtx.CRM_SYSTEM, SimulationCtx.FIN_SYSTEM, extaccs);
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), targetmaps)).ToList());
+      await api.UpdateInvoices(updated.Select(m => FromCore(Int32.Parse(m.Map.TargetId), m.Core.To<CoreInvoice>(), targetmaps)).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.Id.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
           updated.Select(m => m.Updated()).ToList());
@@ -105,10 +114,9 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, IList<ICoreEntity> accounts, GetForCoresResult maps) {
+  private FinInvoice FromCore(int id, CoreInvoice i, IList<EntityIntraSysMap> accmaps) {
     var issource = i.SourceId == Config.System.Value;
-    var account = accounts.Single(acc => acc.Id == i.CustomerId);
-    var accid = Int32.Parse(issource ? account.SourceId : maps.Updated.Single(m => m.Core.Id == account.Id).Map.TargetId);
+    var accid = Int32.Parse(issource ? i.CustomerId : accmaps.Single(m => m.CoreId == i.CustomerId).TargetId);
     return new(id, accid, i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
   }
 

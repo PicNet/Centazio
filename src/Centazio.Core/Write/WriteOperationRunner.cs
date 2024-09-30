@@ -9,7 +9,7 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
     IOperationRunner<C, CoreEntityType, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
-    var pending = await core.Get(op.State.Object, op.Checkpoint);
+    var pending = await core.Get(op.State.Object, op.Checkpoint, op.State.System);
     var maps = await entitymap.GetForCores(pending, op.State.System, op.State.Object);
     var results = await op.Config.WriteEntitiesesToTargetSystem.WriteEntities(op.Config, maps.Created, maps.Updated);
     
@@ -17,8 +17,8 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
       Log.Warning($"error occurred calling `WriteEntitiesToTargetSystem`");
       return results;  
     }
-    if (results.EntitiesCreated.Any()) await entitymap.Create(results.EntitiesCreated.Select(e => e.Map));
-    if (results.EntitiesUpdated.Any()) await entitymap.Update(results.EntitiesUpdated.Select(e => e.Map));
+    if (results.EntitiesCreated.Any()) await entitymap.Create(results.EntitiesCreated.Select(e => e.Map).ToList());
+    if (results.EntitiesUpdated.Any()) await entitymap.Update(results.EntitiesUpdated.Select(e => e.Map).ToList());
     return results;
   }
 

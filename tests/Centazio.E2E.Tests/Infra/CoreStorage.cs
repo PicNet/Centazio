@@ -9,10 +9,10 @@ namespace Centazio.E2E.Tests.Infra;
 public record CoreCustomer : CoreEntityBase {
   
   public string Name { get; private init; }
-  public CoreMembershipType Membership { get; private init; }
-  public List<CoreInvoice> Invoices { get; private init; }
+  public CoreMembershipType Membership { get; internal init; }
+  public List<CoreInvoice> Invoices { get; internal init; }
   
-  private CoreCustomer(string id, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, sourceupdate, checksum) {
+  private CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, source, sourceupdate, source, checksum) {
     Name = name;
     Membership = membership;
     Invoices = invoices;
@@ -20,14 +20,19 @@ public record CoreCustomer : CoreEntityBase {
   
   public static CoreCustomer FromCrmCustomer(CrmCustomer c, CoreStorage db) {
     var (id, updated, membership, invoices) = (c.Id.ToString(), c.Updated, db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
-    var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    return new CoreCustomer(id, updated, c.Name, membership, invoices, checksum);
+    // var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum, Invoices = invoices.Select(e => e.Checksum).ToList() });
+    // var checksum = db.Checksum(new { id, c.Name, Membership = membership.Checksum });
+    var checksum = db.Checksum(new { id, c.Name });
+    Console.WriteLine("FromCrmCustomer: " + c.Name);
+    return new CoreCustomer(id, SimulationCtx.CRM_SYSTEM, updated, c.Name, membership, invoices, checksum);
   }
   
   public static CoreCustomer FromFinAccount(FinAccount a, CoreStorage db) {
     var (id, updated, pending, invoices) = (a.Id.ToString(), a.Updated, db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
-    var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
-    return new CoreCustomer(id, updated, a.Name, pending, invoices, checksum);
+    // var checksum = db.Checksum(new { id, a.Name, Invoices = invoices.Select(e => e.Checksum).ToList() });
+    var checksum = db.Checksum(new { id, a.Name });
+    Console.WriteLine("FromFinAccount: " + a.Name);
+    return new CoreCustomer(id, SimulationCtx.FIN_SYSTEM, updated, a.Name, pending, invoices, checksum);
   }
 }
 
@@ -35,7 +40,7 @@ public record CoreMembershipType : CoreEntityBase {
 
   public string Name { get; private init; }
   
-  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, sourceupdate, checksum) {
+  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, SimulationCtx.CRM_SYSTEM, sourceupdate, SimulationCtx.CRM_SYSTEM, checksum) {
     Name = name;
   }
   
@@ -52,7 +57,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateOnly DueDate { get; private set; }
   public DateTime? PaidDate { get; private set; }
   
-  private CoreInvoice(string id, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, sourceupdate, checksum) {
+  private CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, source, sourceupdate, source, checksum) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
@@ -61,31 +66,34 @@ public record CoreInvoice : CoreEntityBase {
   
   public static CoreInvoice FromCrmInvoice(CrmInvoice i, CoreStorage db) {
     var (id, updated, customer, cents, due, paid) = (i.Id.ToString(), i.Updated, i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate);
-    return new CoreInvoice(id, updated, customer, cents, due, paid, db.Checksum(new { id, customer, cents, due, paid }));
+    return new CoreInvoice(id, SimulationCtx.CRM_SYSTEM, updated, customer, cents, due, paid, db.Checksum(new { id, customer, cents, due, paid }));
   }
   
   public static CoreInvoice FromFinInvoice(FinInvoice i, CoreStorage db) {
     var (id, updated, account, amt, due, paid) = (i.Id.ToString(), i.Updated, i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate);
-    return new CoreInvoice(id, updated, account, (int) (amt * 100), DateOnly.FromDateTime(due), paid, db.Checksum(new { id, customer = account, amt, due, paid }));
+    return new CoreInvoice(id, SimulationCtx.FIN_SYSTEM, updated, account, (int) (amt * 100), DateOnly.FromDateTime(due), paid, db.Checksum(new { id, customer = account, amt, due, paid }));
   }
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
-  public string SourceSystem { get; } = nameof(CrmSystem);
+  public string SourceSystem { get; }
   public string SourceId { get; protected init; }
   public string Id { get; protected init; }
   public string Checksum { get; protected init; }
   public DateTime DateCreated { get; protected init; }
   public DateTime DateUpdated { get; protected init; }
   public DateTime SourceSystemDateUpdated { get; protected init; }
+  public string LastUpdateSystem { get; protected init; }
   
-  protected CoreEntityBase(string id, DateTime sourceupdate, string checksum) {
+  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string checksum) {
+    SourceSystem = source;
     SourceId = id;
     SourceSystemDateUpdated = sourceupdate;
         
     Id = id;
     DateCreated = UtcDate.UtcNow;
     DateUpdated = UtcDate.UtcNow;
+    LastUpdateSystem = lastsys;
     
     Checksum = checksum;
   }
@@ -104,8 +112,8 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after) => 
-      Task.FromResult(GetList(obj).Where(e => e.DateUpdated > after).ToList());
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) => 
+      Task.FromResult(GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList());
 
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids) {
     var lst = GetList(obj);
@@ -114,11 +122,12 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
 
   public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
-    return (await Get(obj, DateTime.MinValue))
+    return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
   public Task<IEnumerable<ICoreEntity>> Upsert(CoreEntityType obj, IEnumerable<ICoreEntity> entities) {
+    if (obj == CoreEntityType.From<CoreCustomer>()) Console.WriteLine("Upserting CoreCustomer: " + String.Join(",", entities.Select(e => ((CoreCustomer)e).Name)));
     var (source, target) = (entities.ToList(), GetList(obj));
     source.ForEach(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.Id);

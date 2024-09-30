@@ -23,7 +23,7 @@ internal class CliBootstrapper {
   }
 
   private static void InitialiseLogger() => Log.Logger = LogInitialiser.GetBaseConfig()
-      .WriteTo.File(LogInitialiser.Formatter, "log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+      .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
       .MinimumLevel.Debug()
       .CreateLogger();
 

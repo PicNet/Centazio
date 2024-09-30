@@ -4,8 +4,10 @@ public interface ICoreStorageGetter : IAsyncDisposable {
 
   /// <summary>
   /// Gets all core entities that have been created/updated after the given `after` parameter.
+  /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
+  /// systems writing back their own changes.
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after);
+  Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude);
   
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 

@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
-using Serilog;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
@@ -54,10 +53,6 @@ public class FinSystem : IFinSystemApi, ISystem {
   }
 
   public class SimulationImpl(List<FinAccount> accounts, List<FinInvoice> invoices) : ISimulation {
-    private const int MAX_NEW_ACCOUNTS = 10;
-    private const int MAX_EDIT_ACCOUNTS = 5;
-    private const int MAX_NEW_INVOICES = 10;
-    private const int MAX_EDIT_INVOICES = 5;
 
     public void Step() {
       AddAccounts();
@@ -67,37 +62,50 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
     
     private void AddAccounts() {
-      var count = rng.Next(MAX_NEW_ACCOUNTS);
-      Log.Debug($"FinSimulation - AddAccounts count[{count}]");
-      accounts.AddRange(Enumerable.Range(0, count).Select(_ => new FinAccount(rng.Next(Int32.MaxValue), Guid.NewGuid().ToString(), UtcDate.UtcNow)));
+      var count = rng.Next(SimulationCtx.FIN_MAX_NEW_ACCOUNTS);
+      if (count == 0) return;
+      
+      var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(rng.Next(Int32.MaxValue), SimulationCtx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
+      SimulationCtx.Debug($"FinSimulation - AddAccounts[{count}] - {String.Join(',', toadd.Select(a => a.Name))}");
+      accounts.AddRange(toadd);
     }
 
     private void EditAccounts() {
-      if (!accounts.Any()) return;
-      var count = rng.Next(MAX_EDIT_ACCOUNTS);
-      Log.Debug($"FinSimulation - EditAccounts count[{count}]");
+      var count = rng.Next(SimulationCtx.FIN_MAX_EDIT_ACCOUNTS);
+      if (!accounts.Any() || count == 0) return;
+      
+      var log = new List<string>();
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(accounts.Count);
-        accounts[idx] = accounts[idx] with { Name = Guid.NewGuid().ToString(), Updated = UtcDate.UtcNow };
+        var (name, newname) = (accounts[idx].Name, SimulationCtx.UpdateName(accounts[idx].Name));
+        log.Add($"{name}->{newname}");
+        accounts[idx] = accounts[idx] with { Name = newname, Updated = UtcDate.UtcNow };
       });
+      SimulationCtx.Debug($"FinSimulation - EditAccounts[{count}] - {String.Join(',', log)}");
     }
 
     private void AddInvoices() {
-      if (!accounts.Any()) return;
-      var count = rng.Next(MAX_NEW_INVOICES);
-      Log.Debug($"FinSimulation - AddInvoices count[{count}]");
-      Enumerable.Range(0, count).ForEach(_ => 
-          invoices.Add(new FinInvoice(rng.Next(Int32.MaxValue), accounts.RandomItem().Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
+      var count = rng.Next(SimulationCtx.FIN_MAX_NEW_INVOICES);
+      if (!accounts.Any() || count == 0) return;
+      
+      var toadd = new List<FinInvoice>();
+      Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(rng.Next(Int32.MaxValue), accounts.RandomItem().Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
+      SimulationCtx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.Id}(${i.Amount:N2})"))}");
+      invoices.AddRange(toadd);
     }
 
     private void EditInvoices() {
-      if (!invoices.Any()) return;
-      var count = rng.Next(MAX_EDIT_INVOICES);
-      Log.Debug($"FinSimulation - EditInvoices count[{count}]");
+      var count = rng.Next(SimulationCtx.FIN_MAX_EDIT_INVOICES);
+      if (!invoices.Any() || count == 0) return;
+      
+      var log = new List<string>();
       Enumerable.Range(0, count).ForEach(_ => {
         var idx = rng.Next(invoices.Count);
-        invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = rng.Next(100, 10000) / 100.0m, Updated = UtcDate.UtcNow };
+        var newamt = rng.Next(100, 10000) / 100.0m;
+        log.Add($"{invoices[idx].Id}(${invoices[idx].Amount:N2} -> ${newamt:N2})");
+        invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = newamt, Updated = UtcDate.UtcNow };
       });
+      SimulationCtx.Debug($"FinSimulation - EditInvoices[{count}] - {String.Join(',', log)}");
     }
   }
 }
