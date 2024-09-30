@@ -36,21 +36,12 @@ public class PromoteOperationRunner(
   }
   
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
-    DevelDebug.WriteLine($"PromoteRunner WriteEntitiesToCoreStorage[{entities.Count}]");
-    var ig1 = entities.IgnoreMultipleUpdatesToSameEntity();
-    DevelDebug.WriteLine($"PromoteRunner IgnoreMultipleUpdatesToSameEntity[{ig1.Count}]");
-    var ig2 = await ig1.IgnoreNonMeaninfulChanges(op.State.Object, core);
-    DevelDebug.WriteLine($"PromoteRunner IgnoreNonMeaninfulChanges[{ig2.Count}]");
-    var ig3 = await ig2.IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
-    DevelDebug.WriteLine($"PromoteRunner IgnoreEntitiesBouncingBack[{ig3.Count}]");
+    var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
+    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core);
+    var toupsert = op.Config.IsBiderectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
     
-    var toupsert = await (await entities
-        .IgnoreMultipleUpdatesToSameEntity()
-        .IgnoreNonMeaninfulChanges(op.State.Object, core))
-        .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
-    
-    Console.WriteLine("PromoteRunner toupsert: " + toupsert.Count);
     if (!toupsert.Any()) return;
+    DevelDebug.WriteLine($"[{op.State.System}/{op.State.Object}] PromoteOperationRunner.WriteEntitiesToCoreStorage[{entities.Count}]");
     await core.Upsert(op.State.Object, toupsert);
   }
 

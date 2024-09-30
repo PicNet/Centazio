@@ -1,10 +1,18 @@
 # Todo
+- major refactor required to support bi-directional entities.  Need to remove the concept of IntraMap and instead
+  have a table that has CoreType, CoreId, ExternalObj, ExternalId, with additional metadata columns.  This will
+  allow one core entity to reside and get updates for all external systems.  This is a considerable change 
+
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
 - add unit test to check no `Console.WriteXXX` being used and no `DevelDebug.WriteLine` left in code
 - add unit tests to ensure that project and namespace dependencies are not being violated
+- add unit tests to check bi-directional bounce back protection using checksums
 - standardise IEnumerable, IList, ICollection, List, IReadOnlyList, etc. Consider enforcing uniqueness with Sets?
+- use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
+- it may be possible to clean up FilterBounceBack logic by simply ignoring any promotes that are from systems that are not
+  the SourceSystem.  I.e. if an entity is not bi-directional then all promotes should be from the original source system
 
 # Developer Guidelines:
 

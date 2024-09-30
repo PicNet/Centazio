@@ -19,6 +19,7 @@ public record CoreEntity(string Id, string Checksum, string FirstName, string La
   public string LastUpdateSystem { get; }  = Constants.System1Name;
   public DateTime DateCreated { get; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
+  public string DisplayName { get; } = $"{FirstName} {LastName}";
 
   public record Dto {
     public string? Id { get; init; }
@@ -47,4 +48,6 @@ public record CoreEntity2(string Id, string Checksum, DateTime DateUpdated) : IC
   public string LastUpdateSystem { get; } = Constants.System1Name;
   public DateTime DateCreated { get; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
+  
+  public string DisplayName { get; } = Id;
 }

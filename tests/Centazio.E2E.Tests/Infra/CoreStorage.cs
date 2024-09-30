@@ -11,7 +11,7 @@ public record CoreCustomer : CoreEntityBase {
   public CoreMembershipType Membership { get; internal init; }
   public List<CoreInvoice> Invoices { get; internal init; }
   
-  private CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, source, sourceupdate, source, checksum) {
+  private CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, source, sourceupdate, source, name, checksum) {
     Name = name;
     Membership = membership;
     Invoices = invoices;
@@ -32,7 +32,7 @@ public record CoreMembershipType : CoreEntityBase {
 
   public string Name { get; private init; }
   
-  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, SimulationCtx.CRM_SYSTEM, sourceupdate, SimulationCtx.CRM_SYSTEM, checksum) {
+  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, SimulationCtx.CRM_SYSTEM, sourceupdate, SimulationCtx.CRM_SYSTEM, name, checksum) {
     Name = name;
   }
   
@@ -46,7 +46,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateOnly DueDate { get; private set; }
   public DateTime? PaidDate { get; private set; }
   
-  private CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, source, sourceupdate, source, checksum) {
+  private CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, source, sourceupdate, source, id, checksum) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
@@ -69,7 +69,9 @@ public abstract record CoreEntityBase : ICoreEntity {
   public DateTime SourceSystemDateUpdated { get; protected init; }
   public string LastUpdateSystem { get; protected init; }
   
-  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string checksum) {
+  public string DisplayName { get; protected init; }
+  
+  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display, string checksum) {
     SourceSystem = source;
     SourceId = id;
     SourceSystemDateUpdated = sourceupdate;
@@ -79,6 +81,7 @@ public abstract record CoreEntityBase : ICoreEntity {
     DateUpdated = UtcDate.UtcNow;
     LastUpdateSystem = lastsys;
     
+    DisplayName = display;
     Checksum = checksum;
   }
 }
@@ -109,7 +112,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
-    if (obj == CoreEntityType.From<CoreCustomer>()) DevelDebug.WriteLine("Upserting CoreCustomer: " + String.Join(",", entities.Select(e => ((CoreCustomer)e).Name)));
+    DevelDebug.WriteLine($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.DisplayName}({e.Id})")));
     var (source, target) = (entities.ToList(), GetList(obj));
     source.ForEach(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.Id);

@@ -47,10 +47,11 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   }
 
   public override Task<List<string>> FilterOutBouncedBackIds(SystemName promotingsys, CoreEntityType obj, List<string> ids) {
-    // todo: FilterOutBouncedBackIds causes issues, needs to account for `LastUpdateSystem` not just SourceSystem
     var bounces = memdb.Values.
-      Where(tse => tse.CoreEntity == obj && tse.TargetSystem == promotingsys && ids.Contains(tse.TargetId)).
-      Select(tse => tse.TargetId.Value).
+      Where(map => map.CoreEntity == obj 
+          && map.TargetSystem == promotingsys 
+          && ids.Contains(map.TargetId)).
+      Select(map => map.TargetId.Value).
       ToList();
     return Task.FromResult(ids.Except(bounces).ToList());
   }

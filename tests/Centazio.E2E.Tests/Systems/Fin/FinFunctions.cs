@@ -45,8 +45,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   public FinPromoteFunction(CoreStorage db) {
     this.db = db;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, new ([
-      new (new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+      new (new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBiderectional = true },
+      new (new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBiderectional = true }
     ]));
   }
 

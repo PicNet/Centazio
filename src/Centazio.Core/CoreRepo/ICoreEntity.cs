@@ -21,6 +21,16 @@ public interface ICoreEntity {
   public string Id { get; }
   
   /// <summary>
+  /// A descriptive field that can be used for debugging and displaying the
+  /// entity.  This can be any field in the real entity, and can even be
+  /// blank if there is no logical name or descriptive field.
+  ///
+  /// Try to keep the contents of this field to a small size so it does not
+  /// polute logs and displays.
+  /// </summary>
+  public string DisplayName { get; }
+  
+  /// <summary>
   /// A checksum used to check for unnecessary updates to already existing entities in
   /// core storage.  If this is empty then checksum comparisons will not be made and all
   /// updates from the source system will be replicated to core storage even if nothing

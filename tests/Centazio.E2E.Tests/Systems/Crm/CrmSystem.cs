@@ -85,7 +85,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var toadd = Enumerable.Range(0, count)
           .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, SimulationCtx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
-      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Id}({a.Name})"))}");
+      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.Id})"))}");
       customers.AddRange(toadd);
     }
 
@@ -96,7 +96,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var log = new List<string>();
       idxs.ForEach(idx => {
         var (name, newname) = (customers[idx].Name, SimulationCtx.UpdateName(customers[idx].Name));
-        log.Add($"{customers[idx].Id}({name}->{newname})");
+        log.Add($"{name}->{newname}({customers[idx].Id})");
         customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditCustomers[{idxs.Count}] - {String.Join(',', log)}");
@@ -109,7 +109,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
           toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
-      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.Id}({i.AmountCents}c)"))}");
+      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
     }
 
@@ -120,8 +120,9 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var log = new List<string>();
       idxs.ForEach(idx => {
         var newamt = rng.Next(100, 10000);
-        log.Add($"{invoices[idx].Id}({invoices[idx].AmountCents}c -> {newamt}c)");
-        invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
+        var inv = invoices[idx];
+        log.Add($"{inv.CustomerId}({inv.Id}) {inv.AmountCents}c -> {newamt}c)");
+        invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
     }
@@ -133,7 +134,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
       var log = new List<string>();
       idxs.ForEach(idx => {
         var (old, newnm) = (types[idx].Name, SimulationCtx.UpdateName(types[idx].Name));
-        log.Add($"{types[idx].Id}({old}->{newnm})");
+        log.Add($"{old}->{newnm}({types[idx].Id})");
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
