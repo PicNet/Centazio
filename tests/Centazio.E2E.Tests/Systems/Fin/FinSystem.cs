@@ -71,17 +71,16 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
 
     private void EditAccounts() {
-      var count = rng.Next(SimulationCtx.FIN_MAX_EDIT_ACCOUNTS);
-      if (!accounts.Any() || count == 0) return;
+      var idxs = Enumerable.Range(0, accounts.Count).Shuffle(SimulationCtx.FIN_MAX_EDIT_ACCOUNTS);
+      if (!idxs.Any()) return;
       
       var log = new List<string>();
-      Enumerable.Range(0, count).ForEach(_ => {
-        var idx = rng.Next(accounts.Count);
+      idxs.ForEach(idx => {
         var (name, newname) = (accounts[idx].Name, SimulationCtx.UpdateName(accounts[idx].Name));
         log.Add($"{accounts[idx].Id}({name}->{newname})");
         accounts[idx] = accounts[idx] with { Name = newname, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"FinSimulation - EditAccounts[{count}] - {String.Join(',', log)}");
+      SimulationCtx.Debug($"FinSimulation - EditAccounts[{idxs.Count}] - {String.Join(',', log)}");
     }
 
     private void AddInvoices() {
@@ -95,17 +94,17 @@ public class FinSystem : IFinSystemApi, ISystem {
     }
 
     private void EditInvoices() {
-      var count = rng.Next(SimulationCtx.FIN_MAX_EDIT_INVOICES);
-      if (!invoices.Any() || count == 0) return;
+      var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.FIN_MAX_EDIT_INVOICES);
+      if (!idxs.Any()) return;
       
       var log = new List<string>();
-      Enumerable.Range(0, count).ForEach(_ => {
+      idxs.ForEach(_ => {
         var idx = rng.Next(invoices.Count);
         var newamt = rng.Next(100, 10000) / 100.0m;
         log.Add($"{invoices[idx].Id}(${invoices[idx].Amount:N2} -> ${newamt:N2})");
         invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = newamt, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"FinSimulation - EditInvoices[{count}] - {String.Join(',', log)}");
+      SimulationCtx.Debug($"FinSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
     }
   }
 }

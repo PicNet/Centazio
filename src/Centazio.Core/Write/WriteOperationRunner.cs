@@ -11,6 +11,7 @@ public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, I
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
     var pending = await core.Get(op.State.Object, op.Checkpoint, op.State.System);
     var maps = await entitymap.GetForCores(pending, op.State.System, op.State.Object);
+    DevelDebug.WriteLine($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Maps Created/Updated[{maps.Created.Count}/{maps.Updated.Count}]");
     if (maps.Empty) return new SuccessWriteOperationResult([], []);
     var results = await op.Config.WriteEntitiesesToTargetSystem.WriteEntities(op.Config, maps.Created, maps.Updated);
     

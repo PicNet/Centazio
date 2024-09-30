@@ -90,17 +90,16 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }
 
     private void EditCustomers() {
-      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_CUSTOMERS);
-      if (!customers.Any() || count == 0) return;
+      var idxs = Enumerable.Range(0, customers.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_CUSTOMERS);
+      if (!idxs.Any()) return;
       
       var log = new List<string>();
-      Enumerable.Range(0, count).ForEach(_ => {
-        var idx = rng.Next(customers.Count);
+      idxs.ForEach(idx => {
         var (name, newname) = (customers[idx].Name, SimulationCtx.UpdateName(customers[idx].Name));
         log.Add($"{customers[idx].Id}({name}->{newname})");
         customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditCustomers[{count}] - {String.Join(',', log)}");
+      SimulationCtx.Debug($"CrmSimulation - EditCustomers[{idxs.Count}] - {String.Join(',', log)}");
     }
 
     private void AddInvoices() {
@@ -115,31 +114,29 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }
 
     private void EditInvoices() {
-      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_INVOICES);
-      if (!invoices.Any() || count == 0) return;
+      var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_INVOICES);
+      if (!idxs.Any()) return;
       
       var log = new List<string>();
-      Enumerable.Range(0, count).ForEach(_ => {
-        var idx = rng.Next(invoices.Count);
+      idxs.ForEach(idx => {
         var newamt = rng.Next(100, 10000);
         log.Add($"{invoices[idx].Id}({invoices[idx].AmountCents}c -> {newamt}c)");
         invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditInvoices[{count}] - {String.Join(',', log)}");
+      SimulationCtx.Debug($"CrmSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
     }
 
     private void EditMemberships() {
-      var count = rng.Next(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS);
-      if (count == 0) return;
+      var idxs = Enumerable.Range(0, types.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS);
+      if (!idxs.Any()) return;
       
       var log = new List<string>();
-      Enumerable.Range(0, count).ForEach(_ => {
-        var idx = rng.Next(types.Count);
+      idxs.ForEach(idx => {
         var (old, newnm) = (types[idx].Name, SimulationCtx.UpdateName(types[idx].Name));
         log.Add($"{types[idx].Id}({old}->{newnm})");
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditMemberships[{count}] - {String.Join(',', log)}");
+      SimulationCtx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
     }
   }
 }

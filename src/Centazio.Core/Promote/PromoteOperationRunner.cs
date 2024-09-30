@@ -24,6 +24,7 @@ public class PromoteOperationRunner(
       return results;  
     }
     
+    DevelDebug.WriteLine($"PromoteRunner[{results.ToPromote.Count}]");
     if (results.ToPromote.Any()) await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     
     await staged.Update(
@@ -35,11 +36,20 @@ public class PromoteOperationRunner(
   }
   
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
+    DevelDebug.WriteLine($"PromoteRunner WriteEntitiesToCoreStorage[{entities.Count}]");
+    var ig1 = entities.IgnoreMultipleUpdatesToSameEntity();
+    DevelDebug.WriteLine($"PromoteRunner IgnoreMultipleUpdatesToSameEntity[{ig1.Count}]");
+    var ig2 = await ig1.IgnoreNonMeaninfulChanges(op.State.Object, core);
+    DevelDebug.WriteLine($"PromoteRunner IgnoreNonMeaninfulChanges[{ig2.Count}]");
+    var ig3 = await ig2.IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
+    DevelDebug.WriteLine($"PromoteRunner IgnoreEntitiesBouncingBack[{ig3.Count}]");
+    
     var toupsert = await (await entities
         .IgnoreMultipleUpdatesToSameEntity()
         .IgnoreNonMeaninfulChanges(op.State.Object, core))
         .IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
     
+    Console.WriteLine("PromoteRunner toupsert: " + toupsert.Count);
     if (!toupsert.Any()) return;
     await core.Upsert(op.State.Object, toupsert);
   }

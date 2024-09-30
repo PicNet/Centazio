@@ -2,7 +2,8 @@
 - set up testing pipeline (agent is ready)
 - self hosted
 - dummy testing environment, with random data, multiple systems, etc.
-- add unit test to check no `Console.WriteXXX` being used
+- add unit test to check no `Console.WriteXXX` being used and no `DevelDebug.WriteLine` left in code
+- add unit tests to ensure that project and namespace dependencies are not being violated
 - standardise IEnumerable, IList, ICollection, List, IReadOnlyList, etc. Consider enforcing uniqueness with Sets?
 
 # Developer Guidelines:

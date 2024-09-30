@@ -113,34 +113,31 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task RunEpoch(int epoch, List<ISystem> systems) {
-    SimulationCtx.Debug($"\nEpoch[{epoch}] Starting\n");
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}\n");
     
-    TestingUtcDate.DoTick(new TimeSpan(1, Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
+    RandomTimeStep();
     systems.ForEach(s => s.Simulation.Step());
-    SimulationCtx.Debug($"\nEpoch[{epoch}] Simulation Step Completed - Running Functions\n");
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Simulation Step Completed - Running Functions {{{UtcDate.UtcNow:o}}}\n");
     
-    var functions = new List<Task> { 
-      crm_read_runner.RunFunction(),
-      fin_read_runner.RunFunction(),
-      crm_promote_runner.RunFunction(),
-      fin_promote_runner.RunFunction(),
-      crm_write_runner.RunFunction(),
-      fin_write_runner.RunFunction()
-    };
-    // functions.AddRange(functions); // todo: do twice to test ping backs
-    /*
     await crm_read_runner.RunFunction();
-    await fin_read_runner.RunFunction();
+    TestingUtcDate.DoTick(TimeSpan.FromSeconds(Random.Shared.Next(1, 120)));
+    await fin_read_runner.RunFunction(); 
+    TestingUtcDate.DoTick(TimeSpan.FromSeconds(Random.Shared.Next(1, 120)));
     await crm_promote_runner.RunFunction();
+    TestingUtcDate.DoTick(TimeSpan.FromSeconds(Random.Shared.Next(1, 120)));
     await fin_promote_runner.RunFunction();
+    TestingUtcDate.DoTick(TimeSpan.FromSeconds(Random.Shared.Next(1, 120)));
     await crm_write_runner.RunFunction();
+    TestingUtcDate.DoTick(TimeSpan.FromSeconds(Random.Shared.Next(1, 120)));
     await fin_write_runner.RunFunction();
-    */
-    await functions.Synchronous();
-    SimulationCtx.Debug($"\nEpoch[{epoch}] Functions Completed - Validating\n");
+    
+    SimulationCtx.Debug($"\nEpoch[{epoch}] Functions Completed - Validating {{{UtcDate.UtcNow:o}}}\n");
     await ValidateEpoch();
   }
 
+  private void RandomTimeStep() {
+    TestingUtcDate.DoTick(new TimeSpan(Random.Shared.Next(0, 2), Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
+  }
   
   private Task ValidateEpoch() {
     CompareMembershipTypes();
@@ -153,7 +150,7 @@ public class E2EEnvironment : IAsyncDisposable {
     var core_types = SimulationCtx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Name } );
     
-    CompareByChecksun(crm_types, core_types);
+    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_types, crm_types);
   }
   
   private void CompareCustomers() {
@@ -163,8 +160,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_customers = crm.Customers.Select(c => new { c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { c.Name });
     
-    CompareByChecksun(crm_customers, core_customers_for_crm);
-    CompareByChecksun(fin_accounts, core_customers_for_fin);
+    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_customers_for_crm, crm_customers);
+    CompareByChecksun(SimulationCtx.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
   }
   
   private void CompareInvoices() {
@@ -174,14 +171,14 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_invoices = crm.Invoices.Select(i => new { i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
-    CompareByChecksun(crm_invoices, core_invoices);
-    CompareByChecksun(fin_invoices, core_invoices);
+    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_invoices, crm_invoices);
+    CompareByChecksun(SimulationCtx.FIN_SYSTEM, core_invoices, fin_invoices);
   }
   
-  private void CompareByChecksun(IEnumerable<object> expected, IEnumerable<object> actual) {
-    var expstrs = expected.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
-    var actstr = actual.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
-    Assert.That(expstrs, Is.EquivalentTo(actstr), $"EXPECTED:\n\t{String.Join("\n\t", expstrs)}\nACTUAL:\n\t{String.Join("\n\t", actstr)}");
+  private void CompareByChecksun(SystemName targetsys, IEnumerable<object> core, IEnumerable<object> targets) {
+    var corestr = core.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
+    var targetstr = targets.Select(e => JsonSerializer.Serialize(e)).OrderBy(str => str).ToList();
+    Assert.That(targetstr, Is.EquivalentTo(corestr), $"CORES:\n\t{String.Join("\n\t", corestr)}\nTARGET[{targetsys}]:\n\t{String.Join("\n\t", targetstr)}");
     
   }
 }

@@ -31,7 +31,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
       nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
-    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}] Updates[{updates.Count}]");
+    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
     return ReadOperationResult.Create(updates);
   }
 }
@@ -51,7 +51,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   }
 
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
-    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}] Staged[{staged.Count}]");
+    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
@@ -89,7 +89,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}]");
+    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());

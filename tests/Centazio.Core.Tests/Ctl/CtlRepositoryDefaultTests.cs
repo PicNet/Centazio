@@ -109,7 +109,7 @@ public abstract class CtlRepositoryDefaultTests {
     
     Assert.That(prior, Is.Null);
     var expected = ObjectState<CoreEntityType>.Create(NAME2, NAME2, Constants.CoreEntityName);
-    Console.WriteLine($"CREATED[{created.Object.GetType().Name}] EXPECTED[{expected.GetType().Name}]");
+    DevelDebug.WriteLine($"CREATED[{created.Object.GetType().Name}] EXPECTED[{expected.GetType().Name}]");
     Assert.That(created, Is.EqualTo(expected));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));

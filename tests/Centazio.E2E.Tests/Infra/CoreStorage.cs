@@ -109,7 +109,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
         .ToDictionary(e => e.Id, e => e.Checksum);
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
-    if (obj == CoreEntityType.From<CoreCustomer>()) Console.WriteLine("Upserting CoreCustomer: " + String.Join(",", entities.Select(e => ((CoreCustomer)e).Name)));
+    if (obj == CoreEntityType.From<CoreCustomer>()) DevelDebug.WriteLine("Upserting CoreCustomer: " + String.Join(",", entities.Select(e => ((CoreCustomer)e).Name)));
     var (source, target) = (entities.ToList(), GetList(obj));
     source.ForEach(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.Id);
