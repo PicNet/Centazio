@@ -3,10 +3,9 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
-using Centazio.Core.Tests.CoreRepo;
-using Centazio.Core.Tests.IntegrationTests;
 using Centazio.Test.Lib;
-using F = Centazio.Core.Tests.TestingFactories;
+using Centazio.Test.Lib.CoreStorage;
+using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.Promote;
 

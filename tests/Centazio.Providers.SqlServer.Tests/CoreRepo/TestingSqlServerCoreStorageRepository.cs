@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Centazio.Core;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.Tests.CoreRepo;
-using Centazio.Core.Tests.IntegrationTests;
+using Centazio.Test.Lib;
+using Centazio.Test.Lib.CoreStorage;
 using Dapper;
 
 namespace Centazio.Providers.SqlServer.Tests.CoreRepo;

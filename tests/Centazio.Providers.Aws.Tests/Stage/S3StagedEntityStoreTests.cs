@@ -2,9 +2,9 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.AbstractProviderTests;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.Minio;
 

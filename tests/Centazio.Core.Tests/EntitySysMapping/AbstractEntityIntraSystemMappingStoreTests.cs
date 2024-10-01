@@ -1,6 +1,6 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
-using Centazio.Core.Tests.IntegrationTests;
+using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.EntitySysMapping;
 

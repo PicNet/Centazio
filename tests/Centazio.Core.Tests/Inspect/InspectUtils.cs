@@ -10,8 +10,7 @@ internal static class InspectUtils {
   public static List<string> GetSolnCsFiles(string? dir) => GetSolnFiles(dir, "*.cs");
   
   public static List<string> GetCentazioDllFiles() {
-    var errors = new List<string>();
-    var centazios = InspectUtils.GetSolnFiles(null, "*.dll")
+    var centazios = GetSolnFiles(null, "*.dll")
         .Where(dll => dll.IndexOf("\\obj\\", StringComparison.OrdinalIgnoreCase) < 0 && dll.Split("\\").Last().IndexOf("Centazio", StringComparison.OrdinalIgnoreCase) >= 0)
         .ToList();
     var distinct = new Dictionary<string, (DateTime LastWrite, string Full)>();

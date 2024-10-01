@@ -3,7 +3,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
-using F = Centazio.Core.Tests.TestingFactories;
+using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
 

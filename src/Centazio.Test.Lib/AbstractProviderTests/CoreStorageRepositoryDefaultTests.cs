@@ -1,7 +1,8 @@
 ﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Tests.IntegrationTests;
+using Centazio.Test.Lib.CoreStorage;
+using NUnit.Framework;
 
-namespace Centazio.Core.Tests.CoreRepo;
+namespace Centazio.Test.Lib.AbstractProviderTests;
 
 public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions) {
 

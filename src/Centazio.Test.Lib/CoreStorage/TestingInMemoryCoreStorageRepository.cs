@@ -1,7 +1,8 @@
 ﻿using System.Linq.Expressions;
+using Centazio.Core;
 using Centazio.Core.CoreRepo;
 
-namespace Centazio.Core.Tests.CoreRepo;
+namespace Centazio.Test.Lib.CoreStorage;
 
 public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorageGetter {
   

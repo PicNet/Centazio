@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Stage;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.AbstractProviderTests;
 
 namespace Centazio.Core.Tests.Stage;
 

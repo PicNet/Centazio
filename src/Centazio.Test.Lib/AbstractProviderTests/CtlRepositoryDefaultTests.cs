@@ -1,8 +1,9 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Tests.IntegrationTests;
+using NUnit.Framework;
 
-namespace Centazio.Core.Tests.Ctl;
+namespace Centazio.Test.Lib.AbstractProviderTests;
 
 public abstract class CtlRepositoryDefaultTests {
 
@@ -11,8 +12,8 @@ public abstract class CtlRepositoryDefaultTests {
   
   protected abstract Task<ICtlRepository> GetRepository();
   
-  protected ICtlRepository repo;
-  protected IObjectStateRepo<CoreEntityType> objrepo;
+  protected ICtlRepository repo = null!;
+  protected IObjectStateRepo<CoreEntityType> objrepo = null!;
   
   [SetUp] public async Task SetUp() {
     repo = await GetRepository();

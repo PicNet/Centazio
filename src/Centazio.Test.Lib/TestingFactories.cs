@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
@@ -6,11 +7,10 @@ using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests.CoreRepo;
-using Centazio.Core.Tests.IntegrationTests;
 using Centazio.Core.Write;
+using Centazio.Test.Lib.CoreStorage;
 
-namespace Centazio.Core.Tests;
+namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
     
@@ -28,7 +28,7 @@ public static class TestingFactories {
   public static CoreEntity NewCoreCust(string first, string last, string? id = null, string? checksum = null) {
     id ??= Guid.NewGuid().ToString();
     var dob = DateOnly.MinValue;
-    checksum ??= Test.Lib.Helpers.TestingChecksum(new { id, first, last, dob });
+    checksum ??= Helpers.TestingChecksum(new { id, first, last, dob });
     return new CoreEntity(id, checksum, first, last, dob, UtcDate.UtcNow);
   }
 
@@ -37,7 +37,7 @@ public static class TestingFactories {
 
 }
 
-public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Test.Lib.Helpers.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
+public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;

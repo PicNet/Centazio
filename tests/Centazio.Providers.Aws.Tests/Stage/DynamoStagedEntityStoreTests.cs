@@ -1,9 +1,9 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.AbstractProviderTests;
 using Testcontainers.DynamoDb;
 
 namespace Centazio.Providers.Aws.Tests.Stage;

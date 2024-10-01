@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.Stage;
-using Centazio.Core.Tests.Stage;
 using Centazio.Providers.SqlServer.Stage;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.AbstractProviderTests;
 using Dapper;
 
 namespace Centazio.Providers.SqlServer.Tests.Stage;

@@ -1,9 +1,9 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
-using Centazio.Core.Tests.IntegrationTests;
-using Centazio.Test.Lib;
+using NUnit.Framework;
 
-namespace Centazio.Core.Tests.Stage;
+namespace Centazio.Test.Lib.AbstractProviderTests;
 
 public abstract class StagedEntityStoreDefaultTests {
 
@@ -11,8 +11,8 @@ public abstract class StagedEntityStoreDefaultTests {
   protected const int LARGE_BATCH_SIZE = 100;
   
   protected abstract Task<IStagedEntityStore> GetStore(int limit=0, Func<string, string>? checksum = null);
-  protected IStagedEntityStore store;
-  protected TestingUtcDate dt;
+  protected IStagedEntityStore store = null!;
+  protected TestingUtcDate dt = null!;
   
   [SetUp] public async Task SetUp() {
     store = await GetStore(0, Hash);
