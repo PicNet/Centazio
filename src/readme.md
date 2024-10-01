@@ -6,7 +6,6 @@
 
 - set up testing pipeline (agent is ready)
 - self hosted
-- add unit tests to ensure that project and namespace dependencies are not being violated
 
 - standardise IEnumerable, IList, ICollection, List, IReadOnlyList, etc. Consider enforcing uniqueness with Sets?
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
