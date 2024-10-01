@@ -5,12 +5,12 @@ using Centazio.Test.Lib;
 namespace Centazio.Core.Tests.EntitySysMapping;
 
 // note: EntityIntraSystemMapping key is CoreEntity, CoreId, SourceSystem, SourceId, TargetSystem, TargetId
-public abstract class AbstractEntityIntraSystemMappingStoreTests {
+public abstract class AbstractCoreToSystemMapStoreTests {
 
-  private readonly string STR = nameof(AbstractEntityIntraSystemMappingStoreTests);
+  private readonly string STR = nameof(AbstractCoreToSystemMapStoreTests);
   private readonly string STR2 = nameof(CoreToExternalMap);
   
-  private AbstractEntityIntraSystemMappingStore store;
+  private AbstractCoreToSystemMapStore store;
   [SetUp] public void SetUp() => store = GetStore();
   [TearDown] public async Task TearDown() => await store.DisposeAsync();
 
@@ -47,11 +47,11 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     Assert.That(list2, Is.EquivalentTo(exp));
   }
   
-  protected abstract AbstractEntityIntraSystemMappingStore GetStore();
+  protected abstract AbstractCoreToSystemMapStore GetStore();
 }
 
-public class InMemoryEntityIntraSystemMappingStoreTests : AbstractEntityIntraSystemMappingStoreTests {
+public class InMemoryCoreToSystemMapStoreTests : AbstractCoreToSystemMapStoreTests {
 
-  protected override AbstractEntityIntraSystemMappingStore GetStore() => new InMemoryEntityIntraSystemMappingStore();
+  protected override AbstractCoreToSystemMapStore GetStore() => new InMemoryCoreToSystemMapStore();
 
 }

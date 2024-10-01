@@ -8,7 +8,7 @@ public record GetForCoresResult(List<CoreAndPendingCreateMap> Created, List<Core
   public bool Empty => !Created.Any() && !Updated.Any();
 }
 
-public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
+public interface ICoreToSystemMapStore : IAsyncDisposable {
   
   Task<CoreToExternalMap.Created> Create(CoreToExternalMap.Created create);
   Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> maps);
@@ -30,7 +30,7 @@ public interface IEntityIntraSystemMappingStore : IAsyncDisposable {
 
 }
 
-public abstract class AbstractEntityIntraSystemMappingStore : IEntityIntraSystemMappingStore {
+public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   
   public async Task<CoreToExternalMap.Created> Create(CoreToExternalMap.Created create) => (await Create([create])).Single();
   public abstract Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> creates);

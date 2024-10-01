@@ -5,7 +5,7 @@ using Centazio.Core.Runner;
 using Serilog;
 
 namespace Centazio.Core.Write;
-public class WriteOperationRunner<C>(IEntityIntraSystemMappingStore entitymap, ICoreStorageGetter core) : 
+public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStorageGetter core) : 
     IOperationRunner<C, CoreEntityType, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {

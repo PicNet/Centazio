@@ -26,7 +26,7 @@ internal static class SimulationCtx {
   public static readonly SystemName FIN_SYSTEM;
   
   public static readonly ICtlRepository ctl = new InMemoryCtlRepository();
-  public static readonly IEntityIntraSystemMappingStore entitymap = new InMemoryEntityIntraSystemMappingStore();
+  public static readonly ICoreToSystemMapStore entitymap = new InMemoryCoreToSystemMapStore();
   public static readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, Helpers.TestingChecksum);
   public static readonly CoreStorage core = new();
       

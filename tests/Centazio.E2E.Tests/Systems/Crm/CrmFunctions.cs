@@ -76,9 +76,9 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly CrmSystem api;
-  private readonly IEntityIntraSystemMappingStore intra;
+  private readonly ICoreToSystemMapStore intra;
 
-  public CrmWriteFunction(CrmSystem api, IEntityIntraSystemMappingStore intra) {
+  public CrmWriteFunction(CrmSystem api, ICoreToSystemMapStore intra) {
     this.api = api;
     this.intra = intra;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Write, new ([

@@ -4,7 +4,7 @@ using Centazio.Core.Write;
 
 namespace Centazio.Core.EntitySysMapping;
 
-public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMappingStore {
+public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   protected readonly Dictionary<CoreToExternalMap.MappingKey, CoreToExternalMap> memdb = new();
   public override Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
@@ -16,8 +16,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     var updates = new List<CoreAndPendingUpdateMap>();
     cores.ForEach(c => {
       var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.ExternalSystem == target);
-      // todo: replace `== default` with `is null` and add to `Inspect` unit test
-      if (existing == default) news.Add(new CoreAndPendingCreateMap(c, CoreToExternalMap.Create(c, target, obj)));
+      if (existing is null) news.Add(new CoreAndPendingCreateMap(c, CoreToExternalMap.Create(c, target, obj)));
       else updates.Add(new CoreAndPendingUpdateMap(c, memdb[existing].Update()));
     });
     return Task.FromResult(new GetForCoresResult(news, updates));

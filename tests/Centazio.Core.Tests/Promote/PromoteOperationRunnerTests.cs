@@ -16,7 +16,7 @@ public class PromoteOperationRunnerTests {
   private TestingStagedEntityStore stager;
   private TestingCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
-  private InMemoryEntityIntraSystemMappingStore entitymap;
+  private InMemoryCoreToSystemMapStore entitymap;
   private IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {

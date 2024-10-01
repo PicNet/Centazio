@@ -17,11 +17,11 @@ public static class TestingFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static InMemoryEntityIntraSystemMappingStore EntitySysMap() => new();
+  public static InMemoryCoreToSystemMapStore EntitySysMap() => new();
   public static IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
   public static IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
-      IEntityIntraSystemMappingStore? entitymap = null, 
+      ICoreToSystemMapStore? entitymap = null, 
       ICoreStorageUpserter? core = null) => 
       new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo());
 
@@ -32,7 +32,7 @@ public static class TestingFactories {
     return new CoreEntity(id, checksum, first, last, dob, UtcDate.UtcNow);
   }
 
-  public static WriteOperationRunner<C> WriteRunner<C>(InMemoryEntityIntraSystemMappingStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+  public static WriteOperationRunner<C> WriteRunner<C>(InMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
       => new(entitymap ?? EntitySysMap(), core ?? CoreRepo());
 
 }

@@ -73,9 +73,9 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
   
   private readonly FinSystem api;
-  private readonly IEntityIntraSystemMappingStore intra;
+  private readonly ICoreToSystemMapStore intra;
 
-  public FinWriteFunction(FinSystem api, IEntityIntraSystemMappingStore intra) {
+  public FinWriteFunction(FinSystem api, ICoreToSystemMapStore intra) {
     this.api = api;
     this.intra = intra;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, new ([
