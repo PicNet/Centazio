@@ -152,7 +152,6 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private void CompareCustomers() {
-    // todo: add invoices to comparison
     var core_customers_for_crm = SimulationCtx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.Membership.Id });
     var core_customers_for_fin = SimulationCtx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name });
     var crm_customers = crm.Customers.Select(c => new { c.Id, c.Name, c.MembershipTypeId });
@@ -163,8 +162,6 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private void CompareInvoices() {
-    // todo: also compare account/customer name which will need to be added as a property
-    // this can also be used to test what happens when a related entity updates, does it update the children? Not sure if this is valid concern
     var core_invoices = SimulationCtx.core.Invoices.Cast<CoreInvoice>().Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
     var crm_invoices = crm.Invoices.Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.Id, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });

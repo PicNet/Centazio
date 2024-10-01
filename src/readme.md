@@ -1,12 +1,7 @@
 # Todo
-- major refactor required to support bi-directional entities.  Need to remove the concept of IntraMap and instead
-  have a table that has CoreType, CoreId, ExternalObj, ExternalId, with additional metadata columns.  This will
-  allow one core entity to reside and get updates for all external systems.  This is a considerable change 
 - add unit tests to check bi-directional bounce back protection using checksums
-
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
-
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 
 # Developer Guidelines:

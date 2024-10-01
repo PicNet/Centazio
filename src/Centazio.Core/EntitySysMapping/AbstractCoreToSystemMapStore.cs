@@ -18,15 +18,14 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   
   Task<CoreToExternalMap> GetSingle(CoreToExternalMap.MappingKey key);
   
-  // todo: can this be removed and replaced with more explicit methods
-  // such as ones below (FindTargetIds)
-  Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName target, CoreEntityType obj);
-  Task<List<CoreToExternalMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids);
+  Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName external);
+  Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external);
   
   /// <summary>
-  /// Gets the CoreId for a specific `CoreEntityType` given its `TargetId` and `TargetSystem`.
+  /// Gets the CoreId for a specific `CoreEntityType` given its `ExternalId` and `ExternalSystem`.
+  /// This methods throws an exception if the expected CoreEntity is not found.
   /// </summary>
-  Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+  Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
 
 }
 
@@ -39,11 +38,11 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   public abstract Task<List<CoreToExternalMap.Updated>> Update(List<CoreToExternalMap.Updated> updates);
   
   public abstract Task<CoreToExternalMap> GetSingle(CoreToExternalMap.MappingKey key);
-  public abstract Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName target, CoreEntityType obj);
-  public abstract Task<List<CoreToExternalMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids);
+  public abstract Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName external);
+  public abstract Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external);
   public abstract Task<List<CoreToExternalMap>> GetAll();
   
-  public abstract Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+  public abstract Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
   public abstract ValueTask DisposeAsync();
 
 }

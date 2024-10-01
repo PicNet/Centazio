@@ -10,23 +10,21 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
   public override Task<CoreToExternalMap> GetSingle(CoreToExternalMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  // todo: remove `CoreEntityType obj` and use `CoreEntityType.From(c)`
-  public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName target, CoreEntityType obj) {
-    var news = new List<CoreAndPendingCreateMap>();
-    var updates = new List<CoreAndPendingUpdateMap>();
+  public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName external) {
+    var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
-      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.ExternalSystem == target);
-      if (existing is null) news.Add(new CoreAndPendingCreateMap(c, CoreToExternalMap.Create(c, target, obj)));
+      var obj = CoreEntityType.From(c);
+      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.ExternalSystem == external);
+      if (existing is null) news.Add(new CoreAndPendingCreateMap(c, CoreToExternalMap.Create(c, external)));
       else updates.Add(new CoreAndPendingUpdateMap(c, memdb[existing].Update()));
     });
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  // todo: this now seems redundant and same as `GetForCores`
-  public override Task<List<CoreToExternalMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids) {
+  public override Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external) {
     return Task.FromResult(
-        coreids.Select(cid => {
-          var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == target);
+        coreids.Distinct().Select(cid => {
+          var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == external);
           return key is null ? null : memdb[key];
         })
         .Where(m => m is not null)
@@ -34,9 +32,8 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
         .ToList());
   }
   
-  public override Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
-    var coreid = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid)?.CoreId.Value;
-    return Task.FromResult(coreid);
+  public override Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
+    return Task.FromResult(memdb.Keys.Single(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid).CoreId.Value);
   }
 
   public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {

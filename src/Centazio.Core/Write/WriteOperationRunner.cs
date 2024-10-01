@@ -10,13 +10,13 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
     var pending = await core.Get(op.State.Object, op.Checkpoint, op.State.System);
-    var maps = await entitymap.GetForCores(pending, op.State.System, op.State.Object);
+    var maps = await entitymap.GetForCores(pending, op.State.System);
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Created[{maps.Created.Count}] Updated[{maps.Updated.Count}]");
     if (maps.Empty) return new SuccessWriteOperationResult([], []);
     var results = await op.Config.WriteEntitiesesToTargetSystem.WriteEntities(op.Config, maps.Created, maps.Updated);
     
     if (results.Result == EOperationResult.Error) {
-      Log.Warning($"error occurred calling `WriteEntitiesToTargetSystem`");
+      Log.Warning("error occurred calling `WriteEntitiesToTargetSystem` {@Results}", results);
       return results;  
     }
     if (results.EntitiesCreated.Any()) await entitymap.Create(results.EntitiesCreated.Select(e => e.Map).ToList());

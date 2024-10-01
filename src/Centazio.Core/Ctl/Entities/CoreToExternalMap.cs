@@ -60,7 +60,7 @@ public record CoreToExternalMap {
     };
   }
   
-  public static PendingCreate Create(ICoreEntity e, SystemName externalsys, CoreEntityType obj) => new(e, externalsys, obj);
+  public static PendingCreate Create(ICoreEntity e, SystemName externalsys) => new(e, externalsys);
   
   public record PendingCreate {
     public CoreEntityType CoreEntity { get; } 
@@ -70,9 +70,8 @@ public record CoreToExternalMap {
     public SystemName ExternalSystem { get; } 
     public DateTime DateCreated { get; }
     
-    // todo: remove `CoreEntityType obj` use `CoreEntityType.From(e)`
-    internal PendingCreate(ICoreEntity e, SystemName externalsys, CoreEntityType obj) {
-      CoreEntity = obj;
+    internal PendingCreate(ICoreEntity e, SystemName externalsys) {
+      CoreEntity = CoreEntityType.From(e);
       CoreId = e.Id;
       SourceSystem = e.SourceSystem;
       SourceId = e.SourceId;

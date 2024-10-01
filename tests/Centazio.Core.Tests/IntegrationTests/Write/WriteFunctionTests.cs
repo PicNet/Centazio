@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -18,8 +17,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [customer1, customer2]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndExternalMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name, Constants.CoreEntityName).SuccessCreate(customer1.SourceId) ), 
-      new CoreAndExternalMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name, Constants.CoreEntityName).SuccessCreate(customer2.SourceId) ) };
+      new CoreAndExternalMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
+      new CoreAndExternalMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -30,7 +29,6 @@ public class WriteFunctionTests {
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
-    func.Reset(); // todo: remove nothing after this so no need to reset
 
     Assert.That(upsert1, Is.EquivalentTo(new [] { customer1, customer2 }));
     Assert.That(res1.EntitiesUpdated, Is.Empty);

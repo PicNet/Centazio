@@ -16,7 +16,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = CoreToExternalMap.Create(core, STR, Constants.CoreEntityName); 
+    var original = CoreToExternalMap.Create(core, STR); 
     var created = await store.Create(original.SuccessCreate(STR));
     var created2 = (await store.GetSingle(created.Key)).Update();
     
@@ -32,8 +32,8 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<CoreToExternalMap.Created> { 
-      CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR, STR), STR, Constants.CoreEntityName).SuccessCreate(STR),
-      CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2, Constants.CoreEntityName2).SuccessCreate(STR2)
+      CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR),
+      CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2)
     }; 
     var created = (await store.Create(original)).ToList();
     var list1 = await store.GetAll();

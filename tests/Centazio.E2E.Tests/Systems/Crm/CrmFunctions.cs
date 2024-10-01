@@ -60,9 +60,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
       nameof(CoreInvoice) => await staged.Select(async s => {
         var crminv = s.Deserialise<CrmInvoice>();
-        // todo: this needs to be cleaned up 
-        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System) 
-            ?? SimulationCtx.core.Customers.Single(c => c.SourceId == crminv.CustomerId.ToString()).Id; 
+        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System);
         return new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(crminv, custid));
       }).Synchronous(), 
       _ => throw new NotSupportedException(config.State.Object) };
@@ -114,8 +112,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           .Cast<CoreInvoice>()
           .ToList();
       var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
-      // todo: should FindTargetIds somehow enforce uniqueness of extaccs (using Sets)?
-      var maps = await intra.FindTargetIds(CoreEntityType.From<CoreCustomer>(), SimulationCtx.FIN_SYSTEM, externalcusts);
+      var maps = await intra.GetForCores(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationCtx.FIN_SYSTEM);
       // todo: clean up existing cores
       var existingcores = SimulationCtx.core.Customers.Where(c => externalcusts.Contains(c.Id)).ToList();
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
