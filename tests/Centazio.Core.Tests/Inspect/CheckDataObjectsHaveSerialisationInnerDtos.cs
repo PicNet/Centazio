@@ -8,7 +8,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
   [Test] public void Test_all_data_objects_follow_Dto_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
         .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false })
-        .Where(t => t.BaseType != typeof(EntityIntraSysMap)) // ignore these
+        .Where(t => t.BaseType != typeof(CoreToExternalMap)) // ignore these
         .ToList();
     var bases = types.Where(t => t.FullName!.IndexOf('+') < 0).ToList();
     bases.ForEach(t => ValidateDataObject(t, types));

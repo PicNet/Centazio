@@ -58,7 +58,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
       nameof(CoreInvoice) => await staged.Select(async s => {
         var fininv = s.Deserialise<FinInvoice>();
         // todo: this needs to be cleaned up 
-        var custid = await SimulationCtx.entitymap.GetCoreIdForTargetSys(CoreEntityType.From<CoreCustomer>(), fininv.AccountId.ToString(), config.State.System)
+        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), fininv.AccountId.ToString(), config.State.System)
             ?? SimulationCtx.core.Customers.Single(c => c.SourceId == fininv.AccountId.ToString()).Id;
         return new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(fininv, custid));
       }).Synchronous(), 
@@ -94,8 +94,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await api.UpdateAccounts(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.TargetId), e1.Core.To<CoreCustomer>());
-        var existing = api.Accounts.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
+        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
+        var existing = api.Accounts.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
         return toupdate;
       }).ToList());
@@ -118,8 +118,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
       var existingcores = SimulationCtx.core.Customers.Where(c => customers.Contains(c.Id)).ToList();
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
       await api.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.TargetId), e1.Core.To<CoreInvoice>(), maps, existingcores);
-        var existing = api.Invoices.Single(e2 => e1.Map.TargetId == e2.Id.ToString());
+        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps, existingcores);
+        var existing = api.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
         return toupdate;
       }).ToList());
@@ -132,9 +132,9 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, List<EntityIntraSysMap> accmaps, List<ICoreEntity> existingcores) {
+  private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToExternalMap> accmaps, List<ICoreEntity> existingcores) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
-    var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.FIN_SYSTEM)?.TargetId.Value ??
+    var accid = potentials.SingleOrDefault(acc => acc.ExternalSystem == SimulationCtx.FIN_SYSTEM)?.ExternalId.Value ??
         existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
     if (accid is null) {
       throw new Exception($"FinWriteFunction -\n\t" +

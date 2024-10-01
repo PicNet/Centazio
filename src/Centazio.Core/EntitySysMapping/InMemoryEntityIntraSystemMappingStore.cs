@@ -6,41 +6,46 @@ namespace Centazio.Core.EntitySysMapping;
 
 public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMappingStore {
 
-  protected readonly Dictionary<EntityIntraSysMap.MappingKey, EntityIntraSysMap> memdb = new();
-  public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
-  public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
+  protected readonly Dictionary<CoreToExternalMap.MappingKey, CoreToExternalMap> memdb = new();
+  public override Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
+  public override Task<CoreToExternalMap> GetSingle(CoreToExternalMap.MappingKey key) => Task.FromResult(memdb[key]);
 
+  // todo: remove `CoreEntityType obj` and use `CoreEntityType.From(c)`
   public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName target, CoreEntityType obj) {
     var news = new List<CoreAndPendingCreateMap>();
     var updates = new List<CoreAndPendingUpdateMap>();
     cores.ForEach(c => {
-      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.SourceSystem == c.SourceSystem && k.SourceId == c.SourceId && k.TargetSystem == target);
-      if (existing == default) news.Add(new CoreAndPendingCreateMap(c, EntityIntraSysMap.Create(c, target, obj)));
+      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.ExternalSystem == target);
+      // todo: replace `== default` with `is null` and add to `Inspect` unit test
+      if (existing == default) news.Add(new CoreAndPendingCreateMap(c, CoreToExternalMap.Create(c, target, obj)));
       else updates.Add(new CoreAndPendingUpdateMap(c, memdb[existing].Update()));
     });
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids) {
-    return Task.FromResult(coreids.Select(cid => {
-      var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.TargetSystem == target);
-      return key is null ? null : memdb[key];
-    })
+  // todo: this now seems redundant and same as `GetForCores`
+  public override Task<List<CoreToExternalMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids) {
+    return Task.FromResult(
+        coreids.Select(cid => {
+          var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == target);
+          return key is null ? null : memdb[key];
+        })
         .Where(m => m is not null)
-        .Cast<EntityIntraSysMap>()
+        .Cast<CoreToExternalMap>()
         .ToList());
   }
   
-  public override Task<string?> GetCoreIdForTargetSys(CoreEntityType obj, string targetid, SystemName targetsys) {
-    var coreid = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.TargetSystem == targetsys && k.TargetId == targetid)?.CoreId.Value;
+  public override Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
+    var coreid = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid)?.CoreId.Value;
     return Task.FromResult(coreid);
   }
 
-  public override Task<List<EntityIntraSysMap.Created>> Create(List<EntityIntraSysMap.Created> news) => 
-      Task.FromResult(news.Select(map => (EntityIntraSysMap.Created)(memdb[map.Key] = map)).ToList());
+  public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {
+    return Task.FromResult(news.Select(map => (CoreToExternalMap.Created)(memdb[map.Key] = map)).ToList());
+  }
 
-  public override Task<List<EntityIntraSysMap.Updated>> Update(List<EntityIntraSysMap.Updated> updates) {
-    return Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated)(memdb[map.Key] = map)).ToList());
+  public override Task<List<CoreToExternalMap.Updated>> Update(List<CoreToExternalMap.Updated> updates) {
+    return Task.FromResult(updates.Select(map => (CoreToExternalMap.Updated)(memdb[map.Key] = map)).ToList());
   }
   
   public override ValueTask DisposeAsync() { 

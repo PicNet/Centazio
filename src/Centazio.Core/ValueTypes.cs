@@ -24,6 +24,7 @@ public sealed record ExternalEntityType(string Value) : ObjectName(Value);
 
 public sealed record CoreEntityType(string Value) : ObjectName(Value) {
   public static CoreEntityType From<E>() where E : ICoreEntity => new(typeof(E).Name);
+  public static CoreEntityType From<E>(E core) where E : ICoreEntity => new(core.GetType().Name);
 }
 
 public sealed record LifecycleStage(string Value) : ValidString(Value) {

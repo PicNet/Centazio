@@ -4,7 +4,7 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Write;
 
 public abstract record WriteOperationResult(
-    List<CoreAndCreatedMap> EntitiesCreated,
+    List<CoreAndExternalMap> EntitiesCreated,
     List<CoreAndUpdatedMap> EntitiesUpdated,
     EOperationResult Result,
     string Message,
@@ -18,7 +18,7 @@ public abstract record WriteOperationResult(
 }
 
 public record SuccessWriteOperationResult(
-    List<CoreAndCreatedMap> EntitiesCreated,
+    List<CoreAndExternalMap> EntitiesCreated,
     List<CoreAndUpdatedMap> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : WriteOperationResult(EntitiesCreated,

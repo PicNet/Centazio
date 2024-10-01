@@ -4,27 +4,28 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
-public record CoreAndPendingCreateMap(ICoreEntity Core, EntityIntraSysMap.PendingCreate Map) {
-  public CoreAndCreatedMap Created(string targetid) => new(Core, Map.SuccessCreate(targetid));
+public record CoreAndPendingCreateMap(ICoreEntity Core, CoreToExternalMap.PendingCreate Map) {
+  public CoreAndExternalMap Created(string targetid) => new(Core, Map.SuccessCreate(targetid));
 }
-public record CoreAndCreatedMap {
+
+public record CoreAndExternalMap {
   internal ICoreEntity Core { get; }
-  internal EntityIntraSysMap.Created Map { get; }
+  internal CoreToExternalMap.Created Map { get; }
   
-  internal CoreAndCreatedMap(ICoreEntity core, EntityIntraSysMap.Created map) {
+  internal CoreAndExternalMap(ICoreEntity core, CoreToExternalMap.Created map) {
     Core = core;
     Map = map;
   }
 }
-public record CoreAndPendingUpdateMap(ICoreEntity Core, EntityIntraSysMap.PendingUpdate Map) {
+public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToExternalMap.PendingUpdate Map) {
   public CoreAndUpdatedMap Updated() => new(Core, Map.SuccessUpdate());
 }
 
 public record CoreAndUpdatedMap {
   internal ICoreEntity Core { get; }
-  internal EntityIntraSysMap.Updated Map { get; }
+  internal CoreToExternalMap.Updated Map { get; }
   
-  internal CoreAndUpdatedMap(ICoreEntity core, EntityIntraSysMap.Updated map) {
+  internal CoreAndUpdatedMap(ICoreEntity core, CoreToExternalMap.Updated map) {
     Core = core;
     Map = map;
   }
