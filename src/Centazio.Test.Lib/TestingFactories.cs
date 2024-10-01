@@ -23,7 +23,7 @@ public static class TestingFactories {
       IStagedEntityStore? store = null, 
       IEntityIntraSystemMappingStore? entitymap = null, 
       ICoreStorageUpserter? core = null) => 
-      new PromoteOperationRunner(store ?? SeStore(), entitymap ?? EntitySysMap(), core ?? CoreRepo());
+      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo());
 
   public static CoreEntity NewCoreCust(string first, string last, string? id = null, string? checksum = null) {
     id ??= Guid.NewGuid().ToString();

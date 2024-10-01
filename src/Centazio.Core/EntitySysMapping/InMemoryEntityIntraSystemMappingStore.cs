@@ -32,7 +32,6 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   }
   
   public override Task<string?> GetCoreIdForTargetSys(CoreEntityType obj, string targetid, SystemName targetsys) {
-    // try to get the core from target system first (assumes `system` is the TargetSystem)
     var coreid = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.TargetSystem == targetsys && k.TargetId == targetid)?.CoreId.Value;
     return Task.FromResult(coreid);
   }
@@ -43,17 +42,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap.Updated>> Update(List<EntityIntraSysMap.Updated> updates) {
     return Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated)(memdb[map.Key] = map)).ToList());
   }
-
-  public override Task<List<string>> FilterOutBouncedBackIds(SystemName promotingsys, CoreEntityType obj, List<string> ids) {
-    var bounces = memdb.Values.
-      Where(map => map.CoreEntity == obj 
-          && map.TargetSystem == promotingsys 
-          && ids.Contains(map.TargetId)).
-      Select(map => map.TargetId.Value).
-      ToList();
-    return Task.FromResult(ids.Except(bounces).ToList());
-  }
-
+  
   public override ValueTask DisposeAsync() { 
     memdb.Clear();
     return ValueTask.CompletedTask;

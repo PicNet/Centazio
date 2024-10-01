@@ -47,20 +47,6 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
     Assert.That(list2, Is.EquivalentTo(exp));
   }
   
-  [Test] public async Task Test_FilterOutBouncedBackIds() {
-    // testing this scenario: https://sequencediagram.org/index.html#initialData=C4S2BsFMAIGECUCy0C0A+aAxEA7AhjgMYh7gDOAXNAEID2ArkTNXoQNbQDKeAtgA5QAUAmTo4SKgEkcAN1ohCMABQiAjACYAzAEpohAE6Q8wSABNhSVBliQcwPAC8QtKbPmLoKpBp3Qy9gHMzYVt7J1p0GztHZ1c5BRg+fVoeWhNzKLDndGx8IhJyOPcYAHd9MBMcTzUtaAAjSEIUyDIsXE11VWhcNrziUjJtAB0cAFE7MABPRDw+PlwAr0QAGmhJH1XczfbO7UFcgn7ySNCYl16Orv88IIzT8JPo8KkAnFpDaCSUtIWLzug8K0wK08NBTPQBApjJAAHQjAAitBwMDqkz0AAtGmxfuNQMBprN5jgAtAAGbvXrLXKXIA
-    // relevant steps are: 
-    // Centazio->Financials: Invoice written (CRM123 becomes Fin321 in Financials)\nEntityMapping(CRM, I123, Fin, Fin321)
-    var core = TestingFactories.NewCoreCust("N", "N", "coreid") with { SourceId = "CRM123" };
-    await store.Create(EntityIntraSysMap.Create(core, Constants.System2Name, Constants.CoreEntityName).SuccessCreate("FIN321"));
-    
-    var ids = new List<string> { "FIN1", "FIN2", "FIN321", "FIN3" };
-    // Centazio->Centazio: Ignore promoting Fin321 as its a duplicate.\nDone by checking EntityMapping for Fin,Fin321
-    var filtered = await store.FilterOutBouncedBackIds(Constants.System2Name, Constants.CoreEntityName, ids);
-    
-    Assert.That(filtered, Is.EquivalentTo(ids.Where(id => id != "FIN321")));
-  }
-
   protected abstract AbstractEntityIntraSystemMappingStore GetStore();
 }
 

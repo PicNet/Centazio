@@ -23,7 +23,7 @@ public class AbstractFunctionStaticHelperTests {
   }
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentException>(() => _ = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, new ([])));
+    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, []));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {

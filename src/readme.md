@@ -4,13 +4,10 @@
   allow one core entity to reside and get updates for all external systems.  This is a considerable change 
 - add unit tests to check bi-directional bounce back protection using checksums
 
-- set up testing pipeline (agent is ready)
-- self hosted
+- set up azure devops testing pipeline (agent is ready)
+- self-hosted runner
 
-- standardise IEnumerable, IList, ICollection, List, IReadOnlyList, etc. Consider enforcing uniqueness with Sets?
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
-- it may be possible to clean up FilterBounceBack logic by simply ignoring any promotes that are from systems that are not
-  the SourceSystem.  I.e. if an entity is not bi-directional then all promotes should be from the original source system
 
 # Developer Guidelines:
 

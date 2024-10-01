@@ -45,8 +45,8 @@ public record CoreEntity(string Id, string Checksum, string FirstName, string La
 
 public record CoreEntity2(string Id, string Checksum, DateTime DateUpdated) : ICoreEntity {
   public string SourceId { get; init; } = Id;
-  public string SourceSystem { get; } = Constants.System1Name;
-  public string LastUpdateSystem { get; } = Constants.System1Name;
+  public string SourceSystem { get; } = Constants.System2Name;
+  public string LastUpdateSystem { get; } = Constants.System2Name;
   public DateTime DateCreated { get; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
   

@@ -85,7 +85,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
     crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new CrmPromoteFunction(SimulationCtx.core),
-        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.entitymap, SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core),
         SimulationCtx.ctl);
     
     crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new CrmWriteFunction(crm, SimulationCtx.entitymap),
@@ -96,7 +96,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
     fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new FinPromoteFunction(SimulationCtx.core),
-        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.entitymap, SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core),
         SimulationCtx.ctl);
     
     fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new FinWriteFunction(fin, SimulationCtx.entitymap),

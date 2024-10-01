@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
@@ -8,8 +7,7 @@ using Serilog;
 namespace Centazio.Core.Promote;
 
 public class PromoteOperationRunner(
-    IStagedEntityStore staged, 
-    IEntityIntraSystemMappingStore entitymap,
+    IStagedEntityStore staged,
     ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
@@ -26,7 +24,7 @@ public class PromoteOperationRunner(
       return results;  
     }
     
-    Log.Information($"PromoteOperationRunner ToPromote[{results.ToPromote.Count}]");
+    Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{results.ToPromote.Count}] ToIgnore[{results.ToIgnore.Count}]");
     if (results.ToPromote.Any()) await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     
     await staged.Update(
@@ -40,10 +38,12 @@ public class PromoteOperationRunner(
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
     var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core);
-    var toupsert = op.Config.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(entitymap, op.State.System, op.State.Object);
-    
+    var toupsert = op.Config.IsBidirectional ? 
+        meaningful : 
+        await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
+    Log.Information($"[{op.State.System}/{op.State.Object}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] Meaningful[{meaningful.Count}] Upserting[{toupsert.Count}]");
     if (!toupsert.Any()) return;
-    Log.Information($"[{op.State.System}/{op.State.Object}] PromoteOperationRunner.WriteEntitiesToCoreStorage[{entities.Count}]");
+    
     await core.Upsert(op.State.Object, toupsert);
   }
 
@@ -76,11 +76,14 @@ public static class PromoteOperationRunnerHelperExtensions {
   } 
   
   /// <summary>
-  /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back. 
+  /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back.
+  ///
+  /// Bounce backs are avoided by filtering out any core entities being promoted whose `SourceSystem` is not the current functions
+  /// `System`.  As there should only be one source of truth system.
+  ///
+  /// Note: This is only done with Uni-directional promote operations. Bi-directional operations must manage their own bounce backs for now. 
   /// </summary>
-  public static async Task<List<ICoreEntity>> IgnoreEntitiesBouncingBack(this List<ICoreEntity> lst, IEntityIntraSystemMappingStore entitymap, SystemName thissys, CoreEntityType obj)  {
-    var ids = lst.Select(e => e.SourceId).ToList();
-    var valid = (await entitymap.FilterOutBouncedBackIds(thissys, obj, ids)).ToDictionary(id => id);
-    return lst.Where(e => valid.ContainsKey(e.SourceId)).ToList();
+  public static Task<List<ICoreEntity>> IgnoreEntitiesBouncingBack(this List<ICoreEntity> lst, SystemName thissys)  {
+    return Task.FromResult(lst.Where(e => e.SourceSystem == thissys).ToList());
   }
 } 
