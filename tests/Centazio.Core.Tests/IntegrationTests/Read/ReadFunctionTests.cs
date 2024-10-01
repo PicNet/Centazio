@@ -50,7 +50,7 @@ public class ReadFunctionTests {
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
-    Assert.That(new IEnumerable[] { sys0, obj0, staged0 }, Is.All.Empty);
+    Assert.That(new List<IEnumerable> { sys0, obj0, staged0 }, Is.All.Empty);
     
     Assert.That(sys1.Single(), Is.EqualTo(SS(start)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, 0)));

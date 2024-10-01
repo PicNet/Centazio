@@ -10,7 +10,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
   public override Task<List<EntityIntraSysMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
   public override Task<EntityIntraSysMap> GetSingle(EntityIntraSysMap.MappingKey key) => Task.FromResult(memdb[key]);
 
-  public override Task<GetForCoresResult> GetForCores(ICollection<ICoreEntity> cores, SystemName target, CoreEntityType obj) {
+  public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName target, CoreEntityType obj) {
     var news = new List<CoreAndPendingCreateMap>();
     var updates = new List<CoreAndPendingUpdateMap>();
     cores.ForEach(c => {
@@ -21,7 +21,7 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, ICollection<string> coreids) {
+  public override Task<List<EntityIntraSysMap>> FindTargetIds(CoreEntityType coretype, SystemName target, List<string> coreids) {
     return Task.FromResult(coreids.Select(cid => {
       var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.TargetSystem == target);
       return key is null ? null : memdb[key];
@@ -37,10 +37,10 @@ public class InMemoryEntityIntraSystemMappingStore : AbstractEntityIntraSystemMa
     return Task.FromResult(coreid);
   }
 
-  public override Task<List<EntityIntraSysMap.Created>> Create(ICollection<EntityIntraSysMap.Created> news) => 
+  public override Task<List<EntityIntraSysMap.Created>> Create(List<EntityIntraSysMap.Created> news) => 
       Task.FromResult(news.Select(map => (EntityIntraSysMap.Created)(memdb[map.Key] = map)).ToList());
 
-  public override Task<List<EntityIntraSysMap.Updated>> Update(ICollection<EntityIntraSysMap.Updated> updates) {
+  public override Task<List<EntityIntraSysMap.Updated>> Update(List<EntityIntraSysMap.Updated> updates) {
     return Task.FromResult(updates.Select(map => (EntityIntraSysMap.Updated)(memdb[map.Key] = map)).ToList());
   }
 

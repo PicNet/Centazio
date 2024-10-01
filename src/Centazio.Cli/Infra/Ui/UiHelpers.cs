@@ -9,7 +9,7 @@ public static class UiHelpers {
           ? AnsiConsole.Ask<string>(prompt + ":").Trim() 
           : AnsiConsole.Ask(prompt, defaultval.Trim()).Trim();
 
-  public static string PromptCommandOptions(ICollection<string> options) => 
+  public static string PromptCommandOptions(List<string> options) => 
       AnsiConsole.Prompt(new SelectionPrompt<string>()
           .Title("Select Operation:")
           .AddChoices(options.Concat(["back"])));

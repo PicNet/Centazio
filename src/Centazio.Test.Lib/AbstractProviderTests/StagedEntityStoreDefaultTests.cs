@@ -81,12 +81,12 @@ public abstract class StagedEntityStoreDefaultTests {
     for (var pgstart = 0; pgstart < LARGE_BATCH_SIZE; pgstart+=pgsz) {
       var page = await store.GetAll(start, NAME, Constants.ExternalEntityName);
       start = page.Last().DateStaged;
-      var (actual, exp) = (StrSes(page), StrDts(ordered.Skip(pgstart).Take(pgsz)));
+      var (actual, exp) = (StrSes(page), StrDts(ordered.Skip(pgstart).Take(pgsz).ToList()));
       Assert.That(actual, Is.EqualTo(exp)); 
     }
     
-    string StrSes(IEnumerable<StagedEntity> ses) => StrDts(ses.Select(se => se.DateStaged));
-    string StrDts(IEnumerable<DateTime> dts) => String.Join(",", dts);
+    string StrSes(List<StagedEntity> ses) => StrDts(ses.Select(se => se.DateStaged).ToList());
+    string StrDts(List<DateTime> dts) => String.Join(",", dts);
   }
   
   [Test] public async Task Test_updating_multiple_entities() {

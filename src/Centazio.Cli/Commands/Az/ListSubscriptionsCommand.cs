@@ -14,6 +14,7 @@ public class ListSubscriptionsCommand(IAzSubscriptions impl) : AbstractCentazioC
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "State"])
               .AddRows((await impl.ListSubscriptions())
-                  .Select(a => new [] { a.Name, a.Id, a.State }))));
+                  .Select(a => new [] { a.Name, a.Id, a.State })
+                  .ToList())));
   
 }   

@@ -13,10 +13,12 @@ public record FunctionConfigDefaults {
 public record FunctionConfig<C, O>(
     SystemName System, 
     LifecycleStage Stage, 
-    ValidList<C> Operations) : ILoggable 
+    List<C> Operations) : ILoggable 
         where C : OperationConfig<O>
         where O : ObjectName {
 
+  public List<C> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
+  
   /// <summary>
   /// This is the maximum number of minutes that a function can be considered `running`.  After this, we assume
   /// the function is somehow stuck, and allow other instances of this function to run again.
@@ -37,7 +39,7 @@ public record FunctionConfig<C, O>(
   /// </summary>
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
 
-  public object LoggableValue => $"{System}/{Stage} Operations[{Operations.Value.Count}]";
+  public object LoggableValue => $"{System}/{Stage} Operations[{Operations.Count}]";
 }
 
 public abstract record OperationConfig<O>(

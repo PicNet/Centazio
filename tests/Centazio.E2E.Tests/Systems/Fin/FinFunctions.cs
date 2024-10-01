@@ -132,7 +132,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, IList<EntityIntraSysMap> accmaps, List<ICoreEntity> existingcores) {
+  private FinInvoice FromCore(int id, CoreInvoice i, List<EntityIntraSysMap> accmaps, List<ICoreEntity> existingcores) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
     var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.FIN_SYSTEM)?.TargetId.Value ??
         existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;

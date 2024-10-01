@@ -6,8 +6,7 @@ internal static class InspectUtils {
   internal static string SolnDir => solndir ??= GetSolutionRootDirectory();
   
   private static List<string>? csfiles;
-  public static List<string> CsFiles(string? dir, params string[] ignore) => (csfiles ??= GetSolnCsFiles(dir)).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
-  public static List<string> GetSolnCsFiles(string? dir) => GetSolnFiles(dir, "*.cs");
+  public static List<string> CsFiles(string? dir, params string[] ignore) => (csfiles ??= GetSolnFiles(dir, "*.cs")).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
   
   public static List<string> GetCentazioDllFiles() {
     var centazios = GetSolnFiles(null, "*.dll")

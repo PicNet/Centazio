@@ -15,6 +15,7 @@ public class ListResourceGroupsCommand(IAzResourceGroups impl) : AbstractCentazi
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "State", "ManagedBy"])
               .AddRows((await impl.ListResourceGroups())
-                  .Select(a => new [] { a.Name, a.Id, a.State, a.ManagedBy }))));
+                  .Select(a => new [] { a.Name, a.Id, a.State, a.ManagedBy })
+                  .ToList())));
   
 }

@@ -31,7 +31,7 @@ public abstract class AbstractEntityIntraSystemMappingStoreTests {
   }
   
   [Test] public async Task Test_upsert_enum() {
-    var original = new [] { 
+    var original = new List<EntityIntraSysMap.Created> { 
       EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR, STR), STR, Constants.CoreEntityName).SuccessCreate(STR),
       EntityIntraSysMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2, Constants.CoreEntityName2).SuccessCreate(STR2)
     }; 

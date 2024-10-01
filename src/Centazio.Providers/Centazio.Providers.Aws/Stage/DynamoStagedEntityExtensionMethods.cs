@@ -20,7 +20,7 @@ public static class DynamoStagedEntityExtensionMethods {
     return dict;
   }
   
-  public static IList<StagedEntity> AwsDocumentsToDynamoStagedEntities(this IEnumerable<Document> docs) {
+  public static List<StagedEntity> AwsDocumentsToDynamoStagedEntities(this List<Document> docs) {
     return docs.Select(d => {
       var (system, entity, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
       var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');

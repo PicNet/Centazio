@@ -49,9 +49,9 @@ public class FunctionRunner<C, O, R>(
   }
 }
 
-public abstract record FunctionRunResults<R>(IEnumerable<R> OpResults, string Message) where R : OperationResult; 
-public record SuccessFunctionRunResults<R>(IEnumerable<R> OpResults) : FunctionRunResults<R>(OpResults, "SuccessFunctionRunResults") where R : OperationResult;
-public record AlreadyRunningFunctionRunResults<R>() : FunctionRunResults<R>(Array.Empty<R>(), "AlreadyRunningFunctionRunResults") where R : OperationResult;
-public record InactiveFunctionRunResults<R>() : FunctionRunResults<R>(Array.Empty<R>(), "InactiveFunctionRunResults") where R : OperationResult;
+public abstract record FunctionRunResults<R>(List<R> OpResults, string Message) where R : OperationResult; 
+public record SuccessFunctionRunResults<R>(List<R> OpResults) : FunctionRunResults<R>(OpResults, "SuccessFunctionRunResults") where R : OperationResult;
+public record AlreadyRunningFunctionRunResults<R>() : FunctionRunResults<R>([], "AlreadyRunningFunctionRunResults") where R : OperationResult;
+public record InactiveFunctionRunResults<R>() : FunctionRunResults<R>([], "InactiveFunctionRunResults") where R : OperationResult;
 // ReSharper disable once NotAccessedPositionalProperty.Global
-public record ErrorFunctionRunResults<R>(Exception Exception) : FunctionRunResults<R>(Array.Empty<R>(), Exception.ToString()) where R : OperationResult;
+public record ErrorFunctionRunResults<R>(Exception Exception) : FunctionRunResults<R>([], Exception.ToString()) where R : OperationResult;

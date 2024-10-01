@@ -101,7 +101,7 @@ public class CoreStorage : ICoreStorageGetter, ICoreStorageUpserter {
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) => 
       Task.FromResult(GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList());
 
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids) {
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
     var lst = GetList(obj);
     return Task.FromResult(coreids.Select(id => lst.Single(e => e.Id == id)).ToList());
   }

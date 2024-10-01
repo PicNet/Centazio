@@ -11,7 +11,7 @@ public abstract class AbstractFunction<C, O, R>
   
   public abstract FunctionConfig<C, O> Config { get; }
 
-  public virtual async Task<IEnumerable<R>> RunFunctionOperations(
+  public virtual async Task<List<R>> RunFunctionOperations(
       IOperationRunner<C, O, R> runner,
       ICtlRepository ctl) {
     var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
@@ -21,8 +21,8 @@ public abstract class AbstractFunction<C, O, R>
     return results;
   }
 
-  internal static async Task<IReadOnlyList<OperationStateAndConfig<C, O>>> LoadOperationsStates(FunctionConfig<C, O> conf, SystemState system, ICtlRepository ctl) {
-    return (await conf.Operations.Value
+  internal static async Task<List<OperationStateAndConfig<C, O>>> LoadOperationsStates(FunctionConfig<C, O> conf, SystemState system, ICtlRepository ctl) {
+    return (await conf.Operations
             .Select(async op => {
       var state = await ctl.GetObjectStateRepo<O>().GetOrCreateObjectState(system, op.Object);
       var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
@@ -32,15 +32,15 @@ public abstract class AbstractFunction<C, O, R>
     .ToList();
   }
 
-  internal static IEnumerable<OperationStateAndConfig<C, O>> GetReadyOperations(IEnumerable<OperationStateAndConfig<C, O>> states) {
+  internal static List<OperationStateAndConfig<C, O>> GetReadyOperations(List<OperationStateAndConfig<C, O>> states) {
     bool IsOperationReady(OperationStateAndConfig<C, O> op) {
       var next = op.Config.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
       return next <= UtcDate.UtcNow;
     }
-    return states.Where(IsOperationReady);
+    return states.Where(IsOperationReady).ToList();
   }
   
-  internal static async Task<IEnumerable<R>> RunOperationsTillAbort(IEnumerable<OperationStateAndConfig<C, O>> ops, IOperationRunner<C, O, R> runner, ICtlRepository ctl, bool throws = true) {
+  internal static async Task<List<R>> RunOperationsTillAbort(List<OperationStateAndConfig<C, O>> ops, IOperationRunner<C, O, R> runner, ICtlRepository ctl, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);

@@ -7,16 +7,16 @@ namespace Centazio.Cli.Infra.Az;
 
 public interface IAzResourceGroups {
 
-  Task<IEnumerable<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups();
+  Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups();
   Task<string> AddResourceGroup(string name);
 
 }
 
 public class AzResourceGroups(CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzResourceGroups {
 
-  public Task<IEnumerable<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
+  public Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
       var subscription = GetClient().GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{Secrets.AZ_SUBSCRIPTION_ID}"));
-      var rgs = subscription.GetResourceGroups().Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? ""));
+      var rgs = subscription.GetResourceGroups().Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? "")).ToList();
       return Task.FromResult(rgs);
     }
     

@@ -134,7 +134,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
-  private CrmInvoice FromCore(Guid id, CoreInvoice i, IList<EntityIntraSysMap> custmaps, List<ICoreEntity> existingcores) {
+  private CrmInvoice FromCore(Guid id, CoreInvoice i, List<EntityIntraSysMap> custmaps, List<ICoreEntity> existingcores) {
     var potentials = custmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
     var accid = potentials.SingleOrDefault(acc => acc.TargetSystem == SimulationCtx.CRM_SYSTEM)?.TargetId.Value ??
         existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;

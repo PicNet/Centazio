@@ -68,7 +68,7 @@ public class AbstractFunctionStaticHelperTests {
     using var _ = new ShortLivedUtcDateOverride(
         Dt("2024-08-01T01:30:00Z"));                        // 01:30 UTC on August 1st, 2024
     
-    var ops = new [] {
+    var ops = new List<OperationStateAndConfig<ReadOperationConfig, ExternalEntityType>> {
       Op("1", "0 0 0 * * *", Dt("2024-07-31T23:59:59Z")),   // Daily at 00:00 UTC, ready for 01:00 UTC
       Op("2", "0 0 * * * *", Dt("2024-08-01T00:00:00Z")),   // Hourly at 00 minutes, ready for 01:00 UTC
       Op("3", "0 0 0 1 * *", Dt("2024-07-01T00:00:00Z")),   // Monthly on the 1st at 00:00 UTC, ready for 2024-08-01
@@ -165,12 +165,12 @@ public class AbstractFunctionStaticHelperTests {
             await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
             new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
     
-    public static ValidList<ReadOperationConfig> READ_OP_CONFIGS => new ([
-      new ReadOperationConfig(new ExternalEntityType("1"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig(new ExternalEntityType("2"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig(new ExternalEntityType("3"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new ReadOperationConfig(new ExternalEntityType("4"), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
-    ]);
+    public static List<ReadOperationConfig> READ_OP_CONFIGS => [
+      new(new ExternalEntityType("1"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new ExternalEntityType("2"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new ExternalEntityType("3"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new ExternalEntityType("4"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
+    ];
   }
   
   private class TestingListReadOperationImplementation : IGetObjectsToStage {

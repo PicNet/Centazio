@@ -13,5 +13,7 @@ public class ListAccountsCommand(IAwsAccounts impl) : AbstractCentazioCommand<Co
       await UiHelpers.Progress("Loading account list", async () => 
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "Arn", "Status", "Email"])
-              .AddRows((await impl.ListAccounts()).Select(a => new [] { a.Name, a.Id, a.Arn, a.Status, a.Email }))));
+              .AddRows((await impl.ListAccounts())
+                  .Select(a => new [] { a.Name, a.Id, a.Arn, a.Status, a.Email })
+                  .ToList())));
 }

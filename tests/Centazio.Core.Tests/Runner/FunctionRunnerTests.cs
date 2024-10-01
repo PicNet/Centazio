@@ -86,10 +86,10 @@ public class FunctionRunnerTests {
 
     public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; } = new EmptyFunctionConfig();
     
-    public override async Task<IEnumerable<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<List<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
-      return Array.Empty<ReadOperationResult>();
+      return [];
     }
 
   }
@@ -98,10 +98,10 @@ public class FunctionRunnerTests {
 
     public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; } = new EmptyFunctionConfig();
     
-    public override async Task<IEnumerable<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> runner, ICtlRepository ctl) {
+    public override async Task<List<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> runner, ICtlRepository ctl) {
       var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
-      return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult());
+      return Enumerable.Range(0, results).Select(_ => (ReadOperationResult) new EmptyReadOperationResult()).ToList();
     }
 
   }

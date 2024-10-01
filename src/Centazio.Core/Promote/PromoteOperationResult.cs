@@ -8,8 +8,8 @@ public record StagedAndCoreEntity(StagedEntity Staged, ICoreEntity Core);
 public record StagedEntityAndIgnoreReason(StagedEntity Staged, ValidString Reason);
 
 public abstract record PromoteOperationResult(
-    ICollection<StagedAndCoreEntity> ToPromote,
-    ICollection<StagedEntityAndIgnoreReason> ToIgnore,
+    List<StagedAndCoreEntity> ToPromote,
+    List<StagedEntityAndIgnoreReason> ToIgnore,
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
@@ -20,8 +20,8 @@ public abstract record PromoteOperationResult(
 }
 
 public record SuccessPromoteOperationResult(
-    ICollection<StagedAndCoreEntity> ToPromote,
-    ICollection<StagedEntityAndIgnoreReason> ToIgnore,
+    List<StagedAndCoreEntity> ToPromote,
+    List<StagedEntityAndIgnoreReason> ToIgnore,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : PromoteOperationResult(ToPromote,
         ToIgnore,
@@ -30,8 +30,8 @@ public record SuccessPromoteOperationResult(
         AbortVote);
 
 public record ErrorPromoteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null)
-    : PromoteOperationResult(Array.Empty<StagedAndCoreEntity>(),
-        Array.Empty<StagedEntityAndIgnoreReason>(),
+    : PromoteOperationResult([],
+        [],
         EOperationResult.Error,
         $"ErrorPromoteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]",
         AbortVote,

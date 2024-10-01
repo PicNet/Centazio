@@ -17,7 +17,7 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult(lst);
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, IList<string> coreids) {
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
     if (!db.TryGetValue(obj, out var fulllst)) throw new Exception($"Core entity type [{obj}] not found");
     var lst = coreids.Select(id => fulllst.Single(e => e.Value.Id == id).Value).ToList();
     return Task.FromResult(lst);
