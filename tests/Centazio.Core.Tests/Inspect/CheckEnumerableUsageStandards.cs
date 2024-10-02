@@ -2,7 +2,7 @@
 
 public class CheckEnumerableUsageStandards {
 
-  private readonly string[] NOT_ALLOWED = ["IEnumerable", "ICollection", "IList"];
+  private readonly string[] NOT_ALLOWED = ["IEnumerable", "ICollection", "IList", "IDictionary"];
 
   [Test] public void Test_no_use_of_IEnumerable() {
     var errors = new List<string>();
@@ -10,7 +10,7 @@ public class CheckEnumerableUsageStandards {
         .ForEach(file => {
           var contents = File.ReadAllText(file);
           NOT_ALLOWED.ForEach(na => {
-            if (contents.IndexOf($"{na}<", StringComparison.Ordinal) >= 0) errors.Add($"file[{file}] uses {na}<>.  Use List<> instead to avoid confusions.");
+            if (contents.IndexOf($"{na}<", StringComparison.Ordinal) >= 0) errors.Add($"file[{file}] uses {na}<>.  Use List<> or Dictionary<> instead to avoid confusions.");
           });
         });
     Assert.That(errors, Is.Empty, String.Join("\n", errors));

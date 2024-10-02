@@ -38,6 +38,14 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     return Task.FromResult(key?.CoreId.Value);
   }
 
+  public override Task<Dictionary<string, string>> GetPreExistingCoreIds(List<ICoreEntity> potentialDuplicates, SystemName system) {
+    var dict = potentialDuplicates
+        .Select(c => (c.SourceId, NewCoreId: memdb.Keys.SingleOrDefault(k => k.CoreEntity == CoreEntityType.From(c) && k.ExternalSystem == system && k.ExternalId == c.SourceId)?.CoreId.Value))
+        .Where(t => t.NewCoreId is not null)
+        .ToDictionary(t => t.SourceId, t => t.NewCoreId!);
+    return Task.FromResult(dict);
+  }
+
   public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<CoreToExternalMap.Created>());
     

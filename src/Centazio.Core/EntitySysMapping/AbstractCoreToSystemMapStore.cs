@@ -21,6 +21,14 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   /// This methods returns null if the entity is not found.
   /// </summary>
   Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+
+  /// <summary>
+  /// Gets a map from SourceId to the correct CoreId for potential duplicate entities.  These potential
+  /// duplicates can only happen for Bi-directional entities that can bounce back when written to
+  /// a target system.
+  /// </summary>
+  Task<Dictionary<string, string>> GetPreExistingCoreIds(List<ICoreEntity> duplicates, SystemName system);
+
 }
 
 public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
@@ -32,6 +40,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   public abstract Task<List<CoreToExternalMap>> GetAll();
   
   public abstract Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+  public abstract Task<Dictionary<string, string>> GetPreExistingCoreIds(List<ICoreEntity> duplicates, SystemName system);
   public abstract ValueTask DisposeAsync();
 
 }

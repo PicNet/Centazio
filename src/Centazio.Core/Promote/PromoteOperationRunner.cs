@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
@@ -39,22 +40,34 @@ public class PromoteOperationRunner(
   }
 
   private async Task<List<StagedAndCoreEntity>> IdentifyBouncedBackAndSetCorrectId(SystemName system, CoreEntityType coretype, List<StagedAndCoreEntity> topromote) {
+    // todo: if the Id is part of the checksum then this will
+    //  change the Id and result in an endless bounce back.  Need to check that Id is not
+    //  part of the checksum object.
+    //  Also, having Id with a public setter is not nice, how can this be avoided?
+    var bounces = await GetBounceBacks(system, coretype, topromote.Select(t => t.Core).ToList());
+    if (!bounces.Any()) return topromote;
+    
     var changes = new List<string>();
-    foreach (var t in topromote) {
-      // todo: make this a single call, instead of calls for each item in topromote array
-      var id = await entitymap.GetCoreIdForSystem(coretype, t.Core.SourceId, system);
-      if (id is null) continue;
-      var existing = (await core.Get(coretype, [id])).Single();
-      // todo: if the Id is part of the checksum then this will
-      //  change the Id and result in an endless bounce back.  Need to check that Id is not
-      //  part of the checksum object.
-      //  Also, havving Id with a public setter is not nice, how can this be avoided?
-      changes.Add($"{t.Core.Id}->{existing.Id}");
-      t.Core.Id = existing.Id;
-      t.Core.SourceId = existing.SourceId;
-    }
+    bounces.ForEach(bounce => {
+      var idx = topromote.FindIndex(t => t.Core.SourceId == bounce.Key);
+      var e = topromote[idx].Core;
+      changes.Add($"{e.Id}->{bounce.Value.NewId}");
+      (e.Id, e.SourceId) = (bounce.Value.NewId, bounce.Value.NewSourceId);
+      topromote[idx] = topromote[idx] with { Core = e };
+    });
     if (changes.Any()) Log.Information("identified bounce backs {@ExternalSystem} {@CoreEntityType} {@Changes}", system, coretype, changes);
     return topromote;
+  }
+  
+  private async Task<Dictionary<string, (string NewId, string NewSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
+    var maps = await entitymap.GetPreExistingCoreIds(potentialDups, system);
+    if (!maps.Any()) return new();
+    
+    var existing = await core.Get(coretype, maps.Values.ToList());
+    return maps.ToDictionary(sid_id => sid_id.Key, sid_id => {
+      var preexisting = existing.Single(c => c.Id == sid_id.Value);
+      return (preexisting.Id, preexisting.SourceId);
+    });
   }
 
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
