@@ -119,11 +119,9 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           .Distinct()
           .ToList();
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), customers, SimulationCtx.FIN_SYSTEM);
-      // todo: clean up `existingcores`
-      var existingcores = SimulationCtx.core.Customers.Where(c => customers.Contains(c.Id)).ToList();
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
+      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
       await api.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps, existingcores);
+        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
         var existing = api.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
         return toupdate;
@@ -137,15 +135,13 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToExternalMap> accmaps, List<ICoreEntity> existingcores) {
+  private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToExternalMap> accmaps) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
-    var accid = potentials.SingleOrDefault(acc => acc.ExternalSystem == SimulationCtx.FIN_SYSTEM)?.ExternalId.Value ??
-        existingcores.SingleOrDefault(c => c.Id == i.CustomerId)?.SourceId;
+    var accid = potentials.SingleOrDefault(acc => acc.ExternalSystem == SimulationCtx.FIN_SYSTEM)?.ExternalId.Value;
     if (accid is null) {
       throw new Exception($"FinWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]({i})\n\t" +
           $"Potentials[{String.Join(",", potentials)}]\n\t" +
-          $"Existing Cores[{String.Join(",", existingcores.Select(c => c.Id))}]\n\t" +
           $"In DB[{String.Join(",", SimulationCtx.core.Customers.Select(c => c.Id))}]");
     }
     return new(id, Int32.Parse(accid), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
