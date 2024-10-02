@@ -17,17 +17,17 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, "invalid"));
-    await repo.Upsert(Constants.CoreEntityName, [ TestingFactories.NewCoreCust("", "") ]);
+    await DoUpsert(TestingFactories.NewCoreCust("", ""));
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, "invalid"));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
     var created = TestingFactories.NewCoreCust("N1", "N1");
-    await repo.Upsert(Constants.CoreEntityName, [ created ]);
+    await DoUpsert(created);
     var retreived1 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.Id);
     var list1 = await QueryAll();
     var updated = retreived1 with { FirstName = "N2" };
-    await repo.Upsert(Constants.CoreEntityName, [ updated ]);
+    await DoUpsert(updated);
     var retreived2 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.Id);
     var list2 = await QueryAll();
     
@@ -40,13 +40,13 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   [Test] public async Task Test_batch_upsert() {
     var batch1 = new List<ICoreEntity> { TestingFactories.NewCoreCust("N1", "N1"), TestingFactories.NewCoreCust("N2", "N2") };
-    await repo.Upsert(Constants.CoreEntityName, batch1);
+    await DoUpsert(batch1);
     var list1 = await QueryAll();
     
     var batch2 = new List<ICoreEntity> { 
       (CoreEntity) batch1[0] with { FirstName = "Updated entity" }, 
       TestingFactories.NewCoreCust("N3", "N3") };
-    await repo.Upsert(Constants.CoreEntityName, batch2);
+    await DoUpsert(batch2);
     var list2 = await QueryAll();
     
     Assert.That(list1, Is.EquivalentTo(batch1));
@@ -55,7 +55,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   [Test] public async Task Test_query() {
     var data = Enumerable.Range(0, 100).Select(idx => (ICoreEntity) TestingFactories.NewCoreCust($"{idx}", $"{idx}")).ToList();
-    await repo.Upsert(Constants.CoreEntityName, data);
+    await DoUpsert(data);
     
     var (all, even, odd) = (await QueryAll(), await QueryEvenOdd(true), await QueryEvenOdd(false));
 
@@ -65,7 +65,10 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
     Assert.That(all, Is.EquivalentTo(even.Concat(odd)));
   }
   
-  
+  private Task DoUpsert(ICoreEntity entity) => DoUpsert([entity]);
+  private Task DoUpsert(List<ICoreEntity> entities) => 
+      repo.Upsert(Constants.CoreEntityName, entities.Select(e => new CoreEntityAndChecksum(e, Helpers.TestingChecksum)).ToList());
+
   private async Task<List<CoreEntity>> QueryAll() {
     return (SupportsExpressionBasedQuery 
         ? await repo.Query<CoreEntity>(Constants.CoreEntityName, e => true)

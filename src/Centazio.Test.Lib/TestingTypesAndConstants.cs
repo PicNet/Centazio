@@ -13,7 +13,7 @@ public static class Constants {
 
 public record System1Entity(Guid Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated);
 
-public record CoreEntity(string Id, string Checksum, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
+public record CoreEntity(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 
   public string Id { get; set; } = Id;
   public string SourceId { get; set; } = Id;
@@ -22,10 +22,11 @@ public record CoreEntity(string Id, string Checksum, string FirstName, string La
   public DateTime DateCreated { get; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
   public string DisplayName => $"{FirstName} {LastName}";
+  
+  public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
   public record Dto {
     public string? Id { get; init; }
-    public string? Checksum { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public DateOnly? DateOfBirth { get; init; }
@@ -36,7 +37,6 @@ public record CoreEntity(string Id, string Checksum, string FirstName, string La
     
     public static explicit operator CoreEntity(Dto raw) => new(
         raw.Id ?? throw new ArgumentNullException(nameof(Id)),
-        raw.Checksum ?? "",
         raw.FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
         raw.LastName ?? throw new ArgumentNullException(nameof(LastName)),
         raw.DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth)),
@@ -44,7 +44,7 @@ public record CoreEntity(string Id, string Checksum, string FirstName, string La
   }
 }
 
-public record CoreEntity2(string Id, string Checksum, DateTime DateUpdated) : ICoreEntity {
+public record CoreEntity2(string Id, DateTime DateUpdated) : ICoreEntity {
   public string Id { get; set; } = Id;
   public string SourceId { get; set; } = Id;
   public string SourceSystem { get; } = Constants.System2Name;
@@ -53,6 +53,8 @@ public record CoreEntity2(string Id, string Checksum, DateTime DateUpdated) : IC
   public DateTime SourceSystemDateUpdated => DateUpdated;
   
   public string DisplayName { get; } = Id;
+  
+  public object GetChecksumSubset() => new { Id };
 }
 
 public record TestSettingsRaw {

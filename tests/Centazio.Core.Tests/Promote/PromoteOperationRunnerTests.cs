@@ -71,7 +71,7 @@ public class PromoteOperationRunnerTests {
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
     public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<StagedEntity> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-          staged.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+          staged.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
           staged.Where((_, idx) => idx % 2 == 1).Select(e => new StagedEntityAndIgnoreReason(e, Reason: $"Ignore: {e.Data}")).ToList()));
     }
     
@@ -101,22 +101,27 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
-    var entities1 = new List<ICoreEntity> {
-      F.NewCoreCust("N1", "N1", "1", "c1"),
-      F.NewCoreCust("N2", "N2", "2", "c2"),
-      F.NewCoreCust("N3", "N3", "3", "c3"),
-      F.NewCoreCust("N4", "N4", "4", "c4"),
+    var entities1 = new List<CoreEntityAndChecksum> {
+      new (F.NewCoreCust("N1", "N1", "1"), Helpers.TestingChecksum),
+      new (F.NewCoreCust("N2", "N2", "2"), Helpers.TestingChecksum),
+      new (F.NewCoreCust("N3", "N3", "3"), Helpers.TestingChecksum),
+      new (F.NewCoreCust("N4", "N4", "4"), Helpers.TestingChecksum)
     };
     await core.Upsert(Constants.CoreEntityName, entities1);
     
     var entities2 = new List<ICoreEntity> {
-      F.NewCoreCust("N12", "N12", "1", "c1"),
-      F.NewCoreCust("N22", "N22", "2", "c2"),
-      F.NewCoreCust("N32", "N32", "3", "c32"), // only this one gets updated as the checksum changed
-      F.NewCoreCust("N42", "N42", "4", "c4"),
+      // F.NewCoreCust("N12", "N12", "1", "c1"),
+      // F.NewCoreCust("N22", "N22", "2", "c2"),
+      // F.NewCoreCust("N32", "N32", "3", "c32"), // only this one gets updated as the checksum changed
+      // F.NewCoreCust("N42", "N42", "4", "c4"),
+      
+      F.NewCoreCust("N1", "N1", "1"),
+      F.NewCoreCust("N2", "N2", "2"),
+      F.NewCoreCust("N32", "N32", "3"), // only this one gets updated as the checksum changed
+      F.NewCoreCust("N4", "N4", "4")
     };
-    // ideally these methods should be strongly typed using generics 
-    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core);
+    // ideally these methods should be strongly typed using generics
+    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core, Helpers.TestingChecksum);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
   }
 }

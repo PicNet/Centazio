@@ -1,8 +1,10 @@
 ﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.CoreStorage;
 using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
@@ -15,9 +17,17 @@ public class PromoteFunctionTests {
   private readonly ExternalEntityType external = Constants.ExternalEntityName;
   private readonly CoreEntityType obj = Constants.CoreEntityName;
   
+  private TestingCtlRepository ctl;
+  private TestingStagedEntityStore stager;
+  private TestingInMemoryCoreStorageRepository core;
+  private TestingInMemoryCoreToSystemMapStore entitymap;
+
+  [SetUp] public void SetUp() {
+    (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
+  }
+      
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
-    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
     
@@ -62,7 +72,6 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
-    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
     
@@ -107,7 +116,6 @@ public class PromoteFunctionTests {
   }
   
   [Test] public async Task Test_that_bounce_backs_are_promoted_again_if_checksum_changes() {
-    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
     var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
     var runner1 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func1, oprunner, ctl);
     
@@ -117,7 +125,7 @@ public class PromoteFunctionTests {
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
-    var c1 = new CoreEntity("C1", "CHECKSUM1", "", "", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
+    var c1 = new CoreEntity("C1", "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
     func1.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se1, c1)], []);
     
     TestingUtcDate.DoTick();
@@ -125,7 +133,7 @@ public class PromoteFunctionTests {
     await runner1.RunFunction();
     var expkey1 = new CoreToExternalMap.MappingKey(obj, "C1", sys1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
-    Assert.That(core.MemDb[obj].Values, Is.EquivalentTo(new [] { c1 }));
+    Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
     await entitymap.Create([CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
@@ -136,7 +144,7 @@ public class PromoteFunctionTests {
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
-    var c2 = new CoreEntity("C2", "CHECKSUM2", "", "", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
+    var c2 = new CoreEntity("C2", "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se2, c2)], []);
     TestingUtcDate.DoTick();
@@ -144,12 +152,11 @@ public class PromoteFunctionTests {
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
-    var expected = new CoreEntity("C1", "CHECKSUM2", "", "", DateOnly.MinValue, c2.DateUpdated) { SourceId = "E1" };
-    Assert.That(core.MemDb[obj].Values, Is.EquivalentTo(new [] { expected }));
+    var expected = new CoreEntity("C1", "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = "E1" };
+    Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }
   
   [Test] public async Task Test_that_bounce_backs_are_ignored_if_checksum_is_the_same() {
-    var (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
     var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
     var runner1 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func1, oprunner, ctl);
     
@@ -159,7 +166,7 @@ public class PromoteFunctionTests {
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
-    var c1 = new CoreEntity("C1", "CHECKSUM", "", "", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
+    var c1 = new CoreEntity("C1", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
     func1.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se1, c1)], []);
     
     TestingUtcDate.DoTick();
@@ -167,7 +174,7 @@ public class PromoteFunctionTests {
     await runner1.RunFunction();
     var expkey1 = new CoreToExternalMap.MappingKey(obj, "C1", sys1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
-    Assert.That(core.MemDb[obj].Values, Is.EquivalentTo(new [] { c1 }));
+    Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
     await entitymap.Create([CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
@@ -178,16 +185,17 @@ public class PromoteFunctionTests {
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
-    var c2 = new CoreEntity("C2", "CHECKSUM", "", "", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
+    var c2 = new CoreEntity("C2", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se2, c2)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
-    Assert.That(core.MemDb[obj].Values, Is.EquivalentTo(new [] { c1 })); // no changes to entity as checksum did not change
+    Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 })); // no changes to entity as checksum did not change
   }
   
+  private List<ICoreEntity> CoresInDb => core.MemDb[obj].Values.Select(e => e.CoreEntity).ToList();
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys1, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
   private ObjectState<CoreEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys1, stg, obj, true) {
     DateCreated = start,

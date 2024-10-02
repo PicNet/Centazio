@@ -56,7 +56,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
-    List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, Guid.NewGuid().ToString(), "", "", DateOnly.MinValue, UtcDate.UtcNow)];
+    List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, "", "", DateOnly.MinValue, UtcDate.UtcNow)];
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), "CrmSystem");
@@ -74,9 +74,10 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
+    var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName external, string externalid) {
-      var c = new CoreEntity(coreid, Guid.NewGuid().ToString(), "", "", DateOnly.MinValue, UtcDate.UtcNow);
-      await corestore.Upsert(Constants.CoreEntityName, [c]);
+      var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
+      await corestore.Upsert(Constants.CoreEntityName, [new CoreEntityAndChecksum(c, Helpers.TestingChecksum)]);
       await entitymap.Create([CoreToExternalMap.Create(c, external).SuccessCreate(externalid)]);
       return c;
     }
@@ -104,9 +105,9 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
-    var c2dup = new CoreEntity("C2", "C2", "", "", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
+    var c2dup = new CoreEntity("C2", name, name, DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     var c2 = await SimulatePromoteOperationRunnerFixed([c2dup], Constants.System2Name);
-    Assert.That(c1.Checksum == c2.Checksum);
+    Assert.That(Helpers.TestingChecksum(c1.GetChecksumSubset()), Is.EqualTo(Helpers.TestingChecksum(c2.GetChecksumSubset()))); 
   }
   
   protected abstract ITestingCoreToSystemMapStore GetStore();

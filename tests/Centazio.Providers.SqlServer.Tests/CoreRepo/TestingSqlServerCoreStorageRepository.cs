@@ -52,7 +52,7 @@ END
     return mapping.ToDictionary(t => t.Id, t => t.Checksum);
   }
 
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
     var sql = $@"MERGE INTO {obj} T
 USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
@@ -65,8 +65,11 @@ UPDATE SET Checksum=c.Checksum, FirstName=c.FirstName, LastName=c.LastName, Date
   DateUpdated=c.DateUpdated, SourceSystemDateUpdated=c.SourceSystemDateUpdated;";
     
     await using var conn = SqlConn.Instance.Conn();
-    await conn.ExecuteAsync(sql, entities);
-    return entities;
+    await conn.ExecuteAsync(sql, entities.Select(cs => {
+      var c = cs.ToCore<CoreEntity>();
+      return new { c.Id, cs.Checksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
+    }));
+    return entities.Select(c => c.CoreEntity).ToList();
   }
 
   public async ValueTask DisposeAsync() {

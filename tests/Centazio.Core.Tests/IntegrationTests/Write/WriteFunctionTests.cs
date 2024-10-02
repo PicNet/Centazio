@@ -12,9 +12,9 @@ public class WriteFunctionTests {
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
     
-    var customer1 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var customer2 = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var upsert1 = await core.Upsert(Constants.CoreEntityName, [customer1, customer2]);
+    var customer1 = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var customer2 = new CoreEntity(Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingChecksum), new (customer2, Helpers.TestingChecksum)]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
       new CoreAndExternalMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
@@ -24,8 +24,8 @@ public class WriteFunctionTests {
     
     TestingUtcDate.DoTick();
     
-    var customer22 = customer2 with { Checksum = Guid.NewGuid().ToString(), FirstName = "22", DateUpdated = UtcDate.UtcNow };
-    var upsert2 = await core.Upsert(Constants.CoreEntityName, [customer22]);
+    var customer22 = customer2 with { FirstName = "22", DateUpdated = UtcDate.UtcNow };
+    var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingChecksum)]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
@@ -50,8 +50,8 @@ public class WriteFunctionTests {
     var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
 
     // add some data, as the write function will not be called if there is nothing to 'write'
-    var entity = new CoreEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    await core.Upsert(Constants.CoreEntityName, [entity]);
+    var entity = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    await core.Upsert(Constants.CoreEntityName, [new (entity, Helpers.TestingChecksum)]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();

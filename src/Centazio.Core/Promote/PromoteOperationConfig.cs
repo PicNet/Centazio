@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
@@ -27,6 +28,7 @@ public record PromoteOperationConfig(
   public bool IsBidirectional { get; init; }
   
   public object LoggableValue => $"{ExternalEntityType.Value} -> {CoreEntityType.Value}";
-
+  
+  public Func<object, string> ChecksumAlgorithm { get; init; } = DefaultChecksumAlgorithm.Checksum;
 }
 

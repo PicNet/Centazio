@@ -2,6 +2,20 @@
 
 namespace Centazio.Core.CoreRepo;
 
+public record CoreEntityAndChecksum {
+  public ICoreEntity CoreEntity { get; private init; }
+  public string Checksum { get; private init; }
+  
+  public CoreEntityAndChecksum(ICoreEntity core, Func<object, string> checksum) {
+    var subset = core.GetChecksumSubset();
+    
+    CoreEntity = core;
+    Checksum = subset is null ? String.Empty : checksum(subset);
+  }
+  
+  public T ToCore<T>() where T : ICoreEntity => (T) CoreEntity; 
+}
+
 public interface ICoreEntity {
   
   /// <summary>
@@ -24,11 +38,24 @@ public interface ICoreEntity {
 
   /// <summary>
   /// A checksum used to check for unnecessary updates to already existing entities in
-  /// core storage.  If this is empty then checksum comparisons will not be made and all
+  /// core storage.  If this returns null then checksum comparisons will not be made and all
   /// updates from the source system will be replicated to core storage even if nothing
-  /// meaningful has changed
+  /// meaningful has changed.
+  ///
+  /// Implementing methods should return a subset of the entity fields that
+  /// signify meaningful changes.
+  ///
+  /// Example:
+  /// ```
+  /// public object? GetChecksumSubset() => new {
+  ///   Name,
+  ///   Address,
+  ///   Children = Children.Select(c => c.GetChecksumSubset()).ToList(),
+  ///   Parent = Parent.GetChecksumSubset()
+  /// };
+  /// ```
   /// </summary>
-  public string Checksum { get; }
+  public object? GetChecksumSubset();
   
   /// <summary>
   /// The date/time when this entity was added to core storage

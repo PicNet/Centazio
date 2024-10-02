@@ -25,11 +25,10 @@ public static class TestingFactories {
       ICoreStorage? core = null) => 
       new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), entitymap ?? CoreSysMap());
 
-  public static CoreEntity NewCoreCust(string first, string last, string? id = null, string? checksum = null) {
+  public static CoreEntity NewCoreCust(string first, string last, string? id = null) {
     id ??= Guid.NewGuid().ToString();
     var dob = DateOnly.MinValue;
-    checksum ??= Helpers.TestingChecksum(new { id, first, last, dob });
-    return new CoreEntity(id, checksum, first, last, dob, UtcDate.UtcNow);
+    return new CoreEntity(id, first, last, dob, UtcDate.UtcNow);
   }
 
   public static WriteOperationRunner<C> WriteRunner<C>(InMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  

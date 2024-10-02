@@ -71,12 +71,12 @@ public class PromoteOperationRunner(
 
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
-    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core);
+    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core, op.Config.ChecksumAlgorithm);
     var toupsert = op.Config.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
     Log.Information($"[{op.State.System}/{op.State.Object}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] Meaningful[{meaningful.Count}] Upserting[{toupsert.Count}]");
     if (!toupsert.Any()) return;
     
-    await core.Upsert(op.State.Object, toupsert);
+    await core.Upsert(op.State.Object, toupsert.Select(e => new CoreEntityAndChecksum(e, op.Config.ChecksumAlgorithm)).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(toupsert, op.State.System); 
     await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
@@ -102,13 +102,15 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, CoreEntityType obj, ICoreStorageUpserter core) {
-    if (lst.All(e => String.IsNullOrWhiteSpace(e.Checksum))) return lst;
+  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<object, string> checksum) {
+    if (lst.All(e => e.GetChecksumSubset() is null)) return lst;
     
     var checksums = await core.GetChecksums(obj, lst);
-    return lst.Where(e => String.IsNullOrWhiteSpace(e.Checksum)
-        || !checksums.ContainsKey(e.Id)
-        || e.Checksum != checksums[e.Id]).ToList();
+    return lst.Where(e => {
+      var newsubset = e.GetChecksumSubset();
+      if (!checksums.TryGetValue(e.Id, out var existing) || newsubset is null) return true;
+      return checksum(newsubset) != existing;
+    }).ToList();
   } 
   
   /// <summary>

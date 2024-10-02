@@ -2,21 +2,25 @@
 
 public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
-  protected readonly Dictionary<CoreEntityType, Dictionary<string, ICoreEntity>> db = new();
+  protected readonly Dictionary<CoreEntityType, Dictionary<string, CoreEntityAndChecksum>> db = new();
 
   public Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var checksums = new Dictionary<string, string>();
     if (!entities.Any()) return Task.FromResult(checksums);
     if (!db.TryGetValue(obj, out var dbtype)) return Task.FromResult(checksums);
-    
-    return Task.FromResult(entities
+    var result = entities
         .Where(e => dbtype.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => dbtype[e.Id].Checksum));
+        .Select(e => dbtype[e.Id])
+        .ToDictionary(e => e.CoreEntity.Id, e => e.Checksum);
+    return Task.FromResult(result);
   }
 
-  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
-    if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, ICoreEntity>();
-    var upserted = entities.Select(e => db[obj][e.Id] = e).ToList();
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
+    if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, CoreEntityAndChecksum>();
+    var upserted = entities.Select(e => {
+      db[obj][e.CoreEntity.Id] = e;
+      return e.CoreEntity;
+    }).ToList();
     return Task.FromResult(upserted);
   }
 

@@ -2,6 +2,7 @@
 using Centazio.Core.CoreRepo;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
+using Centazio.Test.Lib;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -27,6 +28,9 @@ public record CoreCustomer : CoreEntityBase {
     var (pending, invoices) = (db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
     return new CoreCustomer(a.Id.ToString(), SimulationCtx.FIN_SYSTEM, a.Updated, a.Name, pending, invoices, SimulationCtx.Checksum(a));
   }
+
+  public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset(), Invoices = Invoices.Select(i => i.GetChecksumSubset()).ToList() };
+
 }
 
 public record CoreMembershipType : CoreEntityBase {
@@ -38,6 +42,8 @@ public record CoreMembershipType : CoreEntityBase {
   }
   
   public static CoreMembershipType FromCrmMembershipType(CrmMembershipType m) => new(m.Id.ToString(), m.Updated, m.Name, SimulationCtx.Checksum(m));
+  
+  public override object GetChecksumSubset() => new { Name };
 
 }
 public record CoreInvoice : CoreEntityBase {
@@ -57,7 +63,8 @@ public record CoreInvoice : CoreEntityBase {
   public static CoreInvoice FromCrmInvoice(CrmInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.CRM_SYSTEM, i.Updated, corecustid, i.AmountCents, i.DueDate, i.PaidDate, SimulationCtx.Checksum(i));
 
   public static CoreInvoice FromFinInvoice(FinInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.FIN_SYSTEM, i.Updated, corecustid, (int) (i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate, SimulationCtx.Checksum(i));
-
+  
+  public override object GetChecksumSubset() => new { CustomerId, Cents, DueDate, PaidDate };
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
@@ -71,6 +78,8 @@ public abstract record CoreEntityBase : ICoreEntity {
   public string LastUpdateSystem { get; protected init; }
   
   public string DisplayName { get; protected init; }
+  
+  public abstract object? GetChecksumSubset();
   
   protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display, string checksum) {
     SourceSystem = source;
@@ -110,17 +119,18 @@ public class CoreStorage : ICoreStorage {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => e.Checksum);
+        .ToDictionary(e => e.Id, e => Helpers.TestingChecksum(e.GetChecksumSubset() ?? throw new Exception()));
   }
-  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
-    Log.Information($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.DisplayName}({e.Id})")));
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
+    Log.Information($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.Id})")));
     var target = GetList(obj);
-    entities.ForEach(e => {
-      var idx = target.FindIndex(e2 => e2.Id == e.Id);
-      if (idx < 0) target.Add(e);
-      else target[idx] = e;
-    });
-    return Task.FromResult(entities);
+    var upserted = entities.Select(e => {
+      var idx = target.FindIndex(e2 => e2.Id == e.CoreEntity.Id);
+      if (idx < 0) target.Add(e.CoreEntity);
+      else target[idx] = e.CoreEntity;
+      return e.CoreEntity;
+    }).ToList();
+    return Task.FromResult(upserted);
   }
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
