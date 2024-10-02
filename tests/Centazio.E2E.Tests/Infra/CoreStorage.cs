@@ -62,7 +62,7 @@ public record CoreInvoice : CoreEntityBase {
 
 public abstract record CoreEntityBase : ICoreEntity {
   public string SourceSystem { get; }
-  public string SourceId { get; protected init; }
+  public string SourceId { get; set; }
   public string Id { get; set; }
   public string Checksum { get; protected init; }
   public DateTime DateCreated { get; protected init; }

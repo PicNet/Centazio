@@ -12,8 +12,8 @@ public interface ICoreEntity {
   /// <summary>
   /// The id of the entity in the source system 
   /// </summary>
-  public string SourceId { get; }
-  
+  public string SourceId { get; set; }
+
   /// <summary>
   /// The id of the entity.  Ideally this should be the same id as used in the source
   /// system (i.e. same as `SourceId`). If this is not possible then this should be a

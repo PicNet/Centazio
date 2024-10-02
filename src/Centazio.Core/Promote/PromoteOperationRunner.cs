@@ -51,6 +51,7 @@ public class PromoteOperationRunner(
       //  Also, havving Id with a public setter is not nice, how can this be avoided?
       changes.Add($"{t.Core.Id}->{existing.Id}");
       t.Core.Id = existing.Id;
+      t.Core.SourceId = existing.SourceId;
     }
     if (changes.Any()) Log.Information("identified bounce backs {@ExternalSystem} {@CoreEntityType} {@Changes}", system, coretype, changes);
     return topromote;
@@ -64,8 +65,7 @@ public class PromoteOperationRunner(
     if (!toupsert.Any()) return;
     
     await core.Upsert(op.State.Object, toupsert);
-
-    DevelDebug.WriteLine($"PromoteOperationRunner - Creating CoreSysMaps[{entitymap.GetHashCode()}]");
+    
     var existing = await entitymap.GetForCores(toupsert, op.State.System); 
     await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
     await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());

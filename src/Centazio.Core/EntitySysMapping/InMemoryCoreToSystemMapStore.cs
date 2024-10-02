@@ -12,7 +12,6 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   // todo: rename these overrides, they do not share return types
   public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName external) {
-    if (cores.Any()) DevelDebug.WriteLine($"GetForCores1 CoreIds[{String.Join(';', cores.Select(c => c.Id))}] Type[{CoreEntityType.From(cores.First())}] External[{external}]");
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
       var obj = CoreEntityType.From(c);
@@ -24,7 +23,6 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   }
   
   public override Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external) {
-    DevelDebug.WriteLine($"GetForCores2 CoreIds[{String.Join(",", coreids)}] Type[{coretype}] External[{external}]");
     return Task.FromResult(
         coreids.Distinct().Select(cid => {
           var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == external);
@@ -58,12 +56,6 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     
     var updated = updates.Select(map => (CoreToExternalMap.Updated)(memdb[map.Key] = map)).ToList();
     return Task.FromResult(updated);
-  }
-
-  private void ValidateDuplicates() {
-    var keys = memdb.Keys;
-    var dulpicates = keys.GroupBy(k => new { k.CoreEntity, k.ExternalSystem, k.ExternalId } ).Where(g => g.Count() > 1).Select(g => $"{String.Join(",", g.ToList())}: {g.Count()}").ToList();
-    if (dulpicates.Any()) throw new Exception($"found duplicate external entities in CoreToSysMap:\n\t{String.Join("\n\t", dulpicates)}");
   }
 
   public override ValueTask DisposeAsync() { 

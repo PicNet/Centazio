@@ -60,7 +60,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
       nameof(CoreInvoice) => await staged.Select(async s => {
         var crminv = s.Deserialise<CrmInvoice>();
-        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System);
+        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System) ?? throw new Exception();
         return new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(crminv, custid));
       }).Synchronous(), 
       _ => throw new NotSupportedException(config.State.Object) };

@@ -57,7 +57,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
       nameof(CoreInvoice) => await staged.Select(async s => {
         var fininv = s.Deserialise<FinInvoice>();
-        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), fininv.AccountId.ToString(), config.State.System);
+        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), fininv.AccountId.ToString(), config.State.System) ?? throw new Exception();
         return new StagedAndCoreEntity(s, CoreInvoice.FromFinInvoice(fininv, custid));
       }).Synchronous(), 
       _ => throw new Exception() };
