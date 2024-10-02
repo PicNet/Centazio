@@ -3,6 +3,7 @@
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
+- use simulation to optimise performance
 
 # Developer Guidelines:
 

@@ -9,7 +9,7 @@ namespace Centazio.Core.Promote;
 
 public class PromoteOperationRunner(
     IStagedEntityStore staged,
-    ICoreStorageUpserter core,
+    ICoreStorage core,
     ICoreToSystemMapStore entitymap) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
@@ -23,17 +23,39 @@ public class PromoteOperationRunner(
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
       return results;  
     }
-    Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{results.ToPromote.Count}] ToIgnore[{results.ToIgnore.Count}]");
+    var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
     
-    await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
+    if (op.Config.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op.State.System, op.State.Object, topromote); }
+    
+    Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{topromote.Count}] ToIgnore[{toignore.Count}]");
+    
+    await WriteEntitiesToCoreStorage(op, topromote.Select(p => p.Core).ToList());
     await staged.Update(
-        results.ToPromote.Select(e => e.Staged.Promote(start))
-            .Concat(results.ToIgnore.Select(e => e.Staged.Ignore(e.Reason)))
+        topromote.Select(e => e.Staged.Promote(start))
+            .Concat(toignore.Select(e => e.Staged.Ignore(e.Reason)))
             .ToList());
     
     return results; 
   }
-  
+
+  private async Task<List<StagedAndCoreEntity>> IdentifyBouncedBackAndSetCorrectId(SystemName system, CoreEntityType coretype, List<StagedAndCoreEntity> topromote) {
+    var changes = new List<string>();
+    foreach (var t in topromote) {
+      // todo: make this a single call, instead of calls for each item in topromote array
+      var id = await entitymap.GetCoreIdForSystem(coretype, t.Core.SourceId, system);
+      if (id is null) continue;
+      var existing = (await core.Get(coretype, [id])).Single();
+      // todo: if the Id is part of the checksum then this will
+      //  change the Id and result in an endless bounce back.  Need to check that Id is not
+      //  part of the checksum object.
+      //  Also, havving Id with a public setter is not nice, how can this be avoided?
+      changes.Add($"{t.Core.Id}->{existing.Id}");
+      t.Core.Id = existing.Id;
+    }
+    if (changes.Any()) Log.Information("identified bounce backs {@ExternalSystem} {@CoreEntityType} {@Changes}", system, coretype, changes);
+    return topromote;
+  }
+
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
     var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core);

@@ -35,8 +35,9 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
         .ToList());
   }
   
-  public override Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
-    return Task.FromResult(memdb.Keys.Single(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid).CoreId.Value);
+  public override Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
+    var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid);
+    return Task.FromResult(key?.CoreId.Value);
   }
 
   public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {

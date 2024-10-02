@@ -32,3 +32,5 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// </summary>
   Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities);
 }
+
+public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

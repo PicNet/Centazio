@@ -1,5 +1,4 @@
-﻿using System.Runtime.ConstrainedExecution;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Test.Lib;
@@ -83,7 +82,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     }
     
     async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName external, string externalid) {
-      var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, externalid, external);
+      var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, externalid, external) ?? throw new Exception();
       return await corestore.Get<CoreEntity>(Constants.CoreEntityName, id);
     }
     

@@ -18,9 +18,9 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   
   /// <summary>
   /// Gets the CoreId for a specific `CoreEntityType` given its `ExternalId` and `ExternalSystem`.
-  /// This methods throws an exception if the expected CoreEntity is not found.
+  /// This methods returns null if the entity is not found.
   /// </summary>
-  Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+  Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
 }
 
 public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
@@ -31,7 +31,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   public abstract Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external);
   public abstract Task<List<CoreToExternalMap>> GetAll();
   
-  public abstract Task<string> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
+  public abstract Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys);
   public abstract ValueTask DisposeAsync();
 
 }

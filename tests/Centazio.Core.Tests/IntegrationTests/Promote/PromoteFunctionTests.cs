@@ -208,13 +208,13 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? sys=null, bool bidi=false) {
     // todo: use collection initialiser in entire project
     Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, new ([
-      new (Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
+      new (Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
     ]));
   }
   
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
     DevelDebug.WriteLine("Returning Next Results: " + NextResult);
-    if (NextResult != null) return Task.FromResult(NextResult);
+    if (NextResult is not null) return Task.FromResult(NextResult);
     
     var cores = staged.Select(e => {
       var core = JsonSerializer.Deserialize<CoreEntity>(e.Data) ?? throw new Exception();

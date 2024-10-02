@@ -10,8 +10,6 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
     var pending = await core.Get(op.State.Object, op.Checkpoint, op.State.System);
-    
-    DevelDebug.WriteLine($"WriteOperationRunner - Creating CoreSysMaps[{entitymap.GetHashCode()}]");
     var maps = await entitymap.GetForCores(pending, op.State.System);
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Created[{maps.Created.Count}] Updated[{maps.Updated.Count}]");
     if (maps.Empty) return new SuccessWriteOperationResult([], []);

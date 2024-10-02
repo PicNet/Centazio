@@ -4,7 +4,7 @@ using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.CoreStorage;
 
-public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorageGetter {
+public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorage {
   
   public Task<E> Get<E>(CoreEntityType obj, string id) where E : class, ICoreEntity {
     if (!db.ContainsKey(obj) || !db[obj].ContainsKey(id)) throw new Exception($"Core entity [{obj}#{id}] not found");

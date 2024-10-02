@@ -22,7 +22,7 @@ public static class TestingFactories {
   public static IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
       ICoreToSystemMapStore? entitymap = null, 
-      ICoreStorageUpserter? core = null) => 
+      ICoreStorage? core = null) => 
       new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), entitymap ?? CoreSysMap());
 
   public static CoreEntity NewCoreCust(string first, string last, string? id = null, string? checksum = null) {

@@ -20,8 +20,8 @@ public interface ICoreEntity {
   /// short string representation of a unique identifier that can be used to map back
   /// to the source system 
   /// </summary>
-  public string Id { get; }
-  
+  public string Id { get; set; }
+
   /// <summary>
   /// A checksum used to check for unnecessary updates to already existing entities in
   /// core storage.  If this is empty then checksum comparisons will not be made and all
