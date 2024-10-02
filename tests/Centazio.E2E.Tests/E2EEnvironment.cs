@@ -152,7 +152,7 @@ public class E2EEnvironment : IAsyncDisposable {
     var core_types = SimulationCtx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Id, m.Name } );
     
-    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_types, crm_types);
+    CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_types, crm_types);
   }
   
   private void CompareCustomers() {
@@ -161,8 +161,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_customers = crm.Customers.Select(c => new { c.Id, c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { c.Id, c.Name });
     
-    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_customers_for_crm, crm_customers);
-    CompareByChecksun(SimulationCtx.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
+    CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_customers_for_crm, crm_customers);
+    CompareByChecksum(SimulationCtx.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
   }
   
   private void CompareInvoices() {
@@ -170,28 +170,28 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_invoices = crm.Invoices.Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.Id, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
-    CompareByChecksun(SimulationCtx.CRM_SYSTEM, core_invoices, crm_invoices);
-    CompareByChecksun(SimulationCtx.FIN_SYSTEM, core_invoices, fin_invoices);
+    CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_invoices, crm_invoices);
+    CompareByChecksum(SimulationCtx.FIN_SYSTEM, core_invoices, fin_invoices);
   }
   
-  private void CompareByChecksun(SystemName targetsys, IEnumerable<object> cores, IEnumerable<object> targets) {
-    var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
-    var (core_compare, core_desc) = (coreslst.Select(e => Serialise(e, false)), coreslst.Select(e => Serialise(e, true)));
-    var (targets_compare, targets_desc) = (targetslst.Select(e => Serialise(e, false)), targetslst.Select(e => Serialise(e, true)));
-    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"CORES:\n\t{String.Join("\n\t", core_desc)}\nTARGET[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
-
-    string Serialise(object obj, bool includeid) {
-      JsonSerializerOptions options = includeid ? new() : new() {
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver {
-          Modifiers = {
-            ti => {
-              if (ti.Kind != JsonTypeInfoKind.Object) return;
-              ti.Properties.Remove(ti.Properties.Single(p => p.Name == "Id"));
-            }
-          }
+  private readonly JsonSerializerOptions withid = new();
+  private readonly JsonSerializerOptions noid = new() {
+    TypeInfoResolver = new DefaultJsonTypeInfoResolver {
+      Modifiers = {
+        ti => {
+          if (ti.Kind != JsonTypeInfoKind.Object) return;
+          ti.Properties.Remove(ti.Properties.Single(p => p.Name == "Id"));
         }
-      };
-      return JsonSerializer.Serialize(obj, options);
+      }
     }
+  };
+  
+  private void CompareByChecksum(SystemName targetsys, IEnumerable<object> cores, IEnumerable<object> targets) {
+    var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
+    var (core_compare, core_desc) = (coreslst.Select(e => Json(e, false)), coreslst.Select(e => Json(e, true)));
+    var (targets_compare, targets_desc) = (targetslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, true)));
+    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"CORES:\n\t{String.Join("\n\t", core_desc)}\nTARGET[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
+    
+    string Json(object obj, bool includeid) => JsonSerializer.Serialize(obj, includeid ? withid : noid);
   }
 }

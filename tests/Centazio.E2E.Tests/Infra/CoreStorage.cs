@@ -114,13 +114,13 @@ public class CoreStorage : ICoreStorage {
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<ICoreEntity> entities) {
     Log.Information($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.DisplayName}({e.Id})")));
-    var (source, target) = (entities.ToList(), GetList(obj));
-    source.ForEach(e => {
+    var target = GetList(obj);
+    entities.ForEach(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.Id);
       if (idx < 0) target.Add(e);
       else target[idx] = e;
     });
-    return Task.FromResult(source);
+    return Task.FromResult(entities);
   }
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
@@ -131,5 +131,4 @@ public class CoreStorage : ICoreStorage {
     if (obj.Value == nameof(CoreInvoice)) return Invoices;
     throw new NotSupportedException(obj);
   }
-
 }

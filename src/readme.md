@@ -3,8 +3,9 @@
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
-- use simulation to optimise performance
 - use simulation to optimise the developer experiecen, add lots of helpers to do common tasks
+- have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
+    causes this
 
 # Developer Guidelines:
 
