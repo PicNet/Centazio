@@ -19,10 +19,10 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
   
   public FinReadFunction(IFinSystemApi api) {
     this.api = api;
-    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, new ([
-      new (new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new (new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
-    ]));
+    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, [
+      new(new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
+    ]);
   }
   
   public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
@@ -44,10 +44,10 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
 
   public FinPromoteFunction(CoreStorage db) {
     this.db = db;
-    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, new ([
-      new (new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL },
-      new (new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL }
-    ]));
+    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, [
+      new(new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL },
+      new(new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL }
+    ]);
   }
 
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
@@ -76,10 +76,10 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
   public FinWriteFunction(FinSystem api, ICoreToSystemMapStore intra) {
     this.api = api;
     this.intra = intra;
-    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, new ([
+    Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, [
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this),
-    ]));
+      new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+    ]);
   }
 
   public async Task<WriteOperationResult> WriteEntities(

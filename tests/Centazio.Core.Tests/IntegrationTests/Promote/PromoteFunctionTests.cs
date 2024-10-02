@@ -212,10 +212,9 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public PromoteOperationResult? NextResult { get; set; }
   
   public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? sys=null, bool bidi=false) {
-    // todo: use collection initialiser in entire project
-    Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, new ([
-      new (Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
-    ]));
+    Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
+      new(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
+    ]);
   }
   
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {

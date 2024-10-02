@@ -46,7 +46,7 @@ public class ReadFunctionTests {
     // validate results
     var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult(new List<string> { expjson }).ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult([expjson]).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -87,9 +87,9 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
-    Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, new ([
-      new (Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    ]));
+    Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, [
+      new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+    ]);
   }
   
   public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {

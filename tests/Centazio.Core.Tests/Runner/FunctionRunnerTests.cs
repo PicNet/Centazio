@@ -74,8 +74,9 @@ public class FunctionRunnerTests {
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }
   
-  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, 
-      new List<ReadOperationConfig> { new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults()) }) {
+  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, [
+    new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults())
+  ]) {
     
     private class EmptyResults : IGetObjectsToStage {
       public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());

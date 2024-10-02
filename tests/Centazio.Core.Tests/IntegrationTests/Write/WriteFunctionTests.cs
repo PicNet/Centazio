@@ -77,16 +77,16 @@ public class WriteFunctionTests {
 
 public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
 
-  public List<CoreAndExternalMap> Created { get; } = new();
-  public List<CoreAndUpdatedMap> Updated { get; } = new();
+  public List<CoreAndExternalMap> Created { get; } = [];
+  public List<CoreAndUpdatedMap> Updated { get; } = [];
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
   public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
 
   public TestingBatchWriteFunction() {
-    Config = new FunctionConfig<WriteOperationConfig, CoreEntityType>(Constants.System2Name, LifecycleStage.Defaults.Write, new List<WriteOperationConfig> {
+    Config = new FunctionConfig<WriteOperationConfig, CoreEntityType>(Constants.System2Name, LifecycleStage.Defaults.Write, [
       new(Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    }) { ThrowExceptions = false };
+    ]) { ThrowExceptions = false };
   }
 
   public void Reset() {
