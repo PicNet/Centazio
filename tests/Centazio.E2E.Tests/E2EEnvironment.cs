@@ -20,7 +20,9 @@ namespace Centazio.E2E.Tests;
 
 internal static class SimulationCtx {
   
-  public static readonly bool ALLOW_BIDIRECTIONAL = false;
+  public static readonly bool SILENCE_LOGGING = true;
+  public static readonly bool SILENCE_SIMULATION = true;
+  public static readonly bool ALLOW_BIDIRECTIONAL = true;
   
   public static readonly SystemName CRM_SYSTEM;
   public static readonly SystemName FIN_SYSTEM;
@@ -48,6 +50,7 @@ internal static class SimulationCtx {
   public const int FIN_MAX_EDIT_INVOICES = 0;
  
  public static void Debug(string message) {
+   if (SILENCE_SIMULATION) return;
    if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message);
    else Helpers.DebugWrite(message);
  }
@@ -85,7 +88,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
     crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new CrmPromoteFunction(SimulationCtx.core),
-        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core, SimulationCtx.entitymap),
         SimulationCtx.ctl);
     
     crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new CrmWriteFunction(crm, SimulationCtx.entitymap),
@@ -96,7 +99,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
     fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new FinPromoteFunction(SimulationCtx.core),
-        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core),
+        new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core, SimulationCtx.entitymap),
         SimulationCtx.ctl);
     
     fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new FinWriteFunction(fin, SimulationCtx.entitymap),
@@ -110,7 +113,8 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   [Test] public async Task RunSimulation() {
-    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    if (SimulationCtx.SILENCE_LOGGING)  LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    
     var systems = new List<ISystem> { crm, fin };
     await Enumerable.Range(0, SimulationCtx.TOTAL_EPOCHS).Select(epoch => RunEpoch(epoch, systems)).Synchronous();
   }

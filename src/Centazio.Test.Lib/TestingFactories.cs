@@ -17,13 +17,13 @@ public static class TestingFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static InMemoryCoreToSystemMapStore EntitySysMap() => new();
+  public static InMemoryCoreToSystemMapStore CoreSysMap() => new();
   public static IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
   public static IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
       ICoreToSystemMapStore? entitymap = null, 
       ICoreStorageUpserter? core = null) => 
-      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo());
+      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), entitymap ?? CoreSysMap());
 
   public static CoreEntity NewCoreCust(string first, string last, string? id = null, string? checksum = null) {
     id ??= Guid.NewGuid().ToString();
@@ -33,7 +33,7 @@ public static class TestingFactories {
   }
 
   public static WriteOperationRunner<C> WriteRunner<C>(InMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
-      => new(entitymap ?? EntitySysMap(), core ?? CoreRepo());
+      => new(entitymap ?? CoreSysMap(), core ?? CoreRepo());
 
 }
 

@@ -10,6 +10,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C, CoreEntityType> op) {
     var pending = await core.Get(op.State.Object, op.Checkpoint, op.State.System);
+    
+    DevelDebug.WriteLine($"WriteOperationRunner - Creating CoreSysMaps[{entitymap.GetHashCode()}]");
     var maps = await entitymap.GetForCores(pending, op.State.System);
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Created[{maps.Created.Count}] Updated[{maps.Updated.Count}]");
     if (maps.Empty) return new SuccessWriteOperationResult([], []);
@@ -19,8 +21,9 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       Log.Warning("error occurred calling `WriteEntitiesToTargetSystem` {@Results}", results);
       return results;  
     }
-    if (results.EntitiesCreated.Any()) await entitymap.Create(results.EntitiesCreated.Select(e => e.Map).ToList());
-    if (results.EntitiesUpdated.Any()) await entitymap.Update(results.EntitiesUpdated.Select(e => e.Map).ToList());
+    
+    await entitymap.Create(results.EntitiesCreated.Select(e => e.Map).ToList());
+    await entitymap.Update(results.EntitiesUpdated.Select(e => e.Map).ToList());
     return results;
   }
 

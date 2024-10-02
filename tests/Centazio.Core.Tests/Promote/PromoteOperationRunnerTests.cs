@@ -20,7 +20,7 @@ public class PromoteOperationRunnerTests {
   private IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
-    (stager, ctl, core, entitymap) = (F.SeStore(), F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
+    (stager, ctl, core, entitymap) = (F.SeStore(), F.CtlRepo(), F.CoreRepo(), F.CoreSysMap());
     promoter = F.PromoteRunner(stager, entitymap, core);
   }
   

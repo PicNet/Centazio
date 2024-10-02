@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
@@ -8,11 +9,10 @@ namespace Centazio.Core.Promote;
 
 public class PromoteOperationRunner(
     IStagedEntityStore staged,
-    ICoreStorageUpserter core) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
+    ICoreStorageUpserter core,
+    ICoreToSystemMapStore entitymap) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
-    if (op.Config.IsBidirectional) throw new NotSupportedException($"[{op.State.System}/{op.State.Object}] - IsBiderectional is currently not supported");
-    
     var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.Config.ExternalEntityType);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
@@ -23,10 +23,9 @@ public class PromoteOperationRunner(
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
       return results;  
     }
-    
     Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{results.ToPromote.Count}] ToIgnore[{results.ToIgnore.Count}]");
-    if (results.ToPromote.Any()) await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     
+    await WriteEntitiesToCoreStorage(op, results.ToPromote.Select(p => p.Core).ToList());
     await staged.Update(
         results.ToPromote.Select(e => e.Staged.Promote(start))
             .Concat(results.ToIgnore.Select(e => e.Staged.Ignore(e.Reason)))
@@ -38,13 +37,16 @@ public class PromoteOperationRunner(
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
     var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core);
-    var toupsert = op.Config.IsBidirectional ? 
-        meaningful : 
-        await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
+    var toupsert = op.Config.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
     Log.Information($"[{op.State.System}/{op.State.Object}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] Meaningful[{meaningful.Count}] Upserting[{toupsert.Count}]");
     if (!toupsert.Any()) return;
     
     await core.Upsert(op.State.Object, toupsert);
+
+    DevelDebug.WriteLine($"PromoteOperationRunner - Creating CoreSysMaps[{entitymap.GetHashCode()}]");
+    var existing = await entitymap.GetForCores(toupsert, op.State.System); 
+    await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
+    await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);

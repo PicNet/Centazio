@@ -8,7 +8,7 @@ namespace Centazio.Core.Tests.IntegrationTests.Write;
 
 public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
-    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
+    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.CoreSysMap());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
     
@@ -44,7 +44,7 @@ public class WriteFunctionTests {
   }
   
   [Test] public async Task Test_WriteFunction_error_handling() {
-    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.EntitySysMap());
+    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.CoreSysMap());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     func.Throws = true;
     var funcrunner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(func, oprunner, ctl);
