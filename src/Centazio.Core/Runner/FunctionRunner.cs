@@ -8,7 +8,7 @@ namespace Centazio.Core.Runner;
 public class FunctionRunner<C, O, R>(
     AbstractFunction<C, O, R> func, 
     IOperationRunner<C, O, R> oprunner, 
-    ICtlRepository ctl) 
+    ICtlRepository ctl) : IDisposable
         where C : OperationConfig<O>
         where O : ObjectName
         where R : OperationResult {
@@ -47,6 +47,9 @@ public class FunctionRunner<C, O, R>(
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
+
+  public void Dispose() { func.Dispose(); }
+
 }
 
 public abstract record FunctionRunResults<R>(List<R> OpResults, string Message) where R : OperationResult; 

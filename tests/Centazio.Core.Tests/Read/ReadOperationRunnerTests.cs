@@ -82,12 +82,13 @@ public class ReadOperationRunnerTests {
   
   private async Task<OperationStateAndConfig<ReadOperationConfig, ExternalEntityType>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
     => new (
-        await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
-        new (new ExternalEntityType(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl));
+        await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())),
+        new BaseFunctionConfig(),
+        new (new ExternalEntityType(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl), DateTime.MinValue);
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object);
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
       return Task.FromResult(res);
     }
@@ -95,7 +96,7 @@ public class ReadOperationRunnerTests {
   
   private class TestingSingleReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object); 
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
       return Task.FromResult(res);
     }
@@ -103,7 +104,7 @@ public class ReadOperationRunnerTests {
   
   private class TestingListReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object); 
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
       return Task.FromResult(res); 
     }

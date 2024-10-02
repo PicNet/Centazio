@@ -30,7 +30,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
       nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
-    SimulationCtx.Debug($"FinReadFunction[{config.Config.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
+    SimulationCtx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
     return ReadOperationResult.Create(updates);
   }
 }
@@ -50,7 +50,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   }
 
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
-    SimulationCtx.Debug($"FinPromoteFunction[{config.Config.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
+    SimulationCtx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     
     var topromote = config.State.Object.Value switch { 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 

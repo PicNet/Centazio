@@ -53,16 +53,20 @@ public class AbstractFunctionStaticHelperTests {
     
     var config = new FunctionConfig<ReadOperationConfig, ExternalEntityType>(NAME, NAME, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
-    var names = states.Select(s => s.Config.Object.Value).ToList();
+    var names = states.Select(s => s.OpConfig.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(new ObjectState<ExternalEntityType>(name, name, new ExternalEntityType(name), true) { 
-      LastCompleted = last,
-      LastResult = EOperationResult.Success,
-      LastAbortVote = EOperationAbortVote.Continue
-    }, new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()));
+    OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> Op(string name, string cron, DateTime last) => new(
+        new ObjectState<ExternalEntityType>(name, name, new ExternalEntityType(name), true) { 
+          LastCompleted = last,
+          LastResult = EOperationResult.Success,
+          LastAbortVote = EOperationAbortVote.Continue
+        }, 
+        new BaseFunctionConfig(), 
+        new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()), 
+        DateTime.MinValue);
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
     using var _ = new ShortLivedUtcDateOverride(
@@ -128,7 +132,7 @@ public class AbstractFunctionStaticHelperTests {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
       await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
     };
-    states[0] = states[0] with { Config = states[0].Config with { GetObjectsToStage = new ErrorReadOperationImplementation() } }; 
+    states[0] = states[0] with { OpConfig = states[0].OpConfig with { GetObjectsToStage = new ErrorReadOperationImplementation() } }; 
     var results = (await AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>.RunOperationsTillAbort(states, runner, repo, false)).ToList();
     var newstates = repo.GetObjects<ExternalEntityType>().Values.ToList();
     var ex = results[0].Exception ?? throw new Exception();
@@ -162,8 +166,10 @@ public class AbstractFunctionStaticHelperTests {
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig, ExternalEntityType>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
-            await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())), 
-            new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()));
+            await repo.GetObjectStateRepo<ExternalEntityType>().CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())),
+            new BaseFunctionConfig(),
+            new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()), 
+            DateTime.MinValue);
     
     public static List<ReadOperationConfig> READ_OP_CONFIGS => [
       new(new ExternalEntityType("1"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
@@ -175,7 +181,7 @@ public class AbstractFunctionStaticHelperTests {
   
   private class TestingListReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object); 
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
       return Task.FromResult(res); 
     }
@@ -183,7 +189,7 @@ public class AbstractFunctionStaticHelperTests {
   
   private class TestingAbortingAndEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object);
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult(EOperationAbortVote.Abort) : new EmptyReadOperationResult(); 
       return Task.FromResult(res);
     }
@@ -191,7 +197,7 @@ public class AbstractFunctionStaticHelperTests {
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
-      var result = Enum.Parse<EOperationResult>(config.Config.Object);
+      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object);
       ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
       return Task.FromResult(res);
     }

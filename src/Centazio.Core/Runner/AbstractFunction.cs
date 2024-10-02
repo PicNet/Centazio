@@ -4,10 +4,10 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<C, O, R> 
+public abstract class AbstractFunction<C, O, R> : IDisposable  
     where C : OperationConfig<O>
     where O : ObjectName
-    where R : OperationResult {
+    where R : OperationResult{
   
   public abstract FunctionConfig<C, O> Config { get; }
 
@@ -26,7 +26,7 @@ public abstract class AbstractFunction<C, O, R>
             .Select(async op => {
       var state = await ctl.GetObjectStateRepo<O>().GetOrCreateObjectState(system, op.Object);
       var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
-      return new OperationStateAndConfig<C, O>(state, op, checkpoint);
+      return new OperationStateAndConfig<C, O>(state, conf, op, checkpoint);
     }).Synchronous())
     .Where(op => op.State.Active)
     .ToList();
@@ -34,7 +34,7 @@ public abstract class AbstractFunction<C, O, R>
 
   internal static List<OperationStateAndConfig<C, O>> GetReadyOperations(List<OperationStateAndConfig<C, O>> states) {
     bool IsOperationReady(OperationStateAndConfig<C, O> op) {
-      var next = op.Config.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
+      var next = op.OpConfig.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
       return next <= UtcDate.UtcNow;
     }
     return states.Where(IsOperationReady).ToList();
@@ -75,5 +75,7 @@ public abstract class AbstractFunction<C, O, R>
       return await ctl.GetObjectStateRepo<O>().SaveObjectState(newstate);
     }
   }
+
+  public void Dispose() { Config.Dispose(); }
 
 }
