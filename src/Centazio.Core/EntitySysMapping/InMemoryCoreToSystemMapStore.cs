@@ -8,10 +8,8 @@ namespace Centazio.Core.EntitySysMapping;
 public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   protected readonly Dictionary<CoreToExternalMap.MappingKey, CoreToExternalMap> memdb = new();
-  public override Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList());
-
-  // todo: rename these overrides, they do not share return types
-  public override Task<GetForCoresResult> GetForCores(List<ICoreEntity> cores, SystemName external) {
+  
+  public override Task<GetForCoresResult> GetNewAndExistingMappingsFromCores(List<ICoreEntity> cores, SystemName external) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
       var obj = CoreEntityType.From(c);
@@ -22,24 +20,28 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     return Task.FromResult(new GetForCoresResult(news, updates));
   }
   
-  public override Task<List<CoreToExternalMap>> GetForCores(CoreEntityType coretype, List<string> coreids, SystemName external) {
-    return Task.FromResult(
-        coreids.Distinct().Select(cid => {
-          var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == external);
-          return key is null ? null : memdb[key];
-        })
-        .Where(m => m is not null)
-        .Cast<CoreToExternalMap>()
-        .ToList());
-  }
-  
-  public override Task<string?> GetCoreIdForSystem(CoreEntityType obj, string externalid, SystemName externalsys) {
-    var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid);
-    return Task.FromResult(key?.CoreId.Value);
-  }
+  public override Task<List<CoreToExternalMap>> GetExistingMappingsFromCoreIds(CoreEntityType coretype, List<string> coreids, SystemName external) => 
+      Task.FromResult(coreids.Distinct().Select(cid => {
+            var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.ExternalSystem == external);
+            return key is null ? null : memdb[key];
+          })
+          .Where(m => m is not null)
+          .Cast<CoreToExternalMap>()
+          .ToList());
 
-  public override Task<Dictionary<string, string>> GetPreExistingCoreIds(List<ICoreEntity> potentialDuplicates, SystemName system) {
-    var dict = potentialDuplicates
+  // var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid);
+  // return Task.FromResult(key?.CoreId.Value);
+  public override Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> coreids, SystemName external) => 
+      Task.FromResult(coreids.Distinct().Select(cid => {
+            var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.ExternalId == cid && k.ExternalSystem == external);
+            return key is null ? null : memdb[key];
+          })
+          .Where(m => m is not null)
+          .Cast<CoreToExternalMap>()
+          .ToList());
+
+  public override Task<Dictionary<string, string>> GetPreExistingSourceIdToCoreIdMap(List<ICoreEntity> potentialDups, SystemName system) {
+    var dict = potentialDups
         .Select(c => (c.SourceId, NewCoreId: memdb.Keys.SingleOrDefault(k => k.CoreEntity == CoreEntityType.From(c) && k.ExternalSystem == system && k.ExternalId == c.SourceId)?.CoreId.Value))
         .Where(t => t.NewCoreId is not null)
         .ToDictionary(t => t.SourceId, t => t.NewCoreId!);

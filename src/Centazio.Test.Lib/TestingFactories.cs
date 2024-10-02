@@ -17,7 +17,7 @@ public static class TestingFactories {
   public static TestingStagedEntityStore SeStore() => new(); 
   public static TestingCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static InMemoryCoreToSystemMapStore CoreSysMap() => new();
+  public static TestingInMemoryCoreToSystemMapStore CoreSysMap() => new();
   public static IOperationRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
   public static IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
@@ -42,4 +42,10 @@ public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.T
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
   public Dictionary<(SystemName, LifecycleStage, O), ObjectState<O>> GetObjects<O>() where O : ObjectName=> ((InMemoryObjectStateRepository<O>)GetObjectStateRepo<O>()).objects;
+}
+
+public interface ITestingCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<CoreToExternalMap>> GetAll(); }
+
+public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingCoreToSystemMapStore {
+  public Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
 }

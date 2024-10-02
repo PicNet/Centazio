@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
@@ -60,7 +59,7 @@ public class PromoteOperationRunner(
   }
   
   private async Task<Dictionary<string, (string NewId, string NewSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
-    var maps = await entitymap.GetPreExistingCoreIds(potentialDups, system);
+    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(potentialDups, system);
     if (!maps.Any()) return new();
     
     var existing = await core.Get(coretype, maps.Values.ToList());
@@ -79,7 +78,7 @@ public class PromoteOperationRunner(
     
     await core.Upsert(op.State.Object, toupsert);
     
-    var existing = await entitymap.GetForCores(toupsert, op.State.System); 
+    var existing = await entitymap.GetNewAndExistingMappingsFromCores(toupsert, op.State.System); 
     await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
     await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
   }

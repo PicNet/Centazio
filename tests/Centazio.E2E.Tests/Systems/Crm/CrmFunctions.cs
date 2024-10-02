@@ -58,15 +58,22 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>()))).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromCrmCustomer(s.Deserialise<CrmCustomer>(), db))).ToList(), 
-      nameof(CoreInvoice) => await staged.Select(async s => {
-        var crminv = s.Deserialise<CrmInvoice>();
-        var custid = await SimulationCtx.entitymap.GetCoreIdForSystem(CoreEntityType.From<CoreCustomer>(), crminv.CustomerId.ToString(), config.State.System) ?? throw new Exception();
-        return new StagedAndCoreEntity(s, CoreInvoice.FromCrmInvoice(crminv, custid));
-      }).Synchronous(), 
+      nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return new SuccessPromoteOperationResult(topromote, []);
-  }
 
+    async Task<List<StagedAndCoreEntity>> EvaluateInvoices() {
+      var invoices = staged.Select(s => s.Deserialise<CrmInvoice>()).ToList();
+      var custids = invoices.Select(i => i.CustomerId.ToString()).Distinct().ToList();
+      var customers = await SimulationCtx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), custids, config.State.System);
+      var result = invoices.Zip(staged).Select(t => {
+        var (crminv, se) = t;
+        var custid = customers.Single(k => k.ExternalId == crminv.CustomerId.ToString()).CoreId;
+        return new StagedAndCoreEntity(se, CoreInvoice.FromCrmInvoice(crminv, custid));
+      }).ToList();
+      return result;
+    }
+  }
 }
 
 public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
@@ -112,7 +119,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntit
           .Cast<CoreInvoice>()
           .ToList();
       var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
-      var maps = await intra.GetForCores(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationCtx.FIN_SYSTEM);
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationCtx.FIN_SYSTEM);
       // todo: clean up existing cores
       var existingcores = SimulationCtx.core.Customers.Where(c => externalcusts.Contains(c.Id)).ToList();
       var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps, existingcores)).ToList());
