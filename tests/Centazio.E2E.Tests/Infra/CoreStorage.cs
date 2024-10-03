@@ -122,7 +122,7 @@ public class CoreStorage : ICoreStorage {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => Helpers.TestingChecksum(e.GetChecksumSubset() ?? throw new Exception()));
+        .ToDictionary(e => e.Id, e => SimulationCtx.checksum.Checksum(e.GetChecksumSubset() ?? throw new Exception()));
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
     var target = GetList(obj);

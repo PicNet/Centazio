@@ -91,7 +91,7 @@ public class FinSystem  {
       
       var toadd = new List<FinInvoice>();
       Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(rng.Next(Int32.MaxValue), accounts.RandomItem().Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
-      SimulationCtx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.AccountId}({i.Id}) ${i.Amount:N2}"))}");
+      SimulationCtx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Acc:{i.AccountId}({i.Id}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
       return toadd.Select(e => e.Id).ToList();
     }
@@ -104,7 +104,7 @@ public class FinSystem  {
       idxs.ForEach(_ => {
         var idx = rng.Next(invoices.Count);
         var newamt = rng.Next(100, 10000) / 100.0m;
-        log.Add($"{invoices[idx].AccountId}({invoices[idx].Id}) ${invoices[idx].Amount:N2}->${newamt:N2}");
+        log.Add($"Acc:{invoices[idx].AccountId}({invoices[idx].Id}) ${invoices[idx].Amount:N2}->${newamt:N2}");
         invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = newamt, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"FinSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");

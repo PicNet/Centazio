@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Runner;
@@ -25,7 +26,9 @@ public class PromoteOperationRunner(
     }
     var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
     
-    if (op.OpConfig.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op.State.System, op.State.Object.ToCoreEntityType, topromote); }
+    // todo: clean bidi code, maybe here add else { IgnoreBounceBacks(); }
+    // todo: if we ignore the bounce-back then we should ignore this staged entity, add 'IgnoreReason'='Bounce Back'
+    if (op.OpConfig.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op, topromote); }
     
     Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{topromote.Count}] ToIgnore[{toignore.Count}]");
     
@@ -38,23 +41,36 @@ public class PromoteOperationRunner(
     return results; 
   }
 
-  private async Task<List<StagedAndCoreEntity>> IdentifyBouncedBackAndSetCorrectId(SystemName system, CoreEntityType coretype, List<StagedAndCoreEntity> topromote) {
+  private async Task<List<StagedAndCoreEntity>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedAndCoreEntity> topromote) {
     // todo: if the Id is part of the checksum then this will
     //  change the Id and result in an endless bounce back.  Need to check that Id is not
     //  part of the checksum object.
     //  Also, having Id with a public setter is not nice, how can this be avoided?
-    var bounces = await GetBounceBacks(system, coretype, topromote.Select(t => t.Core).ToList());
+    var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
     if (!bounces.Any()) return topromote;
     
+    // todo: rename bounce.Value.NewId -> bounce.Value.OriginalId
+    var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.NewId).ToList());
     var changes = new List<string>();
     bounces.ForEach(bounce => {
       var idx = topromote.FindIndex(t => t.Core.SourceId == bounce.Key);
       var e = topromote[idx].Core;
-      changes.Add($"{e.Id}->{bounce.Value.NewId}");
+      var ess = e.GetChecksumSubset()!;
+      var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(ess);
+      var orige = originals.Single(e => e.Id == bounce.Value.NewId);
+      // todo: GetChecksumSubset() should not require the '!' if the operation is marked as Bidirectional add checks before useage
+      var origess = orige.GetChecksumSubset()!;
+      var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(origess);
+      var msg = $"{op.State.System}#Id[{e.Id}] -> Original#Id[{bounce.Value.NewId}]";
       (e.Id, e.SourceId) = (bounce.Value.NewId, bounce.Value.NewSourceId);
+      var e2ss = e.GetChecksumSubset()!;
+      var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e2ss);
+      if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.");
+      
+      changes.Add(msg + $":\n\tBefore Checksum[{echecksum}] - {JsonSerializer.Serialize(ess)}\n\tAfter  Checksum[{newchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tOrig Entity  CS[{originalchecksum}] - {JsonSerializer.Serialize(origess)}");
       topromote[idx] = topromote[idx] with { Core = e };
     });
-    if (changes.Any()) Log.Information("identified bounce backs {@ExternalSystem} {@CoreEntityType} {@Changes}", system, coretype, changes);
+    if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@ExternalSystem}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);
     return topromote;
   }
   
@@ -71,14 +87,14 @@ public class PromoteOperationRunner(
 
   private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
-    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
-    var toupsert = op.OpConfig.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
-    Log.Information($"[{op.State.System}/{op.State.Object}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] Meaningful[{meaningful.Count}] Upserting[{toupsert.Count}]");
-    if (!toupsert.Any()) return;
+    var nobounces = op.OpConfig.IsBidirectional ? nodups : await nodups.IgnoreEntitiesBouncingBack(op.State.System);
+    var meaningful = await nobounces.IgnoreNonMeaninfulChanges(op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
+    Log.Information($"[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] No Bounces[{nobounces.Count}] Meaningful[{meaningful.Count}]");
+    if (!meaningful.Any()) return;
     
-    await core.Upsert(op.State.Object.ToCoreEntityType, toupsert.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum)).ToList());
+    await core.Upsert(op.State.Object.ToCoreEntityType, meaningful.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum)).ToList());
     
-    var existing = await entitymap.GetNewAndExistingMappingsFromCores(toupsert, op.State.System); 
+    var existing = await entitymap.GetNewAndExistingMappingsFromCores(meaningful, op.State.System); 
     await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
     await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
   }

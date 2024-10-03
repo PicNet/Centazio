@@ -1,7 +1,6 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Write;
-using Serilog;
 
 namespace Centazio.Core.EntitySysMapping;
 
@@ -51,7 +50,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<CoreToExternalMap.Created>());
     
-    Log.Information("Creating {@CoreToSysMaps}", news);
+    // Log.Information("Creating {@CoreToSysMaps}", news);
     var created = news.Select(map => {
       var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == map.CoreEntity && k.ExternalSystem == map.ExternalSystem && k.ExternalId == map.ExternalId);
       if (duplicate is not null) throw new Exception($"creating duplicate CoreToExternalMap map[{map}] existing[{duplicate}]");

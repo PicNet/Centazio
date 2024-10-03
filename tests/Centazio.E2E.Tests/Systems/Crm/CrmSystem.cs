@@ -113,7 +113,7 @@ public class CrmSystem {
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
           toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
-      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
+      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
       return toadd.Select(e => e.Id).ToList();
     }
@@ -128,7 +128,7 @@ public class CrmSystem {
       idxs.ForEach(idx => {
         var newamt = rng.Next(100, 10000);
         var inv = invoices[idx];
-        log.Add($"{inv.CustomerId}({inv.Id}) {inv.AmountCents}c -> {newamt}c)");
+        log.Add($"Cust:{inv.CustomerId}({inv.Id}) {inv.AmountCents}c -> {newamt}c)");
         invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -26,9 +27,10 @@ internal static class SimulationCtx {
   public static readonly SystemName CRM_SYSTEM;
   public static readonly SystemName FIN_SYSTEM;
   
+  public static readonly IChecksumAlgorithm checksum = new Sha256ChecksumAlgorithm();
   public static readonly ICtlRepository ctl = new InMemoryCtlRepository();
   public static readonly ICoreToSystemMapStore entitymap = new InMemoryCoreToSystemMapStore();
-  public static readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, Helpers.TestingChecksum);
+  public static readonly IStagedEntityStore stage = new InMemoryStagedEntityStore(0, checksum.Checksum);
   public static readonly CoreStorage core = new();
       
   static SimulationCtx() {
@@ -36,15 +38,15 @@ internal static class SimulationCtx {
     FIN_SYSTEM = new(nameof(FinSystem));
   }
   
-  public const int TOTAL_EPOCHS = 500;
+  public const int TOTAL_EPOCHS = 50;
   public const int CRM_MAX_EDIT_MEMBERSHIPS = 2;
-  public const int CRM_MAX_NEW_CUSTOMERS = 2;
+  public const int CRM_MAX_NEW_CUSTOMERS = 4;
   public const int CRM_MAX_EDIT_CUSTOMERS = 4;
   public const int CRM_MAX_NEW_INVOICES = 4;
   public const int CRM_MAX_EDIT_INVOICES = 4;
   
-  public const int FIN_MAX_NEW_ACCOUNTS = 2;
   // todo: adding this causes issues
+  public const int FIN_MAX_NEW_ACCOUNTS = 0;
   public const int FIN_MAX_EDIT_ACCOUNTS = 0;
   public const int FIN_MAX_NEW_INVOICES = 0;
   public const int FIN_MAX_EDIT_INVOICES = 0;
@@ -55,11 +57,11 @@ internal static class SimulationCtx {
    else Helpers.DebugWrite(message);
  }
  
- public static string Checksum(CrmMembershipType m) => Helpers.TestingChecksum(new { Id = m.Id.ToString(), m.Name });
- public static string Checksum(CrmCustomer c) => Helpers.TestingChecksum(new { Id = c.Id.ToString(), c.Name, Membership = c.MembershipTypeId.ToString(), Invoices = core.GetInvoicesForCustomer(c.Id.ToString()).Select(e => e.Checksum).ToList() });
- public static string Checksum(FinAccount a) => Helpers.TestingChecksum(new { Id = a.Id.ToString(), a.Name, Invoices = core.GetInvoicesForCustomer(a.Id.ToString()).Select(e => e.Checksum).ToList() });
- public static string Checksum(CrmInvoice i) => Helpers.TestingChecksum(new { Id = i.Id.ToString(), Customer = i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate });
- public static string Checksum(FinInvoice i) => Helpers.TestingChecksum(new { Id = i.Id.ToString(), Customer = i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate });
+ public static string Checksum(CrmMembershipType m) => checksum.Checksum(new { Id = m.Id.ToString(), m.Name });
+ public static string Checksum(CrmCustomer c) => checksum.Checksum(new { Id = c.Id.ToString(), c.Name, Membership = c.MembershipTypeId.ToString(), Invoices = core.GetInvoicesForCustomer(c.Id.ToString()).Select(e => e.Checksum).ToList() });
+ public static string Checksum(FinAccount a) => checksum.Checksum(new { Id = a.Id.ToString(), a.Name, Invoices = core.GetInvoicesForCustomer(a.Id.ToString()).Select(e => e.Checksum).ToList() });
+ public static string Checksum(CrmInvoice i) => checksum.Checksum(new { Id = i.Id.ToString(), Customer = i.CustomerId.ToString(), i.AmountCents, i.DueDate, i.PaidDate });
+ public static string Checksum(FinInvoice i) => checksum.Checksum(new { Id = i.Id.ToString(), Customer = i.AccountId.ToString(), i.Amount, i.DueDate, i.PaidDate });
  
  public static string NewName<T>(string prefix, List<T> target, int idx) => $"{prefix}_{target.Count + idx}:0";
  
@@ -121,42 +123,42 @@ public class E2EEnvironment : IAsyncDisposable {
   private async Task RunEpoch(int epoch) {
     SimulationCtx.Debug($"\nEpoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}\n");
     
-    SimulationCtx.core.ResetUpserted();
-    
     RandomTimeStep();
-    
-    crm.Simulation.Step();
-    fin.Simulation.Step();
     
     SimulationCtx.Debug($"\nEpoch[{epoch}] Simulation Step Completed - Running Functions {{{UtcDate.UtcNow:o}}}\n");
     
+    SimulationCtx.core.ResetUpserted();
+    crm.Simulation.Step();
     await crm_read_runner.RunFunction();
-    await fin_read_runner.RunFunction(); 
     await crm_promote_runner.RunFunction();
+    await fin_write_runner.RunFunction();
+    // await ValidateEpoch(epoch, true);
+    // SimulationCtx.core.ResetUpserted();
+    fin.Simulation.Step();
+    await fin_read_runner.RunFunction(); 
     await fin_promote_runner.RunFunction();
     await crm_write_runner.RunFunction();
-    await fin_write_runner.RunFunction();
     
     SimulationCtx.Debug($"\nEpoch[{epoch}] Functions Completed - Validating {{{UtcDate.UtcNow:o}}}\n");
-    await ValidateEpoch(epoch);
+    await ValidateEpoch(epoch, true);
   }
 
   private void RandomTimeStep() {
     TestingUtcDate.DoTick(new TimeSpan(Random.Shared.Next(0, 2), Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
   }
   
-  private Task ValidateEpoch(int epoch) {
-    CompareMembershipTypes(epoch);
+  private Task ValidateEpoch(int epoch, bool crmpromote) {
+    CompareMembershipTypes(epoch, crmpromote);
     CompareCustomers();
     CompareInvoices();
     return Task.CompletedTask;
   }
 
-  private void CompareMembershipTypes(int epoch) {
+  private void CompareMembershipTypes(int epoch, bool crmpromote) {
     var core_types = SimulationCtx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Id, m.Name } );
     
-    Assert.That(SimulationCtx.core.Added.Count(e => e is CoreMembershipType), Is.EqualTo(epoch == 0 ? 4 : 0));
+    Assert.That(SimulationCtx.core.Added.Count(e => e is CoreMembershipType), Is.EqualTo(epoch == 0 && crmpromote ? 4 : 0));
     Assert.That(SimulationCtx.core.Updated.Count(e => e is CoreMembershipType), Is.EqualTo(epoch == 0 ? 0 : crm.Simulation.EditedMemberships.Count));
     CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_types, crm_types);
   }

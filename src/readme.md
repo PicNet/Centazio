@@ -2,6 +2,7 @@
 - add unit tests to check bi-directional bounce back protection using checksums
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
+
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experiecen, add lots of helpers to do common tasks
 - have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
@@ -13,9 +14,9 @@
 ## Code Style 
 - 2 tab spaces
 - Braces on same line
-- Avoid long cammel-case names.  Methods should be short so having ugly variableNamesThatAddNoValueInAShortContext 
+- Avoid long cammel-case names.  Methods should be short, so having ugly variableNamesThatAddNoValueInAShortContext 
     should be avoided. 
-- Class names and method names can be descriptive, allowing for short/concise variables
+- Class names and method names can be descriptive, allowing for the above short/concise variables
 - Use implicitly typed variables where possible
 - Use `is null` / `is not null` instead of `== null` / `!= null`
 
