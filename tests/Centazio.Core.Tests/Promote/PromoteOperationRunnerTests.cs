@@ -17,7 +17,7 @@ public class PromoteOperationRunnerTests {
   private TestingCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
   private InMemoryCoreToSystemMapStore entitymap;
-  private IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> promoter;
+  private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
     (stager, ctl, core, entitymap) = (F.SeStore(), F.CtlRepo(), F.CoreRepo(), F.CoreSysMap());
@@ -32,8 +32,8 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
     await stager.Stage(Constants.System1Name, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
-    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig, CoreEntityType>(
-        ObjectState<CoreEntityType>.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
+        ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
         new PromoteOperationConfig(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.Id);
@@ -54,8 +54,8 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
     await stager.Stage(Constants.System1Name, Constants.ExternalEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
-    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig, CoreEntityType>(
-        ObjectState<CoreEntityType>.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
+    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
+        ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
         new PromoteOperationConfig(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.Id);
@@ -71,7 +71,7 @@ public class PromoteOperationRunnerTests {
   }
   
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<StagedEntity> staged) {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedEntity> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
           staged.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
           staged.Where((_, idx) => idx % 2 == 1).Select(e => new StagedEntityAndIgnoreReason(e, Reason: $"Ignore: {e.Data}")).ToList()));
@@ -81,7 +81,7 @@ public class PromoteOperationRunnerTests {
   }
 
   public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<StagedEntity> staged) {
+    public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedEntity> staged) {
       return Task.FromResult((PromoteOperationResult) new ErrorPromoteOperationResult());
     }
   }

@@ -3,9 +3,9 @@ using Cronos;
 
 namespace Centazio.Core.Runner;
 
-public abstract record OperationConfig<O>(
-    O Object, 
-    ValidCron Cron) where O : ObjectName {
+public abstract record OperationConfig(
+    ObjectName Object, 
+    ValidCron Cron) {
   public DateTime? FirstTimeCheckpoint { get; init; }
 }
 
@@ -21,10 +21,8 @@ public record ValidCron {
   public static implicit operator ValidCron(string value) => new(value);
 }
 
-public record OperationStateAndConfig<C, O>(
-    ObjectState<O> State,
+public record OperationStateAndConfig<C>(
+    ObjectState State,
     IFunctionConfig FuncConfig,
     C OpConfig, 
-    DateTime Checkpoint) 
-    where C : OperationConfig<O> 
-    where O : ObjectName;
+    DateTime Checkpoint) where C : OperationConfig;

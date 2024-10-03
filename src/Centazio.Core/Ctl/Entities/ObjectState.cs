@@ -1,10 +1,10 @@
 ﻿namespace Centazio.Core.Ctl.Entities;
 
-public record ObjectState<O> : ILoggable where O : ObjectName {
+public record ObjectState : ILoggable {
   
-  public static ObjectState<O> Create(SystemName system, LifecycleStage stage, O name, bool active = true) => new(system, stage, name, active);
+  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName name, bool active = true) => new(system, stage, name, active);
   
-  public ObjectState<O> Success(DateTime start, EOperationAbortVote abort, string message) {
+  public ObjectState Success(DateTime start, EOperationAbortVote abort, string message) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
       LastStart = start,
@@ -16,7 +16,7 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
       LastSuccessCompleted = UtcDate.UtcNow
     };
   }
-  public ObjectState<O> Error(DateTime start, EOperationAbortVote abort, string message, string? exception) {
+  public ObjectState Error(DateTime start, EOperationAbortVote abort, string message, string? exception) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
       LastStart = start,
@@ -27,7 +27,7 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
       LastRunException = exception
     };
   }
-  public ObjectState<O> SetActive(bool active) {
+  public ObjectState SetActive(bool active) {
     return this with {
       DateUpdated = UtcDate.UtcNow,
       Active = active
@@ -36,16 +36,20 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
   
   public SystemName System { get; } 
   public LifecycleStage Stage { get; } 
-  public O Object { get; internal init; }
+  public ObjectName Object { get; internal init; }
+  public bool ObjectIsCoreEntityType { get; }
+  public bool ObjectIsExternalEntityType { get; }
   public bool Active { get; private init; } 
   public DateTime DateCreated { get; internal init; } 
   public EOperationResult LastResult { get; internal init; } = EOperationResult.Unknown;
   public EOperationAbortVote LastAbortVote { get; internal init; } = EOperationAbortVote.Unknown;
   
-  internal ObjectState(SystemName system, LifecycleStage stage, O obj, bool active) {
+  internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
     System = system;
     Stage = stage;
     Object = obj;
+    ObjectIsCoreEntityType = obj is CoreEntityType;
+    ObjectIsExternalEntityType = obj is ExternalEntityType;
     Active = active;
     DateCreated = UtcDate.UtcNow;
   }
@@ -62,6 +66,8 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
     public string? System { get; init; }
     public string? Stage { get; init; }
     public string? Object { get; init; }
+    public bool ObjectIsCoreEntityType { get; }
+    public bool ObjectIsExternalEntityType { get;  }
     public bool? Active { get; init; }
     public DateTime? DateCreated { get; init; }
     public string? LastResult { get; init; } 
@@ -80,11 +86,15 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
       System = system;
       Stage = stage;
       Object = obj.Value;
+      ObjectIsCoreEntityType = obj is CoreEntityType;
+      ObjectIsExternalEntityType = obj is ExternalEntityType;
       Active = active;
       DateCreated = UtcDate.UtcNow;
+      
+      if (!ObjectIsCoreEntityType && !ObjectIsExternalEntityType) throw new NotSupportedException($"Object[{obj}] is neither of CoreEntityType or ExternalEntityType");
     }
     
-    public static Dto FromObjectState(ObjectState<O> os) => new(os.System, os.Stage, os.Object, os.Active) {
+    public static Dto FromObjectState(ObjectState os) => new(os.System, os.Stage, os.Object, os.Active) {
       LastResult = os.LastResult.ToString(),
       LastAbortVote = os.LastAbortVote.ToString(),
       DateCreated = os.DateCreated,
@@ -97,14 +107,14 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
       LastRunException = os.LastRunException
     };
     
-    public ObjectState<O> ToObjectState() => new(
+    public ObjectState ToObjectState() => new(
         System ?? throw new ArgumentNullException(nameof(System)),
         Stage ?? throw new ArgumentNullException(nameof(Stage)),
-        NameFromString(Object),
+        SafeObjectName(),
         Active ?? throw new ArgumentNullException(nameof(Active))) {
       
       LastResult =  Enum.Parse<EOperationResult>(LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
-      LastAbortVote =   Enum.Parse<EOperationAbortVote>(LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
+      LastAbortVote = Enum.Parse<EOperationAbortVote>(LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
       DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       DateUpdated = DateUpdated,
       LastStart = LastStart,
@@ -115,9 +125,11 @@ public record ObjectState<O> : ILoggable where O : ObjectName {
       LastRunException = LastRunException
     };
     
-    private O NameFromString(string? name) {
-      ArgumentException.ThrowIfNullOrWhiteSpace(name);
-      return (O) (Activator.CreateInstance(typeof(O), name) ?? throw new Exception());
+    private ObjectName SafeObjectName() {
+      if (String.IsNullOrWhiteSpace(Object)) throw new ArgumentNullException(nameof(Object));
+      if (ObjectIsCoreEntityType) return new CoreEntityType(Object);
+      if (ObjectIsExternalEntityType) return new ExternalEntityType(Object);
+      throw new NotSupportedException("ObjectState.Dto was neither of CoreEntityType or ExternalEntityType");
     }
   }
 

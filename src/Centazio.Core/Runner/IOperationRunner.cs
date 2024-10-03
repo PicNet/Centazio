@@ -1,9 +1,8 @@
 ﻿namespace Centazio.Core.Runner;
 
-public interface IOperationRunner<C, O, R> 
-    where C : OperationConfig<O>
-    where O : ObjectName
+public interface IOperationRunner<C, R> 
+    where C : OperationConfig
     where R : OperationResult {
-  Task<R> RunOperation(OperationStateAndConfig<C, O> op);
-  R BuildErrorResult(OperationStateAndConfig<C, O> op, Exception ex);
+  Task<R> RunOperation(OperationStateAndConfig<C> op);
+  R BuildErrorResult(OperationStateAndConfig<C> op, Exception ex);
 }

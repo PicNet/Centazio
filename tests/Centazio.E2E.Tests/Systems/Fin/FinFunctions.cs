@@ -10,9 +10,9 @@ using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
-public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>, IGetObjectsToStage {
+public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; }
+  public override FunctionConfig<ReadOperationConfig> Config { get; }
   
   private readonly IFinSystemApi api;
   
@@ -24,7 +24,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]);
   }
   
-  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
       nameof(FinAccount) => await api.GetAccounts(config.Checkpoint), 
       nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
@@ -35,9 +35,9 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
   }
 }
 
-public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
   
-  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig> Config { get; }
   
   private readonly CoreStorage db;
 
@@ -49,7 +49,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]);
   }
 
-  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     SimulationCtx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     
     var topromote = config.State.Object.Value switch { 
@@ -73,9 +73,9 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
 
 }
 
-public class FinWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
+  public override FunctionConfig<WriteOperationConfig> Config { get; }
   
   private readonly FinSystem api;
   private readonly ICoreToSystemMapStore intra;

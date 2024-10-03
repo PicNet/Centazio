@@ -8,7 +8,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
     { "ValidString", ["Value"] },
     { "CoreToExternalMap", ["LastError"] },
-    { "ObjectState`1", ["LastRunMessage", "LastRunException"] },
+    { "ObjectState", ["LastRunMessage", "LastRunException"] },
     { "StagedEntity", ["IgnoreReason"] },
     { "CoreEntityType", ["Name"] },
     { "ExternalEntityType", ["Name"] },

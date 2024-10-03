@@ -73,36 +73,36 @@ public class E2EEnvironment : IAsyncDisposable {
 
   // Crm
   private readonly CrmSystem crm = new();
-  private readonly FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> crm_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> crm_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult> crm_write_runner;
+  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner;
+  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner;
+  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner;
 
   // Fin
   private readonly FinSystem fin = new();
-  private readonly FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult> fin_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> fin_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult> fin_write_runner;
+  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner;
+  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner;
+  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner;
 
   public E2EEnvironment() {
-    crm_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new CrmReadFunction(crm),
+    crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(crm),
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
-    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new CrmPromoteFunction(SimulationCtx.core),
+    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new CrmPromoteFunction(SimulationCtx.core),
         new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core, SimulationCtx.entitymap),
         SimulationCtx.ctl);
     
-    crm_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new CrmWriteFunction(crm, SimulationCtx.entitymap),
+    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(crm, SimulationCtx.entitymap),
         new WriteOperationRunner<WriteOperationConfig>(SimulationCtx.entitymap, SimulationCtx.core), 
         SimulationCtx.ctl);
     
-    fin_read_runner = new FunctionRunner<ReadOperationConfig, ExternalEntityType, ReadOperationResult>(new FinReadFunction(fin),
+    fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new FinReadFunction(fin),
         new ReadOperationRunner(SimulationCtx.stage),
         SimulationCtx.ctl);
-    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(new FinPromoteFunction(SimulationCtx.core),
+    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new FinPromoteFunction(SimulationCtx.core),
         new PromoteOperationRunner(SimulationCtx.stage, SimulationCtx.core, SimulationCtx.entitymap),
         SimulationCtx.ctl);
     
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, CoreEntityType, WriteOperationResult>(new FinWriteFunction(fin, SimulationCtx.entitymap),
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(fin, SimulationCtx.entitymap),
         new WriteOperationRunner<WriteOperationConfig>(SimulationCtx.entitymap, SimulationCtx.core), 
         SimulationCtx.ctl);
   }

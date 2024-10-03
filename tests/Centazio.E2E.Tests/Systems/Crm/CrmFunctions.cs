@@ -10,9 +10,9 @@ using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
-public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEntityType, ReadOperationResult>, IGetObjectsToStage {
+public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig, ExternalEntityType> Config { get; }
+  public override FunctionConfig<ReadOperationConfig> Config { get; }
   
   private readonly ICrmSystemApi api;
   
@@ -25,7 +25,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
     ]);
   }
   
-  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config) {
+  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
       nameof(CrmMembershipType) => await api.GetMembershipTypes(config.Checkpoint), 
       nameof(CrmCustomer) => await api.GetCustomers(config.Checkpoint), 
@@ -37,9 +37,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ExternalEnt
   }
 }
 
-public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
   
-  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig> Config { get; }
   
   private readonly CoreStorage db;
 
@@ -52,7 +52,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
     ]);
   }
 
-  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     SimulationCtx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, CoreMembershipType.FromCrmMembershipType(s.Deserialise<CrmMembershipType>()))).ToList(), 
@@ -75,9 +75,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, CoreE
   }
 }
 
-public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, CoreEntityType, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
   
-  public override FunctionConfig<WriteOperationConfig, CoreEntityType> Config { get; }
+  public override FunctionConfig<WriteOperationConfig> Config { get; }
   
   private readonly CrmSystem api;
   private readonly ICoreToSystemMapStore intra;

@@ -29,7 +29,7 @@ public class PromoteFunctionTests {
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -37,7 +37,7 @@ public class PromoteFunctionTests {
     var json1 = Json(cust1);
     var staged1 = await stager.Stage(sys1, external, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
+    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -57,7 +57,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(sys1, external, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
+    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
@@ -73,7 +73,7 @@ public class PromoteFunctionTests {
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
     var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -81,7 +81,7 @@ public class PromoteFunctionTests {
     var json1 = Json(cust1);
     var staged1 = await stager.Stage(sys1, external, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
+    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -102,7 +102,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(sys1, external, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.GetObjects<CoreEntityType>().Values.ToList());
+    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
@@ -117,10 +117,10 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_that_bounce_backs_are_promoted_again_if_checksum_changes() {
     var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
-    var runner1 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func1, oprunner, ctl);
+    var runner1 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func1, oprunner, ctl);
     
     var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(sys2, true);
-    var runner2 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func2, oprunner, ctl);
+    var runner2 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func2, oprunner, ctl);
     
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
@@ -158,10 +158,10 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_that_bounce_backs_are_ignored_if_checksum_is_the_same() {
     var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
-    var runner1 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func1, oprunner, ctl);
+    var runner1 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func1, oprunner, ctl);
     
     var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(sys2, true);
-    var runner2 = new FunctionRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>(func2, oprunner, ctl);
+    var runner2 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func2, oprunner, ctl);
     
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
@@ -197,7 +197,7 @@ public class PromoteFunctionTests {
   
   private List<ICoreEntity> CoresInDb => core.MemDb[obj].Values.Select(e => e.CoreEntity).ToList();
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys1, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState<CoreEntityType> OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys1, stg, obj, true) {
+  private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys1, stg, obj, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,
     LastAbortVote = EOperationAbortVote.Continue,
@@ -213,9 +213,9 @@ public class PromoteFunctionTests {
   private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, CoreEntityType, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
 
-  public override FunctionConfig<PromoteOperationConfig, CoreEntityType> Config { get; }
+  public override FunctionConfig<PromoteOperationConfig> Config { get; }
   public bool IgnoreNext { get; set; }
   public PromoteOperationResult? NextResult { get; set; }
   
@@ -225,7 +225,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     ]);
   }
   
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged) {
+  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     if (NextResult is not null) return Task.FromResult(NextResult);
     
     var cores = staged.Select(e => {

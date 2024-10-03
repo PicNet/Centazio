@@ -4,14 +4,14 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
-  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> config, List<StagedEntity> staged);
+  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged);
 }
 
 public record PromoteOperationConfig(
     ExternalEntityType ExternalEntityType,
     CoreEntityType CoreEntityType,
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig<CoreEntityType>(CoreEntityType, Cron), ILoggable {
+    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(CoreEntityType, Cron), ILoggable {
 
   // ReSharper disable RedundantExplicitPositionalPropertyDeclaration
   public ExternalEntityType ExternalEntityType { get; } = ExternalEntityType;

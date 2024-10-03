@@ -14,11 +14,15 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     bases.ForEach(t => ValidateDataObject(t, types));
   }
 
+  private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { { "ObjectState", ["ObjectIsCoreEntityType", "ObjectIsExternalEntityType"] } };
   private void ValidateDataObject(Type baset, List<Type> types) {
     var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
-    var nonnulls = dto.GetProperties().Where(p => !IsNullable(p)).ToList();
+    var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
+    var nonnulls = dto.GetProperties().Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
+    var setters = baset.GetProperties().Where(p => p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
+    
     Assert.That(baset.GetConstructors().All(c => c.IsPrivate), Is.True, $"{baset.Name} has public constructor");
-    Assert.That(baset.GetProperties().All(p => p.SetMethod is null || !p.SetMethod.IsPublic), Is.True, $"{baset.Name} has public setters");
+    Assert.That(setters, Is.Empty, $"{baset.Name} has public setters: {String.Join(",", setters)}");
     Assert.That(nonnulls.Any(), Is.False, $"{baset.Name}#Dto has non-nullable properties: {String.Join(',', nonnulls.Select(p => p.Name))}");
     Test.Lib.Helpers.DebugWrite($"Type[{baset.Name}] Constructors[{baset.GetConstructors().Length}] Setters[{baset.GetProperties().Count(p => p.SetMethod is not null)}]");
 

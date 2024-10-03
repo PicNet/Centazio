@@ -47,13 +47,10 @@ public record BaseFunctionConfig : IFunctionConfig {
   public void Dispose() { checksum?.Dispose(); }
 }
 
-// todo: FunctionConfig should not take <O> generic argument as Functions handle multiple operations for multiple objects
-public record FunctionConfig<C, O>(
+public record FunctionConfig<C>(
     SystemName System, 
     LifecycleStage Stage, 
-    List<C> Operations) : BaseFunctionConfig, ILoggable 
-        where C : OperationConfig<O>
-        where O : ObjectName {
+    List<C> Operations) : BaseFunctionConfig, ILoggable where C : OperationConfig {
 
   public List<C> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   

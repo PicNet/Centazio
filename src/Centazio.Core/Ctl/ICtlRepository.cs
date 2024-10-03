@@ -11,15 +11,9 @@ public interface ICtlRepository : IAsyncDisposable {
   async Task<SystemState> GetOrCreateSystemState(SystemName system, LifecycleStage stage) => 
       await GetSystemState(system, stage) ?? await CreateSystemState(system, stage);
   
-  IObjectStateRepo<O> GetObjectStateRepo<O>() where O : ObjectName;
-}
-
-public interface IObjectStateRepo<O> : IAsyncDisposable 
-    where O : ObjectName {
+  Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj);
+  Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj);
+  Task<ObjectState> SaveObjectState(ObjectState state);
   
-  Task<ObjectState<O>?> GetObjectState(SystemState system, O obj);
-  Task<ObjectState<O>> CreateObjectState(SystemState system, O obj);
-  Task<ObjectState<O>> SaveObjectState(ObjectState<O> state);
-  
-  async Task<ObjectState<O>> GetOrCreateObjectState(SystemState system, O obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
+  async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
 }

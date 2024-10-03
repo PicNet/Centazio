@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests;
+﻿using Centazio.Test.Lib;
+
+namespace Centazio.Core.Tests;
 
 public class TypesTests {
 
@@ -29,6 +31,14 @@ public class TypesTests {
     Assert.That(new SystemName(new ValidString(str)).Value, Is.EqualTo(str));
     Assert.That(new SystemName(new ValidString(str)), Is.EqualTo((SystemName) str));
     Assert.That(new SystemName(new ValidString(str)), Is.EqualTo((SystemName) str));
+  }
+  
+  [Test] public void Test_ObjectName_casting_to_Externals_and_Core() {
+    Assert.Throws<Exception>(() => _ = Constants.ExternalEntityName.ToCoreEntityType);
+    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToExternalEntityType);
+    
+    Assert.That(Constants.ExternalEntityName.ToExternalEntityType.Value, Is.EqualTo(Constants.ExternalEntityName.Value));
+    Assert.That(Constants.CoreEntityName.ToCoreEntityType.Value, Is.EqualTo(Constants.CoreEntityName.Value));
   }
 
 }

@@ -3,11 +3,11 @@
 namespace Centazio.Core.Read;
 
 public interface IGetObjectsToStage {
-  Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig, ExternalEntityType> config);
+  Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
 }
 
 public record ReadOperationConfig(ExternalEntityType ExternalEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
-        : OperationConfig<ExternalEntityType>(ExternalEntityType, Cron), ILoggable {
+        : OperationConfig(ExternalEntityType, Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;

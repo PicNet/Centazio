@@ -10,9 +10,9 @@ namespace Centazio.Core.Promote;
 public class PromoteOperationRunner(
     IStagedEntityStore staged,
     ICoreStorage core,
-    ICoreToSystemMapStore entitymap) : IOperationRunner<PromoteOperationConfig, CoreEntityType, PromoteOperationResult> {
+    ICoreToSystemMapStore entitymap) : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   
-  public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op) {
+  public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var start = UtcDate.UtcNow;
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.OpConfig.ExternalEntityType);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
@@ -25,7 +25,7 @@ public class PromoteOperationRunner(
     }
     var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
     
-    if (op.OpConfig.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op.State.System, op.State.Object, topromote); }
+    if (op.OpConfig.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op.State.System, op.State.Object.ToCoreEntityType, topromote); }
     
     Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{topromote.Count}] ToIgnore[{toignore.Count}]");
     
@@ -69,21 +69,21 @@ public class PromoteOperationRunner(
     });
   }
 
-  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, List<ICoreEntity> entities) {
+  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<ICoreEntity> entities) {
     var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
-    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
+    var meaningful = await nodups.IgnoreNonMeaninfulChanges(op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
     var toupsert = op.OpConfig.IsBidirectional ? meaningful : await meaningful.IgnoreEntitiesBouncingBack(op.State.System);
     Log.Information($"[{op.State.System}/{op.State.Object}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] Meaningful[{meaningful.Count}] Upserting[{toupsert.Count}]");
     if (!toupsert.Any()) return;
     
-    await core.Upsert(op.State.Object, toupsert.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum)).ToList());
+    await core.Upsert(op.State.Object.ToCoreEntityType, toupsert.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum)).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(toupsert, op.State.System); 
     await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
     await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
   }
 
-  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig, CoreEntityType> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
+  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
 
 }
 

@@ -18,6 +18,9 @@ public sealed record SystemName(string Value) : ValidString(Value) {
 
 public record ObjectName : ValidString {
   internal ObjectName(string Value) : base(Value) {}
+  
+  internal ExternalEntityType ToExternalEntityType => this as ExternalEntityType ?? throw new Exception($"expected [{this}] to be of type 'ExternalEntityType'");
+  internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type 'CoreEntityType'");
 }
 
 public sealed record ExternalEntityType(string Value) : ObjectName(Value);
