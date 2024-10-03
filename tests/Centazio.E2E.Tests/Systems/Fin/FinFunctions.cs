@@ -14,10 +14,10 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   
-  private readonly IFinSystemApi api;
+  private readonly FinSystem fin;
   
-  public FinReadFunction(IFinSystemApi api) {
-    this.api = api;
+  public FinReadFunction(FinSystem fin) {
+    this.fin = fin;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, [
       new(new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
       new(new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
@@ -26,8 +26,8 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   
   public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
-      nameof(FinAccount) => await api.GetAccounts(config.Checkpoint), 
-      nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
+      nameof(FinAccount) => await fin.GetAccounts(config.Checkpoint), 
+      nameof(FinInvoice) => await fin.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
     SimulationCtx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
@@ -77,11 +77,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
-  private readonly FinSystem api;
+  private readonly FinSystem fin;
   private readonly ICoreToSystemMapStore intra;
 
-  public FinWriteFunction(FinSystem api, ICoreToSystemMapStore intra) {
-    this.api = api;
+  public FinWriteFunction(FinSystem fin, ICoreToSystemMapStore intra) {
+    this.fin = fin;
     this.intra = intra;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, [
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -97,11 +97,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
-      var created2 = await api.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
-      await api.UpdateAccounts(updated.Select(e1 => {
+      var created2 = await fin.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
+      await fin.UpdateAccounts(updated.Select(e1 => {
         var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
-        var existing = api.Accounts.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        var existing = fin.Accounts.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
@@ -118,11 +118,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
           .Distinct()
           .ToList();
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), customers, SimulationCtx.FIN_SYSTEM);
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
-      await api.UpdateInvoices(updated.Select(e1 => {
+      var created2 = await fin.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
+      await fin.UpdateInvoices(updated.Select(e1 => {
         var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
-        var existing = api.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        var existing = fin.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(

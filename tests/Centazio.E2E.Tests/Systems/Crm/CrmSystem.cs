@@ -3,13 +3,7 @@ using Centazio.Core;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
-public interface ICrmSystemApi {
-  Task<List<string>> GetMembershipTypes(DateTime after);
-  Task<List<string>> GetCustomers(DateTime after);
-  Task<List<string>> GetInvoices(DateTime after);
-}
-
-public class CrmSystem : ICrmSystemApi, ISystem {
+public class CrmSystem {
   
   internal static Guid PENDING_MEMBERSHIP_TYPE_ID = Guid.NewGuid();
   internal List<CrmMembershipType> MembershipTypes { get; } = [
@@ -21,7 +15,7 @@ public class CrmSystem : ICrmSystemApi, ISystem {
   internal List<CrmCustomer> Customers { get; } = new();
   internal List<CrmInvoice> Invoices { get; } = new();
   
-  public ISimulation Simulation { get; }
+  public SimulationImpl Simulation { get; }
   
   public CrmSystem() => Simulation = new SimulationImpl(MembershipTypes, Customers, Invoices);
   
@@ -65,33 +59,40 @@ public class CrmSystem : ICrmSystemApi, ISystem {
     }).ToList());
   }
   
-  class SimulationImpl(List<CrmMembershipType> types, List<CrmCustomer> customers, List<CrmInvoice> invoices) : ISimulation {
+  public class SimulationImpl(List<CrmMembershipType> types, List<CrmCustomer> customers, List<CrmInvoice> invoices) {
     
     
     private readonly Random rng = Random.Shared;
+    
+    public List<Guid> AddedCustomers { get; private set; } = [];
+    public List<Guid> EditedCustomers { get; private set; } = [];
+    public List<Guid> AddedInvoices { get; private set; } = [];
+    public List<Guid> EditedInvoices { get; private set; } = [];
+    public List<Guid> EditedMemberships { get; private set; } = [];
 
     public void Step() {
-      AddCustomers();
-      EditCustomers();
-      AddInvoices();
-      EditInvoices();
-      EditMemberships();
+      AddedCustomers = AddCustomers();
+      EditedCustomers = EditCustomers();
+      AddedInvoices = AddInvoices();
+      EditedInvoices = EditInvoices();
+      EditedMemberships = EditMemberships();
     }
     
-    private void AddCustomers() {
+    private List<Guid> AddCustomers() {
       var count = rng.Next(SimulationCtx.CRM_MAX_NEW_CUSTOMERS);
-      if (count == 0) return;
+      if (count == 0) return [];
       
       var toadd = Enumerable.Range(0, count)
           .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, SimulationCtx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
       SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.Id})"))}");
       customers.AddRange(toadd);
+      return toadd.Select(c => c.Id).ToList();
     }
 
-    private void EditCustomers() {
+    private List<Guid> EditCustomers() {
       var idxs = Enumerable.Range(0, customers.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_CUSTOMERS);
-      if (!idxs.Any()) return;
+      if (!idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(idx => {
@@ -100,26 +101,28 @@ public class CrmSystem : ICrmSystemApi, ISystem {
         customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditCustomers[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => customers[idx].Id).Where(id => !AddedCustomers.Contains(id)).ToList();
     }
 
-    private void AddInvoices() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+    private List<Guid> AddInvoices() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return [];
       
       var count = rng.Next(SimulationCtx.CRM_MAX_NEW_INVOICES);
-      if (!customers.Any() || count == 0) return;
+      if (!customers.Any() || count == 0) return [];
       
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
           toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
       SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
+      return toadd.Select(e => e.Id).ToList();
     }
 
-    private void EditInvoices() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
+    private List<Guid> EditInvoices() {
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return [];
       
       var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_INVOICES);
-      if (!idxs.Any()) return;
+      if (!idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(idx => {
@@ -129,11 +132,12 @@ public class CrmSystem : ICrmSystemApi, ISystem {
         invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => invoices[idx].Id).Where(id => !AddedInvoices.Contains(id)).ToList();
     }
 
-    private void EditMemberships() {
-      var idxs = Enumerable.Range(0, types.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS);
-      if (!idxs.Any()) return;
+    private List<Guid> EditMemberships() {
+      var idxs = Enumerable.Range(0, types.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS).ToList();
+      if (!idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(idx => {
@@ -142,10 +146,10 @@ public class CrmSystem : ICrmSystemApi, ISystem {
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => types[idx].Id).ToList();
     }
   }
 }
-
 
 public record CrmMembershipType(Guid Id, DateTime Updated, string Name);
 public record CrmInvoice(Guid Id, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null);

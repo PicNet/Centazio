@@ -9,7 +9,6 @@ using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Systems;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 using Centazio.Test.Lib;
@@ -20,8 +19,8 @@ namespace Centazio.E2E.Tests;
 
 internal static class SimulationCtx {
   
-  public static readonly bool SILENCE_LOGGING = true;
-  public static readonly bool SILENCE_SIMULATION = true;
+  public static readonly bool SILENCE_LOGGING = false;
+  public static readonly bool SILENCE_SIMULATION = false;
   public static readonly bool ALLOW_BIDIRECTIONAL = true;
   
   public static readonly SystemName CRM_SYSTEM;
@@ -38,13 +37,14 @@ internal static class SimulationCtx {
   }
   
   public const int TOTAL_EPOCHS = 500;
+  public const int CRM_MAX_EDIT_MEMBERSHIPS = 2;
   public const int CRM_MAX_NEW_CUSTOMERS = 2;
   public const int CRM_MAX_EDIT_CUSTOMERS = 4;
-  public const int CRM_MAX_EDIT_MEMBERSHIPS = 2;
   public const int CRM_MAX_NEW_INVOICES = 4;
   public const int CRM_MAX_EDIT_INVOICES = 4;
   
   public const int FIN_MAX_NEW_ACCOUNTS = 2;
+  // todo: adding this causes issues
   public const int FIN_MAX_EDIT_ACCOUNTS = 0;
   public const int FIN_MAX_NEW_INVOICES = 0;
   public const int FIN_MAX_EDIT_INVOICES = 0;
@@ -115,15 +115,19 @@ public class E2EEnvironment : IAsyncDisposable {
   [Test] public async Task RunSimulation() {
     if (SimulationCtx.SILENCE_LOGGING)  LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
     
-    var systems = new List<ISystem> { crm, fin };
-    await Enumerable.Range(0, SimulationCtx.TOTAL_EPOCHS).Select(epoch => RunEpoch(epoch, systems)).Synchronous();
+    await Enumerable.Range(0, SimulationCtx.TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
   }
 
-  private async Task RunEpoch(int epoch, List<ISystem> systems) {
+  private async Task RunEpoch(int epoch) {
     SimulationCtx.Debug($"\nEpoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}\n");
     
+    SimulationCtx.core.ResetUpserted();
+    
     RandomTimeStep();
-    systems.ForEach(s => s.Simulation.Step());
+    
+    crm.Simulation.Step();
+    fin.Simulation.Step();
+    
     SimulationCtx.Debug($"\nEpoch[{epoch}] Simulation Step Completed - Running Functions {{{UtcDate.UtcNow:o}}}\n");
     
     await crm_read_runner.RunFunction();
@@ -134,24 +138,26 @@ public class E2EEnvironment : IAsyncDisposable {
     await fin_write_runner.RunFunction();
     
     SimulationCtx.Debug($"\nEpoch[{epoch}] Functions Completed - Validating {{{UtcDate.UtcNow:o}}}\n");
-    await ValidateEpoch();
+    await ValidateEpoch(epoch);
   }
 
   private void RandomTimeStep() {
     TestingUtcDate.DoTick(new TimeSpan(Random.Shared.Next(0, 2), Random.Shared.Next(0, 24), Random.Shared.Next(0, 60), Random.Shared.Next(0, 60)));
   }
   
-  private Task ValidateEpoch() {
-    CompareMembershipTypes();
+  private Task ValidateEpoch(int epoch) {
+    CompareMembershipTypes(epoch);
     CompareCustomers();
     CompareInvoices();
     return Task.CompletedTask;
   }
 
-  private void CompareMembershipTypes() {
+  private void CompareMembershipTypes(int epoch) {
     var core_types = SimulationCtx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Id, m.Name } );
     
+    Assert.That(SimulationCtx.core.Added.Count(e => e is CoreMembershipType), Is.EqualTo(epoch == 0 ? 4 : 0));
+    Assert.That(SimulationCtx.core.Updated.Count(e => e is CoreMembershipType), Is.EqualTo(epoch == 0 ? 0 : crm.Simulation.EditedMemberships.Count));
     CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_types, crm_types);
   }
   
@@ -161,6 +167,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_customers = crm.Customers.Select(c => new { c.Id, c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { c.Id, c.Name });
     
+    Assert.That(SimulationCtx.core.Added.Count(e => e is CoreCustomer), Is.EqualTo(crm.Simulation.AddedCustomers.Count + fin.Simulation.AddedAccounts.Count));
+    Assert.That(SimulationCtx.core.Updated.Count(e => e is CoreCustomer), Is.EqualTo(crm.Simulation.EditedCustomers.Count + fin.Simulation.EditedAccounts.Count));
     CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_customers_for_crm, crm_customers);
     CompareByChecksum(SimulationCtx.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
   }
@@ -170,6 +178,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var crm_invoices = crm.Invoices.Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.Id, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
+    Assert.That(SimulationCtx.core.Added.Count(e => e is CoreInvoice), Is.EqualTo(crm.Simulation.AddedInvoices.Count + fin.Simulation.AddedInvoices.Count));
+    Assert.That(SimulationCtx.core.Updated.Count(e => e is CoreInvoice), Is.EqualTo(crm.Simulation.EditedInvoices.Count + fin.Simulation.EditedInvoices.Count));
     CompareByChecksum(SimulationCtx.CRM_SYSTEM, core_invoices, crm_invoices);
     CompareByChecksum(SimulationCtx.FIN_SYSTEM, core_invoices, fin_invoices);
   }

@@ -3,19 +3,14 @@ using Centazio.Core;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
-public interface IFinSystemApi {
-  Task<List<string>> GetAccounts(DateTime after);
-  Task<List<string>> GetInvoices(DateTime after);
-}
-
-public class FinSystem : IFinSystemApi, ISystem {
+public class FinSystem  {
 
   private static readonly Random rng = Random.Shared;
   
   internal List<FinAccount> Accounts { get; } = new();
   internal List<FinInvoice> Invoices { get; } = new();
   
-  public ISimulation Simulation { get; }
+  public SimulationImpl Simulation { get; }
   public FinSystem() => Simulation = new SimulationImpl(Accounts, Invoices);
   
   public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(Accounts.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
@@ -52,31 +47,33 @@ public class FinSystem : IFinSystemApi, ISystem {
     }).ToList());
   }
 
-  public class SimulationImpl(List<FinAccount> accounts, List<FinInvoice> invoices) : ISimulation {
+  public class SimulationImpl(List<FinAccount> accounts, List<FinInvoice> invoices) {
 
+    public List<int> AddedAccounts { get; private set; } = [];
+    public List<int> EditedAccounts { get; private set; } = [];
+    public List<int> AddedInvoices { get; private set; } = [];
+    public List<int> EditedInvoices { get; private set; } = [];
+    
     public void Step() {
-      AddAccounts();
-      EditAccounts();
-      AddInvoices();
-      EditInvoices();
+      AddedAccounts = AddAccounts();
+      EditedAccounts = EditAccounts();
+      AddedInvoices = AddInvoices();
+      EditedInvoices = EditInvoices();
     }
     
-    private void AddAccounts() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
-      
+    private List<int> AddAccounts() {
       var count = rng.Next(SimulationCtx.FIN_MAX_NEW_ACCOUNTS);
-      if (count == 0) return;
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL || count == 0) return [];
       
       var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(rng.Next(Int32.MaxValue), SimulationCtx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
       SimulationCtx.Debug($"FinSimulation - AddAccounts[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.Id})"))}");
       accounts.AddRange(toadd);
+      return toadd.Select(e => e.Id).ToList();
     }
 
-    private void EditAccounts() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return;
-      
+    private List<int> EditAccounts() {
       var idxs = Enumerable.Range(0, accounts.Count).Shuffle(SimulationCtx.FIN_MAX_EDIT_ACCOUNTS);
-      if (!idxs.Any()) return;
+      if (!SimulationCtx.ALLOW_BIDIRECTIONAL || !idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(idx => {
@@ -85,21 +82,23 @@ public class FinSystem : IFinSystemApi, ISystem {
         accounts[idx] = accounts[idx] with { Name = newname, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"FinSimulation - EditAccounts[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => accounts[idx].Id).Where(id => !AddedAccounts.Contains(id)).ToList();
     }
 
-    private void AddInvoices() {
+    private List<int> AddInvoices() {
       var count = rng.Next(SimulationCtx.FIN_MAX_NEW_INVOICES);
-      if (!accounts.Any() || count == 0) return;
+      if (!accounts.Any() || count == 0) return [];
       
       var toadd = new List<FinInvoice>();
       Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(rng.Next(Int32.MaxValue), accounts.RandomItem().Id, rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(rng.Next(-10, 60)), null)));
       SimulationCtx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"{i.AccountId}({i.Id}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
+      return toadd.Select(e => e.Id).ToList();
     }
 
-    private void EditInvoices() {
+    private List<int> EditInvoices() {
       var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.FIN_MAX_EDIT_INVOICES);
-      if (!idxs.Any()) return;
+      if (!idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(_ => {
@@ -109,6 +108,7 @@ public class FinSystem : IFinSystemApi, ISystem {
         invoices[idx] = invoices[idx] with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), Amount = newamt, Updated = UtcDate.UtcNow };
       });
       SimulationCtx.Debug($"FinSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => invoices[idx].Id).Where(id => !AddedInvoices.Contains(id)).ToList();
     }
   }
 }

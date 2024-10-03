@@ -2,7 +2,7 @@
 
 public static class GlobalEnumerableExtensionMethods {
 
-  public static T Add2<T>(this ICollection<T> lst, T item) {
+  public static T AddAndReturn<T>(this ICollection<T> lst, T item) {
     lst.Add(item);
     return item;
   }

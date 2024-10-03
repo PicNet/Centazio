@@ -102,6 +102,9 @@ public class CoreStorage : ICoreStorage {
   internal List<ICoreEntity> Customers { get; } = [];
   internal List<ICoreEntity> Invoices { get; } = [];
   
+  internal List<ICoreEntity> Added { get; } = [];
+  internal List<ICoreEntity> Updated { get; } = [];
+  
   public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>();
   public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();
   public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
@@ -122,17 +125,29 @@ public class CoreStorage : ICoreStorage {
         .ToDictionary(e => e.Id, e => Helpers.TestingChecksum(e.GetChecksumSubset() ?? throw new Exception()));
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
-    Log.Information($"CoreStorage.Upsert[{obj}] - " + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.Id})")));
     var target = GetList(obj);
+    var (added, updated) = (0, 0);
     var upserted = entities.Select(e => {
       var idx = target.FindIndex(e2 => e2.Id == e.CoreEntity.Id);
-      if (idx < 0) target.Add(e.CoreEntity);
-      else target[idx] = e.CoreEntity;
+      if (idx < 0) {
+        added++;
+        Added.Add(target.AddAndReturn(e.CoreEntity));
+      } else {
+        updated++;
+        Updated.Add(target[idx] = e.CoreEntity);
+      }
       return e.CoreEntity;
     }).ToList();
+    
+    Log.Information($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.Id})")) + $"] Created[{added}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   
+  internal void ResetUpserted() {
+    Added.Clear();
+    Updated.Clear();
+  }
+
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
   private List<ICoreEntity> GetList(CoreEntityType obj) {

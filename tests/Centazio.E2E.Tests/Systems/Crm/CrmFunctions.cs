@@ -14,10 +14,10 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   
-  private readonly ICrmSystemApi api;
+  private readonly CrmSystem crm;
   
-  public CrmReadFunction(ICrmSystemApi api) {
-    this.api = api;
+  public CrmReadFunction(CrmSystem crm) {
+    this.crm = crm;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Read, [
       new(new ExternalEntityType(nameof(CrmMembershipType)), TestingDefaults.CRON_EVERY_SECOND, this),
       new(new ExternalEntityType(nameof(CrmCustomer)), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -27,9 +27,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   
   public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
-      nameof(CrmMembershipType) => await api.GetMembershipTypes(config.Checkpoint), 
-      nameof(CrmCustomer) => await api.GetCustomers(config.Checkpoint), 
-      nameof(CrmInvoice) => await api.GetInvoices(config.Checkpoint), 
+      nameof(CrmMembershipType) => await crm.GetMembershipTypes(config.Checkpoint), 
+      nameof(CrmCustomer) => await crm.GetCustomers(config.Checkpoint), 
+      nameof(CrmInvoice) => await crm.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
     if (updates.Any()) SimulationCtx.Debug($"CrmReadFunction[{config.State.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
@@ -79,11 +79,11 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
-  private readonly CrmSystem api;
+  private readonly CrmSystem crm;
   private readonly ICoreToSystemMapStore intra;
 
-  public CrmWriteFunction(CrmSystem api, ICoreToSystemMapStore intra) {
-    this.api = api;
+  public CrmWriteFunction(CrmSystem crm, ICoreToSystemMapStore intra) {
+    this.crm = crm;
     this.intra = intra;
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Write, [
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -98,11 +98,11 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     
     SimulationCtx.Debug($"CrmWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      var created2 = await api.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
-      await api.UpdateCustomers(updated.Select(e1 => {
+      var created2 = await crm.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
+      await crm.UpdateCustomers(updated.Select(e1 => {
         var toupdate = FromCore(Guid.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
-        var existing = api.Customers.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        var existing = crm.Customers.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
@@ -119,11 +119,11 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
           .ToList();
       var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationCtx.FIN_SYSTEM);
-      var created2 = await api.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps)).ToList());
-      await api.UpdateInvoices(updated.Select(e1 => {
+      var created2 = await crm.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps)).ToList());
+      await crm.UpdateInvoices(updated.Select(e1 => {
         var toupdate = FromCore(Guid.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
-        var existing = api.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.  Existing[{existing}] Updated[{toupdate}]");
+        var existing = crm.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
+        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
