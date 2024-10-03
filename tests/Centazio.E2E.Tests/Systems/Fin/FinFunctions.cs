@@ -14,9 +14,11 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   
+  private readonly SimulationCtx ctx;
   private readonly FinSystem fin;
   
-  public FinReadFunction(FinSystem fin) {
+  public FinReadFunction(SimulationCtx ctx, FinSystem fin) {
+    this.ctx = ctx;
     this.fin = fin;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, [
       new(new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -30,7 +32,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(FinInvoice) => await fin.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
-    SimulationCtx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
     return ReadOperationResult.Create(updates);
   }
 }
@@ -39,21 +41,21 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   
   public override FunctionConfig<PromoteOperationConfig> Config { get; }
   
-  private readonly CoreStorage db;
+  private readonly SimulationCtx ctx;
 
-  public FinPromoteFunction(CoreStorage db) {
-    this.db = db;
+  public FinPromoteFunction(SimulationCtx ctx) {
+    this.ctx = ctx;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Promote, [
-      new(new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL },
-      new(new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = SimulationCtx.ALLOW_BIDIRECTIONAL }
+      new(new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = ctx.ALLOW_BIDIRECTIONAL },
+      new(new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = ctx.ALLOW_BIDIRECTIONAL }
     ]);
   }
 
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    SimulationCtx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     
     var topromote = config.State.Object.Value switch { 
-      nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, CoreCustomer.FromFinAccount(s.Deserialise<FinAccount>(), db))).ToList(), 
+      nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, ctx.FinAccountToCoreCustomer(s.Deserialise<FinAccount>()))).ToList(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new Exception() };
     return new SuccessPromoteOperationResult(topromote, []);
@@ -61,11 +63,11 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<StagedAndCoreEntity>> EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<FinInvoice>()).ToList();
       var accids = invoices.Select(i => i.AccountId.ToString()).Distinct().ToList();
-      var accounts = await SimulationCtx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), accids, config.State.System);
+      var accounts = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), accids, config.State.System);
       var result = invoices.Zip(staged).Select(t => {
         var (fininv, se) = t;
         var accid = accounts.Single(k => k.ExternalId == fininv.AccountId.ToString()).CoreId;
-        return new StagedAndCoreEntity(se, CoreInvoice.FromFinInvoice(fininv, accid));
+        return new StagedAndCoreEntity(se, ctx.FinInvoiceToCoreInvoice(fininv, accid));
       }).ToList();
       return result;
     }
@@ -77,10 +79,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
+  private readonly SimulationCtx ctx;
   private readonly FinSystem fin;
   private readonly ICoreToSystemMapStore intra;
 
-  public FinWriteFunction(FinSystem fin, ICoreToSystemMapStore intra) {
+  public FinWriteFunction(SimulationCtx ctx, FinSystem fin, ICoreToSystemMapStore intra) {
+    this.ctx = ctx;
     this.fin = fin;
     this.intra = intra;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Write, [
@@ -94,14 +98,14 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       List<CoreAndPendingCreateMap> created, 
       List<CoreAndPendingUpdateMap> updated) {
     
-    SimulationCtx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await fin.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await fin.UpdateAccounts(updated.Select(e1 => {
         var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
         var existing = fin.Accounts.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
+        if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
@@ -117,12 +121,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
           .Concat(updated.Select(m => m.Core.To<CoreInvoice>().CustomerId))
           .Distinct()
           .ToList();
-      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), customers, SimulationCtx.FIN_SYSTEM);
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), customers, SimulationConstants.FIN_SYSTEM);
       var created2 = await fin.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
       await fin.UpdateInvoices(updated.Select(e1 => {
         var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
         var existing = fin.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
-        if (SimulationCtx.Checksum(existing) == SimulationCtx.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
+        if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
@@ -136,12 +140,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
   private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToExternalMap> accmaps) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
-    var accid = potentials.SingleOrDefault(acc => acc.ExternalSystem == SimulationCtx.FIN_SYSTEM)?.ExternalId.Value;
+    var accid = potentials.SingleOrDefault(acc => acc.ExternalSystem == SimulationConstants.FIN_SYSTEM)?.ExternalId.Value;
     if (accid is null) {
       throw new Exception($"FinWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]({i})\n\t" +
           $"Potentials[{String.Join(",", potentials)}]\n\t" +
-          $"In DB[{String.Join(",", SimulationCtx.core.Customers.Select(c => c.Id))}]");
+          $"In DB[{String.Join(",", ctx.core.Customers.Select(c => c.Id))}]");
     }
     return new(id, Int32.Parse(accid), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
   }

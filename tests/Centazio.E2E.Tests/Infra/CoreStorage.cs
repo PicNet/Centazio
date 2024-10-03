@@ -1,8 +1,5 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
-using Centazio.E2E.Tests.Systems.Crm;
-using Centazio.E2E.Tests.Systems.Fin;
-using Centazio.Test.Lib;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -13,23 +10,19 @@ public record CoreCustomer : CoreEntityBase {
   public CoreMembershipType Membership { get; internal init; }
   public List<CoreInvoice> Invoices { get; internal init; }
   
-  private CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices, string checksum) : base(id, source, sourceupdate, source, name, checksum) {
+  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices) : base(id, source, sourceupdate, source, name) {
     Name = name;
     Membership = membership;
     Invoices = invoices;
   }
-  
-  public static CoreCustomer FromCrmCustomer(CrmCustomer c, CoreStorage db) {
-    var (membership, invoices) = (db.GetMembershipType(c.MembershipTypeId.ToString()), db.GetInvoicesForCustomer(c.Id.ToString()));
-    return new CoreCustomer(c.Id.ToString(), SimulationCtx.CRM_SYSTEM, c.Updated, c.Name, membership, invoices, SimulationCtx.Checksum(c));
-  }
-  
-  public static CoreCustomer FromFinAccount(FinAccount a, CoreStorage db) {
-    var (pending, invoices) = (db.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), db.GetInvoicesForCustomer(a.Id.ToString()));
-    return new CoreCustomer(a.Id.ToString(), SimulationCtx.FIN_SYSTEM, a.Updated, a.Name, pending, invoices, SimulationCtx.Checksum(a));
-  }
 
-  public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset(), Invoices = Invoices.Select(i => i.GetChecksumSubset()).ToList() };
+  // todo: since Fin does not have Membership it sets it to 'Pending'.  This is an issue as Crm membership gets overwritten on bounce-backs
+  //    we may need to have checksums save not just for each core entity, but for each CoreEntity/ExternalSystem combination.  This will mean 
+  //    that GetChecksumSubset will need to take an SystemName 
+  // For now we remove Membership from the checksum subset but this is a hack
+  
+  // public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset() };
+  public override object GetChecksumSubset() => new { Name };
 
 }
 
@@ -37,11 +30,9 @@ public record CoreMembershipType : CoreEntityBase {
 
   public string Name { get; private init; }
   
-  private CoreMembershipType(string id, DateTime sourceupdate, string name, string checksum) : base(id, SimulationCtx.CRM_SYSTEM, sourceupdate, SimulationCtx.CRM_SYSTEM, name, checksum) {
+  internal CoreMembershipType(string id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM, name) {
     Name = name;
   }
-  
-  public static CoreMembershipType FromCrmMembershipType(CrmMembershipType m) => new(m.Id.ToString(), m.Updated, m.Name, SimulationCtx.Checksum(m));
   
   public override object GetChecksumSubset() => new { Name };
 
@@ -53,16 +44,12 @@ public record CoreInvoice : CoreEntityBase {
   public DateOnly DueDate { get; private set; }
   public DateTime? PaidDate { get; private set; }
   
-  private CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid, string checksum) : base(id, source, sourceupdate, source, id, checksum) {
+  internal CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, source, sourceupdate, source, id) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
     PaidDate = paid;
   }
-  
-  public static CoreInvoice FromCrmInvoice(CrmInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.CRM_SYSTEM, i.Updated, corecustid, i.AmountCents, i.DueDate, i.PaidDate, SimulationCtx.Checksum(i));
-
-  public static CoreInvoice FromFinInvoice(FinInvoice i, string corecustid) => new(i.Id.ToString(), SimulationCtx.FIN_SYSTEM, i.Updated, corecustid, (int) (i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate, SimulationCtx.Checksum(i));
   
   public override object GetChecksumSubset() => new { CustomerId, Cents, DueDate, PaidDate };
 }
@@ -71,7 +58,6 @@ public abstract record CoreEntityBase : ICoreEntity {
   public string SourceSystem { get; }
   public string SourceId { get; set; }
   public string Id { get; set; }
-  public string Checksum { get; protected init; }
   public DateTime DateCreated { get; protected init; }
   public DateTime DateUpdated { get; protected init; }
   public DateTime SourceSystemDateUpdated { get; protected init; }
@@ -81,7 +67,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   
   public abstract object? GetChecksumSubset();
   
-  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display, string checksum) {
+  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display) {
     SourceSystem = source;
     SourceId = id;
     SourceSystemDateUpdated = sourceupdate;
@@ -92,18 +78,14 @@ public abstract record CoreEntityBase : ICoreEntity {
     LastUpdateSystem = lastsys;
     
     DisplayName = display;
-    Checksum = checksum;
   }
 }
 
-public class CoreStorage : ICoreStorage {
+public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   internal List<ICoreEntity> Types { get; } = [];
   internal List<ICoreEntity> Customers { get; } = [];
   internal List<ICoreEntity> Invoices { get; } = [];
-  
-  internal List<ICoreEntity> Added { get; } = [];
-  internal List<ICoreEntity> Updated { get; } = [];
   
   public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>();
   public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();
@@ -122,7 +104,7 @@ public class CoreStorage : ICoreStorage {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => SimulationCtx.checksum.Checksum(e.GetChecksumSubset() ?? throw new Exception()));
+        .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e.GetChecksumSubset() ?? throw new Exception()));
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
     var target = GetList(obj);
@@ -131,10 +113,10 @@ public class CoreStorage : ICoreStorage {
       var idx = target.FindIndex(e2 => e2.Id == e.CoreEntity.Id);
       if (idx < 0) {
         added++;
-        Added.Add(target.AddAndReturn(e.CoreEntity));
+        ctx.Epoch.Add(target.AddAndReturn(e.CoreEntity));
       } else {
         updated++;
-        Updated.Add(target[idx] = e.CoreEntity);
+        ctx.Epoch.Update(target[idx] = e.CoreEntity);
       }
       return e.CoreEntity;
     }).ToList();
@@ -143,11 +125,6 @@ public class CoreStorage : ICoreStorage {
     return Task.FromResult(upserted);
   }
   
-  internal void ResetUpserted() {
-    Added.Clear();
-    Updated.Clear();
-  }
-
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
   private List<ICoreEntity> GetList(CoreEntityType obj) {

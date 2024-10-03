@@ -17,8 +17,8 @@ public class CrmSystem {
   
   public SimulationImpl Simulation { get; }
   
-  public CrmSystem() => Simulation = new SimulationImpl(MembershipTypes, Customers, Invoices);
-  
+  public CrmSystem(SimulationCtx ctx) => Simulation = new SimulationImpl(ctx, MembershipTypes, Customers, Invoices);
+
   public Task<List<string>> GetMembershipTypes(DateTime after) => 
       Task.FromResult(MembershipTypes.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
   
@@ -59,16 +59,13 @@ public class CrmSystem {
     }).ToList());
   }
   
-  public class SimulationImpl(List<CrmMembershipType> types, List<CrmCustomer> customers, List<CrmInvoice> invoices) {
+  public class SimulationImpl(SimulationCtx ctx, List<CrmMembershipType> types, List<CrmCustomer> customers, List<CrmInvoice> invoices) {
     
-    
-    private readonly Random rng = Random.Shared;
-    
-    public List<Guid> AddedCustomers { get; private set; } = [];
-    public List<Guid> EditedCustomers { get; private set; } = [];
-    public List<Guid> AddedInvoices { get; private set; } = [];
-    public List<Guid> EditedInvoices { get; private set; } = [];
-    public List<Guid> EditedMemberships { get; private set; } = [];
+    public List<CrmCustomer> AddedCustomers { get; private set; } = [];
+    public List<CrmCustomer> EditedCustomers { get; private set; } = [];
+    public List<CrmInvoice> AddedInvoices { get; private set; } = [];
+    public List<CrmInvoice> EditedInvoices { get; private set; } = [];
+    public List<CrmMembershipType> EditedMemberships { get; private set; } = [];
 
     public void Step() {
       AddedCustomers = AddCustomers();
@@ -78,75 +75,85 @@ public class CrmSystem {
       EditedMemberships = EditMemberships();
     }
     
-    private List<Guid> AddCustomers() {
-      var count = rng.Next(SimulationCtx.CRM_MAX_NEW_CUSTOMERS);
+    private List<CrmCustomer> AddCustomers() {
+      var count = ctx.rng.Next(ctx.CRM_MAX_NEW_CUSTOMERS);
       if (count == 0) return [];
       
       var toadd = Enumerable.Range(0, count)
-          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, types.RandomItem().Id, SimulationCtx.NewName(nameof(CrmCustomer), customers, idx)))
+          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(types).Id, ctx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
-      SimulationCtx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.Id})"))}");
+      ctx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.Id})"))}");
       customers.AddRange(toadd);
-      return toadd.Select(c => c.Id).ToList();
+      return toadd;
     }
 
-    private List<Guid> EditCustomers() {
-      var idxs = Enumerable.Range(0, customers.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_CUSTOMERS);
+    private List<CrmCustomer> EditCustomers() {
+      var idxs = ctx.ShuffleAndTake(Enumerable.Range(0, customers.Count), ctx.CRM_MAX_EDIT_CUSTOMERS);
       if (!idxs.Any()) return [];
       
       var log = new List<string>();
+      var edited = new List<CrmCustomer>();
       idxs.ForEach(idx => {
-        var (name, newname) = (customers[idx].Name, SimulationCtx.UpdateName(customers[idx].Name));
-        log.Add($"{name}->{newname}({customers[idx].Id})");
-        customers[idx] = customers[idx] with { MembershipTypeId = types.RandomItem().Id, Name = newname, Updated = UtcDate.UtcNow };
+        var cust = customers[idx];
+        // lets not edit previously added entities, makes it hard to verify
+        if (AddedCustomers.Contains(cust)) return;
+        edited.Add(cust);
+        var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, ctx.RandomItem(types).Id);
+        log.Add($"{name}#{oldmt}->{newname}#{newmt}({cust.Id})");
+        customers[idx] = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditCustomers[{idxs.Count}] - {String.Join(',', log)}");
-      return idxs.Select(idx => customers[idx].Id).Where(id => !AddedCustomers.Contains(id)).ToList();
+      ctx.Debug($"CrmSimulation - EditCustomers[{edited.Count}] - {String.Join(',', log)}");
+      return edited;
     }
 
-    private List<Guid> AddInvoices() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return [];
+    private List<CrmInvoice> AddInvoices() {
+      if (!ctx.ALLOW_BIDIRECTIONAL) return [];
       
-      var count = rng.Next(SimulationCtx.CRM_MAX_NEW_INVOICES);
+      var count = ctx.rng.Next(ctx.CRM_MAX_NEW_INVOICES);
       if (!customers.Any() || count == 0) return [];
       
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
-          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, customers.RandomItem().Id, rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(rng.Next(-10, 60))))));
-      SimulationCtx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
+          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(customers).Id, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
+      ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.Id}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
-      return toadd.Select(e => e.Id).ToList();
+      return toadd.ToList();
     }
 
-    private List<Guid> EditInvoices() {
-      if (!SimulationCtx.ALLOW_BIDIRECTIONAL) return [];
+    private List<CrmInvoice> EditInvoices() {
+      if (!ctx.ALLOW_BIDIRECTIONAL) return [];
       
-      var idxs = Enumerable.Range(0, invoices.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_INVOICES);
+      var idxs = ctx.ShuffleAndTake(Enumerable.Range(0, invoices.Count), ctx.CRM_MAX_EDIT_INVOICES);
       if (!idxs.Any()) return [];
       
       var log = new List<string>();
+      var edited = new List<CrmInvoice>();
       idxs.ForEach(idx => {
-        var newamt = rng.Next(100, 10000);
+        var newamt = ctx.rng.Next(100, 10000);
         var inv = invoices[idx];
+        // lets not edit previously added entities, makes it hard to verify
+        if (AddedInvoices.Contains(inv)) return; 
+        edited.Add(inv);
         log.Add($"Cust:{inv.CustomerId}({inv.Id}) {inv.AmountCents}c -> {newamt}c)");
-        invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
+        invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(ctx.rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditInvoices[{idxs.Count}] - {String.Join(',', log)}");
-      return idxs.Select(idx => invoices[idx].Id).Where(id => !AddedInvoices.Contains(id)).ToList();
+      ctx.Debug($"CrmSimulation - EditInvoices[{edited.Count}] - {String.Join(',', log)}");
+      return edited;
     }
 
-    private List<Guid> EditMemberships() {
-      var idxs = Enumerable.Range(0, types.Count).Shuffle(SimulationCtx.CRM_MAX_EDIT_MEMBERSHIPS).ToList();
-      if (!idxs.Any()) return [];
+    private List<CrmMembershipType> EditMemberships() {
+      var idxs = ctx.ShuffleAndTake(Enumerable.Range(0, types.Count), ctx.CRM_MAX_EDIT_MEMBERSHIPS).ToList();
+      // at Epoch 0 all 4 memberships are added, so lets not edit
+      if (ctx.Epoch.Epoch == 0 || !idxs.Any()) return [];
       
       var log = new List<string>();
       idxs.ForEach(idx => {
-        var (old, newnm) = (types[idx].Name, SimulationCtx.UpdateName(types[idx].Name));
+        var (old, newnm) = (types[idx].Name, ctx.UpdateName(types[idx].Name));
         log.Add($"{old}->{newnm}({types[idx].Id})");
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
-      SimulationCtx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
-      return idxs.Select(idx => types[idx].Id).ToList();
+      ctx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
+      return idxs.Select(idx => types[idx]).ToList();
     }
   }
 }

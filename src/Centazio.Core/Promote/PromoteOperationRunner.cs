@@ -57,7 +57,7 @@ public class PromoteOperationRunner(
       var e = topromote[idx].Core;
       var ess = e.GetChecksumSubset()!;
       var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(ess);
-      var orige = originals.Single(e => e.Id == bounce.Value.NewId);
+      var orige = originals.Single(e2 => e2.Id == bounce.Value.NewId);
       // todo: GetChecksumSubset() should not require the '!' if the operation is marked as Bidirectional add checks before useage
       var origess = orige.GetChecksumSubset()!;
       var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(origess);
@@ -67,7 +67,7 @@ public class PromoteOperationRunner(
       var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e2ss);
       if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.");
       
-      changes.Add(msg + $":\n\tBefore Checksum[{echecksum}] - {JsonSerializer.Serialize(ess)}\n\tAfter  Checksum[{newchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tOrig Entity  CS[{originalchecksum}] - {JsonSerializer.Serialize(origess)}");
+      changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
       topromote[idx] = topromote[idx] with { Core = e };
     });
     if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@ExternalSystem}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);

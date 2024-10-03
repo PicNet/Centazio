@@ -50,7 +50,12 @@ public interface ICoreEntity {
   /// public object? GetChecksumSubset() => new {
   ///   Name,
   ///   Address,
-  ///   Children = Children.Select(c => c.GetChecksumSubset()).ToList(),
+  ///   // Usually we do not include children entities as children have the foreign key field.
+  ///   // This means that if a child changes, the parent does not really change and does not
+  ///   // need to be promoted.
+  ///   // Children = Children.Select(c => c.GetChecksumSubset()).ToList(),
+  ///
+  ///   // If the relationship to the parent changes, we must recognise this and promote again
   ///   Parent = Parent.GetChecksumSubset()
   /// };
   /// ```
