@@ -72,17 +72,12 @@ public record CoreToExternalMap : ICoreToExternalMap {
   public record PendingCreate : ICoreToExternalMap {
     public CoreEntityType CoreEntity { get; } 
     public ValidString CoreId { get; }
-    // todo: do we use SourceSystem / SourceId
-    public SystemName SourceSystem { get; } 
-    public ValidString SourceId { get; } 
     public SystemName ExternalSystem { get; } 
     public DateTime DateCreated { get; }
     
     internal PendingCreate(ICoreEntity e, SystemName externalsys) {
       CoreEntity = CoreEntityType.From(e);
       CoreId = e.Id;
-      SourceSystem = e.SourceSystem;
-      SourceId = e.SourceId;
       ExternalSystem = externalsys;
       DateCreated = UtcDate.UtcNow;
     }

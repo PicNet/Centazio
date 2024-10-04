@@ -31,7 +31,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   private readonly Dictionary<(Type, string), ICoreEntity> added = new();
   private readonly Dictionary<(SystemName, Type, string), ICoreEntity> updated = new();
   
-  public async Task ValidateAdded<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
+  public async Task ValidateAdded<T>(params IEnumerable<IExternalEntity>[] expected) where T : ICoreEntity {
     var ascore = await ExternalEntitiesToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count()}] Actual[{actual.Count}]" +
@@ -39,17 +39,15 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
-  public async Task ValidateUpdated<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
+  public async Task ValidateUpdated<T>(params IEnumerable<IExternalEntity>[] expected) where T : ICoreEntity {
     var ascore = await ExternalEntitiesToCore(expected);
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
-
-  // todo: IEnumerable<object> should be IEnumerable<IExternalEntity>
-  // todo: look for all usages of object and replace
-  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<object>[] expected) {
+  
+  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<IExternalEntity>[] expected) {
     var cores = new List<ICoreEntity>();
     var allsums = new Dictionary<string, bool>();
     foreach (var externals in expected) {
