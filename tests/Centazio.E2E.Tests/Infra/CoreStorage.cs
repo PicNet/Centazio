@@ -16,14 +16,7 @@ public record CoreCustomer : CoreEntityBase {
     Invoices = invoices;
   }
 
-  // todo: since Fin does not have Membership it sets it to 'Pending'.  This is an issue as Crm membership gets overwritten on bounce-backs
-  //    we may need to have checksums save not just for each core entity, but for each CoreEntity/ExternalSystem combination.  This will mean 
-  //    that GetChecksumSubset will need to take an SystemName 
-  // For now we remove Membership from the checksum subset but this is a hack
-  
-  // public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset() };
-  public override object GetChecksumSubset() => new { Name };
-
+  public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset() };
 }
 
 public record CoreMembershipType : CoreEntityBase {

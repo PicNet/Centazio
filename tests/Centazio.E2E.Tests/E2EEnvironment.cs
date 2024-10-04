@@ -31,32 +31,41 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   private readonly Dictionary<(Type, string), ICoreEntity> added = new();
   private readonly Dictionary<(Type, string), ICoreEntity> updated = new();
   
-  public void ValidateAdded<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
-    var ascore = ExternalEntitiesToCore(expected);
+  public async Task ValidateAdded<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
+    var ascore = await ExternalEntitiesToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count()}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
-  public void ValidateUpdated<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
-    var ascore = ExternalEntitiesToCore(expected);
+  public async Task ValidateUpdated<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
+    var ascore = await ExternalEntitiesToCore(expected);
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
-  private List<ICoreEntity> ExternalEntitiesToCore(params IEnumerable<object>[] expected) {
-    return expected.SelectMany(lst => lst.Select(ToCore)).ToList();
+  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<object>[] expected) {
+    return await expected.SelectMany(lst => lst.Select(ToCore)).Synchronous();
 
-    ICoreEntity ToCore(object e) => e switch { 
+    async Task<ICoreEntity> ToCore(object e) => e switch { 
       CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type), 
       CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer), 
       CrmInvoice invoice => ctx.CrmInvoiceToCoreInvoice(invoice), 
-      FinAccount account => ctx.FinAccountToCoreCustomer(account), 
+      FinAccount account => await FromFinAccount(account), 
       FinInvoice finInvoice => ctx.FinInvoiceToCoreInvoice(finInvoice), 
       _ => throw new NotSupportedException(e.GetType().Name) };
+
+    async Task<CoreCustomer> FromFinAccount(FinAccount account) {
+      var externalid = account.Id.ToString();
+      var map = (await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), [externalid], SimulationConstants.FIN_SYSTEM)).Single();
+      var coreid = map.CoreId;
+      var existing = ctx.core.GetCustomer(coreid); 
+      var membership = existing?.Membership ?? ctx.core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
+      return ctx.FinAccountToCoreCustomer(account, membership);
+    }
   }
 
   public void Add(ICoreEntity e) {
@@ -98,7 +107,7 @@ public class SimulationCtx {
     Epoch = new(0, this);
   }
 
-  public readonly int TOTAL_EPOCHS = 50;
+  public readonly int TOTAL_EPOCHS = 250;
   public readonly int CRM_MAX_EDIT_MEMBERSHIPS = 2;
   public readonly int CRM_MAX_NEW_CUSTOMERS = 4;
   public readonly int CRM_MAX_EDIT_CUSTOMERS = 4;
@@ -127,9 +136,9 @@ public class SimulationCtx {
     var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.Id.ToString()));
     return new CoreCustomer(c.Id.ToString(), SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
   }
-  public CoreCustomer FinAccountToCoreCustomer(FinAccount a) {
-    var (pending, invoices) = (core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()), core.GetInvoicesForCustomer(a.Id.ToString()));
-    return new CoreCustomer(a.Id.ToString(), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, pending, invoices);
+  public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreMembershipType membership) {
+    var invoices = core.GetInvoicesForCustomer(a.Id.ToString());
+    return new CoreCustomer(a.Id.ToString(), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, invoices);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
@@ -238,41 +247,40 @@ public class E2EEnvironment : IAsyncDisposable {
     TestingUtcDate.DoTick(new TimeSpan(ctx.rng.Next(0, 2), ctx.rng.Next(0, 24), ctx.rng.Next(0, 60), ctx.rng.Next(0, 60)));
   }
   
-  private Task ValidateEpoch() {
-    CompareMembershipTypes();
-    CompareCustomers();
-    CompareInvoices();
-    return Task.CompletedTask;
+  private async Task ValidateEpoch() {
+    await CompareMembershipTypes();
+    await CompareCustomers();
+    await CompareInvoices();
   }
 
-  private void CompareMembershipTypes() {
+  private async Task CompareMembershipTypes() {
     var core_types = ctx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { m.Id, m.Name } );
     
-    ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
-    ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
+    await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
+    await ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_types, crm_types);
   }
   
-  private void CompareCustomers() {
+  private async Task CompareCustomers() {
     var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.Membership.Id });
     var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name });
     var crm_customers = crm.Customers.Select(c => new { c.Id, c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { c.Id, c.Name });
     
-    ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
-    ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
+    await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
+    await ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm_customers);
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
   }
   
-  private void CompareInvoices() {
+  private async Task CompareInvoices() {
     var core_invoices = ctx.core.Invoices.Cast<CoreInvoice>().Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
     var crm_invoices = crm.Invoices.Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { i.Id, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
-    ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
-    ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);
+    await ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
+    await ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_invoices, crm_invoices);
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices, fin_invoices);
   }

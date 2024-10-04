@@ -4,6 +4,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
+public record StagedAndExternalEntity<E>(StagedEntity Staged, E External) where E : class;
 public record StagedAndCoreEntity(StagedEntity Staged, ICoreEntity Core);
 public record StagedEntityAndIgnoreReason(StagedEntity Staged, ValidString Reason);
 

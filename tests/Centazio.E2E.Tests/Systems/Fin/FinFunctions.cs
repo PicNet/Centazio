@@ -6,6 +6,7 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
+using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
@@ -50,26 +51,39 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       new(new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = ctx.ALLOW_BIDIRECTIONAL }
     ]);
   }
-
+  
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
-    
-    var topromote = config.State.Object.Value switch { 
-      nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, ctx.FinAccountToCoreCustomer(s.Deserialise<FinAccount>()))).ToList(), 
-      nameof(CoreInvoice) => await EvaluateInvoices(), 
-      _ => throw new Exception() };
+
+    List<StagedAndCoreEntity> topromote = new();
+    if (config.State.Object.Value == nameof(CoreCustomer)) {
+      // todo: this relationship building needs to be extracted into helper methods as its very common
+      var accounts = staged.Deserialise<FinAccount>();
+      var externalids = accounts.Select(acc => acc.External.Id.ToString()).ToList();
+      var idmaps = await ctx.entitymap.GetExistingMappingsFromExternalIds(config.State.Object.ToCoreEntityType, externalids, config.State.System);
+      foreach (var acc in accounts) {
+        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.External.Id.ToString())?.CoreId;
+        var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
+        var membership = existing?.Membership ?? ctx.core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
+        var updated = ctx.FinAccountToCoreCustomer(acc.External, membership);
+        topromote.Add(new StagedAndCoreEntity(acc.Staged, updated)); 
+      }
+    } else if (config.State.Object.Value == nameof(CoreInvoice))
+      await EvaluateInvoices();
+    else
+      throw new Exception();
+
     return new SuccessPromoteOperationResult(topromote, []);
     
-    async Task<List<StagedAndCoreEntity>> EvaluateInvoices() {
+    async Task EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<FinInvoice>()).ToList();
       var accids = invoices.Select(i => i.AccountId.ToString()).Distinct().ToList();
       var accounts = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), accids, config.State.System);
-      var result = invoices.Zip(staged).Select(t => {
+      invoices.Zip(staged).ForEach(t => {
         var (fininv, se) = t;
         var accid = accounts.Single(k => k.ExternalId == fininv.AccountId.ToString()).CoreId;
-        return new StagedAndCoreEntity(se, ctx.FinInvoiceToCoreInvoice(fininv, accid));
-      }).ToList();
-      return result;
+        topromote.Add(new StagedAndCoreEntity(se, ctx.FinInvoiceToCoreInvoice(fininv, accid)));
+      });
     }
   }
 

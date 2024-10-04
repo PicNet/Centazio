@@ -15,7 +15,7 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   
   Task<GetForCoresResult> GetNewAndExistingMappingsFromCores(List<ICoreEntity> cores, SystemName external);
   Task<List<CoreToExternalMap>> GetExistingMappingsFromCoreIds(CoreEntityType coretype, List<string> coreids, SystemName external);
-  Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> coreids, SystemName external);
+  Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> externalids, SystemName external);
 
   /// <summary>
   /// Gets a map from SourceId to the correct CoreId for potential duplicate entities.  These potential
@@ -33,7 +33,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   public abstract Task<GetForCoresResult> GetNewAndExistingMappingsFromCores(List<ICoreEntity> cores, SystemName external);
   public abstract Task<List<CoreToExternalMap>> GetExistingMappingsFromCoreIds(CoreEntityType coretype, List<string> coreids, SystemName external);
   
-  public abstract Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> coreids, SystemName external);
+  public abstract Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> externalids, SystemName external);
   public abstract Task<Dictionary<string, string>> GetPreExistingSourceIdToCoreIdMap(List<ICoreEntity> potentialDups, SystemName system);
   public abstract ValueTask DisposeAsync();
 

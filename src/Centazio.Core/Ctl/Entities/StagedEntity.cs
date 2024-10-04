@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Centazio.Core.Promote;
 
 namespace Centazio.Core.Ctl.Entities;
 
@@ -75,4 +76,9 @@ public sealed record StagedEntity {
       IgnoreReason = se.IgnoreReason
     };
   }
+}
+
+public static class StagedEntityListExtensions {
+  public static List<StagedAndExternalEntity<E>> Deserialise<E>(this List<StagedEntity> lst) where E : class => 
+      lst.Select(e => new StagedAndExternalEntity<E>(e, e.Deserialise<E>())).ToList(); 
 }

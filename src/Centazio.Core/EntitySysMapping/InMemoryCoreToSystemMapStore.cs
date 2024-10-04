@@ -30,8 +30,8 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   // var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.ExternalSystem == externalsys && k.ExternalId == externalid);
   // return Task.FromResult(key?.CoreId.Value);
-  public override Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> coreids, SystemName external) => 
-      Task.FromResult(coreids.Distinct().Select(cid => {
+  public override Task<List<CoreToExternalMap>> GetExistingMappingsFromExternalIds(CoreEntityType coretype, List<string> externalids, SystemName external) => 
+      Task.FromResult(externalids.Distinct().Select(cid => {
             var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.ExternalId == cid && k.ExternalSystem == external);
             return key is null ? null : memdb[key];
           })
