@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Write;
 
 namespace Centazio.Core;
 
@@ -23,7 +24,10 @@ public record ObjectName : ValidString {
   internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type 'CoreEntityType'");
 }
 
-public sealed record ExternalEntityType(string Value) : ObjectName(Value);
+public sealed record ExternalEntityType(string Value) : ObjectName(Value) {
+  public static ExternalEntityType From<E>() where E : IExternalEntity => new(typeof(E).Name);
+  public static ExternalEntityType From<E>(E external) where E : IExternalEntity => new(external.GetType().Name);
+}
 
 public sealed record CoreEntityType(string Value) : ObjectName(Value) {
   public static CoreEntityType From<E>() where E : ICoreEntity => new(typeof(E).Name);

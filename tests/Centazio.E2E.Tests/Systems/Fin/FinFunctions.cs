@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -21,8 +22,8 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     this.ctx = ctx;
     this.fin = fin;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, [
-      new(new(nameof(FinAccount)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(new(nameof(FinInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(ExternalEntityType.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(ExternalEntityType.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
   
@@ -61,7 +62,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       var externalids = accounts.Select(acc => acc.External.Id.ToString()).ToList();
       var idmaps = await ctx.entitymap.GetExistingMappingsFromExternalIds(config.State.Object.ToCoreEntityType, externalids, config.State.System);
       foreach (var acc in accounts) {
-        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.External.Id.ToString())?.CoreId;
+        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.External.Id)?.CoreId;
         var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
         var updated = ctx.FinAccountToCoreCustomer(acc.External, existing);
         topromote.Add(new StagedAndCoreEntity(acc.Staged, updated)); 
@@ -87,7 +88,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
 }
 
-public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
@@ -105,17 +106,30 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<WriteOperationResult> WriteEntities(
-      WriteOperationConfig config, 
-      List<CoreAndPendingCreateMap> created, 
-      List<CoreAndPendingUpdateMap> updated) {
+  public async Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
+    // todo: remove UtcDate.UtcNow from all logs, and just log the time when it changes (calls DoTick)
+    ctx.Debug($"FinWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] Core[{Core}] Updated[{Map}] {{{UtcDate.UtcNow:o}}}");
     
-    ctx.Debug($"FinWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+    if (config.Object.Value == nameof(CoreCustomer)) {
+      return FromCore(Map is CoreToExternalMap update ? Int32.Parse(update.ExternalId) : 0, Core.To<CoreCustomer>());
+    }
+    if (config.Object.Value == nameof(CoreInvoice)) {
+      var inv = Core.To<CoreInvoice>();
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), [inv.CustomerId], SimulationConstants.FIN_SYSTEM);
+      return FromCore(Map is CoreToExternalMap update ? Int32.Parse(update.ExternalId) : 0, inv, maps);
+    }
+    
+    throw new NotSupportedException(config.Object);
+  }
+
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
+    
+    ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await fin.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await fin.UpdateAccounts(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
+        var toupdate = e1.ExternalEntity.To<FinAccount>();
         var existing = fin.Accounts.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
@@ -130,13 +144,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       // note: to get the correct target ids for writing back to the target system, we only need to get the mapping
       //    for entities created in another system.  Those created by this target system can just use the `SourceId`
       var customers = created.Select(m => m.Core.To<CoreInvoice>().CustomerId)
-          .Concat(updated.Select(m => m.Core.To<CoreInvoice>().CustomerId))
           .Distinct()
           .ToList();
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), customers, SimulationConstants.FIN_SYSTEM);
       var created2 = await fin.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
       await fin.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Int32.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
+        var toupdate = e1.ExternalEntity.To<FinInvoice>();
         var existing = fin.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;

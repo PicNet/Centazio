@@ -14,6 +14,7 @@
 - have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
     causes this
 - review all code comments
+- add unit test to check for "", use string.empty instead
 
 # Developer Guidelines:
 

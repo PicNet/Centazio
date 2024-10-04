@@ -8,6 +8,11 @@ public record GetForCoresResult(List<CoreAndPendingCreateMap> Created, List<Core
   public bool Empty => !Created.Any() && !Updated.Any();
 }
 
+public record WriteEntitiesToTargetSystem(List<CoreAndPendingCreateMap> Created, List<CoreExternalMap> Updated) {
+  public bool Empty => !Created.Any() && !Updated.Any();
+}
+
+
 public interface ICoreToSystemMapStore : IAsyncDisposable {
 
   Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> maps);

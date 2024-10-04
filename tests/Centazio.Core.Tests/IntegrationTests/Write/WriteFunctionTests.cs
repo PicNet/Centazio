@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -17,8 +18,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingChecksum), new (customer2, Helpers.TestingChecksum)]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndExternalMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
-      new CoreAndExternalMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId) ) };
+      new CoreAndCreatedMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
+      new CoreAndCreatedMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -75,9 +76,9 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
 
-  public List<CoreAndExternalMap> Created { get; } = [];
+  public List<CoreAndCreatedMap> Created { get; } = [];
   public List<CoreAndUpdatedMap> Updated { get; } = [];
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
@@ -94,7 +95,9 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
 
-  public Task<WriteOperationResult> WriteEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreAndPendingUpdateMap> updated) {
+  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) => throw new NotImplementedException();
+
+  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
     var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
     var updates = updated.Select(m => m.Updated()).ToList();

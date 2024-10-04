@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
+using Centazio.Core.Write;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
@@ -21,7 +22,7 @@ public class FinSystem  {
   
   // WriteFunction endpoints
   public Task<List<FinAccount>> CreateAccounts(List<FinAccount> news) { 
-    var created = news.Select(c => c with { Id = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { ExternalId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
     Accounts.AddRange(created);
     return Task.FromResult(created);
   }
@@ -36,7 +37,7 @@ public class FinSystem  {
   }
 
   public Task<List<FinInvoice>> CreateInvoices(List<FinInvoice> news) {
-    var created = news.Select(i => i with { Id = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { ExternalId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
     Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -83,10 +84,12 @@ public class FinSystem  {
       idxs.ForEach(idx => {
         var acc = accounts[idx];
         if (AddedAccounts.Contains(acc)) return;
-        edited.Add(acc);
         var (name, newname) = (acc.Name, ctx.UpdateName(acc.Name));
-        log.Add($"{name}->{newname}({acc.Id})");
-        accounts[idx] = acc with { Name = newname, Updated = UtcDate.UtcNow };
+        var newacc = acc with { Name = newname, Updated = UtcDate.UtcNow };
+        var oldcs = ctx.checksum.Checksum(acc.GetChecksumSubset());
+        var newcs = ctx.checksum.Checksum(newacc.GetChecksumSubset());
+        log.Add($"Id[{acc.Id}] Name[{name}->{newname}] Checksum[{oldcs}->{newcs}]");
+        if (oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
       });
       ctx.Debug($"FinSimulation - EditAccounts[{edited.Count}] - {String.Join(',', log)}");
       return edited;
@@ -97,7 +100,7 @@ public class FinSystem  {
       if (!accounts.Any() || count == 0) return [];
       
       var toadd = new List<FinInvoice>();
-      Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).Id, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
+      Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).ExternalId, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
       ctx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Acc:{i.AccountId}({i.Id}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
       return toadd.ToList();
@@ -124,5 +127,18 @@ public class FinSystem  {
   }
 }
 
-public record FinInvoice(int Id, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate);
-public record FinAccount(int Id, string Name, DateTime Updated);
+public record FinInvoice(int ExternalId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : IExternalEntity {
+
+  public string Id => ExternalId.ToString();
+  public string DisplayName { get; } = $"Acct:{AccountId}({ExternalId}) {Amount}c";
+  public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
+
+}
+
+public record FinAccount(int ExternalId, string Name, DateTime Updated) : IExternalEntity {
+
+  public string Id => ExternalId.ToString();
+  public string DisplayName { get; } = Name;
+  public object GetChecksumSubset() => new { Name };
+
+}

@@ -109,7 +109,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
         ctx.Epoch.Add(target.AddAndReturn(e.CoreEntity));
       } else {
         updated++;
-        ctx.Epoch.Update(target[idx] = e.CoreEntity);
+        ctx.Epoch.Update(ctx.CurrentSystem, target[idx] = e.CoreEntity);
       }
       return e.CoreEntity;
     }).ToList();

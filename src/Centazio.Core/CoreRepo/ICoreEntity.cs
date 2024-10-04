@@ -60,10 +60,6 @@ public interface ICoreEntity {
   /// };
   /// ```
   /// </summary>
-  /// <param name="system">
-  /// The current function's system.  This can be used to tailor the checksum for each system
-  /// as some systems do not have todo: remove if not necessery
-  /// </param>
   public object? GetChecksumSubset();
   
   /// <summary>

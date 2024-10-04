@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -22,9 +23,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     this.crm = crm;
     
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Read, [
-      new(new ExternalEntityType(nameof(CrmMembershipType)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(new ExternalEntityType(nameof(CrmCustomer)), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(new ExternalEntityType(nameof(CrmInvoice)), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(ExternalEntityType.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(ExternalEntityType.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(ExternalEntityType.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
   
@@ -78,7 +79,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   }
 }
 
-public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, IWriteEntitiesToTargetSystem {
+public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
@@ -96,16 +97,15 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<WriteOperationResult> WriteEntities(
-      WriteOperationConfig config, 
-      List<CoreAndPendingCreateMap> created, 
-      List<CoreAndPendingUpdateMap> updated) {
+  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) => throw new NotImplementedException();
+
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
     
     ctx.Debug($"CrmWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await crm.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
       await crm.UpdateCustomers(updated.Select(e1 => {
-        var toupdate = FromCore(Guid.Parse(e1.Map.ExternalId), e1.Core.To<CoreCustomer>());
+        var toupdate = e1.ExternalEntity.To<CrmCustomer>();
         var existing = crm.Customers.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
@@ -118,7 +118,6 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     if (config.Object.Value == nameof(CoreInvoice)) {
       // todo: simplify this very common code
       var externals = created.Select(m => m.Core)
-          .Concat(updated.Select(m => m.Core))
           .Where(m => m.SourceSystem != SimulationConstants.CRM_SYSTEM.Value)
           .Cast<CoreInvoice>()
           .ToList();
@@ -126,7 +125,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationConstants.FIN_SYSTEM);
       var created2 = await crm.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps)).ToList());
       await crm.UpdateInvoices(updated.Select(e1 => {
-        var toupdate = FromCore(Guid.Parse(e1.Map.ExternalId), e1.Core.To<CoreInvoice>(), maps);
+        var toupdate = e1.ExternalEntity.To<CrmInvoice>();
         var existing = crm.Invoices.Single(e2 => e1.Map.ExternalId == e2.Id.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;

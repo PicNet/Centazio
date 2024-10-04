@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Write;
+using Serilog;
 
 namespace Centazio.Core.EntitySysMapping;
 
@@ -49,8 +50,11 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<CoreToExternalMap.Created>());
+    var template = news[0];
+    // todo: make it impossible for this to happen? I.e. remove these properties from `CoreToExternalMap.Created` and pass them into this method?
+    if (news.Any(m => m.CoreEntity != template.CoreEntity && m.ExternalSystem != template.ExternalSystem)) throw new Exception();
     
-    // Log.Information("Creating {@CoreToSysMaps}", news);
+    Log.Information("creating core/external maps {@CoreEntityType} {@ExternalSystem} {@CoreToExternalMapEntries}", template.CoreEntity, template.ExternalSystem, news.Select(m => m.ExternalId));
     var created = news.Select(map => {
       var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == map.CoreEntity && k.ExternalSystem == map.ExternalSystem && k.ExternalId == map.ExternalId);
       if (duplicate is not null) throw new Exception($"creating duplicate CoreToExternalMap map[{map}] existing[{duplicate}]");

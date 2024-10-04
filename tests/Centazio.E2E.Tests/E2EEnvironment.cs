@@ -29,7 +29,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   public int Epoch { get; } = epoch;
   
   private readonly Dictionary<(Type, string), ICoreEntity> added = new();
-  private readonly Dictionary<(Type, string), ICoreEntity> updated = new();
+  private readonly Dictionary<(SystemName, Type, string), ICoreEntity> updated = new();
   
   public async Task ValidateAdded<T>(params IEnumerable<object>[] expected) where T : ICoreEntity {
     var ascore = await ExternalEntitiesToCore(expected);
@@ -47,8 +47,23 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
+  // todo: IEnumerable<object> should be IEnumerable<IExternalEntity>
+  // todo: look for all usages of object and replace
   private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<object>[] expected) {
-    return await expected.SelectMany(lst => lst.Select(ToCore)).Synchronous();
+    var cores = new List<ICoreEntity>();
+    var allsums = new Dictionary<string, bool>();
+    foreach (var externals in expected) {
+      var syscores = await externals.Select(ToCore).Synchronous();
+      var sums = syscores.Select(c => ctx.checksum.Checksum(c.GetChecksumSubset() ?? throw new Exception())).Distinct().ToList();
+      if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from an external system to be unique.  Found some external entities that resulted in the same ICoreEntity checksum");
+      syscores.ForEach((c, idx) => {
+        if (allsums.ContainsKey(sums[idx])) return;
+        
+        allsums.Add(sums[idx], true);
+        cores.Add(c);
+      });
+    }
+    return cores;
 
     async Task<ICoreEntity> ToCore(object e) => e switch { 
       CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type), 
@@ -59,7 +74,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       _ => throw new NotSupportedException(e.GetType().Name) };
 
     async Task<CoreCustomer> FromFinAccount(FinAccount account) {
-      var externalid = account.Id.ToString();
+      var externalid = account.Id;
       var map = (await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), [externalid], SimulationConstants.FIN_SYSTEM)).Single();
       var coreid = map.CoreId;
       var existing = ctx.core.GetCustomer(coreid); 
@@ -68,18 +83,14 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   }
 
   public void Add(ICoreEntity e) {
-    var key = (e.GetType(), e.Id);
-    if (added.ContainsKey(key)) throw new Exception($"entity appears to have already been added: {e}");
-    if (updated.ContainsKey(key)) throw new Exception($"entity appears to have already been updated: {e}");
-    added[key] = e;
+    DevelDebug.WriteLine($"CoreStorage.Add CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
+    if (!added.TryAdd((e.GetType(), e.Id), e)) throw new Exception($"entity appears to have already been added: {e}");
   }
-  
-  public void Update(ICoreEntity e) {
-    var key = (e.GetType(), e.Id);
-    // if (added.ContainsKey(key)) throw new Exception($"entity appears to have been added in this epoch, do not update, makes it hard to test: {e}");
-    // if (added.ContainsKey(key)) return;
-    updated[key] = e;
+  public void Update(SystemName system, ICoreEntity e) {
+    DevelDebug.WriteLine($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
+    updated[(system, e.GetType(), e.Id)] = e;
   }
+
 }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore {
@@ -100,6 +111,7 @@ public class SimulationCtx {
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
   public readonly IStagedEntityStore stage;
+  public SystemName CurrentSystem { get; set; } = null!;
 
   internal SimulationCtx() {
     core = new(this);
@@ -133,8 +145,8 @@ public class SimulationCtx {
  }
  
   public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c) {
-    var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.Id.ToString()));
-    return new CoreCustomer(c.Id.ToString(), SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
+    var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.Id));
+    return new CoreCustomer(c.Id, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
   }
   
   // todo: this `CoreCustomer? existing` is required in the promote function as promote should
@@ -142,24 +154,24 @@ public class SimulationCtx {
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) {
     if (existing is not null) return existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
     var membership = core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
-    return new CoreCustomer(a.Id.ToString(), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
+    return new CoreCustomer(a.Id, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
       
-    return new CoreInvoice(i.Id.ToString(), SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
+    return new CoreInvoice(i.Id, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.AccountId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
-    return new CoreInvoice(i.Id.ToString(), SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
+    return new CoreInvoice(i.Id, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
   }
 
-  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m) => new(m.Id.ToString(), m.Updated, m.Name);
+  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m) => new(m.Id, m.Updated, m.Name);
   
   public List<T> ShuffleAndTake<T>(IEnumerable<T> enumerable, int? take = null) {
     var list = enumerable.ToList();
@@ -237,13 +249,18 @@ public class E2EEnvironment : IAsyncDisposable {
     crm.Simulation.Step();
     fin.Simulation.Step(); // todo: can this be put up with crm?
     
+    // todo: these ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM calls are ugly 
+    ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM;
     await crm_read_runner.RunFunction();
     await crm_promote_runner.RunFunction();
     
+    ctx.CurrentSystem = SimulationConstants.FIN_SYSTEM;
     await fin_read_runner.RunFunction(); 
     await fin_promote_runner.RunFunction();
     
+    ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM;
     await crm_write_runner.RunFunction();
+    ctx.CurrentSystem = SimulationConstants.FIN_SYSTEM; 
     await fin_write_runner.RunFunction();
     
     // todo: is this final read/promote required

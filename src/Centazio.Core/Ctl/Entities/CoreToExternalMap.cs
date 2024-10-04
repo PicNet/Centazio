@@ -2,7 +2,14 @@
 
 namespace Centazio.Core.Ctl.Entities;
 
-public record CoreToExternalMap {
+public interface ICoreToExternalMap {
+  public CoreEntityType CoreEntity { get; } 
+  public ValidString CoreId { get; } 
+  public SystemName ExternalSystem { get; } 
+  public DateTime DateCreated { get; }
+}
+
+public record CoreToExternalMap : ICoreToExternalMap {
   private CoreToExternalMap(
       CoreEntityType coreentity, ValidString coreid, 
       SystemName externalsys, ValidString externalid, 
@@ -23,7 +30,7 @@ public record CoreToExternalMap {
   public SystemName ExternalSystem { get; } 
   public ValidString ExternalId { get; }
   public EEntityMappingStatus Status { get; protected init; }
-  
+  public string Checksum { get; init; } = "";
   public DateTime DateCreated { get; protected init; } 
   
   public DateTime? DateUpdated { get; protected init; } 
@@ -62,9 +69,10 @@ public record CoreToExternalMap {
   
   public static PendingCreate Create(ICoreEntity e, SystemName externalsys) => new(e, externalsys);
   
-  public record PendingCreate {
+  public record PendingCreate : ICoreToExternalMap {
     public CoreEntityType CoreEntity { get; } 
-    public ValidString CoreId { get; } 
+    public ValidString CoreId { get; }
+    // todo: do we use SourceSystem / SourceId
     public SystemName SourceSystem { get; } 
     public ValidString SourceId { get; } 
     public SystemName ExternalSystem { get; } 
