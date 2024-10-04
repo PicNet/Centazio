@@ -7,7 +7,8 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
 
   [Test] public void Test_all_data_objects_follow_Dto_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
-        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false })
+        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false } 
+            && !(t is { IsAbstract: true, IsSealed: true })) // ignores static classes like StagedEntityListExtensions
         .Where(t => t.BaseType != typeof(CoreToExternalMap)) // ignore these
         .ToList();
     var bases = types.Where(t => t.FullName!.IndexOf('+') < 0).ToList();
@@ -16,6 +17,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
 
   private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { { "ObjectState", ["ObjectIsCoreEntityType", "ObjectIsExternalEntityType"] } };
   private void ValidateDataObject(Type baset, List<Type> types) {
+    Console.WriteLine("ValidateDataObject: " + baset.Name);
     var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
     var nonnulls = dto.GetProperties().Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();

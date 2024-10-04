@@ -2,9 +2,15 @@
 - add unit tests to check bi-directional bounce back protection using checksums
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
-
+- it is impossible to totally avoid non-meaninful bounce backs.  Need to store the last checksum for the
+  external entity against that system.  And check for changes prior to writing to target system.  Will need a new 
+  interface for external entities.  A scenario where this can happen is:
+  - A customer exists in both CRM, FIN
+  - Both systems edit the name (from 0 -> 1).  Both these edits are valid, which means that both systems will
+  - write this to their counterpart
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experiecen, add lots of helpers to do common tasks
+- clean up simulation code, and promote code, both rough
 - have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
     causes this
 - review all code comments

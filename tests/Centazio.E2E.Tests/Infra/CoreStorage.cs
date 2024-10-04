@@ -6,7 +6,7 @@ namespace Centazio.E2E.Tests.Infra;
 
 public record CoreCustomer : CoreEntityBase {
   
-  public string Name { get; private init; }
+  public string Name { get; init; }
   public CoreMembershipType Membership { get; internal init; }
   public List<CoreInvoice> Invoices { get; internal init; }
   
@@ -53,7 +53,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   public string Id { get; set; }
   public DateTime DateCreated { get; protected init; }
   public DateTime DateUpdated { get; protected init; }
-  public DateTime SourceSystemDateUpdated { get; protected init; }
+  public DateTime SourceSystemDateUpdated { get; init; }
   public string LastUpdateSystem { get; protected init; }
   
   public string DisplayName { get; protected init; }

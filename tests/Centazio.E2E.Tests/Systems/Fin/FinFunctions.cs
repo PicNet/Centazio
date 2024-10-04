@@ -6,7 +6,6 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.Test.Lib;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
@@ -64,8 +63,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       foreach (var acc in accounts) {
         var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.External.Id.ToString())?.CoreId;
         var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
-        var membership = existing?.Membership ?? ctx.core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
-        var updated = ctx.FinAccountToCoreCustomer(acc.External, membership);
+        var updated = ctx.FinAccountToCoreCustomer(acc.External, existing);
         topromote.Add(new StagedAndCoreEntity(acc.Staged, updated)); 
       }
     } else if (config.State.Object.Value == nameof(CoreInvoice))

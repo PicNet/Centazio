@@ -63,8 +63,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       var map = (await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), [externalid], SimulationConstants.FIN_SYSTEM)).Single();
       var coreid = map.CoreId;
       var existing = ctx.core.GetCustomer(coreid); 
-      var membership = existing?.Membership ?? ctx.core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
-      return ctx.FinAccountToCoreCustomer(account, membership);
+      return ctx.FinAccountToCoreCustomer(account, existing);
     }
   }
 
@@ -77,7 +76,8 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   
   public void Update(ICoreEntity e) {
     var key = (e.GetType(), e.Id);
-    if (added.ContainsKey(key)) throw new Exception($"entity appears to have been added in this epoch, do not update, makes it hard to test: {e}");
+    // if (added.ContainsKey(key)) throw new Exception($"entity appears to have been added in this epoch, do not update, makes it hard to test: {e}");
+    // if (added.ContainsKey(key)) return;
     updated[key] = e;
   }
 }
@@ -115,8 +115,8 @@ public class SimulationCtx {
   public readonly int CRM_MAX_EDIT_INVOICES = 4;
   
   // todo: adding this causes issues
-  public readonly int FIN_MAX_NEW_ACCOUNTS = 0;
-  public readonly int FIN_MAX_EDIT_ACCOUNTS = 0;
+  public readonly int FIN_MAX_NEW_ACCOUNTS = 2;
+  public readonly int FIN_MAX_EDIT_ACCOUNTS = 4;
   public readonly int FIN_MAX_NEW_INVOICES = 0;
   public readonly int FIN_MAX_EDIT_INVOICES = 0;
  
@@ -136,14 +136,18 @@ public class SimulationCtx {
     var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.Id.ToString()));
     return new CoreCustomer(c.Id.ToString(), SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
   }
-  public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreMembershipType membership) {
-    var invoices = core.GetInvoicesForCustomer(a.Id.ToString());
-    return new CoreCustomer(a.Id.ToString(), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, invoices);
+  
+  // todo: this `CoreCustomer? existing` is required in the promote function as promote should
+  // fill in details on this target instead of creating new entity
+  public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) {
+    if (existing is not null) return existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
+    var membership = core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
+    return new CoreCustomer(a.Id.ToString(), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.CustomerId.ToString()).CoreId;
-    if (custid != null && newcustid != custid) throw new Exception();
+    if (custid is not null && newcustid != custid) throw new Exception();
       
     return new CoreInvoice(i.Id.ToString(), SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
@@ -151,7 +155,7 @@ public class SimulationCtx {
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.AccountId.ToString()).CoreId;
-    if (custid != null && newcustid != custid) throw new Exception();
+    if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.Id.ToString(), SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
   }
 
@@ -231,13 +235,21 @@ public class E2EEnvironment : IAsyncDisposable {
     ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions {{{UtcDate.UtcNow:o}}}");
     
     crm.Simulation.Step();
+    fin.Simulation.Step(); // todo: can this be put up with crm?
+    
     await crm_read_runner.RunFunction();
     await crm_promote_runner.RunFunction();
-    await fin_write_runner.RunFunction();
-    fin.Simulation.Step();
+    
     await fin_read_runner.RunFunction(); 
     await fin_promote_runner.RunFunction();
+    
     await crm_write_runner.RunFunction();
+    await fin_write_runner.RunFunction();
+    
+    // todo: is this final read/promote required
+    await crm_read_runner.RunFunction();
+    await crm_promote_runner.RunFunction();
+    await fin_write_runner.RunFunction(); // todo: is this required?
     
     ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating {{{UtcDate.UtcNow:o}}}");
     await ValidateEpoch();
@@ -301,7 +313,7 @@ public class E2EEnvironment : IAsyncDisposable {
     var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
     var (core_compare, core_desc) = (coreslst.Select(e => Json(e, false)), coreslst.Select(e => Json(e, true)));
     var (targets_compare, targets_desc) = (targetslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, true)));
-    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"CORES:\n\t{String.Join("\n\t", core_desc)}\nTARGET[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
+    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"Checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
     
     string Json(object obj, bool includeid) => JsonSerializer.Serialize(obj, includeid ? withid : noid);
   }
