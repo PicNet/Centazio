@@ -7,6 +7,7 @@ namespace Centazio.Core.Write;
 //    staged string -> IExternalEntity)
 public interface IExternalEntity {
 
+  // todo: Id is not a great name as its too common and causes conflicts, rename to something a bit better 
   public string Id { get; }
   
   [JsonIgnore] public string DisplayName { get; }

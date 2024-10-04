@@ -7,13 +7,12 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
 
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
     { "ValidString", ["Value"] },
-    { "CoreToExternalMap", ["LastError"] },
+    { "CoreToExternalMap", ["LastError", "Checksum"] },
     { "ObjectState", ["LastRunMessage", "LastRunException"] },
     { "StagedEntity", ["IgnoreReason"] },
     { "CoreEntityType", ["Name"] },
     { "ExternalEntityType", ["Name"] },
-    { "CoreEntityAndChecksum", ["Checksum"] },
-    { "CoreToExternalMap", ["Checksum"] }
+    { "CoreEntityAndChecksum", ["Checksum"] }
   };
   
   [Test] public void Test_string_description_pattern() {

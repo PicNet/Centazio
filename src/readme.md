@@ -15,6 +15,7 @@
     causes this
 - review all code comments
 - add unit test to check for "", use string.empty instead
+- look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
 
 # Developer Guidelines:
 

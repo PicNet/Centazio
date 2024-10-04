@@ -97,11 +97,25 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) => throw new NotImplementedException();
+  public async Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
+    ctx.Debug($"CrmWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] Core[{Core}] Updated[{Map}] {{{UtcDate.UtcNow:o}}}");
+    if (config.Object.Value == nameof(CoreCustomer)) {
+      return FromCore(Map is CoreToExternalMap update ? Guid.Parse(update.ExternalId) : Guid.Empty, Core.To<CoreCustomer>());
+    }
+    
+    if (config.Object.Value == nameof(CoreInvoice)) {
+      var inv = Core.To<CoreInvoice>();
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), [inv.CustomerId], SimulationConstants.CRM_SYSTEM);
+      return FromCore(Map is CoreToExternalMap update ? Guid.Parse(update.ExternalId) : Guid.Empty, inv, maps);
+    }
+    
+    throw new NotSupportedException(config.Object);
+  }
 
   public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
     
-    ctx.Debug($"CrmWriteFunction[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+      
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await crm.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
       await crm.UpdateCustomers(updated.Select(e1 => {

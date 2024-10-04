@@ -59,7 +59,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, "", "", DateOnly.MinValue, UtcDate.UtcNow)];
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
-    var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), "CrmSystem");
+    var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), Constants.System1Name);
     await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc1.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList());
     
     // This scenario was identified in the simulation, where this GetForCores does not identify this entity as having been created before.
@@ -67,7 +67,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // allowed a duplicate to be inserted.
     // PromoteOperationRunner - GetForCores Id[71c5db4e-971a-45f5-831e-643d6ca77b20] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
-    var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Create("71c5db4e-971a-45f5-831e-643d6ca77b20"), "CrmSystem");
+    var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Create("71c5db4e-971a-45f5-831e-643d6ca77b20"), Constants.System1Name);
     
     var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc2.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList()));
     Assert.That(ex.Message.StartsWith("creating duplicate CoreToExternalMap map"), Is.True);
@@ -75,10 +75,10 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
-    async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName external, string externalid) {
+    async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName system, string externalid) {
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
       await corestore.Upsert(Constants.CoreEntityName, [new CoreEntityAndChecksum(c, Helpers.TestingChecksum)]);
-      await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [CoreToExternalMap.Create(c, external).SuccessCreate(externalid)]);
+      await entitymap.Create(Constants.CoreEntityName, system, [CoreToExternalMap.Create(c, system).SuccessCreate(externalid)]);
       return c;
     }
     

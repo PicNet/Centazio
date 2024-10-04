@@ -95,7 +95,10 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
 
-  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) => throw new NotImplementedException();
+  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
+    var core = Core.To<CoreEntity>();
+    return Task.FromResult<IExternalEntity>(new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow));
+  }
 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
