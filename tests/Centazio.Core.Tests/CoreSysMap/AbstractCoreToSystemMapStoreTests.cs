@@ -26,11 +26,11 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
     var original = CoreToExternalMap.Create(core, STR); 
-    var created = (await entitymap.Create([original.SuccessCreate(STR)])).Single();
+    var created = (await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [original.SuccessCreate(STR)])).Single();
     var err = created.Update().Error("Error");
     
     var list1 = await entitymap.GetAll();
-    var updated = (await entitymap.Update([err])).Single();
+    var updated = (await entitymap.Update(Constants.CoreEntityName, Constants.System1Name, [err])).Single();
     var list2 = await entitymap.GetAll();
     
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
@@ -43,10 +43,10 @@ public abstract class AbstractCoreToSystemMapStoreTests {
       CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR),
       CoreToExternalMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2)
     }; 
-    var created = (await entitymap.Create(original)).ToList();
+    var created = (await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, original)).ToList();
     var list1 = await entitymap.GetAll();
     var updatecmd = created.Select(e => e.Update().Error("Error")).ToList();
-    var updated2 = (await entitymap.Update(updatecmd)).ToList();
+    var updated2 = (await entitymap.Update(Constants.CoreEntityName, Constants.System1Name, updatecmd)).ToList();
     var list2 = await entitymap.GetAll();
     var exp = created.Select(e => e.Update().Error("Error")).ToList();
         
@@ -60,7 +60,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), "CrmSystem");
-    await entitymap.Create(gfc1.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList());
+    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc1.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList());
     
     // This scenario was identified in the simulation, where this GetForCores does not identify this entity as having been created before.
     // The bug here is that we promoted a new core entity because it bounced back.  However, CoreToSystemMap should have failed gracefully and not
@@ -69,7 +69,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Create("71c5db4e-971a-45f5-831e-643d6ca77b20"), "CrmSystem");
     
-    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(gfc2.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList()));
+    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc2.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20").Map).ToList()));
     Assert.That(ex.Message.StartsWith("creating duplicate CoreToExternalMap map"), Is.True);
   }
   
@@ -78,7 +78,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName external, string externalid) {
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
       await corestore.Upsert(Constants.CoreEntityName, [new CoreEntityAndChecksum(c, Helpers.TestingChecksum)]);
-      await entitymap.Create([CoreToExternalMap.Create(c, external).SuccessCreate(externalid)]);
+      await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [CoreToExternalMap.Create(c, external).SuccessCreate(externalid)]);
       return c;
     }
     
@@ -95,7 +95,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
-    await entitymap.Create([CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
+    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
     
     // System2 creates E2 
     // Centazio reads/promotes E2/C2

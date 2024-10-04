@@ -81,11 +81,11 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   }
 
   public void Add(ICoreEntity e) {
-    DevelDebug.WriteLine($"CoreStorage.Add CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
+    ctx.Debug($"CoreStorage.Add CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
     if (!added.TryAdd((e.GetType(), e.Id), e)) throw new Exception($"entity appears to have already been added: {e}");
   }
   public void Update(SystemName system, ICoreEntity e) {
-    DevelDebug.WriteLine($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
+    ctx.Debug($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
     updated[(system, e.GetType(), e.Id)] = e;
   }
 

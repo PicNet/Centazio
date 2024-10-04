@@ -48,15 +48,12 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     return Task.FromResult(dict);
   }
 
-  public override Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> news) {
+  public override Task<List<CoreToExternalMap.Created>> Create(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<CoreToExternalMap.Created>());
-    var template = news[0];
-    // todo: make it impossible for this to happen? I.e. remove these properties from `CoreToExternalMap.Created` and pass them into this method?
-    if (news.Any(m => m.CoreEntity != template.CoreEntity && m.ExternalSystem != template.ExternalSystem)) throw new Exception();
     
-    Log.Information("creating core/external maps {@CoreEntityType} {@ExternalSystem} {@CoreToExternalMapEntries}", template.CoreEntity, template.ExternalSystem, news.Select(m => m.ExternalId));
+    Log.Information("creating core/external maps {@CoreEntityType} {@System} {@CoreToExternalMapEntries}", coretype, system, news.Select(m => m.ExternalId));
     var created = news.Select(map => {
-      var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == map.CoreEntity && k.ExternalSystem == map.ExternalSystem && k.ExternalId == map.ExternalId);
+      var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == coretype && k.ExternalSystem == system && k.ExternalId == map.ExternalId);
       if (duplicate is not null) throw new Exception($"creating duplicate CoreToExternalMap map[{map}] existing[{duplicate}]");
       memdb[map.Key] = map;
       return map;
@@ -64,11 +61,10 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     return Task.FromResult(created);
   }
 
-  public override Task<List<CoreToExternalMap.Updated>> Update(List<CoreToExternalMap.Updated> updates) {
+  public override Task<List<CoreToExternalMap.Updated>> Update(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Updated> updates) {
     if (!updates.Any()) return Task.FromResult(new List<CoreToExternalMap.Updated>());
-    
-    var updated = updates.Select(map => (CoreToExternalMap.Updated)(memdb[map.Key] = map)).ToList();
-    return Task.FromResult(updated);
+    updates.ForEach(map => memdb[map.Key] = map);
+    return Task.FromResult(updates);
   }
 
   public override ValueTask DisposeAsync() { 

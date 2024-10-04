@@ -15,8 +15,8 @@ public record WriteEntitiesToTargetSystem(List<CoreAndPendingCreateMap> Created,
 
 public interface ICoreToSystemMapStore : IAsyncDisposable {
 
-  Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> maps);
-  Task<List<CoreToExternalMap.Updated>> Update(List<CoreToExternalMap.Updated> maps);
+  Task<List<CoreToExternalMap.Created>> Create(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Created> maps);
+  Task<List<CoreToExternalMap.Updated>> Update(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Updated> maps);
   
   Task<GetForCoresResult> GetNewAndExistingMappingsFromCores(List<ICoreEntity> cores, SystemName external);
   Task<List<CoreToExternalMap>> GetExistingMappingsFromCoreIds(CoreEntityType coretype, List<string> coreids, SystemName external);
@@ -33,8 +33,8 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
 
 public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
 
-  public abstract Task<List<CoreToExternalMap.Created>> Create(List<CoreToExternalMap.Created> creates);
-  public abstract Task<List<CoreToExternalMap.Updated>> Update(List<CoreToExternalMap.Updated> updates);
+  public abstract Task<List<CoreToExternalMap.Created>> Create(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Created> creates);
+  public abstract Task<List<CoreToExternalMap.Updated>> Update(CoreEntityType coretype, SystemName system, List<CoreToExternalMap.Updated> updates);
   public abstract Task<GetForCoresResult> GetNewAndExistingMappingsFromCores(List<ICoreEntity> cores, SystemName external);
   public abstract Task<List<CoreToExternalMap>> GetExistingMappingsFromCoreIds(CoreEntityType coretype, List<string> coreids, SystemName external);
   

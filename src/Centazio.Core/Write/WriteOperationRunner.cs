@@ -21,9 +21,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       return results;  
     }
     
-    // CrmPromote creates this entity map, then FinWrite tries to create again
-    await entitymap.Create(results.EntitiesCreated.Select(e => e.Map).ToList());
-    await entitymap.Update(results.EntitiesUpdated.Select(e => e.Map).ToList());
+    await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, results.EntitiesCreated.Select(e => e.Map).ToList());
+    await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, results.EntitiesUpdated.Select(e => e.Map).ToList());
     return results;
   }
 

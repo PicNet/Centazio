@@ -72,6 +72,7 @@ public record CoreToExternalMap : ICoreToExternalMap {
   public record PendingCreate : ICoreToExternalMap {
     public CoreEntityType CoreEntity { get; } 
     public ValidString CoreId { get; }
+    // todo: rename ExternalSystem to System and CoreToExternal -> CoreToSystem
     public SystemName ExternalSystem { get; } 
     public DateTime DateCreated { get; }
     

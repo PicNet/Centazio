@@ -12,7 +12,8 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { "StagedEntity", ["IgnoreReason"] },
     { "CoreEntityType", ["Name"] },
     { "ExternalEntityType", ["Name"] },
-    { "CoreEntityAndChecksum", ["Checksum"] } 
+    { "CoreEntityAndChecksum", ["Checksum"] },
+    { "CoreToExternalMap", ["Checksum"] }
   };
   
   [Test] public void Test_string_description_pattern() {

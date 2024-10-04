@@ -7,7 +7,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
 
   [Test] public void Test_all_data_objects_follow_Dto_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
-        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false } 
+        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false, IsInterface: false } 
             && !(t is { IsAbstract: true, IsSealed: true })) // ignores static classes like StagedEntityListExtensions
         .Where(t => t.BaseType != typeof(CoreToExternalMap)) // ignore these
         .ToList();
@@ -15,13 +15,19 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     bases.ForEach(t => ValidateDataObject(t, types));
   }
 
-  private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { { "ObjectState", ["ObjectIsCoreEntityType", "ObjectIsExternalEntityType"] } };
+  private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { 
+    { "ObjectState", ["ObjectIsCoreEntityType", "ObjectIsExternalEntityType"] },
+  };
+  private static readonly Dictionary<string, List<string>> IGNORE_SETTERS = new() {
+    { "CoreToExternalMap", ["Checksum"] }
+  };
+  
   private void ValidateDataObject(Type baset, List<Type> types) {
-    Console.WriteLine("ValidateDataObject: " + baset.Name);
     var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
     var nonnulls = dto.GetProperties().Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
-    var setters = baset.GetProperties().Where(p => p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
+    var setterstoignore = IGNORE_SETTERS.TryGetValue(baset.Name, out var value2) ? value2 : [];
+    var setters = baset.GetProperties().Where(p => !setterstoignore.Contains(p.Name) && p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
     
     Assert.That(baset.GetConstructors().All(c => c.IsPrivate), Is.True, $"{baset.Name} has public constructor");
     Assert.That(setters, Is.Empty, $"{baset.Name} has public setters: {String.Join(",", setters)}");

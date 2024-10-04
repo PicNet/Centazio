@@ -96,8 +96,8 @@ public class PromoteOperationRunner(
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(meaningful, op.State.System);
     // todo: we should store the initial checksum state here from the IExternalEntity into CoreExternalMap
-    await entitymap.Create(existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
-    await entitymap.Update(existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
+    await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId)).ToList());
+    await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, existing.Updated.Select(e => e.Map.SuccessUpdate()).ToList());
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
