@@ -19,6 +19,7 @@ public record CoreAndCreatedMap {
 }
 
 public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToExternalMap.PendingUpdate Map) {
+  // todo: add StagedCoreAndExternal and then this method should be removed
   public CoreExternalMap SetExternalEntity(IExternalEntity external, string checksum) => new(Core, external, Map with { Checksum = checksum });
 }
 

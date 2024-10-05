@@ -31,6 +31,7 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Upsert all entities into core storage
   /// </summary>
   Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities);
+    // todo: the type CoreAndChecksum is not required just add another parameter Func<object,string> checksum
 }
 
 public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

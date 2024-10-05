@@ -4,6 +4,8 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
+  // todo: this should not really be PromoteOperationResult as this is called way before the PromoteOperationRunner returns
+  //    this object just represents the result of the PromotionEvaluation
   Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged);
 }
 

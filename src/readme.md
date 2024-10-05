@@ -1,5 +1,6 @@
 # Todo
-- add unit tests to check bi-directional bounce back protection using checksums
+- add unit tests to check bi-directional bounce back protection using checksums, check for all new logic added through
+   the simulator and check that its adequately unit tested
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - it is impossible to totally avoid non-meaninful bounce backs.  Need to store the last checksum for the
@@ -16,6 +17,11 @@
 - review all code comments
 - add unit test to check for "", use string.empty instead
 - look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
+- checksums everywhere now, need to have naming conventions to clarify which checksum we are after.  Perhaps 
+  strongly typed strings?
+- replace custom container records with named tuples
+- Add extension methods to simulate covariance between all our types and tuples
+- clean up interfaces and types, have stuff everywhere
 
 # Developer Guidelines:
 
