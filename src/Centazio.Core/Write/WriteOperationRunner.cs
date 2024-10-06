@@ -10,11 +10,12 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var pending = await core.Get(op.State.Object.ToCoreEntityType, op.Checkpoint, op.State.System);
-    var maps = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
-    var meaningful = await RemoveNonMeaninfulChanges(op, maps); 
-    Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Created[{maps.Created.Count}] Updated[{maps.Updated.Count}] Meaningful Updates[{meaningful.Updated.Count}]");
-    if (!meaningful.Updated.Any() && !meaningful.Created.Any()) return new SuccessWriteOperationResult([], []);
-    var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, meaningful.Created, meaningful.Updated);
+    var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
+    var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
+    var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
+    Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful Updates[{meaningful.Count}]");
+    if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
+    var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning("error occurred calling `WriteEntitiesToTargetSystem` {@Results}", results);
@@ -26,22 +27,15 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     return results;
   }
 
-  private async Task<WriteEntitiesToTargetSystem> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, GetForCoresResult maps) {
-    var updated = new List<CoreSystemMap>();
-    foreach (var cpum in maps.Updated) {
-      var check = await IsMeaningful(cpum);
-      if (check.IsMeaningful) updated.Add(check.Details);
-    } 
-    return new WriteEntitiesToTargetSystem(maps.Created, updated);
-
-    async Task<(bool IsMeaningful, CoreSystemMap Details)> IsMeaningful(CoreAndPendingUpdateMap cpum) {
-      // todo: change this, it should be done for whole batch not entity by entity
-      var external = await op.OpConfig.TargetSysWriter.CovertCoreEntityToSystemEntity(op.OpConfig, cpum.Core, cpum.Map);
+  private List<CoreSystemMap> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, List<CoreSystemMap> toupdate) {
+    return toupdate.Where(IsMeaningful).ToList();
+  
+    bool IsMeaningful(CoreSystemMap cpum) {
       var existing = cpum.Map.Checksum;
-      var changed = op.FuncConfig.ChecksumAlgorithm.Checksum(external);
+      var changed = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SystemEntity);
       var meaningful = String.IsNullOrWhiteSpace(existing) || String.IsNullOrWhiteSpace(changed) || existing != changed;
       Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{existing}] New Checksum[{changed}]");
-      return (meaningful, cpum.SetSystemEntity(external, changed));
+      return meaningful;
     }
   }
 

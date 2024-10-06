@@ -9,7 +9,13 @@ namespace Centazio.Core.Write;
 // todo: move containers to Containers.ts
 
 public record CoreAndPendingCreateMap(ICoreEntity Core, CoreToSystemMap.PendingCreate Map) {
-  public CoreAndCreatedMap Created(string targetid, SystemEntityChecksum checksum) => new(Core, Map.SuccessCreate(targetid, checksum));
+  public CoreSysAndPendingCreateMap AddSystemEntity(ISystemEntity sysent, SystemEntityChecksum checksum) {
+    return new (Core, sysent, Map, checksum);
+  }
+}
+
+public record CoreSysAndPendingCreateMap(ICoreEntity Core, ISystemEntity SysEnt, CoreToSystemMap.PendingCreate Map, SystemEntityChecksum Checksum) {
+  public CoreAndCreatedMap Created(string targetid) => new(Core, Map.SuccessCreate(targetid, Checksum));
 }
 
 public record CoreAndCreatedMap {
@@ -27,7 +33,7 @@ public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToSystemMap.PendingU
 }
 
 public record CoreSystemMap(ICoreEntity Core, ISystemEntity SystemEntity, CoreToSystemMap.PendingUpdate Map) {
-  public CoreAndUpdatedMap Updated(SystemEntityChecksum checksum) => new(Core, Map.SuccessUpdate(checksum));
+  public CoreAndUpdatedMap Updated() => new(Core, Map.SuccessUpdate(Map.Checksum));
 }
 
 public record CoreAndUpdatedMap {
@@ -55,6 +61,7 @@ public record WriteOperationConfig(
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
 public interface ITargetSystemWriter {
-  Task<ISystemEntity> CovertCoreEntityToSystemEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map);
-  Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreSystemMap> updated);
+  Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate);
+  Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated);
+
 }

@@ -61,7 +61,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), Constants.System1Name);
-    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc1.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS()).Map).ToList());
+    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc1.Created.Select(c =>  c.Map.SuccessCreate("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS())).ToList());
     
     // This scenario was identified in the simulation, where this GetForCores does not identify this entity as having been created before.
     // The bug here is that we promoted a new core entity because it bounced back.  However, CoreToSystemMap should have failed gracefully and not
@@ -70,7 +70,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Create("71c5db4e-971a-45f5-831e-643d6ca77b20"), Constants.System1Name);
     
-    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc2.Created.Select(c => c.Created("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS()).Map).ToList()));
+    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc2.Created.Select(c => c.Map.SuccessCreate("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS())).ToList()));
     Assert.That(ex.Message.StartsWith("creating duplicate CoreToExternalMap map"), Is.True);
   }
   

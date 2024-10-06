@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -103,22 +102,39 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<ISystemEntity> CovertCoreEntityToSystemEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
-    ctx.Debug($"CrmWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] Core[{Core}] Updated[{Map}] {{{UtcDate.UtcNow:o}}}");
+  public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+    ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
+    // todo: add helpers for this
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return FromCore(Map is CoreToSystemMap update ? Guid.Parse(update.ExternalId) : Guid.Empty, Core.To<CoreCustomer>());
+      return (
+          tocreate.Select(m => {
+            var sysent = FromCore(Guid.Empty, m.Core.To<CoreCustomer>()); 
+            return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
+          }).ToList(),
+          toupdate.Select(m => {
+            var sysent = FromCore(Guid.Parse(m.Map.ExternalId), m.Core.To<CoreCustomer>());
+            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
+          }).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var inv = Core.To<CoreInvoice>();
-      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), [inv.CustomerId], SimulationConstants.CRM_SYSTEM);
-      return FromCore(Map is CoreToSystemMap update ? Guid.Parse(update.ExternalId) : Guid.Empty, inv, maps);
+      var custids = toupdate.Select(m => m.Core.To<CoreInvoice>().CustomerId).ToList();
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(),  custids, SimulationConstants.CRM_SYSTEM);
+      return (
+          tocreate.Select(m => {
+            var sysent = FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps); 
+            return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
+          }).ToList(),
+          toupdate.Select(m => {
+            var sysent = FromCore(Guid.Parse(m.Map.ExternalId), m.Core.To<CoreInvoice>(), maps);
+            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
+          }).ToList());
     }
     
     throw new NotSupportedException(config.Object);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreSystemMap> updated) {
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     
     ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
       
@@ -131,8 +147,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
-          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
+          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -151,8 +167,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
-          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
+          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     throw new NotSupportedException(config.Object);
@@ -170,5 +186,4 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     return new CrmInvoice(id, UtcDate.UtcNow, Guid.Parse(accid), i.Cents, i.DueDate, i.PaidDate);
   }
-
 }

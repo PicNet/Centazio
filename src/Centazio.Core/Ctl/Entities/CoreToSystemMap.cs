@@ -97,7 +97,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
   }
 
   public record PendingUpdate : CoreToSystemMap {
-    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, new(nameof(PendingUpdate))) {}
+    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.Checksum) {}
     
     public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 

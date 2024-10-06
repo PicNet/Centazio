@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
@@ -106,17 +105,32 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<ISystemEntity> CovertCoreEntityToSystemEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
+  public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     // todo: remove UtcDate.UtcNow from all logs, and just log the time when it changes (calls DoTick)
-    ctx.Debug($"FinWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] Core[{Core}] Updated[{Map}] {{{UtcDate.UtcNow:o}}}");
-    
+    ctx.Debug($"FinWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return FromCore(Map is CoreToSystemMap update ? Int32.Parse(update.ExternalId) : 0, Core.To<CoreCustomer>());
+      return (
+          tocreate.Select(m => {
+            var sysent = FromCore(0, m.Core.To<CoreCustomer>()); 
+            return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
+          }).ToList(),
+          toupdate.Select(m => {
+            var sysent = FromCore(Int32.Parse(m.Map.ExternalId), m.Core.To<CoreCustomer>());
+            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
+          }).ToList());
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var inv = Core.To<CoreInvoice>();
-      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), [inv.CustomerId], SimulationConstants.FIN_SYSTEM);
-      return FromCore(Map is CoreToSystemMap update ? Int32.Parse(update.ExternalId) : 0, inv, maps);
+      var custids = toupdate.Select(m => m.Core.To<CoreInvoice>().CustomerId).ToList();
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), custids, SimulationConstants.FIN_SYSTEM);
+      return (
+          tocreate.Select(m => {
+            var sysent = FromCore(0, m.Core.To<CoreInvoice>(), maps); 
+            return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
+          }).ToList(),
+          toupdate.Select(m => {
+            var sysent = FromCore(Int32.Parse(m.Map.ExternalId), m.Core.To<CoreInvoice>(), maps);
+            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
+          }).ToList());
     }
     
     throw new NotSupportedException(config.Object);
@@ -135,8 +149,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
-          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
+          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => {
+            var cmap = m.First.Map.SuccessCreate(m.Second, new(Guid.NewGuid().ToString()));
+            return new CoreAndCreatedMap(m.First.Core, cmap);
+          }).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -155,8 +172,11 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
-          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
+          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => {
+            var cmap = m.First.Map.SuccessCreate(m.Second, new(Guid.NewGuid().ToString()));
+            return new CoreAndCreatedMap(m.First.Core, cmap);
+          }).ToList(),
+          updated.Select(m => m.Updated()).ToList());
     }
     
     throw new NotSupportedException(config.Object);
@@ -174,5 +194,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     return new(id, Int32.Parse(accid), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
   }
+  
+  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) => throw new NotImplementedException();
 
 }

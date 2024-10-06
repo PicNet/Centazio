@@ -96,18 +96,33 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
 
-  public Task<ISystemEntity> CovertCoreEntityToSystemEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
+  public Task<ISystemEntity> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
     var core = Core.To<CoreEntity>();
     return Task.FromResult<ISystemEntity>(new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow));
   }
 
-  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreSystemMap> updated) {
+  public Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+    var ccreate = tocreate.Select(e => {
+      var core = e.Core.To<CoreEntity>();
+      var sysent =  new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow);
+      return new CoreSysAndPendingCreateMap(core, sysent, e.Map, Helpers.TestingSystemEntityChecksum(sysent));
+    }).ToList();
+    var cupdate = toupdate.Select(e => {
+      var core = e.Core.To<CoreEntity>();
+      var sysent =  new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow);
+      return e.SetSystemEntity(sysent, Helpers.TestingSystemEntityChecksum(sysent));
+    }).ToList();
+    return Task.FromResult((ccreate, cupdate));
+  }
+
+  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = created.Select(m => m.Created(m.Core.SourceId, Helpers.TestingSystemEntityChecksum(m.Core))).ToList();
-    var updates = updated.Select(m => m.Updated(Helpers.TestingSystemEntityChecksum(m.Core))).ToList();
+    var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
+    var updates = updated.Select(m => m.Updated()).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
   }
+  
 
 }
