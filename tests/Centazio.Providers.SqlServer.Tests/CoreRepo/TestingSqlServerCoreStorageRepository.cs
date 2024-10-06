@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
@@ -45,11 +46,11 @@ END
   
   public Task<List<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
+  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
     var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {obj} WHERE Id IN (@ids)", new { ids });
-    return mapping.ToDictionary(t => t.Id, t => t.Checksum);
+    return mapping.ToDictionary(t => t.Id, t => new CoreEntityChecksum(t.Checksum));
   }
 
   public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
@@ -67,7 +68,7 @@ UPDATE SET Checksum=c.Checksum, FirstName=c.FirstName, LastName=c.LastName, Date
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
       var c = cs.Core.To<CoreEntity>();
-      return new { c.Id, cs.Checksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
+      return new { c.Id, Checksum=cs.Checksum.Value, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
     }));
     return entities.Select(c => c.Core).ToList();
   }

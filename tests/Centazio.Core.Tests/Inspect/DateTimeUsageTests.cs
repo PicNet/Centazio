@@ -9,8 +9,6 @@ public class DateTimeUsageTests {
       if (contents.IndexOf("DateTime.Now", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of DateTime.Now, use UtcDate.UtcNow instead"); }
       if (contents.IndexOf("DateTime.Today", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of DateTime.Today, use UtcDate.UtcToday instead"); }
       if (contents.IndexOf("DateTime.UtcNow", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of DateTime.UtcNow, use UtcDate.UtcNow instead"); }
-      if (contents.IndexOf("UtcDate.Now.Now", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of UtcDate.Now.Now, use UtcDate.UtcNow instead"); }
-      if (contents.IndexOf("UtcDate.Now.UtcNow", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of UtcDate.Now.UtcNow, use UtcDate.UtcNow instead"); }
     });
     Assert.That(errors, Is.Empty);
   }

@@ -1,17 +1,19 @@
-﻿namespace Centazio.Core.CoreRepo;
+﻿using Centazio.Core.Checksum;
+
+namespace Centazio.Core.CoreRepo;
 
 public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
   protected readonly Dictionary<CoreEntityType, Dictionary<string, Containers.CoreChecksum>> db = new();
 
-  public Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
-    var checksums = new Dictionary<string, string>();
+  public Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
+    var checksums = new Dictionary<string, CoreEntityChecksum>();
     if (!entities.Any()) return Task.FromResult(checksums);
     if (!db.TryGetValue(obj, out var dbtype)) return Task.FromResult(checksums);
     var result = entities
         .Where(e => dbtype.ContainsKey(e.Id))
         .Select(e => dbtype[e.Id])
-        .ToDictionary(e => e.Core.Id, e => e.Checksum);
+        .ToDictionary(e => e.Core.Id, e => new CoreEntityChecksum(e.Checksum));
     return Task.FromResult(result);
   }
 

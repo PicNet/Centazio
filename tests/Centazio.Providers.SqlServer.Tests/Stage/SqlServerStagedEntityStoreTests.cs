@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Stage;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.Stage;
 using Centazio.Providers.SqlServer.Stage;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.AbstractProviderTests;
@@ -8,11 +9,11 @@ namespace Centazio.Providers.SqlServer.Tests.Stage;
 
 public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, string>? checksum = null) 
+  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) 
       => await new TestingSqlServerStagedEntityStore(limit, checksum).Initalise();
 
-  class TestingSqlServerStagedEntityStore(int limit, Func<string, string>? checksum = null) 
-      : SqlServerStagedEntityStore(() => SqlConn.Instance.Conn(), limit, checksum ?? Helpers.TestingChecksum ) {
+  class TestingSqlServerStagedEntityStore(int limit, Func<string, StagedEntityChecksum>? checksum = null) 
+      : SqlServerStagedEntityStore(() => SqlConn.Instance.Conn(), limit, checksum ?? Helpers.TestingStagedEntityChecksum ) {
 
     public override async ValueTask DisposeAsync() {
       if (!SqlConn.Instance.Real) {

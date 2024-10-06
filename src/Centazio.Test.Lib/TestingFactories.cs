@@ -36,15 +36,15 @@ public static class TestingFactories {
 
 }
 
-public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.TestingChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
+public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
 public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
   public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
 }
 
-public interface ITestingCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<CoreToExternalMap>> GetAll(); }
+public interface ITestingCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<CoreToSystemMap>> GetAll(); }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingCoreToSystemMapStore {
-  public Task<List<CoreToExternalMap>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
+  public Task<List<CoreToSystemMap>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
 }

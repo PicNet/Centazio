@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Centazio.Core.Checksum;
 using Centazio.Core.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
@@ -26,13 +27,13 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
     await container.DisposeAsync();
   }
   
-  protected override async Task<IStagedEntityStore> GetStore(int limit = 0, Func<string, string>? checksum = null) {
+  protected override async Task<IStagedEntityStore> GetStore(int limit = 0, Func<string, StagedEntityChecksum>? checksum = null) {
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
     return await new TestingS3StagedEntityStore(client, limit).Initalise();
   }
 
-  class TestingS3StagedEntityStore(IAmazonS3 client, int limit = 100) : S3StagedEntityStore(client, BUCKET_NAME, limit, Helpers.TestingChecksum) {
+  class TestingS3StagedEntityStore(IAmazonS3 client, int limit = 100) : S3StagedEntityStore(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
     
     private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityStore).ToLower(CultureInfo.InvariantCulture);
 

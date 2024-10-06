@@ -98,11 +98,10 @@ public class CrmSystem {
         var cust = customers[idx];
         // lets not edit previously added entities, makes it hard to verify
         if (AddedCustomers.Contains(cust)) return;
-        // todo: add function `Ctx.Checksum` that takes in ICore/IExternalEntity and calls GetChecksumSubset automatically
         var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, ctx.RandomItem(types).ExternalId);
         var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
-        var oldcs = ctx.objchecksum.Checksum(cust);
-        var newcs = ctx.objchecksum.Checksum(newcust);
+        var oldcs = ctx.checksum.Checksum(cust);
+        var newcs = ctx.checksum.Checksum(newcust);
         log.Add($"Id[{cust.SystemId}] Name[{name}->{newname}] Membership[{oldmt}->{newmt}] Checksum[{oldcs}->{newcs}]");
         if (oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
       });

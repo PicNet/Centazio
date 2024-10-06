@@ -77,7 +77,7 @@ public class ReadFunctionTests {
       LastRunMessage = $"operation [{sys}/{stg}/{externalname}] completed [Success] message: " + 
           (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
     };
-    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, externalname, onetick, expjson, Helpers.TestingChecksum(expjson));
+    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, externalname, onetick, expjson, Helpers.TestingStagedEntityChecksum(expjson));
   }
 }
 

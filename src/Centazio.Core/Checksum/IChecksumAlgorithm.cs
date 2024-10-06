@@ -1,3 +1,6 @@
+using Centazio.Core.CoreRepo;
+using Centazio.Core.Write;
+
 namespace Centazio.Core.Checksum;
 
 /// <summary>
@@ -20,9 +23,12 @@ public interface IGetChecksumSubset {
 }
 
 public interface IChecksumAlgorithm : IDisposable {
-  string Checksum(IGetChecksumSubset obj);
+  SystemEntityChecksum Checksum(ISystemEntity e);
+  CoreEntityChecksum Checksum(ICoreEntity e);
+  StagedEntityChecksum Checksum(string str);
 }
 
-public interface IStringChecksumAlgorithm : IDisposable {
-  string Checksum(string str);
-} 
+public abstract record ChecksumValue(string Value) : ValidString(Value);
+public record StagedEntityChecksum(string Value) : ChecksumValue(Value);
+public record SystemEntityChecksum(string Value) : ChecksumValue(Value);
+public record CoreEntityChecksum(string Value) : ChecksumValue(Value);

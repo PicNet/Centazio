@@ -132,13 +132,13 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new CoreToExternalMap.MappingKey(obj, "C1", sys1, "E1");
+    var expkey1 = new CoreToSystemMap.MappingKey(obj, "C1", sys1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2", Guid.NewGuid().ToString())]);
-    var expkey2 = new CoreToExternalMap.MappingKey(obj, "C1", sys2, "E2");
+    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToSystemMap.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
+    var expkey2 = new CoreToSystemMap.MappingKey(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
@@ -175,13 +175,13 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new CoreToExternalMap.MappingKey(obj, "C1", sys1, "E1");
+    var expkey1 = new CoreToSystemMap.MappingKey(obj, "C1", sys1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2", Guid.NewGuid().ToString())]);
-    var expkey2 = new CoreToExternalMap.MappingKey(obj, "C1", sys2, "E2");
+    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToSystemMap.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
+    var expkey2 = new CoreToSystemMap.MappingKey(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
@@ -212,7 +212,7 @@ public class PromoteFunctionTests {
     LastCompleted = updated,
     LastRunMessage = $"operation [{sys1}/{stg}/{obj}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
-  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys1, external, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys1, external, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) {
     var sysent = JsonSerializer.Deserialize<System1Entity>(json) ?? throw new Exception();

@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Serilog;
 
@@ -93,11 +94,11 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     return Task.FromResult(coreids.Select(id => lst.Single(e => e.Id == id)).ToList());
   }
 
-  public async Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
+  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => ctx.objchecksum.Checksum(e));
+        .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e));
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
     var target = GetList(obj);

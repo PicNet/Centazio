@@ -9,17 +9,17 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var types = typeof(StagedEntity).Assembly.GetTypes()
         .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false, IsInterface: false } 
             && !(t is { IsAbstract: true, IsSealed: true })) // ignores static classes like StagedEntityListExtensions
-        .Where(t => t.BaseType != typeof(CoreToExternalMap)) // ignore these
+        .Where(t => t.BaseType != typeof(CoreToSystemMap)) // ignore these
         .ToList();
     var bases = types.Where(t => t.FullName!.IndexOf('+') < 0).ToList();
     bases.ForEach(t => ValidateDataObject(t, types));
   }
 
   private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { 
-    { "ObjectState", ["ObjectIsCoreEntityType", "ObjectIsExternalEntityType"] },
+    { nameof(ObjectState), [nameof(ObjectState.ObjectIsCoreEntityType), nameof(ObjectState.ObjectIsExternalEntityType)] },
   };
   private static readonly Dictionary<string, List<string>> IGNORE_SETTERS = new() {
-    { "CoreToExternalMap", ["Checksum"] }
+    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.Checksum)] }
   };
   
   private void ValidateDataObject(Type baset, List<Type> types) {

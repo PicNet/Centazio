@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Dapper;
@@ -6,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SqlServer.Stage;
 
-public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class SqlServerStagedEntityStore(Func<SqlConnection> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);

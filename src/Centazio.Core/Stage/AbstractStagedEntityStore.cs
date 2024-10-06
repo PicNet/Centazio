@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Stage;
 
@@ -19,7 +20,7 @@ public interface IStagedEntityStore : IEntityStager {
   Task DeleteStagedBefore(DateTime before, SystemName source, ExternalEntityType obj);
 }
 
-public abstract class AbstractStagedEntityStore(int limit, Func<string, string> checksum) : IStagedEntityStore {
+public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityStore {
 
   private int lim = limit;
   

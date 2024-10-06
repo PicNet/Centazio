@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib;
@@ -14,6 +15,7 @@ public static class Helpers {
 
   public static string SecsDiff(DateTime? dt = null) => ((int) ((dt ?? UtcDate.UtcNow) - TestingDefaults.DefaultStartDt).TotalSeconds).ToString();
 
-  public static string TestingChecksum(string data) => data.GetHashCode().ToString();
-  public static string TestingChecksum(object obj) => TestingChecksum(JsonSerializer.Serialize(obj));
+  public static StagedEntityChecksum TestingStagedEntityChecksum(string data) => new (data.GetHashCode().ToString());
+  public static CoreEntityChecksum TestingCoreEntityChecksum(object obj) => new (JsonSerializer.Serialize(obj).GetHashCode().ToString());
+  public static SystemEntityChecksum TestingSystemEntityChecksum(object obj) => new (JsonSerializer.Serialize(obj).GetHashCode().ToString());
 }

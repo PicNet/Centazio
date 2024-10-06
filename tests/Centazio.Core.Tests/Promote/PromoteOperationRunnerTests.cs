@@ -126,9 +126,9 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       new (null!, null!, F.NewCoreCust("N4", "N4", "4"))
     };
     // ideally these methods should be strongly typed using generics
-    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core, Helpers.TestingChecksum);
+    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
     
-    Containers.CoreChecksum CCS(ICoreEntity e) => new (e, Helpers.TestingChecksum(e));
+    Containers.CoreChecksum CCS(ICoreEntity e) => new (e, Helpers.TestingCoreEntityChecksum(e));
   }
 }

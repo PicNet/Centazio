@@ -96,11 +96,10 @@ public class PromoteOperationRunner(
             e => new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e))).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(meaningful.ToCore(), op.State.System);
-    // todo: set checksum here
     await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());
     await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
     
-    string SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(meaningful.Single(c => c.Core.Id == e.Id).Sys);
+    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(meaningful.Single(c => c.Core.Id == e.Id).Sys);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
@@ -122,7 +121,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(this List<Containers.StagedSysCore> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<IGetChecksumSubset, string> checksum) {
+  public static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(this List<Containers.StagedSysCore> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<ICoreEntity, CoreEntityChecksum> checksum) {
     var checksums = await core.GetChecksums(obj, lst.ToCore());
     return lst.Where(e => {
       if (!checksums.TryGetValue(e.Core.Id, out var existing)) return true;

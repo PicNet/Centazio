@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.CoreRepo;
+﻿using Centazio.Core.Checksum;
+
+namespace Centazio.Core.CoreRepo;
 
 public interface ICoreStorageGetter : IAsyncDisposable {
 
@@ -24,8 +26,8 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// 
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
-  /// <returns>An id to checksim mapping of entities already in core storage</returns>
-  Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities);
+  /// <returns>An id to checksum mapping of entities already in core storage</returns>
+  Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities);
   
   /// <summary>
   /// Upsert all entities into core storage

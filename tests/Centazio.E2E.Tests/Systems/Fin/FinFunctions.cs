@@ -106,23 +106,23 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<ISystemEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
+  public async Task<ISystemEntity> CovertCoreEntityToSystemEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
     // todo: remove UtcDate.UtcNow from all logs, and just log the time when it changes (calls DoTick)
     ctx.Debug($"FinWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] Core[{Core}] Updated[{Map}] {{{UtcDate.UtcNow:o}}}");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return FromCore(Map is CoreToExternalMap update ? Int32.Parse(update.ExternalId) : 0, Core.To<CoreCustomer>());
+      return FromCore(Map is CoreToSystemMap update ? Int32.Parse(update.ExternalId) : 0, Core.To<CoreCustomer>());
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var inv = Core.To<CoreInvoice>();
       var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), [inv.CustomerId], SimulationConstants.FIN_SYSTEM);
-      return FromCore(Map is CoreToExternalMap update ? Int32.Parse(update.ExternalId) : 0, inv, maps);
+      return FromCore(Map is CoreToSystemMap update ? Int32.Parse(update.ExternalId) : 0, inv, maps);
     }
     
     throw new NotSupportedException(config.Object);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     
     ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
     
@@ -131,12 +131,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       await fin.UpdateAccounts(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<FinAccount>();
         var existing = fin.Accounts.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
-        if (ctx.objchecksum.Checksum(existing) == ctx.objchecksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
+        if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
-          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
+          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
+          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -151,19 +151,19 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       await fin.UpdateInvoices(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<FinInvoice>();
         var existing = fin.Invoices.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
-        if (ctx.objchecksum.Checksum(existing) == ctx.objchecksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
+        if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
-          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
+          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, new(Guid.NewGuid().ToString()))).ToList(),
+          updated.Select(m => m.Updated(new(Guid.NewGuid().ToString()))).ToList());
     }
     
     throw new NotSupportedException(config.Object);
   }
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
-  private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToExternalMap> accmaps) {
+  private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToSystemMap> accmaps) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
     var accid = potentials.SingleOrDefault(acc => acc.System == SimulationConstants.FIN_SYSTEM)?.ExternalId.Value;
     if (accid is null) {

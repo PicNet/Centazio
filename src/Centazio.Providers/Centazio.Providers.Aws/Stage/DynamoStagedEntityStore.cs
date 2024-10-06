@@ -2,6 +2,7 @@
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Serilog;
@@ -19,7 +20,7 @@ namespace Centazio.Providers.Aws.Stage;
 /// Batch inserting is done by first querying the GSI for all duplicate `SourceSystem|Object` + `Checksums`.
 ///    We then filter these out before doing a BatchWriteItem operation
 /// </summary>
-public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit, Func<string, string> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
   
   protected IAmazonDynamoDB Client => client;
   

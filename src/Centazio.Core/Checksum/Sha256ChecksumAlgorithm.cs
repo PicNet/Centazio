@@ -1,19 +1,22 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Centazio.Core.CoreRepo;
+using Centazio.Core.Write;
 
 namespace Centazio.Core.Checksum;
 
-public class Sha256ChecksumAlgorithm : IChecksumAlgorithm, IStringChecksumAlgorithm {
+public class Sha256ChecksumAlgorithm : IChecksumAlgorithm {
 
   private readonly SHA256 sha = SHA256.Create();
   
-  public string Checksum(IGetChecksumSubset obj) => Checksum(JsonSerializer.Serialize(obj.GetChecksumSubset()));
+  public SystemEntityChecksum Checksum(ISystemEntity e) => new(Impl(JsonSerializer.Serialize(e.GetChecksumSubset())));
+  public CoreEntityChecksum Checksum(ICoreEntity e) => new(Impl(JsonSerializer.Serialize(e.GetChecksumSubset())));
+  public StagedEntityChecksum Checksum(string str) => new(Impl(str));
 
-  public string Checksum(string str) {
-    if (String.IsNullOrWhiteSpace(str)) return String.Empty;
-    var checksum = sha.ComputeHash(Encoding.UTF8.GetBytes(str));
-    return BitConverter.ToString(checksum).Replace("-", String.Empty);
+  private string Impl(string str) {
+    var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(str.Trim()));
+    return Convert.ToHexString(hash);
   }
 
   public void Dispose() => sha.Dispose();

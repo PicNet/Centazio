@@ -68,7 +68,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   private Task DoUpsert(ICoreEntity entity) => DoUpsert([entity]);
   private Task DoUpsert(List<ICoreEntity> entities) => 
-      repo.Upsert(Constants.CoreEntityName, entities.Select(e => new Containers.CoreChecksum(e, Helpers.TestingChecksum(e))).ToList());
+      repo.Upsert(Constants.CoreEntityName, entities.Select(e => new Containers.CoreChecksum(e, Helpers.TestingCoreEntityChecksum(e))).ToList());
 
   private async Task<List<CoreEntity>> QueryAll() {
     return (SupportsExpressionBasedQuery 

@@ -1,7 +1,6 @@
 # Todo
 - add unit tests to check bi-directional bounce back protection using checksums, check for all new logic added through
    the simulator and check that its adequately unit tested
-- Write checksums not working, need to add during promote
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
 - clean up simulation code, and promote code, both rough
@@ -9,17 +8,8 @@
     causes this
 - review all code comments
 - look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
-- checksums everywhere now, need to have naming conventions to clarify which checksum we are after.  Perhaps 
-  strongly typed strings?
-
-- replace custom container records with named tuples
-- Add extension methods to simulate covariance between all our types and tuples
 
 - clean up interfaces and types, have stuff everywhere
-- add unit test to check consistent variable naming:
-  - ICoreEntity: corent
-  - ISystemEntity: sysent
-  - Etc
 
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner

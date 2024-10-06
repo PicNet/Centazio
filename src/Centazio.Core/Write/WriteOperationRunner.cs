@@ -13,7 +13,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     var maps = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
     var meaningful = await RemoveNonMeaninfulChanges(op, maps); 
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] Created[{maps.Created.Count}] Updated[{maps.Updated.Count}] Meaningful Updates[{meaningful.Updated.Count}]");
-    if (meaningful.Empty) return new SuccessWriteOperationResult([], []);
+    if (!meaningful.Updated.Any() && !meaningful.Created.Any()) return new SuccessWriteOperationResult([], []);
     var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, meaningful.Created, meaningful.Updated);
     
     if (results.Result == EOperationResult.Error) {
@@ -27,21 +27,21 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   }
 
   private async Task<WriteEntitiesToTargetSystem> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, GetForCoresResult maps) {
-    var updated = new List<CoreExternalMap>();
+    var updated = new List<CoreSystemMap>();
     foreach (var cpum in maps.Updated) {
-      var checker = await IsMeaningful(cpum);
-      if (checker.IsMeaningful) updated.Add(checker.Details with { Map = checker.Details.Map with { Checksum = String.Empty }});
+      var check = await IsMeaningful(cpum);
+      if (check.IsMeaningful) updated.Add(check.Details);
     } 
     return new WriteEntitiesToTargetSystem(maps.Created, updated);
 
-    async Task<(bool IsMeaningful, CoreExternalMap Details)> IsMeaningful(CoreAndPendingUpdateMap cpum) {
+    async Task<(bool IsMeaningful, CoreSystemMap Details)> IsMeaningful(CoreAndPendingUpdateMap cpum) {
       // todo: change this, it should be done for whole batch not entity by entity
-      var external = await op.OpConfig.TargetSysWriter.CovertCoreEntityToExternalEntity(op.OpConfig, cpum.Core, cpum.Map);
+      var external = await op.OpConfig.TargetSysWriter.CovertCoreEntityToSystemEntity(op.OpConfig, cpum.Core, cpum.Map);
       var existing = cpum.Map.Checksum;
       var changed = op.FuncConfig.ChecksumAlgorithm.Checksum(external);
       var meaningful = String.IsNullOrWhiteSpace(existing) || String.IsNullOrWhiteSpace(changed) || existing != changed;
       Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{existing}] New Checksum[{changed}]");
-      return (meaningful, cpum.SetExternalEntity(external, changed));
+      return (meaningful, cpum.SetSystemEntity(external, changed));
     }
   }
 

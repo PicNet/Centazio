@@ -1,13 +1,14 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, string> checksum) 
+public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
     : AbstractStagedEntityStore(limit, checksum) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";

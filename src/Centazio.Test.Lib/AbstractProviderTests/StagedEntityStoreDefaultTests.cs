@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using NUnit.Framework;
@@ -10,7 +11,7 @@ public abstract class StagedEntityStoreDefaultTests {
   protected const string NAME = nameof(StagedEntityStoreDefaultTests);
   protected const int LARGE_BATCH_SIZE = 100;
   
-  protected abstract Task<IStagedEntityStore> GetStore(int limit=0, Func<string, string>? checksum = null);
+  protected abstract Task<IStagedEntityStore> GetStore(int limit=0, Func<string, StagedEntityChecksum>? checksum = null);
   protected IStagedEntityStore store = null!;
   protected TestingUtcDate dt = null!;
   
@@ -332,7 +333,7 @@ public abstract class StagedEntityStoreDefaultTests {
   }
   
   private StagedEntity SetData(StagedEntity e, string data) => e with { Data = data };
-  private string Hash(object o) => Helpers.TestingChecksum(o.ToString() ?? throw new Exception());
+  private StagedEntityChecksum Hash(object o) => Helpers.TestingStagedEntityChecksum(o.ToString() ?? throw new Exception());
   
   private async Task<StagedEntity> GetSingle(DateTime after, SystemName source, ExternalEntityType obj) => (await store.GetAll(after, source, obj)).Single();
 

@@ -1,8 +1,9 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Stage;
 
-public class InMemoryStagedEntityStore(int limit, Func<string, string> checksum) 
+public class InMemoryStagedEntityStore(int limit, Func<string, StagedEntityChecksum> checksum) 
     : AbstractStagedEntityStore(limit, checksum) {
 
   private readonly Dictionary<string, bool> checksums = new();

@@ -86,8 +86,8 @@ public class FinSystem  {
         if (AddedAccounts.Contains(acc)) return;
         var (name, newname) = (acc.Name, ctx.UpdateName(acc.Name));
         var newacc = acc with { Name = newname, Updated = UtcDate.UtcNow };
-        var oldcs = ctx.objchecksum.Checksum(acc);
-        var newcs = ctx.objchecksum.Checksum(newacc);
+        var oldcs = ctx.checksum.Checksum(acc);
+        var newcs = ctx.checksum.Checksum(newacc);
         log.Add($"Id[{acc.SystemId}] Name[{name}->{newname}] Checksum[{oldcs}->{newcs}]");
         if (oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
       });

@@ -52,7 +52,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     var allsums = new Dictionary<string, bool>();
     foreach (var externals in expected) {
       var syscores = await externals.Select(ToCore).Synchronous();
-      var sums = syscores.Select(c => ctx.objchecksum.Checksum(c)).Distinct().ToList();
+      var sums = syscores.Select(c => ctx.checksum.Checksum(c)).Distinct().ToList();
       if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from an external system to be unique.  Found some external entities that resulted in the same ICoreEntity checksum");
       syscores.ForEach((c, idx) => {
         if (allsums.ContainsKey(sums[idx])) return;
@@ -92,7 +92,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore {
-  public List<CoreToExternalMap> Db => memdb.Values.ToList();
+  public List<CoreToSystemMap> Db => memdb.Values.ToList();
 }
 
 public class SimulationCtx {
@@ -106,8 +106,7 @@ public class SimulationCtx {
   public readonly ICtlRepository ctl = new InMemoryCtlRepository();
   public readonly TestingInMemoryCoreToSystemMapStore entitymap = new();
   
-  public readonly IStringChecksumAlgorithm strchecksum;
-  public readonly IChecksumAlgorithm objchecksum;
+  public readonly IChecksumAlgorithm checksum;
   
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
@@ -115,10 +114,9 @@ public class SimulationCtx {
   public SystemName CurrentSystem { get; set; } = null!;
 
   internal SimulationCtx() {
-    strchecksum = algo;
-    objchecksum = algo;
+    checksum = algo;
     core = new(this);
-    stage = new InMemoryStagedEntityStore(0, strchecksum.Checksum);
+    stage = new InMemoryStagedEntityStore(0, checksum.Checksum);
     Epoch = new(0, this);
   }
 

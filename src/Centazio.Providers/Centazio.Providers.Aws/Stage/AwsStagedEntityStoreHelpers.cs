@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Providers.Aws.Stage;
@@ -15,8 +16,8 @@ public class AwsStagedEntityStoreHelpers {
   public static S3KeyComponents ParseS3Key(string key) {
     var (system, entity, rest, _) = key.Split('/');
     var (stagedstr, checksum, idstr, _) = rest.Split('_');
-    return new S3KeyComponents(system, new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), checksum, Guid.Parse(idstr));
+    return new S3KeyComponents(system, new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), new(checksum), Guid.Parse(idstr));
   } 
 }
 
-public record S3KeyComponents(SystemName System, ExternalEntityType Object, DateTime DateStaged, ValidString Checksum, Guid Id);
+public record S3KeyComponents(SystemName System, ExternalEntityType Object, DateTime DateStaged, StagedEntityChecksum Checksum, Guid Id);

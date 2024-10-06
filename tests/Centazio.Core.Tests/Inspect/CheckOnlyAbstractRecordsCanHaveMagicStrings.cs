@@ -6,13 +6,11 @@ namespace Centazio.Core.Tests.Inspect;
 public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
 
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
-    { "ValidString", ["Value"] },
-    { "CoreToExternalMap", ["LastError"] },
-    { "ObjectState", ["LastRunMessage", "LastRunException"] },
-    { "StagedEntity", ["IgnoreReason"] },
-    { "CoreEntityType", ["Name"] },
-    { "ExternalEntityType", ["Name"] },
-    { "*", ["Checksum"] }
+    { nameof(ValidString), [nameof(ValidString.Value)] },
+    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.LastError)] },
+    { nameof(ObjectState), [nameof(ObjectState.LastRunMessage), nameof(ObjectState.LastRunException)] },
+    { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
+    { "*", [nameof(Checksum)] }
   };
   
   [Test] public void Test_string_description_pattern() {
