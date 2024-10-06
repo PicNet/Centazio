@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
@@ -18,8 +19,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1, CoreToSystemMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, Helpers.TestingSystemEntityChecksum(customer1)) ), 
-      new CoreAndCreatedMap(customer2, CoreToSystemMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, Helpers.TestingSystemEntityChecksum(customer2)) ) };
+      new CoreAndCreatedMap(customer1, CoreToSystemMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, WftHelpers.ToSeCs(customer1)) ), 
+      new CoreAndCreatedMap(customer2, CoreToSystemMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, WftHelpers.ToSeCs(customer2)) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -28,7 +29,7 @@ public class WriteFunctionTests {
     var customer22 = customer2 with { FirstName = "22", DateUpdated = UtcDate.UtcNow };
     var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingCoreEntityChecksum(customer22))]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
-    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate(Helpers.TestingSystemEntityChecksum(customer22)) ) };
+    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate(WftHelpers.ToSeCs(customer22)) ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
     Assert.That(upsert1, Is.EquivalentTo(new [] { customer1, customer2 }));
@@ -88,7 +89,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   public TestingBatchWriteFunction() {
     Config = new FunctionConfig<WriteOperationConfig>(Constants.System2Name, LifecycleStage.Defaults.Write, [
       new(Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    ]) { ThrowExceptions = false };
+    ]) { ThrowExceptions = false, ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
 
   public void Reset() {
@@ -97,20 +98,20 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   }
 
   public Task<ISystemEntity> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
-    var core = Core.To<CoreEntity>();
-    return Task.FromResult<ISystemEntity>(new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow));
+    return Task.FromResult<ISystemEntity>(WftHelpers.ToSe(Core.To<CoreEntity>()));
   }
 
   public Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => {
       var core = e.Core.To<CoreEntity>();
-      var sysent =  new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow);
+      var sysent =  WftHelpers.ToSe(core);
       return new CoreSysAndPendingCreateMap(core, sysent, e.Map, Helpers.TestingSystemEntityChecksum(sysent));
     }).ToList();
     var cupdate = toupdate.Select(e => {
       var core = e.Core.To<CoreEntity>();
-      var sysent =  new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow);
-      return e.SetSystemEntity(sysent, Helpers.TestingSystemEntityChecksum(sysent));
+      var sysent =  WftHelpers.ToSe(core);
+      // todo: here we need to use the old SysEntCs, if we calculate (using Helpers.TestingSystemEntityChecksum(sysent)) again we will get no meaningful update. This is bad code.
+      return e.SetSystemEntity(sysent, e.Map.SystemEntityChecksum); 
     }).ToList();
     return Task.FromResult((ccreate, cupdate));
   }
@@ -118,11 +119,15 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
     var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
-    var updates = updated.Select(m => m.Updated()).ToList();
+    var updates = updated.Select(m => m.Updated(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
   }
-  
+ 
+}
 
+internal static class WftHelpers {
+  public static SystemEntityChecksum ToSeCs(CoreEntity c) => Helpers.TestingSystemEntityChecksum(ToSe(c));
+  public static System1Entity ToSe(CoreEntity c) => new(Guid.NewGuid(), c.FirstName, c.LastName, DateOnly.FromDateTime(c.DateCreated), UtcDate.UtcNow);
 }

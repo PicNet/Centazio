@@ -20,7 +20,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
     System = externalsys; 
     ExternalId = externalid; 
     Status = status;
-    Checksum = checksum;
+    SystemEntityChecksum = checksum;
   }
   
   public record MappingKey(CoreEntityType CoreEntity, ValidString CoreId, SystemName ExternalSystem, ValidString ExternalId);
@@ -31,7 +31,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
   public ValidString CoreId { get; } 
   public SystemName System { get; } 
   public ValidString ExternalId { get; }
-  public SystemEntityChecksum Checksum { get; init; }
+  public SystemEntityChecksum SystemEntityChecksum { get; init; }
   public EEntityMappingStatus Status { get; protected init; }
   public DateTime DateCreated { get; protected init; } 
   
@@ -53,7 +53,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
     public DateTime? DateLastSuccess { get; init; }
     public DateTime? DateLastError { get; init; }
     public string? LastError { get; init; }
-    public string? Checksum { get; init; }
+    public string? SystemEntityChecksum { get; init; }
     
     public static explicit operator CoreToSystemMap(Dto dto) => new(
         new CoreEntityType(dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity))),
@@ -61,7 +61,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
         dto.ExternalSystem ?? throw new ArgumentNullException(nameof(ExternalSystem)),
         dto.ExternalId ?? throw new ArgumentNullException(nameof(ExternalId)),
         Enum.Parse<EEntityMappingStatus>(dto.Status ?? throw new ArgumentNullException(nameof(Status))),
-        new (dto.Checksum ?? throw new ArgumentNullException(nameof(Checksum)))) {
+        new (dto.SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
       
       DateCreated = dto.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       DateUpdated = dto.DateUpdated,
@@ -97,13 +97,13 @@ public record CoreToSystemMap : ICoreToSystemMap {
   }
 
   public record PendingUpdate : CoreToSystemMap {
-    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.Checksum) {}
+    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.SystemEntityChecksum) {}
     
     public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
       DateUpdated = UtcDate.UtcNow, 
       DateLastSuccess = UtcDate.UtcNow,
-      Checksum = checksum
+      SystemEntityChecksum = checksum
     });
     
     public Updated Error(string? error) => new(this with { 
@@ -115,6 +115,6 @@ public record CoreToSystemMap : ICoreToSystemMap {
   }
 
   public record Updated : CoreToSystemMap {
-    internal Updated(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.Checksum) {}
+    internal Updated(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.SystemEntityChecksum) {}
   }
 }

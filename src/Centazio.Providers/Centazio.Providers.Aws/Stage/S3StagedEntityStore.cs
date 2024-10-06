@@ -36,7 +36,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
         .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).Checksum)
         .ToDictionary(cs => cs);
     
-    var tostage = staged.Where(s => !existing.ContainsKey(s.Checksum)).ToList();
+    var tostage = staged.Where(s => !existing.ContainsKey(s.StagedEntityChecksum)).ToList();
     await tostage.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
     
     return tostage;

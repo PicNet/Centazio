@@ -19,7 +19,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     { nameof(ObjectState), [nameof(ObjectState.ObjectIsCoreEntityType), nameof(ObjectState.ObjectIsExternalEntityType)] },
   };
   private static readonly Dictionary<string, List<string>> IGNORE_SETTERS = new() {
-    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.Checksum)] }
+    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.SystemEntityChecksum)] }
   };
   
   private void ValidateDataObject(Type baset, List<Type> types) {
@@ -32,7 +32,6 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     Assert.That(baset.GetConstructors().All(c => c.IsPrivate), Is.True, $"{baset.Name} has public constructor");
     Assert.That(setters, Is.Empty, $"{baset.Name} has public setters: {String.Join(",", setters)}");
     Assert.That(nonnulls.Any(), Is.False, $"{baset.Name}#Dto has non-nullable properties: {String.Join(',', nonnulls.Select(p => p.Name))}");
-    Test.Lib.Helpers.DebugWrite($"Type[{baset.Name}] Constructors[{baset.GetConstructors().Length}] Setters[{baset.GetProperties().Count(p => p.SetMethod is not null)}]");
 
     bool IsNullable(PropertyInfo property) {
       var nullabilityInfoContext = new NullabilityInfoContext();

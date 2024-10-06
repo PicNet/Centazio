@@ -51,7 +51,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     
     Log.Information("creating core/external maps {@CoreEntityType} {@System} {@CoreToExternalMapEntries}", coretype, system, news.Select(m => m.ExternalId));
     var created = news.Select(map => {
-      if (String.IsNullOrWhiteSpace(map.Checksum.Value)) throw new Exception(); 
+      if (String.IsNullOrWhiteSpace(map.SystemEntityChecksum.Value)) throw new Exception(); 
       var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == coretype && k.ExternalSystem == system && k.ExternalId == map.ExternalId);
       if (duplicate is not null) throw new Exception($"creating duplicate CoreToExternalMap map[{map}] existing[{duplicate}]");
       memdb[map.Key] = map;
@@ -64,7 +64,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     if (!updates.Any()) return Task.FromResult(new List<CoreToSystemMap.Updated>());
     updates.ForEach(map => {
       // todo: need to clean up types and make null Checksums impossible, we have a mess of types in CoreToSystemMap.cs
-      if (String.IsNullOrWhiteSpace(map.Checksum.Value)) throw new Exception();
+      if (String.IsNullOrWhiteSpace(map.SystemEntityChecksum.Value)) throw new Exception();
       memdb[map.Key] = map;
     });
     return Task.FromResult(updates);

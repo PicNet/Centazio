@@ -136,7 +136,7 @@ public class SimulationCtx {
  public void Debug(string message) {
    if (SILENCE_SIMULATION) return;
    if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message);
-   else Helpers.DebugWrite(message);
+   else DevelDebug.WriteLine(message);
  }
  
  public string NewName<T>(string prefix, List<T> target, int idx) => $"{prefix}_{target.Count + idx}:0";

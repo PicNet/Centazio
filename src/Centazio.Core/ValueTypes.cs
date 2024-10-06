@@ -24,6 +24,7 @@ public record ObjectName : ValidString {
   internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type 'CoreEntityType'");
 }
 
+// todo: rename ExternalEntityType -> SystemEntityType (search for usage of external)
 public sealed record ExternalEntityType(string Value) : ObjectName(Value) {
   public static ExternalEntityType From<E>() where E : ISystemEntity => new(typeof(E).Name);
   public static ExternalEntityType From<E>(E external) where E : ISystemEntity => new(external.GetType().Name);

@@ -12,8 +12,11 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     var pending = await core.Get(op.State.Object.ToCoreEntityType, op.Checkpoint, op.State.System);
     var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
+    if (sysupdates.Any()) {
+      Log.Information($"Updates[{sysupdates.Count}] Checksums[{String.Join(',', sysupdates.Select(u => u.Map.SystemEntityChecksum))}]");
+    }
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
-    Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful Updates[{meaningful.Count}]");
+    Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful[{meaningful.Count}]");
     if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
     var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
@@ -28,13 +31,15 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   }
 
   private List<CoreSystemMap> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, List<CoreSystemMap> toupdate) {
-    return toupdate.Where(IsMeaningful).ToList();
+    return toupdate
+        .Where(IsMeaningful)
+        .ToList();
   
     bool IsMeaningful(CoreSystemMap cpum) {
-      var existing = cpum.Map.Checksum;
-      var changed = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SystemEntity);
-      var meaningful = String.IsNullOrWhiteSpace(existing) || String.IsNullOrWhiteSpace(changed) || existing != changed;
-      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{existing}] New Checksum[{changed}]");
+      var oldcs = cpum.Map.SystemEntityChecksum;
+      var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SystemEntity);
+      var meaningful = String.IsNullOrWhiteSpace(oldcs) || String.IsNullOrWhiteSpace(newcs) || oldcs != newcs;
+      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
       return meaningful;
     }
   }

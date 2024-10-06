@@ -100,7 +100,7 @@ public abstract class StagedEntityStoreDefaultTests {
         .ToList();
     
     Assert.That(fromnow, Is.Empty);
-    Assert.That(staged.GroupBy(e => e.Checksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
+    Assert.That(staged.GroupBy(e => e.StagedEntityChecksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
     Assert.That(staged, Has.Count.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Has.Count.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, NAME, Constants.ExternalEntityName, dt.Now, idx.ToString(), Hash(idx)))));
@@ -124,7 +124,7 @@ public abstract class StagedEntityStoreDefaultTests {
         .ToList();
     
     Assert.That(fromnow, Is.Empty);
-    Assert.That(staged.GroupBy(e => e.Checksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
+    Assert.That(staged.GroupBy(e => e.StagedEntityChecksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
     Assert.That(staged.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(staged));

@@ -17,7 +17,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{nameof(CoreEntity)}' AND xt
 BEGIN
 CREATE TABLE {nameof(CoreEntity)} (
   Id nvarchar(64) NOT NULL PRIMARY KEY,
-  Checksum nvarchar(64) NOT NULL, 
+  CoreEntityChecksum nvarchar(64) NOT NULL, 
   FirstName nvarchar (64) NOT NULL, 
   LastName nvarchar (64) NOT NULL, 
   DateOfBirth date NOT NULL,
@@ -49,26 +49,26 @@ END
   public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
-    var mapping = await conn.QueryAsync<(string Id, string Checksum)>($"SELECT Id, Checksum FROM {obj} WHERE Id IN (@ids)", new { ids });
-    return mapping.ToDictionary(t => t.Id, t => new CoreEntityChecksum(t.Checksum));
+    var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {obj} WHERE Id IN (@ids)", new { ids });
+    return mapping.ToDictionary(t => t.Id, t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
   public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
     var sql = $@"MERGE INTO {obj} T
-USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
-AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
+USING (VALUES (@Id, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
+AS c (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
 ON T.Id = c.Id
 WHEN NOT MATCHED THEN
-INSERT (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, SourceSystemDateUpdated)
-VALUES (c.Id, c.Checksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.SourceSystemDateUpdated)
+INSERT (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, SourceSystemDateUpdated)
+VALUES (c.Id, c.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.SourceSystemDateUpdated)
 WHEN MATCHED THEN 
-UPDATE SET Checksum=c.Checksum, FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth,
+UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth,
   DateUpdated=c.DateUpdated, SourceSystemDateUpdated=c.SourceSystemDateUpdated;";
     
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
       var c = cs.Core.To<CoreEntity>();
-      return new { c.Id, Checksum=cs.Checksum.Value, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
+      return new { c.Id, CoreEntityChecksum=cs.CoreEntityChecksum.Value, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
     }));
     return entities.Select(c => c.Core).ToList();
   }

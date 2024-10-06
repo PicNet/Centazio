@@ -43,7 +43,7 @@ public class AbstractFunctionStaticHelperTests {
     var updated = (await repo.CreateObjectState(ss, new ExternalEntityType("2"))).SetActive(false);
     await repo.SaveObjectState(updated);
     
-    var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
+    var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.OpConfig.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));

@@ -153,7 +153,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             var cmap = m.First.Map.SuccessCreate(m.Second, new(Guid.NewGuid().ToString()));
             return new CoreAndCreatedMap(m.First.Core, cmap);
           }).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          updated.Select(m => m.Updated(ctx.checksum.Checksum(m.SystemEntity))).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -176,7 +176,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             var cmap = m.First.Map.SuccessCreate(m.Second, new(Guid.NewGuid().ToString()));
             return new CoreAndCreatedMap(m.First.Core, cmap);
           }).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          updated.Select(m => m.Updated(ctx.checksum.Checksum(m.SystemEntity))).ToList());
     }
     
     throw new NotSupportedException(config.Object);

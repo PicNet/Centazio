@@ -230,7 +230,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? sys=null, bool bidi=false) {
     Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
       new(Constants.ExternalEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
-    ]);
+    ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
   
   public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {

@@ -12,7 +12,7 @@ public static class DynamoStagedEntityExtensionMethods {
     var dict = new Dictionary<string, AttributeValue> {
       { AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoHashKey(e.SourceSystem, e.Object)) },
       { AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoRangeKey(e.DateStaged, e.Id)) },
-      { nameof(e.Checksum), new AttributeValue(e.Checksum) },
+      { nameof(e.StagedEntityChecksum), new AttributeValue(e.StagedEntityChecksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
     };
     if (e.IgnoreReason is not null) { dict[nameof(e.IgnoreReason)] = new AttributeValue(e.IgnoreReason); }
@@ -30,7 +30,7 @@ public static class DynamoStagedEntityExtensionMethods {
         Object = entity, 
         DateStaged = DateTime.Parse(staged).ToUniversalTime(), 
         Data = d[nameof(StagedEntity.Data)].AsString(),
-        Checksum = d[nameof(StagedEntity.Checksum)].AsString(),
+        Checksum = d[nameof(StagedEntity.StagedEntityChecksum)].AsString(),
         DatePromoted = d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
         IgnoreReason = d.ContainsKey(nameof(StagedEntity.IgnoreReason)) ? d[nameof(StagedEntity.IgnoreReason)].AsString() : null 
       };

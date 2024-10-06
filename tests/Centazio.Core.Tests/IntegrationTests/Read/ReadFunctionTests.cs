@@ -89,7 +89,7 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   public ReadFunctionWithSingleReadCustomerOperation() {
     Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, [
       new(Constants.ExternalEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    ]);
+    ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
   
   public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {

@@ -108,7 +108,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     //    entity and ignore it if checksum matches
     var c2dup = new CoreEntity("C2", name, name, DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     var c2 = await SimulatePromoteOperationRunnerFixed([c2dup], Constants.System2Name);
-    Assert.That(Helpers.TestingCoreEntityChecksum(c1.GetChecksumSubset()), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2.GetChecksumSubset()))); 
+    Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   
   protected abstract ITestingCoreToSystemMapStore GetStore();

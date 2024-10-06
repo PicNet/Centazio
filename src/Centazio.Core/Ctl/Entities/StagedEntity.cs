@@ -11,13 +11,13 @@ public sealed record StagedEntity {
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(string reason) => this with { IgnoreReason = !String.IsNullOrWhiteSpace(reason.Trim()) ? reason.Trim() : throw new ArgumentNullException(nameof(reason)) };
   
-  internal StagedEntity(Guid Id, SystemName SourceSystem, ExternalEntityType Object, DateTime DateStaged, ValidString Data, StagedEntityChecksum Checksum) {
-    this.Id = Id;
-    this.SourceSystem = SourceSystem;
-    this.Object = Object;
-    this.DateStaged = DateStaged;
-    this.Data = Data;
-    this.Checksum = Checksum;
+  internal StagedEntity(Guid id, SystemName system, ExternalEntityType obj, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
+    Id = id;
+    SourceSystem = system;
+    Object = obj;
+    DateStaged = staged;
+    Data = data;
+    StagedEntityChecksum = checksum;
   }
   
   public Guid Id { get; }
@@ -25,7 +25,7 @@ public sealed record StagedEntity {
   public ExternalEntityType Object { get; }
   public DateTime DateStaged { get; }
   public ValidString Data { get; internal init; }
-  public StagedEntityChecksum Checksum { get; }
+  public StagedEntityChecksum StagedEntityChecksum { get; }
   public string? IgnoreReason { get; internal init; }
   
   public DateTime? DatePromoted { get; internal init; }
@@ -72,7 +72,7 @@ public sealed record StagedEntity {
       Object = se.Object.Value,
       DateStaged = se.DateStaged,
       Data = se.Data.Value,
-      Checksum = se.Checksum.Value,
+      Checksum = se.StagedEntityChecksum.Value,
       DatePromoted = se.DatePromoted,
       IgnoreReason = se.IgnoreReason
     };

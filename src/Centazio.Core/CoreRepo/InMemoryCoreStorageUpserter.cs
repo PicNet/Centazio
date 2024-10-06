@@ -13,7 +13,7 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     var result = entities
         .Where(e => dbtype.ContainsKey(e.Id))
         .Select(e => dbtype[e.Id])
-        .ToDictionary(e => e.Core.Id, e => new CoreEntityChecksum(e.Checksum));
+        .ToDictionary(e => e.Core.Id, e => new CoreEntityChecksum(e.CoreEntityChecksum));
     return Task.FromResult(result);
   }
 

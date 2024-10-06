@@ -148,7 +148,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       }).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          updated.Select(m => m.Updated(ctx.checksum.Checksum(m.SystemEntity))).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -168,7 +168,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       }).ToList());
       return new SuccessWriteOperationResult(
           created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          updated.Select(m => m.Updated(ctx.checksum.Checksum(m.SystemEntity))).ToList());
     }
     
     throw new NotSupportedException(config.Object);

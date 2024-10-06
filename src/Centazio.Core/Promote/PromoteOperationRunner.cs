@@ -63,7 +63,7 @@ public class PromoteOperationRunner(
       (e.Id, e.SourceId) = (bounce.Value.OriginalCoreId, bounce.Value.OriginalSourceId);
       var e2ss = e.GetChecksumSubset();
       var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
-      if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.");
+      if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.\n\tOld CS[{echecksum}]\n\tNew CS[{newchecksum}]");
       
       changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
       topromote[idx] = topromote[idx] with { Core = e };

@@ -72,23 +72,23 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       //    item to `=` expression :(
       FilterExpression = staged.Count > 1 
           ? new() {
-            ExpressionStatement = $"{nameof(StagedEntity.Checksum)} IN (:checksums)",
+            ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} IN (:checksums)",
             ExpressionAttributeValues = new() {
-              { ":checksums", staged.Select(u => u.Checksum.Value).ToList() }
+              { ":checksums", staged.Select(u => u.StagedEntityChecksum.Value).ToList() }
             } 
           } 
           : new() {
-            ExpressionStatement = $"{nameof(StagedEntity.Checksum)} = :checksum",
+            ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} = :checksum",
             ExpressionAttributeValues = new() {
-              { ":checksum", staged.Single().Checksum.Value }
+              { ":checksum", staged.Single().StagedEntityChecksum.Value }
             }
           }
     };
     var search = Table.LoadTable(client, table).Query(queryconf);
     var results = await search.GetNextSetAsync();
     
-    var existing  = results.ToDictionary(d => d[nameof(StagedEntity.Checksum)].AsString());
-    var tostage = staged.Where(e => !existing.ContainsKey(e.Checksum)).ToList();
+    var existing  = results.ToDictionary(d => d[nameof(StagedEntity.StagedEntityChecksum)].AsString());
+    var tostage = staged.Where(e => !existing.ContainsKey(e.StagedEntityChecksum)).ToList();
     await tostage
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
         .Chunk()
@@ -100,7 +100,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
   }
   
   public override async Task<List<StagedEntity>> Update(List<StagedEntity> staged) {
-    var uniques = staged.DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.Checksum}").ToList();
+    var uniques = staged.DistinctBy(e => $"{e.SourceSystem}|{e.Object}|{e.StagedEntityChecksum}").ToList();
     await uniques
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
         .Chunk()
