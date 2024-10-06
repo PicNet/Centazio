@@ -100,6 +100,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e));
   }
+  
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
     var target = GetList(obj);
     var (added, updated) = (0, 0);

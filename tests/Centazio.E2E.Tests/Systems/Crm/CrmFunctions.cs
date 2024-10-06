@@ -35,7 +35,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(CrmInvoice) => await crm.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
-    if (updates.Any()) ctx.Debug($"CrmReadFunction[{config.State.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}\n\t" + String.Join("\n\t", updates));
+    if (updates.Any()) ctx.Debug($"CrmReadFunction[{config.State.Object.Value}] Updates[{updates.Count}]\n\t" + String.Join("\n\t", updates));
     return ReadOperationResult.Create(updates);
   }
 }
@@ -56,7 +56,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   }
 
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    ctx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => {
         var sysent = s.Deserialise<CrmMembershipType>();
@@ -103,7 +103,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   }
 
   public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}]");
     // todo: add helpers for this
     if (config.Object.Value == nameof(CoreCustomer)) {
       return (
@@ -111,10 +111,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             var sysent = FromCore(Guid.Empty, m.Core.To<CoreCustomer>()); 
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
-          toupdate.Select(m => {
-            var sysent = FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreCustomer>());
-            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
-          }).ToList());
+          toupdate.Select(m => m.SetSystemEntity(FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreCustomer>()))).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -125,10 +122,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             var sysent = FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps); 
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
-          toupdate.Select(m => {
-            var sysent = FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps);
-            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
-          }).ToList());
+          toupdate.Select(m => m.SetSystemEntity(FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps))).ToList());
     }
     
     throw new NotSupportedException(config.Object);
@@ -136,7 +130,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
 
   public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     
-    ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}]");
       
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await crm.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());

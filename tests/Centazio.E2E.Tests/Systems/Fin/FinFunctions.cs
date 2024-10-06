@@ -32,7 +32,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(FinInvoice) => await fin.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
-    ctx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}]");
     return ReadOperationResult.Create(updates);
   }
 }
@@ -52,7 +52,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   }
   
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}]");
 
     List<Containers.StagedSysCore> topromote = new();
     if (config.State.Object.Value == nameof(CoreCustomer)) {
@@ -106,18 +106,14 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   }
 
   public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    // todo: remove UtcDate.UtcNow from all logs, and just log the time when it changes (calls DoTick)
-    ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       return (
           tocreate.Select(m => {
             var sysent = FromCore(0, m.Core.To<CoreCustomer>()); 
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
-          toupdate.Select(m => {
-            var sysent = FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreCustomer>());
-            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
-          }).ToList());
+          toupdate.Select(m => m.SetSystemEntity(FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreCustomer>()))).ToList());
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var custids = toupdate.Select(m => m.Core.To<CoreInvoice>().CustomerId).ToList();
@@ -127,18 +123,15 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             var sysent = FromCore(0, m.Core.To<CoreInvoice>(), maps); 
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
-          toupdate.Select(m => {
-            var sysent = FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps);
-            return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
-          }).ToList());
+          toupdate.Select(m => m.SetSystemEntity(FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps))).ToList());
     }
     
     throw new NotSupportedException(config.Object);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreSystemMap> updated) {
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
     
-    ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{created.Count}] Updated[{updated.Count}]");
     
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created2 = await fin.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
@@ -194,7 +187,4 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     return new(id, Int32.Parse(accid), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
   }
-  
-  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) => throw new NotImplementedException();
-
 }

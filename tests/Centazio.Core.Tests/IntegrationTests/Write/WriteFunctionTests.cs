@@ -107,12 +107,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
       var sysent =  WftHelpers.ToSe(core);
       return new CoreSysAndPendingCreateMap(core, sysent, e.Map, Helpers.TestingSystemEntityChecksum(sysent));
     }).ToList();
-    var cupdate = toupdate.Select(e => {
-      var core = e.Core.To<CoreEntity>();
-      var sysent =  WftHelpers.ToSe(core);
-      // todo: here we need to use the old SysEntCs, if we calculate (using Helpers.TestingSystemEntityChecksum(sysent)) again we will get no meaningful update. This is bad code.
-      return e.SetSystemEntity(sysent, e.Map.SystemEntityChecksum); 
-    }).ToList();
+    var cupdate = toupdate.Select(e => e.SetSystemEntity(WftHelpers.ToSe(e.Core.To<CoreEntity>()))).ToList();
     return Task.FromResult((ccreate, cupdate));
   }
 

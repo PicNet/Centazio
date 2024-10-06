@@ -84,6 +84,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     ctx.Debug($"CoreStorage.Add CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
     if (!added.TryAdd((e.GetType(), e.Id), e)) throw new Exception($"entity appears to have already been added: {e}");
   }
+  
   public void Update(SystemName system, ICoreEntity e) {
     ctx.Debug($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
     updated[(system, e.GetType(), e.Id)] = e;
@@ -239,15 +240,14 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task RunEpoch(int epoch) {
-    ctx.Debug($"Epoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}");
     ctx.Epoch = new(epoch, ctx);
-    
     RandomTimeStep();
-    
-    ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"Epoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}");
     
     crm.Simulation.Step();
     fin.Simulation.Step(); // todo: can this be put up with crm?
+    
+    ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
     
     // todo: these ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM calls are ugly 
     ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM;
@@ -268,7 +268,7 @@ public class E2EEnvironment : IAsyncDisposable {
     await crm_promote_runner.RunFunction();
     await fin_write_runner.RunFunction(); // todo: is this required?
     
-    ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
     await ValidateEpoch();
   }
 

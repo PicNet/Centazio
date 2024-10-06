@@ -29,7 +29,7 @@ public record CoreAndCreatedMap {
 }
 
 public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToSystemMap.PendingUpdate Map) {
-  public CoreSystemMap SetSystemEntity(ISystemEntity system, SystemEntityChecksum checksum) => new(Core, system, Map with { SystemEntityChecksum = checksum });
+  public CoreSystemMap SetSystemEntity(ISystemEntity system) => new(Core, system, Map);
 }
 
 public record CoreSystemMap(ICoreEntity Core, ISystemEntity SystemEntity, CoreToSystemMap.PendingUpdate Map) {
