@@ -26,15 +26,18 @@ public class PromoteOperationRunner(
       return results;  
     }
     var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
+    var realpromote = IgnoreMultipleUpdatesToSameEntity(topromote);
     
-    // todo: clean bidi code, maybe here add else { IgnoreBounceBacks(); }
-    // todo: if we ignore the bounce-back then we should ignore this staged entity, add 'IgnoreReason'='Bounce Back'
-    if (op.OpConfig.IsBidirectional) { topromote = await IdentifyBouncedBackAndSetCorrectId(op, topromote); }
+    if (op.OpConfig.IsBidirectional) { realpromote = await IdentifyBouncedBackAndSetCorrectId(op, realpromote); }
+    else realpromote = IgnoreEntitiesBouncingBack(realpromote, op.State.System);
     
-    Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{topromote.Count}] ToIgnore[{toignore.Count}]");
+    realpromote = await IgnoreNonMeaninfulChanges(realpromote, op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
     
-    await WriteEntitiesToCoreStorage(op, topromote);
+    Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{realpromote.Count}] ToIgnore[{toignore.Count}]");
+    
+    await WriteEntitiesToCoreStorageAndUpdateMaps(op, realpromote);
     await staged.Update(
+        // mark all StagedEntities as promoted, even if they were ignored above
         topromote.Select(e => e.Staged.Promote(start))
             .Concat(toignore.Select(e => e.Staged.Ignore(e.Ignore)))
             .ToList());
@@ -43,33 +46,47 @@ public class PromoteOperationRunner(
   }
 
   private async Task<List<Containers.StagedSysCore>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> topromote) {
-    // todo: if the Id is part of the checksum then this will
-    //  change the Id and result in an endless bounce back.  Need to check that Id is not
-    //  part of the checksum object.
-    //  Also, having Id with a public setter is not nice, how can this be avoided?
     var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
     if (!bounces.Any()) return topromote;
+    Log.Information("identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]", bounces.Count, op.State.System, op.State.Object.ToCoreEntityType);
     
     var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
-    var changes = new List<string>();
-    bounces.ForEach(bounce => {
-      var idx = topromote.FindIndex(t => t.Core.SourceId == bounce.Key);
-      var e = topromote[idx].Core;
-      var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
-      var orige = originals.Single(e2 => e2.Id == bounce.Value.OriginalCoreId);
-      var origess = orige.GetChecksumSubset();
-      var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(orige);
-      var msg = $"{op.State.System}#Id[{e.Id}] -> OriginalCoreId[{bounce.Value.OriginalCoreId}]";
-      (e.Id, e.SourceId) = (bounce.Value.OriginalCoreId, bounce.Value.OriginalSourceId);
-      var e2ss = e.GetChecksumSubset();
-      var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
-      if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.\n\tOld CS[{echecksum}]\n\tNew CS[{newchecksum}]");
+    var entities = bounces.Select(b => {
+      var idx = topromote.FindIndex(t => t.Core.SourceId == b.Key);
+      var original = originals.Single(e2 => e2.Id == b.Value.OriginalCoreId);
+      return (SourceId: b.Key, 
+          b.Value.OriginalSourceId, 
+          b.Value.OriginalCoreId, 
+          OriginalEntity: original,
+          OriginalEntityChecksumSubset: original.GetChecksumSubset(),
+          ToPromoteIdx: idx,
+          ToPromoteCore: topromote[idx].Core,
+          PreChangeChecksumSubset: topromote[idx].Core.GetChecksumSubset(),
+          PreChangeChecksum: Checksum(topromote[idx].Core));
+    }).ToList();
+    
+    entities.ForEach(e => {
+      // If the entity is bouncing back, it will have a new Core and SourceId (as it would have been created in the second system).
+      //    We need to correct the process here and make it point to the original Core/Source Id as we do not want
+      //    multiple core records for the same entity.
+      (e.ToPromoteCore.Id, e.ToPromoteCore.SourceId) = (e.OriginalCoreId, e.OriginalSourceId);
+      topromote[e.ToPromoteIdx] = topromote[e.ToPromoteIdx] with { Core = e.ToPromoteCore };
       
-      changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
-      topromote[idx] = topromote[idx] with { Core = e };
+      if (e.PreChangeChecksum != Checksum(e.ToPromoteCore)) 
+        throw new Exception($"Bounce-back identified and after correcting ids we got a different checksum.  " +
+            $"\nThe GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data." +
+            $"\nHaving the Id as part of the ChecksumSubset will mean that we will get infinite bounce backs between two systems." +
+            $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
+            $"\n\tPostchange Checksum[{e.ToPromoteCore.GetChecksumSubset()}({Checksum(e.ToPromoteCore)})]");
+      
+      Log.Information($"\n\t{op.State.System}#Id[{e.ToPromoteCore.Id}] -> OriginalCoreId[{e.OriginalCoreId}]:" +
+          $"\n\tOriginal Checksum[{e.OriginalEntityChecksumSubset}({Checksum(e.OriginalEntity)})]" +
+          $"\n\tNew Checksum[{e.ToPromoteCore.GetChecksumSubset()}({Checksum(e.ToPromoteCore)})]");
     });
-    if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);
+    
     return topromote;
+    
+    string Checksum(ICoreEntity c) => op.FuncConfig.ChecksumAlgorithm.Checksum(c);
   }
   
   private async Task<Dictionary<string, (string OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
@@ -83,36 +100,28 @@ public class PromoteOperationRunner(
     });
   }
 
-  private async Task WriteEntitiesToCoreStorage(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> entities) {
-    var nodups = entities.IgnoreMultipleUpdatesToSameEntity();
-    var nobounces = op.OpConfig.IsBidirectional ? nodups : await nodups.IgnoreEntitiesBouncingBack(op.State.System);
-    var meaningful = await nobounces.IgnoreNonMeaninfulChanges(op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
-    Log.Information($"[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] No Bounces[{nobounces.Count}] Meaningful[{meaningful.Count}]");
-    if (!meaningful.Any()) return;
-    
+  private async Task WriteEntitiesToCoreStorageAndUpdateMaps(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> entities) {
+    if (!entities.Any()) return;
     await core.Upsert(
         op.State.Object.ToCoreEntityType, 
-        meaningful.ToCore().Select(
+        entities.ToCore().Select(
             e => new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e))).ToList());
     
-    var existing = await entitymap.GetNewAndExistingMappingsFromCores(meaningful.ToCore(), op.State.System);
+    var existing = await entitymap.GetNewAndExistingMappingsFromCores(entities.ToCore(), op.State.System);
     await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());
     await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
     
-    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(meaningful.Single(c => c.Core.Id == e.Id).Sys);
+    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(entities.Single(c => c.Core.Id == e.Id).Sys);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
 
-}
-
-public static class PromoteOperationRunnerHelperExtensions {
   /// <summary>
   /// It is possible for several changes to an entity to be staged prior to promotion.  If this happens then
   /// simply take the latest snapshot of the entity to promote as there is no benefit to promoting the same
   /// entity multiple times to only end up in the latest state anyway.
   /// </summary>
-  public static List<Containers.StagedSysCore> IgnoreMultipleUpdatesToSameEntity(this List<Containers.StagedSysCore> lst) => 
+  internal static List<Containers.StagedSysCore> IgnoreMultipleUpdatesToSameEntity(List<Containers.StagedSysCore> lst) => 
         lst.GroupBy(c => c.Core.SourceId)
         .Select(g => g.OrderByDescending(c => c.Core.SourceSystemDateUpdated).First()) 
         .ToList();
@@ -121,7 +130,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(this List<Containers.StagedSysCore> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<ICoreEntity, CoreEntityChecksum> checksum) {
+  internal static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(List<Containers.StagedSysCore> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<ICoreEntity, CoreEntityChecksum> checksum) {
     var checksums = await core.GetChecksums(obj, lst.ToCore());
     return lst.Where(e => {
       if (!checksums.TryGetValue(e.Core.Id, out var existing)) return true;
@@ -138,7 +147,7 @@ public static class PromoteOperationRunnerHelperExtensions {
   ///
   /// Note: This is only done with Uni-directional promote operations. Bi-directional operations must manage their own bounce backs for now. 
   /// </summary>
-  public static Task<List<Containers.StagedSysCore>> IgnoreEntitiesBouncingBack(this List<Containers.StagedSysCore> lst, SystemName thissys)  {
-    return Task.FromResult(lst.Where(e => e.Core.SourceSystem == thissys).ToList());
+  internal static List<Containers.StagedSysCore> IgnoreEntitiesBouncingBack(List<Containers.StagedSysCore> lst, SystemName thissys)  {
+    return lst.Where(e => e.Core.SourceSystem == thissys).ToList();
   }
-} 
+}

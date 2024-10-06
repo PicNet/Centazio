@@ -127,7 +127,6 @@ public class SimulationCtx {
   public readonly int CRM_MAX_NEW_INVOICES = 4;
   public readonly int CRM_MAX_EDIT_INVOICES = 4;
   
-  // todo: adding this causes issues
   public readonly int FIN_MAX_NEW_ACCOUNTS = 2;
   public readonly int FIN_MAX_EDIT_ACCOUNTS = 4;
   public readonly int FIN_MAX_NEW_INVOICES = 0;

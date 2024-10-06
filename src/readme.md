@@ -1,11 +1,8 @@
 # Todo
-- add unit tests to check bi-directional bounce back protection using checksums, check for all new logic added through
-   the simulator and check that its adequately unit tested
+- check for all new logic added through the simulator and check that its adequately unit tested
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
-- clean up simulation code, and promote code, both rough
-- have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
-    causes this
+- clean up simulation code
 - review all code comments
 - look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
 

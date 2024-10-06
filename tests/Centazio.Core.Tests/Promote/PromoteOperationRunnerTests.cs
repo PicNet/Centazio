@@ -100,7 +100,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       new(null!, null!, F.NewCoreCust("N4", "N4"))
     };
     
-    var uniques = entities.IgnoreMultipleUpdatesToSameEntity();
+    var uniques = PromoteOperationRunner.IgnoreMultipleUpdatesToSameEntity(entities);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities[0], entities[3]}));
   }
   
@@ -126,7 +126,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       new (null!, null!, F.NewCoreCust("N4", "N4", "4"))
     };
     // ideally these methods should be strongly typed using generics
-    var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
+    var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
     
     Containers.CoreChecksum CCS(ICoreEntity e) => new (e, Helpers.TestingCoreEntityChecksum(e));
