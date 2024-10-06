@@ -16,7 +16,7 @@ public class PromoteOperationRunner(
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.OpConfig.ExternalEntityType);
+    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.OpConfig.SystemEntityType);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
     
     var results = await op.OpConfig.EvaluateEntitiesToPromote.Evaluate(op, pending);
@@ -68,7 +68,7 @@ public class PromoteOperationRunner(
       changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
       topromote[idx] = topromote[idx] with { Core = e };
     });
-    if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@ExternalSystem}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);
+    if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);
     return topromote;
   }
   

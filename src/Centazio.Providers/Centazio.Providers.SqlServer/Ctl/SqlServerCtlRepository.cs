@@ -41,7 +41,7 @@ BEGIN
     Active bit NOT NULL, 
     Object nvarchar (32) NOT NULL,
     ObjectIsCoreEntityType BIT NOT NULL,
-    ObjectIsExternalEntityType BIT NOT NULL,
+    ObjectIsSystemEntityType BIT NOT NULL,
     DateCreated datetime2 NOT NULL,
     DateUpdated datetime2 NULL,
     LastResult tinyint NOT NULL,
@@ -122,8 +122,8 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     var created = ObjectState.Create(system.System, system.Stage, obj);
     await conn.ExecuteAsync($@"
   INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
-  (System, Stage, Object, ObjectIsCoreEntityType, ObjectIsExternalEntityType, Active, DateCreated, LastResult, LastAbortVote)
-  VALUES (@System, @System, @Object, @ObjectIsCoreEntityType, @ObjectIsExternalEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
+  (System, Stage, Object, ObjectIsCoreEntityType, ObjectIsSystemEntityType, Active, DateCreated, LastResult, LastAbortVote)
+  VALUES (@System, @System, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
   ", created);
 
     return created;

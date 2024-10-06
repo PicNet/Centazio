@@ -16,7 +16,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
   }
 
   private static readonly Dictionary<string, List<string>> IGNORE_NON_NULLS = new() { 
-    { nameof(ObjectState), [nameof(ObjectState.ObjectIsCoreEntityType), nameof(ObjectState.ObjectIsExternalEntityType)] },
+    { nameof(ObjectState), [nameof(ObjectState.ObjectIsCoreEntityType), nameof(ObjectState.ObjectIsSystemEntityType)] },
   };
   private static readonly Dictionary<string, List<string>> IGNORE_SETTERS = new() {
     { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.SystemEntityChecksum)] }

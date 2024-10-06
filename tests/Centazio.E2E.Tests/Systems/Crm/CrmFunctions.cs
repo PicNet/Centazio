@@ -22,9 +22,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     this.crm = crm;
     
     Config = new(nameof(CrmSystem), LifecycleStage.Defaults.Read, [
-      new(ExternalEntityType.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(ExternalEntityType.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(ExternalEntityType.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(SystemEntityType.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(SystemEntityType.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(SystemEntityType.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
   
@@ -73,10 +73,10 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<CrmInvoice>()).ToList();
       var custids = invoices.Select(i => i.CustomerId.ToString()).Distinct().ToList();
-      var customers = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), custids, config.State.System);
+      var customers = await ctx.entitymap.GetExistingMappingsFromSystemIds(CoreEntityType.From<CoreCustomer>(), custids, config.State.System);
       var result = invoices.Zip(staged).Select(t => {
         var (crminv, se) = t;
-        var custid = customers.Single(k => k.ExternalId == crminv.CustomerId.ToString()).CoreId;
+        var custid = customers.Single(k => k.SysId == crminv.CustomerId.ToString()).CoreId;
         return new Containers.StagedSysCore(se, crminv, ctx.CrmInvoiceToCoreInvoice(crminv, custid));
       }).ToList();
       return result;
@@ -112,7 +112,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
           toupdate.Select(m => {
-            var sysent = FromCore(Guid.Parse(m.Map.ExternalId), m.Core.To<CoreCustomer>());
+            var sysent = FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreCustomer>());
             return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
           }).ToList());
     }
@@ -126,7 +126,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
           toupdate.Select(m => {
-            var sysent = FromCore(Guid.Parse(m.Map.ExternalId), m.Core.To<CoreInvoice>(), maps);
+            var sysent = FromCore(Guid.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps);
             return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
           }).ToList());
     }
@@ -142,7 +142,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       var created2 = await crm.CreateCustomers(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreCustomer>())).ToList());
       await crm.UpdateCustomers(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<CrmCustomer>();
-        var existing = crm.Customers.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
+        var existing = crm.Customers.Single(e2 => e1.Map.SysId == e2.SystemId.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
@@ -153,16 +153,16 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     
     if (config.Object.Value == nameof(CoreInvoice)) {
       // todo: simplify this very common code
-      var externals = created.Select(m => m.Core)
+      var fininvoices = created.Select(m => m.Core)
           .Where(m => m.SourceSystem != SimulationConstants.CRM_SYSTEM.Value)
           .Cast<CoreInvoice>()
           .ToList();
-      var externalcusts = externals.Select(i => i.CustomerId).Distinct().ToList();
-      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), externalcusts, SimulationConstants.FIN_SYSTEM);
+      var fincusts = fininvoices.Select(i => i.CustomerId).Distinct().ToList();
+      var maps = await intra.GetExistingMappingsFromCoreIds(CoreEntityType.From<CoreCustomer>(), fincusts, SimulationConstants.FIN_SYSTEM);
       var created2 = await crm.CreateInvoices(created.Select(m => FromCore(Guid.Empty, m.Core.To<CoreInvoice>(), maps)).ToList());
       await crm.UpdateInvoices(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<CrmInvoice>();
-        var existing = crm.Invoices.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
+        var existing = crm.Invoices.Single(e2 => e1.Map.SysId == e2.SystemId.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"CrmWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
@@ -177,7 +177,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
   private CrmInvoice FromCore(Guid id, CoreInvoice i, List<CoreToSystemMap> custmaps) {
     var potentials = custmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
-    var accid = potentials.SingleOrDefault(acc => acc.System == SimulationConstants.CRM_SYSTEM)?.ExternalId.Value;
+    var accid = potentials.SingleOrDefault(acc => acc.System == SimulationConstants.CRM_SYSTEM)?.SysId.Value;
     if (accid is null) {
       throw new Exception($"CrmWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]\n\t" +

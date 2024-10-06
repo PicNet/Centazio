@@ -6,12 +6,12 @@ namespace Centazio.Core.Ctl.Entities;
 
 public sealed record StagedEntity {
   
-  public static StagedEntity Create(SystemName source, ExternalEntityType obj, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
+  public static StagedEntity Create(SystemName source, SystemEntityType obj, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
   
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(string reason) => this with { IgnoreReason = !String.IsNullOrWhiteSpace(reason.Trim()) ? reason.Trim() : throw new ArgumentNullException(nameof(reason)) };
   
-  internal StagedEntity(Guid id, SystemName system, ExternalEntityType obj, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
+  internal StagedEntity(Guid id, SystemName system, SystemEntityType obj, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
     Id = id;
     SourceSystem = system;
     Object = obj;
@@ -22,7 +22,7 @@ public sealed record StagedEntity {
   
   public Guid Id { get; }
   public SystemName SourceSystem { get; }
-  public ExternalEntityType Object { get; }
+  public SystemEntityType Object { get; }
   public DateTime DateStaged { get; }
   public ValidString Data { get; internal init; }
   public StagedEntityChecksum StagedEntityChecksum { get; }

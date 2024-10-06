@@ -38,7 +38,7 @@ public record ObjectState : ILoggable {
   public LifecycleStage Stage { get; } 
   public ObjectName Object { get; internal init; }
   public bool ObjectIsCoreEntityType { get; }
-  public bool ObjectIsExternalEntityType { get; }
+  public bool ObjectIsSystemEntityType { get; }
   public bool Active { get; private init; } 
   public DateTime DateCreated { get; internal init; } 
   public EOperationResult LastResult { get; internal init; } = EOperationResult.Unknown;
@@ -49,7 +49,7 @@ public record ObjectState : ILoggable {
     Stage = stage;
     Object = obj;
     ObjectIsCoreEntityType = obj is CoreEntityType;
-    ObjectIsExternalEntityType = obj is ExternalEntityType;
+    ObjectIsSystemEntityType = obj is SystemEntityType;
     Active = active;
     DateCreated = UtcDate.UtcNow;
   }
@@ -67,7 +67,7 @@ public record ObjectState : ILoggable {
     public string? Stage { get; init; }
     public string? Object { get; init; }
     public bool ObjectIsCoreEntityType { get; }
-    public bool ObjectIsExternalEntityType { get;  }
+    public bool ObjectIsSystemEntityType { get;  }
     public bool? Active { get; init; }
     public DateTime? DateCreated { get; init; }
     public string? LastResult { get; init; } 
@@ -87,11 +87,11 @@ public record ObjectState : ILoggable {
       Stage = stage;
       Object = obj.Value;
       ObjectIsCoreEntityType = obj is CoreEntityType;
-      ObjectIsExternalEntityType = obj is ExternalEntityType;
+      ObjectIsSystemEntityType = obj is SystemEntityType;
       Active = active;
       DateCreated = UtcDate.UtcNow;
       
-      if (!ObjectIsCoreEntityType && !ObjectIsExternalEntityType) throw new NotSupportedException($"Object[{obj}] is neither of CoreEntityType or ExternalEntityType");
+      if (!ObjectIsCoreEntityType && !ObjectIsSystemEntityType) throw new NotSupportedException($"Object[{obj}] is neither of {nameof(CoreEntityType)} or {nameof(SystemEntityType)}");
     }
     
     public static Dto FromObjectState(ObjectState os) => new(os.System, os.Stage, os.Object, os.Active) {
@@ -128,8 +128,8 @@ public record ObjectState : ILoggable {
     private ObjectName SafeObjectName() {
       if (String.IsNullOrWhiteSpace(Object)) throw new ArgumentNullException(nameof(Object));
       if (ObjectIsCoreEntityType) return new CoreEntityType(Object);
-      if (ObjectIsExternalEntityType) return new ExternalEntityType(Object);
-      throw new NotSupportedException("ObjectState.Dto was neither of CoreEntityType or ExternalEntityType");
+      if (ObjectIsSystemEntityType) return new SystemEntityType(Object);
+      throw new NotSupportedException($"ObjectState.Dto was neither of {nameof(CoreEntityType)} or {nameof(SystemEntityType)}");
     }
   }
 

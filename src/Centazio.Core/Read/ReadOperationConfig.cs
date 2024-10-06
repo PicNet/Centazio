@@ -6,13 +6,13 @@ public interface IGetObjectsToStage {
   Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
 }
 
-public record ReadOperationConfig(ExternalEntityType ExternalEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
-        : OperationConfig(ExternalEntityType, Cron), ILoggable {
+public record ReadOperationConfig(SystemEntityType SystemEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
+        : OperationConfig(SystemEntityType, Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
-  public ExternalEntityType ExternalEntityType { get; init; } = ExternalEntityType;
+  public SystemEntityType SystemEntityType { get; init; } = SystemEntityType;
   
-  public object LoggableValue => $"{ExternalEntityType.Value}";
+  public object LoggableValue => $"{SystemEntityType.Value}";
 
 }
         

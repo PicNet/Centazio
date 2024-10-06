@@ -8,13 +8,13 @@ public interface IEvaluateEntitiesToPromote {
 }
 
 public record PromoteOperationConfig(
-    ExternalEntityType ExternalEntityType,
+    SystemEntityType SystemEntityType,
     CoreEntityType CoreEntityType,
     ValidCron Cron, 
     IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(CoreEntityType, Cron), ILoggable {
 
   // ReSharper disable RedundantExplicitPositionalPropertyDeclaration
-  public ExternalEntityType ExternalEntityType { get; } = ExternalEntityType;
+  public SystemEntityType SystemEntityType { get; } = SystemEntityType;
   public CoreEntityType CoreEntityType { get; } = CoreEntityType;
   
   /// <summary>
@@ -26,6 +26,6 @@ public record PromoteOperationConfig(
   /// </summary>
   public bool IsBidirectional { get; init; }
   
-  public object LoggableValue => $"{ExternalEntityType.Value} -> {CoreEntityType.Value}";
+  public object LoggableValue => $"{SystemEntityType.Value} -> {CoreEntityType.Value}";
 }
 

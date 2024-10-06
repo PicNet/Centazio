@@ -20,14 +20,13 @@ public sealed record SystemName(string Value) : ValidString(Value) {
 public record ObjectName : ValidString {
   internal ObjectName(string Value) : base(Value) {}
   
-  internal ExternalEntityType ToExternalEntityType => this as ExternalEntityType ?? throw new Exception($"expected [{this}] to be of type 'ExternalEntityType'");
-  internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type 'CoreEntityType'");
+  internal SystemEntityType ToSystemEntityType => this as SystemEntityType ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityType)}'");
+  internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityType)}'");
 }
 
-// todo: rename ExternalEntityType -> SystemEntityType (search for usage of external)
-public sealed record ExternalEntityType(string Value) : ObjectName(Value) {
-  public static ExternalEntityType From<E>() where E : ISystemEntity => new(typeof(E).Name);
-  public static ExternalEntityType From<E>(E external) where E : ISystemEntity => new(external.GetType().Name);
+public sealed record SystemEntityType(string Value) : ObjectName(Value) {
+  public static SystemEntityType From<E>() where E : ISystemEntity => new(typeof(E).Name);
+  public static SystemEntityType From<E>(E sysent) where E : ISystemEntity => new(sysent.GetType().Name);
 }
 
 public sealed record CoreEntityType(string Value) : ObjectName(Value) {

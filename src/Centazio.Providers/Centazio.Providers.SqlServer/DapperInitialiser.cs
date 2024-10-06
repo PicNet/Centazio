@@ -11,7 +11,7 @@ public class DapperInitialiser {
     SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<SystemName>());
     SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<ObjectName>());
     SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<LifecycleStage>());
-    SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<ExternalEntityType>());
+    SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<SystemEntityType>());
     SqlMapper.AddTypeHandler(new ValidStringSqlTypeHandler<CoreEntityType>());
     SqlMapper.AddTypeHandler(new DateTimeSqlTypeHandler());
     

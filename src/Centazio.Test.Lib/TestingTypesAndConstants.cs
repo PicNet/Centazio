@@ -7,16 +7,16 @@ namespace Centazio.Test.Lib;
 public static class Constants {
   public static readonly SystemName System1Name = new("CRM");
   public static readonly SystemName System2Name = new("FIN");
-  public static readonly ExternalEntityType ExternalEntityName = new(nameof(ExternalEntityType));
+  public static readonly SystemEntityType SYSTEM_ENTITY_NAME = new(nameof(SystemEntityType));
   public static readonly CoreEntityType CoreEntityName = CoreEntityType.From<CoreEntity>();
   public static readonly CoreEntityType CoreEntityName2 = CoreEntityType.From<CoreEntity2>();
 }
 
-public record System1Entity(Guid ExternalId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ISystemEntity {
+public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => Sys1EntityId.ToString();
   public DateTime LastUpdatedDate => DateUpdated;
-  public string DisplayName { get; } = $"{FirstName} {LastName}({ExternalId})";
+  public string DisplayName { get; } = $"{FirstName} {LastName}({Sys1EntityId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
   public CoreEntity ToCoreEntity(string? id = null, string? sourceid = null) => new(id ?? SystemId, FirstName, LastName, DateOfBirth, DateUpdated) { SourceId = sourceid ?? id ?? SystemId };

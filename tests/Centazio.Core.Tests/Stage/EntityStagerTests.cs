@@ -19,24 +19,24 @@ public class EntityStagerTests {
   }
 
   [Test] public async Task Test_staging_a_single_record() {
-    await stager.Stage(NAME, Constants.ExternalEntityName, nameof(EntityStagerTests));
+    await stager.Stage(NAME, Constants.SYSTEM_ENTITY_NAME, nameof(EntityStagerTests));
     
-    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMilliseconds(-1), NAME, Constants.ExternalEntityName)).ToList();
-    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.ExternalEntityName)).ToList();
+    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMilliseconds(-1), NAME, Constants.SYSTEM_ENTITY_NAME)).ToList();
+    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.SYSTEM_ENTITY_NAME)).ToList();
     
     var staged = results1.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, NAME, Constants.ExternalEntityName, UtcDate.UtcNow, nameof(EntityStagerTests), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, NAME, Constants.SYSTEM_ENTITY_NAME, UtcDate.UtcNow, nameof(EntityStagerTests), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
     Assert.That(results2, Is.Empty);
   }
 
   [Test] public async Task Test_staging_a_multiple_records() {
     var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
-    await stager.Stage(NAME, Constants.ExternalEntityName, datas.ToList());
+    await stager.Stage(NAME, Constants.SYSTEM_ENTITY_NAME, datas.ToList());
     
-    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMicroseconds(-1), NAME, Constants.ExternalEntityName)).ToList();
-    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.ExternalEntityName)).ToList();
+    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMicroseconds(-1), NAME, Constants.SYSTEM_ENTITY_NAME)).ToList();
+    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.SYSTEM_ENTITY_NAME)).ToList();
     
-    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, NAME, Constants.ExternalEntityName, UtcDate.UtcNow, idx.ToString(), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
+    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, NAME, Constants.SYSTEM_ENTITY_NAME, UtcDate.UtcNow, idx.ToString(), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
     Assert.That(results1, Is.EqualTo(exp));
     Assert.That(results2, Is.Empty);
   }

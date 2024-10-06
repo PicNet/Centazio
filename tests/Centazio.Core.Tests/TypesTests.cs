@@ -33,11 +33,11 @@ public class TypesTests {
     Assert.That(new SystemName(new ValidString(str)), Is.EqualTo((SystemName) str));
   }
   
-  [Test] public void Test_ObjectName_casting_to_Externals_and_Core() {
-    Assert.Throws<Exception>(() => _ = Constants.ExternalEntityName.ToCoreEntityType);
-    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToExternalEntityType);
+  [Test] public void Test_ObjectName_casting_to_SystemEntityType_and_CoreEntityType() {
+    Assert.Throws<Exception>(() => _ = Constants.SYSTEM_ENTITY_NAME.ToCoreEntityType);
+    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToSystemEntityType);
     
-    Assert.That(Constants.ExternalEntityName.ToExternalEntityType.Value, Is.EqualTo(Constants.ExternalEntityName.Value));
+    Assert.That(Constants.SYSTEM_ENTITY_NAME.ToSystemEntityType.Value, Is.EqualTo(Constants.SYSTEM_ENTITY_NAME.Value));
     Assert.That(Constants.CoreEntityName.ToCoreEntityType.Value, Is.EqualTo(Constants.CoreEntityName.Value));
   }
 

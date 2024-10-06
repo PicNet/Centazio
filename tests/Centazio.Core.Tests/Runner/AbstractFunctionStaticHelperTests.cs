@@ -20,7 +20,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var template = await repo.CreateObjectState(ss, new ExternalEntityType("2")); 
+    var template = await repo.CreateObjectState(ss, new SystemEntityType("2")); 
     
     var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
@@ -30,17 +30,17 @@ public class AbstractFunctionStaticHelperTests {
     
     async void TestAtIndex(int idx) {
       var name = (idx + 1).ToString();
-      var exp = template with { Object = new ExternalEntityType(name) };
+      var exp = template with { Object = new SystemEntityType(name) };
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
-      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new ExternalEntityType(name))));
+      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new SystemEntityType(name))));
     }
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
     var ss = await repo.CreateSystemState(NAME, NAME);
-    var updated = (await repo.CreateObjectState(ss, new ExternalEntityType("2"))).SetActive(false);
+    var updated = (await repo.CreateObjectState(ss, new SystemEntityType("2"))).SetActive(false);
     await repo.SaveObjectState(updated);
     
     var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
@@ -51,13 +51,13 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
     OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(
-        new ObjectState(name, name, new ExternalEntityType(name), true) { 
+        new ObjectState(name, name, new SystemEntityType(name), true) { 
           LastCompleted = last,
           LastResult = EOperationResult.Success,
           LastAbortVote = EOperationAbortVote.Continue
         }, 
         new BaseFunctionConfig(), 
-        new(new ExternalEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()), 
+        new(new SystemEntityType(name), new (new (cron)), new TestingListReadOperationImplementation()), 
         DateTime.MinValue);
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
@@ -139,7 +139,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
-    return new ObjectState(res.ToString(), res.ToString(), new ExternalEntityType(res.ToString()), true) {
+    return new ObjectState(res.ToString(), res.ToString(), new SystemEntityType(res.ToString()), true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res, 
       LastAbortVote = vote, 
@@ -158,16 +158,16 @@ public class AbstractFunctionStaticHelperTests {
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
-            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())),
+            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new SystemEntityType(result.ToString())),
             new BaseFunctionConfig(),
-            new (new ExternalEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()), 
+            new (new SystemEntityType(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()), 
             DateTime.MinValue);
     
     public static List<ReadOperationConfig> READ_OP_CONFIGS => [
-      new(new ExternalEntityType("1"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new(new ExternalEntityType("2"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new(new ExternalEntityType("3"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
-      new(new ExternalEntityType("4"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
+      new(new SystemEntityType("1"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new SystemEntityType("2"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new SystemEntityType("3"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation()),
+      new(new SystemEntityType("4"), new(new(TestingDefaults.CRON_EVERY_SECOND)), new TestingEmptyReadOperationImplementation())
     ];
   }
   

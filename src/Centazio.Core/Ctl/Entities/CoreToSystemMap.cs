@@ -13,24 +13,24 @@ public interface ICoreToSystemMap {
 public record CoreToSystemMap : ICoreToSystemMap {
   private CoreToSystemMap(
       CoreEntityType coreentity, ValidString coreid, 
-      SystemName externalsys, ValidString externalid, 
+      SystemName system, ValidString sysid, 
       EEntityMappingStatus status, SystemEntityChecksum checksum) {
     CoreEntity = coreentity; 
     CoreId = coreid; 
-    System = externalsys; 
-    ExternalId = externalid; 
+    System = system; 
+    SysId = sysid; 
     Status = status;
     SystemEntityChecksum = checksum;
   }
   
-  public record MappingKey(CoreEntityType CoreEntity, ValidString CoreId, SystemName ExternalSystem, ValidString ExternalId);
+  public record MappingKey(CoreEntityType CoreEntity, ValidString CoreId, SystemName System, ValidString SysId);
   
-  public MappingKey Key => new(CoreEntity, CoreId, System, ExternalId);
+  public MappingKey Key => new(CoreEntity, CoreId, System, SysId);
   
   public CoreEntityType CoreEntity { get; } 
   public ValidString CoreId { get; } 
   public SystemName System { get; } 
-  public ValidString ExternalId { get; }
+  public ValidString SysId { get; }
   public SystemEntityChecksum SystemEntityChecksum { get; init; }
   public EEntityMappingStatus Status { get; protected init; }
   public DateTime DateCreated { get; protected init; } 
@@ -45,8 +45,8 @@ public record CoreToSystemMap : ICoreToSystemMap {
   public record Dto {
     public string? CoreEntity { get; init; }
     public string? CoreId { get; init; }
-    public string? ExternalSystem { get; init; }
-    public string? ExternalId { get; init; }
+    public string? System { get; init; }
+    public string? SysId { get; init; }
     public string? Status { get; init; }
     public DateTime? DateCreated { get; init; }
     public DateTime? DateUpdated { get; init; }
@@ -58,8 +58,8 @@ public record CoreToSystemMap : ICoreToSystemMap {
     public static explicit operator CoreToSystemMap(Dto dto) => new(
         new CoreEntityType(dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity))),
         dto.CoreId ?? throw new ArgumentNullException(nameof(CoreId)),
-        dto.ExternalSystem ?? throw new ArgumentNullException(nameof(ExternalSystem)),
-        dto.ExternalId ?? throw new ArgumentNullException(nameof(ExternalId)),
+        dto.System ?? throw new ArgumentNullException(nameof(System)),
+        dto.SysId ?? throw new ArgumentNullException(nameof(SysId)),
         Enum.Parse<EEntityMappingStatus>(dto.Status ?? throw new ArgumentNullException(nameof(Status))),
         new (dto.SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
       
@@ -71,7 +71,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
     };
   }
   
-  public static PendingCreate Create(ICoreEntity e, SystemName externalsys) => new(e, externalsys);
+  public static PendingCreate Create(ICoreEntity e, SystemName system) => new(e, system);
   
   public record PendingCreate : ICoreToSystemMap {
     public CoreEntityType CoreEntity { get; } 
@@ -79,10 +79,10 @@ public record CoreToSystemMap : ICoreToSystemMap {
     public SystemName System { get; } 
     public DateTime DateCreated { get; }
     
-    internal PendingCreate(ICoreEntity e, SystemName externalsys) {
+    internal PendingCreate(ICoreEntity e, SystemName system) {
       CoreEntity = CoreEntityType.From(e);
       CoreId = e.Id;
-      System = externalsys;
+      System = system;
       DateCreated = UtcDate.UtcNow;
     }
     
@@ -97,7 +97,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
   }
 
   public record PendingUpdate : CoreToSystemMap {
-    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.SystemEntityChecksum) {}
+    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.SysId, e.Status, e.SystemEntityChecksum) {}
     
     public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
@@ -115,6 +115,6 @@ public record CoreToSystemMap : ICoreToSystemMap {
   }
 
   public record Updated : CoreToSystemMap {
-    internal Updated(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status, e.SystemEntityChecksum) {}
+    internal Updated(CoreToSystemMap e) : base(e.CoreEntity, e.CoreId, e.System, e.SysId, e.Status, e.SystemEntityChecksum) {}
   }
 }

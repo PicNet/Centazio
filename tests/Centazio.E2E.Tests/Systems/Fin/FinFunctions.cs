@@ -21,8 +21,8 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     this.ctx = ctx;
     this.fin = fin;
     Config = new(nameof(FinSystem), LifecycleStage.Defaults.Read, [
-      new(ExternalEntityType.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(ExternalEntityType.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(SystemEntityType.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(SystemEntityType.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
   
@@ -58,10 +58,10 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     if (config.State.Object.Value == nameof(CoreCustomer)) {
       // todo: this relationship building needs to be extracted into helper methods as its very common
       var accounts = staged.Deserialise<FinAccount>();
-      var externalids = accounts.Select(acc => acc.Sys.SystemId.ToString()).ToList();
-      var idmaps = await ctx.entitymap.GetExistingMappingsFromExternalIds(config.State.Object.ToCoreEntityType, externalids, config.State.System);
+      var accsysids = accounts.Select(acc => acc.Sys.SystemId.ToString()).ToList();
+      var idmaps = await ctx.entitymap.GetExistingMappingsFromSystemIds(config.State.Object.ToCoreEntityType, accsysids, config.State.System);
       foreach (var acc in accounts) {
-        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.Sys.SystemId)?.CoreId;
+        var coreid = idmaps.SingleOrDefault(m => m.SysId == acc.Sys.SystemId)?.CoreId;
         var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
         var updated = ctx.FinAccountToCoreCustomer(acc.Sys.To<FinAccount>(), existing);
         topromote.Add(new Containers.StagedSysCore(acc.Staged, acc.Sys, updated)); 
@@ -76,10 +76,10 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<FinInvoice>()).ToList();
       var accids = invoices.Select(i => i.AccountId.ToString()).Distinct().ToList();
-      var accounts = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), accids, config.State.System);
+      var accounts = await ctx.entitymap.GetExistingMappingsFromSystemIds(CoreEntityType.From<CoreCustomer>(), accids, config.State.System);
       invoices.Zip(staged).ForEach(t => {
         var (fininv, se) = t;
-        var accid = accounts.Single(k => k.ExternalId == fininv.AccountId.ToString()).CoreId;
+        var accid = accounts.Single(k => k.SysId == fininv.AccountId.ToString()).CoreId;
         topromote.Add(new Containers.StagedSysCore(se, fininv, ctx.FinInvoiceToCoreInvoice(fininv, accid)));
       });
     }
@@ -107,7 +107,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
 
   public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     // todo: remove UtcDate.UtcNow from all logs, and just log the time when it changes (calls DoTick)
-    ctx.Debug($"FinWriteFunction.CovertCoreEntityToExternalEntity[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}] {{{UtcDate.UtcNow:o}}}");
     if (config.Object.Value == nameof(CoreCustomer)) {
       return (
           tocreate.Select(m => {
@@ -115,7 +115,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
           toupdate.Select(m => {
-            var sysent = FromCore(Int32.Parse(m.Map.ExternalId), m.Core.To<CoreCustomer>());
+            var sysent = FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreCustomer>());
             return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
           }).ToList());
     }
@@ -128,7 +128,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
             return m.AddSystemEntity(sysent, ctx.checksum.Checksum(sysent));
           }).ToList(),
           toupdate.Select(m => {
-            var sysent = FromCore(Int32.Parse(m.Map.ExternalId), m.Core.To<CoreInvoice>(), maps);
+            var sysent = FromCore(Int32.Parse(m.Map.SysId), m.Core.To<CoreInvoice>(), maps);
             return m.SetSystemEntity(sysent, ctx.checksum.Checksum(sysent)); 
           }).ToList());
     }
@@ -144,7 +144,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       var created2 = await fin.CreateAccounts(created.Select(m => FromCore(0, m.Core.To<CoreCustomer>())).ToList());
       await fin.UpdateAccounts(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<FinAccount>();
-        var existing = fin.Accounts.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
+        var existing = fin.Accounts.Single(e2 => e1.Map.SysId == e2.SystemId.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
@@ -167,7 +167,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       var created2 = await fin.CreateInvoices(created.Select(m => FromCore(0, m.Core.To<CoreInvoice>(), maps)).ToList());
       await fin.UpdateInvoices(updated.Select(e1 => {
         var toupdate = e1.SystemEntity.To<FinInvoice>();
-        var existing = fin.Invoices.Single(e2 => e1.Map.ExternalId == e2.SystemId.ToString());
+        var existing = fin.Invoices.Single(e2 => e1.Map.SysId == e2.SystemId.ToString());
         if (ctx.checksum.Checksum(existing) == ctx.checksum.Checksum(toupdate)) throw new Exception($"FinWriteFunction[{config.Object.Value}] updated object with no changes.\nExisting:\n\t{existing}\nUpdated:\n\t{toupdate}");
         return toupdate;
       }).ToList());
@@ -185,7 +185,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
   private FinInvoice FromCore(int id, CoreInvoice i, List<CoreToSystemMap> accmaps) {
     var potentials = accmaps.Where(acc => acc.CoreId == i.CustomerId).ToList();
-    var accid = potentials.SingleOrDefault(acc => acc.System == SimulationConstants.FIN_SYSTEM)?.ExternalId.Value;
+    var accid = potentials.SingleOrDefault(acc => acc.System == SimulationConstants.FIN_SYSTEM)?.SysId.Value;
     if (accid is null) {
       throw new Exception($"FinWriteFunction -\n\t" +
           $"Could not find CoreCustomer[{i.CustomerId}] for CoreInvoice[{i.SourceId}]({i})\n\t" +

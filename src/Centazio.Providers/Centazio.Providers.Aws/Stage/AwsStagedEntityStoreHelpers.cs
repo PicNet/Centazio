@@ -20,4 +20,4 @@ public class AwsStagedEntityStoreHelpers {
   } 
 }
 
-public record S3KeyComponents(SystemName System, ExternalEntityType Object, DateTime DateStaged, StagedEntityChecksum Checksum, Guid Id);
+public record S3KeyComponents(SystemName System, SystemEntityType Object, DateTime DateStaged, StagedEntityChecksum Checksum, Guid Id);

@@ -31,7 +31,7 @@ public class CrmSystem {
 
   // WriteFunction endpoints
   public Task<List<CrmCustomer>> CreateCustomers(List<CrmCustomer> news) { 
-    var created = news.Select(c => c with { ExternalId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { CrmCustId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
     Customers.AddRange(created);
     return Task.FromResult(created);
   }
@@ -46,7 +46,7 @@ public class CrmSystem {
   }
 
   public Task<List<CrmInvoice>> CreateInvoices(List<CrmInvoice> news) {
-    var created = news.Select(i => i with { ExternalId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { CrmInvId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
     Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -81,7 +81,7 @@ public class CrmSystem {
       if (count == 0) return [];
       
       var toadd = Enumerable.Range(0, count)
-          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(types).ExternalId, ctx.NewName(nameof(CrmCustomer), customers, idx)))
+          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(types).CrmTypeId, ctx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
       ctx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
       customers.AddRange(toadd);
@@ -98,7 +98,7 @@ public class CrmSystem {
         var cust = customers[idx];
         // lets not edit previously added entities, makes it hard to verify
         if (AddedCustomers.Contains(cust)) return;
-        var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, ctx.RandomItem(types).ExternalId);
+        var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, ctx.RandomItem(types).CrmTypeId);
         var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
         var oldcs = ctx.checksum.Checksum(cust);
         var newcs = ctx.checksum.Checksum(newcust);
@@ -117,7 +117,7 @@ public class CrmSystem {
       
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
-          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(customers).ExternalId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
+          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
       ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.SystemId}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
       return toadd.ToList();
@@ -161,27 +161,27 @@ public class CrmSystem {
   }
 }
 
-public record CrmMembershipType(Guid ExternalId, DateTime Updated, string Name) : ISystemEntity {
+public record CrmMembershipType(Guid CrmTypeId, DateTime Updated, string Name) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => CrmTypeId.ToString();
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { Name };
 
 }
 
-public record CrmInvoice(Guid ExternalId, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
+public record CrmInvoice(Guid CrmInvId, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => CrmInvId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = $"Cust:{CustomerId}({ExternalId}) {AmountCents}c";
+  public string DisplayName { get; } = $"Cust:{CustomerId}({CrmInvId}) {AmountCents}c";
   public object GetChecksumSubset() => new { CustomerId, AmountCents, DueDate, PaidDate };
 
 }
 
-public record CrmCustomer(Guid ExternalId, DateTime Updated, Guid MembershipTypeId, string Name) : ISystemEntity {
+public record CrmCustomer(Guid CrmCustId, DateTime Updated, Guid MembershipTypeId, string Name) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => CrmCustId.ToString();
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { MembershipTypeId, Name };

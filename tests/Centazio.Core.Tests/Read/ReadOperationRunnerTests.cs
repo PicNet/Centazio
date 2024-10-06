@@ -82,9 +82,9 @@ public class ReadOperationRunnerTests {
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
     => new (
-        await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new ExternalEntityType(result.ToString())),
+        await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new SystemEntityType(result.ToString())),
         new BaseFunctionConfig(),
-        new (new ExternalEntityType(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl), DateTime.MinValue);
+        new (new SystemEntityType(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl), DateTime.MinValue);
   
   private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {

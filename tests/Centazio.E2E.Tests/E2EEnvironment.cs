@@ -32,7 +32,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   private readonly Dictionary<(SystemName, Type, string), ICoreEntity> updated = new();
   
   public async Task ValidateAdded<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
-    var ascore = await ExternalEntitiesToCore(expected);
+    var ascore = await SysEntsToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count()}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
@@ -40,20 +40,20 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   }
 
   public async Task ValidateUpdated<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
-    var ascore = await ExternalEntitiesToCore(expected);
+    var ascore = await SysEntsToCore(expected);
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
   
-  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<ISystemEntity>[] expected) {
+  private async Task<List<ICoreEntity>> SysEntsToCore(params IEnumerable<ISystemEntity>[] expected) {
     var cores = new List<ICoreEntity>();
     var allsums = new Dictionary<string, bool>();
-    foreach (var externals in expected) {
-      var syscores = await externals.Select(ToCore).Synchronous();
+    foreach (var sysent in expected) {
+      var syscores = await sysent.Select(ToCore).Synchronous();
       var sums = syscores.Select(c => ctx.checksum.Checksum(c)).Distinct().ToList();
-      if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from an external system to be unique.  Found some external entities that resulted in the same ICoreEntity checksum");
+      if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from a system to be unique.  Found some entities that resulted in the same ICoreEntity checksum");
       syscores.ForEach((c, idx) => {
         if (allsums.ContainsKey(sums[idx])) return;
         
@@ -72,8 +72,8 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       _ => throw new NotSupportedException(e.GetType().Name) };
 
     async Task<CoreCustomer> FromFinAccount(FinAccount account) {
-      var externalid = account.SystemId;
-      var map = (await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), [externalid], SimulationConstants.FIN_SYSTEM)).Single();
+      var sysid = account.SystemId;
+      var map = (await ctx.entitymap.GetExistingMappingsFromSystemIds(CoreEntityType.From<CoreCustomer>(), [sysid], SimulationConstants.FIN_SYSTEM)).Single();
       var coreid = map.CoreId;
       var existing = ctx.core.GetCustomer(coreid); 
       return ctx.FinAccountToCoreCustomer(account, existing);
@@ -159,7 +159,7 @@ public class SimulationCtx {
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
-    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.CustomerId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
       
     return new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
@@ -167,7 +167,7 @@ public class SimulationCtx {
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
-    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.AccountId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.AccountId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
   }

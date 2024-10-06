@@ -22,7 +22,7 @@ public class FinSystem  {
   
   // WriteFunction endpoints
   public Task<List<FinAccount>> CreateAccounts(List<FinAccount> news) { 
-    var created = news.Select(c => c with { ExternalId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { FinAccId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
     Accounts.AddRange(created);
     return Task.FromResult(created);
   }
@@ -37,7 +37,7 @@ public class FinSystem  {
   }
 
   public Task<List<FinInvoice>> CreateInvoices(List<FinInvoice> news) {
-    var created = news.Select(i => i with { ExternalId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { FinInvId = ctx.rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
     Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -100,7 +100,7 @@ public class FinSystem  {
       if (!accounts.Any() || count == 0) return [];
       
       var toadd = new List<FinInvoice>();
-      Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).ExternalId, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
+      Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).FinAccId, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
       ctx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
       return toadd.ToList();
@@ -127,18 +127,18 @@ public class FinSystem  {
   }
 }
 
-public record FinInvoice(int ExternalId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
+public record FinInvoice(int FinInvId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => FinInvId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = $"Acct:{AccountId}({ExternalId}) {Amount}c";
+  public string DisplayName { get; } = $"Acct:{AccountId}({FinInvId}) {Amount}c";
   public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
 
 }
 
-public record FinAccount(int ExternalId, string Name, DateTime Updated) : ISystemEntity {
+public record FinAccount(int FinAccId, string Name, DateTime Updated) : ISystemEntity {
 
-  public string SystemId => ExternalId.ToString();
+  public string SystemId => FinAccId.ToString();
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { Name };
