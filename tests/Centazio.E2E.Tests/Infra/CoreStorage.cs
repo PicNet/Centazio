@@ -58,7 +58,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   
   public string DisplayName { get; protected init; }
   
-  public abstract object? GetChecksumSubset();
+  public abstract object GetChecksumSubset();
   
   protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display) {
     SourceSystem = source;

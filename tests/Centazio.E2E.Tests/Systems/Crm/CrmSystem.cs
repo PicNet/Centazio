@@ -165,6 +165,7 @@ public class CrmSystem {
 public record CrmMembershipType(Guid ExternalId, DateTime Updated, string Name) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { Name };
 
@@ -173,6 +174,7 @@ public record CrmMembershipType(Guid ExternalId, DateTime Updated, string Name) 
 public record CrmInvoice(Guid ExternalId, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = $"Cust:{CustomerId}({ExternalId}) {AmountCents}c";
   public object GetChecksumSubset() => new { CustomerId, AmountCents, DueDate, PaidDate };
 
@@ -181,6 +183,7 @@ public record CrmInvoice(Guid ExternalId, DateTime Updated, Guid CustomerId, int
 public record CrmCustomer(Guid ExternalId, DateTime Updated, Guid MembershipTypeId, string Name) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { MembershipTypeId, Name };
 

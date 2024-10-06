@@ -151,7 +151,7 @@ public class AbstractFunctionStaticHelperTests {
       LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: " +
           (len == 0 
               ? res == EOperationResult.Error ? $"ErrorReadOperationResult[{exmessage}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
-              : "")
+              : String.Empty)
     };
   }
 

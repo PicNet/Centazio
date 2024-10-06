@@ -30,7 +30,7 @@ public record CoreToExternalMap : ICoreToExternalMap {
   public SystemName System { get; } 
   public ValidString ExternalId { get; }
   public EEntityMappingStatus Status { get; protected init; }
-  public string Checksum { get; init; } = "";
+  public string Checksum { get; init; } = String.Empty;
   public DateTime DateCreated { get; protected init; } 
   
   public DateTime? DateUpdated { get; protected init; } 

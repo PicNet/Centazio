@@ -56,7 +56,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
-    List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, "", "", DateOnly.MinValue, UtcDate.UtcNow)];
+    List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, String.Empty, String.Empty, DateOnly.MinValue, UtcDate.UtcNow)];
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] External[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, ExternalSystem = CrmSystem, ExternalId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), Constants.System1Name);

@@ -72,8 +72,8 @@ WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.Ign
 
   protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, ExternalEntityType obj, bool incpromoted) {
     await using var conn = newconn();
-    var limit = Limit > 0 ? $"TOP {Limit}" : "";
-    var promotedpredicate = incpromoted ? "" : "AND DatePromoted IS NULL";
+    var limit = Limit > 0 ? $"TOP {Limit}" : String.Empty;
+    var promotedpredicate = incpromoted ? String.Empty : "AND DatePromoted IS NULL";
     var sql = @$"
 SELECT {limit} * 
 FROM {SCHEMA}.{STAGED_ENTITY_TBL} 

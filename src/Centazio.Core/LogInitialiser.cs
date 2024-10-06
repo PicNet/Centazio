@@ -87,7 +87,7 @@ public static class LogInitialiser {
       var source = logEvent.MessageTemplate.Tokens.OfType<PropertyToken>().Where((Func<PropertyToken, bool>)(pt => pt.Format is not null)).ToList();
       if (source.Any()) {
         output.Write(",\"@r\":[");
-        var str = "";
+        var str = String.Empty;
         foreach (var propertyToken in source) {
           output.Write(str);
           str = ",";

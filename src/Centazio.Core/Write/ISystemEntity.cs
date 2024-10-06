@@ -6,6 +6,7 @@ namespace Centazio.Core.Write;
 public interface ISystemEntity : IGetChecksumSubset {
 
   public string SystemId { get; }
+  public DateTime LastUpdatedDate { get; }
   
   [JsonIgnore] public string DisplayName { get; }
   

@@ -164,7 +164,7 @@ public abstract class StagedEntityStoreDefaultTests {
     var (start, staged1) = (dt.Now, dt.Tick());
     var (name1, name2, name3) = (NAME + 1, NAME + 2 , NAME + 3);
     
-    var notignore = new List<StagedEntity> { await Create(name1, "not ignore: 1.1", "") };
+    var notignore = new List<StagedEntity> { await Create(name1, "not ignore: 1.1", String.Empty) };
     var staged2 = dt.Tick();
     notignore.Add(await Create(name1, "not ignore: 1.2", " "));
     notignore.Add(await Create(name2, "not ignore: 2", "\r"));

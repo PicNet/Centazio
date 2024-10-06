@@ -71,7 +71,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
     Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([]));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([""]));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([String.Empty]));
     Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!]));
   }
   

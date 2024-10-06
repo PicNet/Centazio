@@ -17,7 +17,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, "invalid"));
-    await DoUpsert(TestingFactories.NewCoreCust("", ""));
+    await DoUpsert(TestingFactories.NewCoreCust(String.Empty, String.Empty));
     Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, "invalid"));
   }
 

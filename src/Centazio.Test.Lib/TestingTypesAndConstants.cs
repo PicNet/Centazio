@@ -15,6 +15,7 @@ public static class Constants {
 public record System1Entity(Guid ExternalId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => DateUpdated;
   public string DisplayName { get; } = $"{FirstName} {LastName}({ExternalId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 

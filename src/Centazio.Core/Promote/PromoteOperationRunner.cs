@@ -57,7 +57,6 @@ public class PromoteOperationRunner(
       var e = topromote[idx].Core;
       var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
       var orige = originals.Single(e2 => e2.Id == bounce.Value.OriginalCoreId);
-      // todo: GetChecksumSubset() should not require the '!' if the operation is marked as Bidirectional add checks before useage
       var origess = orige.GetChecksumSubset()!;
       var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(orige);
       var msg = $"{op.State.System}#Id[{e.Id}] -> OriginalCoreId[{bounce.Value.OriginalCoreId}]";
@@ -107,10 +106,10 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// <summary>
   /// It is possible for several changes to an entity to be staged prior to promotion.  If this happens then
   /// simply take the latest snapshot of the entity to promote as there is no benefit to promoting the same
-  /// entity multiple times to only end up in the latest state anyway. 
+  /// entity multiple times to only end up in the latest state anyway.
   /// </summary>
   public static List<ICoreEntity> IgnoreMultipleUpdatesToSameEntity(this List<ICoreEntity> lst) => 
-        lst.GroupBy(c => c.Id)
+        lst.GroupBy(c => c.SourceId)
         .Select(g => g.OrderByDescending(c => c.SourceSystemDateUpdated).First()) 
         .ToList();
   

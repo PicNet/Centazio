@@ -1,32 +1,28 @@
 # Todo
 - add unit tests to check bi-directional bounce back protection using checksums, check for all new logic added through
    the simulator and check that its adequately unit tested
-- set up azure devops testing pipeline (agent is ready)
-- self-hosted runner
-- it is impossible to totally avoid non-meaninful bounce backs.  Need to store the last checksum for the
-  external entity against that system.  And check for changes prior to writing to target system.  Will need a new 
-  interface for external entities.  A scenario where this can happen is:
-  - A customer exists in both CRM, FIN
-  - Both systems edit the name (from 0 -> 1).  Both these edits are valid, which means that both systems will
-  - write this to their counterpart
+- Write checksums not working, need to add during promote
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
-- use simulation to optimise the developer experiecen, add lots of helpers to do common tasks
+- use simulation to optimise the developer experience, add lots of helpers to do common tasks
 - clean up simulation code, and promote code, both rough
 - have a way to automatically detect endless bounce backs and add unit test to show that having Id in the checksum 
     causes this
 - review all code comments
-- add unit test to check for "", use string.empty instead
 - look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
 - checksums everywhere now, need to have naming conventions to clarify which checksum we are after.  Perhaps 
   strongly typed strings?
+
 - replace custom container records with named tuples
 - Add extension methods to simulate covariance between all our types and tuples
+
 - clean up interfaces and types, have stuff everywhere
 - add unit test to check consistent variable naming:
   - ICoreEntity: corent
   - ISystemEntity: sysent
   - Etc
-- Unit test for "" replace with String.Empty
+
+- set up azure devops testing pipeline (agent is ready)
+- self-hosted runner
 
 # Developer Guidelines:
 

@@ -27,7 +27,7 @@ public class AwsAccounts(CentazioSecrets secrets) : IAwsAccounts {
   public async Task<string> AddAccount(string name) {
     var response = await client.CreateAccountAsync(new CreateAccountRequest { AccountName = name });
     var state = response.CreateAccountStatus.State;
-    return state == CreateAccountState.SUCCEEDED ? "" : response.CreateAccountStatus.FailureReason.Value ?? "Unknown failure";
+    return state == CreateAccountState.SUCCEEDED ? String.Empty : response.CreateAccountStatus.FailureReason.Value ?? "Unknown failure";
   }
 
 }

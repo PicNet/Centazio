@@ -6,7 +6,7 @@ public class CheckConsoleUsage {
     var errors = new List<string>();
     var NOT_ALLOWED = new [] { "Console.Write", "DevelDebug.Write" };
     InspectUtils.CsFiles(null, "DevelDebug.cs", "CheckConsoleUsage.cs").ForEach(file => {
-      var contents = File.ReadAllText(file).Replace("AnsiConsole.Write", "");
+      var contents = File.ReadAllText(file).Replace("AnsiConsole.Write", String.Empty);
       NOT_ALLOWED.ForEach(na => {
         if (contents.IndexOf(na, StringComparison.Ordinal) >= 0) {
           errors.Add($"File[{file}] uses '{na}'");

@@ -130,6 +130,7 @@ public class FinSystem  {
 public record FinInvoice(int ExternalId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = $"Acct:{AccountId}({ExternalId}) {Amount}c";
   public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
 
@@ -138,6 +139,7 @@ public record FinInvoice(int ExternalId, int AccountId, decimal Amount, DateTime
 public record FinAccount(int ExternalId, string Name, DateTime Updated) : ISystemEntity {
 
   public string SystemId => ExternalId.ToString();
+  public DateTime LastUpdatedDate => Updated;
   public string DisplayName { get; } = Name;
   public object GetChecksumSubset() => new { Name };
 

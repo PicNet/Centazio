@@ -12,7 +12,7 @@ public class CheckDependenciesBetweenProjects {
     if (dependencies["Centazio.Test.Lib"].Count > 1 || dependencies["Centazio.Test.Lib"].Single() != "Centazio.Core") errors.Add("Centazio.Test.Lib should at most depend on Centazio.Core");
     
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0).ForEach(testproj => {
-      var target = testproj.Replace(".Tests", "");
+      var target = testproj.Replace(".Tests", String.Empty);
       var bad = dependencies[testproj].Where(d => !new [] { "Centazio.Core", "Centazio.Test.Lib", target }.Contains(d)).ToList();
       if (bad.Any()) errors.Add($"Test Project [{testproj}] should at most depend on 'Centazio.Core', 'Centazio.Test.Lib' and '{target}'.  Had extra dependencies: " + String.Join(",", bad));
     });
@@ -30,7 +30,7 @@ public class CheckDependenciesBetweenProjects {
         .Select(m => TrimProj(m.Groups[1].Value))
         .ToList());
     
-    string TrimProj(string file) => file.Split("\\").Last().Replace(".csproj", "");
+    string TrimProj(string file) => file.Split("\\").Last().Replace(".csproj", String.Empty);
   }
 
 }

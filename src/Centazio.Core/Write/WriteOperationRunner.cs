@@ -30,7 +30,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     var updated = new List<CoreExternalMap>();
     foreach (var cpum in maps.Updated) {
       var checker = await IsMeaningful(cpum);
-      if (checker.IsMeaningful) updated.Add(checker.Details with { Map = checker.Details.Map with { Checksum = "" }});
+      if (checker.IsMeaningful) updated.Add(checker.Details with { Map = checker.Details.Map with { Checksum = String.Empty }});
     } 
     return new WriteEntitiesToTargetSystem(maps.Created, updated);
 

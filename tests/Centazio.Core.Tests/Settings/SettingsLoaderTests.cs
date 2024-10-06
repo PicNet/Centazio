@@ -10,11 +10,11 @@ public class SettingsLoaderTests {
   [TearDown] public void TearDown() {}
   
   [Test] public void Test_loading_of_settings_from_dir_hierarchy() {
-    TestSettings(CreateLoadAndDeleteSettings("."));
-    TestSettings(CreateLoadAndDeleteSettings(".."));
-    TestSettings(CreateLoadAndDeleteSettings("../.."));
+    TestSettings(CreateLoadAndDeleteSettings(".", String.Empty));
+    TestSettings(CreateLoadAndDeleteSettings("..", String.Empty));
+    TestSettings(CreateLoadAndDeleteSettings("../..", String.Empty));
     
-    void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "To be overriden", "", "")));
+    void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "To be overriden", String.Empty, String.Empty)));
   }
   
   [Test] public void Test_loading_of_settings_with_overriding_environment_file() {
@@ -25,7 +25,7 @@ public class SettingsLoaderTests {
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "Overriden", "No longer empty", "No longer missing")));
   }
   
-  private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment="") {
+  private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
       File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);
       File.WriteAllText(Path.Combine(dir, $"test_settings.{environment}.json"), test_settings_env_json);

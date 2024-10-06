@@ -24,7 +24,7 @@ public class SqlConn {
     if (!String.IsNullOrWhiteSpace(connstr)) throw new Exception("already initialised");
     
     if (Real) {
-      var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load();
+      var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
       var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.SecretsFolder, "dev").Load();
       connstr = secrets.SQL_CONN_STR;
       return;

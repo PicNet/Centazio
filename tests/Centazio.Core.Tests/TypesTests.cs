@@ -15,8 +15,8 @@ public class TypesTests {
   }
   
   [Test] public void Test_ValidString_fails_on_empty() {
-    Assert.Throws<ArgumentException>(() => { _ = new ValidString(""); });
-    Assert.Throws<ArgumentException>(() => { _ = (ValidString) ""; });
+    Assert.Throws<ArgumentException>(() => { _ = new ValidString(String.Empty); });
+    Assert.Throws<ArgumentException>(() => { _ = (ValidString) String.Empty; });
   }
   
   [Test] public void Test_SystemName_conversions() {

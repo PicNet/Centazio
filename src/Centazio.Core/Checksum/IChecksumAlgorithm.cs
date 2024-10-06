@@ -12,11 +12,11 @@ namespace Centazio.Core.Checksum;
 ///
 /// Example:
 /// ```
-/// public object? GetChecksumSubset() => new { Name, Address };
+/// public object GetChecksumSubset() => new { Name, Address };
 /// ```
 /// </summary>
 public interface IGetChecksumSubset {
-  object? GetChecksumSubset();
+  object GetChecksumSubset();
 }
 
 public interface IChecksumAlgorithm : IDisposable {
