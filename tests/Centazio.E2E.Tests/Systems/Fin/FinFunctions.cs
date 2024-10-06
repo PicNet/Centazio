@@ -55,17 +55,17 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
 
-    List<StagedSysCoreCont> topromote = new();
+    List<Containers.StagedSysCore> topromote = new();
     if (config.State.Object.Value == nameof(CoreCustomer)) {
       // todo: this relationship building needs to be extracted into helper methods as its very common
       var accounts = staged.Deserialise<FinAccount>();
-      var externalids = accounts.Select(acc => acc.SysEnt.SystemId.ToString()).ToList();
+      var externalids = accounts.Select(acc => acc.Sys.SystemId.ToString()).ToList();
       var idmaps = await ctx.entitymap.GetExistingMappingsFromExternalIds(config.State.Object.ToCoreEntityType, externalids, config.State.System);
       foreach (var acc in accounts) {
-        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.SysEnt.SystemId)?.CoreId;
+        var coreid = idmaps.SingleOrDefault(m => m.ExternalId == acc.Sys.SystemId)?.CoreId;
         var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
-        var updated = ctx.FinAccountToCoreCustomer(acc.SysEnt.To<FinAccount>(), existing);
-        topromote.Add(new StagedSysCoreCont(acc.Staged, acc.SysEnt, updated)); 
+        var updated = ctx.FinAccountToCoreCustomer(acc.Sys.To<FinAccount>(), existing);
+        topromote.Add(new Containers.StagedSysCore(acc.Staged, acc.Sys, updated)); 
       }
     } else if (config.State.Object.Value == nameof(CoreInvoice))
       await EvaluateInvoices();
@@ -81,7 +81,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       invoices.Zip(staged).ForEach(t => {
         var (fininv, se) = t;
         var accid = accounts.Single(k => k.ExternalId == fininv.AccountId.ToString()).CoreId;
-        topromote.Add(new StagedSysCoreCont(se, fininv, ctx.FinInvoiceToCoreInvoice(fininv, accid)));
+        topromote.Add(new Containers.StagedSysCore(se, fininv, ctx.FinInvoiceToCoreInvoice(fininv, accid)));
       });
     }
   }
@@ -135,8 +135,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
+          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -155,8 +155,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
+          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
     }
     
     throw new NotSupportedException(config.Object);

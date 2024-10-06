@@ -7,12 +7,12 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
 
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
     { "ValidString", ["Value"] },
-    { "CoreToExternalMap", ["LastError", "Checksum"] },
+    { "CoreToExternalMap", ["LastError"] },
     { "ObjectState", ["LastRunMessage", "LastRunException"] },
     { "StagedEntity", ["IgnoreReason"] },
     { "CoreEntityType", ["Name"] },
     { "ExternalEntityType", ["Name"] },
-    { "CoreEntityAndChecksum", ["Checksum"] }
+    { "*", ["Checksum"] }
   };
   
   [Test] public void Test_string_description_pattern() {
@@ -21,13 +21,18 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
         .ToList();
     var errors = new List<string>();
     types.ForEach(type => {
-      var ignore = ALLOWED.TryGetValue(type.Name, out var value) ? value : [];
+      var ignore = Allowed(type);
       var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
           .Where(p => p.PropertyType == typeof(string) && !ignore.Contains(p.Name))
           .ToList();
       if (props.Any()) errors.Add($"Type[{type.FullName}] PROPS[{String.Join(", ", props.Select(p => p.Name))}]");
     });
     Assert.That(errors, Is.Empty, String.Join("\n", errors));
+    
     bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
+    List<string> Allowed(Type t) {
+      var lst = ALLOWED.TryGetValue(t.Name, out var value) ? value : [];
+      return lst.Concat(ALLOWED["*"]).ToList();
+    }
   }
 }

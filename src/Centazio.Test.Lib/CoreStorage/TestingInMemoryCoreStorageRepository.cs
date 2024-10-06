@@ -32,5 +32,5 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   public Task<List<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
   
-  public Dictionary<CoreEntityType, Dictionary<string, CoreEntityAndChecksum>> MemDb => db; 
+  public Dictionary<CoreEntityType, Dictionary<string, Containers.CoreChecksum>> MemDb => db; 
 }

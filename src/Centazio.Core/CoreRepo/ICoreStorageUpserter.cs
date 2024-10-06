@@ -30,7 +30,7 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities);
+  Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities);
 }
 
 public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

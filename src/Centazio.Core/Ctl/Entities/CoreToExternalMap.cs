@@ -82,23 +82,25 @@ public record CoreToExternalMap : ICoreToExternalMap {
       DateCreated = UtcDate.UtcNow;
     }
     
-    public Created SuccessCreate(string targetid) => new(this, targetid);
+    public Created SuccessCreate(string targetid, string checksum) => new(this, targetid, checksum);
   }
   
   public record Created : CoreToExternalMap {
-    internal Created(PendingCreate e, ValidString targetid) : base(e.CoreEntity, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate) {
+    internal Created(PendingCreate e, ValidString targetid, string checksum) : base(e.CoreEntity, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate) {
       DateUpdated = UtcDate.UtcNow;
-      DateLastSuccess = UtcDate.UtcNow; 
+      DateLastSuccess = UtcDate.UtcNow;
+      Checksum = checksum;
     }
   }
 
   public record PendingUpdate : CoreToExternalMap {
     internal PendingUpdate(CoreToExternalMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status) {}
     
-    public Updated SuccessUpdate() => new(this with { 
+    public Updated SuccessUpdate(string checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
       DateUpdated = UtcDate.UtcNow, 
-      DateLastSuccess = UtcDate.UtcNow 
+      DateLastSuccess = UtcDate.UtcNow,
+      Checksum = checksum
     });
     
     public Updated Error(string? error) => new(this with { 

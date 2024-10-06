@@ -4,13 +4,16 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
+
+// todo: move containers to Containers.ts
+
 public record CoreAndPendingCreateMap(ICoreEntity Core, CoreToExternalMap.PendingCreate Map) {
-  public CoreAndCreatedMap Created(string targetid) => new(Core, Map.SuccessCreate(targetid));
+  public CoreAndCreatedMap Created(string targetid, string checksum) => new(Core, Map.SuccessCreate(targetid, checksum));
 }
 
 public record CoreAndCreatedMap {
-  internal ICoreEntity Core { get; }
-  internal CoreToExternalMap.Created Map { get; }
+  public ICoreEntity Core { get; }
+  public CoreToExternalMap.Created Map { get; }
   
   internal CoreAndCreatedMap(ICoreEntity core, CoreToExternalMap.Created map) {
     Core = core;
@@ -24,7 +27,7 @@ public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToExternalMap.Pendin
 }
 
 public record CoreExternalMap(ICoreEntity Core, ISystemEntity SystemEntity, CoreToExternalMap.PendingUpdate Map) {
-  public CoreAndUpdatedMap Updated() => new(Core, Map.SuccessUpdate());
+  public CoreAndUpdatedMap Updated(string checksum) => new(Core, Map.SuccessUpdate(checksum));
 }
 
 public record CoreAndUpdatedMap {

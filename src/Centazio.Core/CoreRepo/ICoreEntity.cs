@@ -3,8 +3,6 @@ using Centazio.Core.Checksum;
 
 namespace Centazio.Core.CoreRepo;
 
-public record CoreEntityAndChecksum(ICoreEntity Core, string Checksum);
-
 public interface ICoreEntity : IGetChecksumSubset {
   
   /// <summary>

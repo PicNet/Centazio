@@ -52,7 +52,7 @@ END
     return mapping.ToDictionary(t => t.Id, t => t.Checksum);
   }
 
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
     var sql = $@"MERGE INTO {obj} T
 USING (VALUES (@Id, @Checksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, Checksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)

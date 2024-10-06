@@ -19,7 +19,7 @@ public record System1Entity(Guid ExternalId, string FirstName, string LastName, 
   public string DisplayName { get; } = $"{FirstName} {LastName}({ExternalId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
-  public CoreEntity ToCoreEntity() => new(SystemId, FirstName, LastName, DateOfBirth, DateUpdated);
+  public CoreEntity ToCoreEntity(string? id = null, string? sourceid = null) => new(id ?? SystemId, FirstName, LastName, DateOfBirth, DateUpdated) { SourceId = sourceid ?? id ?? SystemId };
 }
 
 public record CoreEntity(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {

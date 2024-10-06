@@ -42,7 +42,7 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().CoreEnt, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
@@ -61,7 +61,7 @@ public class PromoteFunctionTests {
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
-    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { new StagedCoreCont(SE(json2, staged23[0].Id), ToCore(json2)), new StagedCoreCont(SE(json3, staged23[1].Id), ToCore(json3)) }));
+    Assert.That(result23.ToPromote.ToStagedCore(), Is.EquivalentTo(new [] { new Containers.StagedCore(SE(json2, staged23[0].Id), ToCore(json2)), new Containers.StagedCore(SE(json3, staged23[1].Id), ToCore(json3)) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
@@ -86,7 +86,7 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().CoreEnt, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
@@ -107,7 +107,7 @@ public class PromoteFunctionTests {
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
-    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { new StagedIgnoreReasonCont(SE(json2, staged23[0].Id), "ignore"), new StagedIgnoreReasonCont(SE(json3, staged23[1].Id), "ignore") }));
+    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { new Containers.StagedIgnore(SE(json2, staged23[0].Id), "ignore"), new Containers.StagedIgnore(SE(json3, staged23[1].Id), "ignore") }));
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -125,8 +125,9 @@ public class PromoteFunctionTests {
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
-    var c1 = new CoreEntity("C1", "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
-    func1.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se1, null!, c1)], []);
+    var sysent1 = new System1Entity(Guid.NewGuid(), "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow);
+    var c1 = sysent1.ToCoreEntity("C1", "E1");
+    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
     
@@ -136,7 +137,7 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
+    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2", Guid.NewGuid().ToString())]);
     var expkey2 = new CoreToExternalMap.MappingKey(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
@@ -144,9 +145,10 @@ public class PromoteFunctionTests {
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
-    var c2 = new CoreEntity("C2", "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
+    var sysent2 = new System1Entity(Guid.NewGuid(), "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow);
+    var c2 = sysent2.ToCoreEntity("C2", "E2"); 
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se2, null!, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -166,8 +168,9 @@ public class PromoteFunctionTests {
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
-    var c1 = new CoreEntity("C1", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
-    func1.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se1, null!, c1)], []);
+    var sysent1 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
+    var c1 = sysent1.ToCoreEntity("C1", "E1");
+    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
     
@@ -177,7 +180,7 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2")]);
+    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [CoreToExternalMap.Create(c1, Constants.System2Name).SuccessCreate("E2", Guid.NewGuid().ToString())]);
     var expkey2 = new CoreToExternalMap.MappingKey(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
@@ -185,9 +188,10 @@ public class PromoteFunctionTests {
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
-    var c2 = new CoreEntity("C2", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
+    var sysent2 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
+    var c2 = sysent2.ToCoreEntity("C2", "E2");
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se2, null!, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -234,10 +238,10 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     
     var cores = staged.Select(e => {
       var sysent = JsonSerializer.Deserialize<System1Entity>(e.Data) ?? throw new Exception();
-      return new StagedSysCoreCont(e, null!, sysent.ToCoreEntity());
+      return new Containers.StagedSysCore(e, sysent, sysent.ToCoreEntity());
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
-        IgnoreNext ? staged.Select(e => new StagedIgnoreReasonCont(e, IgnoreReason: "ignore")).ToList() : [])); 
+        IgnoreNext ? staged.Select(e => new Containers.StagedIgnore(e, Ignore: "ignore")).ToList() : [])); 
   }
 }

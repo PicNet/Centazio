@@ -61,24 +61,24 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.Select(s => {
         var sysent = s.Deserialise<CrmMembershipType>();
-        return new StagedSysCoreCont(s, sysent, ctx.CrmMembershipTypeToCoreMembershipType(sysent));
+        return new Containers.StagedSysCore(s, sysent, ctx.CrmMembershipTypeToCoreMembershipType(sysent));
       }).ToList(), 
       nameof(CoreCustomer) => staged.Select(s => {
         var sysent = s.Deserialise<CrmCustomer>();
-        return new StagedSysCoreCont(s, sysent, ctx.CrmCustomerToCoreCustomer(sysent));
+        return new Containers.StagedSysCore(s, sysent, ctx.CrmCustomerToCoreCustomer(sysent));
       }).ToList(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return new SuccessPromoteOperationResult(topromote, []);
 
-    async Task<List<StagedSysCoreCont>> EvaluateInvoices() {
+    async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<CrmInvoice>()).ToList();
       var custids = invoices.Select(i => i.CustomerId.ToString()).Distinct().ToList();
       var customers = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), custids, config.State.System);
       var result = invoices.Zip(staged).Select(t => {
         var (crminv, se) = t;
         var custid = customers.Single(k => k.ExternalId == crminv.CustomerId.ToString()).CoreId;
-        return new StagedSysCoreCont(se, crminv, ctx.CrmInvoiceToCoreInvoice(crminv, custid));
+        return new Containers.StagedSysCore(se, crminv, ctx.CrmInvoiceToCoreInvoice(crminv, custid));
       }).ToList();
       return result;
     }
@@ -131,8 +131,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          created.Zip(created2.Select(c => c.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
+          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
     }
     
     if (config.Object.Value == nameof(CoreInvoice)) {
@@ -151,8 +151,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
         return toupdate;
       }).ToList());
       return new SuccessWriteOperationResult(
-          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second)).ToList(),
-          updated.Select(m => m.Updated()).ToList());
+          created.Zip(created2.Select(i => i.SystemId.ToString())).Select(m => m.First.Created(m.Second, Guid.NewGuid().ToString())).ToList(),
+          updated.Select(m => m.Updated(Guid.NewGuid().ToString())).ToList());
     }
     
     throw new NotSupportedException(config.Object);

@@ -2,7 +2,7 @@
 
 public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
-  protected readonly Dictionary<CoreEntityType, Dictionary<string, CoreEntityAndChecksum>> db = new();
+  protected readonly Dictionary<CoreEntityType, Dictionary<string, Containers.CoreChecksum>> db = new();
 
   public Task<Dictionary<string, string>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
     var checksums = new Dictionary<string, string>();
@@ -15,8 +15,8 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     return Task.FromResult(result);
   }
 
-  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
-    if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, CoreEntityAndChecksum>();
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
+    if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, Containers.CoreChecksum>();
     var upserted = entities.Select(e => {
       db[obj][e.Core.Id] = e;
       return e.Core;

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using System.Text.Json;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
@@ -18,8 +19,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingChecksum(customer1)), new (customer2, Helpers.TestingChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
-      new CoreAndCreatedMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId) ) };
+      new CoreAndCreatedMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, Helpers.TestingChecksum(customer1)) ), 
+      new CoreAndCreatedMap(customer2, CoreToExternalMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, Helpers.TestingChecksum(customer2)) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -28,11 +29,12 @@ public class WriteFunctionTests {
     var customer22 = customer2 with { FirstName = "22", DateUpdated = UtcDate.UtcNow };
     var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingChecksum(customer22))]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
-    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
+    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate(Helpers.TestingChecksum(customer2)) ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
     Assert.That(upsert1, Is.EquivalentTo(new [] { customer1, customer2 }));
     Assert.That(res1.EntitiesUpdated, Is.Empty);
+
     Assert.That(res1.EntitiesCreated, Is.EquivalentTo(expresults1));
     Assert.That(created1, Is.EquivalentTo(expresults1));
     Assert.That(updated1, Is.Empty);
@@ -102,8 +104,8 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
-    var updates = updated.Select(m => m.Updated()).ToList();
+    var news = created.Select(m => m.Created(m.Core.SourceId, Helpers.TestingChecksum(m.Core))).ToList();
+    var updates = updated.Select(m => m.Updated(Helpers.TestingChecksum(m.Core))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
