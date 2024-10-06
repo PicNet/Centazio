@@ -77,7 +77,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName system, string externalid) {
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
-      await corestore.Upsert(Constants.CoreEntityName, [new CoreEntityAndChecksum(c, Helpers.TestingChecksum)]);
+      await corestore.Upsert(Constants.CoreEntityName, [new CoreEntityAndChecksum(c, Helpers.TestingChecksum(c))]);
       await entitymap.Create(Constants.CoreEntityName, system, [CoreToExternalMap.Create(c, system).SuccessCreate(externalid)]);
       return c;
     }

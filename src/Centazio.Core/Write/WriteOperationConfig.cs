@@ -20,10 +20,10 @@ public record CoreAndCreatedMap {
 
 public record CoreAndPendingUpdateMap(ICoreEntity Core, CoreToExternalMap.PendingUpdate Map) {
   // todo: add StagedCoreAndExternal and then this method should be removed
-  public CoreExternalMap SetExternalEntity(IExternalEntity external, string checksum) => new(Core, external, Map with { Checksum = checksum });
+  public CoreExternalMap SetExternalEntity(ISystemEntity system, string checksum) => new(Core, system, Map with { Checksum = checksum });
 }
 
-public record CoreExternalMap(ICoreEntity Core, IExternalEntity ExternalEntity, CoreToExternalMap.PendingUpdate Map) {
+public record CoreExternalMap(ICoreEntity Core, ISystemEntity SystemEntity, CoreToExternalMap.PendingUpdate Map) {
   public CoreAndUpdatedMap Updated() => new(Core, Map.SuccessUpdate());
 }
 
@@ -52,6 +52,6 @@ public record WriteOperationConfig(
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
 public interface ITargetSystemWriter {
-  Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map);
+  Task<ISystemEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map);
   Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated);
 }

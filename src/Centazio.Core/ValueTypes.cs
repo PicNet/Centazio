@@ -25,8 +25,8 @@ public record ObjectName : ValidString {
 }
 
 public sealed record ExternalEntityType(string Value) : ObjectName(Value) {
-  public static ExternalEntityType From<E>() where E : IExternalEntity => new(typeof(E).Name);
-  public static ExternalEntityType From<E>(E external) where E : IExternalEntity => new(external.GetType().Name);
+  public static ExternalEntityType From<E>() where E : ISystemEntity => new(typeof(E).Name);
+  public static ExternalEntityType From<E>(E external) where E : ISystemEntity => new(external.GetType().Name);
 }
 
 public sealed record CoreEntityType(string Value) : ObjectName(Value) {

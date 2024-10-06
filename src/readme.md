@@ -22,6 +22,11 @@
 - replace custom container records with named tuples
 - Add extension methods to simulate covariance between all our types and tuples
 - clean up interfaces and types, have stuff everywhere
+- add unit test to check consistent variable naming:
+  - ICoreEntity: corent
+  - ISystemEntity: sysent
+  - Etc
+- Unit test for "" replace with String.Empty
 
 # Developer Guidelines:
 

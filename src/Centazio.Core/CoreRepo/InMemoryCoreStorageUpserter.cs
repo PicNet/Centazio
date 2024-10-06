@@ -11,15 +11,15 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     var result = entities
         .Where(e => dbtype.ContainsKey(e.Id))
         .Select(e => dbtype[e.Id])
-        .ToDictionary(e => e.CoreEntity.Id, e => e.Checksum);
+        .ToDictionary(e => e.Core.Id, e => e.Checksum);
     return Task.FromResult(result);
   }
 
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
     if (!db.ContainsKey(obj)) db[obj] = new Dictionary<string, CoreEntityAndChecksum>();
     var upserted = entities.Select(e => {
-      db[obj][e.CoreEntity.Id] = e;
-      return e.CoreEntity;
+      db[obj][e.Core.Id] = e;
+      return e.Core;
     }).ToList();
     return Task.FromResult(upserted);
   }

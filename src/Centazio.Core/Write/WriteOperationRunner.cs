@@ -37,8 +37,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     async Task<(bool IsMeaningful, CoreExternalMap Details)> IsMeaningful(CoreAndPendingUpdateMap cpum) {
       // todo: change this, it should be done for whole batch not entity by entity
       var external = await op.OpConfig.TargetSysWriter.CovertCoreEntityToExternalEntity(op.OpConfig, cpum.Core, cpum.Map);
-      var (existing, subset) = (cpum.Map.Checksum, external.GetChecksumSubset());
-      var changed = subset is null ? String.Empty : op.FuncConfig.ChecksumAlgorithm.Checksum(subset);
+      var existing = cpum.Map.Checksum;
+      var changed = op.FuncConfig.ChecksumAlgorithm.Checksum(external);
       var meaningful = String.IsNullOrWhiteSpace(existing) || String.IsNullOrWhiteSpace(changed) || existing != changed;
       Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{existing}] New Checksum[{changed}]");
       return (meaningful, cpum.SetExternalEntity(external, changed));

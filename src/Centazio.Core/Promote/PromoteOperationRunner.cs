@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
@@ -49,22 +50,20 @@ public class PromoteOperationRunner(
     var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
     if (!bounces.Any()) return topromote;
     
-    // todo: rename bounce.Value.NewId -> bounce.Value.OriginalId
-    var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.NewId).ToList());
+    var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
     var changes = new List<string>();
     bounces.ForEach(bounce => {
       var idx = topromote.FindIndex(t => t.Core.SourceId == bounce.Key);
       var e = topromote[idx].Core;
-      var ess = e.GetChecksumSubset()!;
-      var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(ess);
-      var orige = originals.Single(e2 => e2.Id == bounce.Value.NewId);
+      var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
+      var orige = originals.Single(e2 => e2.Id == bounce.Value.OriginalCoreId);
       // todo: GetChecksumSubset() should not require the '!' if the operation is marked as Bidirectional add checks before useage
       var origess = orige.GetChecksumSubset()!;
-      var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(origess);
-      var msg = $"{op.State.System}#Id[{e.Id}] -> Original#Id[{bounce.Value.NewId}]";
-      (e.Id, e.SourceId) = (bounce.Value.NewId, bounce.Value.NewSourceId);
+      var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(orige);
+      var msg = $"{op.State.System}#Id[{e.Id}] -> OriginalCoreId[{bounce.Value.OriginalCoreId}]";
+      (e.Id, e.SourceId) = (bounce.Value.OriginalCoreId, bounce.Value.OriginalSourceId);
       var e2ss = e.GetChecksumSubset()!;
-      var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e2ss);
+      var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
       if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.");
       
       changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
@@ -74,7 +73,7 @@ public class PromoteOperationRunner(
     return topromote;
   }
   
-  private async Task<Dictionary<string, (string NewId, string NewSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
+  private async Task<Dictionary<string, (string OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
     var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(potentialDups, system);
     if (!maps.Any()) return new();
     
@@ -92,7 +91,7 @@ public class PromoteOperationRunner(
     Log.Information($"[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Initial[{entities.Count}] No Duplicates[{nodups.Count}] No Bounces[{nobounces.Count}] Meaningful[{meaningful.Count}]");
     if (!meaningful.Any()) return;
     
-    await core.Upsert(op.State.Object.ToCoreEntityType, meaningful.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum)).ToList());
+    await core.Upsert(op.State.Object.ToCoreEntityType, meaningful.Select(e => new CoreEntityAndChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e))).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(meaningful, op.State.System);
     // todo: we should store the initial checksum state here from the IExternalEntity into CoreExternalMap
@@ -119,14 +118,12 @@ public static class PromoteOperationRunnerHelperExtensions {
   /// Use checksum (if available) to make sure that we are only promoting entities where their core storage representation has
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
-  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<object, string> checksum) {
-    if (lst.All(e => e.GetChecksumSubset() is null)) return lst;
-    
+  public static async Task<List<ICoreEntity>> IgnoreNonMeaninfulChanges(this List<ICoreEntity> lst, CoreEntityType obj, ICoreStorageUpserter core, Func<IGetChecksumSubset, string> checksum) {
     var checksums = await core.GetChecksums(obj, lst);
     return lst.Where(e => {
-      var newsubset = e.GetChecksumSubset();
-      if (!checksums.TryGetValue(e.Id, out var existing) || newsubset is null) return true;
-      return checksum(newsubset) != existing;
+      if (!checksums.TryGetValue(e.Id, out var existing)) return true;
+      var newchecksum = checksum(e); 
+      return String.IsNullOrWhiteSpace(newchecksum) || newchecksum != existing;
     }).ToList();
   } 
   

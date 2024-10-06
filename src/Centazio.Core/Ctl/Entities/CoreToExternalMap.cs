@@ -5,7 +5,7 @@ namespace Centazio.Core.Ctl.Entities;
 public interface ICoreToExternalMap {
   public CoreEntityType CoreEntity { get; } 
   public ValidString CoreId { get; } 
-  public SystemName ExternalSystem { get; } 
+  public SystemName System { get; } 
   public DateTime DateCreated { get; }
 }
 
@@ -16,18 +16,18 @@ public record CoreToExternalMap : ICoreToExternalMap {
       EEntityMappingStatus status) {
     CoreEntity = coreentity; 
     CoreId = coreid; 
-    ExternalSystem = externalsys; 
+    System = externalsys; 
     ExternalId = externalid; 
     Status = status;
   }
   
   public record MappingKey(CoreEntityType CoreEntity, ValidString CoreId, SystemName ExternalSystem, ValidString ExternalId);
   
-  public MappingKey Key => new(CoreEntity, CoreId, ExternalSystem, ExternalId);
+  public MappingKey Key => new(CoreEntity, CoreId, System, ExternalId);
   
   public CoreEntityType CoreEntity { get; } 
   public ValidString CoreId { get; } 
-  public SystemName ExternalSystem { get; } 
+  public SystemName System { get; } 
   public ValidString ExternalId { get; }
   public EEntityMappingStatus Status { get; protected init; }
   public string Checksum { get; init; } = "";
@@ -72,14 +72,13 @@ public record CoreToExternalMap : ICoreToExternalMap {
   public record PendingCreate : ICoreToExternalMap {
     public CoreEntityType CoreEntity { get; } 
     public ValidString CoreId { get; }
-    // todo: rename ExternalSystem to System and CoreToExternal -> CoreToSystem
-    public SystemName ExternalSystem { get; } 
+    public SystemName System { get; } 
     public DateTime DateCreated { get; }
     
     internal PendingCreate(ICoreEntity e, SystemName externalsys) {
       CoreEntity = CoreEntityType.From(e);
       CoreId = e.Id;
-      ExternalSystem = externalsys;
+      System = externalsys;
       DateCreated = UtcDate.UtcNow;
     }
     
@@ -87,14 +86,14 @@ public record CoreToExternalMap : ICoreToExternalMap {
   }
   
   public record Created : CoreToExternalMap {
-    internal Created(PendingCreate e, ValidString targetid) : base(e.CoreEntity, e.CoreId, e.ExternalSystem, targetid, EEntityMappingStatus.SuccessCreate) {
+    internal Created(PendingCreate e, ValidString targetid) : base(e.CoreEntity, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate) {
       DateUpdated = UtcDate.UtcNow;
       DateLastSuccess = UtcDate.UtcNow; 
     }
   }
 
   public record PendingUpdate : CoreToExternalMap {
-    internal PendingUpdate(CoreToExternalMap e) : base(e.CoreEntity, e.CoreId, e.ExternalSystem, e.ExternalId, e.Status) {}
+    internal PendingUpdate(CoreToExternalMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status) {}
     
     public Updated SuccessUpdate() => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
@@ -111,6 +110,6 @@ public record CoreToExternalMap : ICoreToExternalMap {
   }
 
   public record Updated : CoreToExternalMap {
-    internal Updated(CoreToExternalMap e) : base(e.CoreEntity, e.CoreId, e.ExternalSystem, e.ExternalId, e.Status) {}
+    internal Updated(CoreToExternalMap e) : base(e.CoreEntity, e.CoreId, e.System, e.ExternalId, e.Status) {}
   }
 }

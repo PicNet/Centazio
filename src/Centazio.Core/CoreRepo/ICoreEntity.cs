@@ -1,22 +1,11 @@
 ﻿using System.Text.Json.Serialization;
+using Centazio.Core.Checksum;
 
 namespace Centazio.Core.CoreRepo;
 
-public record CoreEntityAndChecksum {
-  public ICoreEntity CoreEntity { get; private init; }
-  public string Checksum { get; private init; }
-  
-  public CoreEntityAndChecksum(ICoreEntity core, Func<object, string> checksum) {
-    var subset = core.GetChecksumSubset();
-    
-    CoreEntity = core;
-    Checksum = subset is null ? String.Empty : checksum(subset);
-  }
-  
-  public T ToCore<T>() where T : ICoreEntity => (T) CoreEntity; 
-}
+public record CoreEntityAndChecksum(ICoreEntity Core, string Checksum);
 
-public interface ICoreEntity {
+public interface ICoreEntity : IGetChecksumSubset {
   
   /// <summary>
   /// The source system where this entity was originally created
@@ -35,32 +24,6 @@ public interface ICoreEntity {
   /// to the source system 
   /// </summary>
   public string Id { get; set; }
-
-  /// <summary>
-  /// A checksum used to check for unnecessary updates to already existing entities in
-  /// core storage.  If this returns null then checksum comparisons will not be made and all
-  /// updates from the source system will be replicated to core storage even if nothing
-  /// meaningful has changed.
-  ///
-  /// Implementing methods should return a subset of the entity fields that
-  /// signify meaningful changes.
-  ///
-  /// Example:
-  /// ```
-  /// public object? GetChecksumSubset() => new {
-  ///   Name,
-  ///   Address,
-  ///   // Usually we do not include children entities as children have the foreign key field.
-  ///   // This means that if a child changes, the parent does not really change and does not
-  ///   // need to be promoted.
-  ///   // Children = Children.Select(c => c.GetChecksumSubset()).ToList(),
-  ///
-  ///   // If the relationship to the parent changes, we must recognise this and promote again
-  ///   Parent = Parent.GetChecksumSubset()
-  /// };
-  /// ```
-  /// </summary>
-  public object? GetChecksumSubset();
   
   /// <summary>
   /// The date/time when this entity was added to core storage

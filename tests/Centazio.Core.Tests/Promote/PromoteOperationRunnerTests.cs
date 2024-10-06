@@ -104,10 +104,10 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
     var entities1 = new List<CoreEntityAndChecksum> {
-      new (F.NewCoreCust("N1", "N1", "1"), Helpers.TestingChecksum),
-      new (F.NewCoreCust("N2", "N2", "2"), Helpers.TestingChecksum),
-      new (F.NewCoreCust("N3", "N3", "3"), Helpers.TestingChecksum),
-      new (F.NewCoreCust("N4", "N4", "4"), Helpers.TestingChecksum)
+      CCS(F.NewCoreCust("N1", "N1", "1")),
+      CCS(F.NewCoreCust("N2", "N2", "2")),
+      CCS(F.NewCoreCust("N3", "N3", "3")),
+      CCS(F.NewCoreCust("N4", "N4", "4"))
     };
     await core.Upsert(Constants.CoreEntityName, entities1);
     
@@ -125,5 +125,7 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     // ideally these methods should be strongly typed using generics
     var uniques = await entities2.IgnoreNonMeaninfulChanges(Constants.CoreEntityName, core, Helpers.TestingChecksum);
     Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
+    
+    CoreEntityAndChecksum CCS(ICoreEntity e) => new (e, Helpers.TestingChecksum(e));
   }
 }

@@ -97,24 +97,24 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(obj, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
-        .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e.GetChecksumSubset() ?? throw new Exception()));
+        .ToDictionary(e => e.Id, e => ctx.objchecksum.Checksum(e));
   }
   public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<CoreEntityAndChecksum> entities) {
     var target = GetList(obj);
     var (added, updated) = (0, 0);
     var upserted = entities.Select(e => {
-      var idx = target.FindIndex(e2 => e2.Id == e.CoreEntity.Id);
+      var idx = target.FindIndex(e2 => e2.Id == e.Core.Id);
       if (idx < 0) {
         added++;
-        ctx.Epoch.Add(target.AddAndReturn(e.CoreEntity));
+        ctx.Epoch.Add(target.AddAndReturn(e.Core));
       } else {
         updated++;
-        ctx.Epoch.Update(ctx.CurrentSystem, target[idx] = e.CoreEntity);
+        ctx.Epoch.Update(ctx.CurrentSystem, target[idx] = e.Core);
       }
-      return e.CoreEntity;
+      return e.Core;
     }).ToList();
     
-    Log.Information($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.Id})")) + $"] Created[{added}] Updated[{updated}]");
+    Log.Information($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})")) + $"] Created[{added}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   

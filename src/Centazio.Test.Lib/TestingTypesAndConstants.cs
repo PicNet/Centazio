@@ -12,13 +12,14 @@ public static class Constants {
   public static readonly CoreEntityType CoreEntityName2 = CoreEntityType.From<CoreEntity2>();
 }
 
-public record System1Entity(Guid ExternalId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : IExternalEntity {
+public record System1Entity(Guid ExternalId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ISystemEntity {
 
-  public string Id => ExternalId.ToString();
+  public string SystemId => ExternalId.ToString();
   public string DisplayName { get; } = $"{FirstName} {LastName}({ExternalId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
-};
+  public CoreEntity ToCoreEntity() => new(SystemId, FirstName, LastName, DateOfBirth, DateUpdated);
+}
 
 public record CoreEntity(string Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 

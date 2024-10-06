@@ -31,7 +31,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   private readonly Dictionary<(Type, string), ICoreEntity> added = new();
   private readonly Dictionary<(SystemName, Type, string), ICoreEntity> updated = new();
   
-  public async Task ValidateAdded<T>(params IEnumerable<IExternalEntity>[] expected) where T : ICoreEntity {
+  public async Task ValidateAdded<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var ascore = await ExternalEntitiesToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count()}] Actual[{actual.Count}]" +
@@ -39,7 +39,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
-  public async Task ValidateUpdated<T>(params IEnumerable<IExternalEntity>[] expected) where T : ICoreEntity {
+  public async Task ValidateUpdated<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var ascore = await ExternalEntitiesToCore(expected);
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
@@ -47,12 +47,12 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
   
-  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<IExternalEntity>[] expected) {
+  private async Task<List<ICoreEntity>> ExternalEntitiesToCore(params IEnumerable<ISystemEntity>[] expected) {
     var cores = new List<ICoreEntity>();
     var allsums = new Dictionary<string, bool>();
     foreach (var externals in expected) {
       var syscores = await externals.Select(ToCore).Synchronous();
-      var sums = syscores.Select(c => ctx.checksum.Checksum(c.GetChecksumSubset() ?? throw new Exception())).Distinct().ToList();
+      var sums = syscores.Select(c => ctx.objchecksum.Checksum(c)).Distinct().ToList();
       if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from an external system to be unique.  Found some external entities that resulted in the same ICoreEntity checksum");
       syscores.ForEach((c, idx) => {
         if (allsums.ContainsKey(sums[idx])) return;
@@ -72,7 +72,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       _ => throw new NotSupportedException(e.GetType().Name) };
 
     async Task<CoreCustomer> FromFinAccount(FinAccount account) {
-      var externalid = account.Id;
+      var externalid = account.SystemId;
       var map = (await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), [externalid], SimulationConstants.FIN_SYSTEM)).Single();
       var coreid = map.CoreId;
       var existing = ctx.core.GetCustomer(coreid); 
@@ -102,9 +102,12 @@ public class SimulationCtx {
   public readonly bool ALLOW_BIDIRECTIONAL = true;
   
   public readonly Random rng = new(1);
-  public readonly IChecksumAlgorithm checksum = new Sha256ChecksumAlgorithm();
+  private readonly Sha256ChecksumAlgorithm algo = new();
   public readonly ICtlRepository ctl = new InMemoryCtlRepository();
   public readonly TestingInMemoryCoreToSystemMapStore entitymap = new();
+  
+  public readonly IStringChecksumAlgorithm strchecksum;
+  public readonly IChecksumAlgorithm objchecksum;
   
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
@@ -112,8 +115,10 @@ public class SimulationCtx {
   public SystemName CurrentSystem { get; set; } = null!;
 
   internal SimulationCtx() {
+    strchecksum = algo;
+    objchecksum = algo;
     core = new(this);
-    stage = new InMemoryStagedEntityStore(0, checksum.Checksum);
+    stage = new InMemoryStagedEntityStore(0, strchecksum.Checksum);
     Epoch = new(0, this);
   }
 
@@ -143,8 +148,8 @@ public class SimulationCtx {
  }
  
   public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c) {
-    var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.Id));
-    return new CoreCustomer(c.Id, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
+    var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.SystemId));
+    return new CoreCustomer(c.SystemId, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
   }
   
   // todo: this `CoreCustomer? existing` is required in the promote function as promote should
@@ -152,24 +157,24 @@ public class SimulationCtx {
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) {
     if (existing is not null) return existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
     var membership = core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
-    return new CoreCustomer(a.Id, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
+    return new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
-    var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.CustomerId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
       
-    return new CoreInvoice(i.Id, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
+    return new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
     // todo: add in if statement back after validating works
-    var newcustid = entitymap.Db.Single(m => m.ExternalSystem == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.AccountId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.ExternalId == i.AccountId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
-    return new CoreInvoice(i.Id, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
+    return new CoreInvoice(i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
   }
 
-  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m) => new(m.Id, m.Updated, m.Name);
+  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m) => new(m.SystemId, m.Updated, m.Name);
   
   public List<T> ShuffleAndTake<T>(IEnumerable<T> enumerable, int? take = null) {
     var list = enumerable.ToList();
@@ -282,7 +287,7 @@ public class E2EEnvironment : IAsyncDisposable {
 
   private async Task CompareMembershipTypes() {
     var core_types = ctx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
-    var crm_types = crm.MembershipTypes.Select(m => new { m.Id, m.Name } );
+    var crm_types = crm.MembershipTypes.Select(m => new { Id = m.SystemId, m.Name } );
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
     await ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
@@ -292,8 +297,8 @@ public class E2EEnvironment : IAsyncDisposable {
   private async Task CompareCustomers() {
     var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.Membership.Id });
     var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name });
-    var crm_customers = crm.Customers.Select(c => new { c.Id, c.Name, c.MembershipTypeId });
-    var fin_accounts = fin.Accounts.Select(c => new { c.Id, c.Name });
+    var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, c.MembershipTypeId });
+    var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
     await ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
@@ -303,8 +308,8 @@ public class E2EEnvironment : IAsyncDisposable {
   
   private async Task CompareInvoices() {
     var core_invoices = ctx.core.Invoices.Cast<CoreInvoice>().Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
-    var crm_invoices = crm.Invoices.Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.AmountCents });
-    var fin_invoices = fin.Invoices.Select(i => new { i.Id, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
+    var crm_invoices = crm.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, i.DueDate, Amount = i.AmountCents });
+    var fin_invoices = fin.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
     await ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
     await ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);

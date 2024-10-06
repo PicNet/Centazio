@@ -15,7 +15,7 @@ public class WriteFunctionTests {
     
     var customer1 = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var customer2 = new CoreEntity(Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingChecksum), new (customer2, Helpers.TestingChecksum)]);
+    var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingChecksum(customer1)), new (customer2, Helpers.TestingChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
       new CoreAndCreatedMap(customer1, CoreToExternalMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId) ), 
@@ -26,7 +26,7 @@ public class WriteFunctionTests {
     TestingUtcDate.DoTick();
     
     var customer22 = customer2 with { FirstName = "22", DateUpdated = UtcDate.UtcNow };
-    var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingChecksum)]);
+    var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingChecksum(customer22))]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate() ) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
@@ -52,7 +52,7 @@ public class WriteFunctionTests {
 
     // add some data, as the write function will not be called if there is nothing to 'write'
     var entity = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    await core.Upsert(Constants.CoreEntityName, [new (entity, Helpers.TestingChecksum)]);
+    await core.Upsert(Constants.CoreEntityName, [new (entity, Helpers.TestingChecksum(entity))]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
@@ -95,9 +95,9 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
 
-  public Task<IExternalEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
+  public Task<ISystemEntity> CovertCoreEntityToExternalEntity(WriteOperationConfig config, ICoreEntity Core, ICoreToExternalMap Map) {
     var core = Core.To<CoreEntity>();
-    return Task.FromResult<IExternalEntity>(new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow));
+    return Task.FromResult<ISystemEntity>(new System1Entity(Guid.NewGuid(), core.FirstName, core.LastName, DateOnly.FromDateTime(core.DateCreated), UtcDate.UtcNow));
   }
 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreAndPendingCreateMap> created, List<CoreExternalMap> updated) {

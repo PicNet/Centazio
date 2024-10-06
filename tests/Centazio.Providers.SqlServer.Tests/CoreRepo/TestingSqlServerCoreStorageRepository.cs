@@ -66,10 +66,10 @@ UPDATE SET Checksum=c.Checksum, FirstName=c.FirstName, LastName=c.LastName, Date
     
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
-      var c = cs.ToCore<CoreEntity>();
+      var c = cs.Core.To<CoreEntity>();
       return new { c.Id, cs.Checksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
     }));
-    return entities.Select(c => c.CoreEntity).ToList();
+    return entities.Select(c => c.Core).ToList();
   }
 
   public async ValueTask DisposeAsync() {

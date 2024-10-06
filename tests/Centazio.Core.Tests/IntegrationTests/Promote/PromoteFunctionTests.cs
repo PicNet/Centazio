@@ -3,6 +3,7 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
+using Centazio.Core.Write;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
 using F = Centazio.Test.Lib.TestingFactories;
@@ -195,7 +196,7 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 })); // no changes to entity as checksum did not change
   }
   
-  private List<ICoreEntity> CoresInDb => core.MemDb[obj].Values.Select(e => e.CoreEntity).ToList();
+  private List<ICoreEntity> CoresInDb => core.MemDb[obj].Values.Select(e => e.Core).ToList();
   private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys1, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
   private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys1, stg, obj, true) {
     DateCreated = start,
@@ -210,7 +211,11 @@ public class PromoteFunctionTests {
   };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys1, external, UtcDate.UtcNow, json, Helpers.TestingChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
-  private CoreEntity ToCore(string json) => JsonSerializer.Deserialize<CoreEntity>(json) ?? throw new Exception();
+  private CoreEntity ToCore(string json) {
+    var sysent = JsonSerializer.Deserialize<System1Entity>(json) ?? throw new Exception();
+    return sysent.ToCoreEntity();
+  }
+
 }
 
 public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
@@ -229,8 +234,8 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     if (NextResult is not null) return Task.FromResult(NextResult);
     
     var cores = staged.Select(e => {
-      var core = JsonSerializer.Deserialize<CoreEntity>(e.Data) ?? throw new Exception();
-      return new StagedAndCoreEntity(e, core);
+      var sysent = JsonSerializer.Deserialize<System1Entity>(e.Data) ?? throw new Exception();
+      return new StagedAndCoreEntity(e, sysent.ToCoreEntity());
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
