@@ -1,16 +1,21 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
+using Centazio.Core.Write;
 
 namespace Centazio.Core.Promote;
 
-public record StagedAndExternalEntity<E>(StagedEntity Staged, E External) where E : class;
-public record StagedAndCoreEntity(StagedEntity Staged, ICoreEntity Core);
-public record StagedEntityAndIgnoreReason(StagedEntity Staged, ValidString Reason);
+public static class Containers {
+}
+
+public record StagedSysCoreCont(StagedEntity Staged, ISystemEntity SysEnt, ICoreEntity CoreEnt);
+public record StagedSysCont(StagedEntity Staged, ISystemEntity SysEnt);
+public record StagedCoreCont(StagedEntity Staged, ICoreEntity CoreEnt);
+public record StagedIgnoreReasonCont(StagedEntity Staged, ValidString IgnoreReason);
 
 public abstract record PromoteOperationResult(
-    List<StagedAndCoreEntity> ToPromote,
-    List<StagedEntityAndIgnoreReason> ToIgnore,
+    List<StagedSysCoreCont> ToPromote,
+    List<StagedIgnoreReasonCont> ToIgnore,
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
@@ -21,8 +26,8 @@ public abstract record PromoteOperationResult(
 }
 
 public record SuccessPromoteOperationResult(
-    List<StagedAndCoreEntity> ToPromote,
-    List<StagedEntityAndIgnoreReason> ToIgnore,
+    List<StagedSysCoreCont> ToPromote,
+    List<StagedIgnoreReasonCont> ToIgnore,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : PromoteOperationResult(ToPromote,
         ToIgnore,

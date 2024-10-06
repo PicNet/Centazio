@@ -59,20 +59,26 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
     ctx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}] {{{UtcDate.UtcNow:o}}}");
     var topromote = config.State.Object.Value switch { 
-      nameof(CoreMembershipType) => staged.Select(s => new StagedAndCoreEntity(s, ctx.CrmMembershipTypeToCoreMembershipType(s.Deserialise<CrmMembershipType>()))).ToList(), 
-      nameof(CoreCustomer) => staged.Select(s => new StagedAndCoreEntity(s, ctx.CrmCustomerToCoreCustomer(s.Deserialise<CrmCustomer>()))).ToList(), 
+      nameof(CoreMembershipType) => staged.Select(s => {
+        var sysent = s.Deserialise<CrmMembershipType>();
+        return new StagedSysCoreCont(s, sysent, ctx.CrmMembershipTypeToCoreMembershipType(sysent));
+      }).ToList(), 
+      nameof(CoreCustomer) => staged.Select(s => {
+        var sysent = s.Deserialise<CrmCustomer>();
+        return new StagedSysCoreCont(s, sysent, ctx.CrmCustomerToCoreCustomer(sysent));
+      }).ToList(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return new SuccessPromoteOperationResult(topromote, []);
 
-    async Task<List<StagedAndCoreEntity>> EvaluateInvoices() {
+    async Task<List<StagedSysCoreCont>> EvaluateInvoices() {
       var invoices = staged.Select(s => s.Deserialise<CrmInvoice>()).ToList();
       var custids = invoices.Select(i => i.CustomerId.ToString()).Distinct().ToList();
       var customers = await ctx.entitymap.GetExistingMappingsFromExternalIds(CoreEntityType.From<CoreCustomer>(), custids, config.State.System);
       var result = invoices.Zip(staged).Select(t => {
         var (crminv, se) = t;
         var custid = customers.Single(k => k.ExternalId == crminv.CustomerId.ToString()).CoreId;
-        return new StagedAndCoreEntity(se, ctx.CrmInvoiceToCoreInvoice(crminv, custid));
+        return new StagedSysCoreCont(se, crminv, ctx.CrmInvoiceToCoreInvoice(crminv, custid));
       }).ToList();
       return result;
     }

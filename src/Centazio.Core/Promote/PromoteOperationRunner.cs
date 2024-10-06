@@ -33,40 +33,40 @@ public class PromoteOperationRunner(
     
     Log.Information($"PromoteOperationRunner Pending[{pending.Count}] ToPromote[{topromote.Count}] ToIgnore[{toignore.Count}]");
     
-    await WriteEntitiesToCoreStorage(op, topromote.Select(p => p.Core).ToList());
+    await WriteEntitiesToCoreStorage(op, topromote.Select(p => p.CoreEnt).ToList());
     await staged.Update(
         topromote.Select(e => e.Staged.Promote(start))
-            .Concat(toignore.Select(e => e.Staged.Ignore(e.Reason)))
+            .Concat(toignore.Select(e => e.Staged.Ignore(e.IgnoreReason)))
             .ToList());
     
     return results; 
   }
 
-  private async Task<List<StagedAndCoreEntity>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedAndCoreEntity> topromote) {
+  private async Task<List<StagedSysCoreCont>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedSysCoreCont> topromote) {
     // todo: if the Id is part of the checksum then this will
     //  change the Id and result in an endless bounce back.  Need to check that Id is not
     //  part of the checksum object.
     //  Also, having Id with a public setter is not nice, how can this be avoided?
-    var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
+    var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.CoreEnt).ToList());
     if (!bounces.Any()) return topromote;
     
     var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
     var changes = new List<string>();
     bounces.ForEach(bounce => {
-      var idx = topromote.FindIndex(t => t.Core.SourceId == bounce.Key);
-      var e = topromote[idx].Core;
+      var idx = topromote.FindIndex(t => t.CoreEnt.SourceId == bounce.Key);
+      var e = topromote[idx].CoreEnt;
       var echecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
       var orige = originals.Single(e2 => e2.Id == bounce.Value.OriginalCoreId);
-      var origess = orige.GetChecksumSubset()!;
+      var origess = orige.GetChecksumSubset();
       var originalchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(orige);
       var msg = $"{op.State.System}#Id[{e.Id}] -> OriginalCoreId[{bounce.Value.OriginalCoreId}]";
       (e.Id, e.SourceId) = (bounce.Value.OriginalCoreId, bounce.Value.OriginalSourceId);
-      var e2ss = e.GetChecksumSubset()!;
+      var e2ss = e.GetChecksumSubset();
       var newchecksum = op.FuncConfig.ChecksumAlgorithm.Checksum(e);
       if (echecksum != newchecksum) throw new Exception($"Bounce-back identified and after correcting Ids we have a different checksum.  The GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data.");
       
       changes.Add(msg + $":\n\tOriginal CS[{originalchecksum}] - {JsonSerializer.Serialize(e2ss)}\n\tNew Checksum[{newchecksum}] - {JsonSerializer.Serialize(origess)}");
-      topromote[idx] = topromote[idx] with { Core = e };
+      topromote[idx] = topromote[idx] with { CoreEnt = e };
     });
     if (changes.Any()) Log.Information("identified bounce-backs({@ChangesCount}) [{@ExternalSystem}/{@CoreEntityType}]\n\t" + String.Join("\n\t", changes), changes.Count, op.State.System, op.State.Object.ToCoreEntityType);
     return topromote;

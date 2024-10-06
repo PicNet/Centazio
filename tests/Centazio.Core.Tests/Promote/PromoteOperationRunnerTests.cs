@@ -73,8 +73,8 @@ public class PromoteOperationRunnerTests {
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
     public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> op, List<StagedEntity> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-          staged.Where((_, idx) => idx % 2 == 0).Select(e => new StagedAndCoreEntity(e, new CoreEntity(e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
-          staged.Where((_, idx) => idx % 2 == 1).Select(e => new StagedEntityAndIgnoreReason(e, Reason: $"Ignore: {e.Data}")).ToList()));
+          staged.Where((_, idx) => idx % 2 == 0).Select(e => new StagedSysCoreCont(e, null!, new CoreEntity(e.Data, "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow))).ToList(),
+          staged.Where((_, idx) => idx % 2 == 1).Select(e => new StagedIgnoreReasonCont(e, IgnoreReason: $"Ignore: {e.Data}")).ToList()));
     }
     
 

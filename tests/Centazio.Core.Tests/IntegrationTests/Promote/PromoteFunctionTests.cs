@@ -42,7 +42,7 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().CoreEnt, Is.EqualTo(ToCore(json1)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
@@ -61,7 +61,7 @@ public class PromoteFunctionTests {
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
-    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { new StagedAndCoreEntity(SE(json2, staged23[0].Id), ToCore(json2)), new StagedAndCoreEntity(SE(json3, staged23[1].Id), ToCore(json3)) }));
+    Assert.That(result23.ToPromote, Is.EquivalentTo(new [] { new StagedCoreCont(SE(json2, staged23[0].Id), ToCore(json2)), new StagedCoreCont(SE(json3, staged23[1].Id), ToCore(json3)) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
@@ -86,7 +86,7 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().CoreEnt, Is.EqualTo(ToCore(json1)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
@@ -107,7 +107,7 @@ public class PromoteFunctionTests {
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
-    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { new StagedEntityAndIgnoreReason(SE(json2, staged23[0].Id), "ignore"), new StagedEntityAndIgnoreReason(SE(json3, staged23[1].Id), "ignore") }));
+    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { new StagedIgnoreReasonCont(SE(json2, staged23[0].Id), "ignore"), new StagedIgnoreReasonCont(SE(json3, staged23[1].Id), "ignore") }));
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
@@ -126,7 +126,7 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
     var c1 = new CoreEntity("C1", "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
-    func1.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se1, c1)], []);
+    func1.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se1, null!, c1)], []);
     
     TestingUtcDate.DoTick();
     
@@ -146,7 +146,7 @@ public class PromoteFunctionTests {
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
     var c2 = new CoreEntity("C2", "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se2, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se2, null!, c2)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -167,7 +167,7 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(sys1, external, "1") ?? throw new Exception();
     var c1 = new CoreEntity("C1", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E1" };
-    func1.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se1, c1)], []);
+    func1.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se1, null!, c1)], []);
     
     TestingUtcDate.DoTick();
     
@@ -187,7 +187,7 @@ public class PromoteFunctionTests {
     var se2 = await stager.Stage(sys2, external, "2") ?? throw new Exception();
     var c2 = new CoreEntity("C2", "First", "Last", DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new StagedAndCoreEntity(se2, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new StagedSysCoreCont(se2, null!, c2)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -234,10 +234,10 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     
     var cores = staged.Select(e => {
       var sysent = JsonSerializer.Deserialize<System1Entity>(e.Data) ?? throw new Exception();
-      return new StagedAndCoreEntity(e, sysent.ToCoreEntity());
+      return new StagedSysCoreCont(e, null!, sysent.ToCoreEntity());
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
-        IgnoreNext ? staged.Select(e => new StagedEntityAndIgnoreReason(e, Reason: "ignore")).ToList() : [])); 
+        IgnoreNext ? staged.Select(e => new StagedIgnoreReasonCont(e, IgnoreReason: "ignore")).ToList() : [])); 
   }
 }
