@@ -111,7 +111,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
         ctx.Epoch.Add(target.AddAndReturn(e.Core));
       } else {
         updated++;
-        ctx.Epoch.Update(ctx.CurrentSystem, target[idx] = e.Core);
+        ctx.Epoch.Update(ctx.CurrentSystem ?? throw new Exception(), target[idx] = e.Core);
       }
       return e.Core;
     }).ToList();

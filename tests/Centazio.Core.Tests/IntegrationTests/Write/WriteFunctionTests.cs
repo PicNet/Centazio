@@ -111,10 +111,10 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     return Task.FromResult((ccreate, cupdate));
   }
 
-  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> created, List<CoreSystemMap> updated) {
+  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> tocreate, List<CoreSystemMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = created.Select(m => m.Created(m.Core.SourceId)).ToList();
-    var updates = updated.Select(m => m.Updated(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
+    var news = tocreate.Select(m => m.Created(m.Core.SourceId)).ToList();
+    var updates = toupdate.Select(m => m.Updated(Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));

@@ -30,7 +30,7 @@ public record CoreToSystemMap : ICoreToSystemMap {
   public CoreEntityType CoreEntity { get; } 
   public ValidString CoreId { get; } 
   public SystemName System { get; } 
-  public ValidString SysId { get; }
+  public ValidString SysId { get; } // todo: rename to SystemId for consistency
   public SystemEntityChecksum SystemEntityChecksum { get; init; }
   public EEntityMappingStatus Status { get; protected init; }
   public DateTime DateCreated { get; protected init; } 

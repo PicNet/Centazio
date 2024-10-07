@@ -34,7 +34,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   public async Task ValidateAdded<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
-    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count()}] Actual[{actual.Count}]" +
+    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
         $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
         "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
@@ -112,7 +112,7 @@ public class SimulationCtx {
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
   public readonly IStagedEntityStore stage;
-  public SystemName CurrentSystem { get; set; } = null!;
+  public SystemName? CurrentSystem { get; set; }
 
   internal SimulationCtx() {
     checksum = algo;
@@ -249,27 +249,30 @@ public class E2EEnvironment : IAsyncDisposable {
     
     ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
     
-    // todo: these ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM calls are ugly 
-    ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM;
-    await crm_read_runner.RunFunction();
-    await crm_promote_runner.RunFunction();
-    
-    ctx.CurrentSystem = SimulationConstants.FIN_SYSTEM;
-    await fin_read_runner.RunFunction(); 
-    await fin_promote_runner.RunFunction();
-    
-    ctx.CurrentSystem = SimulationConstants.CRM_SYSTEM;
-    await crm_write_runner.RunFunction();
-    ctx.CurrentSystem = SimulationConstants.FIN_SYSTEM; 
-    await fin_write_runner.RunFunction();
+    await RunFunc(crm_read_runner);
+    await RunFunc(crm_promote_runner);
+    await RunFunc(fin_read_runner); 
+    await RunFunc(fin_promote_runner);
+    await RunFunc(crm_write_runner);
+    await RunFunc(fin_write_runner);
     
     // todo: is this final read/promote required
-    await crm_read_runner.RunFunction();
-    await crm_promote_runner.RunFunction();
-    await fin_write_runner.RunFunction(); // todo: is this required?
+    await RunFunc(crm_read_runner);
+    await RunFunc(crm_promote_runner);
+    await RunFunc(fin_write_runner); // todo: is this required?
     
     ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
     await ValidateEpoch();
+  }
+  
+  private Task<FunctionRunResults<R>> RunFunc<R>(IFunctionRunner<R> runner) where R : OperationResult {
+    ctx.CurrentSystem = runner.System;
+    try {
+      return runner.RunFunction();
+    }
+    finally {
+      ctx.CurrentSystem = default;
+    }
   }
 
   private void RandomTimeStep() {

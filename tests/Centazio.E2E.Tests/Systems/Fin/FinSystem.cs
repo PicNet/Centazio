@@ -1,20 +1,26 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
-using Centazio.Core.Write;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
-public class FinSystem  {
+public class FinSystem : ISimulationSystem {
 
   internal List<FinAccount> Accounts { get; } = new();
   internal List<FinInvoice> Invoices { get; } = new();
-  
   private readonly SimulationCtx ctx;
   public SimulationImpl Simulation { get; }
-  
+
   public FinSystem(SimulationCtx ctx) {
     this.ctx = ctx;
     Simulation = new SimulationImpl(ctx, Accounts, Invoices);
+  }
+
+  public SystemName System => SimulationConstants.FIN_SYSTEM;
+  
+  public List<ISystemEntity> GetEntities<E>() where E : ISystemEntity {
+    if (typeof(E) == typeof(FinAccount)) return Accounts.Cast<ISystemEntity>().ToList();
+    if (typeof(E) == typeof(FinInvoice)) return Invoices.Cast<ISystemEntity>().ToList();
+    throw new NotSupportedException();
   }
 
   public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(Accounts.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());

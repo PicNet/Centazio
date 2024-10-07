@@ -34,7 +34,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
     bool IsMeaningful(CoreSystemMap cpum) {
       var oldcs = cpum.Map.SystemEntityChecksum;
-      var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SystemEntity);
+      var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SysEnt);
       var meaningful = String.IsNullOrWhiteSpace(oldcs) || String.IsNullOrWhiteSpace(newcs) || oldcs != newcs;
       Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntity}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
       return meaningful;

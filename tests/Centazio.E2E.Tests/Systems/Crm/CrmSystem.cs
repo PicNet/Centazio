@@ -1,10 +1,9 @@
 ﻿using System.Text.Json;
 using Centazio.Core;
-using Centazio.Core.Write;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
-public class CrmSystem {
+public class CrmSystem : ISimulationSystem {
   
   internal static Guid PENDING_MEMBERSHIP_TYPE_ID = Guid.NewGuid();
   internal List<CrmMembershipType> MembershipTypes { get; } = [
@@ -15,10 +14,16 @@ public class CrmSystem {
   ];
   internal List<CrmCustomer> Customers { get; } = new();
   internal List<CrmInvoice> Invoices { get; } = new();
-  
   public SimulationImpl Simulation { get; }
-  
   public CrmSystem(SimulationCtx ctx) => Simulation = new SimulationImpl(ctx, MembershipTypes, Customers, Invoices);
+  
+  public SystemName System => SimulationConstants.CRM_SYSTEM;
+
+  public List<ISystemEntity> GetEntities<E>() where E : ISystemEntity {
+    if (typeof(E) == typeof(CrmCustomer)) return Customers.Cast<ISystemEntity>().ToList();
+    if (typeof(E) == typeof(CrmInvoice)) return Invoices.Cast<ISystemEntity>().ToList();
+    throw new NotSupportedException();
+  }
 
   public Task<List<string>> GetMembershipTypes(DateTime after) => 
       Task.FromResult(MembershipTypes.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());

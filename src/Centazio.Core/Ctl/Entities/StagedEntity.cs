@@ -1,8 +1,17 @@
 ﻿using System.Text.Json;
 using Centazio.Core.Checksum;
-using Centazio.Core.Write;
+using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Ctl.Entities;
+
+public static class StagedEntityEnumerableExtensions {
+  public static List<E> ToSysEnt<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => s.Deserialise<E>()).ToList();
+  
+  public static List<Containers.StagedSysCore> ToStagedSysCore<E>(this List<StagedEntity> staged, Func<E, ICoreEntity> ToCore) where E : ISystemEntity => staged.Select(s => {
+    var sysent = s.Deserialise<E>();
+    return new Containers.StagedSysCore(s, sysent, ToCore(sysent));
+  }).ToList();
+}
 
 public sealed record StagedEntity {
   
