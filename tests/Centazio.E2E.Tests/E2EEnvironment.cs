@@ -159,22 +159,20 @@ public class SimulationCtx {
   }
   
   // todo: this `CoreCustomer? existing` is required in the promote function as promote should
-  // fill in details on this target instead of creating new entity
+  // fill in details on this target instead of creating new entity.  This should be the case for all
+  // `SystemToCoreEntity` methods below.
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) {
     if (existing is not null) return existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
     var membership = core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
     return new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
-    // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
-      
     return new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
-    // todo: add in if statement back after validating works
     var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.AccountId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
@@ -257,7 +255,7 @@ public class E2EEnvironment : IAsyncDisposable {
     ctx.Debug($"Epoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}");
     
     crm.Simulation.Step();
-    fin.Simulation.Step(); // todo: can this be put up with crm?
+    fin.Simulation.Step(); 
     
     ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
     
@@ -267,11 +265,6 @@ public class E2EEnvironment : IAsyncDisposable {
     await RunFunc(fin_promote_runner);
     await RunFunc(crm_write_runner);
     await RunFunc(fin_write_runner);
-    
-    // todo: is this final read/promote required
-    //await RunFunc(crm_read_runner);
-    //await RunFunc(crm_promote_runner);
-    //await RunFunc(fin_write_runner); // todo: is this required?
     
     ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
     await ValidateEpoch();
@@ -341,11 +334,11 @@ public class E2EEnvironment : IAsyncDisposable {
     }
   };
   
-  private void CompareByChecksum(SystemName targetsys, IEnumerable<object> cores, IEnumerable<object> targets) {
+  private void CompareByChecksum(SystemName system, IEnumerable<object> cores, IEnumerable<object> targets) {
     var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
     var (core_compare, targets_compare) = (coreslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, false)));
     var (core_desc, targets_desc) = (coreslst.Select(e => Json(e, true)), targetslst.Select(e => Json(e, true)));
-    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"Checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
+    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities:\n\t{String.Join("\n\t", targets_desc)}");
     
     string Json(object obj, bool includeid) => JsonSerializer.Serialize(obj, includeid ? withid : noid);
   }

@@ -2,6 +2,7 @@
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
@@ -53,7 +54,8 @@ public class PromoteOperationRunner(
     var entities = bounces.Select(b => {
       var idx = topromote.FindIndex(t => t.Core.SourceId == b.Key);
       var original = originals.Single(e2 => e2.Id == b.Value.OriginalCoreId);
-      return (SourceId: b.Key, 
+      return (
+          SourceId: b.Key, 
           b.Value.OriginalSourceId, 
           b.Value.OriginalCoreId, 
           OriginalEntity: original,
@@ -78,7 +80,7 @@ public class PromoteOperationRunner(
       return e;
     }).ToList();
     
-    var msgs = updated.Select(e => $"{op.State.System}#Id[{e.ToPromoteCore.Id}] -> OriginalCoreId[{e.OriginalCoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
+    var msgs = updated.Select(e => $"[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.Id})] -> OriginalCoreId[{e.OriginalCoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
           $"\n\tOriginal Checksum[{e.OriginalEntityChecksumSubset}({e.OriginalEntityChecksum})]" +
           $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
     Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]" + String.Join("\n", msgs), bounces.Count, op.State.System, op.State.Object.ToCoreEntityType);

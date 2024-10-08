@@ -8,10 +8,11 @@ namespace Centazio.E2E.Tests.Infra;
 public record CoreCustomer : CoreEntityBase {
   
   public string Name { get; init; }
+  public override string DisplayName => Name;
   public CoreMembershipType Membership { get; internal init; }
   public List<CoreInvoice> Invoices { get; internal init; }
   
-  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices) : base(id, source, sourceupdate, source, name) {
+  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices) : base(id, source, sourceupdate, source) {
     Name = name;
     Membership = membership;
     Invoices = invoices;
@@ -23,8 +24,9 @@ public record CoreCustomer : CoreEntityBase {
 public record CoreMembershipType : CoreEntityBase {
 
   public string Name { get; private init; }
+  public override string DisplayName => Name;
   
-  internal CoreMembershipType(string id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM, name) {
+  internal CoreMembershipType(string id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
     Name = name;
   }
   
@@ -33,12 +35,13 @@ public record CoreMembershipType : CoreEntityBase {
 }
 public record CoreInvoice : CoreEntityBase {
   
+  public override string DisplayName => Id;
   public string CustomerId { get; private set; }
   public int Cents { get; private set; }
   public DateOnly DueDate { get; private set; }
   public DateTime? PaidDate { get; private set; }
   
-  internal CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, source, sourceupdate, source, id) {
+  internal CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, source, sourceupdate, source) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
@@ -57,11 +60,10 @@ public abstract record CoreEntityBase : ICoreEntity {
   public DateTime SourceSystemDateUpdated { get; init; }
   public string LastUpdateSystem { get; protected init; }
   
-  public string DisplayName { get; }
-  
+  [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
-  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys, string display) {
+  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys) {
     SourceSystem = source;
     SourceId = id;
     SourceSystemDateUpdated = sourceupdate;
@@ -70,8 +72,6 @@ public abstract record CoreEntityBase : ICoreEntity {
     DateCreated = UtcDate.UtcNow;
     DateUpdated = UtcDate.UtcNow;
     LastUpdateSystem = lastsys;
-    
-    DisplayName = display;
   }
 }
 

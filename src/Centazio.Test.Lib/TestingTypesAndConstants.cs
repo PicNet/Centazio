@@ -15,7 +15,7 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
 
   public string SystemId => Sys1EntityId.ToString();
   public DateTime LastUpdatedDate => DateUpdated;
-  public string DisplayName { get; } = $"{FirstName} {LastName}({Sys1EntityId})";
+  public string DisplayName => $"{FirstName} {LastName}({Sys1EntityId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
   public CoreEntity ToCoreEntity(string? id = null, string? sourceid = null) => new(id ?? SystemId, FirstName, LastName, DateOfBirth, DateUpdated) { SourceId = sourceid ?? id ?? SystemId };
