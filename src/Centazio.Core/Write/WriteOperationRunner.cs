@@ -31,12 +31,12 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     return results;
   }
 
-  private List<CoreSystemMap> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, List<CoreSystemMap> toupdate) {
+  private List<CoreSystemAndPendingUpdateMap> RemoveNonMeaninfulChanges(OperationStateAndConfig<C> op, List<CoreSystemAndPendingUpdateMap> toupdate) {
     return toupdate
         .Where(IsMeaningful)
         .ToList();
   
-    bool IsMeaningful(CoreSystemMap cpum) {
+    bool IsMeaningful(CoreSystemAndPendingUpdateMap cpum) {
       var oldcs = cpum.Map.SystemEntityChecksum;
       var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SysEnt);
       var meaningful = String.IsNullOrWhiteSpace(oldcs) || String.IsNullOrWhiteSpace(newcs) || oldcs != newcs;

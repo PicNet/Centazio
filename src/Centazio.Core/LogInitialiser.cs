@@ -19,7 +19,7 @@ public static class LogInitialiser {
   // public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
   public static LoggingLevelSwitch LevelSwitch { get; } = new(LogEventLevel.Debug); 
 
-  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug, IList<string>? filters = null) {
+  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null) {
     LevelSwitch.MinimumLevel = level;
     var conf = new LoggerConfiguration()
         .Destructure.ByTransformingWhere<ValidString>(typeof(ValidString).IsAssignableFrom, obj => obj.Value)
@@ -29,7 +29,7 @@ public static class LogInitialiser {
     return conf;
   }
 
-  public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug, IList<string>? filters = null) => GetBaseConfig(level, filters)
+  public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null) => GetBaseConfig(level, filters)
       .WriteTo
       // .Console(Formatter);
       .Console();

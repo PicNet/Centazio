@@ -19,8 +19,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1, CoreToSystemMap.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, WftHelpers.ToSeCs(customer1)) ), 
-      new CoreAndCreatedMap(customer2, CoreToSystemMap.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, WftHelpers.ToSeCs(customer2)) ) };
+      new CoreAndCreatedMap(customer1,  Map.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, WftHelpers.ToSeCs(customer1)) ), 
+      new CoreAndCreatedMap(customer2,  Map.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, WftHelpers.ToSeCs(customer2)) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -97,24 +97,24 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
 
-  public Task<ISystemEntity> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, ICoreEntity Core, ICoreToSystemMap Map) {
+  public Task<ISystemEntity> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, ICoreEntity Core, Map.CoreToSystem Map) {
     return Task.FromResult<ISystemEntity>(WftHelpers.ToSe(Core.To<CoreEntity>()));
   }
 
-  public Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => {
       var core = e.Core.To<CoreEntity>();
       var sysent =  WftHelpers.ToSe(core);
-      return new CoreSysAndPendingCreateMap(core, sysent, e.Map, Helpers.TestingSystemEntityChecksum(sysent));
+      return new CoreSystemAndPendingCreateMap(core, sysent, e.Map);
     }).ToList();
-    var cupdate = toupdate.Select(e => e.SetSystemEntity(WftHelpers.ToSe(e.Core.To<CoreEntity>()))).ToList();
+    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.Core.To<CoreEntity>()))).ToList();
     return Task.FromResult((ccreate, cupdate));
   }
 
-  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> tocreate, List<CoreSystemMap> toupdate) {
+  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = tocreate.Select(m => m.Created(m.Core.SourceId)).ToList();
-    var updates = toupdate.Select(m => m.Updated(Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
+    var news = tocreate.Select(m => m.SuccessCreate(m.Core.SourceId, Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
+    var updates = toupdate.Select(m => m.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));

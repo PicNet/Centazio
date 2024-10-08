@@ -93,7 +93,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore {
-  public List<CoreToSystemMap> Db => memdb.Values.ToList();
+  public List<Map.CoreToSystem> Db => memdb.Values.ToList();
 }
 
 public class SimulationCtx {
@@ -101,7 +101,7 @@ public class SimulationCtx {
   public readonly bool SILENCE_LOGGING = false;
   public readonly bool SILENCE_SIMULATION = false;
   public readonly bool ALLOW_BIDIRECTIONAL = true;
-  public IList<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed", "FORCE:"];
+  public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed", "FORCE:"];
   
   public readonly Random rng = new(1);
   // random but seedable guid
@@ -167,13 +167,13 @@ public class SimulationCtx {
     return new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
   }
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
-    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.CustomerId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
-    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SysId == i.AccountId.ToString()).CoreId;
+    var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custid ?? newcustid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate);
   }

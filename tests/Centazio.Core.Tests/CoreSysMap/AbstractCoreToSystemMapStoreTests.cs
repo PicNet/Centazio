@@ -9,10 +9,10 @@ namespace Centazio.Core.Tests.CoreSysMap;
 public abstract class AbstractCoreToSystemMapStoreTests {
 
   private readonly string STR = nameof(AbstractCoreToSystemMapStoreTests);
-  private readonly string STR2 = nameof(CoreToSystemMap);
+  private readonly string STR2 = nameof(Map.CoreToSystem);
   
   private TestingInMemoryCoreStorageRepository corestore;
-  private ITestingCoreToSystemMapStore entitymap;
+  private ITestingInMemoryCoreToSystemMapStore entitymap;
   
   [SetUp] public void SetUp() {
     corestore = TestingFactories.CoreRepo();
@@ -26,7 +26,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original = CoreToSystemMap.Create(core, STR); 
+    var original =  Map.Create(core, STR); 
     var created = (await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [original.SuccessCreate(STR, SCS())])).Single();
     var err = created.Update().Error("Error");
     
@@ -40,9 +40,9 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   }
   
   [Test] public async Task Test_upsert_enum() {
-    var original = new List<CoreToSystemMap.Created> { 
-      CoreToSystemMap.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR, SCS()),
-      CoreToSystemMap.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2, SCS())
+    var original = new List<Map.Created> { 
+       Map.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR, SCS()),
+       Map.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2, SCS())
     }; 
     var created = (await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, original)).ToList();
     var list1 = await entitymap.GetAll();
@@ -59,19 +59,19 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
     List<ICoreEntity> Create(string coreid) => [new CoreEntity(coreid, String.Empty, String.Empty, DateOnly.MinValue, UtcDate.UtcNow)];
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] System[CrmSystem]
-    // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SysId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
+    // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Create("357992994"), Constants.System1Name);
     await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc1.Created.Select(c =>  c.Map.SuccessCreate("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS())).ToList());
     
     // This scenario was identified in the simulation, where this GetForCores does not identify this entity as having been created before.
-    // The bug here is that we promoted a new core entity because it bounced back.  However, CoreToSystemMap should have failed gracefully and not
+    // The bug here is that we promoted a new core entity because it bounced back.  However, Map.CoreToSystem should have failed gracefully and not
     // allowed a duplicate to be inserted.
     // PromoteOperationRunner - GetForCores Id[71c5db4e-971a-45f5-831e-643d6ca77b20] Type[CoreCustomer] System[CrmSystem]
-    // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SysId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
+    // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Create("71c5db4e-971a-45f5-831e-643d6ca77b20"), Constants.System1Name);
     
     var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.CoreEntityName, Constants.System1Name, gfc2.Created.Select(c => c.Map.SuccessCreate("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS())).ToList()));
-    Assert.That(ex.Message.StartsWith($"creating duplicate {nameof(CoreToSystemMap)} map"), Is.True);
+    Assert.That(ex.Message.StartsWith($"creating duplicate {nameof(Map.CoreToSystem)} map"), Is.True);
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
@@ -79,7 +79,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName system, string sysid) {
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
       await corestore.Upsert(Constants.CoreEntityName, [new Containers.CoreChecksum(c, Helpers.TestingCoreEntityChecksum(c))]);
-      await entitymap.Create(Constants.CoreEntityName, system, [CoreToSystemMap.Create(c, system).SuccessCreate(sysid, SCS())]);
+      await entitymap.Create(Constants.CoreEntityName, system, [ Map.Create(c, system).SuccessCreate(sysid, SCS())]);
       return c;
     }
     
@@ -96,7 +96,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [CoreToSystemMap.Create(c1, Constants.System2Name).SuccessCreate("E2", SCS())]);
+    await entitymap.Create(Constants.CoreEntityName, Constants.System1Name, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", SCS())]);
     
     // System2 creates E2 
     // Centazio reads/promotes E2/C2
@@ -111,13 +111,13 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   
-  protected abstract ITestingCoreToSystemMapStore GetStore();
+  protected abstract ITestingInMemoryCoreToSystemMapStore GetStore();
   private SystemEntityChecksum SCS() => new(Guid.NewGuid().ToString());
 }
 
 public class InMemoryCoreToSystemMapStoreTests : AbstractCoreToSystemMapStoreTests {
 
-  protected override ITestingCoreToSystemMapStore GetStore() => new TestingInMemoryCoreToSystemMapStore();
+  protected override ITestingInMemoryCoreToSystemMapStore GetStore() => new TestingInMemoryCoreToSystemMapStore();
 
 }
 

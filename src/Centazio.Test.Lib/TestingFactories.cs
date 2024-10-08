@@ -31,7 +31,7 @@ public static class TestingFactories {
     return new CoreEntity(id, first, last, dob, UtcDate.UtcNow);
   }
 
-  public static WriteOperationRunner<C> WriteRunner<C>(InMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
       => new(entitymap ?? CoreSysMap(), core ?? CoreRepo());
 
 }
@@ -43,8 +43,8 @@ public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
 }
 
-public interface ITestingCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<CoreToSystemMap>> GetAll(); }
+public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystem>> GetAll(); }
 
-public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingCoreToSystemMapStore {
-  public Task<List<CoreToSystemMap>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
+public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingInMemoryCoreToSystemMapStore {
+  public Task<List<Map.CoreToSystem>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
 }

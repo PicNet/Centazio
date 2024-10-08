@@ -90,22 +90,22 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public async Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e, existingcs) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e), existingcs));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => FromCore(Id(id), e));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
       var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(cores, nameof(CoreInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
-      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e, existingcs) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e, maps), existingcs));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
+    
+    Guid Id(string id) => id == String.Empty ? Guid.Empty : Guid.Parse(id);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> tocreate, List<CoreSystemMap> toupdate) {
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       var (created, updated) = (await crm.CreateCustomers(tocreate.ToSysEnt<CrmCustomer>()), await crm.UpdateCustomers(toupdate.ToSysEnt<CrmCustomer>()));

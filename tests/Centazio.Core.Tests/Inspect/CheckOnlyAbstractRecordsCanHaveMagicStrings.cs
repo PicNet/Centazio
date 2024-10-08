@@ -7,7 +7,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
 
   private readonly Dictionary<string, List<string>> ALLOWED = new () {
     { nameof(ValidString), [nameof(ValidString.Value)] },
-    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.LastError)] },
+    { nameof(Map.CoreToSystem), [nameof( Map.CoreToSystem.LastError)] },
     { nameof(ObjectState), [nameof(ObjectState.LastRunMessage), nameof(ObjectState.LastRunException)] },
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
     { "*", [nameof(Checksum)] }

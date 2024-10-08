@@ -97,22 +97,22 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public async Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e, existingcs) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? 0 : Int32.Parse(id), e), existingcs));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => FromCore(Id(id), e));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
       var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(cores, nameof(CoreInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
-      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e, existingcs) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? 0 : Int32.Parse(id), e, maps), existingcs));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
+    
+    int Id(string id) => id == String.Empty ? 0 : Int32.Parse(id);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSysAndPendingCreateMap> tocreate, List<CoreSystemMap> toupdate) {
+  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       var (created, updated) = (await fin.CreateAccounts(tocreate.ToSysEnt<FinAccount>()), await fin.UpdateAccounts(toupdate.ToSysEnt<FinAccount>()));

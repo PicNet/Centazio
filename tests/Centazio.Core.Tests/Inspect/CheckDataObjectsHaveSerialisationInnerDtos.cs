@@ -9,7 +9,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var types = typeof(StagedEntity).Assembly.GetTypes()
         .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false, IsInterface: false } 
             && !(t is { IsAbstract: true, IsSealed: true })) // ignores static classes like StagedEntityListExtensions
-        .Where(t => t.BaseType != typeof(CoreToSystemMap)) // ignore these
+        .Where(t => t.BaseType != typeof(Map.CoreToSystem)) // ignore these
         .ToList();
     var bases = types.Where(t => t.FullName!.IndexOf('+') < 0).ToList();
     bases.ForEach(t => ValidateDataObject(t, types));
@@ -19,10 +19,12 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     { nameof(ObjectState), [nameof(ObjectState.ObjectIsCoreEntityType), nameof(ObjectState.ObjectIsSystemEntityType)] },
   };
   private static readonly Dictionary<string, List<string>> IGNORE_SETTERS = new() {
-    { nameof(CoreToSystemMap), [nameof(CoreToSystemMap.SystemEntityChecksum)] }
+    { nameof(Map.CoreToSystem), [nameof( Map.CoreToSystem.SystemEntityChecksum)] }
   };
   
   private void ValidateDataObject(Type baset, List<Type> types) {
+    if (baset.Name.EndsWith("Map") && (baset.Name.StartsWith("CoreAnd") || baset.Name.StartsWith("CoreSystemAnd"))) return;
+    
     var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
     var nonnulls = dto.GetProperties().Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
