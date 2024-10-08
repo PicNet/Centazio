@@ -48,7 +48,6 @@ public class PromoteOperationRunner(
   private async Task<List<Containers.StagedSysCore>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> topromote) {
     var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
     if (!bounces.Any()) return topromote;
-    Log.Information("identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]", bounces.Count, op.State.System, op.State.Object.ToCoreEntityType);
     
     var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
     var entities = bounces.Select(b => {
@@ -58,31 +57,41 @@ public class PromoteOperationRunner(
           b.Value.OriginalSourceId, 
           b.Value.OriginalCoreId, 
           OriginalEntity: original,
+          OriginalEntityChecksum: Checksum(original),
           OriginalEntityChecksumSubset: original.GetChecksumSubset(),
           ToPromoteIdx: idx,
           ToPromoteCore: topromote[idx].Core,
           PreChangeChecksumSubset: topromote[idx].Core.GetChecksumSubset(),
-          PreChangeChecksum: Checksum(topromote[idx].Core));
+          PreChangeChecksum: Checksum(topromote[idx].Core),
+          PostChangeChecksumSubset: new object(),
+          PostChangeChecksum: String.Empty);
     }).ToList();
     
-    entities.ForEach(e => {
+    var updated = entities.Select(e => {
       // If the entity is bouncing back, it will have a new Core and SourceId (as it would have been created in the second system).
       //    We need to correct the process here and make it point to the original Core/Source Id as we do not want
       //    multiple core records for the same entity.
       (e.ToPromoteCore.Id, e.ToPromoteCore.SourceId) = (e.OriginalCoreId, e.OriginalSourceId);
       topromote[e.ToPromoteIdx] = topromote[e.ToPromoteIdx] with { Core = e.ToPromoteCore };
-      
-      if (e.PreChangeChecksum != Checksum(e.ToPromoteCore)) 
-        throw new Exception($"Bounce-back identified and after correcting ids we got a different checksum.  " +
+      e.PostChangeChecksumSubset = e.ToPromoteCore.GetChecksumSubset();
+      e.PostChangeChecksum = Checksum(e.ToPromoteCore);
+      return e;
+    }).ToList();
+    
+    var msgs = updated.Select(e => $"{op.State.System}#Id[{e.ToPromoteCore.Id}] -> OriginalCoreId[{e.OriginalCoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
+          $"\n\tOriginal Checksum[{e.OriginalEntityChecksumSubset}({e.OriginalEntityChecksum})]" +
+          $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
+    Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]" + String.Join("\n", msgs), bounces.Count, op.State.System, op.State.Object.ToCoreEntityType);
+    
+    var errs = updated.Where(e => e.PreChangeChecksum != e.PostChangeChecksum)
+        .Select(e => $"\n[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.Id})]:" +
+          $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
+          $"\n\tPostchange Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]")
+        .ToList();
+    if (errs.Any())
+      throw new Exception($"Bounce-back identified and after correcting ids we got a different checksum.  " +
             $"\nThe GetChecksumSubset() method of ICoreEntity should not include Ids, updated dates or any other non-meaninful data." +
-            $"\nHaving the Id as part of the ChecksumSubset will mean that we will get infinite bounce backs between two systems." +
-            $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
-            $"\n\tPostchange Checksum[{e.ToPromoteCore.GetChecksumSubset()}({Checksum(e.ToPromoteCore)})]");
-      
-      Log.Information($"\n\t{op.State.System}#Id[{e.ToPromoteCore.Id}] -> OriginalCoreId[{e.OriginalCoreId}]:" +
-          $"\n\tOriginal Checksum[{e.OriginalEntityChecksumSubset}({Checksum(e.OriginalEntity)})]" +
-          $"\n\tNew Checksum[{e.ToPromoteCore.GetChecksumSubset()}({Checksum(e.ToPromoteCore)})]");
-    });
+            $"\nHaving the Id as part of the ChecksumSubset will mean that we will get infinite bounce backs between two systems." + errs);
     
     return topromote;
     

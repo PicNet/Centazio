@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -18,15 +19,17 @@ public static class LogInitialiser {
   // public static readonly ITextFormatter Formatter = new CustomCompactJsonFormatter();
   public static LoggingLevelSwitch LevelSwitch { get; } = new(LogEventLevel.Debug); 
 
-  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug) {
+  public static LoggerConfiguration GetBaseConfig(LogEventLevel level = LogEventLevel.Debug, IList<string>? filters = null) {
     LevelSwitch.MinimumLevel = level;
-    return new LoggerConfiguration()
+    var conf = new LoggerConfiguration()
         .Destructure.ByTransformingWhere<ValidString>(typeof(ValidString).IsAssignableFrom, obj => obj.Value)
         .Destructure.ByTransformingWhere<ILoggable>(typeof(ILoggable).IsAssignableFrom, obj => obj.LoggableValue)
         .MinimumLevel.ControlledBy(LevelSwitch);
+    if (filters is not null && filters.Any()) { conf = conf.Filter.ByIncludingOnly(log => Regex.Match(log.MessageTemplate.Text, $"({String.Join('|', filters)})").Success); }
+    return conf;
   }
 
-  public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug) => GetBaseConfig(level)
+  public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug, IList<string>? filters = null) => GetBaseConfig(level, filters)
       .WriteTo
       // .Console(Formatter);
       .Console();

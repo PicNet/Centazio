@@ -101,6 +101,7 @@ public class SimulationCtx {
   public readonly bool SILENCE_LOGGING = false;
   public readonly bool SILENCE_SIMULATION = false;
   public readonly bool ALLOW_BIDIRECTIONAL = true;
+  public IList<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\["];
   
   public readonly Random rng = new(1);
   // random but seedable guid
@@ -241,7 +242,11 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   [Test] public async Task RunSimulation() {
-    if (ctx.SILENCE_LOGGING)  LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    if (ctx.SILENCE_LOGGING) LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    if (ctx.LOGGING_FILTERS.Any()) {
+      Log.Logger = LogInitialiser.GetConsoleConfig(filters: ctx.LOGGING_FILTERS).CreateLogger();
+      Log.Information($"Logging Filter Enabled[{String.Join(',', ctx.LOGGING_FILTERS)}]");
+    }
     
     await Enumerable.Range(0, ctx.TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
   }
@@ -264,9 +269,9 @@ public class E2EEnvironment : IAsyncDisposable {
     await RunFunc(fin_write_runner);
     
     // todo: is this final read/promote required
-    await RunFunc(crm_read_runner);
-    await RunFunc(crm_promote_runner);
-    await RunFunc(fin_write_runner); // todo: is this required?
+    //await RunFunc(crm_read_runner);
+    //await RunFunc(crm_promote_runner);
+    //await RunFunc(fin_write_runner); // todo: is this required?
     
     ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
     await ValidateEpoch();
@@ -338,8 +343,8 @@ public class E2EEnvironment : IAsyncDisposable {
   
   private void CompareByChecksum(SystemName targetsys, IEnumerable<object> cores, IEnumerable<object> targets) {
     var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
-    var (core_compare, core_desc) = (coreslst.Select(e => Json(e, false)), coreslst.Select(e => Json(e, true)));
-    var (targets_compare, targets_desc) = (targetslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, true)));
+    var (core_compare, targets_compare) = (coreslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, false)));
+    var (core_desc, targets_desc) = (coreslst.Select(e => Json(e, true)), targetslst.Select(e => Json(e, true)));
     Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"Checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities[{targetsys}]:\n\t{String.Join("\n\t", targets_desc)}");
     
     string Json(object obj, bool includeid) => JsonSerializer.Serialize(obj, includeid ? withid : noid);
