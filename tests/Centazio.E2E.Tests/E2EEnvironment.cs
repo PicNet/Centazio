@@ -101,10 +101,11 @@ public class SimulationCtx {
   public readonly bool SILENCE_LOGGING = false;
   public readonly bool SILENCE_SIMULATION = false;
   public readonly bool ALLOW_BIDIRECTIONAL = true;
-  public List<string> LOGGING_FILTERS { get; } = [];
+  // public List<string> LOGGING_FILTERS { get; } = [];
   // public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed"];
   // public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B"];
   // public List<string> LOGGING_FILTERS { get; } = ["FORCE:", "7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B"];
+  public List<string> LOGGING_FILTERS { get; } = ["FORCE:", "d8127c7d-059b-b3fb-1008-e536b36c285c", "FinAccount_16", "Epoch\\["];
   
   public readonly Random rng = new(1);
   // random but seedable guid

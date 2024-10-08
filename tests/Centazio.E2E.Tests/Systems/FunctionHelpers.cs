@@ -4,7 +4,6 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Misc;
-using Serilog;
 
 namespace Centazio.E2E.Tests.Systems;
 
@@ -35,9 +34,6 @@ public class FunctionHelpers(
   /// valid as the same change can be made in both the source and target system causing this check to fail. 
   /// </summary>
   private void TestEntityHasChanges(ISystemEntity updated, SystemEntityChecksum existingcs) {
-    if (updated.DisplayName.StartsWith("FinAccount_5")) {
-      Log.Information($"FORCE:\n\tEntity[{updated}]\n\tSubset[{updated.GetChecksumSubset()}]\n\tNew Checksum[{checksum.Checksum(updated)}]\n\tOld Checksum[{existingcs}] ");
-    }
     if (existingcs != checksum.Checksum(updated)) return;
     
     throw new Exception($"TestEntityHasChanges[{system}/{updated.GetType().Name}] - No changes found:" +

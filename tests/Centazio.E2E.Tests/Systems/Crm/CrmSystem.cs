@@ -130,7 +130,12 @@ public class CrmSystem : ISimulationSystem {
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
           toadd.Add(new CrmInvoice(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
-      ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.SystemId}) {i.AmountCents}c"))}");
+      
+      ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => {
+        var cust = customers.Single(c => c.SystemId == i.CustomerId.ToString());
+        return $"Cust:{cust.DisplayName}({cust.SystemId})/Inv:{i.SystemId}:{i.AmountCents}c";
+      }))}");
+      
       invoices.AddRange(toadd);
       return toadd.ToList();
     }
