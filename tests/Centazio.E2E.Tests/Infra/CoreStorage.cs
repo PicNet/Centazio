@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Text.Json.Serialization;
+using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Serilog;
@@ -55,8 +56,8 @@ public abstract record CoreEntityBase : ICoreEntity {
   public string SourceSystem { get; }
   public string SourceId { get; set; }
   public string Id { get; set; }
-  public DateTime DateCreated { get; protected init; }
-  public DateTime DateUpdated { get; protected init; }
+  public DateTime DateCreated { get; set; }
+  public DateTime DateUpdated { get; set; }
   public DateTime SourceSystemDateUpdated { get; init; }
   public string LastUpdateSystem { get; protected init; }
   
@@ -75,6 +76,8 @@ public abstract record CoreEntityBase : ICoreEntity {
   }
 }
 
+// todo: we need a base class for core storage with Impl methods so a lot of the boilerplate can be handled
+// todo: things like setting the DateCreated / DateUpdated should not be left to the implementor
 public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   internal List<ICoreEntity> Types { get; } = [];
@@ -86,12 +89,18 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) => 
-      Task.FromResult(GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList());
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) {
+    var list = GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
+    Log.Debug($"CoreStorage.Get Object[{obj}] After[{after:o}] Exclude[{exclude}] Returning[{String.Join(",", list.Select(e => $"{e.DisplayName}({e.Id})"))}]");
+    return Task.FromResult(list);
+  }
 
+  // todo: rename so we dont have this ugly override
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
-    var lst = GetList(obj);
-    return Task.FromResult(coreids.Select(id => lst.Single(e => e.Id == id)).ToList());
+    var full = GetList(obj);
+    var forcores = coreids.Select(id => full.Single(e => e.Id == id)).ToList();
+    Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");
+    return Task.FromResult(forcores);
   }
 
   public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
@@ -105,9 +114,11 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     var target = GetList(obj);
     var (added, updated) = (0, 0);
     var upserted = entities.Select(e => {
+      e.Core.DateUpdated = UtcDate.UtcNow;
       var idx = target.FindIndex(e2 => e2.Id == e.Core.Id);
       if (idx < 0) {
         added++;
+        e.Core.DateCreated = UtcDate.UtcNow;
         ctx.Epoch.Add(target.AddAndReturn(e.Core));
       } else {
         updated++;
@@ -116,7 +127,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
       return e.Core;
     }).ToList();
     
-    Log.Information($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})")) + $"] Created[{added}] Updated[{updated}]");
+    Log.Debug($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})#{e.Core.DateUpdated:o}")) + $"] Created[{added}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   

@@ -101,7 +101,7 @@ public class SimulationCtx {
   public readonly bool SILENCE_LOGGING = false;
   public readonly bool SILENCE_SIMULATION = false;
   public readonly bool ALLOW_BIDIRECTIONAL = true;
-  public IList<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\["];
+  public IList<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed", "FORCE:"];
   
   public readonly Random rng = new(1);
   // random but seedable guid
@@ -270,14 +270,13 @@ public class E2EEnvironment : IAsyncDisposable {
     await ValidateEpoch();
   }
   
-  private Task<FunctionRunResults<R>> RunFunc<R>(IFunctionRunner<R> runner) where R : OperationResult {
+  private Task<FunctionRunResults<R>> RunFunc<C, R>(FunctionRunner<C, R> runner) 
+      where C : OperationConfig 
+      where R : OperationResult {
+    ctx.Debug($"Running[{runner.System}/{runner.Stage}] Now[{UtcDate.UtcNow:o}]");
     ctx.CurrentSystem = runner.System;
-    try {
-      return runner.RunFunction();
-    }
-    finally {
-      ctx.CurrentSystem = default;
-    }
+    try { return runner.RunFunction(); } 
+    finally { ctx.CurrentSystem = default; }
   }
 
   private void RandomTimeStep() {

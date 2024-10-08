@@ -25,12 +25,12 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// <summary>
   /// The date/time when this entity was added to core storage
   /// </summary>
-  public DateTime DateCreated { get; }
-  
+  public DateTime DateCreated { get; set; }
+
   /// <summary>
   /// The date/time when this entity was last updated in core storage
   /// </summary>
-  public DateTime DateUpdated { get; }
+  public DateTime DateUpdated { get; set; }
   
   /// <summary>
   /// The system that triggered the last update.  This is used to

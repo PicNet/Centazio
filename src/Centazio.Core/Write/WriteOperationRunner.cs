@@ -11,10 +11,14 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var pending = await core.Get(op.State.Object.ToCoreEntityType, op.Checkpoint, op.State.System);
     var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
+    if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
+    
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
+    
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful[{meaningful.Count}]");
     if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
+    
     var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {

@@ -5,21 +5,16 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public interface IFunctionRunner<R> where R : OperationResult {
-  public SystemName System { get; }
-  public LifecycleStage Stage { get; }
-  Task<FunctionRunResults<R>> RunFunction();
-} 
-
 public class FunctionRunner<C, R>(
     AbstractFunction<C, R> func, 
     IOperationRunner<C, R> oprunner, 
-    ICtlRepository ctl) : IFunctionRunner<R>, IDisposable
+    ICtlRepository ctl) : IDisposable
         where C : OperationConfig
         where R : OperationResult {
 
   public SystemName System { get; } = func.Config.System;
   public LifecycleStage Stage { get; } = func.Config.Stage;
+  public FunctionConfig<C> Config { get; } = func.Config;
 
   public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;

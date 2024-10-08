@@ -46,12 +46,13 @@ public abstract class AbstractFunction<C, R> : IDisposable
 
     async Task<R> RunAndSaveOp(OperationStateAndConfig<C> op) {
       var opstart = UtcDate.UtcNow;
-      Log.Information("operation starting {@Operation}", op);
+      var desc = new { op.State.System, op.State.Object, op.State.Stage };
+      Log.Information("operation starting [{@SysObjStage}] {@Start:o} {@Checkpoint:o}", desc, opstart, op.Checkpoint);
       
       var result = await RunOp(op);
       var saved = await SaveOp(op, opstart, result);
       
-      Log.Information("operation completed {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", op, result, saved, (UtcDate.UtcNow - opstart).TotalMilliseconds);
+      Log.Information("operation completed [{@SysObjStage}] {@Start:o} {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", desc, opstart, op, result, saved, (UtcDate.UtcNow - opstart).TotalMilliseconds);
       
       return result;
     }
@@ -60,6 +61,7 @@ public abstract class AbstractFunction<C, R> : IDisposable
       try { return await runner.RunOperation(op); } 
       catch (Exception ex) {
         var res = runner.BuildErrorResult(op, ex);
+        if (res.Result == EOperationResult.Success) throw new Exception("BuildErrorResult should never return a 'Success' result");
         Log.Error(ex, "unhandled RunOperation exception, {@ErrorResults}", res);
         if (throws) throw;
         return res;
