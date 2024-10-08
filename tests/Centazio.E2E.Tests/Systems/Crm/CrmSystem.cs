@@ -5,18 +5,25 @@ namespace Centazio.E2E.Tests.Systems.Crm;
 
 public class CrmSystem : ISimulationSystem {
   
-  internal static Guid PENDING_MEMBERSHIP_TYPE_ID = Guid.NewGuid();
-  internal List<CrmMembershipType> MembershipTypes { get; } = [
-    new(PENDING_MEMBERSHIP_TYPE_ID, UtcDate.UtcNow, "Pending:0"),
-    new(Guid.NewGuid(), UtcDate.UtcNow, "Standard:0"),
-    new(Guid.NewGuid(), UtcDate.UtcNow, "Silver:0"),
-    new(Guid.NewGuid(), UtcDate.UtcNow, "Gold:0")
-  ];
+  internal static Guid PENDING_MEMBERSHIP_TYPE_ID;
+  internal List<CrmMembershipType> MembershipTypes { get; }
   internal List<CrmCustomer> Customers { get; } = new();
   internal List<CrmInvoice> Invoices { get; } = new();
-  public SimulationImpl Simulation { get; }
-  public CrmSystem(SimulationCtx ctx) => Simulation = new SimulationImpl(ctx, MembershipTypes, Customers, Invoices);
   
+  public SimulationImpl Simulation { get; }
+  private readonly SimulationCtx ctx;
+  
+  public CrmSystem(SimulationCtx ctx) {
+    this.ctx = ctx;
+    MembershipTypes = [
+      new(PENDING_MEMBERSHIP_TYPE_ID = ctx.Guid(), UtcDate.UtcNow, "Pending:0"),
+      new(ctx.Guid(), UtcDate.UtcNow, "Standard:0"),
+      new(ctx.Guid(), UtcDate.UtcNow, "Silver:0"),
+      new(ctx.Guid(), UtcDate.UtcNow, "Gold:0")
+    ];
+    Simulation = new SimulationImpl(ctx, MembershipTypes, Customers, Invoices);
+  }
+
   public SystemName System => SimulationConstants.CRM_SYSTEM;
 
   public List<ISystemEntity> GetEntities<E>() where E : ISystemEntity {
@@ -36,7 +43,7 @@ public class CrmSystem : ISimulationSystem {
 
   // WriteFunction endpoints
   public Task<List<CrmCustomer>> CreateCustomers(List<CrmCustomer> news) { 
-    var created = news.Select(c => c with { CrmCustId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { CrmCustId = ctx.Guid(), Updated = UtcDate.UtcNow }).ToList();
     Customers.AddRange(created);
     return Task.FromResult(created);
   }
@@ -51,7 +58,7 @@ public class CrmSystem : ISimulationSystem {
   }
 
   public Task<List<CrmInvoice>> CreateInvoices(List<CrmInvoice> news) {
-    var created = news.Select(i => i with { CrmInvId = Guid.NewGuid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { CrmInvId = ctx.Guid(), Updated = UtcDate.UtcNow }).ToList();
     Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -86,7 +93,7 @@ public class CrmSystem : ISimulationSystem {
       if (count == 0) return [];
       
       var toadd = Enumerable.Range(0, count)
-          .Select(idx => new CrmCustomer(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(types).CrmTypeId, ctx.NewName(nameof(CrmCustomer), customers, idx)))
+          .Select(idx => new CrmCustomer(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(types).CrmTypeId, ctx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
       ctx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
       customers.AddRange(toadd);
@@ -122,7 +129,7 @@ public class CrmSystem : ISimulationSystem {
       
       var toadd = new List<CrmInvoice>();
       Enumerable.Range(0, count).ForEach(_ => 
-          toadd.Add(new CrmInvoice(Guid.NewGuid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
+          toadd.Add(new CrmInvoice(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
       ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Cust:{i.CustomerId}({i.SystemId}) {i.AmountCents}c"))}");
       invoices.AddRange(toadd);
       return toadd.ToList();

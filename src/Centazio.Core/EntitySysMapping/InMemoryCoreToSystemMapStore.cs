@@ -49,7 +49,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<CoreToSystemMap.Created>> Create(CoreEntityType coretype, SystemName system, List<CoreToSystemMap.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<CoreToSystemMap.Created>());
     
-    Log.Information("creating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, news.Select(m => m.SysId));
+    Log.Information("creating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, news.Select(m => m.Key));
     var created = news.Select(map => {
       if (String.IsNullOrWhiteSpace(map.SystemEntityChecksum.Value)) throw new Exception(); 
       var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == coretype && k.System == system && k.SysId == map.SysId);

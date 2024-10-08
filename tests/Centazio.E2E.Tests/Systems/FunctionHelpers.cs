@@ -24,6 +24,11 @@ public class FunctionHelpers(
       toupdate.Select(m => m.SetSystemEntity(FromCore(m.Map.SysId, m.Core.To<E>(), m.Map.SystemEntityChecksum))).ToList());
   }
   
+  /// <summary>
+  /// This method compares the checksum of the entity to be updated with the checksum in the database (Mapping table).
+  /// We originally tried to compare the checksum with the state of the entity in the target system, however this is not
+  /// valid as the same change can be made in both the source and target system causing this check to fail. 
+  /// </summary>
   public E TestEntityHasChanges<E>(E updated, SystemEntityChecksum? existingcs) where E : ISystemEntity {
     if (updated.SystemId == Guid.Empty.ToString() || updated.SystemId == "0") return updated;
     if (existingcs == null) throw new ArgumentNullException($"TestEntityHasChanges[{typeof(E).Name}] has null 'Existing Checksum (existingcs)'.  When editing entities this parameter is mandatory.");

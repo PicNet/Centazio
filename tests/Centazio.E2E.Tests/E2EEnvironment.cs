@@ -103,6 +103,13 @@ public class SimulationCtx {
   public readonly bool ALLOW_BIDIRECTIONAL = true;
   
   public readonly Random rng = new(1);
+  // random but seedable guid
+  public Guid Guid() { 
+    var guid = new byte[16];
+    rng.NextBytes(guid);
+    return new Guid(guid);
+  }
+  
   private readonly Sha256ChecksumAlgorithm algo = new();
   public readonly ICtlRepository ctl = new InMemoryCtlRepository();
   public readonly TestingInMemoryCoreToSystemMapStore entitymap = new();
