@@ -57,7 +57,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   public DateTime SourceSystemDateUpdated { get; init; }
   public string LastUpdateSystem { get; protected init; }
   
-  public string DisplayName { get; protected init; }
+  public string DisplayName { get; }
   
   public abstract object GetChecksumSubset();
   

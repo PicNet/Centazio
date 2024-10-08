@@ -1,6 +1,5 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -49,7 +48,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
   public CrmPromoteFunction(SimulationCtx ctx) {
     this.ctx = ctx;
-    help = new FunctionHelpers(ctx, SimulationConstants.CRM_SYSTEM); 
+    help = new FunctionHelpers(SimulationConstants.CRM_SYSTEM, ctx.checksum, ctx.entitymap); 
     Config = new(SimulationConstants.CRM_SYSTEM, LifecycleStage.Defaults.Promote, [
       new(new(nameof(CrmMembershipType)), CoreEntityType.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(new(nameof(CrmCustomer)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = ctx.ALLOW_BIDIRECTIONAL },
@@ -67,7 +66,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     return new SuccessPromoteOperationResult(topromote, []);
 
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(ctx.entitymap, staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
       return staged.ToStagedSysCore<CrmInvoice>(e => ctx.CrmInvoiceToCoreInvoice(e, maps[e.CustomerId.ToString()]));
     }
   }
@@ -79,14 +78,12 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   private readonly SimulationCtx ctx;
   private readonly CrmSystem crm;
-  private readonly ICoreToSystemMapStore intra;
   private readonly FunctionHelpers help; 
 
-  public CrmWriteFunction(SimulationCtx ctx, CrmSystem crm, ICoreToSystemMapStore intra) {
+  public CrmWriteFunction(SimulationCtx ctx, CrmSystem crm) {
     this.ctx = ctx;
     this.crm = crm;
-    this.intra = intra;
-    help = new(ctx, SimulationConstants.CRM_SYSTEM);
+    help = new(SimulationConstants.CRM_SYSTEM, ctx.checksum, ctx.entitymap);
     Config = new(SimulationConstants.CRM_SYSTEM, LifecycleStage.Defaults.Write, [
       new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
@@ -96,14 +93,14 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public async Task<(List<CoreSysAndPendingCreateMap>, List<CoreSystemMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e), crm));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e, existingcs) => 
+          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e), existingcs));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(intra, cores, nameof(CoreInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
-      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => 
-          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e, maps), crm));
+      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(cores, nameof(CoreInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
+      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e, existingcs) => 
+          help.TestEntityHasChanges(FromCore(id == String.Empty ? Guid.Empty : Guid.Parse(id), e, maps), existingcs));
     }
     throw new NotSupportedException(config.Object);
   }

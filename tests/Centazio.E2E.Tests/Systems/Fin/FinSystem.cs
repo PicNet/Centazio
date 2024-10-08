@@ -137,7 +137,7 @@ public record FinInvoice(int FinInvId, int AccountId, decimal Amount, DateTime U
 
   public string SystemId => FinInvId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = $"Acct:{AccountId}({FinInvId}) {Amount}c";
+  public string DisplayName => $"Acct:{AccountId}({FinInvId}) {Amount}c";
   public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
 
 }
@@ -146,7 +146,7 @@ public record FinAccount(int FinAccId, string Name, DateTime Updated) : ISystemE
 
   public string SystemId => FinAccId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = Name;
+  public string DisplayName => Name;
   public object GetChecksumSubset() => new { Name };
 
 }

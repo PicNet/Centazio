@@ -25,16 +25,17 @@ public class PromoteOperationRunner(
       return results;  
     }
     var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
-    var realpromote = IgnoreMultipleUpdatesToSameEntity(topromote);
+    var meaningful = IgnoreMultipleUpdatesToSameEntity(topromote);
     
-    if (op.OpConfig.IsBidirectional) { realpromote = await IdentifyBouncedBackAndSetCorrectId(op, realpromote); }
-    else realpromote = IgnoreEntitiesBouncingBack(realpromote, op.State.System);
+    if (op.OpConfig.IsBidirectional) { meaningful = await IdentifyBouncedBackAndSetCorrectId(op, meaningful); }
+    else meaningful = IgnoreEntitiesBouncingBack(meaningful, op.State.System);
+
+    meaningful = await IgnoreNonMeaninfulChanges(meaningful, op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
     
-    realpromote = await IgnoreNonMeaninfulChanges(realpromote, op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
+    var meaningulstr = String.Join(",", meaningful.Select(e => e.Core.DisplayName));
+    Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}({meaningulstr})] ToIgnore[{toignore.Count}]");
     
-    Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{realpromote.Count}] ToIgnore[{toignore.Count}]");
-    
-    await WriteEntitiesToCoreStorageAndUpdateMaps(op, realpromote);
+    await WriteEntitiesToCoreStorageAndUpdateMaps(op, meaningful);
     await staged.Update(
         // mark all StagedEntities as promoted, even if they were ignored above
         topromote.Select(e => e.Staged.Promote(start))

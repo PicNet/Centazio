@@ -212,7 +212,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new PromoteOperationRunner(ctx.stage, ctx.core, ctx.entitymap),
         ctx.ctl);
     
-    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(ctx, crm, ctx.entitymap),
+    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(ctx, crm),
         new WriteOperationRunner<WriteOperationConfig>(ctx.entitymap, ctx.core), 
         ctx.ctl);
     
@@ -223,7 +223,7 @@ public class E2EEnvironment : IAsyncDisposable {
         new PromoteOperationRunner(ctx.stage, ctx.core, ctx.entitymap),
         ctx.ctl);
     
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(ctx, fin, ctx.entitymap),
+    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(ctx, fin),
         new WriteOperationRunner<WriteOperationConfig>(ctx.entitymap, ctx.core), 
         ctx.ctl);
   }

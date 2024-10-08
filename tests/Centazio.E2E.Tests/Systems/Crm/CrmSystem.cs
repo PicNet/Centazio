@@ -170,7 +170,7 @@ public record CrmMembershipType(Guid CrmTypeId, DateTime Updated, string Name) :
 
   public string SystemId => CrmTypeId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = Name;
+  public string DisplayName => Name;
   public object GetChecksumSubset() => new { Name };
 
 }
@@ -179,7 +179,7 @@ public record CrmInvoice(Guid CrmInvId, DateTime Updated, Guid CustomerId, int A
 
   public string SystemId => CrmInvId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = $"Cust:{CustomerId}({CrmInvId}) {AmountCents}c";
+  public string DisplayName => $"Cust:{CustomerId}({CrmInvId}) {AmountCents}c";
   public object GetChecksumSubset() => new { CustomerId, AmountCents, DueDate, PaidDate };
 
 }
@@ -188,7 +188,7 @@ public record CrmCustomer(Guid CrmCustId, DateTime Updated, Guid MembershipTypeI
 
   public string SystemId => CrmCustId.ToString();
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName { get; } = Name;
+  public string DisplayName => Name;
   public object GetChecksumSubset() => new { MembershipTypeId, Name };
 
 }
