@@ -59,7 +59,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   public DateTime DateCreated { get; set; }
   public DateTime DateUpdated { get; set; }
   public DateTime SourceSystemDateUpdated { get; init; }
-  public string LastUpdateSystem { get; protected init; }
+  public string LastUpdateSystem { get; set; }
   
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
@@ -122,12 +122,12 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
         ctx.Epoch.Add(target.AddAndReturn(e.Core));
       } else {
         updated++;
-        ctx.Epoch.Update(ctx.CurrentSystem ?? throw new Exception(), target[idx] = e.Core);
+        ctx.Epoch.Update(e.Core.LastUpdateSystem, target[idx] = e.Core);
       }
       return e.Core;
     }).ToList();
     
-    Log.Debug($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})#{e.Core.DateUpdated:o}")) + $"] Created[{added}] Updated[{updated}]");
+    Log.Debug($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})")) + $"] Created[{added}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   

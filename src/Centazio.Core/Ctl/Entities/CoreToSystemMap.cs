@@ -26,7 +26,7 @@ public static class Map {
       System = system; 
       SystemId = sysid; 
       Status = status;
-      SystemEntityChecksum = checksum;
+      SystemEntityChecksum = checksum; 
     }
     
     public Key Key => new(CoreEntity, CoreId, System, SystemId);
@@ -34,9 +34,9 @@ public static class Map {
     public CoreEntityType CoreEntity { get; } 
     public ValidString CoreId { get; } 
     public SystemName System { get; } 
-    public ValidString SystemId { get; } // todo: rename to SystemId for consistency
-    public SystemEntityChecksum SystemEntityChecksum { get; init; }
-    public EEntityMappingStatus Status { get; protected init; }
+    public ValidString SystemId { get; }
+    public SystemEntityChecksum SystemEntityChecksum { get; internal init; }
+    public EEntityMappingStatus Status { get; internal init; }
     public DateTime DateCreated { get; internal init; } 
     
     public DateTime? DateUpdated { get; internal init; } 
@@ -122,7 +122,12 @@ public static class Map {
   }
 
   public record Updated : CoreToSystem {
-    internal Updated(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
+    internal Updated(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {
+      if (e.SystemEntityChecksum == new SystemEntityChecksum("7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B")) {
+        var debug = true;
+        if (debug) Console.WriteLine("1");
+      }
+    }
   }
 }
 

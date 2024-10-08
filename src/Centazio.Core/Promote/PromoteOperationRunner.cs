@@ -115,7 +115,10 @@ public class PromoteOperationRunner(
     await core.Upsert(
         op.State.Object.ToCoreEntityType, 
         entities.ToCore().Select(
-            e => new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e))).ToList());
+            e => {
+              e.LastUpdateSystem = op.State.System;
+              return new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e));
+            }).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(entities.ToCore(), op.State.System);
     await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());

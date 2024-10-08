@@ -4,6 +4,7 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
 using Centazio.Core.Misc;
+using Serilog;
 
 namespace Centazio.E2E.Tests.Systems;
 
@@ -33,13 +34,16 @@ public class FunctionHelpers(
   /// We originally tried to compare the checksum with the state of the entity in the target system, however this is not
   /// valid as the same change can be made in both the source and target system causing this check to fail. 
   /// </summary>
-  private void TestEntityHasChanges<E>(E updated, SystemEntityChecksum? existingcs) where E : ISystemEntity {
-    if (existingcs is null) throw new ArgumentNullException($"TestEntityHasChanges[{typeof(E).Name}] has null 'Existing Checksum (existingcs)'.  When editing entities this parameter is mandatory.");
+  private void TestEntityHasChanges(ISystemEntity updated, SystemEntityChecksum existingcs) {
+    if (updated.DisplayName.StartsWith("FinAccount_5")) {
+      Log.Information($"FORCE:\n\tEntity[{updated}]\n\tSubset[{updated.GetChecksumSubset()}]\n\tNew Checksum[{checksum.Checksum(updated)}]\n\tOld Checksum[{existingcs}] ");
+    }
+    if (existingcs != checksum.Checksum(updated)) return;
     
-    if (existingcs == checksum.Checksum(updated)) 
-      throw new Exception($"TestEntityHasChanges[{system}/{updated.GetType().Name}] updated object with no changes." +
-        $"\nExisting Checksum (In Db):\n\t{existingcs}" +
-        $"\nUpdated:\n\t{updated}({updated.GetChecksumSubset()}#{checksum.Checksum(updated)})");
+    throw new Exception($"TestEntityHasChanges[{system}/{updated.GetType().Name}] - No changes found:" +
+      $"\n\tExisting Checksum:[{existingcs}]" +
+      $"\n\tUpdated[{updated}]\n\tChecksum Subset[{updated.GetChecksumSubset()}]" +
+      $"\n\tChecksum[{checksum.Checksum(updated)}]");
   }
   
   public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntitySystemIdsFromCoreIds(List<ICoreEntity> entities, string foreignkey, CoreEntityType obj) {

@@ -33,7 +33,7 @@ END
   public async Task<E> Get<E>(CoreEntityType obj, string id) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {obj} WHERE Id=@Id", new { Id = id });
-    if (raw is null) throw new Exception($"Core entity [{obj}#{id}] not found");
+    if (raw is null) throw new Exception($"Core entity [{obj}({id})] not found");
     return (CoreEntity) raw as E ?? throw new Exception();
   }
 

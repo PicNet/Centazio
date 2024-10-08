@@ -101,7 +101,10 @@ public class SimulationCtx {
   public readonly bool SILENCE_LOGGING = false;
   public readonly bool SILENCE_SIMULATION = false;
   public readonly bool ALLOW_BIDIRECTIONAL = true;
-  public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed", "FORCE:"];
+  public List<string> LOGGING_FILTERS { get; } = [];
+  // public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "Epoch\\[", "Running\\[", "operation starting", "operation completed"];
+  // public List<string> LOGGING_FILTERS { get; } = ["FinAccount_5", "268f4ff8-d5e1-09db-b31f-3e8190949cc6", "935107296", "7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B"];
+  // public List<string> LOGGING_FILTERS { get; } = ["FORCE:", "7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B"];
   
   public readonly Random rng = new(1);
   // random but seedable guid
@@ -120,7 +123,6 @@ public class SimulationCtx {
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
   public readonly IStagedEntityStore stage;
-  public SystemName? CurrentSystem { get; set; }
 
   internal SimulationCtx() {
     checksum = algo;
@@ -274,9 +276,7 @@ public class E2EEnvironment : IAsyncDisposable {
       where C : OperationConfig 
       where R : OperationResult {
     ctx.Debug($"Running[{runner.System}/{runner.Stage}] Now[{UtcDate.UtcNow:o}]");
-    ctx.CurrentSystem = runner.System;
-    try { return runner.RunFunction(); } 
-    finally { ctx.CurrentSystem = default; }
+    return runner.RunFunction(); 
   }
 
   private void RandomTimeStep() {

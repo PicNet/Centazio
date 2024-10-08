@@ -33,6 +33,7 @@ public record CoreAndPendingCreateMap(ICoreEntity Core, Map.PendingCreate Map) {
 
 public record CoreSystemAndPendingCreateMap(ICoreEntity Core, ISystemEntity SysEnt,  Map.PendingCreate Map) {
   public CoreAndCreatedMap SuccessCreate(string targetid, SystemEntityChecksum checksum) => new(Core, Map.SuccessCreate(targetid, checksum));
+
 }
 
 public record CoreAndPendingUpdateMap(ICoreEntity Core,  Map.PendingUpdate Map) {
@@ -41,6 +42,7 @@ public record CoreAndPendingUpdateMap(ICoreEntity Core,  Map.PendingUpdate Map) 
 
 public record CoreSystemAndPendingUpdateMap(ICoreEntity Core, ISystemEntity SysEnt,  Map.PendingUpdate Map) {
   public CoreAndUpdatedMap SuccessUpdate(SystemEntityChecksum checksum) => new(Core, Map.SuccessUpdate(checksum));
+
 }
 
 public record CoreAndCreatedMap(ICoreEntity Core, Map.Created Map);

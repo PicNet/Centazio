@@ -1,4 +1,6 @@
 # Todo
+- InMemory stores should all do serialisation of objects to json to add an additional layer of testing
+- review naming conventions of all common names
 - check for all new logic added through the simulator and check that its adequately unit tested
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
