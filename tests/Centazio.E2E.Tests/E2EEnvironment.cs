@@ -29,22 +29,28 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   public int Epoch { get; } = epoch;
   
   private readonly Dictionary<(Type, string), ICoreEntity> added = new();
-  private readonly Dictionary<(SystemName, Type, string), ICoreEntity> updated = new();
+  private readonly Dictionary<(Type, string), ICoreEntity> updated = new();
   
   public async Task ValidateAdded<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
-        "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
+        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
+        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
 
   public async Task ValidateUpdated<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
-    var ascore = await SysEntsToCore(expected);
+    var eadded = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
+    var ascore = (await SysEntsToCore(expected))
+        .DistinctBy(e => (e.GetType(), e.Id))
+        // remove from validation if these entities were added in this epoch, as
+        // they will be validated in the `ValidateAdded` method
+        .Where(e => !eadded.Contains(e)) 
+        .ToList();
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items:\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
-        "\nActual Items:\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
+        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
+        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
   }
   
   private async Task<List<ICoreEntity>> SysEntsToCore(params IEnumerable<ISystemEntity>[] expected) {
@@ -78,14 +84,15 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   }
 
   public void Add(ICoreEntity e) {
-    // ctx.Debug($"CoreStorage.Add CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
     if (!added.TryAdd((e.GetType(), e.Id), e)) throw new Exception($"entity appears to have already been added: {e}");
+    Log.Information($"Validation.Add[{e.DisplayName}({e.Id})]");
   }
   
-  public void Update(SystemName system, ICoreEntity e) {
-    // ctx.Debug($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
-    if (added.ContainsKey((e.GetType(), e.Id))) return;
-    updated[(system, e.GetType(), e.Id)] = e;
+  public void Update(ICoreEntity e) {
+    // ignore entities that have already been added in this epoch, they will be validated as part of the added validation
+    if (added.ContainsKey((e.GetType(), e.Id))) return; 
+    updated[(e.GetType(), e.Id)] = e;
+    Log.Information($"Update.Add[{e.DisplayName}({e.Id})]");
   }
 
 }
@@ -136,7 +143,7 @@ public class SimulationCtx {
   public readonly int FIN_MAX_NEW_ACCOUNTS = 2;
   public readonly int FIN_MAX_EDIT_ACCOUNTS = 4;
   public readonly int FIN_MAX_NEW_INVOICES = 2;
-  public readonly int FIN_MAX_EDIT_INVOICES = 0; // todo: adding invoices causes failure
+  public readonly int FIN_MAX_EDIT_INVOICES = 2;
  
  public void Debug(string message) {
    if (SILENCE_SIMULATION) return;

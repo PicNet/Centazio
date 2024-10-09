@@ -6,6 +6,12 @@ public static class GlobalEnumerableExtensionMethods {
     lst.Add(item);
     return item;
   }
+  
+  public static List<T> AddAndReturn<T>(this List<T> lst, IEnumerable<T> items) {
+    lst.AddRange(items);
+    return lst;
+  }
+  
   public static void ForEach<T>(this IEnumerable<T> e, Action<T> action) {
     foreach (var t in e) action(t);
   }

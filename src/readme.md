@@ -1,4 +1,5 @@
 # Todo
+- should CoreEntity.Id be a ValidString?  Should we more stronly type all Ids?
 - InMemory stores should all do serialisation of objects to json to add an additional layer of testing
 - consider using readonly record structs to protect from mutation
 - review naming conventions of all common names

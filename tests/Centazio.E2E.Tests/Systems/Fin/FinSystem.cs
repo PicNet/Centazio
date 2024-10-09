@@ -94,8 +94,7 @@ public class FinSystem : ISimulationSystem {
         var oldcs = ctx.checksum.Checksum(acc);
         var newcs = ctx.checksum.Checksum(newacc);
         log.Add($"Id[{acc.SystemId}] Name[{name}->{newname}] Checksum[{oldcs}->{newcs}]");
-        // do not mark as edited if the entity was just added in this epoch, it will be validate when checking added entities
-        if (!AddedAccounts.Contains(acc) && oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
+        if (oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
       });
       ctx.Debug($"FinSimulation - EditAccounts[{edited.Count}] - {String.Join(',', log)}");
       return edited;
@@ -109,7 +108,7 @@ public class FinSystem : ISimulationSystem {
       Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).FinAccId, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
       ctx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
-      return toadd.ToList();
+      return toadd;
     }
 
     private List<FinInvoice> EditInvoices() {

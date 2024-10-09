@@ -112,11 +112,10 @@ public class CrmSystem : ISimulationSystem {
         var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
         var oldcs = ctx.checksum.Checksum(cust);
         var newcs = ctx.checksum.Checksum(newcust);
-        log.Add($"Id[{cust.SystemId}] Name[{name}->{newname}] Membership[{oldmt}->{newmt}] Checksum[{oldcs}->{newcs}]");
-        // do not mark as edited if the entity was just added in this epoch, it will be validate when checking added entities
-        if (!AddedCustomers.Contains(cust) && oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
+        log.Add($"[{newname}({cust.SystemId})] Orig Name[{name}] Membership[{oldmt}->{newmt}] Checksum[{oldcs}->{newcs}]");
+        if (oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
       });
-      ctx.Debug($"CrmSimulation - EditCustomers[{edited.Count}] - {String.Join(',', log)}");
+      ctx.Debug($"CrmSimulation - EditCustomers[{edited.Count}]:\n\t{String.Join("\n\t", log)}");
       return edited;
     }
 
