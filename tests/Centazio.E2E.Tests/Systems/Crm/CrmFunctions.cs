@@ -66,7 +66,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     return new SuccessPromoteOperationResult(topromote, []);
 
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>(), true);
       return staged.ToStagedSysCore<CrmInvoice>(e => ctx.CrmInvoiceToCoreInvoice(e, maps[e.CustomerId.ToString()]));
     }
   }

@@ -48,15 +48,19 @@ public class FunctionHelpers(
     var dict = maps.ToDictionary(m => m.CoreId, m => m.SystemId);
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
-    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntitySystemIdFromCoreId[{system}] - Could not find {obj} with ids [{String.Join(",", missing)}]");
+    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntitySystemIdFromCoreId[{system}] - Could not find {obj} with CoreIds [{String.Join(",", missing)}]");
     
     return dict;
   } 
  
-  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntityCoreIdsFromSystemIds<E>(List<E> entities, string foreignkey, CoreEntityType obj) where E : ISystemEntity {
+  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntityCoreIdsFromSystemIds<E>(List<E> entities, string foreignkey, CoreEntityType obj, bool mandatory) where E : ISystemEntity {
     var fks = entities.Select(e => ReflectionUtils.GetPropValAsString(e, foreignkey)).Distinct().ToList();
-    // we do not check for missing ids here as this method is called during promotion, and it is possible for these entities not to be in core storage as they are being created
-    return (await intra.GetExistingMappingsFromCoreIds(obj, fks, system)).ToDictionary(m => m.SystemId, m => m.CoreId);
+    var dict = (await intra.GetExistingMappingsFromSystemIds(obj, fks, system)).ToDictionary(m => m.SystemId, m => m.CoreId);
+    if (!mandatory) return dict;
+    
+    var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
+    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntityCoreIdsFromSystemIds[{system}] - Could not find {obj} with SystemIds [{String.Join(",", missing)}]");
+    return dict;
   } 
   
 }

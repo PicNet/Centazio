@@ -91,7 +91,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) {
     var list = GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
-    Log.Debug($"CoreStorage.Get Object[{obj}] After[{after:o}] Exclude[{exclude}] Returning[{String.Join(",", list.Select(e => $"{e.DisplayName}({e.Id})"))}]");
+    // Log.Debug($"CoreStorage.Get Object[{obj}] After[{after:o}] Exclude[{exclude}] Returning[{String.Join(",", list.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(list);
   }
 
@@ -99,7 +99,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
     var full = GetList(obj);
     var forcores = coreids.Select(id => full.Single(e => e.Id == id)).ToList();
-    Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");
+    // Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(forcores);
   }
 

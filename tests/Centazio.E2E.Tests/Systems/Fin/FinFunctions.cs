@@ -62,7 +62,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
     async Task<List<Containers.StagedSysCore>> EvaluateCustomers() {
       var accounts = staged.Deserialise<FinAccount>();
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<FinAccount>(), nameof(ISystemEntity.SystemId), CoreEntityType.From<CoreCustomer>());
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<FinAccount>(), nameof(ISystemEntity.SystemId), CoreEntityType.From<CoreCustomer>(), false);
       return accounts.Select(acc => {
         maps.TryGetValue(acc.Sys.SystemId, out var coreid);
         var existing = coreid is null ? null : ctx.core.GetCustomer(coreid); 
@@ -72,7 +72,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     }
 
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<FinInvoice>(), nameof(FinInvoice.AccountId), CoreEntityType.From<CoreCustomer>());
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<FinInvoice>(), nameof(FinInvoice.AccountId), CoreEntityType.From<CoreCustomer>(), true);
       return staged.ToStagedSysCore<FinInvoice>(e => ctx.FinInvoiceToCoreInvoice(e, maps[e.AccountId.ToString()]));
     }
   }

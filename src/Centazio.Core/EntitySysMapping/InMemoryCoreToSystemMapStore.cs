@@ -48,7 +48,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<Map.Created>> Create(CoreEntityType coretype, SystemName system, List<Map.Created> news) {
     if (!news.Any()) return Task.FromResult(new List<Map.Created>());
     
-    Log.Information("creating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, news.Select(m => m.Key));
+    // Log.Information("creating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, news.Select(m => m.Key));
     var created = news.Select(map => {
       if (String.IsNullOrWhiteSpace(map.SystemEntityChecksum.Value)) throw new Exception(); 
       var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == coretype && k.System == system && k.SystemId == map.SystemId);
@@ -61,6 +61,8 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   public override Task<List<Map.Updated>> Update(CoreEntityType coretype, SystemName system, List<Map.Updated> updates) {
     if (!updates.Any()) return Task.FromResult(new List<Map.Updated>());
+    
+    // Log.Debug("updating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, updates);
     updates.ForEach(map => memdb[map.Key] = map);
     return Task.FromResult(updates);
   }
