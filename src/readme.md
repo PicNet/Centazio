@@ -6,12 +6,14 @@
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
 - clean up simulation code
 - review all code comments
-- look at the concept of an entitiy tracker where we can query for 1 entity (using coreid) and track everything that has happened to it
+- when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc) were 
+    not changed by the client.  May want to separate 'client' fields from ICoreEntity fields
 
 - clean up interfaces and types, have stuff everywhere
 
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
+
 
 # Developer Guidelines:
 

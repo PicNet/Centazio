@@ -65,15 +65,14 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 
     async Task<ICoreEntity> ToCore(object e) => e switch { 
       CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type), 
-      CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer), 
+      CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer, null), // for comparison purposes its ok to have no `existing` 
       CrmInvoice invoice => ctx.CrmInvoiceToCoreInvoice(invoice), 
       FinAccount account => await FromFinAccount(account), 
       FinInvoice finInvoice => ctx.FinInvoiceToCoreInvoice(finInvoice), 
       _ => throw new NotSupportedException(e.GetType().Name) };
 
     async Task<CoreCustomer> FromFinAccount(FinAccount account) {
-      var sysid = account.SystemId;
-      var map = (await ctx.entitymap.GetExistingMappingsFromSystemIds(CoreEntityType.From<CoreCustomer>(), [sysid], SimulationConstants.FIN_SYSTEM)).Single();
+      var map = (await ctx.entitymap.GetExistingMappingsFromSystemIds(CoreEntityType.From<CoreCustomer>(), [account.SystemId], SimulationConstants.FIN_SYSTEM)).Single();
       var coreid = map.CoreId;
       var existing = ctx.core.GetCustomer(coreid); 
       return ctx.FinAccountToCoreCustomer(account, existing);
@@ -152,24 +151,21 @@ public class SimulationCtx {
    return $"{label}:{Int32.Parse(count) + 1}";
  }
  
-  public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c) {
-    var (membership, invoices) = (core.GetMembershipType(c.MembershipTypeId.ToString()), core.GetInvoicesForCustomer(c.SystemId));
-    return new CoreCustomer(c.SystemId, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, membership, invoices);
-  }
-  
-  // todo: this `CoreCustomer? existing` is required in the promote function as promote should
-  // fill in details on this target instead of creating new entity.  This should be the case for all
-  // `SystemToCoreEntity` methods below.
-  public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) {
-    if (existing is not null) return existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
-    var membership = core.GetMembershipType(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString());
-    return new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, membership, []);
-  }
+  public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c, CoreCustomer? existing) => 
+      existing is null 
+          ? new(c.SystemId, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, c.MembershipTypeId.ToString())
+          : existing with { Name = c.Name, MembershipId = c.MembershipTypeId.ToString()};
+
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, string? custid = null) {
     var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerId.ToString()).CoreId;
     if (custid is not null && newcustid != custid) throw new Exception();
     return new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid ?? newcustid, i.AmountCents, i.DueDate, i.PaidDate);
   }
+  
+  public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) => 
+      existing is null 
+          ? new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString())
+          : existing with { SourceSystemDateUpdated = a.Updated, Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, string? custid = null) {
     var newcustid = entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountId.ToString()).CoreId;
@@ -296,7 +292,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.Membership.Id });
+    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.MembershipId });
     var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name });
     var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, c.MembershipTypeId });
     var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });

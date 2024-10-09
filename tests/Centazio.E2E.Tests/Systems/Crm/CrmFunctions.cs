@@ -60,11 +60,19 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     ctx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.ToStagedSysCore<CrmMembershipType>(ctx.CrmMembershipTypeToCoreMembershipType), 
-      nameof(CoreCustomer) => staged.ToStagedSysCore<CrmCustomer>(ctx.CrmCustomerToCoreCustomer), 
+      nameof(CoreCustomer) => await EvaluateCustomers(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return new SuccessPromoteOperationResult(topromote, []);
 
+    async Task<List<Containers.StagedSysCore>> EvaluateCustomers() {
+      var map = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmCustomer>(), "SystemId", CoreEntityType.From<CoreCustomer>(), false);
+      return staged.ToStagedSysCore<CrmCustomer>(c => {
+        var existing = map.TryGetValue(c.SystemId, out var coreid) ? ctx.core.GetCustomer(coreid) : null;
+        return ctx.CrmCustomerToCoreCustomer(c, existing);
+      });
+    }
+    
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
       var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>(), true);
       return staged.ToStagedSysCore<CrmInvoice>(e => ctx.CrmInvoiceToCoreInvoice(e, maps[e.CustomerId.ToString()]));
@@ -118,7 +126,8 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     throw new NotSupportedException(config.Object);
   }
   
-  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.Membership.SourceId), c.Name);
+  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.MembershipId), c.Name);
+
   private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<ValidString, ValidString> custmaps) => 
       new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerId]), i.Cents, i.DueDate, i.PaidDate);
 

@@ -10,16 +10,14 @@ public record CoreCustomer : CoreEntityBase {
   
   public string Name { get; init; }
   public override string DisplayName => Name;
-  public CoreMembershipType Membership { get; internal init; }
-  public List<CoreInvoice> Invoices { get; internal init; }
+  public string MembershipId { get; internal init; }
   
-  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, CoreMembershipType membership, List<CoreInvoice> invoices) : base(id, source, sourceupdate, source) {
+  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, string membershipid) : base(id, source, sourceupdate, source) {
     Name = name;
-    Membership = membership;
-    Invoices = invoices;
+    MembershipId = membershipid;
   }
 
-  public override object GetChecksumSubset() => new { Name, Membership = Membership.GetChecksumSubset() };
+  public override object GetChecksumSubset() => new { Name, MembershipId };
 }
 
 public record CoreMembershipType : CoreEntityBase {
@@ -38,9 +36,9 @@ public record CoreInvoice : CoreEntityBase {
   
   public override string DisplayName => Id;
   public string CustomerId { get; private set; }
-  public int Cents { get; private set; }
-  public DateOnly DueDate { get; private set; }
-  public DateTime? PaidDate { get; private set; }
+  public int Cents { get; init; }
+  public DateOnly DueDate { get; init; }
+  public DateTime? PaidDate { get; init; }
   
   internal CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, source, sourceupdate, source) {
     CustomerId = customerid;
