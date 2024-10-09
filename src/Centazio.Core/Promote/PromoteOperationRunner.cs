@@ -113,8 +113,8 @@ public class PromoteOperationRunner(
     string Checksum(ICoreEntity c) => op.FuncConfig.ChecksumAlgorithm.Checksum(c);
   }
   
-  private async Task<Dictionary<string, (ValidString OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
-    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, potentialDups);
+  private async Task<Dictionary<ValidString, (ValidString OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
+    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, coretype, entities);
     if (!maps.Any()) return new();
     
     var existing = await core.Get(coretype, maps.Values.ToList());

@@ -71,7 +71,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create("71c5db4e-971a-45f5-831e-643d6ca77b20"));
     
     var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate("71c5db4e-971a-45f5-831e-643d6ca77b20", SCS())).ToList()));
-    Assert.That(ex.Message.StartsWith($"creating duplicate {nameof(Map.CoreToSystem)} map"), Is.True);
+    Assert.That(ex.Message, Is.EqualTo($"attempted to create duplicate CoreToSystemMaps [CRM/CoreEntity] Ids[71c5db4e-971a-45f5-831e-643d6ca77b20]"));
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
@@ -83,8 +83,8 @@ public abstract class AbstractCoreToSystemMapStoreTests {
       return c;
     }
     
-    async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(List<ICoreEntity> dups, SystemName system) {
-      var map = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, dups);
+    async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityType coretype, List<ICoreEntity> dups) {
+      var map = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, coretype, dups);
       // var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
       return await corestore.Get<CoreEntity>(Constants.CoreEntityName, map.Single().Value);
     }
@@ -107,7 +107,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
     var c2dup = new CoreEntity("C2", name, name, DateOnly.MinValue, UtcDate.UtcNow) { SourceId = "E2" };
-    var c2 = await SimulatePromoteOperationRunnerFixed([c2dup], Constants.System2Name);
+    var c2 = await SimulatePromoteOperationRunnerFixed(Constants.System2Name, Constants.CoreEntityName, [c2dup]);
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   

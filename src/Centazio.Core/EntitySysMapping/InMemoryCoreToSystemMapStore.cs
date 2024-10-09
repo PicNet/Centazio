@@ -10,60 +10,45 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> cores) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
-      var obj = CoreEntityType.From(c);
-      var existing = memdb.Keys.SingleOrDefault(k => k.CoreEntity == obj && k.CoreId == c.Id && k.System == system);
+      var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntity == CoreEntityType.From(c) && kvp.Key.CoreId == c.Id && kvp.Key.System == system).Value;
       if (existing is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(c, system)));
-      else updates.Add(new CoreAndPendingUpdateMap(c, memdb[existing].Update()));
+      else updates.Add(new CoreAndPendingUpdateMap(c, existing.Update()));
     });
     return Task.FromResult((news, updates));
   }
   
   public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityType coretype, List<string> coreids) => 
-      Task.FromResult(coreids.Distinct().Select(cid => {
-            var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.CoreId == cid && k.System == system);
-            return key is null ? null : memdb[key];
-          })
-          .Where(m => m is not null)
-          .Cast<Map.CoreToSystem>()
-          .ToList());
+      Task.FromResult(GetById(system, coretype, coreids, false));
   
   public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityType coretype, List<string> sysids) => 
-      Task.FromResult(sysids.Distinct().Select(cid => {
-            var key = memdb.Keys.SingleOrDefault(k => k.CoreEntity == coretype && k.SystemId == cid && k.System == system);
-            return key is null ? null : memdb[key];
-          })
-          .Where(m => m is not null)
-          .Cast<Map.CoreToSystem>()
-          .ToList());
+      Task.FromResult(GetById(system, coretype, sysids, true));
 
-  public override Task<Dictionary<string, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, List<ICoreEntity> potentialDups) {
-    var dict = potentialDups
-        .Select(c => (c.SourceId, NewCoreId: memdb.Keys.SingleOrDefault(k => k.CoreEntity == CoreEntityType.From(c) && k.System == system && k.SystemId == c.SourceId)?.CoreId.Value))
-        .Where(t => t.NewCoreId is not null)
-        .ToDictionary(t => t.SourceId, t => new ValidString(t.NewCoreId!));
-    return Task.FromResult(dict);
+  public override Task<Dictionary<ValidString, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
+    var lst = GetById(system, coretype, entities.Select(e => e.SourceId).ToList(), true);
+    return Task.FromResult(lst.ToDictionary(m => m.SystemId, m => m.CoreId));
   }
 
   public override Task<List<Map.Created>> Create(SystemName system, CoreEntityType coretype, List<Map.Created> news) {
-    if (!news.Any()) return Task.FromResult(new List<Map.Created>());
+    var sysids = news.Select(e => e.SystemId.Value).ToList();
+    var duplicates = GetById(system, coretype, sysids, true).Select(m => m.SystemId).ToList();
+    if (duplicates.Any()) throw new Exception($"attempted to create duplicate CoreToSystemMaps [{system}/{coretype}] Ids[{String.Join(",", duplicates)}]");
+    var nochecksums = news.Where(e => String.IsNullOrWhiteSpace(e.SystemEntityChecksum.Value)).Select(e => e.SystemId.Value).ToList();
+    if (nochecksums.Any()) throw new Exception($"attempted to create CoreToSystemMaps with no SystemEntityChecksum [{system}/{coretype}] Ids[{String.Join(",", nochecksums)}]");
     
-    // Log.Information("creating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, news.Select(m => m.Key));
-    var created = news.Select(map => {
-      if (String.IsNullOrWhiteSpace(map.SystemEntityChecksum.Value)) throw new Exception(); 
-      var duplicate = memdb.Keys.FirstOrDefault(k => k.CoreEntity == coretype && k.System == system && k.SystemId == map.SystemId);
-      if (duplicate is not null) throw new Exception($"creating duplicate {nameof(Map.CoreToSystem)} map[{map}] existing[{duplicate}]");
-      memdb[map.Key] = map;
-      return map;
-    }).ToList();
-    return Task.FromResult(created);
+    return Task.FromResult(news.Select(map => memdb[map.Key] = map).Cast<Map.Created>().ToList());
   }
 
+  private List<Map.CoreToSystem> GetById(SystemName system, CoreEntityType coretype, List<string> ids, bool sysid) => 
+      ids.Distinct()
+          .Select(cid => memdb.SingleOrDefault(kvp => kvp.Key.CoreEntity == coretype && (sysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value)
+          // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+          .Where(v => v != default)
+          .ToList();
+
   public override Task<List<Map.Updated>> Update(SystemName system, CoreEntityType coretype, List<Map.Updated> updates) {
-    if (!updates.Any()) return Task.FromResult(new List<Map.Updated>());
-    
-    // Log.Debug("updating core/system maps {@CoreEntityType} {@System} {@CoreToSystemMapEntries}", coretype, system, updates);
-    updates.ForEach(map => memdb[map.Key] = map);
-    return Task.FromResult(updates);
+    var missing = updates.Where(m => !memdb.ContainsKey(m.Key)).Select(m => m.SystemId).ToList();
+    if (missing.Any()) throw new Exception($"attempted to update CoreToSystemMaps that do not exist [{system}/{coretype}] Ids[{String.Join(",", missing)}]");
+    return Task.FromResult(updates.Select(map => memdb[map.Key] = map).Cast<Map.Updated>().ToList());
   }
 
   public override ValueTask DisposeAsync() { 

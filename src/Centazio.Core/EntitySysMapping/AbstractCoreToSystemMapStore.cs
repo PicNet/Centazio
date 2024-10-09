@@ -17,7 +17,7 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   /// duplicates can only happen for Bi-directional entities that can bounce back when written to
   /// a target system.
   /// </summary>
-  Task<Dictionary<string, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, List<ICoreEntity> potentialDups);
+  Task<Dictionary<ValidString, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities);
 
 }
 
@@ -29,7 +29,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   public abstract Task<List<Map.CoreToSystem>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityType coretype, List<string> coreids);
   
   public abstract Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityType coretype, List<string> sysids);
-  public abstract Task<Dictionary<string, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, List<ICoreEntity> potentialDups);
+  public abstract Task<Dictionary<ValidString, ValidString>> GetPreExistingSourceIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities);
   public abstract ValueTask DisposeAsync();
 
 }
