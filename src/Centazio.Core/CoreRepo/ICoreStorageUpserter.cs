@@ -14,7 +14,7 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids);
+  Task<List<ICoreEntity>> Get(CoreEntityType obj, List<ValidString> coreids);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {

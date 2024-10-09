@@ -6,7 +6,7 @@ namespace Centazio.Test.Lib;
 public static class Constants {
   public static readonly SystemName System1Name = new("CRM");
   public static readonly SystemName System2Name = new("FIN");
-  public static readonly SystemEntityType SYSTEM_ENTITY_NAME = new(nameof(SystemEntityType));
+  public static readonly SystemEntityType SystemEntityName = new(nameof(SystemEntityType));
   public static readonly CoreEntityType CoreEntityName = CoreEntityType.From<CoreEntity>();
   public static readonly CoreEntityType CoreEntityName2 = CoreEntityType.From<CoreEntity2>();
 }

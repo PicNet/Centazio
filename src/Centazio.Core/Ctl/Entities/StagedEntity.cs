@@ -7,9 +7,14 @@ namespace Centazio.Core.Ctl.Entities;
 public static class StagedEntityEnumerableExtensions {
   public static List<E> ToSysEnt<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => s.Deserialise<E>()).ToList();
   
-  public static List<Containers.StagedSysCore> ToStagedSysCore<E>(this List<StagedEntity> staged, Func<E, ICoreEntity> ToCore) where E : ISystemEntity => staged.Select(s => {
+  public static List<Containers.StagedSys> ToStagedSys<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => {
     var sysent = s.Deserialise<E>();
-    return new Containers.StagedSysCore(s, sysent, ToCore(sysent));
+    return new Containers.StagedSys(s, sysent);
+  }).ToList();
+  
+  public static List<Containers.StagedSysOptionalCore> ToStagedSysCore<E>(this List<StagedEntity> staged, Func<E, ICoreEntity> ToCore) where E : ISystemEntity => staged.Select(s => {
+    var sysent = s.Deserialise<E>();
+    return new Containers.StagedSysOptionalCore(s, sysent, ToCore(sysent));
   }).ToList();
 }
 

@@ -55,29 +55,38 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       new(new(nameof(CrmInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = ctx.ALLOW_BIDIRECTIONAL }
     ]);
   }
-
-  public async Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    ctx.Debug($"CrmPromoteFunction[{config.State.Object.Value}] Staged[{staged.Count}]");
+  
+  public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
+    ctx.Debug($"CrmPromoteFunction.DeserialiseStagedEntities[{config.State.Object.Value}] Staged[{staged.Count}]");
+    return config.State.Object.Value switch { 
+      nameof(CoreMembershipType) => staged.ToStagedSys<CrmMembershipType>(), 
+      nameof(CoreCustomer) => staged.ToStagedSys<CrmCustomer>(), 
+      nameof(CoreInvoice) => staged.ToStagedSys<CrmInvoice>(), 
+      _ => throw new NotSupportedException(config.State.Object) };
+  }
+  
+  public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
+    ctx.Debug($"CrmPromoteFunction.BuildCoreEntities[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
-      nameof(CoreMembershipType) => staged.ToStagedSysCore<CrmMembershipType>(ctx.CrmMembershipTypeToCoreMembershipType), 
-      nameof(CoreCustomer) => await EvaluateCustomers(), 
-      nameof(CoreInvoice) => await EvaluateInvoices(), 
+      nameof(CoreMembershipType) => BuildMembershipTypes(), 
+      nameof(CoreCustomer) => BuildCustomers(), 
+      nameof(CoreInvoice) => await BuildInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
     return new SuccessPromoteOperationResult(topromote, []);
 
-    async Task<List<Containers.StagedSysCore>> EvaluateCustomers() {
-      var map = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmCustomer>(), "SystemId", CoreEntityType.From<CoreCustomer>(), false);
-      return staged.ToStagedSysCore<CrmCustomer>(c => {
-        var existing = map.TryGetValue(c.SystemId, out var coreid) ? ctx.core.GetCustomer(coreid) : null;
-        return ctx.CrmCustomerToCoreCustomer(c, existing);
-      });
-    }
-    
-    async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged.ToSysEnt<CrmInvoice>(), nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>(), true);
-      return staged.ToStagedSysCore<CrmInvoice>(e => ctx.CrmInvoiceToCoreInvoice(e, maps[e.CustomerId.ToString()]));
+    List<Containers.StagedSysCore> BuildMembershipTypes() => staged.ToStagedSysOptionalCore<CrmMembershipType, CoreMembershipType>().Select(t => 
+        t.SetCore(ctx.CrmMembershipTypeToCoreMembershipType(t.Sys, t.OptCore))).ToList();
+
+    List<Containers.StagedSysCore> BuildCustomers() => staged.ToStagedSysOptionalCore<CrmCustomer, CoreCustomer>().Select(t => 
+        t.SetCore(ctx.CrmCustomerToCoreCustomer(t.Sys, t.OptCore))).ToList();
+
+    async Task<List<Containers.StagedSysCore>> BuildInvoices() {
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged, nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>(), true);
+      return staged.ToStagedSysOptionalCore<CrmInvoice, CoreInvoice>().Select(t => 
+          t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.CustomerId.ToString()]))).ToList();
     }
   }
+
 }
 
 public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {

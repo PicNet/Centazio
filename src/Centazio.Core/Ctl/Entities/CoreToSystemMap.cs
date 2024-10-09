@@ -122,12 +122,7 @@ public static class Map {
   }
 
   public record Updated : CoreToSystem {
-    internal Updated(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {
-      if (e.SystemEntityChecksum == new SystemEntityChecksum("7CC9CFD1DDA9E713A05389AADD74A675802ACF59F48F417E40401BB23F0BE76B")) {
-        var debug = true;
-        if (debug) Console.WriteLine("1");
-      }
-    }
+    internal Updated(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
   }
 }
 

@@ -4,14 +4,15 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
-  Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged);
+  List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged);
+  Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged);
 }
 
 public record PromoteOperationConfig(
     SystemEntityType SystemEntityType,
     CoreEntityType CoreEntityType,
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote EvaluateEntitiesToPromote) : OperationConfig(CoreEntityType, Cron), ILoggable {
+    IEvaluateEntitiesToPromote PromoteEvaluator) : OperationConfig(CoreEntityType, Cron), ILoggable {
 
   // ReSharper disable RedundantExplicitPositionalPropertyDeclaration
   public SystemEntityType SystemEntityType { get; } = SystemEntityType;
@@ -27,5 +28,6 @@ public record PromoteOperationConfig(
   public bool IsBidirectional { get; init; }
   
   public object LoggableValue => $"{SystemEntityType.Value} -> {CoreEntityType.Value}";
+
 }
 

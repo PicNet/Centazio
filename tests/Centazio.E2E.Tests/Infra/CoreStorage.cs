@@ -22,7 +22,7 @@ public record CoreCustomer : CoreEntityBase {
 
 public record CoreMembershipType : CoreEntityBase {
 
-  public string Name { get; private init; }
+  public string Name { get; init; }
   public override string DisplayName => Name;
   
   internal CoreMembershipType(string id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
@@ -93,8 +93,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     return Task.FromResult(list);
   }
 
-  // todo: rename so we dont have this ugly override
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<ValidString> coreids) {
     var full = GetList(obj);
     var forcores = coreids.Select(id => full.Single(e => e.Id == id)).ToList();
     // Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");

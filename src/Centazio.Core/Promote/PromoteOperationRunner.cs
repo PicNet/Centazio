@@ -18,7 +18,9 @@ public class PromoteOperationRunner(
     var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.OpConfig.SystemEntityType);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
     
-    var results = await op.OpConfig.EvaluateEntitiesToPromote.Evaluate(op, pending);
+    var sysents = op.OpConfig.PromoteEvaluator.DeserialiseStagedEntities(op, pending);
+    var syscores = await GetExistingCoreEntitiesForSysEnts(op, sysents);
+    var results = await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, syscores);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
@@ -32,8 +34,7 @@ public class PromoteOperationRunner(
 
     meaningful = await IgnoreNonMeaninfulChanges(meaningful, op.State.Object.ToCoreEntityType, core, op.FuncConfig.ChecksumAlgorithm.Checksum);
     
-    var meaningulstr = String.Join(",", meaningful.Select(e => e.Core.DisplayName));
-    Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}({meaningulstr})] ToIgnore[{toignore.Count}]");
+    Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}] ToIgnore[{toignore.Count}]");
     
     await WriteEntitiesToCoreStorageAndUpdateMaps(op, meaningful);
     await staged.Update(
@@ -45,8 +46,21 @@ public class PromoteOperationRunner(
     return results; 
   }
 
+  private async Task<List<Containers.StagedSysOptionalCore>> GetExistingCoreEntitiesForSysEnts(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSys> stagedsys) {
+    var sysids = stagedsys.Select(e => e.Sys.SystemId).ToList();
+    var maps = await entitymap.GetExistingMappingsFromSystemIds(op.OpConfig.CoreEntityType, sysids, op.State.System);
+    var coreids = maps.Select(m => m.CoreId).ToList();
+    var coreents = await core.Get(op.OpConfig.CoreEntityType, coreids);
+    var syscores = stagedsys.Select(t => {
+      var coreid = maps.SingleOrDefault(m => m.SystemId == t.Sys.SystemId)?.CoreId;
+      var coreent = coreid is null ? null : coreents.Single(e => e.Id == coreid); 
+      return new Containers.StagedSysOptionalCore(t.Staged, t.Sys, coreent);
+    }).ToList();
+    return syscores;
+  }
+
   private async Task<List<Containers.StagedSysCore>> IdentifyBouncedBackAndSetCorrectId(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> topromote) {
-    var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.Select(t => t.Core).ToList());
+    var bounces = await GetBounceBacks(op.State.System, op.State.Object.ToCoreEntityType, topromote.ToCore());
     if (!bounces.Any()) return topromote;
     
     var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
@@ -99,14 +113,14 @@ public class PromoteOperationRunner(
     string Checksum(ICoreEntity c) => op.FuncConfig.ChecksumAlgorithm.Checksum(c);
   }
   
-  private async Task<Dictionary<string, (string OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
+  private async Task<Dictionary<string, (ValidString OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
     var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(potentialDups, system);
     if (!maps.Any()) return new();
     
     var existing = await core.Get(coretype, maps.Values.ToList());
     return maps.ToDictionary(sid_id => sid_id.Key, sid_id => {
       var preexisting = existing.Single(c => c.Id == sid_id.Value);
-      return (preexisting.Id, preexisting.SourceId);
+      return (new ValidString(preexisting.Id), preexisting.SourceId);
     });
   }
 

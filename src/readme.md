@@ -1,5 +1,6 @@
 # Todo
 - InMemory stores should all do serialisation of objects to json to add an additional layer of testing
+- consider using readonly record structs to protect from mutation
 - review naming conventions of all common names
 - check for all new logic added through the simulator and check that its adequately unit tested
 - use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)

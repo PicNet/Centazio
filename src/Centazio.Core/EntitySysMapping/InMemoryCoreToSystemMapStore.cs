@@ -36,11 +36,11 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
           .Cast<Map.CoreToSystem>()
           .ToList());
 
-  public override Task<Dictionary<string, string>> GetPreExistingSourceIdToCoreIdMap(List<ICoreEntity> potentialDups, SystemName system) {
+  public override Task<Dictionary<string, ValidString>> GetPreExistingSourceIdToCoreIdMap(List<ICoreEntity> potentialDups, SystemName system) {
     var dict = potentialDups
         .Select(c => (c.SourceId, NewCoreId: memdb.Keys.SingleOrDefault(k => k.CoreEntity == CoreEntityType.From(c) && k.System == system && k.SystemId == c.SourceId)?.CoreId.Value))
         .Where(t => t.NewCoreId is not null)
-        .ToDictionary(t => t.SourceId, t => t.NewCoreId!);
+        .ToDictionary(t => t.SourceId, t => new ValidString(t.NewCoreId!));
     return Task.FromResult(dict);
   }
 

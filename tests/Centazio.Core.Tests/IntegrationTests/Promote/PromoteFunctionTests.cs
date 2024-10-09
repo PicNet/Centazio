@@ -14,7 +14,7 @@ public class PromoteFunctionTests {
   private readonly SystemName sys1 = Constants.System1Name;
   private readonly SystemName sys2 = Constants.System2Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Promote;
-  private readonly SystemEntityType system = Constants.SYSTEM_ENTITY_NAME;
+  private readonly SystemEntityType system = Constants.SystemEntityName;
   private readonly CoreEntityType obj = Constants.CoreEntityName;
   
   private TestingCtlRepository ctl;
@@ -154,7 +154,7 @@ public class PromoteFunctionTests {
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
-    var expected = new CoreEntity("C1", "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = "E1" };
+    var expected = new CoreEntity("C1", "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = "E1", LastUpdateSystem = Constants.System2Name };
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }
   
@@ -229,19 +229,32 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   
   public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? sys=null, bool bidi=false) {
     Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
-      new(Constants.SYSTEM_ENTITY_NAME, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
+      new(Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
-  
-  public Task<PromoteOperationResult> Evaluate(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
+
+  public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
+    if (NextResult is not null) return staged.Select(s => new Containers.StagedSys(s, new System1Entity(Guid.Empty, "N", "N", DateOnly.MinValue, DateTime.MinValue))).ToList();
+    if (config.OpConfig.SystemEntityType.ToSystemEntityType != Constants.SystemEntityName) throw new NotSupportedException(config.OpConfig.Object.Value);
+    return staged.ToStagedSys<System1Entity>();
+  }
+
+  public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
     if (NextResult is not null) return Task.FromResult(NextResult);
     
-    var cores = staged.Select(e => {
+    /*OLD:
+     var cores = staged.Select(e => {
       var sysent = JsonSerializer.Deserialize<System1Entity>(e.Data) ?? throw new Exception();
       return new Containers.StagedSysCore(e, sysent, sysent.ToCoreEntity());
     }).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 
         IgnoreNext ? staged.Select(e => new Containers.StagedIgnore(e, Ignore: "ignore")).ToList() : [])); 
+        
+        */
+    var cores = staged.Select(e => e.SetCore(e.Sys.To<System1Entity>().ToCoreEntity())).ToList();
+    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
+        IgnoreNext ? [] : cores, 
+        IgnoreNext ? staged.Select(e => new Containers.StagedIgnore(e.Staged, Ignore: "ignore")).ToList() : [])); 
   }
 }

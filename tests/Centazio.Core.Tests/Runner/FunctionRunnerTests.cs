@@ -75,7 +75,7 @@ public class FunctionRunnerTests {
   }
   
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(NAME, NAME, [
-    new(Constants.SYSTEM_ENTITY_NAME, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults())
+    new(Constants.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults())
   ]) {
     
     private class EmptyResults : IGetObjectsToStage {

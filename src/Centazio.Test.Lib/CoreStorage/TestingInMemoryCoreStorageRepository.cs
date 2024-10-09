@@ -6,7 +6,7 @@ namespace Centazio.Test.Lib.CoreStorage;
 
 public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorage {
   
-  public Task<E> Get<E>(CoreEntityType obj, string id) where E : class, ICoreEntity {
+  public Task<E> Get<E>(CoreEntityType obj, ValidString id) where E : class, ICoreEntity {
     if (!db.ContainsKey(obj) || !db[obj].ContainsKey(id)) throw new Exception($"Core entity [{obj}({id})] not found");
     return Task.FromResult(db[obj][id].Core.To<E>());
   }
@@ -17,8 +17,8 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult(lst);
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<string> coreids) {
-    if (!db.TryGetValue(obj, out var fulllst)) throw new Exception($"Core entity type [{obj}] not found");
+  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<ValidString> coreids) {
+    if (!db.TryGetValue(obj, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
     var lst = coreids.Select(id => fulllst.Single(e => e.Value.Core.Id == id).Value.Core).ToList();
     return Task.FromResult(lst);
   }
@@ -32,5 +32,5 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   public Task<List<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
   
-  public Dictionary<CoreEntityType, Dictionary<string, Containers.CoreChecksum>> MemDb => db; 
+  public Dictionary<CoreEntityType, Dictionary<ValidString, Containers.CoreChecksum>> MemDb => db; 
 }
