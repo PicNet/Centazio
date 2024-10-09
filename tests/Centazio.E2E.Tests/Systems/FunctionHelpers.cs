@@ -44,7 +44,7 @@ public class FunctionHelpers(
   
   public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntitySystemIdsFromCoreIds(List<ICoreEntity> entities, string foreignkey, CoreEntityType obj) {
     var fks = entities.Select(e => ReflectionUtils.GetPropValAsString(e, foreignkey)).Distinct().ToList();
-    var maps = await intra.GetExistingMappingsFromCoreIds(obj, fks, system);
+    var maps = await intra.GetExistingMappingsFromCoreIds(system, obj, fks);
     var dict = maps.ToDictionary(m => m.CoreId, m => m.SystemId);
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
@@ -55,7 +55,7 @@ public class FunctionHelpers(
  
   public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntityCoreIdsFromSystemIds(List<Containers.StagedSysOptionalCore> entities, string foreignkey, CoreEntityType obj, bool mandatory) {
     var fks = entities.Select(e => ReflectionUtils.GetPropValAsString(e.Sys, foreignkey)).Distinct().ToList();
-    var dict = (await intra.GetExistingMappingsFromSystemIds(obj, fks, system)).ToDictionary(m => m.SystemId, m => m.CoreId);
+    var dict = (await intra.GetExistingMappingsFromSystemIds(system, obj, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
     if (!mandatory) return dict;
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();

@@ -10,7 +10,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var pending = await core.Get(op.State.Object.ToCoreEntityType, op.Checkpoint, op.State.System);
-    var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(pending, op.State.System);
+    var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, pending);
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
@@ -26,8 +26,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       return results;  
     }
     
-    await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, results.EntitiesCreated.Select(e => e.Map).ToList());
-    await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, results.EntitiesUpdated.Select(e => e.Map).ToList());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, results.EntitiesCreated.Select(e => e.Map).ToList());
+    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityType, results.EntitiesUpdated.Select(e => e.Map).ToList());
     return results;
   }
 

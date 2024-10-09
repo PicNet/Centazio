@@ -48,7 +48,7 @@ public class PromoteOperationRunner(
 
   private async Task<List<Containers.StagedSysOptionalCore>> GetExistingCoreEntitiesForSysEnts(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSys> stagedsys) {
     var sysids = stagedsys.Select(e => e.Sys.SystemId).ToList();
-    var maps = await entitymap.GetExistingMappingsFromSystemIds(op.OpConfig.CoreEntityType, sysids, op.State.System);
+    var maps = await entitymap.GetExistingMappingsFromSystemIds(op.State.System, op.OpConfig.CoreEntityType, sysids);
     var coreids = maps.Select(m => m.CoreId).ToList();
     var coreents = await core.Get(op.OpConfig.CoreEntityType, coreids);
     var syscores = stagedsys.Select(t => {
@@ -114,7 +114,7 @@ public class PromoteOperationRunner(
   }
   
   private async Task<Dictionary<string, (ValidString OriginalCoreId, string OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> potentialDups) {
-    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(potentialDups, system);
+    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, potentialDups);
     if (!maps.Any()) return new();
     
     var existing = await core.Get(coretype, maps.Values.ToList());
@@ -134,9 +134,9 @@ public class PromoteOperationRunner(
               return new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e));
             }).ToList());
     
-    var existing = await entitymap.GetNewAndExistingMappingsFromCores(entities.ToCore(), op.State.System);
-    await entitymap.Create(op.State.Object.ToCoreEntityType, op.State.System, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());
-    await entitymap.Update(op.State.Object.ToCoreEntityType, op.State.System, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
+    var existing = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, entities.ToCore());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());
+    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityType, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
     
     SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(entities.Single(c => c.Core.Id == e.Id).Sys);
   }

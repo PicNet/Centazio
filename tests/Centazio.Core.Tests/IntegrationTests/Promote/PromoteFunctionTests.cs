@@ -137,7 +137,7 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
+    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
     var expkey2 = new Map.Key(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
@@ -180,7 +180,7 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.CoreEntityName, Constants.System2Name, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
+    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
     var expkey2 = new Map.Key(obj, "C1", sys2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
