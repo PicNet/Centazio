@@ -89,13 +89,13 @@ public class FinSystem : ISimulationSystem {
       var edited = new List<FinAccount>();
       idxs.ForEach(idx => {
         var acc = accounts[idx];
-        if (AddedAccounts.Contains(acc)) return;
         var (name, newname) = (acc.Name, ctx.UpdateName(acc.Name));
         var newacc = acc with { Name = newname, Updated = UtcDate.UtcNow };
         var oldcs = ctx.checksum.Checksum(acc);
         var newcs = ctx.checksum.Checksum(newacc);
         log.Add($"Id[{acc.SystemId}] Name[{name}->{newname}] Checksum[{oldcs}->{newcs}]");
-        if (oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
+        // do not mark as edited if the entity was just added in this epoch, it will be validate when checking added entities
+        if (!AddedAccounts.Contains(acc) && oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
       });
       ctx.Debug($"FinSimulation - EditAccounts[{edited.Count}] - {String.Join(',', log)}");
       return edited;

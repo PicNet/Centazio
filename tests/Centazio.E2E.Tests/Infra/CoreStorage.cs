@@ -76,15 +76,16 @@ public abstract record CoreEntityBase : ICoreEntity {
 
 // todo: we need a base class for core storage with Impl methods so a lot of the boilerplate can be handled
 // todo: things like setting the DateCreated / DateUpdated should not be left to the implementor
+// todo: we a proper AbstractCoreToSystemMapStore to also do validations
 public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   internal List<ICoreEntity> Types { get; } = [];
   internal List<ICoreEntity> Customers { get; } = [];
   internal List<ICoreEntity> Invoices { get; } = [];
   
-  public CoreMembershipType GetMembershipType(string id) => Types.Single(e => e.Id == id).To<CoreMembershipType>();
-  public CoreCustomer GetCustomer(string id) => Customers.Single(e => e.Id == id).To<CoreCustomer>();
-  public CoreInvoice GetInvoice(string id) => Invoices.Single(e => e.Id == id).To<CoreInvoice>();
+  public CoreMembershipType? GetMembershipType(string? id) => Types.SingleOrDefault(e => e.Id == id)?.To<CoreMembershipType>();
+  public CoreCustomer? GetCustomer(string? id) => Customers.SingleOrDefault(e => e.Id == id)?.To<CoreCustomer>();
+  public CoreInvoice? GetInvoice(string? id) => Invoices.SingleOrDefault(e => e.Id == id)?.To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
   public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) {

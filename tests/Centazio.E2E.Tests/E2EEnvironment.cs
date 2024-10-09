@@ -63,14 +63,18 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     }
     return cores;
 
-    Task<ICoreEntity> ToCore(object e) => Task.FromResult<ICoreEntity>(e switch { 
-      // for comparison purposes its ok to have null `existing` (last argument below) 
-      CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type, null), 
-      CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer, null),  
-      CrmInvoice invoice => ctx.CrmInvoiceToCoreInvoice(invoice, null), 
-      FinAccount account => ctx.FinAccountToCoreCustomer(account, null), 
-      FinInvoice finInvoice => ctx.FinInvoiceToCoreInvoice(finInvoice, null), 
-      _ => throw new NotSupportedException(e.GetType().Name) });
+    Task<ICoreEntity> ToCore(ISystemEntity e) {
+      var exid = ctx.entitymap.Db.SingleOrDefault(m => m.SystemId == e.SystemId)?.CoreId.Value;
+      ICoreEntity result = e switch {
+        CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type, ctx.core.GetMembershipType(exid)), 
+        CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer, ctx.core.GetCustomer(exid)), 
+        CrmInvoice invoice => ctx.CrmInvoiceToCoreInvoice(invoice, ctx.core.GetInvoice(exid)), 
+        FinAccount account => ctx.FinAccountToCoreCustomer(account, ctx.core.GetCustomer(exid)), 
+        FinInvoice fininv => ctx.FinInvoiceToCoreInvoice(fininv, ctx.core.GetInvoice(exid)), 
+        _ => throw new NotSupportedException(e.GetType().Name)
+      };
+      return Task.FromResult(result);
+    }
   }
 
   public void Add(ICoreEntity e) {
@@ -80,6 +84,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   
   public void Update(SystemName system, ICoreEntity e) {
     // ctx.Debug($"CoreStorage.Update System[{system}] CoreEntityType[{e.GetType().Name}] Name[{e.DisplayName}] Id[{e.Id}]");
+    if (added.ContainsKey((e.GetType(), e.Id))) return;
     updated[(system, e.GetType(), e.Id)] = e;
   }
 
@@ -130,8 +135,8 @@ public class SimulationCtx {
   
   public readonly int FIN_MAX_NEW_ACCOUNTS = 2;
   public readonly int FIN_MAX_EDIT_ACCOUNTS = 4;
-  public readonly int FIN_MAX_NEW_INVOICES = 0;
-  public readonly int FIN_MAX_EDIT_INVOICES = 0;
+  public readonly int FIN_MAX_NEW_INVOICES = 2;
+  public readonly int FIN_MAX_EDIT_INVOICES = 0; // todo: adding invoices causes failure
  
  public void Debug(string message) {
    if (SILENCE_SIMULATION) return;
@@ -158,9 +163,8 @@ public class SimulationCtx {
         : existing with { Cents = i.AmountCents, DueDate = i.DueDate, PaidDate = i.PaidDate };
   }
   
-  // todo: this method will cause an issue with new `CoreCustomer? existing` logic
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) => 
-      1==1 || existing is null 
+      existing is null 
           ? new CoreCustomer(a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString())
           : existing with { Name = a.Name };
 

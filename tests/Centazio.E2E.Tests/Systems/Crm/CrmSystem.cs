@@ -108,14 +108,13 @@ public class CrmSystem : ISimulationSystem {
       var edited = new List<CrmCustomer>();
       idxs.ForEach(idx => {
         var cust = customers[idx];
-        // lets not edit previously added entities, makes it hard to verify
-        if (AddedCustomers.Contains(cust)) return;
         var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, ctx.RandomItem(types).CrmTypeId);
         var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
         var oldcs = ctx.checksum.Checksum(cust);
         var newcs = ctx.checksum.Checksum(newcust);
         log.Add($"Id[{cust.SystemId}] Name[{name}->{newname}] Membership[{oldmt}->{newmt}] Checksum[{oldcs}->{newcs}]");
-        if (oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
+        // do not mark as edited if the entity was just added in this epoch, it will be validate when checking added entities
+        if (!AddedCustomers.Contains(cust) && oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
       });
       ctx.Debug($"CrmSimulation - EditCustomers[{edited.Count}] - {String.Join(',', log)}");
       return edited;
