@@ -10,7 +10,7 @@ public static class DynamoStagedEntityExtensionMethods {
 
   public static Dictionary<string, AttributeValue> ToDynamoDict(this StagedEntity e) {
     var dict = new Dictionary<string, AttributeValue> {
-      { AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoHashKey(e.SourceSystem, e.Object)) },
+      { AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoHashKey(e.System, e.SystemEntityType)) },
       { AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoRangeKey(e.DateStaged, e.Id)) },
       { nameof(e.StagedEntityChecksum), new AttributeValue(e.StagedEntityChecksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
@@ -26,11 +26,11 @@ public static class DynamoStagedEntityExtensionMethods {
       var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
       return (StagedEntity) new StagedEntity.Dto {
         Id = Guid.Parse(suffix),
-        SourceSystem = system, 
-        Object = entity, 
+        System = system, 
+        SystemEntityType = entity, 
         DateStaged = DateTime.Parse(staged).ToUniversalTime(), 
         Data = d[nameof(StagedEntity.Data)].AsString(),
-        Checksum = d[nameof(StagedEntity.StagedEntityChecksum)].AsString(),
+        StagedEntityChecksum = d[nameof(StagedEntity.StagedEntityChecksum)].AsString(),
         DatePromoted = d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
         IgnoreReason = d.ContainsKey(nameof(StagedEntity.IgnoreReason)) ? d[nameof(StagedEntity.IgnoreReason)].AsString() : null 
       };

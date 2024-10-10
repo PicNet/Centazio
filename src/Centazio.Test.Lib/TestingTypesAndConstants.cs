@@ -1,8 +1,10 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 
 namespace Centazio.Test.Lib;
 
+[IgnoreNamingConventions] 
 public static class Constants {
   public static readonly SystemName System1Name = new("CRM");
   public static readonly SystemName System2Name = new("FIN");

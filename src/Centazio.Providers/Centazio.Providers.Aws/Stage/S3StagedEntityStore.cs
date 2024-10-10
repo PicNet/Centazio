@@ -32,8 +32,8 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
-    var existing = (await ListAll(se.SourceSystem, se.Object))
-        .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).Checksum)
+    var existing = (await ListAll(se.System, se.SystemEntityType))
+        .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
         .ToDictionary(cs => cs);
     
     var tostage = staged.Where(s => !existing.ContainsKey(s.StagedEntityChecksum)).ToList();
@@ -46,9 +46,9 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
-  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, SystemEntityType obj, bool incpromoted) {
-    var from = $"{source.Value}/{obj.Value}/{after:o}_z";
-    var list = (await ListAll(source, obj))
+  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted) {
+    var from = $"{system.Value}/{systype.Value}/{after:o}_z";
+    var list = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
         .ToList();
     // note: S3 does not support querying by metadata so 'Ignore' is is handled here
@@ -61,9 +61,9 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged).ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(DateTime before, SystemName source, SystemEntityType obj, bool promoted) {
-    var beforestr = $"{source.Value}/{obj.Value}/{before:o}";
-    var todelete = (await ListAll(source, obj))
+  protected override async Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted) {
+    var beforestr = $"{system.Value}/{systype.Value}/{before:o}";
+    var todelete = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, beforestr) < 0)
         .Select(o => o.Key)
         .ToList();
@@ -84,10 +84,10 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   }
   
   
-  private async Task<List<S3Object>> ListAll(SystemName source, SystemEntityType obj) =>
+  private async Task<List<S3Object>> ListAll(SystemName system, SystemEntityType systype) =>
       (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
-        Prefix = $"{source.Value}/{obj.Value}" })).S3Objects;
+        Prefix = $"{system.Value}/{systype.Value}" })).S3Objects;
   
   public PutObjectRequest ToPutObjectRequest(StagedEntity se) {
     var req = new PutObjectRequest { 
@@ -117,11 +117,11 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     
     return (StagedEntity) new StagedEntity.Dto {
       Id = details.Id,
-      SourceSystem = details.System,
-      Object = details.Object.Value,
+      System = details.System,
+      SystemEntityType = details.SystemEntityType.Value,
       DateStaged = details.DateStaged.ToUniversalTime(),
       Data = data, 
-      Checksum = details.Checksum,
+      StagedEntityChecksum = details.StagedEntityChecksum,
       DatePromoted = promoted
     };
   }

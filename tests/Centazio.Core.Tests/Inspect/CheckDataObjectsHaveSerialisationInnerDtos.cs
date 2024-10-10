@@ -30,10 +30,13 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var nonnulls = dto.GetProperties().Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
     var setterstoignore = IGNORE_SETTERS.TryGetValue(baset.Name, out var value2) ? value2 : [];
     var setters = baset.GetProperties().Where(p => !setterstoignore.Contains(p.Name) && p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
+    var basenames = baset.GetProperties().Select(p => p.Name).ToDictionary(p => p);
+    var invalidprops = dto.GetProperties().Where(p => !basenames.ContainsKey(p.Name)).ToList();
     
     Assert.That(baset.GetConstructors().All(c => c.IsPrivate), Is.True, $"{baset.Name} has public constructor");
     Assert.That(setters, Is.Empty, $"{baset.Name} has public setters: {String.Join(",", setters)}");
     Assert.That(nonnulls.Any(), Is.False, $"{baset.Name}#Dto has non-nullable properties: {String.Join(',', nonnulls.Select(p => p.Name))}");
+    Assert.That(invalidprops.Any(), Is.False, $"{baset.Name}#Dto has properties not found in base type: {String.Join(',', invalidprops.Select(p => p.Name))}");
 
     bool IsNullable(PropertyInfo property) {
       var nullabilityInfoContext = new NullabilityInfoContext();

@@ -23,7 +23,7 @@ internal static class InspectUtils {
     return distinct.Values.Select(t => t.Full).ToList();
   }
   
-  public static List<Assembly> LoadCentazioAssemblies() => GetCentazioDllFiles().Select(Assembly.LoadFile).ToList();
+  public static List<Assembly> LoadCentazioAssemblies() => GetCentazioDllFiles().Select(Assembly.LoadFrom).ToList();
   
   public static List<string> GetSolnFiles(string? dir, string extension) => Directory.GetFiles(dir ?? SolnDir, extension, SearchOption.AllDirectories).ToList();
 

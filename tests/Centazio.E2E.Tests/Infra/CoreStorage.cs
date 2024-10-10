@@ -2,6 +2,7 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -12,7 +13,7 @@ public record CoreCustomer : CoreEntityBase {
   public override string DisplayName => Name;
   public string MembershipId { get; internal init; }
   
-  internal CoreCustomer(string id, SystemName source, DateTime sourceupdate, string name, string membershipid) : base(id, source, sourceupdate, source) {
+  internal CoreCustomer(string id, SystemName system, DateTime sourceupdate, string name, string membershipid) : base(id, system, sourceupdate, system) {
     Name = name;
     MembershipId = membershipid;
   }
@@ -40,7 +41,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateOnly DueDate { get; init; }
   public DateTime? PaidDate { get; init; }
   
-  internal CoreInvoice(string id, SystemName source, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, source, sourceupdate, source) {
+  internal CoreInvoice(string id, SystemName system, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, system, sourceupdate, system) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
@@ -51,6 +52,7 @@ public record CoreInvoice : CoreEntityBase {
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
+  // todo: use strong types SystemName (for SourceSystem and LastUpdateSystem), ValidString, etc
   public string SourceSystem { get; }
   public string SourceId { get; set; }
   public string Id { get; set; }
@@ -62,8 +64,8 @@ public abstract record CoreEntityBase : ICoreEntity {
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
-  protected CoreEntityBase(string id, SystemName source, DateTime sourceupdate, string lastsys) {
-    SourceSystem = source;
+  protected CoreEntityBase(string id, SystemName system, DateTime sourceupdate, string lastsys) {
+    SourceSystem = system;
     SourceId = id;
     SourceSystemDateUpdated = sourceupdate;
         
@@ -88,28 +90,28 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   public CoreInvoice? GetInvoice(string? id) => Invoices.SingleOrDefault(e => e.Id == id)?.To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude) {
-    var list = GetList(obj).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
+  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, DateTime after, SystemName exclude) {
+    var list = GetList(coretype).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
     // Log.Debug($"CoreStorage.Get Object[{obj}] After[{after:o}] Exclude[{exclude}] Returning[{String.Join(",", list.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(list);
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityType obj, List<ValidString> coreids) {
-    var full = GetList(obj);
+  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<ValidString> coreids) {
+    var full = GetList(coretype);
     var forcores = coreids.Select(id => full.Single(e => e.Id == id)).ToList();
     // Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(forcores);
   }
 
-  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
+  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
-    return (await Get(obj, DateTime.MinValue, new("ignore")))
+    return (await Get(coretype, DateTime.MinValue, new("ignore")))
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e));
   }
   
-  public Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
-    var target = GetList(obj);
+  public Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
+    var target = GetList(coretype);
     var (added, updated) = (0, 0);
     var upserted = entities.Select(e => {
       e.Core.DateUpdated = UtcDate.UtcNow;
@@ -125,16 +127,16 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
       return e.Core;
     }).ToList();
     
-    Log.Debug($"CoreStorage.Upsert[{obj}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})")) + $"] Created[{added}] Updated[{updated}]");
+    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.Core.DisplayName}({e.Core.Id})")) + $"] Created[{added}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
   
-  private List<ICoreEntity> GetList(CoreEntityType obj) {
-    if (obj.Value == nameof(CoreMembershipType)) return Types;
-    if (obj.Value == nameof(CoreCustomer)) return Customers;
-    if (obj.Value == nameof(CoreInvoice)) return Invoices;
-    throw new NotSupportedException(obj);
+  private List<ICoreEntity> GetList(CoreEntityType coretype) {
+    if (coretype.Value == nameof(CoreMembershipType)) return Types;
+    if (coretype.Value == nameof(CoreCustomer)) return Customers;
+    if (coretype.Value == nameof(CoreInvoice)) return Invoices;
+    throw new NotSupportedException(coretype);
   }
 }

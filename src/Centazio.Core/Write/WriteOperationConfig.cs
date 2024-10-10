@@ -8,12 +8,8 @@ public record WriteOperationConfig(
     CoreEntityType CoreEntityType, 
     ValidCron Cron,
     ITargetSystemWriter TargetSysWriter) : OperationConfig(CoreEntityType, Cron), ILoggable {
-
-  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
-  public CoreEntityType CoreEntityType { get; init; } = CoreEntityType;
   
   public object LoggableValue => $"{CoreEntityType.Value}";
-
 }
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time

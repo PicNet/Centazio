@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Checksum;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
@@ -9,12 +10,12 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
   /// systems writing back their own changes.
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType obj, DateTime after, SystemName exclude);
+  Task<List<ICoreEntity>> Get(CoreEntityType coretype, DateTime after, [IgnoreNamingConventions] SystemName exclude);
   
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType obj, List<ValidString> coreids);
+  Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<ValidString> coreids);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {
@@ -27,12 +28,12 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
   /// <returns>An id to checksum mapping of entities already in core storage</returns>
-  Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities);
+  Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities);
   
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities);
+  Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities);
 }
 
 public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

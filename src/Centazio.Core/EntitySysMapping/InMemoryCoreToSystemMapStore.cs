@@ -10,7 +10,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> cores) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
-      var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntity == CoreEntityType.From(c) && kvp.Key.CoreId == c.Id && kvp.Key.System == system).Value;
+      var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityType == CoreEntityType.From(c) && kvp.Key.CoreId == c.Id && kvp.Key.System == system).Value;
       if (existing is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(c, system)));
       else updates.Add(new CoreAndPendingUpdateMap(c, existing.Update()));
     });
@@ -40,7 +40,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   private List<Map.CoreToSystem> GetById(SystemName system, CoreEntityType coretype, List<string> ids, bool sysid) => 
       ids.Distinct()
-          .Select(cid => memdb.SingleOrDefault(kvp => kvp.Key.CoreEntity == coretype && (sysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value)
+          .Select(cid => memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityType == coretype && (sysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value)
           // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
           .Where(v => v != default)
           .ToList();

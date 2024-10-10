@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core;
 
@@ -36,7 +37,7 @@ public sealed record CoreEntityType(string Value) : ObjectName(Value) {
 public sealed record LifecycleStage(string Value) : ValidString(Value) {
   public static implicit operator LifecycleStage(string value) => new((ValidString) value);
   
-  public static class Defaults {
+  [IgnoreNamingConventions] public static class Defaults {
     public static readonly LifecycleStage Read = new(nameof(Read));
     public static readonly LifecycleStage Promote = new(nameof(Promote));
     public static readonly LifecycleStage Write = new(nameof(Write));

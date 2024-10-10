@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.Tests.Inspect;
 
@@ -15,7 +16,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
   
   [Test] public void Test_string_description_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
-        .Where(t => IsRecord(t) && !t.IsAbstract && t.Namespace != "Centazio.Core.Settings" && t.Namespace != "Centazio.Core.Secrets" && !t.FullName!.EndsWith("+Dto"))
+        .Where(t => ReflectionUtils.IsRecord(t) && !t.IsAbstract && t.Namespace != "Centazio.Core.Settings" && t.Namespace != "Centazio.Core.Secrets" && !t.FullName!.EndsWith("+Dto"))
         .ToList();
     var errors = new List<string>();
     types.ForEach(type => {
@@ -27,7 +28,6 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     });
     Assert.That(errors, Is.Empty, String.Join("\n", errors));
     
-    bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
     List<string> Allowed(Type t) {
       var lst = ALLOWED.TryGetValue(t.Name, out var value) ? value : [];
       return lst.Concat(ALLOWED["*"]).ToList();

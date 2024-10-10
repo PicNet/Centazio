@@ -10,4 +10,6 @@ public static class ReflectionUtils {
     var rprop = o.GetType().GetProperty(prop) ?? throw new Exception($"could not find property[{prop}] in type[{o.GetType().Name}]");
     return rprop.GetValue(o)?.ToString() ?? throw new Exception();
   }
+  
+  public static bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
 }

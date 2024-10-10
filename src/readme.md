@@ -89,7 +89,7 @@ should be provided to provide support for different creation scenarios.
 ```
 public sealed record StagedEntity {
   ...
-  public static StagedEntity Create(SystemName source, ObjectName obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
+  public static StagedEntity Create(SystemName system, ObjectName obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
   ...
 ```
 

@@ -6,6 +6,7 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.EntitySysMapping;
+using Centazio.Core.Misc;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -20,6 +21,7 @@ using Serilog.Events;
 
 namespace Centazio.E2E.Tests;
 
+[IgnoreNamingConventions]
 public static class SimulationConstants {
   public static readonly SystemName CRM_SYSTEM = new(nameof(CrmSystem));
   public static readonly SystemName FIN_SYSTEM = new(nameof(FinSystem));
@@ -163,7 +165,7 @@ public class SimulationCtx {
           : existing with { Name = c.Name, MembershipId = c.MembershipTypeId.ToString()};
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, string? custid = null) {
-    custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerId.ToString()).CoreId;
+    custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerId.ToString()).CoreId;
     if (existing is not null && existing.CustomerId != custid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custid, i.AmountCents, i.DueDate, i.PaidDate)
@@ -176,7 +178,7 @@ public class SimulationCtx {
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, string? custid = null) {
-    custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntity == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountId.ToString()).CoreId;
+    custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountId.ToString()).CoreId;
     if (existing is not null && existing.CustomerId != custid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 

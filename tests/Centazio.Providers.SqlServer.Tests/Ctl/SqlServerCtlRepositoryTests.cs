@@ -36,7 +36,7 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
     DapperInitialiser.Initialise(); // is not working?
     
     await using var conn = SqlConn.Instance.Conn();
-    await conn.ExecuteAsync($"CREATE TABLE {TEST_TABLE} (Valid nvarchar (8) NULL, Sys nvarchar (8) NULL)");
+    await conn.ExecuteAsync($"CREATE TABLE {TEST_TABLE} (Valid nvarchar (8) NULL, System nvarchar (8) NULL)");
     await conn.ExecuteAsync($"INSERT INTO {TEST_TABLE} VALUES (null, null)");
 
     Assert.ThrowsAsync<ArgumentNullException>(() => conn.QueryAsync<TestRecord>($"SELECT * FROM {TEST_TABLE}"));
@@ -60,6 +60,6 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
   record TestRecord {
 
     public ValidString Valid { get; } = null!;
-    public SystemName Sys { get; } = null!;
+    public SystemName System { get; } = null!;
   }
 }

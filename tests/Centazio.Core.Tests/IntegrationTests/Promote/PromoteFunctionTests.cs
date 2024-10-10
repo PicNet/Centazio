@@ -11,11 +11,11 @@ namespace Centazio.Core.Tests.IntegrationTests.Promote;
 
 public class PromoteFunctionTests {
 
-  private readonly SystemName sys1 = Constants.System1Name;
-  private readonly SystemName sys2 = Constants.System2Name;
-  private readonly LifecycleStage stg = LifecycleStage.Defaults.Promote;
+  private readonly SystemName system1 = Constants.System1Name;
+  private readonly SystemName system2 = Constants.System2Name;
+  private readonly LifecycleStage stage = LifecycleStage.Defaults.Promote;
   private readonly SystemEntityType system = Constants.SystemEntityName;
-  private readonly CoreEntityType obj = Constants.CoreEntityName;
+  private readonly CoreEntityType coretype = Constants.CoreEntityName;
   
   private TestingCtlRepository ctl;
   private TestingStagedEntityStore stager;
@@ -35,7 +35,7 @@ public class PromoteFunctionTests {
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(sys1, system, json1) ?? throw new Exception();
+    var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -48,14 +48,14 @@ public class PromoteFunctionTests {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // create two more entities and also include the previous one (without any changes
     var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
     var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json(cust2), Json(cust3));
     TestingUtcDate.DoTick();
-    var staged23 = (await stager.Stage(sys1, system, [json1, json2, json3])).ToList();
+    var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
@@ -67,7 +67,7 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2, 0)));
-    Assert.That(await core.Query<CoreEntity>(obj, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
+    Assert.That(await core.Query<CoreEntity>(coretype, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
@@ -79,7 +79,7 @@ public class PromoteFunctionTests {
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json(cust1);
-    var staged1 = await stager.Stage(sys1, system, json1) ?? throw new Exception();
+    var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -92,7 +92,7 @@ public class PromoteFunctionTests {
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
     
     // lets ignore all staged entities from now
     func.IgnoreNext = true;
@@ -100,7 +100,7 @@ public class PromoteFunctionTests {
     var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json(cust2), Json(cust3));
     TestingUtcDate.DoTick();
-    var staged23 = (await stager.Stage(sys1, system, [json1, json2, json3])).ToList();
+    var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
@@ -112,19 +112,19 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 0, 2)));
-    Assert.That((await core.Query<CoreEntity>(obj, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
   }
   
   [Test] public async Task Test_that_bounce_backs_are_promoted_again_if_checksum_changes() {
-    var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
+    var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(system1, true), F.PromoteRunner(stager, entitymap, core));
     var runner1 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func1, oprunner, ctl);
     
-    var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(sys2, true);
+    var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(system2, true);
     var runner2 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func2, oprunner, ctl);
     
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
-    var se1 = await stager.Stage(sys1, system, "1") ?? throw new Exception();
+    var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow);
     var c1 = sysent1.ToCoreEntity("C1", "E1");
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
@@ -132,19 +132,19 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new Map.Key(obj, "C1", sys1, "E1");
+    var expkey1 = new Map.Key(coretype, "C1", system1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
     await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
-    var expkey2 = new Map.Key(obj, "C1", sys2, "E2");
+    var expkey2 = new Map.Key(coretype, "C1", system2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
-    var se2 = await stager.Stage(sys2, system, "2") ?? throw new Exception();
+    var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow);
     var c2 = sysent2.ToCoreEntity("C2", "E2"); 
     TestingUtcDate.DoTick();
@@ -159,15 +159,15 @@ public class PromoteFunctionTests {
   }
   
   [Test] public async Task Test_that_bounce_backs_are_ignored_if_checksum_is_the_same() {
-    var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(sys1, true), F.PromoteRunner(stager, entitymap, core));
+    var (func1, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(system1, true), F.PromoteRunner(stager, entitymap, core));
     var runner1 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func1, oprunner, ctl);
     
-    var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(sys2, true);
+    var func2 = new PromoteFunctionWithSinglePromoteCustomerOperation(system2, true);
     var runner2 = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func2, oprunner, ctl);
     
     // For full scenario details see: AbstractCoreToSystemMapStoreTests#Reproduce_duplicate_mappings_found_in_simulation
     // Centazio creates map [System1:C1->E1]
-    var se1 = await stager.Stage(sys1, system, "1") ?? throw new Exception();
+    var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
     var c1 = sysent1.ToCoreEntity("C1", "E1");
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
@@ -175,19 +175,19 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new Map.Key(obj, "C1", sys1, "E1");
+    var expkey1 = new Map.Key(coretype, "C1", system1, "E1");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
     await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
-    var expkey2 = new Map.Key(obj, "C1", sys2, "E2");
+    var expkey2 = new Map.Key(coretype, "C1", system2, "E2");
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
     
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
-    var se2 = await stager.Stage(sys2, system, "2") ?? throw new Exception();
+    var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
     var c2 = sysent2.ToCoreEntity("C2", "E2");
     TestingUtcDate.DoTick();
@@ -199,9 +199,9 @@ public class PromoteFunctionTests {
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 })); // no changes to entity as checksum did not change
   }
   
-  private List<ICoreEntity> CoresInDb => core.MemDb[obj].Values.Select(e => e.Core).ToList();
-  private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(sys1, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
-  private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(sys1, stg, obj, true) {
+  private List<ICoreEntity> CoresInDb => core.MemDb[coretype].Values.Select(e => e.Core).ToList();
+  private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(system1, stage, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
+  private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(system1, stage, coretype, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,
     LastAbortVote = EOperationAbortVote.Continue,
@@ -210,9 +210,9 @@ public class PromoteFunctionTests {
     LastSuccessStart = updated,
     LastSuccessCompleted = updated,
     LastCompleted = updated,
-    LastRunMessage = $"operation [{sys1}/{stg}/{obj}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
+    LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
-  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), sys1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
   private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) {
     var sysent = JsonSerializer.Deserialize<System1Entity>(json) ?? throw new Exception();
@@ -227,8 +227,8 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public bool IgnoreNext { get; set; }
   public PromoteOperationResult? NextResult { get; set; }
   
-  public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? sys=null, bool bidi=false) {
-    Config = new(sys ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
+  public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? system=null, bool bidi=false) {
+    Config = new(system ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
       new(Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
@@ -242,16 +242,6 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
     if (NextResult is not null) return Task.FromResult(NextResult);
     
-    /*OLD:
-     var cores = staged.Select(e => {
-      var sysent = JsonSerializer.Deserialize<System1Entity>(e.Data) ?? throw new Exception();
-      return new Containers.StagedSysCore(e, sysent, sysent.ToCoreEntity());
-    }).ToList();
-    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-        IgnoreNext ? [] : cores, 
-        IgnoreNext ? staged.Select(e => new Containers.StagedIgnore(e, Ignore: "ignore")).ToList() : [])); 
-        
-        */
     var cores = staged.Select(e => e.SetCore(e.Sys.To<System1Entity>().ToCoreEntity())).ToList();
     return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
         IgnoreNext ? [] : cores, 

@@ -4,14 +4,14 @@ using Centazio.Core.CoreRepo;
 namespace Centazio.Core.Ctl.Entities;
 
 public interface ICoreToSystemMap {
-  public CoreEntityType CoreEntity { get; } 
+  public CoreEntityType CoreEntityType { get; } 
   public ValidString CoreId { get; } 
   public SystemName System { get; } 
   public DateTime DateCreated { get; }
 }
 
 public static class Map {
-  public record Key(CoreEntityType CoreEntity, ValidString CoreId, SystemName System, ValidString SystemId);
+  public record Key(CoreEntityType CoreEntityType, ValidString CoreId, SystemName System, ValidString SystemId);
   
   // factories
   public static PendingCreate Create(ICoreEntity e, SystemName system) => new(e, system);
@@ -21,7 +21,7 @@ public static class Map {
         CoreEntityType coreentity, ValidString coreid, 
         SystemName system, ValidString sysid, 
         EEntityMappingStatus status, SystemEntityChecksum checksum) {
-      CoreEntity = coreentity; 
+      CoreEntityType = coreentity; 
       CoreId = coreid; 
       System = system; 
       SystemId = sysid; 
@@ -29,9 +29,9 @@ public static class Map {
       SystemEntityChecksum = checksum; 
     }
     
-    public Key Key => new(CoreEntity, CoreId, System, SystemId);
+    public Key Key => new(CoreEntityType, CoreId, System, SystemId);
     
-    public CoreEntityType CoreEntity { get; } 
+    public CoreEntityType CoreEntityType { get; } 
     public ValidString CoreId { get; } 
     public SystemName System { get; } 
     public ValidString SystemId { get; }
@@ -77,13 +77,13 @@ public static class Map {
   }
   
   public record PendingCreate : ICoreToSystemMap {
-    public CoreEntityType CoreEntity { get; } 
+    public CoreEntityType CoreEntityType { get; } 
     public ValidString CoreId { get; }
     public SystemName System { get; } 
     public DateTime DateCreated { get; }
     
     internal PendingCreate(ICoreEntity e, SystemName system) {
-      CoreEntity = CoreEntityType.From(e);
+      CoreEntityType = CoreEntityType.From(e);
       CoreId = e.Id;
       System = system;
       DateCreated = UtcDate.UtcNow;
@@ -97,14 +97,14 @@ public static class Map {
   }
   
   public record Created : CoreToSystem {
-    internal Created(PendingCreate e, ValidString targetid, SystemEntityChecksum checksum) : base(e.CoreEntity, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate, checksum) {
+    internal Created(PendingCreate e, ValidString targetid, SystemEntityChecksum checksum) : base(e.CoreEntityType, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate, checksum) {
       DateUpdated = UtcDate.UtcNow;
       DateLastSuccess = UtcDate.UtcNow;
     }
   }
 
   public record PendingUpdate : CoreToSystem {
-    internal PendingUpdate(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
+    internal PendingUpdate(CoreToSystem e) : base(e.CoreEntityType, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
     
     public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
@@ -122,7 +122,7 @@ public static class Map {
   }
 
   public record Updated : CoreToSystem {
-    internal Updated(CoreToSystem e) : base(e.CoreEntity, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
+    internal Updated(CoreToSystem e) : base(e.CoreEntityType, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
   }
 }
 

@@ -30,31 +30,31 @@ END
     return this;
   }
   
-  public async Task<E> Get<E>(CoreEntityType obj, ValidString id) where E : class, ICoreEntity {
+  public async Task<E> Get<E>(CoreEntityType coretype, ValidString id) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
-    var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {obj} WHERE Id=@Id", new { Id = id.Value });
-    if (raw is null) throw new Exception($"Core entity [{obj}({id})] not found");
+    var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {coretype} WHERE Id=@Id", new { Id = id.Value });
+    if (raw is null) throw new Exception($"Core entity [{coretype}({id})] not found");
     return (CoreEntity) raw as E ?? throw new Exception();
   }
 
   
-  public async Task<List<E>> Query<E>(CoreEntityType obj, string query) where E : class, ICoreEntity {
+  public async Task<List<E>> Query<E>(CoreEntityType coretype, string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var raws = await conn.QueryAsync<CoreEntity.Dto>(query);
     return raws.Select(raw => (CoreEntity) raw).Cast<E>().ToList();
   }
   
-  public Task<List<E>> Query<E>(CoreEntityType obj, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
+  public Task<List<E>> Query<E>(CoreEntityType coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType obj, List<ICoreEntity> entities) {
+  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
-    var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {obj} WHERE Id IN (@ids)", new { ids });
+    var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {coretype} WHERE Id IN (@ids)", new { ids });
     return mapping.ToDictionary(t => t.Id, t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityType obj, List<Containers.CoreChecksum> entities) {
-    var sql = $@"MERGE INTO {obj} T
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
+    var sql = $@"MERGE INTO {coretype} T
 USING (VALUES (@Id, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
 AS c (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
 ON T.Id = c.Id

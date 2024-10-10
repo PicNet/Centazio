@@ -11,7 +11,7 @@ public class InMemoryStagedEntityStore(int limit, Func<string, StagedEntityCheck
 
   public override Task Update(List<StagedEntity> staged) {
     staged.ForEach(s => {
-      var idx = saved.FindIndex(e => e.SourceSystem == s.SourceSystem && e.Object == s.Object && e.Id == s.Id);
+      var idx = saved.FindIndex(e => e.System == s.System && e.SystemEntityType == s.SystemEntityType && e.Id == s.Id);
       if (idx < 0) throw new Exception($"could not find StagedEntity[{s.Id}]");
       saved[idx] = s;
     });
@@ -29,16 +29,16 @@ public class InMemoryStagedEntityStore(int limit, Func<string, StagedEntityCheck
     return Task.FromResult(lst);
   }
 
-  protected override Task<List<StagedEntity>> GetImpl(DateTime after, SystemName source, SystemEntityType obj, bool incpromoted) => 
+  protected override Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted) => 
       Task.FromResult(saved
-          .Where(s => s.DateStaged > after && s.SourceSystem == source && s.Object == obj && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
+          .Where(s => s.DateStaged > after && s.System == system && s.SystemEntityType == systype && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .ToList());
 
-  protected override Task DeleteBeforeImpl(DateTime before, SystemName source, SystemEntityType obj, bool promoted) {
+  protected override Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted) {
     var toremove = saved
-        .Where(se => se.SourceSystem == source && se.Object == obj && 
+        .Where(se => se.System == system && se.SystemEntityType == systype && 
             ((promoted && se.DatePromoted < before) || 
                 (!promoted && se.DateStaged < before)))
         .ToList();

@@ -42,24 +42,24 @@ public class FunctionHelpers(
       $"\n\tChecksum[{checksum.Checksum(updated)}]");
   }
   
-  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntitySystemIdsFromCoreIds(List<ICoreEntity> entities, string foreignkey, CoreEntityType obj) {
+  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntitySystemIdsFromCoreIds(List<ICoreEntity> entities, string foreignkey, CoreEntityType coretype) {
     var fks = entities.Select(e => ReflectionUtils.GetPropValAsString(e, foreignkey)).Distinct().ToList();
-    var maps = await intra.GetExistingMappingsFromCoreIds(system, obj, fks);
+    var maps = await intra.GetExistingMappingsFromCoreIds(system, coretype, fks);
     var dict = maps.ToDictionary(m => m.CoreId, m => m.SystemId);
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
-    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntitySystemIdFromCoreId[{system}] - Could not find {obj} with CoreIds [{String.Join(",", missing)}]");
+    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntitySystemIdFromCoreId[{system}] - Could not find {coretype} with CoreIds [{String.Join(",", missing)}]");
     
     return dict;
   } 
  
-  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntityCoreIdsFromSystemIds(List<Containers.StagedSysOptionalCore> entities, string foreignkey, CoreEntityType obj, bool mandatory) {
+  public async Task<Dictionary<ValidString, ValidString>> GetRelatedEntityCoreIdsFromSystemIds(List<Containers.StagedSysOptionalCore> entities, string foreignkey, CoreEntityType coretype, bool mandatory) {
     var fks = entities.Select(e => ReflectionUtils.GetPropValAsString(e.Sys, foreignkey)).Distinct().ToList();
-    var dict = (await intra.GetExistingMappingsFromSystemIds(system, obj, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
+    var dict = (await intra.GetExistingMappingsFromSystemIds(system, coretype, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
     if (!mandatory) return dict;
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
-    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntityCoreIdsFromSystemIds[{system}] - Could not find {obj} with SystemIds [{String.Join(",", missing)}]");
+    if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntityCoreIdsFromSystemIds[{system}] - Could not find {coretype} with SystemIds [{String.Join(",", missing)}]");
     return dict;
   } 
   
