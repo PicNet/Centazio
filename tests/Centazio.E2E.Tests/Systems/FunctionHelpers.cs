@@ -33,11 +33,11 @@ public class FunctionHelpers(
   /// We originally tried to compare the checksum with the state of the entity in the target system, however this is not
   /// valid as the same change can be made in both the source and target system causing this check to fail. 
   /// </summary>
-  private void TestEntityHasChanges(ISystemEntity updated, SystemEntityChecksum existingcs) {
-    if (existingcs != checksum.Checksum(updated)) return;
+  private void TestEntityHasChanges(ISystemEntity updated, SystemEntityChecksum syschksm) {
+    if (syschksm != checksum.Checksum(updated)) return;
     
     throw new Exception($"TestEntityHasChanges[{system}/{updated.GetType().Name}] - No changes found:" +
-      $"\n\tExisting Checksum:[{existingcs}]" +
+      $"\n\tExisting Checksum:[{syschksm}]" +
       $"\n\tUpdated[{updated}]\n\tChecksum Subset[{updated.GetChecksumSubset()}]" +
       $"\n\tChecksum[{checksum.Checksum(updated)}]");
   }

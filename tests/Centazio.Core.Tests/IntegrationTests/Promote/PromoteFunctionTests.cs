@@ -154,7 +154,7 @@ public class PromoteFunctionTests {
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
-    var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = Constants.Sys1Id1, LastUpdateSystem = Constants.System2Name };
+    var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SystemId = Constants.Sys1Id1, LastUpdateSystem = Constants.System2Name };
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }
   

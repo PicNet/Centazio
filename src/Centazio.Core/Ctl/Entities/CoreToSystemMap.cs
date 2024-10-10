@@ -84,7 +84,7 @@ public static class Map {
     
     internal PendingCreate(ICoreEntity e, SystemName system) {
       CoreEntityType = CoreEntityType.From(e);
-      CoreId = e.Id;
+      CoreId = e.CoreId;
       System = system;
       DateCreated = UtcDate.UtcNow;
     }

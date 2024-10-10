@@ -26,10 +26,7 @@ public class ReadOperationRunnerTests {
     var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, new TestingSingleReadOperationImplementation()));
     
     Assert.That(store.Contents, Is.Empty);
-    ValidateResult(
-        new ErrorReadOperationResult(),
-        actual,
-        (SystemState) new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
+    ValidateResult((SystemState) new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ErrorReadOperationResult(), actual);
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
@@ -38,10 +35,7 @@ public class ReadOperationRunnerTests {
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(store.Contents, Is.Empty);
-    ValidateResult(
-        new EmptyReadOperationResult(),
-        actual,
-        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()));
+    ValidateResult((SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new EmptyReadOperationResult(), actual);
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
@@ -50,10 +44,7 @@ public class ReadOperationRunnerTests {
 
     var staged = store.Contents.Single();
     Assert.That(staged, Is.EqualTo((StagedEntity) new StagedEntity.Dto(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.StagedEntityChecksum)));
-    ValidateResult(
-        new SingleRecordReadOperationResult(actual.Payload),
-        actual,
-        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
+    ValidateResult((SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new SingleRecordReadOperationResult(actual.Payload), actual);
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
@@ -63,10 +54,7 @@ public class ReadOperationRunnerTests {
     var staged = store.Contents;
     Assert.That(staged, Is.EquivalentTo(
         staged.Select(s => (StagedEntity) new StagedEntity.Dto(s.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum))));
-    ValidateResult(
-        new ListRecordsReadOperationResult(actual.PayloadList),
-        actual,
-        (SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()) );
+    ValidateResult((SystemState) new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ListRecordsReadOperationResult(actual.PayloadList), actual);
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
@@ -75,7 +63,7 @@ public class ReadOperationRunnerTests {
     Assert.Throws<ArgumentNullException>(() => _ = new ListRecordsReadOperationResult([null!]));
   }
   
-  private void ValidateResult(OperationResult expected, OperationResult actual, SystemState expss) {
+  private void ValidateResult(SystemState expss, OperationResult expected, OperationResult actual) {
     Assert.That(JsonSerializer.Serialize(actual), Is.EqualTo(JsonSerializer.Serialize(expected)));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }

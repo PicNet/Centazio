@@ -26,14 +26,14 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
 
   public CoreEntity ToCoreEntity(CoreEntityId? id = null, SystemEntityId? sourceid = null) => new(id ?? new(SystemId.Value), FirstName, LastName, DateOfBirth, DateUpdated) {
     // todo: this is ugly
-    SourceId = sourceid ?? (id is not null ? new(id.Value) : SystemId) 
+    SystemId = sourceid ?? (id is not null ? new(id.Value) : SystemId) 
   };
 }
 
-public record CoreEntity(CoreEntityId Id, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
+public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
 
-  public CoreEntityId Id { get; set; } = Id;
-  public SystemEntityId SourceId { get; set; } = new(Id.Value);
+  public CoreEntityId CoreId { get; set; } = CoreId;
+  public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
   public string SourceSystem { get; } = Constants.System1Name;
   public string LastUpdateSystem { get; set; }  = Constants.System1Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
@@ -62,18 +62,18 @@ public record CoreEntity(CoreEntityId Id, string FirstName, string LastName, Dat
   }
 }
 
-public record CoreEntity2(CoreEntityId Id, DateTime DateUpdated) : ICoreEntity {
-  public CoreEntityId Id { get; set; } = Id;
-  public SystemEntityId SourceId { get; set; } = new(Id.Value);
+public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEntity {
+  public CoreEntityId CoreId { get; set; } = CoreId;
+  public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
   public string SourceSystem { get; } = Constants.System2Name;
   public string LastUpdateSystem { get; set; } = Constants.System2Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
   
-  public string DisplayName { get; } = Id;
+  public string DisplayName { get; } = CoreId;
   
-  public object GetChecksumSubset() => new { Id };
+  public object GetChecksumSubset() => new { Id = CoreId };
 }
 
 public record TestSettingsRaw {

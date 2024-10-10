@@ -6,9 +6,9 @@ namespace Centazio.Test.Lib.CoreStorage;
 
 public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorage {
   
-  public Task<E> Get<E>(CoreEntityType coretype, CoreEntityId id) where E : class, ICoreEntity {
-    if (!db.ContainsKey(coretype) || !db[coretype].ContainsKey(id)) throw new Exception($"Core entity [{coretype}({id})] not found");
-    return Task.FromResult(db[coretype][id].Core.To<E>());
+  public Task<E> Get<E>(CoreEntityType coretype, CoreEntityId coreid) where E : class, ICoreEntity {
+    if (!db.ContainsKey(coretype) || !db[coretype].ContainsKey(coreid)) throw new Exception($"Core entity [{coretype}({coreid})] not found");
+    return Task.FromResult(db[coretype][coreid].Core.To<E>());
   }
   
   public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityType coretype, DateTime after) {
@@ -19,7 +19,7 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
 
   public Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<CoreEntityId> coreids) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
-    var lst = coreids.Select(id => fulllst.Single(e => e.Value.Core.Id == id).Value.Core).ToList();
+    var lst = coreids.Select(id => fulllst.Single(e => e.Value.Core.CoreId == id).Value.Core).ToList();
     return Task.FromResult(lst);
   }
 

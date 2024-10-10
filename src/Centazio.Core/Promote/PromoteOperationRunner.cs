@@ -53,7 +53,7 @@ public class PromoteOperationRunner(
     var coreents = await core.Get(op.OpConfig.CoreEntityType, coreids);
     var syscores = stagedsys.Select(t => {
       var coreid = maps.SingleOrDefault(m => m.SystemId == t.Sys.SystemId)?.CoreId;
-      var coreent = coreid is null ? null : coreents.Single(e => e.Id == coreid); 
+      var coreent = coreid is null ? null : coreents.Single(e => e.CoreId == coreid); 
       return new Containers.StagedSysOptionalCore(t.Staged, t.Sys, coreent);
     }).ToList();
     return syscores;
@@ -65,8 +65,8 @@ public class PromoteOperationRunner(
     
     var originals = await core.Get(op.State.Object.ToCoreEntityType, bounces.Select(n => n.Value.OriginalCoreId).ToList());
     var entities = bounces.Select(b => {
-      var idx = topromote.FindIndex(t => t.Core.SourceId == b.Key);
-      var original = originals.Single(e2 => e2.Id == b.Value.OriginalCoreId);
+      var idx = topromote.FindIndex(t => t.Core.SystemId == b.Key);
+      var original = originals.Single(e2 => e2.CoreId == b.Value.OriginalCoreId);
       return (
           SourceId: b.Key, 
           b.Value.OriginalSourceId, 
@@ -86,20 +86,20 @@ public class PromoteOperationRunner(
       // If the entity is bouncing back, it will have a new Core and SourceId (as it would have been created in the second system).
       //    We need to correct the process here and make it point to the original Core/Source Id as we do not want
       //    multiple core records for the same entity.
-      (e.ToPromoteCore.Id, e.ToPromoteCore.SourceId) = (e.OriginalCoreId, e.OriginalSourceId);
+      (e.ToPromoteCore.CoreId, e.ToPromoteCore.SystemId) = (e.OriginalCoreId, e.OriginalSourceId);
       topromote[e.ToPromoteIdx] = topromote[e.ToPromoteIdx] with { Core = e.ToPromoteCore };
       e.PostChangeChecksumSubset = e.ToPromoteCore.GetChecksumSubset();
       e.PostChangeChecksum = Checksum(e.ToPromoteCore);
       return e;
     }).ToList();
     
-    var msgs = updated.Select(e => $"[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.Id})] -> OriginalCoreId[{e.OriginalCoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
+    var msgs = updated.Select(e => $"[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})] -> OriginalCoreId[{e.OriginalCoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
           $"\n\tOriginal Checksum[{e.OriginalEntityChecksumSubset}({e.OriginalEntityChecksum})]" +
           $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
     Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityType}]" + String.Join("\n", msgs), bounces.Count, op.State.System, op.State.Object.ToCoreEntityType);
     
     var errs = updated.Where(e => e.PreChangeChecksum != e.PostChangeChecksum)
-        .Select(e => $"\n[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.Id})]:" +
+        .Select(e => $"\n[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})]:" +
           $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
           $"\n\tPostchange Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]")
         .ToList();
@@ -119,8 +119,8 @@ public class PromoteOperationRunner(
     
     var existing = await core.Get(coretype, maps.Values.ToList());
     return maps.ToDictionary(sid_id => sid_id.Key, sid_id => {
-      var preexisting = existing.Single(c => c.Id == sid_id.Value);
-      return (preexisting.Id, preexisting.SourceId);
+      var preexisting = existing.Single(c => c.CoreId == sid_id.Value);
+      return (Id: preexisting.CoreId, SourceId: preexisting.SystemId);
     });
   }
 
@@ -135,10 +135,10 @@ public class PromoteOperationRunner(
             }).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, entities.ToCore());
-    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SourceId, SysChecksum(e.Core))).ToList());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SystemId, SysChecksum(e.Core))).ToList());
     await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityType, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
     
-    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(entities.Single(c => c.Core.Id == e.Id).Sys);
+    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(entities.Single(c => c.Core.CoreId == e.CoreId).Sys);
   }
 
   public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
@@ -149,7 +149,7 @@ public class PromoteOperationRunner(
   /// entity multiple times to only end up in the latest state anyway.
   /// </summary>
   internal static List<Containers.StagedSysCore> IgnoreMultipleUpdatesToSameEntity(List<Containers.StagedSysCore> lst) => 
-        lst.GroupBy(c => c.Core.SourceId)
+        lst.GroupBy(c => c.Core.SystemId)
         .Select(g => g.OrderByDescending(c => c.Core.SourceSystemDateUpdated).First()) 
         .ToList();
   
@@ -160,7 +160,7 @@ public class PromoteOperationRunner(
   internal static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(List<Containers.StagedSysCore> lst, CoreEntityType coretype, ICoreStorageUpserter core, Func<ICoreEntity, CoreEntityChecksum> checksum) {
     var checksums = await core.GetChecksums(coretype, lst.ToCore());
     return lst.Where(e => {
-      if (!checksums.TryGetValue(e.Core.Id, out var existing)) return true;
+      if (!checksums.TryGetValue(e.Core.CoreId, out var existing)) return true;
       var newchecksum = checksum(e.Core); 
       return String.IsNullOrWhiteSpace(newchecksum) || newchecksum != existing;
     }).ToList();

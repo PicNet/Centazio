@@ -46,7 +46,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
-  protected override async Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted) {
     var from = $"{system.Value}/{systype.Value}/{after:o}_z";
     var list = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
@@ -61,7 +61,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged).ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted) {
+  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {
     var beforestr = $"{system.Value}/{systype.Value}/{before:o}";
     var todelete = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, beforestr) < 0)

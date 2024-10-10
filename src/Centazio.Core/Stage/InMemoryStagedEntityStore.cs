@@ -29,14 +29,14 @@ public class InMemoryStagedEntityStore(int limit, Func<string, StagedEntityCheck
     return Task.FromResult(lst);
   }
 
-  protected override Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted) => 
+  protected override Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted) => 
       Task.FromResult(saved
           .Where(s => s.DateStaged > after && s.System == system && s.SystemEntityType == systype && s.IgnoreReason is null && (incpromoted || !s.DatePromoted.HasValue))
           .OrderBy(s => s.DateStaged)
           .Take(Limit)
           .ToList());
 
-  protected override Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted) {
+  protected override Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {
     var toremove = saved
         .Where(se => se.System == system && se.SystemEntityType == systype && 
             ((promoted && se.DatePromoted < before) || 

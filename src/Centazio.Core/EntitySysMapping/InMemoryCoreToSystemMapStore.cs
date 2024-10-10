@@ -10,7 +10,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> cores) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
-      var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityType == CoreEntityType.From(c) && kvp.Key.CoreId == c.Id && kvp.Key.System == system).Value;
+      var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityType == CoreEntityType.From(c) && kvp.Key.CoreId == c.CoreId && kvp.Key.System == system).Value;
       if (existing is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(system, c)));
       else updates.Add(new CoreAndPendingUpdateMap(c, existing.Update()));
     });
@@ -24,7 +24,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
       Task.FromResult(GetById(system, coretype, sysids));
 
   public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSourceIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
-    var lst = GetById(system, coretype, entities.Select(e => e.SourceId).ToList());
+    var lst = GetById(system, coretype, entities.Select(e => e.SystemId).ToList());
     return Task.FromResult(lst.ToDictionary(m => m.SystemId, m => m.CoreId));
   }
 

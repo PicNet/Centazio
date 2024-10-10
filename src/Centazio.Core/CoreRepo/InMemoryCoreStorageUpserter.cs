@@ -11,16 +11,16 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     if (!entities.Any()) return Task.FromResult(checksums);
     if (!db.TryGetValue(coretype, out var dbtype)) return Task.FromResult(checksums);
     var result = entities
-        .Where(e => dbtype.ContainsKey(e.Id))
-        .Select(e => dbtype[e.Id])
-        .ToDictionary(e => e.Core.Id, e => new CoreEntityChecksum(e.CoreEntityChecksum));
+        .Where(e => dbtype.ContainsKey(e.CoreId))
+        .Select(e => dbtype[e.CoreId])
+        .ToDictionary(e => e.Core.CoreId, e => new CoreEntityChecksum(e.CoreEntityChecksum));
     return Task.FromResult(result);
   }
 
   public Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
     if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, Containers.CoreChecksum>();
     var upserted = entities.Select(e => {
-      db[coretype][e.Core.Id] = e;
+      db[coretype][e.Core.CoreId] = e;
       return e.Core;
     }).ToList();
     return Task.FromResult(upserted);

@@ -49,8 +49,8 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEn
   public Task Update(StagedEntity staged) => Update([staged]);
   public abstract Task Update(List<StagedEntity> staged);
 
-  public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(after, system, systype, true);
-  public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(after, system, systype, false);
+  public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(system, systype, after, true);
+  public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(system, systype, after, false);
 
   /// <summary>
   /// Implementing providers must ensure the following:
@@ -60,11 +60,11 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEn
   ///   feature and the provider should ensure they only query the underlying data source for maximum this
   ///   amount of records. 
   /// </summary>
-  protected abstract Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted);
+  protected abstract Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted);
   
-  public async Task DeletePromotedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(before, system, systype, true);
-  public async Task DeleteStagedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(before, system, systype, false);
-  protected abstract Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted);
+  public async Task DeletePromotedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(system, systype, before, true);
+  public async Task DeleteStagedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(system, systype, before, false);
+  protected abstract Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted);
   
   public abstract ValueTask DisposeAsync();
 

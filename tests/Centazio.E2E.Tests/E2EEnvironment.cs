@@ -37,22 +37,22 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     var ascore = await SysEntsToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
-        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
+        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
   }
 
   public async Task ValidateUpdated<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var eadded = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     var ascore = (await SysEntsToCore(expected))
-        .DistinctBy(e => (e.GetType(), e.Id))
+        .DistinctBy(e => (e.GetType(), Id: e.CoreId))
         // remove from validation if these entities were added in this epoch, as
         // they will be validated in the `ValidateAdded` method
         .Where(e => !eadded.Contains(e)) 
         .ToList();
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
     Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.Id})")) + 
-        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.Id})")));
+        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
   }
   
   private async Task<List<ICoreEntity>> SysEntsToCore(params IEnumerable<ISystemEntity>[] expected) {
@@ -86,15 +86,15 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   }
 
   public void Add(ICoreEntity e) {
-    if (!added.TryAdd((e.GetType(), e.Id), e)) throw new Exception($"entity appears to have already been added: {e}");
-    Log.Information($"Validation.Add[{e.DisplayName}({e.Id})]");
+    if (!added.TryAdd((e.GetType(), e.CoreId), e)) throw new Exception($"entity appears to have already been added: {e}");
+    Log.Information($"Validation.Add[{e.DisplayName}({e.CoreId})]");
   }
   
   public void Update(ICoreEntity e) {
     // ignore entities that have already been added in this epoch, they will be validated as part of the added validation
-    if (added.ContainsKey((e.GetType(), e.Id))) return; 
-    updated[(e.GetType(), e.Id)] = e;
-    Log.Information($"Update.Add[{e.DisplayName}({e.Id})]");
+    if (added.ContainsKey((e.GetType(), e.CoreId))) return; 
+    updated[(e.GetType(), e.CoreId)] = e;
+    Log.Information($"Update.Add[{e.DisplayName}({e.CoreId})]");
   }
 
 }
@@ -164,7 +164,7 @@ public class SimulationCtx {
           ? new(new(c.SystemId.Value), SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, new(c.MembershipTypeId.ToString()))
           : existing with { Name = c.Name, MembershipId = new(c.MembershipTypeId.ToString())};
 
-  public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custid = null) {
+  public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, [IgnoreNamingConventions] CoreEntityId? custid = null) {
     custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == new SystemEntityId(i.CustomerId.ToString())).CoreId;
     if (existing is not null && existing.CustomerId != custid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
@@ -177,7 +177,7 @@ public class SimulationCtx {
           ? new CoreCustomer(new(a.SystemId.Value), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, new(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()))
           : existing with { Name = a.Name };
 
-  public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custid = null) {
+  public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, [IgnoreNamingConventions] CoreEntityId? custid = null) {
     custid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == new SystemEntityId(i.AccountId.ToString())).CoreId;
     if (existing is not null && existing.CustomerId != custid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
@@ -297,7 +297,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task CompareMembershipTypes() {
-    var core_types = ctx.core.Types.Cast<CoreMembershipType>().Select(m => new { m.Id, m.Name });
+    var core_types = ctx.core.Types.Cast<CoreMembershipType>().Select(m => new { Id = m.CoreId, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { Id = m.SystemId, m.Name } );
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
@@ -306,8 +306,8 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name, MembershipTypeId = c.MembershipId.Value });
-    var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { c.Id, c.Name });
+    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipId.Value });
+    var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name });
     var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, MembershipTypeId = c.MembershipTypeId.ToString() });
     var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });
     
@@ -318,7 +318,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareInvoices() {
-    var core_invoices = ctx.core.Invoices.Cast<CoreInvoice>().Select(i => new { i.Id, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
+    var core_invoices = ctx.core.Invoices.Cast<CoreInvoice>().Select(i => new { Id = i.CoreId, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
     var crm_invoices = crm.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     

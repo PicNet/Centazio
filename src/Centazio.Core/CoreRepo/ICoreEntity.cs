@@ -12,7 +12,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// <summary>
   /// The id of the entity in the source system 
   /// </summary>
-  public SystemEntityId SourceId { get; set; }
+  public SystemEntityId SystemId { get; set; }
 
   /// <summary>
   /// The id of the entity.  Ideally this should be the same id as used in the source
@@ -20,7 +20,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// short string representation of a unique identifier that can be used to map back
   /// to the source system 
   /// </summary>
-  public CoreEntityId Id { get; set; }
+  public CoreEntityId CoreId { get; set; }
   
   /// <summary>
   /// The date/time when this entity was added to core storage

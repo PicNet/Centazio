@@ -36,17 +36,20 @@ public class CheckStandardNamingOfCommonTypes {
       void ValidateType(Type objtype) {
         if (objtype.Name.IndexOf("__", StringComparison.Ordinal) >= 0) return;
         var ifaces = objtype.GetInterfaces();
-        if (Ignore(objtype) || ifaces.Any(Ignore)) return;
+        if (Ignore(objtype) || ifaces.Any(Ignore)) { return; }
         
         var isrec = ReflectionUtils.IsRecord(objtype);
         
         objtype.GetConstructors().ForEach(ValidateCtor);
         objtype.GetProperties().ForEach(ValidateProp);
         objtype.GetFields().ForEach(ValidateField);
-        if (!isrec) {
-          objtype.GetMethods().ForEach(ValidateMethod);
-          objtype.GetMethods().ForEach(ValidateMethodParamOrder);
-        }
+        
+        var methods = isrec ? [] : objtype
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+            .Where(m => m.Name.IndexOf('_', StringComparison.Ordinal) < 0)
+            .ToList(); 
+        methods.ForEach(ValidateMethod);
+        methods.ForEach(ValidateMethodParamOrder);
 
         void ValidateCtor(ConstructorInfo ctor) {
           if (Ignore(ctor)) return;
@@ -61,7 +64,7 @@ public class CheckStandardNamingOfCommonTypes {
         void ValidateMethod(MethodInfo method) {
           if (Ignore(method)) return;
           method.GetParameters().ForEach(param => {
-            if (param.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0) return;
+            if (String.IsNullOrWhiteSpace(param.Name) || param.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0) return;
             var imethods = ifaces.SelectMany(i => i.GetMethods().Where(m => m.Name == method.Name));
             var iparams = imethods.SelectMany(m => m.GetParameters().Where(p => p.Name == param.Name));
             if (iparams.Any(Ignore)) return;
@@ -90,20 +93,14 @@ public class CheckStandardNamingOfCommonTypes {
         }
 
         void ValidateImpl(string prefix, Type type, bool upper, string name) {
-          Check(typeof(CoreEntityType), name);
-          Check(typeof(SystemEntityType), name);
-          Check(typeof(ObjectName), name);
-          Check(typeof(SystemName), name);
-          Check(typeof(LifecycleStage), name);
-          Check(typeof(CoreEntityChecksum), name);
-          Check(typeof(SystemEntityChecksum), name);
+          EXPECTED.TryGetValue(type, out var check);
+          if (check.Uppercase is not null) Check(type);
           
-          void Check(Type exp, string actual) {
+          void Check(Type exp) {
             if (objtype == exp) return; // do not check naming conventions if the object is the same type we are testing
-            if (type != exp) return; // only test properties, fields, params if they are of the type we are testing
-            var expected = upper ? EXPECTED[type].Uppercase : EXPECTED[type].Lowercase;
-            if (actual == expected) return; // name is correct
-            AddErr(prefix, type, $"Name[{actual}] Expected[{expected}]");
+            var expected = upper ? check.Uppercase : check.Lowercase;
+            if (name == expected) return; // name is correct
+            AddErr(prefix, type, $"Name[{name}] Expected[{expected}]");
           }
         }
         

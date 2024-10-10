@@ -25,11 +25,11 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   [Test] public async Task Test_insert_get_update_get() {
     var created = TestingFactories.NewCoreCust("N1", "N1");
     await DoUpsert(created);
-    var retreived1 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.Id);
+    var retreived1 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.CoreId);
     var list1 = await QueryAll();
     var updated = retreived1 with { FirstName = "N2" };
     await DoUpsert(updated);
-    var retreived2 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.Id);
+    var retreived2 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.CoreId);
     var list2 = await QueryAll();
     
     Assert.That(retreived1, Is.EqualTo(created));

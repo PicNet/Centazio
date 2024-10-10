@@ -59,7 +59,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
     List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, String.Empty, String.Empty, DateOnly.MinValue, UtcDate.UtcNow)];
     var (cid_fin, cid_crm) = (new CoreEntityId("357992994"), new CoreEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20"));
-    var (sid_fin, sid_crm) = (new SystemEntityId("357992994"), new SystemEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20"));
+    var sid_crm = new SystemEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20");
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] System[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create(cid_fin));
@@ -108,7 +108,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
-    var c2dup = new CoreEntity(Constants.CoreE1Id1, name, name, DateOnly.MinValue, UtcDate.UtcNow) { SourceId = Constants.Sys1Id2 };
+    var c2dup = new CoreEntity(Constants.CoreE1Id1, name, name, DateOnly.MinValue, UtcDate.UtcNow) { SystemId = Constants.Sys1Id2 };
     var c2 = await SimulatePromoteOperationRunnerFixed(Constants.System2Name, Constants.CoreEntityName, [c2dup]);
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }

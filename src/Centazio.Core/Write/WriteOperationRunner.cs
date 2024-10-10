@@ -40,7 +40,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       var oldcs = cpum.Map.SystemEntityChecksum;
       var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SysEnt);
       var meaningful = String.IsNullOrWhiteSpace(oldcs) || String.IsNullOrWhiteSpace(newcs) || oldcs != newcs;
-      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntityType}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.Id})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
+      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntityType}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.CoreId})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
       return meaningful;
     }
   }
