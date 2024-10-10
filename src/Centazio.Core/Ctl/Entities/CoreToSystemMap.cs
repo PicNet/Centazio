@@ -5,21 +5,21 @@ namespace Centazio.Core.Ctl.Entities;
 
 public interface ICoreToSystemMap {
   public CoreEntityType CoreEntityType { get; } 
-  public ValidString CoreId { get; } 
+  public CoreEntityId CoreId { get; } 
   public SystemName System { get; } 
   public DateTime DateCreated { get; }
 }
 
 public static class Map {
-  public record Key(CoreEntityType CoreEntityType, ValidString CoreId, SystemName System, ValidString SystemId);
+  public record Key(CoreEntityType CoreEntityType, CoreEntityId CoreId, SystemName System, SystemEntityId SystemId);
   
   // factories
   public static PendingCreate Create(SystemName system, ICoreEntity e) => new(e, system);
   
   public record CoreToSystem : ICoreToSystemMap {
     internal CoreToSystem(
-        CoreEntityType coreentity, ValidString coreid, 
-        SystemName system, ValidString sysid, 
+        CoreEntityType coreentity, CoreEntityId coreid, 
+        SystemName system, SystemEntityId sysid, 
         EEntityMappingStatus status, SystemEntityChecksum checksum) {
       CoreEntityType = coreentity; 
       CoreId = coreid; 
@@ -32,9 +32,9 @@ public static class Map {
     public Key Key => new(CoreEntityType, CoreId, System, SystemId);
     
     public CoreEntityType CoreEntityType { get; } 
-    public ValidString CoreId { get; } 
+    public CoreEntityId CoreId { get; } 
     public SystemName System { get; } 
-    public ValidString SystemId { get; }
+    public SystemEntityId SystemId { get; }
     public SystemEntityChecksum SystemEntityChecksum { get; internal init; }
     public EEntityMappingStatus Status { get; internal init; }
     public DateTime DateCreated { get; internal init; } 
@@ -61,9 +61,9 @@ public static class Map {
       
       public static explicit operator CoreToSystem(Dto dto) => new(
           new CoreEntityType(dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity))),
-          dto.CoreId ?? throw new ArgumentNullException(nameof(CoreId)),
+          new(dto.CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
           dto.System ?? throw new ArgumentNullException(nameof(System)),
-          dto.SystemId ?? throw new ArgumentNullException(nameof(SystemId)),
+          new (dto.SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
           Enum.Parse<EEntityMappingStatus>(dto.Status ?? throw new ArgumentNullException(nameof(Status))),
           new (dto.SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
         
@@ -78,7 +78,7 @@ public static class Map {
   
   public record PendingCreate : ICoreToSystemMap {
     public CoreEntityType CoreEntityType { get; } 
-    public ValidString CoreId { get; }
+    public CoreEntityId CoreId { get; }
     public SystemName System { get; } 
     public DateTime DateCreated { get; }
     
@@ -89,7 +89,7 @@ public static class Map {
       DateCreated = UtcDate.UtcNow;
     }
     
-    public Created SuccessCreate(string targetid, SystemEntityChecksum checksum) => new(this, targetid, checksum) {
+    public Created SuccessCreate(SystemEntityId systemid, SystemEntityChecksum checksum) => new(this, systemid, checksum) {
       DateCreated = DateCreated,
       DateUpdated = UtcDate.UtcNow,
       DateLastSuccess = UtcDate.UtcNow
@@ -97,7 +97,7 @@ public static class Map {
   }
   
   public record Created : CoreToSystem {
-    internal Created(PendingCreate e, ValidString targetid, SystemEntityChecksum checksum) : base(e.CoreEntityType, e.CoreId, e.System, targetid, EEntityMappingStatus.SuccessCreate, checksum) {
+    internal Created(PendingCreate e, SystemEntityId systemid, SystemEntityChecksum checksum) : base(e.CoreEntityType, e.CoreId, e.System, systemid, EEntityMappingStatus.SuccessCreate, checksum) {
       DateUpdated = UtcDate.UtcNow;
       DateLastSuccess = UtcDate.UtcNow;
     }

@@ -32,7 +32,7 @@ public record CoreAndPendingCreateMap(ICoreEntity Core, Map.PendingCreate Map) {
 }
 
 public record CoreSystemAndPendingCreateMap(ICoreEntity Core, ISystemEntity SysEnt,  Map.PendingCreate Map) {
-  public CoreAndCreatedMap SuccessCreate(string targetid, SystemEntityChecksum checksum) => new(Core, Map.SuccessCreate(targetid, checksum));
+  public CoreAndCreatedMap SuccessCreate(SystemEntityId systemid, SystemEntityChecksum checksum) => new(Core, Map.SuccessCreate(systemid, checksum));
 
 }
 

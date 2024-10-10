@@ -15,7 +15,7 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<ValidString> coreids);
+  Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<CoreEntityId> coreids);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {
@@ -28,7 +28,7 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
   /// <returns>An id to checksum mapping of entities already in core storage</returns>
-  Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities);
+  Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities);
   
   /// <summary>
   /// Upsert all entities into core storage

@@ -43,11 +43,11 @@ public class PromoteOperationRunnerTests {
       if (idx % 2 == 0) {
         Assert.That(se.DatePromoted, Is.EqualTo(UtcDate.UtcNow));
         Assert.That(se.IgnoreReason, Is.Null);
-        Assert.That(saved.ContainsKey(se.Data), Is.True);
+        Assert.That(saved.ContainsKey(new(se.Data)), Is.True);
       } else {
         Assert.That(se.DatePromoted, Is.Null);
         Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {se.Data}"));
-        Assert.That(saved.ContainsKey(se.Data), Is.False);
+        Assert.That(saved.ContainsKey(new(se.Data)), Is.False);
       }
     });
   }
@@ -80,7 +80,7 @@ public class PromoteOperationRunnerTests {
     public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
           staged.Where((_, idx) => idx % 2 == 0).Select(e => {
-            var core = e.Sys.To<System1Entity>().ToCoreEntity(e.Staged.Data, e.Staged.Data);
+            var core = e.Sys.To<System1Entity>().ToCoreEntity(new(e.Staged.Data), new(e.Staged.Data));
             return e.SetCore(core);
           }).ToList(),
           staged.Where((_, idx) => idx % 2 == 1).Select(e => new Containers.StagedIgnore(e.Staged, Ignore: $"Ignore: {e.Staged.Data}")).ToList()));
@@ -100,7 +100,7 @@ public class PromoteOperationRunnerTests {
 
 public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
-    var id = Guid.NewGuid().ToString();
+    var id = Constants.CoreE1Id1;
     var entities = new List<Containers.StagedSysCore> {
       new(null!, null!, F.NewCoreCust("N1", "N1", id)),
       new(null!, null!, F.NewCoreCust("N2", "N2", id)),
@@ -115,23 +115,18 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
     var entities1 = new List<Containers.CoreChecksum> {
-      CCS(F.NewCoreCust("N1", "N1", "1")),
-      CCS(F.NewCoreCust("N2", "N2", "2")),
-      CCS(F.NewCoreCust("N3", "N3", "3")),
-      CCS(F.NewCoreCust("N4", "N4", "4"))
+      CCS(F.NewCoreCust("N1", "N1", new("1"))),
+      CCS(F.NewCoreCust("N2", "N2", new("2"))),
+      CCS(F.NewCoreCust("N3", "N3", new("3"))),
+      CCS(F.NewCoreCust("N4", "N4", new("4")))
     };
     await core.Upsert(Constants.CoreEntityName, entities1);
     
     var entities2 = new List<Containers.StagedSysCore> {
-      // F.NewCoreCust("N12", "N12", "1", "c1"),
-      // F.NewCoreCust("N22", "N22", "2", "c2"),
-      // F.NewCoreCust("N32", "N32", "3", "c32"), // only this one gets updated as the checksum changed
-      // F.NewCoreCust("N42", "N42", "4", "c4"),
-      
-      new (null!, null!, F.NewCoreCust("N1", "N1", "1")),
-      new (null!, null!, F.NewCoreCust("N2", "N2", "2")),
-      new (null!, null!, F.NewCoreCust("N32", "N32", "3")), // only this one gets updated as the checksum changed
-      new (null!, null!, F.NewCoreCust("N4", "N4", "4"))
+      new (null!, null!, F.NewCoreCust("N1", "N1", new("1"))),
+      new (null!, null!, F.NewCoreCust("N2", "N2", new("2"))),
+      new (null!, null!, F.NewCoreCust("N32", "N32",  new("3"))), // only this one gets updated as the checksum changed
+      new (null!, null!, F.NewCoreCust("N4", "N4", new("4")))
     };
     // ideally these methods should be strongly typed using generics
     var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);

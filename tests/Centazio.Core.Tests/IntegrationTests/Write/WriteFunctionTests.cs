@@ -14,8 +14,8 @@ public class WriteFunctionTests {
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
-    var customer1 = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var customer2 = new CoreEntity(Guid.NewGuid().ToString(), "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var customer1 = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var customer2 = new CoreEntity(Constants.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
@@ -53,7 +53,7 @@ public class WriteFunctionTests {
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
 
     // add some data, as the write function will not be called if there is nothing to 'write'
-    var entity = new CoreEntity(Guid.NewGuid().ToString(), "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var entity = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
     await core.Upsert(Constants.CoreEntityName, [new (entity, Helpers.TestingCoreEntityChecksum(entity))]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();

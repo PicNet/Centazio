@@ -30,9 +30,9 @@ END
     return this;
   }
   
-  public async Task<E> Get<E>(CoreEntityType coretype, ValidString id) where E : class, ICoreEntity {
+  public async Task<E> Get<E>(CoreEntityType coretype, CoreEntityId id) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
-    var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {coretype} WHERE Id=@Id", new { Id = id.Value });
+    var raw = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {coretype} WHERE Id=@Id", new { Id = id });
     if (raw is null) throw new Exception($"Core entity [{coretype}({id})] not found");
     return (CoreEntity) raw as E ?? throw new Exception();
   }
@@ -46,11 +46,11 @@ END
   
   public Task<List<E>> Query<E>(CoreEntityType coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
     await using var conn = SqlConn.Instance.Conn();
     var ids = entities.Select(e => e.Id).ToList();
     var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {coretype} WHERE Id IN (@ids)", new { ids });
-    return mapping.ToDictionary(t => t.Id, t => new CoreEntityChecksum(t.CoreEntityChecksum));
+    return mapping.ToDictionary(t => new CoreEntityId(t.Id), t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
   public async Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
@@ -68,7 +68,7 @@ UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastN
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
       var c = cs.Core.To<CoreEntity>();
-      return new { c.Id, CoreEntityChecksum=cs.CoreEntityChecksum.Value, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
+      return new { c.Id, cs.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
     }));
     return entities.Select(c => c.Core).ToList();
   }

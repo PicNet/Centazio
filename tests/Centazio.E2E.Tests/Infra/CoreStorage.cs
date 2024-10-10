@@ -2,7 +2,6 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -11,9 +10,9 @@ public record CoreCustomer : CoreEntityBase {
   
   public string Name { get; init; }
   public override string DisplayName => Name;
-  public string MembershipId { get; internal init; }
+  public CoreEntityId MembershipId { get; internal init; }
   
-  internal CoreCustomer(string id, SystemName system, DateTime sourceupdate, string name, string membershipid) : base(id, system, sourceupdate, system) {
+  internal CoreCustomer(CoreEntityId id, SystemName system, DateTime sourceupdate, string name, CoreEntityId membershipid) : base(id, system, sourceupdate, system) {
     Name = name;
     MembershipId = membershipid;
   }
@@ -26,7 +25,7 @@ public record CoreMembershipType : CoreEntityBase {
   public string Name { get; init; }
   public override string DisplayName => Name;
   
-  internal CoreMembershipType(string id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
+  internal CoreMembershipType(CoreEntityId id, DateTime sourceupdate, string name) : base(id, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
     Name = name;
   }
   
@@ -36,12 +35,12 @@ public record CoreMembershipType : CoreEntityBase {
 public record CoreInvoice : CoreEntityBase {
   
   public override string DisplayName => Id;
-  public string CustomerId { get; private set; }
+  public CoreEntityId CustomerId { get; private set; }
   public int Cents { get; init; }
   public DateOnly DueDate { get; init; }
   public DateTime? PaidDate { get; init; }
   
-  internal CoreInvoice(string id, SystemName system, DateTime sourceupdate, string customerid, int cents, DateOnly due, DateTime? paid) : base(id, system, sourceupdate, system) {
+  internal CoreInvoice(CoreEntityId id, SystemName system, DateTime sourceupdate, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(id, system, sourceupdate, system) {
     CustomerId = customerid;
     Cents = cents;
     DueDate = due;
@@ -54,8 +53,8 @@ public record CoreInvoice : CoreEntityBase {
 public abstract record CoreEntityBase : ICoreEntity {
   // todo: use strong types SystemName (for SourceSystem and LastUpdateSystem), ValidString, etc
   public string SourceSystem { get; }
-  public string SourceId { get; set; }
-  public string Id { get; set; }
+  public SystemEntityId SourceId { get; set; }
+  public CoreEntityId Id { get; set; }
   public DateTime DateCreated { get; set; }
   public DateTime DateUpdated { get; set; }
   public DateTime SourceSystemDateUpdated { get; init; }
@@ -64,9 +63,9 @@ public abstract record CoreEntityBase : ICoreEntity {
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
-  protected CoreEntityBase(string id, SystemName system, DateTime sourceupdate, string lastsys) {
+  protected CoreEntityBase(CoreEntityId id, SystemName system, DateTime sourceupdate, string lastsys) {
     SourceSystem = system;
-    SourceId = id;
+    SourceId = new (id.Value); // todo: do not reuse ids, have own system and core ids
     SourceSystemDateUpdated = sourceupdate;
         
     Id = id;
@@ -85,10 +84,9 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   internal List<ICoreEntity> Customers { get; } = [];
   internal List<ICoreEntity> Invoices { get; } = [];
   
-  public CoreMembershipType? GetMembershipType(string? id) => Types.SingleOrDefault(e => e.Id == id)?.To<CoreMembershipType>();
-  public CoreCustomer? GetCustomer(string? id) => Customers.SingleOrDefault(e => e.Id == id)?.To<CoreCustomer>();
-  public CoreInvoice? GetInvoice(string? id) => Invoices.SingleOrDefault(e => e.Id == id)?.To<CoreInvoice>();
-  public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
+  public CoreMembershipType? GetMembershipType(CoreEntityId? id) => Types.SingleOrDefault(e => e.Id == id)?.To<CoreMembershipType>();
+  public CoreCustomer? GetCustomer(CoreEntityId? id) => Customers.SingleOrDefault(e => e.Id == id)?.To<CoreCustomer>();
+  public CoreInvoice? GetInvoice(CoreEntityId? id) => Invoices.SingleOrDefault(e => e.Id == id)?.To<CoreInvoice>();
   
   public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityType coretype, DateTime after) {
     var list = GetList(coretype).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
@@ -96,14 +94,14 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     return Task.FromResult(list);
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<ValidString> coreids) {
+  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<CoreEntityId> coreids) {
     var full = GetList(coretype);
     var forcores = coreids.Select(id => full.Single(e => e.Id == id)).ToList();
     // Log.Debug($"CoreStorage.Get Object[{obj}] CoreIds[{coreids.Count}] Returning[{String.Join(",", forcores.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(forcores);
   }
 
-  public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
     return (await Get(new("ignore"), coretype, DateTime.MinValue))
         .Where(e => ids.ContainsKey(e.Id))

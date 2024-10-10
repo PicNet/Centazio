@@ -24,7 +24,7 @@ public interface IGetChecksumSubset {
 
 public interface ISystemEntity : IGetChecksumSubset {
 
-  public string SystemId { get; }
+  public SystemEntityId SystemId { get; }
   public DateTime LastUpdatedDate { get; }
   
   [JsonIgnore] public string DisplayName { get; }

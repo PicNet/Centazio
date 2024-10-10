@@ -25,8 +25,8 @@ public static class TestingFactories {
       ICoreStorage? core = null) => 
       new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), entitymap ?? CoreSysMap());
 
-  public static CoreEntity NewCoreCust(string first, string last, string? id = null) {
-    id ??= Guid.NewGuid().ToString();
+  public static CoreEntity NewCoreCust(string first, string last, CoreEntityId? id = null) {
+    id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
     return new CoreEntity(id, first, last, dob, UtcDate.UtcNow);
   }

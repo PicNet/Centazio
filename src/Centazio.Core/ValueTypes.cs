@@ -13,6 +13,9 @@ public record ValidString(string Value) {
   public sealed override string ToString() => Value;
 }
 
+public record CoreEntityId(string Value) : ValidString(Value);
+public record SystemEntityId(string Value) : ValidString(Value);
+
 public sealed record SystemName(string Value) : ValidString(Value) {
   public static implicit operator SystemName(string value) => new(value);
 }

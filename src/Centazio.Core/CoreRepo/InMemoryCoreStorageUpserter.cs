@@ -6,8 +6,8 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
   protected readonly Dictionary<CoreEntityType, Dictionary<ValidString, Containers.CoreChecksum>> db = new();
 
-  public Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
-    var checksums = new Dictionary<string, CoreEntityChecksum>();
+  public Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
+    var checksums = new Dictionary<CoreEntityId, CoreEntityChecksum>();
     if (!entities.Any()) return Task.FromResult(checksums);
     if (!db.TryGetValue(coretype, out var dbtype)) return Task.FromResult(checksums);
     var result = entities

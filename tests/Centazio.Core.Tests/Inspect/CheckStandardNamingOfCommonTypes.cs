@@ -15,6 +15,8 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(LifecycleStage), (nameof(SystemState.Stage), "stage") },
     { typeof(CoreEntityChecksum), (nameof(CoreEntityChecksum), "corchksm") },
     { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm") },
+    { typeof(CoreEntityId), (nameof(Map.CoreToSystem.CoreId), "coreid") },
+    { typeof(SystemEntityId), (nameof(Map.CoreToSystem.SystemId), "systemid") },
   };
   
   private readonly List<Type> EXP_ORDER = [
@@ -84,10 +86,10 @@ public class CheckStandardNamingOfCommonTypes {
         }
 
         void ValidateParam(string prefix, ParameterInfo param) {
-          ValidateImpl(prefix + ".Param", param.ParameterType, isrec, param.Name ?? throw new Exception(), param.Position);
+          ValidateImpl(prefix + ".Param", param.ParameterType, isrec, param.Name ?? throw new Exception());
         }
 
-        void ValidateImpl(string prefix, Type type, bool upper, string name, int? position = null) {
+        void ValidateImpl(string prefix, Type type, bool upper, string name) {
           Check(typeof(CoreEntityType), name);
           Check(typeof(SystemEntityType), name);
           Check(typeof(ObjectName), name);

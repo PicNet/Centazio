@@ -83,7 +83,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<Containers.StagedSysCore>> BuildInvoices() {
       var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
       return staged.ToStagedSysOptionalCore<CrmInvoice, CoreInvoice>().Select(t => 
-          t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.CustomerId.ToString()]))).ToList();
+          t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[new(t.Sys.CustomerId.ToString())]))).ToList();
     }
   }
 
@@ -137,7 +137,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.MembershipId), c.Name);
 
-  private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<ValidString, ValidString> custmaps) => 
+  private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
       new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerId]), i.Cents, i.DueDate, i.PaidDate);
 
 }

@@ -126,19 +126,19 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow);
-    var c1 = sysent1.ToCoreEntity("C1", "E1");
+    var c1 = sysent1.ToCoreEntity(Constants.CoreE1Id1, Constants.Sys1Id1);
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new Map.Key(coretype, "C1", system1, "E1");
+    var expkey1 = new Map.Key(coretype, Constants.CoreE1Id1, system1, Constants.Sys1Id1);
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
-    var expkey2 = new Map.Key(coretype, "C1", system2, "E2");
+    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate(Constants.Sys1Id2, new(Guid.NewGuid().ToString()))]);
+    var expkey2 = new Map.Key(coretype, Constants.CoreE1Id1, system2, Constants.Sys1Id2);
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
@@ -146,7 +146,7 @@ public class PromoteFunctionTests {
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow);
-    var c2 = sysent2.ToCoreEntity("C2", "E2"); 
+    var c2 = sysent2.ToCoreEntity(Constants.CoreE1Id2, Constants.Sys1Id2); 
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();
@@ -154,7 +154,7 @@ public class PromoteFunctionTests {
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
-    var expected = new CoreEntity("C1", "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = "E1", LastUpdateSystem = Constants.System2Name };
+    var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SourceId = Constants.Sys1Id1, LastUpdateSystem = Constants.System2Name };
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }
   
@@ -169,19 +169,19 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
-    var c1 = sysent1.ToCoreEntity("C1", "E1");
+    var c1 = sysent1.ToCoreEntity(Constants.CoreE1Id1, Constants.Sys1Id1);
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
     
     await runner1.RunFunction();
-    var expkey1 = new Map.Key(coretype, "C1", system1, "E1");
+    var expkey1 = new Map.Key(coretype, Constants.CoreE1Id1, system1, Constants.Sys1Id1);
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1 }));
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { c1 }));
     
     // Centazio writes C1 to System2 and creates map [System2:C1-E2]
-    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate("E2", new(Guid.NewGuid().ToString()))]);
-    var expkey2 = new Map.Key(coretype, "C1", system2, "E2");
+    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate(Constants.Sys1Id2, new(Guid.NewGuid().ToString()))]);
+    var expkey2 = new Map.Key(coretype, Constants.CoreE1Id1, system2, Constants.Sys1Id2);
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     
     TestingUtcDate.DoTick();
@@ -189,7 +189,7 @@ public class PromoteFunctionTests {
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
-    var c2 = sysent2.ToCoreEntity("C2", "E2");
+    var c2 = sysent2.ToCoreEntity(Constants.CoreE1Id2, Constants.Sys1Id2);
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();

@@ -8,10 +8,10 @@ public class BounceBackTests {
   [Test] public void Test_any_update_not_from_source_system_is_ignored() {
     
     var toupdate = new List<Containers.StagedSysCore> {
-      new(null!, null!, new CoreEntity("1", "1", "1", DateOnly.MinValue, UtcDate.UtcNow)),
-      new(null!, null!, new CoreEntity2("3", UtcDate.UtcNow)),
-      new(null!, null!, new CoreEntity("2", "2", "2", DateOnly.MinValue, UtcDate.UtcNow)),
-      new(null!, null!, new CoreEntity2("4", UtcDate.UtcNow))
+      new(null!, null!, new CoreEntity(new("1"), "1", "1", DateOnly.MinValue, UtcDate.UtcNow)),
+      new(null!, null!, new CoreEntity2(new("3"), UtcDate.UtcNow)),
+      new(null!, null!, new CoreEntity(new("2"), "2", "2", DateOnly.MinValue, UtcDate.UtcNow)),
+      new(null!, null!, new CoreEntity2(new("4"), UtcDate.UtcNow))
     };
     var promoting1 = PromoteOperationRunner.IgnoreEntitiesBouncingBack(toupdate, Constants.System1Name);
     var promoting2 = PromoteOperationRunner.IgnoreEntitiesBouncingBack(toupdate, Constants.System2Name);
