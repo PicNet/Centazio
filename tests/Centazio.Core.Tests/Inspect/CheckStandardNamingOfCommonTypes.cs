@@ -16,6 +16,8 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(CoreEntityChecksum), (nameof(CoreEntityChecksum), "corchksm") },
     { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm") },
   };
+  
+  private readonly List<Type> EXP_ORDER = [typeof(SystemName), typeof(LifecycleStage), typeof(ObjectName)];
 
   [Test] public void Test_naming_standards() {
     var errors = new List<string>();
@@ -34,7 +36,10 @@ public class CheckStandardNamingOfCommonTypes {
         objtype.GetConstructors().ForEach(ValidateCtor);
         objtype.GetProperties().ForEach(ValidateProp);
         objtype.GetFields().ForEach(ValidateField);
-        if (!isrec) objtype.GetMethods().ForEach(ValidateMethod);
+        if (!isrec) {
+          objtype.GetMethods().ForEach(ValidateMethod);
+          objtype.GetMethods().ForEach(ValidateMethodParamOrder);
+        }
 
         void ValidateCtor(ConstructorInfo ctor) {
           if (Ignore(ctor)) return;
@@ -48,14 +53,23 @@ public class CheckStandardNamingOfCommonTypes {
 
         void ValidateMethod(MethodInfo method) {
           if (Ignore(method)) return;
-          var args = method.GetParameters();  
-          args.ForEach(param => {
+          method.GetParameters().ForEach(param => {
             if (param.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0) return;
             var imethods = ifaces.SelectMany(i => i.GetMethods().Where(m => m.Name == method.Name));
             var iparams = imethods.SelectMany(m => m.GetParameters().Where(p => p.Name == param.Name));
             if (iparams.Any(Ignore)) return;
             
             ValidateParam($"Method[{method.Name}]", param);
+          });
+        }
+        
+        void ValidateMethodParamOrder(MethodInfo method) {
+          if (Ignore(method)) return;
+          var args = method.GetParameters();
+          var ordered = EXP_ORDER.Where(t => args.Any(p => t.IsAssignableFrom(p.ParameterType))).ToList();
+          ordered.ForEach((t, exp) => {
+            var p = args.Single(p => t.IsAssignableFrom(p.ParameterType));
+            if (p.Position != exp) AddErr($"Method[{method.Name}]", p.ParameterType, $"Name[{p.Name}] Position[{p.Position}] Expected[{exp}]");
           });
         }
         
@@ -82,9 +96,11 @@ public class CheckStandardNamingOfCommonTypes {
             if (type != exp) return; // only test properties, fields, params if they are of the type we are testing
             var expected = upper ? EXPECTED[type].Uppercase : EXPECTED[type].Lowercase;
             if (actual == expected) return; // name is correct
-            errors.Add($"Assembly[{ass.GetName().Name}] Object[{objtype.Name}] Record[{isrec}] {prefix} - Type[{type.Name}] Name[{actual}] Expected[{expected}] Pos[{position}]");
+            AddErr(prefix, type, $"Name[{actual}] Expected[{expected}]");
           }
         }
+        
+        void AddErr(string prefix, Type type, string suffix) => errors.Add($"Assembly[{ass.GetName().Name}] Object[{objtype.Name}] Record[{isrec}] {prefix} - Type[{type.Name}] {suffix}");
       }
     }
 
