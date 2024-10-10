@@ -175,6 +175,6 @@ public class PromoteOperationRunner(
   /// Note: This is only done with Uni-directional promote operations. Bi-directional operations must manage their own bounce backs for now. 
   /// </summary>
   internal static List<Containers.StagedSysCore> IgnoreEntitiesBouncingBack(List<Containers.StagedSysCore> lst, SystemName thissys)  {
-    return lst.Where(e => e.Core.SourceSystem == thissys).ToList();
+    return lst.Where(e => e.Core.System == thissys).ToList();
   }
 }

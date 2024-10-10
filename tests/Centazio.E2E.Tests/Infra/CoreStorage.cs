@@ -2,7 +2,6 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
 using Serilog;
 
 namespace Centazio.E2E.Tests.Infra;
@@ -52,20 +51,19 @@ public record CoreInvoice : CoreEntityBase {
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
-  // todo: use strong types SystemName (for SourceSystem and LastUpdateSystem), ValidString, etc
-  public string SourceSystem { get; }
+  public SystemName System { get; }
   public SystemEntityId SystemId { get; set; }
   public CoreEntityId CoreId { get; set; }
   public DateTime DateCreated { get; set; }
   public DateTime DateUpdated { get; set; }
   public DateTime SourceSystemDateUpdated { get; init; }
-  public string LastUpdateSystem { get; set; }
+  public SystemName LastUpdateSystem { get; set; }
   
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase(CoreEntityId coreid, SystemName system, DateTime sourceupdate, string lastsys) {
-    SourceSystem = system;
+    System = system;
     SystemId = new (coreid.Value); // todo: do not reuse ids, have own system and core ids
     SourceSystemDateUpdated = sourceupdate;
         

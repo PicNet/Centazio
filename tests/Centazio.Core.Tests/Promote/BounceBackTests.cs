@@ -18,7 +18,7 @@ public class BounceBackTests {
     
     Assert.That(promoting1, Has.Count.EqualTo(2));
     Assert.That(promoting2, Has.Count.EqualTo(2));
-    Assert.That(promoting1, Is.EquivalentTo(toupdate.Where(e => e.Core.SourceSystem == Constants.System1Name)));
-    Assert.That(promoting2, Is.EquivalentTo(toupdate.Where(e => e.Core.SourceSystem == Constants.System2Name)));
+    Assert.That(promoting1, Is.EquivalentTo(toupdate.Where(e => e.Core.System == Constants.System1Name)));
+    Assert.That(promoting2, Is.EquivalentTo(toupdate.Where(e => e.Core.System == Constants.System2Name)));
   }
 }

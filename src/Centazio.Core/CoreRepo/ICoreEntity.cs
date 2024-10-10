@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
@@ -7,7 +8,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// <summary>
   /// The source system where this entity was originally created
   /// </summary>
-  public string SourceSystem { get; }
+  public SystemName System { get; }
   
   /// <summary>
   /// The id of the entity in the source system 
@@ -37,7 +38,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// filter out any changes by a system, when writing back to that system.  I.e. if
   /// System 1 changes a property, then there is no need to write this back to System 1.
   /// </summary>
-  public string LastUpdateSystem { get; set; }
+  [IgnoreNamingConventions] public SystemName LastUpdateSystem { get; set; }
 
   /// <summary>
   /// The date/time when this entity was last updated in the source system.  This requires that the source system

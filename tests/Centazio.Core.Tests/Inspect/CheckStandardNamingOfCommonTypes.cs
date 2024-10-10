@@ -57,7 +57,7 @@ public class CheckStandardNamingOfCommonTypes {
         }
 
         void ValidateProp(PropertyInfo prop) {
-          if (Ignore(prop)) return;
+          if (Ignore(prop) || ifaces.Any(i => Ignore(i.GetProperty(prop.Name)))) return;
           ValidateImpl($"Property", prop.PropertyType, true, prop.Name);
         }
 
@@ -111,7 +111,7 @@ public class CheckStandardNamingOfCommonTypes {
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
   }
 
-  private bool Ignore(ICustomAttributeProvider prov) => 
-      prov.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0;
+  private bool Ignore(ICustomAttributeProvider? prov) => 
+      prov is not null && prov.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0;
 
 }

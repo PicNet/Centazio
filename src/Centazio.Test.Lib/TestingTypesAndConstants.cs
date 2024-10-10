@@ -30,8 +30,8 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
 
   public CoreEntityId CoreId { get; set; } = CoreId;
   public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public string SourceSystem { get; } = Constants.System1Name;
-  public string LastUpdateSystem { get; set; }  = Constants.System1Name;
+  public SystemName System { get; } = Constants.System1Name;
+  public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
@@ -61,8 +61,8 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
 public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEntity {
   public CoreEntityId CoreId { get; set; } = CoreId;
   public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public string SourceSystem { get; } = Constants.System2Name;
-  public string LastUpdateSystem { get; set; } = Constants.System2Name;
+  public SystemName System { get; } = Constants.System2Name;
+  public SystemName LastUpdateSystem { get; set; } = Constants.System2Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;
   public DateTime SourceSystemDateUpdated => DateUpdated;
