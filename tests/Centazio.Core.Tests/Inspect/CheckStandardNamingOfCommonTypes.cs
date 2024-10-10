@@ -7,16 +7,16 @@ namespace Centazio.Core.Tests.Inspect;
 
 public class CheckStandardNamingOfCommonTypes {
   
-  private readonly Dictionary<Type, (string Uppercase, string Lowercase)> EXPECTED = new() {
-    { typeof(CoreEntityType), (nameof(CoreEntityType), "coretype") },
-    { typeof(SystemEntityType), (nameof(SystemEntityType), "systype") },
-    { typeof(ObjectName), (nameof(ObjectState.Object), "obj") },
-    { typeof(SystemName), (nameof(ObjectState.System), "system") },
-    { typeof(LifecycleStage), (nameof(SystemState.Stage), "stage") },
-    { typeof(CoreEntityChecksum), (nameof(CoreEntityChecksum), "corchksm") },
-    { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm") },
-    { typeof(CoreEntityId), (nameof(Map.CoreToSystem.CoreId), "coreid") },
-    { typeof(SystemEntityId), (nameof(Map.CoreToSystem.SystemId), "systemid") },
+  private readonly Dictionary<Type, (string Uppercase, string Lowercase, bool EndsWith)> EXPECTED = new() {
+    { typeof(CoreEntityType), (nameof(CoreEntityType), "coretype", false) },
+    { typeof(SystemEntityType), (nameof(SystemEntityType), "systype", false) },
+    { typeof(ObjectName), (nameof(ObjectState.Object), "obj", false) },
+    { typeof(SystemName), (nameof(ObjectState.System), "system", false) },
+    { typeof(LifecycleStage), (nameof(SystemState.Stage), "stage", false) },
+    { typeof(CoreEntityChecksum), (nameof(CoreEntityChecksum), "corchksm", false) },
+    { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm", false) },
+    { typeof(CoreEntityId), (nameof(Map.CoreToSystem.CoreId), "coreid", true) },
+    { typeof(SystemEntityId), (nameof(Map.CoreToSystem.SystemId), "systemid", true) },
   };
   
   private readonly List<Type> EXP_ORDER = [
@@ -99,7 +99,7 @@ public class CheckStandardNamingOfCommonTypes {
           void Check(Type exp) {
             if (objtype == exp) return; // do not check naming conventions if the object is the same type we are testing
             var expected = upper ? check.Uppercase : check.Lowercase;
-            if (name == expected) return; // name is correct
+            if (check.EndsWith ? name.EndsWith(expected) : name == expected) return; // name is correct
             AddErr(prefix, type, $"Name[{name}] Expected[{expected}]");
           }
         }

@@ -11,14 +11,14 @@ public record CoreCustomer : CoreEntityBase {
   
   public string Name { get; init; }
   public override string DisplayName => Name;
-  [IgnoreNamingConventions] public CoreEntityId MembershipId { get; internal init; }
+  public CoreEntityId MembershipCoreId { get; internal init; }
   
   internal CoreCustomer(CoreEntityId coreid, SystemName system, DateTime sourceupdate, string name, CoreEntityId membershipid) : base(coreid, system, sourceupdate, system) {
     Name = name;
-    MembershipId = membershipid;
+    MembershipCoreId = membershipid;
   }
 
-  public override object GetChecksumSubset() => new { Name, MembershipId };
+  public override object GetChecksumSubset() => new { Name, MembershipId = MembershipCoreId };
 }
 
 public record CoreMembershipType : CoreEntityBase {
@@ -36,19 +36,19 @@ public record CoreMembershipType : CoreEntityBase {
 public record CoreInvoice : CoreEntityBase {
   
   public override string DisplayName => CoreId;
-  [IgnoreNamingConventions] public CoreEntityId CustomerId { get; private set; }
+  public CoreEntityId CustomerCoreId { get; private set; }
   public int Cents { get; init; }
   public DateOnly DueDate { get; init; }
   public DateTime? PaidDate { get; init; }
   
   internal CoreInvoice(CoreEntityId coreid, SystemName system, DateTime sourceupdate, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, system, sourceupdate, system) {
-    CustomerId = customerid;
+    CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;
     PaidDate = paid;
   }
   
-  public override object GetChecksumSubset() => new { CustomerId, Cents, DueDate, PaidDate };
+  public override object GetChecksumSubset() => new { CustomerId = CustomerCoreId, Cents, DueDate, PaidDate };
 }
 
 public abstract record CoreEntityBase : ICoreEntity {

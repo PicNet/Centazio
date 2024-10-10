@@ -23,11 +23,7 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
   public DateTime LastUpdatedDate => DateUpdated;
   public string DisplayName => $"{FirstName} {LastName}({Sys1EntityId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
-
-  public CoreEntity ToCoreEntity(CoreEntityId? id = null, SystemEntityId? sourceid = null) => new(id ?? new(SystemId.Value), FirstName, LastName, DateOfBirth, DateUpdated) {
-    // todo: this is ugly
-    SystemId = sourceid ?? (id is not null ? new(id.Value) : SystemId) 
-  };
+  public CoreEntity ToCoreEntity() => new(new(SystemId.Value), FirstName, LastName, DateOfBirth, DateUpdated);
 }
 
 public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {

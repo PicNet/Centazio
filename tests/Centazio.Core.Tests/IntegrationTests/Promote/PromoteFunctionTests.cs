@@ -126,7 +126,7 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow);
-    var c1 = sysent1.ToCoreEntity(Constants.CoreE1Id1, Constants.Sys1Id1);
+    var c1 = sysent1.ToCoreEntity() with { CoreId = Constants.CoreE1Id1, SystemId = Constants.Sys1Id1 };
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
@@ -146,7 +146,7 @@ public class PromoteFunctionTests {
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow);
-    var c2 = sysent2.ToCoreEntity(Constants.CoreE1Id2, Constants.Sys1Id2); 
+    var c2 = sysent2.ToCoreEntity() with { CoreId = Constants.CoreE1Id2, SystemId = Constants.Sys1Id2 }; 
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();
@@ -169,7 +169,7 @@ public class PromoteFunctionTests {
     // Centazio creates map [System1:C1->E1]
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
-    var c1 = sysent1.ToCoreEntity(Constants.CoreE1Id1, Constants.Sys1Id1);
+    var c1 = sysent1.ToCoreEntity() with { CoreId = Constants.CoreE1Id1, SystemId = Constants.Sys1Id1 };
     func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
     
     TestingUtcDate.DoTick();
@@ -189,7 +189,7 @@ public class PromoteFunctionTests {
     // System2 creates E2, Centazio reads/promotes E2/C2 and creates map [System2:C2-E2]
     var se2 = await stager.Stage(system2, system, "2") ?? throw new Exception();
     var sysent2 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
-    var c2 = sysent2.ToCoreEntity(Constants.CoreE1Id2, Constants.Sys1Id2);
+    var c2 = sysent2.ToCoreEntity() with { CoreId = Constants.CoreE1Id2, SystemId = Constants.Sys1Id2 };
     TestingUtcDate.DoTick();
     func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
     TestingUtcDate.DoTick();

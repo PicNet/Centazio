@@ -36,18 +36,18 @@ public class PromoteOperationRunnerTests {
         ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
         new PromoteOperationConfig(Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
+    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
       if (idx % 2 == 0) {
         Assert.That(se.DatePromoted, Is.EqualTo(UtcDate.UtcNow));
         Assert.That(se.IgnoreReason, Is.Null);
-        Assert.That(saved.ContainsKey(new(se.Data)), Is.True);
+        Assert.That(saved.ContainsKey(se.Data), Is.True);
       } else {
         Assert.That(se.DatePromoted, Is.Null);
         Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {se.Data}"));
-        Assert.That(saved.ContainsKey(new(se.Data)), Is.False);
+        Assert.That(saved.ContainsKey(se.Data), Is.False);
       }
     });
   }
@@ -73,14 +73,14 @@ public class PromoteOperationRunnerTests {
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
     public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
       return staged
-        .Select(se => new Containers.StagedSys(se, new System1Entity(Guid.NewGuid(), "N", "N", new DateOnly(2000, 1, 1), UtcDate.UtcNow)))
+        .Select(se => new Containers.StagedSys(se, new System1Entity(Guid.NewGuid(), se.Data, se.Data, new DateOnly(2000, 1, 1), UtcDate.UtcNow)))
         .ToList();
     }
     
     public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
           staged.Where((_, idx) => idx % 2 == 0).Select(e => {
-            var core = e.Sys.To<System1Entity>().ToCoreEntity(new(e.Staged.Data), new(e.Staged.Data));
+            var core = e.Sys.To<System1Entity>().ToCoreEntity();
             return e.SetCore(core);
           }).ToList(),
           staged.Where((_, idx) => idx % 2 == 1).Select(e => new Containers.StagedIgnore(e.Staged, Ignore: $"Ignore: {e.Staged.Data}")).ToList()));

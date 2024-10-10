@@ -130,8 +130,7 @@ public class CrmSystem : ISimulationSystem {
           toadd.Add(new CrmInvoice(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
       
       ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => {
-        // todo: all these conversions to CoreEntityId/SystemEntityId with ToStrnigs everywhere is ugly
-        var cust = customers.Single(c => c.SystemId == new SystemEntityId(i.CustomerId.ToString()));
+        var cust = customers.Single(c => c.SystemId == i.CustomerSystemId);
         return $"Cust:{cust.DisplayName}({cust.SystemId})/Inv:{i.SystemId}:{i.AmountCents}c";
       }))}");
       
@@ -189,6 +188,7 @@ public record CrmMembershipType(Guid CrmTypeId, DateTime Updated, string Name) :
 public record CrmInvoice(Guid CrmInvId, DateTime Updated, Guid CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
 
   public SystemEntityId SystemId => new(CrmInvId.ToString());
+  public SystemEntityId CustomerSystemId => new(CustomerId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => $"Cust:{CustomerId}({CrmInvId}) {AmountCents}c";
   public object GetChecksumSubset() => new { CustomerId, AmountCents, DueDate, PaidDate };
@@ -198,6 +198,7 @@ public record CrmInvoice(Guid CrmInvId, DateTime Updated, Guid CustomerId, int A
 public record CrmCustomer(Guid CrmCustId, DateTime Updated, Guid MembershipTypeId, string Name) : ISystemEntity {
 
   public SystemEntityId SystemId => new(CrmCustId.ToString());
+  public SystemEntityId MembershipTypeSystemId => new(MembershipTypeId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
   public object GetChecksumSubset() => new { MembershipTypeId, Name };

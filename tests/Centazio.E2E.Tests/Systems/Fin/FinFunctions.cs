@@ -75,7 +75,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
       var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(FinInvoice.AccountId), true);
       return staged.ToStagedSysOptionalCore<FinInvoice, CoreInvoice>().Select(t => 
-          t.SetCore(ctx.FinInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[new(t.Sys.AccountId.ToString())]))).ToList();
+          t.SetCore(ctx.FinInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.AccountSystemId]))).ToList();
     }
   }
 
@@ -106,7 +106,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerId));
+      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
       return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
@@ -129,6 +129,6 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   private FinAccount FromCore(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
   private FinInvoice FromCore(int id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> accmaps) => 
-      new(id, Int32.Parse(accmaps[i.CustomerId]), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
+      new(id, Int32.Parse(accmaps[i.CustomerCoreId]), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue), i.PaidDate);
 
 }

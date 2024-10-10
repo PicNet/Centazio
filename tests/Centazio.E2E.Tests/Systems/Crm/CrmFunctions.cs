@@ -83,7 +83,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<Containers.StagedSysCore>> BuildInvoices() {
       var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
       return staged.ToStagedSysOptionalCore<CrmInvoice, CoreInvoice>().Select(t => 
-          t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[new(t.Sys.CustomerId.ToString())]))).ToList();
+          t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.CustomerSystemId]))).ToList();
     }
   }
 
@@ -114,7 +114,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerId));
+      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
       return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
@@ -135,9 +135,9 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     throw new NotSupportedException(config.Object);
   }
   
-  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.MembershipId), c.Name);
+  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.MembershipCoreId), c.Name);
 
   private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
-      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerId]), i.Cents, i.DueDate, i.PaidDate);
+      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerCoreId]), i.Cents, i.DueDate, i.PaidDate);
 
 }

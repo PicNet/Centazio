@@ -135,6 +135,7 @@ public class FinSystem : ISimulationSystem {
 public record FinInvoice(int FinInvId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
 
   public SystemEntityId SystemId => new(FinInvId.ToString());
+  public SystemEntityId AccountSystemId => new(AccountId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => $"Acct:{AccountId}({FinInvId}) {Amount}c";
   public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
