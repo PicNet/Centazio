@@ -14,7 +14,7 @@ public static class Map {
   public record Key(CoreEntityType CoreEntityType, ValidString CoreId, SystemName System, ValidString SystemId);
   
   // factories
-  public static PendingCreate Create(ICoreEntity e, SystemName system) => new(e, system);
+  public static PendingCreate Create(SystemName system, ICoreEntity e) => new(e, system);
   
   public record CoreToSystem : ICoreToSystemMap {
     internal CoreToSystem(

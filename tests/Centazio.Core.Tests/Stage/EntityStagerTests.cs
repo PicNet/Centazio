@@ -21,8 +21,8 @@ public class EntityStagerTests {
   [Test] public async Task Test_staging_a_single_record() {
     await stager.Stage(NAME, Constants.SystemEntityName, nameof(EntityStagerTests));
     
-    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMilliseconds(-1), NAME, Constants.SystemEntityName)).ToList();
-    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.SystemEntityName)).ToList();
+    var results1 = (await stager.GetUnpromoted(NAME, Constants.SystemEntityName, UtcDate.UtcNow.AddMilliseconds(-1))).ToList();
+    var results2 = (await stager.GetUnpromoted(NAME, Constants.SystemEntityName, UtcDate.UtcNow)).ToList();
     
     var staged = results1.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, NAME, Constants.SystemEntityName, UtcDate.UtcNow, nameof(EntityStagerTests), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
@@ -33,8 +33,8 @@ public class EntityStagerTests {
     var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
     await stager.Stage(NAME, Constants.SystemEntityName, datas.ToList());
     
-    var results1 = (await stager.GetUnpromoted(UtcDate.UtcNow.AddMicroseconds(-1), NAME, Constants.SystemEntityName)).ToList();
-    var results2 = (await stager.GetUnpromoted(UtcDate.UtcNow, NAME, Constants.SystemEntityName)).ToList();
+    var results1 = (await stager.GetUnpromoted(NAME, Constants.SystemEntityName, UtcDate.UtcNow.AddMicroseconds(-1))).ToList();
+    var results2 = (await stager.GetUnpromoted(NAME, Constants.SystemEntityName, UtcDate.UtcNow)).ToList();
     
     var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, NAME, Constants.SystemEntityName, UtcDate.UtcNow, idx.ToString(), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
     Assert.That(results1, Is.EqualTo(exp));

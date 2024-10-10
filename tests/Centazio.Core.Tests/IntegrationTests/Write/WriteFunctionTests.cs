@@ -19,8 +19,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1,  Map.Create(customer1, Constants.System2Name).SuccessCreate(customer1.SourceId, WftHelpers.ToSeCs(customer1)) ), 
-      new CoreAndCreatedMap(customer2,  Map.Create(customer2, Constants.System2Name).SuccessCreate(customer2.SourceId, WftHelpers.ToSeCs(customer2)) ) };
+      new CoreAndCreatedMap(customer1,  Map.Create(Constants.System2Name, customer1).SuccessCreate(customer1.SourceId, WftHelpers.ToSeCs(customer1)) ), 
+      new CoreAndCreatedMap(customer2,  Map.Create(Constants.System2Name, customer2).SuccessCreate(customer2.SourceId, WftHelpers.ToSeCs(customer2)) ) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     

@@ -10,7 +10,7 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
   /// systems writing back their own changes.
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType coretype, DateTime after, [IgnoreNamingConventions] SystemName exclude);
+  Task<List<ICoreEntity>> Get([IgnoreNamingConventions] SystemName exclude, CoreEntityType coretype, DateTime after);
   
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 

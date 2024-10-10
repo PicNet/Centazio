@@ -26,7 +26,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original =  Map.Create(core, STR); 
+    var original =  Map.Create(STR, core); 
     var created = (await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [original.SuccessCreate(STR, SCS())])).Single();
     var err = created.Update().Error("Error");
     
@@ -41,8 +41,8 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<Map.Created> { 
-       Map.Create(TestingFactories.NewCoreCust(STR, STR), STR).SuccessCreate(STR, SCS()),
-       Map.Create(TestingFactories.NewCoreCust(STR2, STR2), STR2).SuccessCreate(STR2, SCS())
+       Map.Create(STR, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(STR, SCS()),
+       Map.Create(STR2, TestingFactories.NewCoreCust(STR2, STR2)).SuccessCreate(STR2, SCS())
     }; 
     var created = (await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, original)).ToList();
     var list1 = await entitymap.GetAll();
@@ -79,7 +79,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     async Task<CoreEntity> SimulatePromoteOperationRunner(string coreid, SystemName system, string sysid) {
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue, UtcDate.UtcNow);
       await corestore.Upsert(Constants.CoreEntityName, [new Containers.CoreChecksum(c, Helpers.TestingCoreEntityChecksum(c))]);
-      await entitymap.Create(system, Constants.CoreEntityName, [ Map.Create(c, system).SuccessCreate(sysid, SCS())]);
+      await entitymap.Create(system, Constants.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
       return c;
     }
     
@@ -96,7 +96,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
-    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [ Map.Create(c1, Constants.System2Name).SuccessCreate("E2", SCS())]);
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate("E2", SCS())]);
     
     // System2 creates E2 
     // Centazio reads/promotes E2/C2

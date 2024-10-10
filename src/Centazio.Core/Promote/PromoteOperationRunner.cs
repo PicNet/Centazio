@@ -15,7 +15,7 @@ public class PromoteOperationRunner(
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.Checkpoint, op.State.System, op.OpConfig.SystemEntityType);
+    var pending = await staged.GetUnpromoted(op.State.System, op.OpConfig.SystemEntityType, op.Checkpoint);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
     
     var sysents = op.OpConfig.PromoteEvaluator.DeserialiseStagedEntities(op, pending);

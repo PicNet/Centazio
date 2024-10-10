@@ -12,7 +12,7 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     return Task.FromResult(db[coretype][id].Core.To<E>());
   }
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, DateTime after, SystemName exclude) {
+  public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityType coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
     var lst = fulllst.Where(c => c.Value.Core.LastUpdateSystem != exclude.Value && c.Value.Core.DateCreated > after || c.Value.Core.DateUpdated > after).Select(c => c.Value.Core).ToList();
     return Task.FromResult(lst);

@@ -17,7 +17,12 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm") },
   };
   
-  private readonly List<Type> EXP_ORDER = [typeof(SystemName), typeof(LifecycleStage), typeof(ObjectName)];
+  private readonly List<Type> EXP_ORDER = [
+    typeof(SystemName),
+    typeof(SystemState),
+    typeof(LifecycleStage), 
+    typeof(ObjectName)
+  ];
 
   [Test] public void Test_naming_standards() {
     var errors = new List<string>();

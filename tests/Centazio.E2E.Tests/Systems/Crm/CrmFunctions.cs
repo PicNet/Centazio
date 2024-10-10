@@ -81,7 +81,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
         t.SetCore(ctx.CrmCustomerToCoreCustomer(t.Sys, t.OptCore))).ToList();
 
     async Task<List<Containers.StagedSysCore>> BuildInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(staged, nameof(CrmInvoice.CustomerId), CoreEntityType.From<CoreCustomer>(), true);
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
       return staged.ToStagedSysOptionalCore<CrmInvoice, CoreInvoice>().Select(t => 
           t.SetCore(ctx.CrmInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.CustomerId.ToString()]))).ToList();
     }
@@ -114,7 +114,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(cores, nameof(CoreInvoice.CustomerId), CoreEntityType.From<CoreCustomer>());
+      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerId));
       return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);

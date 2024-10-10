@@ -9,7 +9,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    var pending = await core.Get(op.State.Object.ToCoreEntityType, op.Checkpoint, op.State.System);
+    var pending = await core.Get(op.State.System, op.State.Object.ToCoreEntityType, op.Checkpoint);
     var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, pending);
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     

@@ -90,7 +90,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   public CoreInvoice? GetInvoice(string? id) => Invoices.SingleOrDefault(e => e.Id == id)?.To<CoreInvoice>();
   public List<CoreInvoice> GetInvoicesForCustomer(string id) => Invoices.Cast<CoreInvoice>().Where(e => e.CustomerId == id).ToList();
   
-  public Task<List<ICoreEntity>> Get(CoreEntityType coretype, DateTime after, SystemName exclude) {
+  public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityType coretype, DateTime after) {
     var list = GetList(coretype).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
     // Log.Debug($"CoreStorage.Get Object[{obj}] After[{after:o}] Exclude[{exclude}] Returning[{String.Join(",", list.Select(e => $"{e.DisplayName}({e.Id})"))}]");
     return Task.FromResult(list);
@@ -105,7 +105,7 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
 
   public async Task<Dictionary<string, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
     var ids = entities.ToDictionary(e => e.Id);
-    return (await Get(coretype, DateTime.MinValue, new("ignore")))
+    return (await Get(new("ignore"), coretype, DateTime.MinValue))
         .Where(e => ids.ContainsKey(e.Id))
         .ToDictionary(e => e.Id, e => ctx.checksum.Checksum(e));
   }

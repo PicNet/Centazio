@@ -13,11 +13,11 @@ public interface IStagedEntityStore : IEntityStager {
   Task Update(StagedEntity staged);
   Task Update(List<StagedEntity> staged);
   
-  Task<List<StagedEntity>> GetAll(DateTime after, SystemName system, SystemEntityType systype);
-  Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName system, SystemEntityType systype);
+  Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityType systype, DateTime after);
+  Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityType systype, DateTime after);
   
-  Task DeletePromotedBefore(DateTime before, SystemName system, SystemEntityType systype);
-  Task DeleteStagedBefore(DateTime before, SystemName system, SystemEntityType systype);
+  Task DeletePromotedBefore(SystemName system, SystemEntityType systype, DateTime before);
+  Task DeleteStagedBefore(SystemName system, SystemEntityType systype, DateTime before);
 }
 
 public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityStore {
@@ -49,8 +49,8 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEn
   public Task Update(StagedEntity staged) => Update([staged]);
   public abstract Task Update(List<StagedEntity> staged);
 
-  public Task<List<StagedEntity>> GetAll(DateTime after, SystemName system, SystemEntityType systype) => GetImpl(after, system, systype, true);
-  public Task<List<StagedEntity>> GetUnpromoted(DateTime after, SystemName system, SystemEntityType systype) => GetImpl(after, system, systype, false);
+  public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(after, system, systype, true);
+  public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityType systype, DateTime after) => GetImpl(after, system, systype, false);
 
   /// <summary>
   /// Implementing providers must ensure the following:
@@ -62,8 +62,8 @@ public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEn
   /// </summary>
   protected abstract Task<List<StagedEntity>> GetImpl(DateTime after, SystemName system, SystemEntityType systype, bool incpromoted);
   
-  public async Task DeletePromotedBefore(DateTime before, SystemName system, SystemEntityType systype) => await DeleteBeforeImpl(before, system, systype, true);
-  public async Task DeleteStagedBefore(DateTime before, SystemName system, SystemEntityType systype) => await DeleteBeforeImpl(before, system, systype, false);
+  public async Task DeletePromotedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(before, system, systype, true);
+  public async Task DeleteStagedBefore(SystemName system, SystemEntityType systype, DateTime before) => await DeleteBeforeImpl(before, system, systype, false);
   protected abstract Task DeleteBeforeImpl(DateTime before, SystemName system, SystemEntityType systype, bool promoted);
   
   public abstract ValueTask DisposeAsync();

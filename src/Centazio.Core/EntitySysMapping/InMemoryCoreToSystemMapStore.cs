@@ -11,7 +11,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     cores.ForEach(c => {
       var existing = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityType == CoreEntityType.From(c) && kvp.Key.CoreId == c.Id && kvp.Key.System == system).Value;
-      if (existing is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(c, system)));
+      if (existing is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(system, c)));
       else updates.Add(new CoreAndPendingUpdateMap(c, existing.Update()));
     });
     return Task.FromResult((news, updates));
