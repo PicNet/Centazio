@@ -12,7 +12,7 @@ public record CoreCustomer : CoreEntityBase {
   public override string DisplayName => Name;
   public CoreEntityId MembershipCoreId { get; internal init; }
   
-  internal CoreCustomer(CoreEntityId coreid, SystemName system, DateTime sourceupdate, string name, CoreEntityId membershipid) : base(coreid, system, sourceupdate, system) {
+  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, string name, CoreEntityId membershipid) : base(coreid, sysid, system, sourceupdate, system) {
     Name = name;
     MembershipCoreId = membershipid;
   }
@@ -25,7 +25,7 @@ public record CoreMembershipType : CoreEntityBase {
   public string Name { get; init; }
   public override string DisplayName => Name;
   
-  internal CoreMembershipType(CoreEntityId coreid, DateTime sourceupdate, string name) : base(coreid, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
+  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, DateTime sourceupdate, string name) : base(coreid, sysid, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
     Name = name;
   }
   
@@ -40,7 +40,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateOnly DueDate { get; init; }
   public DateTime? PaidDate { get; init; }
   
-  internal CoreInvoice(CoreEntityId coreid, SystemName system, DateTime sourceupdate, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, system, sourceupdate, system) {
+  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid, system, sourceupdate, system) {
     CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;
@@ -62,9 +62,9 @@ public abstract record CoreEntityBase : ICoreEntity {
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
-  protected CoreEntityBase(CoreEntityId coreid, SystemName system, DateTime sourceupdate, string lastsys) {
+  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, string lastsys) {
     System = system;
-    SystemId = new (coreid.Value); // todo: do not reuse ids, have own system and core ids
+    SystemId = sysid;
     SourceSystemDateUpdated = sourceupdate;
         
     CoreId = coreid;

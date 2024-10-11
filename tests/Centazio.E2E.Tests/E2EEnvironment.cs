@@ -111,8 +111,8 @@ public class SimulationCtx {
   public List<string> LOGGING_FILTERS { get; } = [];
   
   public readonly Random rng = new(1);
-  // random but seedable guid
-  public Guid Guid() { 
+  
+  public Guid Guid() { // random but seedable guid 
     var guid = new byte[16];
     rng.NextBytes(guid);
     return new Guid(guid);
@@ -159,36 +159,48 @@ public class SimulationCtx {
    return $"{label}:{Int32.Parse(count) + 1}";
  }
  
-  public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c, CoreCustomer? existing) => 
+ public readonly Dictionary<SystemEntityId, CoreEntityId> systocoreids = new();
+ public readonly Dictionary<CoreEntityId, SystemEntityId> coretosysids = new();
+ 
+ private int ceid;
+ public CoreEntityId NewCoreEntityId<T>(SystemName system, SystemEntityId systemid) where T : ICoreEntity {
+   var coreid = new CoreEntityId($"{system}/{typeof(T).Name}[{++ceid}]");
+   systocoreids[systemid] = coreid;
+   coretosysids[coreid] = systemid;
+   return coreid;
+ }
+
+ public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c, CoreCustomer? existing) => 
       existing is null 
-          ? new(new(c.SystemId.Value), SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, new(c.MembershipTypeSystemId.Value))
-          : existing with { Name = c.Name, MembershipCoreId = new(c.MembershipTypeSystemId.Value) };
+          ? new(NewCoreEntityId<CoreCustomer>(SimulationConstants.CRM_SYSTEM, c.SystemId), c.SystemId, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, systocoreids[c.MembershipTypeSystemId])
+          : existing with { Name = c.Name, MembershipCoreId = systocoreids[c.MembershipTypeSystemId] };
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(new(i.SystemId.Value), SimulationConstants.CRM_SYSTEM, i.Updated, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
         : existing with { Cents = i.AmountCents, DueDate = i.DueDate, PaidDate = i.PaidDate };
   }
   
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) => 
       existing is null 
-          ? new CoreCustomer(new(a.SystemId.Value), SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, new(CrmSystem.PENDING_MEMBERSHIP_TYPE_ID.ToString()))
+          ? new CoreCustomer(NewCoreEntityId<CoreCustomer>(SimulationConstants.FIN_SYSTEM, a.SystemId), a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, systocoreids[CrmSystem.PENDING_MEMBERSHIP_TYPE_ID])
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(new(i.SystemId.Value), SimulationConstants.FIN_SYSTEM, i.Updated, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
         : existing with { Cents = (int)(i.Amount * 100), DueDate = DateOnly.FromDateTime(i.DueDate), PaidDate = i.PaidDate };
   }
 
-  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m, CoreMembershipType? existing) => existing is null 
-      ? new(new(m.SystemId.Value), m.Updated, m.Name) 
-      : existing with { Name = m.Name };
-  
+  public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m, CoreMembershipType? existing) => 
+      existing is null 
+        ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.SystemId, m.Updated, m.Name)
+        : existing with { Name = m.Name };
+
   public List<T> ShuffleAndTake<T>(IEnumerable<T> enumerable, int? take = null) {
     var list = enumerable.ToList();
     var n = list.Count;
@@ -306,9 +318,9 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipCoreId.Value });
+    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipCoreId });
     var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name });
-    var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, MembershipTypeId = c.MembershipTypeId.ToString() });
+    var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, MembershipTypeId = ctx.systocoreids[c.MembershipTypeSystemId] });
     var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);

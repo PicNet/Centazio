@@ -5,7 +5,8 @@ namespace Centazio.E2E.Tests.Systems.Crm;
 
 public class CrmSystem : ISimulationSystem {
   
-  internal static Guid PENDING_MEMBERSHIP_TYPE_ID;
+  // this static is ugly
+  internal static SystemEntityId PENDING_MEMBERSHIP_TYPE_ID = null!;
   internal List<CrmMembershipType> MembershipTypes { get; }
   internal List<CrmCustomer> Customers { get; } = new();
   internal List<CrmInvoice> Invoices { get; } = new();
@@ -16,11 +17,12 @@ public class CrmSystem : ISimulationSystem {
   public CrmSystem(SimulationCtx ctx) {
     this.ctx = ctx;
     MembershipTypes = [
-      new(PENDING_MEMBERSHIP_TYPE_ID = ctx.Guid(), UtcDate.UtcNow, "Pending:0"),
+      new(ctx.Guid(), UtcDate.UtcNow, "Pending:0"),
       new(ctx.Guid(), UtcDate.UtcNow, "Standard:0"),
       new(ctx.Guid(), UtcDate.UtcNow, "Silver:0"),
       new(ctx.Guid(), UtcDate.UtcNow, "Gold:0")
     ];
+    PENDING_MEMBERSHIP_TYPE_ID = MembershipTypes[0].SystemId;
     Simulation = new SimulationImpl(ctx, MembershipTypes, Customers, Invoices);
   }
 

@@ -135,9 +135,9 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     throw new NotSupportedException(config.Object);
   }
   
-  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(c.MembershipCoreId), c.Name);
+  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(ctx.coretosysids[c.MembershipCoreId].Value), c.Name);
 
   private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
-      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerCoreId]), i.Cents, i.DueDate, i.PaidDate);
+      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerCoreId].Value), i.Cents, i.DueDate, i.PaidDate);
 
 }
