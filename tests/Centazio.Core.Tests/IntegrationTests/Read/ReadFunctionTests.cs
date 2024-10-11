@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Text.Json;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -44,7 +43,7 @@ public class ReadFunctionTests {
     var staged3 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // validate results
-    var expjson = JsonSerializer.Serialize(DummyCrmApi.NewCust(0, onetick));
+    var expjson = Json.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
     Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult([expjson]).ToString()));
     Assert.That(r3, Is.Empty);

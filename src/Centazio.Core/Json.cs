@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace Centazio.Core;
 
-// todo: add unit test to make sure JsonSerializer is no longer used
 public static class Json {
   
   private static readonly JsonSerializerOptions opts = CreateDefaultOpts();

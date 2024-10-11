@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core.Checksum;
+﻿using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Ctl.Entities;
@@ -47,7 +46,7 @@ public sealed record StagedEntity {
   
   public DateTime? DatePromoted { get; internal init; }
   
-  public T Deserialise<T>() => JsonSerializer.Deserialize<T>(Data) ?? throw new Exception();
+  public T Deserialise<T>() => Json.Deserialize<T>(Data) ?? throw new Exception();
 
   public record Dto {
     public Guid? Id { get; init; }

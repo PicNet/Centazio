@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
@@ -34,7 +33,7 @@ public class PromoteFunctionTests {
     // create single entity
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
-    var json1 = Json(cust1);
+    var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
@@ -53,7 +52,7 @@ public class PromoteFunctionTests {
     // create two more entities and also include the previous one (without any changes
     var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
     var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
-    var (json2, json3) = (Json(cust2), Json(cust3));
+    var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
@@ -78,7 +77,7 @@ public class PromoteFunctionTests {
     // create single entity
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
-    var json1 = Json(cust1);
+    var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
@@ -98,7 +97,7 @@ public class PromoteFunctionTests {
     func.IgnoreNext = true;
     var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
     var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
-    var (json2, json3) = (Json(cust2), Json(cust3));
+    var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
@@ -213,9 +212,8 @@ public class PromoteFunctionTests {
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
-  private string Json(object o) => JsonSerializer.Serialize(o);
   private CoreEntity ToCore(string json) {
-    var sysent = JsonSerializer.Deserialize<System1Entity>(json) ?? throw new Exception();
+    var sysent = Json.Deserialize<System1Entity>(json) ?? throw new Exception();
     return sysent.ToCoreEntity();
   }
 

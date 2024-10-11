@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Test.Lib;
+﻿using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.IntegrationTests;
 
@@ -11,7 +10,7 @@ internal class DummyCrmApi {
 
   internal Task<List<string>> GetCustomersUpdatedSince(DateTime after) {
     UpdateCustomerList();
-    return Task.FromResult(customers.Where(c => c.DateUpdated > after).Select(c => JsonSerializer.Serialize(c)).ToList());
+    return Task.FromResult(customers.Where(c => c.DateUpdated > after).Select(Json.Serialize).ToList());
   }
 
   private void UpdateCustomerList() {

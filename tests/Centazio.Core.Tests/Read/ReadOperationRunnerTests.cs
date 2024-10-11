@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
@@ -64,7 +63,7 @@ public class ReadOperationRunnerTests {
   }
   
   private void ValidateResult(SystemState expss, OperationResult expected, OperationResult actual) {
-    Assert.That(JsonSerializer.Serialize(actual), Is.EqualTo(JsonSerializer.Serialize(expected)));
+    Assert.That(Json.Serialize(actual), Is.EqualTo(Json.Serialize(expected)));
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }
   

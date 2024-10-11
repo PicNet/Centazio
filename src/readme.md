@@ -1,6 +1,4 @@
 # Todo
-- CoreStorage design needs carefull consideration, best way to do this will be with a real implementation with 
-  real serialisation to storage
 - InMemory stores should all do serialisation of objects to json to add an additional layer of testing
 - consider using readonly record structs to protect from mutation
 - check for all new logic added through the simulator and check that its adequately unit tested
