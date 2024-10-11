@@ -127,12 +127,13 @@ public class PromoteOperationRunner(
   private async Task WriteEntitiesToCoreStorageAndUpdateMaps(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> entities) {
     if (!entities.Any()) return;
     await core.Upsert(
-        op.State.Object.ToCoreEntityType, 
-        entities.ToCore().Select(
-            e => {
-              e.LastUpdateSystem = op.State.System;
-              return new Containers.CoreChecksum(e, op.FuncConfig.ChecksumAlgorithm.Checksum(e));
-            }).ToList());
+        op.State.Object.ToCoreEntityType,
+        entities.Select(ssc => {
+          ssc.Core.LastUpdateSystem = op.State.System;
+          ssc.Core.DateUpdated = UtcDate.UtcNow;
+          ssc.Core.DateCreated = ssc.IsCreated ? UtcDate.UtcNow : ssc.Core.DateCreated;
+          return new Containers.CoreChecksum(ssc.Core, op.FuncConfig.ChecksumAlgorithm.Checksum(ssc.Core));
+        }).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, entities.ToCore());
     await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SystemId, SysChecksum(e.Core))).ToList());

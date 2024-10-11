@@ -60,13 +60,13 @@ public class PromoteFunctionTests {
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
-    Assert.That(result23.ToPromote.ToStagedCore(), Is.EquivalentTo(new [] { new Containers.StagedCore(SE(json2, staged23[0].Id), ToCore(json2)), new Containers.StagedCore(SE(json3, staged23[1].Id), ToCore(json3)) }));
+    Assert.That(result23.ToPromote.ToStagedCore(), Is.EquivalentTo(new [] { new Containers.StagedCore(SE(json2, staged23[0].Id), ToCore(json2, UtcDate.UtcNow)), new Containers.StagedCore(SE(json3, staged23[1].Id), ToCore(json3, UtcDate.UtcNow)) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2, 0)));
-    Assert.That(await core.Query<CoreEntity>(coretype, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
+    Assert.That(await core.Query<CoreEntity>(coretype, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2, UtcDate.UtcNow), ToCore(json3, UtcDate.UtcNow) }));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
@@ -126,7 +126,7 @@ public class PromoteFunctionTests {
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First1", "Last1", DateOnly.MinValue, UtcDate.UtcNow);
     var c1 = sysent1.ToCoreEntity() with { CoreId = Constants.CoreE1Id1, SystemId = Constants.Sys1Id1 };
-    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
+    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1, true)], []);
     
     TestingUtcDate.DoTick();
     
@@ -147,7 +147,7 @@ public class PromoteFunctionTests {
     var sysent2 = new System1Entity(Guid.NewGuid(), "First2", "Last2", DateOnly.MinValue, UtcDate.UtcNow);
     var c2 = sysent2.ToCoreEntity() with { CoreId = Constants.CoreE1Id2, SystemId = Constants.Sys1Id2 }; 
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2, true)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -169,7 +169,7 @@ public class PromoteFunctionTests {
     var se1 = await stager.Stage(system1, system, "1") ?? throw new Exception();
     var sysent1 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
     var c1 = sysent1.ToCoreEntity() with { CoreId = Constants.CoreE1Id1, SystemId = Constants.Sys1Id1 };
-    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1)], []);
+    func1.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se1, sysent1, c1, false)], []);
     
     TestingUtcDate.DoTick();
     
@@ -190,7 +190,7 @@ public class PromoteFunctionTests {
     var sysent2 = new System1Entity(Guid.NewGuid(), "First", "Last", DateOnly.MinValue, UtcDate.UtcNow);
     var c2 = sysent2.ToCoreEntity() with { CoreId = Constants.CoreE1Id2, SystemId = Constants.Sys1Id2 };
     TestingUtcDate.DoTick();
-    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2)], []);
+    func2.NextResult = new SuccessPromoteOperationResult([new Containers.StagedSysCore(se2, sysent2, c2, false)], []);
     TestingUtcDate.DoTick();
     
     await runner2.RunFunction();
@@ -212,9 +212,11 @@ public class PromoteFunctionTests {
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
-  private CoreEntity ToCore(string json) {
+  private CoreEntity ToCore(string json, DateTime? created = null) {
     var sysent = Json.Deserialize<System1Entity>(json) ?? throw new Exception();
-    return sysent.ToCoreEntity();
+    var coreent = sysent.ToCoreEntity();
+    if (created.HasValue) coreent.DateUpdated = coreent.DateCreated = created.Value;
+    return coreent;
   }
 
 }

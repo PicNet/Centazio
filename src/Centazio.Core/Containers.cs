@@ -5,14 +5,14 @@ using Centazio.Core.Ctl.Entities;
 namespace Centazio.Core;
 
 public static class Containers {
-  public readonly record struct StagedSysCore(StagedEntity Staged, ISystemEntity Sys, ICoreEntity Core);
+  public readonly record struct StagedSysCore(StagedEntity Staged, ISystemEntity Sys, ICoreEntity Core, bool IsCreated);
   public record StagedSysOptionalCore(StagedEntity Staged, ISystemEntity Sys, ICoreEntity? OptCore) {
-    public StagedSysCore SetCore(ICoreEntity core) => new(Staged, Sys, core);
+    public StagedSysCore SetCore(ICoreEntity core) => new(Staged, Sys, core, OptCore is null);
   }
   public record StagedSysOptionalCore<S, C>(StagedEntity Staged, S Sys, C? OptCore) 
       where S : ISystemEntity
       where C : ICoreEntity {
-    public StagedSysCore SetCore(C core) => new(Staged, Sys, core);
+    public StagedSysCore SetCore(C core) => new(Staged, Sys, core, OptCore is null);
   }
   public record StagedSys(StagedEntity Staged, ISystemEntity Sys);
   public record StagedCore(StagedEntity Staged, ICoreEntity Core);

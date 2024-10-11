@@ -102,10 +102,10 @@ public class PromoteOperationRunnerHelperExtensionsTests {
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
     var id = Constants.CoreE1Id1;
     var entities = new List<Containers.StagedSysCore> {
-      new(null!, null!, F.NewCoreCust("N1", "N1", id)),
-      new(null!, null!, F.NewCoreCust("N2", "N2", id)),
-      new(null!, null!, F.NewCoreCust("N3", "N3", id)),
-      new(null!, null!, F.NewCoreCust("N4", "N4"))
+      new(null!, null!, F.NewCoreCust("N1", "N1", id), true),
+      new(null!, null!, F.NewCoreCust("N2", "N2", id), true),
+      new(null!, null!, F.NewCoreCust("N3", "N3", id), true),
+      new(null!, null!, F.NewCoreCust("N4", "N4"), true)
     };
     
     var uniques = PromoteOperationRunner.IgnoreMultipleUpdatesToSameEntity(entities);
@@ -123,10 +123,10 @@ public class PromoteOperationRunnerHelperExtensionsTests {
     await core.Upsert(Constants.CoreEntityName, entities1);
     
     var entities2 = new List<Containers.StagedSysCore> {
-      new (null!, null!, F.NewCoreCust("N1", "N1", new("1"))),
-      new (null!, null!, F.NewCoreCust("N2", "N2", new("2"))),
-      new (null!, null!, F.NewCoreCust("N32", "N32",  new("3"))), // only this one gets updated as the checksum changed
-      new (null!, null!, F.NewCoreCust("N4", "N4", new("4")))
+      new (null!, null!, F.NewCoreCust("N1", "N1", new("1")), true),
+      new (null!, null!, F.NewCoreCust("N2", "N2", new("2")), true),
+      new (null!, null!, F.NewCoreCust("N32", "N32",  new("3")), true), // only this one gets updated as the checksum changed
+      new (null!, null!, F.NewCoreCust("N4", "N4", new("4")), true)
     };
     // ideally these methods should be strongly typed using generics
     var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
