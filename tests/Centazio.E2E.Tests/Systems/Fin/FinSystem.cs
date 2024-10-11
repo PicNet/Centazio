@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core;
+﻿using Centazio.Core;
 
 namespace Centazio.E2E.Tests.Systems.Fin;
 
@@ -23,8 +22,8 @@ public class FinSystem : ISimulationSystem {
     throw new NotSupportedException();
   }
 
-  public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(Accounts.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
-  public Task<List<string>> GetInvoices(DateTime after) => Task.FromResult(Invoices.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
+  public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(Accounts.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
+  public Task<List<string>> GetInvoices(DateTime after) => Task.FromResult(Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   
   // WriteFunction endpoints
   public Task<List<FinAccount>> CreateAccounts(List<FinAccount> news) { 

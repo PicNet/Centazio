@@ -6,9 +6,9 @@ namespace Centazio.Core;
 // todo: add unit test to make sure JsonSerializer is no longer used
 public static class Json {
   
-  private static readonly JsonSerializerOptions opts = CreateOpts();
+  private static readonly JsonSerializerOptions opts = CreateDefaultOpts();
   
-  private static JsonSerializerOptions CreateOpts() {
+  internal static JsonSerializerOptions CreateDefaultOpts() {
     var o = new JsonSerializerOptions();
     ValidString.AllSubclasses().ForEach(t => {
       var convtyp = typeof(ValidStringJsonConverter<>).MakeGenericType(t);
@@ -18,8 +18,10 @@ public static class Json {
     return o;
   }
 
-  public static string Serial(object o) => JsonSerializer.Serialize(o, opts);
-  public static T Deserial<T>(string json) => JsonSerializer.Deserialize<T>(json, opts) ?? throw new Exception();
+  public static string Serialize(object o) => SerializeWithOpts(o, opts);
+  public static string SerializeWithOpts(object o, JsonSerializerOptions overide) => JsonSerializer.Serialize(o, overide);
+  
+  public static T Deserialize<T>(string json) => JsonSerializer.Deserialize<T>(json, opts) ?? throw new Exception();
 
   internal class ValidStringJsonConverter<T> : JsonConverter<T> where T : ValidString {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => 

@@ -34,14 +34,14 @@ public class JsonSerialisationTests {
   
   [Test] public void Test_serialisation_of_object_dtos_with_child_valid_strings() {
     var obj = new TestValidStrings { Str1 = nameof(TestValidStrings.Str1), Str2 = nameof(TestValidStrings.Str2) };
-    var serialised = Json.Serial(obj);
+    var serialised = Json.Serialize(obj);
     var deserialised = JsonSerializer.Deserialize<TestValidStrings.Dto>(serialised)!.FromDto();
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
   [Test] public void Test_serialisation_of_object_dtos_with_child_valid_string_subclasses() {
     var obj = new TestValidStringSubclasses { CoreId = new(nameof(TestValidStrings.Str1)), SystemId = new(nameof(TestValidStrings.Str2)) };
-    var serialised = Json.Serial(obj);
+    var serialised = Json.Serialize(obj);
     var deserialised = JsonSerializer.Deserialize<TestValidStringSubclasses.Dto>(serialised)!.FromDto();
     Assert.That(obj, Is.EqualTo(deserialised));
   }

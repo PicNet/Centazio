@@ -309,7 +309,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task CompareMembershipTypes() {
-    var core_types = ctx.core.Types.Cast<CoreMembershipType>().Select(m => new { Id = m.CoreId, m.Name });
+    var core_types = ctx.core.GetMembershipTypes().Select(m => new { Id = m.CoreId, m.Name });
     var crm_types = crm.MembershipTypes.Select(m => new { Id = m.SystemId, m.Name } );
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
@@ -318,8 +318,8 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipCoreId });
-    var core_customers_for_fin = ctx.core.Customers.Cast<CoreCustomer>().Select(c => new { Id = c.CoreId, c.Name });
+    var core_customers_for_crm = ctx.core.GetCustomers().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipCoreId });
+    var core_customers_for_fin = ctx.core.GetCustomers().Select(c => new { Id = c.CoreId, c.Name });
     var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, MembershipTypeId = ctx.systocoreids[c.MembershipTypeSystemId] });
     var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });
     
@@ -330,7 +330,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareInvoices() {
-    var core_invoices = ctx.core.Invoices.Cast<CoreInvoice>().Select(i => new { Id = i.CoreId, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
+    var core_invoices = ctx.core.GetInvoices().Select(i => new { Id = i.CoreId, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
     var crm_invoices = crm.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, i.DueDate, Amount = i.AmountCents });
     var fin_invoices = fin.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
@@ -340,25 +340,25 @@ public class E2EEnvironment : IAsyncDisposable {
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices, fin_invoices);
   }
   
-  private readonly JsonSerializerOptions withid = new();
-  private readonly JsonSerializerOptions noid = new() {
-    TypeInfoResolver = new DefaultJsonTypeInfoResolver {
+  private static readonly JsonSerializerOptions noid = Json.CreateDefaultOpts();
+  static E2EEnvironment() {
+    noid.TypeInfoResolver = new DefaultJsonTypeInfoResolver {
       Modifiers = {
         ti => {
           if (ti.Kind != JsonTypeInfoKind.Object || ti.Type == typeof(CoreEntityId) || ti.Type == typeof(SystemEntityId)) return;
           var prop = ti.Properties.Single(p => p.Name == "Id");
           ti.Properties.Remove(prop);
         }
-      }
-    }
-  };
+      } 
+    };
+  }
   
   private void CompareByChecksum(SystemName system, IEnumerable<object> cores, IEnumerable<object> targets) {
     var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
-    var (core_compare, targets_compare) = (coreslst.Select(e => Json(e, false)), targetslst.Select(e => Json(e, false)));
-    var (core_desc, targets_desc) = (coreslst.Select(e => Json(e, true)), targetslst.Select(e => Json(e, true)));
+    var (core_compare, targets_compare) = (coreslst.Select(e => ToJson(e, false)), targetslst.Select(e => ToJson(e, false)));
+    var (core_desc, targets_desc) = (coreslst.Select(e => ToJson(e, true)), targetslst.Select(e => ToJson(e, true)));
     Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities:\n\t{String.Join("\n\t", targets_desc)}");
     
-    string Json(object obj, bool includeid) => JsonSerializer.Serialize(obj, includeid ? withid : noid);
+    string ToJson(object obj, bool includeid) => includeid ? Json.Serialize(obj) : Json.SerializeWithOpts(obj, noid);
   }
 }

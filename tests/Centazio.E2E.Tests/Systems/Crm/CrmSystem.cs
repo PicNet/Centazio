@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core;
+﻿using Centazio.Core;
 
 namespace Centazio.E2E.Tests.Systems.Crm;
 
@@ -35,13 +34,13 @@ public class CrmSystem : ISimulationSystem {
   }
 
   public Task<List<string>> GetMembershipTypes(DateTime after) => 
-      Task.FromResult(MembershipTypes.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
+      Task.FromResult(MembershipTypes.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   
   public Task<List<string>> GetCustomers(DateTime after) => 
-      Task.FromResult(Customers.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
+      Task.FromResult(Customers.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   
   public Task<List<string>> GetInvoices(DateTime after) => 
-      Task.FromResult(Invoices.Where(e => e.Updated > after).Select(e => JsonSerializer.Serialize(e)).ToList());
+      Task.FromResult(Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
 
   // WriteFunction endpoints
   public Task<List<CrmCustomer>> CreateCustomers(List<CrmCustomer> news) { 
