@@ -11,6 +11,11 @@ public record ValidString(string Value) {
   public static implicit operator ValidString(string value) => new(value);
   
   public sealed override string ToString() => Value;
+  
+  public static List<Type> AllSubclasses() {
+    return typeof(ValidString).Assembly.GetTypes()
+        .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ValidString))).ToList();
+  }
 }
 
 public record CoreEntityId(string Value) : ValidString(Value);

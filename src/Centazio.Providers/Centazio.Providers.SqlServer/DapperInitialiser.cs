@@ -15,9 +15,7 @@ public class DapperInitialiser {
 
   private static void AddAllRequiredValidStringSqlHandlers() {
     var handler = new ValidStringSqlTypeHandler();
-    typeof(ValidString).Assembly.GetTypes()
-        .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ValidString)))
-        .ForEach(t => SqlMapper.AddTypeHandler(t, handler));
+    ValidString.AllSubclasses().ForEach(t => SqlMapper.AddTypeHandler(t, handler));
   }
 
   private class DateTimeSqlTypeHandler : SqlMapper.TypeHandler<DateTime> {
@@ -30,9 +28,10 @@ public class DapperInitialiser {
     public void SetValue(IDbDataParameter parameter, object value) { 
       parameter.Value = ((ValidString?)value)?.Value ?? throw new Exception($"{nameof(value)} must ne non-empty");
     }
-    public object Parse(Type destinationType, object value) {
+    
+    public object Parse(Type type, object value) {
       ArgumentException.ThrowIfNullOrWhiteSpace((string?) value);
-      return Activator.CreateInstance(destinationType, (string?) value) ?? throw new UnreachableException();
+      return Activator.CreateInstance(type, (string?) value) ?? throw new UnreachableException();
     }
 
   }
