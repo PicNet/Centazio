@@ -39,13 +39,6 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// System 1 changes a property, then there is no need to write this back to System 1.
   /// </summary>
   [IgnoreNamingConventions] public SystemName LastUpdateSystem { get; set; }
-
-  /// <summary>
-  /// The date/time when this entity was last updated in the source system.  This requires that the source system
-  /// provides this 'updated' date.  If the source system does not provide an updated date field then this can
-  /// be set to `DateUpdated`
-  /// </summary>
-  public DateTime SourceSystemDateUpdated { get; }
   
   /// <summary>
   /// A descriptive field that can be used for debugging and displaying the

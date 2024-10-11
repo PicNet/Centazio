@@ -34,7 +34,6 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;
-  public DateTime SourceSystemDateUpdated => DateUpdated;
   public string DisplayName => $"{FirstName} {LastName}";
   
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
@@ -47,7 +46,6 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
     public DateTime? DateUpdated { get; init; } 
     public string? SourceSystem { get; init; } 
     public DateTime? DateCreated { get; init; } 
-    public DateTime? SourceSystemDateUpdated { get; init; }
     
     public static explicit operator CoreEntity(Dto raw) => new(
         new(raw.Id ?? throw new ArgumentNullException(nameof(Id))),
@@ -65,7 +63,6 @@ public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEnti
   public SystemName LastUpdateSystem { get; set; } = Constants.System2Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;
-  public DateTime SourceSystemDateUpdated => DateUpdated;
   
   public string DisplayName { get; } = CoreId;
   

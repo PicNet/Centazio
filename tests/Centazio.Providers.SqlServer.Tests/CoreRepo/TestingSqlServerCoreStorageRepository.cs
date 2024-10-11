@@ -23,8 +23,7 @@ CREATE TABLE {nameof(CoreEntity)} (
   DateOfBirth date NOT NULL,
 
   DateCreated datetime2 NULL,
-  DateUpdated datetime2 NULL,
-  SourceSystemDateUpdated datetime2 NULL)
+  DateUpdated datetime2 NULL)
 END
 ");
     return this;
@@ -55,20 +54,20 @@ END
 
   public async Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
     var sql = $@"MERGE INTO {coretype} T
-USING (VALUES (@Id, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @SourceSystemDateUpdated))
-AS c (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, SourceSystemDateUpdated)
+USING (VALUES (@Id, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated))
+AS c (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated)
 ON T.Id = c.Id
 WHEN NOT MATCHED THEN
-INSERT (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, SourceSystemDateUpdated)
-VALUES (c.Id, c.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.SourceSystemDateUpdated)
+INSERT (Id, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated)
+VALUES (c.Id, c.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated)
 WHEN MATCHED THEN 
 UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth,
-  DateUpdated=c.DateUpdated, SourceSystemDateUpdated=c.SourceSystemDateUpdated;";
+  DateUpdated=c.DateUpdated;";
     
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
       var c = cs.Core.To<CoreEntity>();
-      return new { Id = c.CoreId, cs.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.SourceSystemDateUpdated };
+      return new { Id = c.CoreId, cs.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
     }));
     return entities.Select(c => c.Core).ToList();
   }

@@ -172,33 +172,33 @@ public class SimulationCtx {
 
  public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c, CoreCustomer? existing) => 
       existing is null 
-          ? new(NewCoreEntityId<CoreCustomer>(SimulationConstants.CRM_SYSTEM, c.SystemId), c.SystemId, SimulationConstants.CRM_SYSTEM, c.Updated, c.Name, systocoreids[c.MembershipTypeSystemId])
+          ? new(NewCoreEntityId<CoreCustomer>(SimulationConstants.CRM_SYSTEM, c.SystemId), c.SystemId, SimulationConstants.CRM_SYSTEM, c.Name, systocoreids[c.MembershipTypeSystemId])
           : existing with { Name = c.Name, MembershipCoreId = systocoreids[c.MembershipTypeSystemId] };
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.CRM_SYSTEM, i.Updated, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.CRM_SYSTEM, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
         : existing with { Cents = i.AmountCents, DueDate = i.DueDate, PaidDate = i.PaidDate };
   }
   
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) => 
       existing is null 
-          ? new CoreCustomer(NewCoreEntityId<CoreCustomer>(SimulationConstants.FIN_SYSTEM, a.SystemId), a.SystemId, SimulationConstants.FIN_SYSTEM, a.Updated, a.Name, systocoreids[CrmSystem.PENDING_MEMBERSHIP_TYPE_ID])
+          ? new CoreCustomer(NewCoreEntityId<CoreCustomer>(SimulationConstants.FIN_SYSTEM, a.SystemId), a.SystemId, SimulationConstants.FIN_SYSTEM, a.Name, systocoreids[CrmSystem.PENDING_MEMBERSHIP_TYPE_ID])
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.FIN_SYSTEM, i.Updated, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.FIN_SYSTEM, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
         : existing with { Cents = (int)(i.Amount * 100), DueDate = DateOnly.FromDateTime(i.DueDate), PaidDate = i.PaidDate };
   }
 
   public CoreMembershipType CrmMembershipTypeToCoreMembershipType(CrmMembershipType m, CoreMembershipType? existing) => 
       existing is null 
-        ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.SystemId, m.Updated, m.Name)
+        ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.SystemId, m.Name)
         : existing with { Name = m.Name };
 
   public List<T> ShuffleAndTake<T>(IEnumerable<T> enumerable, int? take = null) {

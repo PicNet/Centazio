@@ -15,7 +15,7 @@ public record CoreCustomer : CoreEntityBase {
   public CoreEntityId MembershipCoreId { get; internal init; }
   
   private CoreCustomer() {}
-  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, string name, CoreEntityId membershipid) : base(coreid, sysid, system, sourceupdate, system) {
+  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, SystemName system, string name, CoreEntityId membershipid) : base(coreid, sysid, system, system) {
     Name = name;
     MembershipCoreId = membershipid;
   }
@@ -42,7 +42,7 @@ public record CoreMembershipType : CoreEntityBase {
   public override string DisplayName => Name;
   
   private CoreMembershipType() {}
-  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, DateTime sourceupdate, string name) : base(coreid, sysid, SimulationConstants.CRM_SYSTEM, sourceupdate, SimulationConstants.CRM_SYSTEM) {
+  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, string name) : base(coreid, sysid, SimulationConstants.CRM_SYSTEM, SimulationConstants.CRM_SYSTEM) {
     Name = name;
   }
   
@@ -66,7 +66,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateTime? PaidDate { get; set; }
   
   private CoreInvoice() {}
-  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid, system, sourceupdate, system) {
+  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, SystemName system, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid, system, system) {
     CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;
@@ -99,17 +99,15 @@ public abstract record CoreEntityBase : ICoreEntity {
   public CoreEntityId CoreId { get; set; }
   public DateTime DateCreated { get; set; }
   public DateTime DateUpdated { get; set; }
-  public DateTime SourceSystemDateUpdated { get; private set; }
   public SystemName LastUpdateSystem { get; set; }
   
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase() {}
-  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid, SystemName system, DateTime sourceupdate, string lastsys) {
+  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid, SystemName system, string lastsys) {
     System = system;
     SystemId = sysid;
-    SourceSystemDateUpdated = sourceupdate;
         
     CoreId = coreid;
     DateCreated = UtcDate.UtcNow;
@@ -123,18 +121,16 @@ public abstract record CoreEntityBase : ICoreEntity {
     public string? CoreId { get; init; }
     public DateTime? DateCreated { get; init; }
     public DateTime? DateUpdated { get; init; }
-    public DateTime? SourceSystemDateUpdated { get; init; } // todo: rename SourceSystem -> System
     public string? LastUpdateSystem { get; init; }
     
     protected Dto() {}
     
-    internal Dto(string? system, string? systemid, string coreid, DateTime? created, DateTime? updated, DateTime? systemupdated, string? lastsystem) {
+    internal Dto(string? system, string? systemid, string coreid, DateTime? created, DateTime? updated, string? lastsystem) {
       System = system;
       SystemId = systemid;
       CoreId = coreid; 
       DateCreated = created;
       DateUpdated = updated;
-      SourceSystemDateUpdated = systemupdated;
       LastUpdateSystem = lastsystem;
     }
     
@@ -146,7 +142,6 @@ public abstract record CoreEntityBase : ICoreEntity {
       e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
       e.DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated));
       e.DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated));
-      e.SourceSystemDateUpdated = SourceSystemDateUpdated ?? throw new ArgumentNullException(nameof(SourceSystemDateUpdated));
       e.LastUpdateSystem = LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem));
       return e;
     }

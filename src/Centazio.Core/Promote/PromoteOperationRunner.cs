@@ -150,7 +150,7 @@ public class PromoteOperationRunner(
   /// </summary>
   internal static List<Containers.StagedSysCore> IgnoreMultipleUpdatesToSameEntity(List<Containers.StagedSysCore> lst) => 
         lst.GroupBy(c => c.Core.SystemId)
-        .Select(g => g.OrderByDescending(c => c.Core.SourceSystemDateUpdated).First()) 
+        .Select(g => g.OrderByDescending(c => c.Core.DateUpdated).First()) 
         .ToList();
   
   /// <summary>
