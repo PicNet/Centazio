@@ -10,7 +10,7 @@ internal class DummyCrmApi {
 
   internal Task<List<string>> GetCustomersUpdatedSince(DateTime after) {
     UpdateCustomerList();
-    return Task.FromResult(customers.Where(c => c.DateUpdated > after).Select(Json.Serialize).ToList());
+    return Task.FromResult(customers.Where(c => c.LastUpdatedDate > after).Select(Json.Serialize).ToList());
   }
 
   private void UpdateCustomerList() {

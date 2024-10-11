@@ -41,13 +41,13 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1, start)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1, start)));
     
     // create two more entities and also include the previous one (without any changes
     var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
@@ -66,7 +66,7 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2, 0)));
-    Assert.That(await core.Query<CoreEntity>(coretype, t => true), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2, UtcDate.UtcNow), ToCore(json3, UtcDate.UtcNow) }));
+    Assert.That(await core.Query<CoreEntity>(coretype, t => true), Is.EquivalentTo(new [] { ToCore(json1, start), ToCore(json2, UtcDate.UtcNow), ToCore(json3, UtcDate.UtcNow) }));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
@@ -85,13 +85,13 @@ public class PromoteFunctionTests {
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
     Assert.That(result1.ToPromote.Single().Staged, Is.EqualTo(staged1));
-    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1)));
+    Assert.That(result1.ToPromote.Single().Core, Is.EqualTo(ToCore(json1, start)));
     Assert.That(result1.ToIgnore, Is.Empty);
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
-    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1, start)));
     
     // lets ignore all staged entities from now
     func.IgnoreNext = true;
@@ -111,7 +111,7 @@ public class PromoteFunctionTests {
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 0, 2)));
-    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1)));
+    Assert.That((await core.Query<CoreEntity>(coretype, t => true)).Single(), Is.EqualTo(ToCore(json1, start)));
   }
   
   [Test] public async Task Test_that_bounce_backs_are_promoted_again_if_checksum_changes() {
@@ -153,7 +153,7 @@ public class PromoteFunctionTests {
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
     // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
-    var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue, c2.DateUpdated) { SystemId = Constants.Sys1Id1, LastUpdateSystem = Constants.System2Name };
+    var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue) { SystemId = Constants.Sys1Id1, System = Constants.System2Name, LastUpdateSystem = Constants.System2Name, DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow};
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }
   
@@ -212,10 +212,10 @@ public class PromoteFunctionTests {
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
   private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
-  private CoreEntity ToCore(string json, DateTime? created = null) {
+  private CoreEntity ToCore(string json, DateTime updated) {
     var sysent = Json.Deserialize<System1Entity>(json) ?? throw new Exception();
     var coreent = sysent.ToCoreEntity();
-    if (created.HasValue) coreent.DateUpdated = coreent.DateCreated = created.Value;
+    coreent.DateUpdated = coreent.DateCreated = updated;
     return coreent;
   }
 

@@ -55,7 +55,9 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
   
   [Test] public async Task Test_query() {
-    var data = Enumerable.Range(0, 100).Select(idx => (ICoreEntity) TestingFactories.NewCoreCust($"{idx}", $"{idx}")).ToList();
+    var data = Enumerable.Range(0, 100)
+        .Select(idx => (ICoreEntity) TestingFactories.NewCoreCust($"{idx}", $"{idx}"))
+        .ToList();
     await DoUpsert(data);
     
     var (all, even, odd) = (await QueryAll(), await QueryEvenOdd(true), await QueryEvenOdd(false));
@@ -67,8 +69,19 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
   
   private Task DoUpsert(ICoreEntity entity) => DoUpsert([entity]);
-  private Task DoUpsert(List<ICoreEntity> entities) => 
-      repo.Upsert(Constants.CoreEntityName, entities.Select(e => new Containers.CoreChecksum(e, Helpers.TestingCoreEntityChecksum(e))).ToList());
+  private Task DoUpsert(List<ICoreEntity> entities) {
+    entities.ForEach(ValidateEntityPreUpsert);
+    return repo.Upsert(Constants.CoreEntityName, entities.Select(e => new Containers.CoreChecksum(e, Helpers.TestingCoreEntityChecksum(e))).ToList());
+  }
+
+  private void ValidateEntityPreUpsert(ICoreEntity e) {
+    ArgumentNullException.ThrowIfNull(e.CoreId);
+    ArgumentNullException.ThrowIfNull(e.System);
+    ArgumentNullException.ThrowIfNull(e.SystemId);
+    ArgumentNullException.ThrowIfNull(e.LastUpdateSystem);
+    ArgumentOutOfRangeException.ThrowIfEqual(e.DateCreated, DateTime.MinValue);
+    ArgumentOutOfRangeException.ThrowIfEqual(e.DateUpdated, DateTime.MinValue);
+  }
 
   private async Task<List<CoreEntity>> QueryAll() {
     return (SupportsExpressionBasedQuery 

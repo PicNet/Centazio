@@ -5,6 +5,7 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.Tests.Inspect;
 
+// todo: add check for `Dto` to be called dto
 public class CheckStandardNamingOfCommonTypes {
   
   private readonly Dictionary<Type, (string Uppercase, string Lowercase, bool EndsWith)> EXPECTED = new() {

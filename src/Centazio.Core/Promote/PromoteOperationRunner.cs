@@ -26,7 +26,7 @@ public class PromoteOperationRunner(
       Log.Warning($"error occurred calling `EvaluateEntitiesToPromote`.  Not promoting any entities, not updating StagedEntity states.");
       return results;  
     }
-    var (topromote, toignore) = (results.ToPromote, results.ToIgnore);
+    var (topromote, toignore) = (SetInternalPropertiesOnCoreEntities(results.ToPromote), results.ToIgnore);
     var meaningful = IgnoreMultipleUpdatesToSameEntity(topromote);
     
     if (op.OpConfig.IsBidirectional) { meaningful = await IdentifyBouncedBackAndSetCorrectId(op, meaningful); }
@@ -44,6 +44,18 @@ public class PromoteOperationRunner(
             .ToList());
     
     return results; 
+    
+    List<Containers.StagedSysCore> SetInternalPropertiesOnCoreEntities(List<Containers.StagedSysCore> entities) {
+      entities.ForEach(ssc => {
+        ssc.Core.DateUpdated = UtcDate.UtcNow;
+        ssc.Core.LastUpdateSystem = op.State.System;
+        if (!ssc.IsCreated) { return; }
+        
+        ssc.Core.DateCreated = UtcDate.UtcNow;
+        ssc.Core.System = op.State.System;
+      });
+      return entities;
+    }
   }
 
   private async Task<List<Containers.StagedSysOptionalCore>> GetExistingCoreEntitiesForSysEnts(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSys> stagedsys) {
@@ -126,14 +138,8 @@ public class PromoteOperationRunner(
 
   private async Task WriteEntitiesToCoreStorageAndUpdateMaps(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysCore> entities) {
     if (!entities.Any()) return;
-    await core.Upsert(
-        op.State.Object.ToCoreEntityType,
-        entities.Select(ssc => {
-          ssc.Core.LastUpdateSystem = op.State.System;
-          ssc.Core.DateUpdated = UtcDate.UtcNow;
-          ssc.Core.DateCreated = ssc.IsCreated ? UtcDate.UtcNow : ssc.Core.DateCreated;
-          return new Containers.CoreChecksum(ssc.Core, op.FuncConfig.ChecksumAlgorithm.Checksum(ssc.Core));
-        }).ToList());
+    var wchecksums = entities.Select(ssc => new Containers.CoreChecksum(ssc.Core, op.FuncConfig.ChecksumAlgorithm.Checksum(ssc.Core))).ToList(); 
+    await core.Upsert(op.State.Object.ToCoreEntityType, wchecksums);
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, entities.ToCore());
     await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SystemId, SysChecksum(e.Core))).ToList());
@@ -170,7 +176,7 @@ public class PromoteOperationRunner(
   /// <summary>
   /// Ignore fields created in system 1, written (and hence created again) to system 2, being promoted again.  This is called a bouce back.
   ///
-  /// Bounce backs are avoided by filtering out any core entities being promoted whose `SourceSystem` is not the current functions
+  /// Bounce backs are avoided by filtering out any core entities being promoted whose `System` is not the current functions
   /// `System`.  As there should only be one source of truth system.
   ///
   /// Note: This is only done with Uni-directional promote operations. Bi-directional operations must manage their own bounce backs for now. 

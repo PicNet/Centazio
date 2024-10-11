@@ -17,49 +17,50 @@ public static class Constants {
   public static readonly CoreEntityId CoreE1Id2 = new("C1.2");
 }
 
-public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ISystemEntity {
+public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime LastUpdatedDate) : ISystemEntity {
 
   public SystemEntityId SystemId => new(Sys1EntityId.ToString());
-  public DateTime LastUpdatedDate => DateUpdated;
   public string DisplayName => $"{FirstName} {LastName}({Sys1EntityId})";
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
-  public CoreEntity ToCoreEntity() => new(new(SystemId.Value), FirstName, LastName, DateOfBirth, DateUpdated);
+  public CoreEntity ToCoreEntity() => new(new(SystemId.Value), FirstName, LastName, DateOfBirth);
 }
 
-public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth, DateTime DateUpdated) : ICoreEntity {
+public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth) : ICoreEntity {
 
   public CoreEntityId CoreId { get; set; } = CoreId;
   public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public SystemName System { get; } = Constants.System1Name;
+  public SystemName System { get; set; } = Constants.System1Name;
   public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
-  public DateTime DateUpdated { get; set; } = DateUpdated;
-  public DateTime DateCreated { get; set; } = DateUpdated;
+  public DateTime DateUpdated { get; set; }
+  public DateTime DateCreated { get; set; }
   public string DisplayName => $"{FirstName} {LastName}";
   
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
   public record Dto {
-    public string? Id { get; init; }
+    public string? CoreId { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public DateOnly? DateOfBirth { get; init; }
     public DateTime? DateUpdated { get; init; } 
-    public string? SourceSystem { get; init; } 
+    public string? System { get; init; } 
     public DateTime? DateCreated { get; init; } 
     
-    public static explicit operator CoreEntity(Dto raw) => new(
-        new(raw.Id ?? throw new ArgumentNullException(nameof(Id))),
-        raw.FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
-        raw.LastName ?? throw new ArgumentNullException(nameof(LastName)),
-        raw.DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth)),
-        raw.DateUpdated ?? UtcDate.UtcNow);
+    public CoreEntity ToCoreEntity() => new(
+        new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+        FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
+        LastName ?? throw new ArgumentNullException(nameof(LastName)),
+        DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth))) {
+      DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
+      DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated))
+    };
   }
 }
 
 public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEntity {
   public CoreEntityId CoreId { get; set; } = CoreId;
   public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public SystemName System { get; } = Constants.System2Name;
+  public SystemName System { get; set; } = Constants.System2Name;
   public SystemName LastUpdateSystem { get; set; } = Constants.System2Name;
   public DateTime DateUpdated { get; set; } = DateUpdated;
   public DateTime DateCreated { get; set; } = DateUpdated;

@@ -73,7 +73,7 @@ This pattern has the following characteristics:
 ```
 public sealed record StagedEntity {
   public Guid Id { get; }
-  public SystemName SourceSystem { get; }
+  public SystemName System { get; }
   public ObjectName Object { get; }
   ...
 }

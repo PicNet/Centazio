@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
@@ -14,8 +13,8 @@ public class WriteFunctionTests {
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
-    var customer1 = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
-    var customer2 = new CoreEntity(Constants.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var customer1 = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
+    var customer2 = new CoreEntity(Constants.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
@@ -53,7 +52,7 @@ public class WriteFunctionTests {
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
 
     // add some data, as the write function will not be called if there is nothing to 'write'
-    var entity = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1), UtcDate.UtcNow);
+    var entity = new CoreEntity(Constants.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
     await core.Upsert(Constants.CoreEntityName, [new (entity, Helpers.TestingCoreEntityChecksum(entity))]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
@@ -96,11 +95,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Created.Clear();
     Updated.Clear();
   }
-
-  public Task<ISystemEntity> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, ICoreEntity Core, Map.CoreToSystem Map) {
-    return Task.FromResult<ISystemEntity>(WftHelpers.ToSe(Core.To<CoreEntity>()));
-  }
-
+  
   public Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => {
       var core = e.Core.To<CoreEntity>();

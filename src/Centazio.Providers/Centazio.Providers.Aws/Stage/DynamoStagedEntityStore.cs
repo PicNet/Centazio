@@ -11,13 +11,13 @@ namespace Centazio.Providers.Aws.Stage;
 
 /// <summary>
 /// A note on DynamoStagedEntityStore design
-/// Hash Key: `SourceSystem|Object`
+/// Hash Key: `System|Object`
 /// Main Range Key: `DateStaged` used for querying
 /// Secondary Range Key (set up as a Global Secondary Index - GSI): `Checksum` used for batch inserts
 ///   Note: This GSI is setup to project KEYS_ONLY and hence can only be used to query for the existance
 ///     of this Checksum, no other queries.
 ///
-/// Batch inserting is done by first querying the GSI for all duplicate `SourceSystem|Object` + `Checksums`.
+/// Batch inserting is done by first querying the GSI for all duplicate `System|Object` + `Checksums`.
 ///    We then filter these out before doing a BatchWriteItem operation
 /// </summary>
 public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {

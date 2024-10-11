@@ -3,12 +3,13 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
+// todo: should core entity even have System, LastUpdateSystem and SystemId.  This should be managed in Map table
 public interface ICoreEntity : IGetChecksumSubset {
   
   /// <summary>
   /// The source system where this entity was originally created
   /// </summary>
-  public SystemName System { get; }
+  public SystemName System { get; set; }
   
   /// <summary>
   /// The id of the entity in the source system 

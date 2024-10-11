@@ -36,23 +36,26 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   public async Task ValidateAdded<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
-    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateAdded Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
-        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
+    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"Expected {typeof(T).Name} Created({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+        $"\nActual {typeof(T).Name} Created({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
+    
+    Assert.That(actual.All(e => e.DateUpdated == UtcDate.UtcNow));
+    Assert.That(actual.All(e => e.DateCreated == UtcDate.UtcNow));
   }
 
   public async Task ValidateUpdated<T>(params IEnumerable<ISystemEntity>[] expected) where T : ICoreEntity {
     var eadded = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
     var ascore = (await SysEntsToCore(expected))
-        .DistinctBy(e => (e.GetType(), Id: e.CoreId))
+        .DistinctBy(e => (e.GetType(), e.CoreId))
         // remove from validation if these entities were added in this epoch, as
         // they will be validated in the `ValidateAdded` method
         .Where(e => !eadded.Contains(e)) 
         .ToList();
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
-    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"ValidateUpdated Type[{typeof(T).Name}] Expected[{ascore.Count}] Actual[{actual.Count}]" +
-        $"\nExpected Items({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
-        $"\nActual Items({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
+    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"Expected {typeof(T).Name} Updated({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+        $"\nActual {typeof(T).Name} Updated({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
+    Assert.That(actual.All(e => e.DateUpdated == UtcDate.UtcNow));
+    Assert.That(actual.All(e => e.DateCreated < UtcDate.UtcNow));
   }
   
   private async Task<List<ICoreEntity>> SysEntsToCore(params IEnumerable<ISystemEntity>[] expected) {
@@ -172,27 +175,27 @@ public class SimulationCtx {
 
  public CoreCustomer CrmCustomerToCoreCustomer(CrmCustomer c, CoreCustomer? existing) => 
       existing is null 
-          ? new(NewCoreEntityId<CoreCustomer>(SimulationConstants.CRM_SYSTEM, c.SystemId), c.SystemId, SimulationConstants.CRM_SYSTEM, c.Name, systocoreids[c.MembershipTypeSystemId])
+          ? new(NewCoreEntityId<CoreCustomer>(SimulationConstants.CRM_SYSTEM, c.SystemId), c.SystemId, c.Name, systocoreids[c.MembershipTypeSystemId])
           : existing with { Name = c.Name, MembershipCoreId = systocoreids[c.MembershipTypeSystemId] };
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.CRM_SYSTEM, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
         : existing with { Cents = i.AmountCents, DueDate = i.DueDate, PaidDate = i.PaidDate };
   }
   
   public CoreCustomer FinAccountToCoreCustomer(FinAccount a, CoreCustomer? existing) => 
       existing is null 
-          ? new CoreCustomer(NewCoreEntityId<CoreCustomer>(SimulationConstants.FIN_SYSTEM, a.SystemId), a.SystemId, SimulationConstants.FIN_SYSTEM, a.Name, systocoreids[CrmSystem.PENDING_MEMBERSHIP_TYPE_ID])
+          ? new CoreCustomer(NewCoreEntityId<CoreCustomer>(SimulationConstants.FIN_SYSTEM, a.SystemId), a.SystemId, a.Name, systocoreids[CrmSystem.PENDING_MEMBERSHIP_TYPE_ID])
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
     custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
-        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, SimulationConstants.FIN_SYSTEM, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
+        ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 
         : existing with { Cents = (int)(i.Amount * 100), DueDate = DateOnly.FromDateTime(i.DueDate), PaidDate = i.PaidDate };
   }
 
@@ -309,8 +312,8 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task CompareMembershipTypes() {
-    var core_types = ctx.core.GetMembershipTypes().Select(m => new { Id = m.CoreId, m.Name });
-    var crm_types = crm.MembershipTypes.Select(m => new { Id = m.SystemId, m.Name } );
+    var core_types = ctx.core.GetMembershipTypes().Select(m => new { m.Name });
+    var crm_types = crm.MembershipTypes.Select(m => new { m.Name } );
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
     await ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
@@ -318,10 +321,10 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.GetCustomers().Select(c => new { Id = c.CoreId, c.Name, MembershipTypeId = c.MembershipCoreId });
-    var core_customers_for_fin = ctx.core.GetCustomers().Select(c => new { Id = c.CoreId, c.Name });
-    var crm_customers = crm.Customers.Select(c => new { Id = c.SystemId, c.Name, MembershipTypeId = ctx.systocoreids[c.MembershipTypeSystemId] });
-    var fin_accounts = fin.Accounts.Select(c => new { Id = c.SystemId, c.Name });
+    var core_customers_for_crm = ctx.core.GetCustomers().Select(c => new { c.Name, MembershipTypeId = c.MembershipCoreId });
+    var core_customers_for_fin = ctx.core.GetCustomers().Select(c => new { c.Name });
+    var crm_customers = crm.Customers.Select(c => new { c.Name, MembershipTypeId = ctx.systocoreids[c.MembershipTypeSystemId] });
+    var fin_accounts = fin.Accounts.Select(c => new { c.Name });
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
     await ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
@@ -330,9 +333,9 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private async Task CompareInvoices() {
-    var core_invoices = ctx.core.GetInvoices().Select(i => new { Id = i.CoreId, i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
-    var crm_invoices = crm.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, i.DueDate, Amount = i.AmountCents });
-    var fin_invoices = fin.Invoices.Select(i => new { Id = i.SystemId, i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
+    var core_invoices = ctx.core.GetInvoices().Select(i => new { i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
+    var crm_invoices = crm.Invoices.Select(i => new { i.PaidDate, i.DueDate, Amount = i.AmountCents });
+    var fin_invoices = fin.Invoices.Select(i => new { i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
     
     await ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
     await ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);
@@ -354,11 +357,7 @@ public class E2EEnvironment : IAsyncDisposable {
   }
   
   private void CompareByChecksum(SystemName system, IEnumerable<object> cores, IEnumerable<object> targets) {
-    var (coreslst, targetslst) = (cores.ToList(), targets.ToList());
-    var (core_compare, targets_compare) = (coreslst.Select(e => ToJson(e, false)), targetslst.Select(e => ToJson(e, false)));
-    var (core_desc, targets_desc) = (coreslst.Select(e => ToJson(e, true)), targetslst.Select(e => ToJson(e, true)));
-    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_desc)}\ntarget system entities:\n\t{String.Join("\n\t", targets_desc)}");
-    
-    string ToJson(object obj, bool includeid) => includeid ? Json.Serialize(obj) : Json.SerializeWithOpts(obj, noid);
+    var (core_compare, targets_compare) = (cores.Select(Json.Serialize).ToList(), targets.Select(Json.Serialize).ToList());
+    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_compare)}\ntarget system entities:\n\t{String.Join("\n\t", targets_compare)}");
   }
 }

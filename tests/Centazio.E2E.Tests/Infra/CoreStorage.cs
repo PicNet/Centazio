@@ -15,7 +15,7 @@ public record CoreCustomer : CoreEntityBase {
   public CoreEntityId MembershipCoreId { get; internal init; }
   
   private CoreCustomer() {}
-  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, SystemName system, string name, CoreEntityId membershipid) : base(coreid, sysid, system, system) {
+  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, string name, CoreEntityId membershipid) : base(coreid, sysid) {
     Name = name;
     MembershipCoreId = membershipid;
   }
@@ -42,7 +42,7 @@ public record CoreMembershipType : CoreEntityBase {
   public override string DisplayName => Name;
   
   private CoreMembershipType() {}
-  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, string name) : base(coreid, sysid, SimulationConstants.CRM_SYSTEM, SimulationConstants.CRM_SYSTEM) {
+  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, string name) : base(coreid, sysid) {
     Name = name;
   }
   
@@ -66,7 +66,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateTime? PaidDate { get; set; }
   
   private CoreInvoice() {}
-  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, SystemName system, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid, system, system) {
+  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid) {
     CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;
@@ -94,7 +94,7 @@ public record CoreInvoice : CoreEntityBase {
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
-  public SystemName System { get; private set; }
+  public SystemName System { get; set; }
   public SystemEntityId SystemId { get; set; }
   public CoreEntityId CoreId { get; set; }
   public DateTime DateCreated { get; set; }
@@ -105,14 +105,9 @@ public abstract record CoreEntityBase : ICoreEntity {
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase() {}
-  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid, SystemName system, string lastsys) {
-    System = system;
+  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid) {
     SystemId = sysid;
-        
     CoreId = coreid;
-    DateCreated = UtcDate.UtcNow;
-    DateUpdated = UtcDate.UtcNow;
-    LastUpdateSystem = lastsys;
   }
   
   public abstract record Dto<E> where E : CoreEntityBase {
@@ -182,14 +177,9 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     var target = db[coretype];
     var updated = entities.Count(e => target.ContainsKey(e.Core.CoreId));
     var upserted = entities.Select(e => {
-      // todo: date updated / date created should be handled somewhere abstract to allow users not to worry about it 
-      e.Core.DateUpdated = UtcDate.UtcNow;
-      if (target.ContainsKey(e.Core.CoreId)) {
-        ctx.Epoch.Update(e.Core);
-      } else {
-        e.Core.DateCreated = UtcDate.UtcNow;
-        ctx.Epoch.Add(e.Core);
-      }
+      if (target.ContainsKey(e.Core.CoreId)) { ctx.Epoch.Update(e.Core); } 
+      else { ctx.Epoch.Add(e.Core); }
+      
       target[e.Core.CoreId] = Json.Serialize(e.Core);
       return e.Core;
     }).ToList();

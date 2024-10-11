@@ -28,7 +28,7 @@ public static class TestingFactories {
   public static CoreEntity NewCoreCust(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
-    return new CoreEntity(id, first, last, dob, UtcDate.UtcNow);
+    return new CoreEntity(id, first, last, dob) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
   }
 
   public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
