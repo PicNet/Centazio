@@ -173,12 +173,10 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     return Task.FromResult(forcores);
   }
 
-  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
-    var ids = entities.ToDictionary(e => e.CoreId);
-    return (await Get(new("ignore"), coretype, DateTime.MinValue))
-        .Where(e => ids.ContainsKey(e.CoreId))
-        .ToDictionary(e => e.CoreId, e => ctx.checksum.Checksum(e));
-  }
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<CoreEntityId> coreids) => 
+      (await Get(new("ignore"), coretype, DateTime.MinValue))
+          .Where(e => coreids.Contains(e.CoreId))
+          .ToDictionary(e => e.CoreId, e => ctx.checksum.Checksum(e));
 
   public Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
     var target = db[coretype];

@@ -24,6 +24,7 @@ public static class Containers {
   public static List<StagedEntity> ToStaged(this List<StagedSysCore> lst) => lst.Select(e => e.Staged).ToList();
   public static List<ISystemEntity> ToSys(this List<StagedSysCore> lst) => lst.Select(e => e.Sys).ToList();
   public static List<ICoreEntity> ToCore(this List<StagedSysCore> lst) => lst.Select(e => e.Core).ToList();
+  public static List<CoreEntityId> ToCoreId(this List<StagedSysCore> lst) => lst.Select(e => e.Core.CoreId).ToList();
   public static List<ICoreEntity> ToCore(this List<StagedSysOptionalCore> lst) => lst.Select(e => e.OptCore ?? throw new Exception()).ToList();
   public static List<ISystemEntity> ToSys(this List<StagedSysOptionalCore> lst) => lst.Select(e => e.Sys).ToList();
   

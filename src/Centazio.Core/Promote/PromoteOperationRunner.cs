@@ -159,7 +159,7 @@ public class PromoteOperationRunner(
   /// meaningful changes.  This is why its important that the core storage checksum be only calculated on meaningful fields. 
   /// </summary>
   internal static async Task<List<Containers.StagedSysCore>> IgnoreNonMeaninfulChanges(List<Containers.StagedSysCore> lst, CoreEntityType coretype, ICoreStorageUpserter core, Func<ICoreEntity, CoreEntityChecksum> checksum) {
-    var checksums = await core.GetChecksums(coretype, lst.ToCore());
+    var checksums = await core.GetChecksums(coretype, lst.ToCoreId());
     return lst.Where(e => {
       if (!checksums.TryGetValue(e.Core.CoreId, out var existing)) return true;
       var newchecksum = checksum(e.Core); 

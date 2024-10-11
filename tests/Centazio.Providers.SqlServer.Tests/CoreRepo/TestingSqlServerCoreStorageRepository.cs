@@ -45,10 +45,9 @@ END
   
   public Task<List<E>> Query<E>(CoreEntityType coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<ICoreEntity> entities) {
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<CoreEntityId> coreids) {
     await using var conn = SqlConn.Instance.Conn();
-    var ids = entities.Select(e => e.CoreId).ToList();
-    var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {coretype} WHERE Id IN (@ids)", new { ids });
+    var mapping = await conn.QueryAsync<(string Id, string CoreEntityChecksum)>($"SELECT Id, CoreEntityChecksum FROM {coretype} WHERE Id IN (@coreids)", new { coreids });
     return mapping.ToDictionary(t => new CoreEntityId(t.Id), t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
