@@ -22,7 +22,7 @@ public class PromoteFunctionTests {
   private TestingInMemoryCoreToSystemMapStore entitymap;
 
   [SetUp] public void SetUp() {
-    (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSysMap());
+    (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSystemMap());
   }
       
   [Test] public async Task Test_standalone_Promote_function() {
@@ -152,7 +152,7 @@ public class PromoteFunctionTests {
     
     await runner2.RunFunction();
     Assert.That((await entitymap.GetAll()).Select(m => m.Key).ToList(), Is.EquivalentTo(new [] { expkey1, expkey2 }));
-    // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SourceId should remain the same 
+    // Update is expected, this update should change the checksum (CHECKSUM2), the DateUpdated. Id and SystemId should remain the same 
     var expected = new CoreEntity(Constants.CoreE1Id1, "First2", "Last2", DateOnly.MinValue) { SystemId = Constants.Sys1Id1, System = Constants.System2Name, LastUpdateSystem = Constants.System2Name, DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow};
     Assert.That(CoresInDb, Is.EquivalentTo(new [] { expected }));
   }

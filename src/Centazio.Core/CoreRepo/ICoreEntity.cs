@@ -7,7 +7,7 @@ namespace Centazio.Core.CoreRepo;
 public interface ICoreEntity : IGetChecksumSubset {
   
   /// <summary>
-  /// The source system where this entity was originally created
+  /// The source/originating system where this entity was originally created
   /// </summary>
   public SystemName System { get; set; }
   
@@ -18,7 +18,7 @@ public interface ICoreEntity : IGetChecksumSubset {
 
   /// <summary>
   /// The id of the entity.  Ideally this should be the same id as used in the source
-  /// system (i.e. same as `SourceId`). If this is not possible then this should be a
+  /// system (i.e. same as `SystemId`). If this is not possible then this should be a
   /// short string representation of a unique identifier that can be used to map back
   /// to the source system 
   /// </summary>

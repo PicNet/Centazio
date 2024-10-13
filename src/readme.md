@@ -8,7 +8,11 @@
 - review all code comments
 - when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc) were 
     not changed by the client.  May want to separate 'client' fields from ICoreEntity fields
-
+- PromoteOpRunner is the most complex code in `Centazio.Core`, consider simplifying
+- System/SystemId should not be part of the `ICoreEntity` interface, this information should be part of the
+  `CoreSystemMap`.
+- consider changing all the records being used to track changes in promoted entities to use interfaces instead, these
+  then do not need so many imlpementations
 - clean up interfaces and types, have stuff everywhere
 
 - set up azure devops testing pipeline (agent is ready)

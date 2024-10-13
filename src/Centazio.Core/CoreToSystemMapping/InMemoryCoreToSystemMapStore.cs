@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 
-namespace Centazio.Core.EntitySysMapping;
+namespace Centazio.Core.CoreToSystemMapping;
 
 public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
@@ -23,7 +23,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityType coretype, List<SystemEntityId> sysids) => 
       Task.FromResult(GetById(system, coretype, sysids));
 
-  public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSourceIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
+  public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
     var lst = GetById(system, coretype, entities.Select(e => e.SystemId).ToList());
     return Task.FromResult(lst.ToDictionary(m => m.SystemId, m => m.CoreId));
   }

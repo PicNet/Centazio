@@ -1,11 +1,9 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
+using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Misc;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
@@ -13,6 +11,7 @@ using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
+using Centazio.E2E.Tests.Systems;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 using Centazio.Test.Lib;
@@ -130,11 +129,15 @@ public class SimulationCtx {
   public EpochTracker Epoch { get; set; }
   public readonly CoreStorage core;
   public readonly IStagedEntityStore stage;
+  public readonly FunctionHelpers crmhelp;
+  public readonly FunctionHelpers finhelp;
 
   internal SimulationCtx() {
     checksum = algo;
     core = new(this);
     stage = new InMemoryStagedEntityStore(0, checksum.Checksum);
+    crmhelp = new FunctionHelpers(SimulationConstants.CRM_SYSTEM, checksum, entitymap);
+    finhelp = new FunctionHelpers(SimulationConstants.FIN_SYSTEM, checksum, entitymap);
     Epoch = new(0, this);
   }
 
@@ -203,6 +206,17 @@ public class SimulationCtx {
       existing is null 
         ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.SystemId, m.Name)
         : existing with { Name = m.Name };
+
+  public CrmMembershipType CoreMembershipTypeToCrmMembershipType(Guid id, CoreMembershipType m) => new(id, UtcDate.UtcNow, m.Name);
+  public CrmCustomer CoreCustomerToCrmCustomer(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, System.Guid.Parse(coretosysids[c.MembershipCoreId].Value), c.Name);
+
+  public CrmInvoice CoreInvoiceToCrmInvoice(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
+      new(id, UtcDate.UtcNow, System.Guid.Parse(custmaps[i.CustomerCoreId].Value), i.Cents, i.DueDate, i.PaidDate);
+  
+  public FinAccount CoreCustomerToFinAccount(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
+  
+  public FinInvoice CoreInvoiceToFinInvoice(int id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> accmaps) => 
+      new(id, Int32.Parse(accmaps[i.CustomerCoreId]), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), i.PaidDate);
 
   public List<T> ShuffleAndTake<T>(IEnumerable<T> enumerable, int? take = null) {
     var list = enumerable.ToList();
@@ -312,52 +326,38 @@ public class E2EEnvironment : IAsyncDisposable {
   }
 
   private async Task CompareMembershipTypes() {
-    var core_types = ctx.core.GetMembershipTypes().Select(m => new { m.Name });
-    var crm_types = crm.MembershipTypes.Select(m => new { m.Name } );
+    var core_types = ctx.core.GetMembershipTypes().Select(m => ctx.CoreMembershipTypeToCrmMembershipType(Guid.Empty, m));
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
     await ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_types, crm_types);
+    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_types, crm.MembershipTypes);
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = ctx.core.GetCustomers().Select(c => new { c.Name, MembershipTypeId = c.MembershipCoreId });
-    var core_customers_for_fin = ctx.core.GetCustomers().Select(c => new { c.Name });
-    var crm_customers = crm.Customers.Select(c => new { c.Name, MembershipTypeId = ctx.systocoreids[c.MembershipTypeSystemId] });
-    var fin_accounts = fin.Accounts.Select(c => new { c.Name });
+    var core_customers_for_crm = ctx.core.GetCustomers().Select(c => ctx.CoreCustomerToCrmCustomer(Guid.Empty, c));
+    var core_customers_for_fin = ctx.core.GetCustomers().Select(c => ctx.CoreCustomerToFinAccount(0, c));
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
     await ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm_customers);
-    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin_accounts);
+    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm.Customers);
+    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin.Accounts);
   }
   
   private async Task CompareInvoices() {
-    var core_invoices = ctx.core.GetInvoices().Select(i => new { i.PaidDate, i.DueDate, Amount = i.Cents }).ToList();
-    var crm_invoices = crm.Invoices.Select(i => new { i.PaidDate, i.DueDate, Amount = i.AmountCents });
-    var fin_invoices = fin.Invoices.Select(i => new { i.PaidDate, DueDate = DateOnly.FromDateTime(i.DueDate), Amount = (int) (i.Amount * 100m) });
+    var cores = ctx.core.GetInvoices();
+    var crmmaps = await ctx.crmhelp.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var finmaps = await ctx.finhelp.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var core_invoices_for_crm = cores.Select(i => ctx.CoreInvoiceToCrmInvoice(Guid.Empty, i, crmmaps));
+    var core_invoices_for_fin = cores.Select(i => ctx.CoreInvoiceToFinInvoice(0, i, finmaps));
     
     await ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
     await ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_invoices, crm_invoices);
-    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices, fin_invoices);
+    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_invoices_for_crm, crm.Invoices);
+    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
   }
   
-  private static readonly JsonSerializerOptions noid = Json.CreateDefaultOpts();
-  static E2EEnvironment() {
-    noid.TypeInfoResolver = new DefaultJsonTypeInfoResolver {
-      Modifiers = {
-        ti => {
-          if (ti.Kind != JsonTypeInfoKind.Object || ti.Type == typeof(CoreEntityId) || ti.Type == typeof(SystemEntityId)) return;
-          var prop = ti.Properties.Single(p => p.Name == "Id");
-          ti.Properties.Remove(prop);
-        }
-      } 
-    };
-  }
-  
-  private void CompareByChecksum(SystemName system, IEnumerable<object> cores, IEnumerable<object> targets) {
-    var (core_compare, targets_compare) = (cores.Select(Json.Serialize).ToList(), targets.Select(Json.Serialize).ToList());
-    Assert.That(targets_compare, Is.EquivalentTo(core_compare), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", core_compare)}\ntarget system entities:\n\t{String.Join("\n\t", targets_compare)}");
+  private void CompareByChecksum(SystemName system, IEnumerable<ISystemEntity> cores, IEnumerable<ISystemEntity> targets) {
+    var (corecs, targetscs) = (cores.Select(c => Json.Serialize(c.GetChecksumSubset())).ToList(), targets.Select(t => Json.Serialize(t.GetChecksumSubset())).ToList());
+    Assert.That(targetscs, Is.EquivalentTo(corecs), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");
   }
 }

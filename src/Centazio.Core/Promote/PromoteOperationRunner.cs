@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
+using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Serilog;
@@ -80,8 +80,8 @@ public class PromoteOperationRunner(
       var idx = topromote.FindIndex(t => t.Core.SystemId == b.Key);
       var original = originals.Single(e2 => e2.CoreId == b.Value.OriginalCoreId);
       return (
-          SourceId: b.Key, 
-          b.Value.OriginalSourceId, 
+          SystemId: b.Key, 
+          b.Value.OriginalSystemId, 
           b.Value.OriginalCoreId, 
           OriginalEntity: original,
           OriginalEntityChecksum: Checksum(original),
@@ -95,10 +95,10 @@ public class PromoteOperationRunner(
     }).ToList();
     
     var updated = entities.Select(e => {
-      // If the entity is bouncing back, it will have a new Core and SourceId (as it would have been created in the second system).
-      //    We need to correct the process here and make it point to the original Core/Source Id as we do not want
+      // If the entity is bouncing back, it will have a new Core and SystemId (as it would have been created in the second system).
+      //    We need to correct the process here and make it point to the original Core/System Id as we do not want
       //    multiple core records for the same entity.
-      (e.ToPromoteCore.CoreId, e.ToPromoteCore.SystemId) = (e.OriginalCoreId, e.OriginalSourceId);
+      (e.ToPromoteCore.CoreId, e.ToPromoteCore.SystemId) = (e.OriginalCoreId, e.OriginalSystemId);
       topromote[e.ToPromoteIdx] = topromote[e.ToPromoteIdx] with { Core = e.ToPromoteCore };
       e.PostChangeChecksumSubset = e.ToPromoteCore.GetChecksumSubset();
       e.PostChangeChecksum = Checksum(e.ToPromoteCore);
@@ -125,14 +125,14 @@ public class PromoteOperationRunner(
     string Checksum(ICoreEntity c) => op.FuncConfig.ChecksumAlgorithm.Checksum(c);
   }
   
-  private async Task<Dictionary<SystemEntityId, (CoreEntityId OriginalCoreId, SystemEntityId OriginalSourceId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
-    var maps = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, coretype, entities);
+  private async Task<Dictionary<SystemEntityId, (CoreEntityId OriginalCoreId, SystemEntityId OriginalSystemId)>> GetBounceBacks(SystemName system, CoreEntityType coretype, List<ICoreEntity> entities) {
+    var maps = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, coretype, entities);
     if (!maps.Any()) return new();
     
     var existing = await core.Get(coretype, maps.Values.ToList());
     return maps.ToDictionary(sid_id => sid_id.Key, sid_id => {
       var preexisting = existing.Single(c => c.CoreId == sid_id.Value);
-      return (Id: preexisting.CoreId, SourceId: preexisting.SystemId);
+      return (preexisting.CoreId, preexisting.SystemId);
     });
   }
 

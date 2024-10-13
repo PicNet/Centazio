@@ -110,12 +110,12 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public async Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => FromCore(Id(id), e));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.CoreCustomerToCrmCustomer(Id(id), e));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
       var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
-      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => FromCore(Id(id), e, maps));
+      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.CoreInvoiceToCrmInvoice(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
     
@@ -134,10 +134,4 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     throw new NotSupportedException(config.Object);
   }
-  
-  private CrmCustomer FromCore(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(ctx.coretosysids[c.MembershipCoreId].Value), c.Name);
-
-  private CrmInvoice FromCore(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
-      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerCoreId].Value), i.Cents, i.DueDate, i.PaidDate);
-
 }

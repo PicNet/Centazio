@@ -4,7 +4,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
 
-namespace Centazio.Core.Tests.CoreSysMap;
+namespace Centazio.Core.Tests.CoreToSystemMapping;
 
 public abstract class AbstractCoreToSystemMapStoreTests {
 
@@ -86,7 +86,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     }
     
     async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityType coretype, List<ICoreEntity> dups) {
-      var map = await entitymap.GetPreExistingSourceIdToCoreIdMap(system, coretype, dups);
+      var map = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, coretype, dups);
       // var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
       return await corestore.Get<CoreEntity>(Constants.CoreEntityName, map.Single().Value);
     }

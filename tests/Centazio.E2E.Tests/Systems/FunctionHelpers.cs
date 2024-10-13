@@ -2,7 +2,7 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.EntitySysMapping;
+using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Misc;
 
 namespace Centazio.E2E.Tests.Systems;
