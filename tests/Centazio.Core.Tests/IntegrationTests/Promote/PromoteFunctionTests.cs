@@ -60,7 +60,8 @@ public class PromoteFunctionTests {
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
-    Assert.That(result23.ToPromote.ToStagedCore(), Is.EquivalentTo(new [] { new Containers.StagedCore(SE(json2, staged23[0].Id), ToCore(json2, UtcDate.UtcNow)), new Containers.StagedCore(SE(json3, staged23[1].Id), ToCore(json3, UtcDate.UtcNow)) }));
+    Assert.That(result23.ToPromote.ToCore(), Is.EquivalentTo(new [] { ToCore(json2, UtcDate.UtcNow), ToCore(json3, UtcDate.UtcNow) }));
+    Assert.That(result23.ToPromote.Select(t => t.Staged), Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));

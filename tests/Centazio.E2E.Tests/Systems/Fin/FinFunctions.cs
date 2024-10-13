@@ -66,14 +66,16 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     return new SuccessPromoteOperationResult(topromote, []);
 
     Task<List<Containers.StagedSysCore>> EvaluateCustomers() {
-      return Task.FromResult(staged.ToStagedSysOptionalCore<FinAccount, CoreCustomer>().Select(t => 
-          t.SetCore(ctx.FinAccountToCoreCustomer(t.Sys, t.OptCore))).ToList());
+      return Task.FromResult(staged.Select(t => 
+          t.SetCore(ctx.FinAccountToCoreCustomer(t.Sys.To<FinAccount>(), t.OptCore?.To<CoreCustomer>()))).ToList());
     }
 
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
       var maps = await ctx.finhelp.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(FinInvoice.AccountId), true);
-      return staged.ToStagedSysOptionalCore<FinInvoice, CoreInvoice>().Select(t => 
-          t.SetCore(ctx.FinInvoiceToCoreInvoice(t.Sys, t.OptCore, maps[t.Sys.AccountSystemId]))).ToList();
+      return staged.Select(t => {
+        var fininv = t.Sys.To<FinInvoice>();
+        return t.SetCore(ctx.FinInvoiceToCoreInvoice(fininv, t.OptCore?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));
+      }).ToList();
     }
   }
 
