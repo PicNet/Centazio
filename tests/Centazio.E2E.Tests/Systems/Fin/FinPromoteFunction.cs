@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.E2E.Tests.Infra;
@@ -16,16 +15,9 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public FinPromoteFunction(SimulationCtx ctx) {
     this.ctx = ctx;
     Config = new(nameof(FinApi), LifecycleStage.Defaults.Promote, [
-      new(new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
-      new(new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
+      new(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
+      new(typeof(FinInvoice), new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
     ]);
-  }
-  
-  public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    return config.State.Object.Value switch { 
-      nameof(CoreCustomer) => staged.ToStagedSys<FinAccount>(), 
-      nameof(CoreInvoice) => staged.ToStagedSys<FinInvoice>(), 
-      _ => throw new NotSupportedException(config.State.Object) };
   }
   
   public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {

@@ -27,7 +27,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     }; 
-    ctx.Debug($"FinReadFunction[{config.OpConfig.Object.Value}] Updates[{updates.Count}]");
+    if (updates.Any()) ctx.Debug($"FinReadFunction.GetUpdatesAfterCheckpoint[{config.OpConfig.Object.Value}] Updates[{updates.Count}]:\n\t{String.Join("\n\t", updates)}");
     return ReadOperationResult.Create(updates);
   }
 }

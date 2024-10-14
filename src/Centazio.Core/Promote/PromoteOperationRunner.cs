@@ -9,16 +9,20 @@ using Serilog;
 namespace Centazio.Core.Promote;
 
 public class PromoteOperationRunner(
-    IStagedEntityStore staged,
+    IStagedEntityStore stagestore,
     ICoreStorage core,
     ICoreToSystemMapStore entitymap) : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   
   public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var start = UtcDate.UtcNow;
-    var pending = await staged.GetUnpromoted(op.State.System, op.OpConfig.SystemEntityType, op.Checkpoint);
+    var pending = await stagestore.GetUnpromoted(op.State.System, op.OpConfig.SystemEntityType, op.Checkpoint);
     if (!pending.Any()) return new SuccessPromoteOperationResult([], []);
     
-    var sysents = op.OpConfig.PromoteEvaluator.DeserialiseStagedEntities(op, pending);
+    var sysents = pending.Select(staged => {
+      var sysent = (ISystemEntity) Json.Deserialize(staged.Data, op.OpConfig.SystemEntityRealType);
+      return new Containers.StagedSys(staged, sysent);
+    }).ToList(); 
+    
     var syscores = await GetExistingCoreEntitiesForSysEnts(op, sysents);
     var results = await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, syscores);
     
@@ -37,7 +41,7 @@ public class PromoteOperationRunner(
     Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}] ToIgnore[{toignore.Count}]");
     
     await WriteEntitiesToCoreStorageAndUpdateMaps(op, meaningful);
-    await staged.Update(
+    await stagestore.Update(
         // mark all StagedEntities as promoted, even if they were ignored above
         topromote.Select(e => e.Staged.Promote(start))
             .Concat(toignore.Select(e => e.Staged.Ignore(e.Ignore)))

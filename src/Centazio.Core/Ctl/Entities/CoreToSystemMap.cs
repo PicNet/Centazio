@@ -74,6 +74,7 @@ public static class Map {
         DateLastError = DateLastError,
         LastError = LastError
       };
+      public object ToBaseAsObj() => ToBase();
     }
   }
   

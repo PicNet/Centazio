@@ -1,20 +1,19 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Runner;
+﻿using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
-  List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged);
   Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged);
 }
 
+// todo: if we are going to mix Types and SystemEntityType/CoreEntityType, then the latter should be sufficed TypeName
 public record PromoteOperationConfig(
+    Type SystemEntityRealType,
     SystemEntityType SystemEntityType,
     CoreEntityType CoreEntityType,
     ValidCron Cron, 
     IEvaluateEntitiesToPromote PromoteEvaluator) : OperationConfig(CoreEntityType, Cron), ILoggable {
 
-  // ReSharper disable RedundantExplicitPositionalPropertyDeclaration
   public SystemEntityType SystemEntityType { get; } = SystemEntityType;
   public CoreEntityType CoreEntityType { get; } = CoreEntityType;
   

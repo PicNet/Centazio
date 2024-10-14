@@ -7,16 +7,17 @@ namespace Centazio.Core;
 public static class Json {
   
   public static string Serialize(object o) => JsonSerializer.Serialize(PrepareDtoForSerialisation(o));
-  public static T Deserialize<T>(string json) {
-    var dtot = GetDtoTypeFromTypeHierarchy(typeof(T));
-    if (dtot is null) return JsonSerializer.Deserialize<T>(json) ?? throw new Exception();
+  public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
+  public static object Deserialize(string json, Type type) {
+    var dtot = GetDtoTypeFromTypeHierarchy(type);
+    if (dtot is null) return JsonSerializer.Deserialize(json, type) ?? throw new Exception();
     var dtoobj = JsonSerializer.Deserialize(json, dtot);
-    if (dtoobj is IDto<T> idto) return idto.ToBase();
+    if (dtoobj is IDto idto) return idto.ToBaseAsObj();
     
-    var obj = Activator.CreateInstance(typeof(T)) ?? throw new Exception();
-    var pairs = GetPropPairs(typeof(T), dtot);
+    var obj = Activator.CreateInstance(type) ?? throw new Exception();
+    var pairs = GetPropPairs(type, dtot);
     pairs.ForEach(p => p.BasePi.SetValue(obj, GetObjVal(p.BasePi, p.DtoPi)));
-    return (T) obj;
+    return obj;
     
     object? GetObjVal(PropertyInfo origpi, PropertyInfo dtopi) {
       var dtoval = dtopi.GetValue(dtoobj);

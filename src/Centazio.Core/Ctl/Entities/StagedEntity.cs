@@ -7,7 +7,7 @@ public static class StagedEntityEnumerableExtensions {
   public static List<E> ToSysEnt<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => s.Deserialise<E>()).ToList();
   
   public static List<Containers.StagedSys> ToStagedSys<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => {
-    var sysent = s.Deserialise<E>();
+    var sysent =  s.Deserialise<E>();
     return new Containers.StagedSys(s, sysent);
   }).ToList();
   
@@ -92,5 +92,6 @@ public sealed record StagedEntity {
       IgnoreReason = String.IsNullOrWhiteSpace(IgnoreReason) ? null : IgnoreReason.Trim(),
       DatePromoted = DatePromoted
     };
+    public object ToBaseAsObj() => ToBase();
   }
 }

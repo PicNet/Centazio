@@ -62,5 +62,6 @@ public record SystemState {
       LastStarted = LastStarted,
       LastCompleted = LastCompleted
     };
+    public object ToBaseAsObj() => ToBase();
   }
 }

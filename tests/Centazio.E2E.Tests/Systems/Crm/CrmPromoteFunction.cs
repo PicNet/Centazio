@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.E2E.Tests.Infra;
@@ -18,18 +17,10 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     this.ctx = ctx;
     help = new FunctionHelpers(SimulationConstants.CRM_SYSTEM, ctx.ChecksumAlg, ctx.EntityMap); 
     Config = new(SimulationConstants.CRM_SYSTEM, LifecycleStage.Defaults.Promote, [
-      new(new(nameof(CrmMembershipType)), CoreEntityType.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(new(nameof(CrmCustomer)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
-      new(new(nameof(CrmInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
+      new(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityType.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(typeof(CrmCustomer), new(nameof(CrmCustomer)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
+      new(typeof(CrmInvoice), new(nameof(CrmInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
     ]);
-  }
-  
-  public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    return config.State.Object.Value switch { 
-      nameof(CoreMembershipType) => staged.ToStagedSys<CrmMembershipType>(), 
-      nameof(CoreCustomer) => staged.ToStagedSys<CrmCustomer>(), 
-      nameof(CoreInvoice) => staged.ToStagedSys<CrmInvoice>(), 
-      _ => throw new NotSupportedException(config.State.Object) };
   }
   
   public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {

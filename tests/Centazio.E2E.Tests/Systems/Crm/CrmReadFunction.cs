@@ -15,7 +15,6 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   public CrmReadFunction(SimulationCtx ctx, CrmApi api) {
     this.ctx = ctx;
     this.api = api;
-    
     Config = new(nameof(CrmApi), LifecycleStage.Defaults.Read, [
       new(SystemEntityType.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(SystemEntityType.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
@@ -30,7 +29,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(CrmInvoice) => await api.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
-    if (updates.Any()) ctx.Debug($"CrmReadFunction.GetUpdatesAfterCheckpoint[{config.State.Object.Value}] Updates[{updates.Count}]\n\t" + String.Join("\n\t", updates));
+    if (updates.Any()) ctx.Debug($"CrmReadFunction.GetUpdatesAfterCheckpoint[{config.State.Object.Value}] Updates[{updates.Count}]:\n\t{String.Join("\n\t", updates)}");
     return ReadOperationResult.Create(updates);
   }
 }

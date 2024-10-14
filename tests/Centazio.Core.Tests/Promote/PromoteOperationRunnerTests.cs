@@ -31,11 +31,12 @@ public class PromoteOperationRunnerTests {
   } 
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
-    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
+    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
+    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -43,21 +44,22 @@ public class PromoteOperationRunnerTests {
       if (idx % 2 == 0) {
         Assert.That(se.DatePromoted, Is.EqualTo(UtcDate.UtcNow));
         Assert.That(se.IgnoreReason, Is.Null);
-        Assert.That(saved.ContainsKey(se.Data), Is.True);
+        Assert.That(saved.ContainsKey(idx.ToString()), Is.True);
       } else {
         Assert.That(se.DatePromoted, Is.Null);
         Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {se.Data}"));
-        Assert.That(saved.ContainsKey(se.Data), Is.False);
+        Assert.That(saved.ContainsKey(idx.ToString()), Is.False);
       }
     });
   }
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
-    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, RECORDS_COUNT).Select(idx => idx.ToString()).ToList());
+    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
+    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
     Assert.That(saved, Is.Empty);
     
@@ -71,12 +73,6 @@ public class PromoteOperationRunnerTests {
   }
   
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
-    public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-      return staged
-        .Select(se => new Containers.StagedSys(se, new System1Entity(Guid.NewGuid(), se.Data, se.Data, new DateOnly(2000, 1, 1), UtcDate.UtcNow)))
-        .ToList();
-    }
-    
     public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
       return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
           staged.Where((_, idx) => idx % 2 == 0).Select(e => {
@@ -88,10 +84,6 @@ public class PromoteOperationRunnerTests {
   }
 
   public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
-    public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-      return [];
-    }
-    
     public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
       return Task.FromResult((PromoteOperationResult) new ErrorPromoteOperationResult());
     }
