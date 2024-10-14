@@ -200,7 +200,7 @@ public class PromoteFunctionTests {
   }
   
   private List<ICoreEntity> CoresInDb => core.MemDb[coretype].Values.Select(e => e.Core).ToList();
-  private SystemState SS(DateTime start, DateTime updated) => (SystemState) new SystemState.Dto(system1, stage, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
+  private SystemState SS(DateTime start, DateTime updated) => new SystemState.Dto(system1, stage, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated).ToBase();
   private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(system1, stage, coretype, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,
@@ -212,7 +212,7 @@ public class PromoteFunctionTests {
     LastCompleted = updated,
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
-  private StagedEntity SE(string json, Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json));
+  private StagedEntity SE(string json, Guid? id = null) => new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json)).ToBase();
   private CoreEntity ToCore(string json, DateTime updated) {
     var sysent = Json.Deserialize<System1Entity>(json) ?? throw new Exception();
     var coreent = sysent.ToCoreEntity();

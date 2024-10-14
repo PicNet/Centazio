@@ -8,7 +8,7 @@ public static class TestingFactories {
 
   public static CentazioSecrets Secrets() {
     var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
-    return (CentazioSecrets) new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(settings.SecretsFolder, "dev").Load();
+    return new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(settings.SecretsFolder, "dev").Load().ToBase();
   }
 
 }

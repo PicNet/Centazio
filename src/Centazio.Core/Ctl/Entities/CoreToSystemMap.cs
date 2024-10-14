@@ -47,7 +47,7 @@ public static class Map {
     
     public PendingUpdate Update() => new(this);
     
-    public record Dto {
+    public record Dto : IDto<CoreToSystem> {
       public string? CoreEntityType { get; init; }
       public string? CoreId { get; init; }
       public string? System { get; init; }
@@ -60,7 +60,7 @@ public static class Map {
       public string? LastError { get; init; }
       public string? SystemEntityChecksum { get; init; }
       
-      public CoreToSystem ToCoreToSystem() => new(
+      public CoreToSystem ToBase() => new(
           new CoreEntityType(CoreEntityType ?? throw new ArgumentNullException(nameof(CoreEntityType))),
           new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
           System ?? throw new ArgumentNullException(nameof(System)),

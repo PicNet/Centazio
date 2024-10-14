@@ -20,7 +20,7 @@ public record CentazioSecrets {
     this.AZ_SUBSCRIPTION_ID = AZ_SUBSCRIPTION_ID;
   }
   
-  public record Dto {
+  public record Dto : IDto<CentazioSecrets> {
     public string? AWS_KEY { get; init; } 
     public string? AWS_SECRET { get; init; }
     public string? AWS_REGION { get; init; }
@@ -30,13 +30,13 @@ public record CentazioSecrets {
     public string? AZ_SECRET_ID { get; init; }
     public string? AZ_SUBSCRIPTION_ID { get; init; }
     
-    public static explicit operator CentazioSecrets(Dto dto) => new(
-      String.IsNullOrWhiteSpace(dto.AWS_KEY) ? throw new ArgumentNullException(nameof(AWS_KEY)) : dto.AWS_KEY.Trim(),
-      String.IsNullOrWhiteSpace(dto.AWS_SECRET) ? throw new ArgumentNullException(nameof(AWS_SECRET)) : dto.AWS_SECRET.Trim(),
-      String.IsNullOrWhiteSpace(dto.AWS_REGION) ? throw new ArgumentNullException(nameof(AWS_REGION)) : dto.AWS_REGION.Trim(),
-      String.IsNullOrWhiteSpace(dto.AZ_TENANT_ID) ? throw new ArgumentNullException(nameof(AZ_TENANT_ID)) : dto.AZ_TENANT_ID.Trim(),
-      String.IsNullOrWhiteSpace(dto.AZ_CLIENT_ID) ? throw new ArgumentNullException(nameof(AZ_CLIENT_ID)) : dto.AZ_CLIENT_ID.Trim(),
-      String.IsNullOrWhiteSpace(dto.AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : dto.AZ_SECRET_ID.Trim(),
-      String.IsNullOrWhiteSpace(dto.AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : dto.AZ_SUBSCRIPTION_ID.Trim()); 
+    public CentazioSecrets ToBase() => new(
+      String.IsNullOrWhiteSpace(AWS_KEY) ? throw new ArgumentNullException(nameof(AWS_KEY)) : AWS_KEY.Trim(),
+      String.IsNullOrWhiteSpace(AWS_SECRET) ? throw new ArgumentNullException(nameof(AWS_SECRET)) : AWS_SECRET.Trim(),
+      String.IsNullOrWhiteSpace(AWS_REGION) ? throw new ArgumentNullException(nameof(AWS_REGION)) : AWS_REGION.Trim(),
+      String.IsNullOrWhiteSpace(AZ_TENANT_ID) ? throw new ArgumentNullException(nameof(AZ_TENANT_ID)) : AZ_TENANT_ID.Trim(),
+      String.IsNullOrWhiteSpace(AZ_CLIENT_ID) ? throw new ArgumentNullException(nameof(AZ_CLIENT_ID)) : AZ_CLIENT_ID.Trim(),
+      String.IsNullOrWhiteSpace(AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : AZ_SECRET_ID.Trim(),
+      String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim()); 
   }
 }

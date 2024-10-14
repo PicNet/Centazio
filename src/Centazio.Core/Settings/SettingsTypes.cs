@@ -9,13 +9,13 @@ public record AzureFunctionSettings {
     FunctionClassName = classname;
   }
   
-  public record Dto {
+  public record Dto : IDto<AzureFunctionSettings> {
     public string? FunctionAppId { get; init; }
     public string? FunctionClassName { get; init; }
     
-    public static explicit operator AzureFunctionSettings(Dto dto) => new (
-        String.IsNullOrWhiteSpace(dto.FunctionAppId) ? throw new ArgumentNullException(nameof(FunctionAppId)) : dto.FunctionAppId.Trim(),
-        String.IsNullOrWhiteSpace(dto.FunctionClassName) ? throw new ArgumentNullException(nameof(FunctionClassName)) : dto.FunctionClassName.Trim());
+    public AzureFunctionSettings ToBase() => new (
+        String.IsNullOrWhiteSpace(FunctionAppId) ? throw new ArgumentNullException(nameof(FunctionAppId)) : FunctionAppId.Trim(),
+        String.IsNullOrWhiteSpace(FunctionClassName) ? throw new ArgumentNullException(nameof(FunctionClassName)) : FunctionClassName.Trim());
   }
 }
 
@@ -35,19 +35,19 @@ public record AzureSettings {
   }
   
   
-  public record Dto {
+  public record Dto : IDto<AzureSettings> {
     public string? Region { get; init; }
     public string? ResourceGroup { get; init; }
     public string? FunctionStorageAccId { get; init; }
     public string? AppServicePlanId { get; init; }
     public List<AzureFunctionSettings.Dto>? Functions { get; init; }
     
-    public static explicit operator AzureSettings(Dto dto) => new (
-        String.IsNullOrWhiteSpace(dto.Region) ? throw new ArgumentNullException(nameof(Region)) : dto.Region.Trim(),
-        String.IsNullOrWhiteSpace(dto.ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : dto.ResourceGroup.Trim(),
-        String.IsNullOrWhiteSpace(dto.FunctionStorageAccId) ? throw new ArgumentNullException(nameof(FunctionStorageAccId)) : dto.FunctionStorageAccId.Trim(),
-        String.IsNullOrWhiteSpace(dto.AppServicePlanId) ? throw new ArgumentNullException(nameof(AppServicePlanId)) : dto.AppServicePlanId.Trim(),
-        dto.Functions is null || !dto.Functions.Any() ? throw new ArgumentNullException(nameof(Functions)) : dto.Functions.Select(f => (AzureFunctionSettings) f).ToList());
+    public AzureSettings ToBase() => new (
+        String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
+        String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
+        String.IsNullOrWhiteSpace(FunctionStorageAccId) ? throw new ArgumentNullException(nameof(FunctionStorageAccId)) : FunctionStorageAccId.Trim(),
+        String.IsNullOrWhiteSpace(AppServicePlanId) ? throw new ArgumentNullException(nameof(AppServicePlanId)) : AppServicePlanId.Trim(),
+        Functions is null || !Functions.Any() ? throw new ArgumentNullException(nameof(Functions)) : Functions.Select(f => f.ToBase()).ToList());
   }
 }
 
@@ -57,11 +57,11 @@ public record AwsSettings {
   
   private AwsSettings(string accname) { AccountName = accname; }
   
-  public record Dto {
+  public record Dto : IDto<AwsSettings> {
     public string? AccountName { get; init; }
     
-    public static explicit operator AwsSettings(Dto dto) => new (
-        String.IsNullOrEmpty(dto.AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : dto.AccountName.Trim());
+    public AwsSettings ToBase() => new (
+        String.IsNullOrEmpty(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim());
   }
 }
 
@@ -76,14 +76,14 @@ public record CentazioSettings {
     AzureSettings = azure;
   }
     
-  public record Dto {
+  public record Dto : IDto<CentazioSettings> {
     public string? SecretsFolder { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
     
-    public static explicit operator CentazioSettings(Dto dto) => new (
-        String.IsNullOrWhiteSpace(dto.SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : dto.SecretsFolder.Trim(),
-        dto.AwsSettings is null ? null : (AwsSettings) dto.AwsSettings,
-        dto.AzureSettings is null ? null : (AzureSettings) dto.AzureSettings);
+    public CentazioSettings ToBase() => new (
+        String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
+        AwsSettings?.ToBase(),
+        AzureSettings?.ToBase());
   }
 }

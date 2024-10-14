@@ -24,7 +24,7 @@ public static class DynamoStagedEntityExtensionMethods {
     return docs.Select(d => {
       var (system, entity, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
       var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
-      return (StagedEntity) new StagedEntity.Dto {
+      return new StagedEntity.Dto {
         Id = Guid.Parse(suffix),
         System = system, 
         SystemEntityType = entity, 
@@ -33,7 +33,7 @@ public static class DynamoStagedEntityExtensionMethods {
         StagedEntityChecksum = d[nameof(StagedEntity.StagedEntityChecksum)].AsString(),
         DatePromoted = d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
         IgnoreReason = d.ContainsKey(nameof(StagedEntity.IgnoreReason)) ? d[nameof(StagedEntity.IgnoreReason)].AsString() : null 
-      };
+      }.ToBase();
     }).ToList();
   }
 }

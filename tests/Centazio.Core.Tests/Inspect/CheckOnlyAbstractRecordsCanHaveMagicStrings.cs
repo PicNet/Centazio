@@ -11,7 +11,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(Map.CoreToSystem), [nameof( Map.CoreToSystem.LastError)] },
     { nameof(ObjectState), [nameof(ObjectState.LastRunMessage), nameof(ObjectState.LastRunException)] },
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
-    { "*", [nameof(Checksum)] }
+    { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }
   };
   
   [Test] public void Test_string_description_pattern() {

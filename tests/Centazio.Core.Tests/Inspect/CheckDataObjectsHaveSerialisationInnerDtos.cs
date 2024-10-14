@@ -28,7 +28,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var baseprops = baset.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var basenames = baseprops.Select(p => p.Name).ToList();
     var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
-    var dtoprops = dto.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();;
+    var dtoprops = dto.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var dtonames = dtoprops.Select(p => p.Name).ToList();
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
     var nonnulls = dtoprops.Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();

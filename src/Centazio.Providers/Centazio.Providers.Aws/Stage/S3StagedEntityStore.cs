@@ -115,7 +115,7 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
     
-    return (StagedEntity) new StagedEntity.Dto {
+    return new StagedEntity.Dto {
       Id = details.Id,
       System = details.System,
       SystemEntityType = details.SystemEntityType.Value,
@@ -123,6 +123,6 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
       Data = data, 
       StagedEntityChecksum = details.StagedEntityChecksum,
       DatePromoted = promoted
-    };
+    }.ToBase();
   }
 }

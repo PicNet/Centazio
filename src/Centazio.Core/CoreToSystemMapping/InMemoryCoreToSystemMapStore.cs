@@ -65,7 +65,6 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   }
   
   [return: NotNullIfNotNull(nameof(json))]
-  protected Map.CoreToSystem? Deserialize(string? json) => 
-      json is null ? null : Json.Deserialize<Map.CoreToSystem.Dto>(json).ToCoreToSystem();
+  protected Map.CoreToSystem? Deserialize(string? json) => json is null ? null : Json.Deserialize<Map.CoreToSystem>(json);
 
 }

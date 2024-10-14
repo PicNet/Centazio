@@ -54,7 +54,7 @@ WHEN NOT MATCHED THEN
  INSERT (Id, System, SystemEntityType, DateStaged, Data, StagedEntityChecksum)
  VALUES (se.Id, se.System, se.SystemEntityType, se.DateStaged, se.Data, se.StagedEntityChecksum)
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
-;", staged.Select(e => (StagedEntity.Dto) e).ToList());
+;", staged.Select(e => e.ToDto()).ToList());
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
@@ -87,7 +87,7 @@ WHERE
 ORDER BY DateStaged
 ";
     return (await conn.QueryAsync<StagedEntity.Dto>(sql, new { after, system, systype }))
-        .Select(e => (StagedEntity) e).ToList();
+        .Select(e => e.ToBase()).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {

@@ -64,12 +64,12 @@ public record ObjectState : ILoggable {
   public string? LastRunMessage { get; internal init; } 
   public string? LastRunException { get; internal init; }
   
-  public record Dto {
+  public record Dto : IDto<ObjectState> {
     public string? System { get; init; }
     public string? Stage { get; init; }
     public string? Object { get; init; }
-    public bool ObjectIsCoreEntityType { get; }
-    public bool ObjectIsSystemEntityType { get;  }
+    public bool ObjectIsCoreEntityType { get; init; }
+    public bool ObjectIsSystemEntityType { get; init; }
     public bool? Active { get; init; }
     public DateTime? DateCreated { get; init; }
     public string? LastResult { get; init; } 
@@ -82,34 +82,7 @@ public record ObjectState : ILoggable {
     public string? LastRunMessage { get; init; }
     public string? LastRunException { get; init; }
     
-    public Dto() { }
-    
-    internal Dto(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
-      System = system;
-      Stage = stage;
-      Object = obj.Value;
-      ObjectIsCoreEntityType = obj is CoreEntityType;
-      ObjectIsSystemEntityType = obj is SystemEntityType;
-      Active = active;
-      DateCreated = UtcDate.UtcNow;
-      
-      if (!ObjectIsCoreEntityType && !ObjectIsSystemEntityType) throw new NotSupportedException($"Object[{obj}] is neither of {nameof(CoreEntityType)} or {nameof(SystemEntityType)}");
-    }
-    
-    public static Dto FromObjectState(ObjectState os) => new(os.System, os.Stage, os.Object, os.Active) {
-      LastResult = os.LastResult.ToString(),
-      LastAbortVote = os.LastAbortVote.ToString(),
-      DateCreated = os.DateCreated,
-      DateUpdated = os.DateUpdated,
-      LastStart = os.LastStart,
-      LastSuccessStart = os.LastSuccessStart,
-      LastCompleted = os.LastCompleted,
-      LastSuccessCompleted = os.LastSuccessCompleted,
-      LastRunMessage = os.LastRunMessage,
-      LastRunException = os.LastRunException
-    };
-    
-    public ObjectState ToObjectState() => new(
+    public ObjectState ToBase() => new(
         System ?? throw new ArgumentNullException(nameof(System)),
         Stage ?? throw new ArgumentNullException(nameof(Stage)),
         SafeObjectName(),

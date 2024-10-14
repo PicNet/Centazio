@@ -63,7 +63,7 @@ public class ReadFunctionTests {
     Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, 1)));
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
-    SystemState SS(DateTime updated) => (SystemState) new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated);
+    SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated).ToBase();
     ObjectState OS(DateTime updated, int len) => new(sys, stg, sysent, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success,
@@ -76,7 +76,7 @@ public class ReadFunctionTests {
       LastRunMessage = $"operation [{sys}/{stg}/{sysent}] completed [Success] message: " + 
           (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
     };
-    StagedEntity SE(Guid? id = null) => (StagedEntity) new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, sysent, onetick, expjson, Helpers.TestingStagedEntityChecksum(expjson));
+    StagedEntity SE(Guid? id = null) => new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, sysent, onetick, expjson, Helpers.TestingStagedEntityChecksum(expjson)).ToBase();
   }
 }
 

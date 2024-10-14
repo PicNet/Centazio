@@ -29,7 +29,7 @@ public record SystemState {
   public DateTime? LastStarted { get; private init; }
   public DateTime? LastCompleted { get; private init; }
   
-  public record Dto {
+  public record Dto : IDto<SystemState> {
     public string? System { get; init; }
     public string? Stage { get; init; }
     public bool? Active { get; init; } 
@@ -52,15 +52,15 @@ public record SystemState {
       LastCompleted = lastcomplete;
     }
     
-    public static explicit operator SystemState(Dto dto) => new(
-        dto.System ?? throw new ArgumentNullException(nameof(System)), 
-        dto.Stage ?? throw new ArgumentNullException(nameof(Stage)), 
-        dto.Active ?? throw new ArgumentNullException(nameof(Active)),
-        dto.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-        Enum.Parse<ESystemStateStatus>(dto.Status ?? throw new ArgumentNullException(nameof(Status)))) {
-      DateUpdated = dto.DateUpdated,
-      LastStarted = dto.LastStarted,
-      LastCompleted = dto.LastCompleted
+    public SystemState ToBase() => new(
+        System ?? throw new ArgumentNullException(nameof(System)), 
+        Stage ?? throw new ArgumentNullException(nameof(Stage)), 
+        Active ?? throw new ArgumentNullException(nameof(Active)),
+        DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
+        Enum.Parse<ESystemStateStatus>(Status ?? throw new ArgumentNullException(nameof(Status)))) {
+      DateUpdated = DateUpdated,
+      LastStarted = LastStarted,
+      LastCompleted = LastCompleted
     };
   }
 }

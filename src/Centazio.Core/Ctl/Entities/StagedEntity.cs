@@ -48,7 +48,18 @@ public sealed record StagedEntity {
   
   public T Deserialise<T>() => Json.Deserialize<T>(Data) ?? throw new Exception();
 
-  public record Dto {
+  public Dto ToDto() => new() {
+    Id = Id,
+    System = System.Value,
+    SystemEntityType = SystemEntityType.Value,
+    DateStaged = DateStaged,
+    Data = Data.Value,
+    StagedEntityChecksum = StagedEntityChecksum.Value,
+    DatePromoted = DatePromoted,
+    IgnoreReason = IgnoreReason
+  };
+  
+  public record Dto : IDto<StagedEntity> {
     public Guid? Id { get; init; }
     public string? System { get; init; }
     public string? SystemEntityType { get; init; }
@@ -71,26 +82,15 @@ public sealed record StagedEntity {
       IgnoreReason = ignoreres;
     }
     
-    public static explicit operator StagedEntity(Dto dto) => new(
-        dto.Id ?? throw new ArgumentNullException(nameof(Id)),
-        dto.System ?? throw new ArgumentNullException(nameof(System)),
-        new(dto.SystemEntityType ?? throw new ArgumentNullException(nameof(SystemEntityType))),
-        dto.DateStaged ?? throw new ArgumentNullException(nameof(DateStaged)),
-        dto.Data ?? throw new ArgumentNullException(nameof(Data)),
-        new(dto.StagedEntityChecksum ?? throw new ArgumentNullException(nameof(StagedEntityChecksum)))) {
-      IgnoreReason = String.IsNullOrWhiteSpace(dto.IgnoreReason) ? null : dto.IgnoreReason.Trim(),
-      DatePromoted = dto.DatePromoted
-    };
-    
-    public static explicit operator Dto(StagedEntity se) => new() {
-      Id = se.Id,
-      System = se.System.Value,
-      SystemEntityType = se.SystemEntityType.Value,
-      DateStaged = se.DateStaged,
-      Data = se.Data.Value,
-      StagedEntityChecksum = se.StagedEntityChecksum.Value,
-      DatePromoted = se.DatePromoted,
-      IgnoreReason = se.IgnoreReason
+    public StagedEntity ToBase() => new(
+        Id ?? throw new ArgumentNullException(nameof(Id)),
+        System ?? throw new ArgumentNullException(nameof(System)),
+        new(SystemEntityType ?? throw new ArgumentNullException(nameof(SystemEntityType))),
+        DateStaged ?? throw new ArgumentNullException(nameof(DateStaged)),
+        Data ?? throw new ArgumentNullException(nameof(Data)),
+        new(StagedEntityChecksum ?? throw new ArgumentNullException(nameof(StagedEntityChecksum)))) {
+      IgnoreReason = String.IsNullOrWhiteSpace(IgnoreReason) ? null : IgnoreReason.Trim(),
+      DatePromoted = DatePromoted
     };
   }
 }

@@ -49,12 +49,53 @@ public class JsonSerialisationTests {
   
   [Test] public void Test_dto_pattern() {
     var bt = new BaseT { Status = ESystemStateStatus.Idle, Str1 = new(nameof(Test_dto_pattern)) };
-    var json = Json.Serialize(bt);
-    var bt2 = Json.Deserialize<BaseT.Dto>(json).ToBase();
+    TestDtoImpl(bt);
+  }
+  
+  [Test] public void Test_real_dtos() {
+    var str = nameof(Test_real_dtos);
+    /*
+     -- useful for printing all system Dtos
+    var dtos = typeof(SystemState).Assembly.GetTypes()
+        .Concat(GetType().Assembly.GetTypes())
+        .Where(t => (t.FullName ?? String.Empty).EndsWith("+Dto"))
+        .ToList();
+     */
     
-    Assert.That(json, Is.EqualTo(@"{""Status"":""Idle"",""Str1"":""Test_dto_pattern""}"));
-    Assert.That(bt2, Is.EqualTo(bt));
+    // todo: standardise on pattern / remove explicit casting operator overrides
     
+    // Centazio.Core.Ctl.Entities.ObjectState+Dto
+    var oscet = new ObjectState(new(str), new(str), new CoreEntityType(str), true);
+    var oscet2 = Json.Deserialize<ObjectState>(Json.Serialize(oscet));
+    Assert.That(oscet2, Is.EqualTo(oscet));
+    
+    var osset = new ObjectState(new(str), new(str), new SystemEntityType(str), true);
+    var osset2 = Json.Deserialize<ObjectState>(Json.Serialize(osset));
+    Assert.That(osset2, Is.EqualTo(osset));
+    
+    // Centazio.Core.Ctl.Entities.SystemState+Dto
+    var ss = SystemState.Create(str, str);
+    var ss2 = Json.Deserialize<SystemState>(Json.Serialize(ss));
+    Assert.That(ss2, Is.EqualTo(ss));
+    
+    // Centazio.Core.Ctl.Entities.StagedEntity+Dto
+    var se = new StagedEntity(Guid.NewGuid(), str, new(str), UtcDate.UtcNow, "data", new("checksum"));
+    var se2 = Json.Deserialize<StagedEntity>(Json.Serialize(se));
+    Assert.That(se2, Is.EqualTo(se));
+    
+    // Centazio.Core.Ctl.Entities.Map+CoreToSystem+Dto
+    var c2s = new Map.CoreToSystem(new(str), new(str), new(str), new(str), EEntityMappingStatus.Orphaned, new(str));
+    var c2s2 = Json.Deserialize<Map.CoreToSystem>(Json.Serialize(c2s));
+    Assert.That(c2s2, Is.EqualTo(c2s));
+  }
+  
+  private void TestDtoImpl<T>(T baseobj) {
+    ArgumentNullException.ThrowIfNull(baseobj);
+    
+    var json = Json.Serialize(baseobj);
+    var deserialised = Json.Deserialize<T>(json); // should automatically detect the Dto 
+    
+    Assert.That(deserialised, Is.EqualTo(baseobj));
   }
   
   public record TestValidStrings {

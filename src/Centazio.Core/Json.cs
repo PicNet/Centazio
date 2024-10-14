@@ -11,14 +11,11 @@ public static class Json {
     var dtot = GetDtoTypeFromTypeHierarchy(typeof(T));
     if (dtot is null) return JsonSerializer.Deserialize<T>(json) ?? throw new Exception();
     var dtoobj = JsonSerializer.Deserialize(json, dtot);
+    if (dtoobj is IDto<T> idto) return idto.ToBase();
+    
     var obj = Activator.CreateInstance(typeof(T)) ?? throw new Exception();
-    var dtoprops = dtot.GetProperties();
-    typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
-        .ForEach(pi => {
-          var dtopi = dtoprops.SingleOrDefault(pi2 => pi2.Name == pi.Name) ?? throw new Exception($"could not find property[{pi.Name}] in Dto[{dtot.FullName}]");
-          pi.SetValue(obj, GetObjVal(pi, dtopi));
-        });
+    var pairs = GetPropPairs(typeof(T), dtot);
+    pairs.ForEach(p => p.BasePi.SetValue(obj, GetObjVal(p.BasePi, p.DtoPi)));
     return (T) obj;
     
     object? GetObjVal(PropertyInfo origpi, PropertyInfo dtopi) {
@@ -39,22 +36,18 @@ public static class Json {
   private static object PrepareDtoForSerialisation(object orig) {
     var dtot = GetDtoTypeFromTypeHierarchy(orig.GetType());
     if (dtot is null) return orig;
+    
     var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
-    var dtoprops = dtot.GetProperties();
-    orig.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
-        .ForEach(pi => {
-          var dtopi = dtoprops.SingleOrDefault(pi2 => pi2.Name == pi.Name) ?? throw new Exception($"could not find property[{pi.Name}] in Dto[{dtot.FullName}]");
-          dtopi.SetValue(dto, GetDtoVal(pi, dtopi));
-        });
+    var pairs = GetPropPairs(orig.GetType(), dtot);
+    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(p)));
     return dto;
     
-    object? GetDtoVal(PropertyInfo origpi, PropertyInfo dtopi) {
-      var origval = origpi.GetValue(orig);
+    object? GetDtoVal(PropPair p) {
+      var origval = p.BasePi.GetValue(orig);
       if (origval is null) return origval;
-      if (origpi.PropertyType.IsEnum) return origpi.GetValue(orig)?.ToString();
-      if (origpi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
-      return Convert.ChangeType(origval, Nullable.GetUnderlyingType(dtopi.PropertyType) ?? dtopi.PropertyType) ?? throw new Exception();
+      if (p.BasePi.PropertyType.IsEnum) return p.BasePi.GetValue(orig)?.ToString();
+      if (p.BasePi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
+      return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
     }
   }
   
@@ -66,4 +59,16 @@ public static class Json {
     }
     return null;
   }
+  
+  private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
+    var dtoprops = dtot.GetProperties();
+    return baset.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+        .Select(pi => {
+          var dtopi = dtoprops.SingleOrDefault(pi2 => pi2.Name == pi.Name) ?? throw new Exception($"could not find property[{pi.Name}] in Dto[{dtot.FullName}]");
+          return new PropPair(pi, dtopi);
+        }).ToList();
+  } 
+  
+  record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
 }

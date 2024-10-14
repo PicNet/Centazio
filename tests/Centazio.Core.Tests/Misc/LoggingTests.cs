@@ -17,8 +17,8 @@ public class LoggingTests {
   }
   
   [Test] public void Test_destructing_SystemState() {
-    var sysempty = (SystemState) new SystemState.Dto(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString());
-    var sysfull = (SystemState) new SystemState.Dto(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow);
+    var sysempty = new SystemState.Dto(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase();
+    var sysfull = new SystemState.Dto(nameof(LoggingTests), nameof(LoggingTests), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow, UtcDate.UtcNow).ToBase();
     Log.Information("empty[{@SysEmpty}] full[{@SysFull}]", sysempty, sysfull);
   }
   
