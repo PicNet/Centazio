@@ -34,11 +34,11 @@ public class TypesTests {
   }
   
   [Test] public void Test_ObjectName_casting_to_SystemEntityType_and_CoreEntityType() {
-    Assert.Throws<Exception>(() => _ = Constants.SystemEntityName.ToCoreEntityType);
-    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToSystemEntityType);
+    Assert.Throws<Exception>(() => _ = Constants.SystemEntityName.ToCoreEntityTypeName);
+    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToSystemEntityTypeName);
     
-    Assert.That(Constants.SystemEntityName.ToSystemEntityType.Value, Is.EqualTo(Constants.SystemEntityName.Value));
-    Assert.That(Constants.CoreEntityName.ToCoreEntityType.Value, Is.EqualTo(Constants.CoreEntityName.Value));
+    Assert.That(Constants.SystemEntityName.ToSystemEntityTypeName.Value, Is.EqualTo(Constants.SystemEntityName.Value));
+    Assert.That(Constants.CoreEntityName.ToCoreEntityTypeName.Value, Is.EqualTo(Constants.CoreEntityName.Value));
   }
 
 }

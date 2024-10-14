@@ -335,6 +335,6 @@ public abstract class StagedEntityStoreDefaultTests {
   private StagedEntity SetData(StagedEntity e, string data) => e with { Data = data };
   private StagedEntityChecksum Hash(object o) => Helpers.TestingStagedEntityChecksum(o.ToString() ?? throw new Exception());
   
-  private async Task<StagedEntity> GetSingle(SystemName system, SystemEntityType systype, DateTime after) => (await store.GetAll(system, systype, after)).Single();
+  private async Task<StagedEntity> GetSingle(SystemName system, SystemEntityTypeName systype, DateTime after) => (await store.GetAll(system, systype, after)).Single();
 
 }

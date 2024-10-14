@@ -4,9 +4,9 @@ namespace Centazio.Core.CoreRepo;
 
 public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
-  protected readonly Dictionary<CoreEntityType, Dictionary<ValidString, Containers.CoreChecksum>> db = new();
+  protected readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, Containers.CoreChecksum>> db = new();
 
-  public Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<CoreEntityId> coreids) {
+  public Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     var checksums = new Dictionary<CoreEntityId, CoreEntityChecksum>();
     if (!coreids.Any()) return Task.FromResult(checksums);
     if (!db.TryGetValue(coretype, out var dbtype)) return Task.FromResult(checksums);
@@ -17,7 +17,7 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     return Task.FromResult(result);
   }
 
-  public Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
+  public Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<Containers.CoreChecksum> entities) {
     if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, Containers.CoreChecksum>();
     var upserted = entities.Select(e => {
       db[coretype][e.Core.CoreId] = e;

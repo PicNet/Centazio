@@ -25,7 +25,7 @@ BEGIN
   CREATE TABLE {SCHEMA}.{STAGED_ENTITY_TBL} (
     Id uniqueidentifier NOT NULL PRIMARY KEY, 
     System nvarchar (64) NOT NULL, 
-    SystemEntityType nvarchar (64) NOT NULL, 
+    SystemEntityTypeName nvarchar (64) NOT NULL, 
     DateStaged datetime2 NOT NULL, 
     Data nvarchar (max) NOT NULL,
     StagedEntityChecksum nvarchar (64) NOT NULL,
@@ -33,7 +33,7 @@ BEGIN
     IgnoreReason nvarchar (256) NULL)
 
 ALTER TABLE {SCHEMA}.{STAGED_ENTITY_TBL} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
-CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON {SCHEMA}.{STAGED_ENTITY_TBL} (System, SystemEntityType, DateStaged);
+CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON {SCHEMA}.{STAGED_ENTITY_TBL} (System, SystemEntityTypeName, DateStaged);
 END
 ");
     return this;
@@ -44,15 +44,15 @@ END
     var dtstaged = staged.First().DateStaged;
     await using var conn = newconn();
     await conn.ExecuteAsync($@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
-USING (VALUES (@Id, @System, @SystemEntityType, @DateStaged, @Data, @StagedEntityChecksum))
-  AS se (Id, System, SystemEntityType, DateStaged, Data, StagedEntityChecksum)
+USING (VALUES (@Id, @System, @SystemEntityTypeName, @DateStaged, @Data, @StagedEntityChecksum))
+  AS se (Id, System, SystemEntityTypeName, DateStaged, Data, StagedEntityChecksum)
 ON 
   T.System = se.System
-  AND T.SystemEntityType = se.SystemEntityType
+  AND T.SystemEntityTypeName = se.SystemEntityTypeName
   AND T.StagedEntityChecksum = se.StagedEntityChecksum
 WHEN NOT MATCHED THEN
- INSERT (Id, System, SystemEntityType, DateStaged, Data, StagedEntityChecksum)
- VALUES (se.Id, se.System, se.SystemEntityType, se.DateStaged, se.Data, se.StagedEntityChecksum)
+ INSERT (Id, System, SystemEntityTypeName, DateStaged, Data, StagedEntityChecksum)
+ VALUES (se.Id, se.System, se.SystemEntityTypeName, se.DateStaged, se.Data, se.StagedEntityChecksum)
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
 ;", staged.Select(e => e.ToDto()).ToList());
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
@@ -63,15 +63,15 @@ WHEN NOT MATCHED THEN
     await using var conn = newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
-USING (VALUES (@Id, @System, @SystemEntityType, @DatePromoted, @IgnoreReason)) AS se (Id, System, SystemEntityType, DatePromoted, IgnoreReason)
+USING (VALUES (@Id, @System, @SystemEntityTypeName, @DatePromoted, @IgnoreReason)) AS se (Id, System, SystemEntityTypeName, DatePromoted, IgnoreReason)
 ON 
   T.System = se.System
-  AND T.SystemEntityType = se.SystemEntityType
+  AND T.SystemEntityTypeName = se.SystemEntityTypeName
   AND T.Id = se.Id
 WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.IgnoreReason;", staged);
   }
 
-  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
     await using var conn = newconn();
     var limit = Limit > 0 ? $"TOP {Limit}" : String.Empty;
     var promotedpredicate = incpromoted ? String.Empty : "AND DatePromoted IS NULL";
@@ -81,7 +81,7 @@ FROM {SCHEMA}.{STAGED_ENTITY_TBL}
 WHERE 
   DateStaged > @after
   AND System = @system
-  AND SystemEntityType = @systype  
+  AND SystemEntityTypeName = @systype  
   AND IgnoreReason IS NULL 
   {promotedpredicate} 
 ORDER BY DateStaged
@@ -90,10 +90,10 @@ ORDER BY DateStaged
         .Select(e => e.ToBase()).ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {
+  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     await using var conn = newconn();
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
-    await conn.ExecuteAsync($"DELETE FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE {col} < @before AND System = @system AND SystemEntityType = @systype", new { before, system, systype });
+    await conn.ExecuteAsync($"DELETE FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE {col} < @before AND System = @system AND SystemEntityTypeName = @systype", new { before, system, systype });
   }
 }
 

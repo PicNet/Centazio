@@ -14,9 +14,9 @@ public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOp
 
     async Task DoStage() {
       if (res is SingleRecordReadOperationResult sr) {
-        await stager.Stage(op.State.System, op.OpConfig.SystemEntityType, sr.Payload);
+        await stager.Stage(op.State.System, op.OpConfig.SystemEntityTypeName, sr.Payload);
       } else if (res is ListRecordsReadOperationResult lr) {
-        await stager.Stage(op.State.System, op.OpConfig.SystemEntityType, lr.PayloadList);
+        await stager.Stage(op.State.System, op.OpConfig.SystemEntityTypeName, lr.PayloadList);
       } else throw new UnreachableException();
     }
   }

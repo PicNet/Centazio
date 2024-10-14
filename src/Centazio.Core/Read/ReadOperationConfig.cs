@@ -6,13 +6,13 @@ public interface IGetObjectsToStage {
   Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
 }
 
-public record ReadOperationConfig(SystemEntityType SystemEntityType, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
-        : OperationConfig(SystemEntityType, Cron), ILoggable {
+public record ReadOperationConfig(SystemEntityTypeName SystemEntityTypeName, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
+        : OperationConfig(SystemEntityTypeName, Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
-  public SystemEntityType SystemEntityType { get; init; } = SystemEntityType;
+  public SystemEntityTypeName SystemEntityTypeName { get; init; } = SystemEntityTypeName;
   
-  public string LoggableValue => $"{SystemEntityType.Value}";
+  public string LoggableValue => $"{SystemEntityTypeName.Value}";
 
 }
         

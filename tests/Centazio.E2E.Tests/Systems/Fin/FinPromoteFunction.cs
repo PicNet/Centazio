@@ -15,8 +15,8 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   public FinPromoteFunction(SimulationCtx ctx) {
     this.ctx = ctx;
     Config = new(nameof(FinApi), LifecycleStage.Defaults.Promote, [
-      new(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
-      new(typeof(FinInvoice), new(nameof(FinInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
+      new(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
+      new(typeof(FinInvoice), new(nameof(FinInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
     ]);
   }
   
@@ -34,7 +34,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     }
 
     async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(FinInvoice.AccountId), true);
+      var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), staged, nameof(FinInvoice.AccountId), true);
       return staged.Select(t => {
         var fininv = t.Sys.To<FinInvoice>();
         return t.SetCore(ctx.Converter.FinInvoiceToCoreInvoice(fininv, t.OptCore?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));

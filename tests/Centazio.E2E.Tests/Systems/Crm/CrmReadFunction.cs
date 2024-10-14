@@ -16,9 +16,9 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     this.ctx = ctx;
     this.api = api;
     Config = new(nameof(CrmApi), LifecycleStage.Defaults.Read, [
-      new(SystemEntityType.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(SystemEntityType.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(SystemEntityType.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(SystemEntityTypeName.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(SystemEntityTypeName.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
   

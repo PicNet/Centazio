@@ -85,7 +85,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
       return c;
     }
     
-    async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityType coretype, List<ICoreEntity> dups) {
+    async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> dups) {
       var map = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, coretype, dups);
       // var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
       return await corestore.Get<CoreEntity>(Constants.CoreEntityName, map.Single().Value);

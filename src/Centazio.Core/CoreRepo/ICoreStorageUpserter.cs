@@ -10,12 +10,12 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
   /// systems writing back their own changes.
   /// </summary>
-  Task<List<ICoreEntity>> Get([IgnoreNamingConventions] SystemName exclude, CoreEntityType coretype, DateTime after);
+  Task<List<ICoreEntity>> Get([IgnoreNamingConventions] SystemName exclude, CoreEntityTypeName coretype, DateTime after);
   
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
-  Task<List<ICoreEntity>> Get(CoreEntityType coretype, List<CoreEntityId> coreids);
+  Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
 }
 
 public interface ICoreStorageUpserter : IAsyncDisposable {
@@ -28,12 +28,12 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// Note: If an entity is not in core storage, then it can be omitted from the returned dictionary.
   /// </summary>
   /// <returns>An id to checksum mapping of entities already in core storage</returns>
-  Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<CoreEntityId> coreids);
+  Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
   
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities);
+  Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<Containers.CoreChecksum> entities);
 }
 
 public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

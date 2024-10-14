@@ -32,7 +32,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
-    var existing = (await ListAll(se.System, se.SystemEntityType))
+    var existing = (await ListAll(se.System, se.SystemEntityTypeName))
         .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
         .ToDictionary(cs => cs);
     
@@ -46,7 +46,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
-  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
     var from = $"{system.Value}/{systype.Value}/{after:o}_z";
     var list = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, from) > 0) 
@@ -61,7 +61,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged).ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {
+  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     var beforestr = $"{system.Value}/{systype.Value}/{before:o}";
     var todelete = (await ListAll(system, systype))
         .Where(o => String.CompareOrdinal(o.Key, beforestr) < 0)
@@ -84,7 +84,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   }
   
   
-  private async Task<List<S3Object>> ListAll(SystemName system, SystemEntityType systype) =>
+  private async Task<List<S3Object>> ListAll(SystemName system, SystemEntityTypeName systype) =>
       (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
         Prefix = $"{system.Value}/{systype.Value}" })).S3Objects;
@@ -118,7 +118,7 @@ internal static class S3StagedEntityStore_StagedEntityExtensions {
     return new StagedEntity.Dto {
       Id = details.Id,
       System = details.System,
-      SystemEntityType = details.SystemEntityType.Value,
+      SystemEntityTypeName = details.SystemEntityTypeName.Value,
       DateStaged = details.DateStaged.ToUniversalTime(),
       Data = data, 
       StagedEntityChecksum = details.StagedEntityChecksum,

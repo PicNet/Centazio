@@ -17,9 +17,9 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     this.ctx = ctx;
     help = new FunctionHelpers(SimulationConstants.CRM_SYSTEM, ctx.ChecksumAlg, ctx.EntityMap); 
     Config = new(SimulationConstants.CRM_SYSTEM, LifecycleStage.Defaults.Promote, [
-      new(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityType.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(typeof(CrmCustomer), new(nameof(CrmCustomer)), CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
-      new(typeof(CrmInvoice), new(nameof(CrmInvoice)), CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
+      new(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityTypeName.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(typeof(CrmCustomer), new(nameof(CrmCustomer)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
+      new(typeof(CrmInvoice), new(nameof(CrmInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true }
     ]);
   }
   
@@ -38,7 +38,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
         t.SetCore(ctx.Converter.CrmCustomerToCoreCustomer(t.Sys.To<CrmCustomer>(), t.OptCore?.To<CoreCustomer>()))).ToList();
 
     async Task<List<Containers.StagedSysCore>> BuildInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
       return staged.Select(t => {
         var crminv = t.Sys.To<CrmInvoice>();
         return t.SetCore(ctx.Converter.CrmInvoiceToCoreInvoice(crminv, t.OptCore?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));

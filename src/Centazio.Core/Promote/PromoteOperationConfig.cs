@@ -6,16 +6,15 @@ public interface IEvaluateEntitiesToPromote {
   Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged);
 }
 
-// todo: if we are going to mix Types and SystemEntityType/CoreEntityType, then the latter should be sufficed TypeName
 public record PromoteOperationConfig(
-    Type SystemEntityRealType,
-    SystemEntityType SystemEntityType,
-    CoreEntityType CoreEntityType,
+    Type SystemEntityType, 
+    SystemEntityTypeName SystemEntityTypeName,
+    CoreEntityTypeName CoreEntityTypeName,
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote PromoteEvaluator) : OperationConfig(CoreEntityType, Cron), ILoggable {
+    IEvaluateEntitiesToPromote PromoteEvaluator) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
 
-  public SystemEntityType SystemEntityType { get; } = SystemEntityType;
-  public CoreEntityType CoreEntityType { get; } = CoreEntityType;
+  public SystemEntityTypeName SystemEntityTypeName { get; } = SystemEntityTypeName;
+  public CoreEntityTypeName CoreEntityTypeName { get; } = CoreEntityTypeName;
   
   /// <summary>
   /// Biderectional objects do not check for bounce-backs.  This means that there is a risk
@@ -26,7 +25,7 @@ public record PromoteOperationConfig(
   /// </summary>
   public bool IsBidirectional { get; init; }
   
-  public string LoggableValue => $"{SystemEntityType.Value} -> {CoreEntityType.Value}";
+  public string LoggableValue => $"{SystemEntityTypeName.Value} -> {CoreEntityTypeName.Value}";
 
 }
 

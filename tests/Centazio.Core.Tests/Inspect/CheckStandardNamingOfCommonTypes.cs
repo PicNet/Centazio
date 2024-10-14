@@ -8,8 +8,8 @@ namespace Centazio.Core.Tests.Inspect;
 public class CheckStandardNamingOfCommonTypes {
   
   private readonly Dictionary<Type, (string Uppercase, string Lowercase, bool EndsWith)> EXPECTED = new() {
-    { typeof(CoreEntityType), (nameof(CoreEntityType), "coretype", false) },
-    { typeof(SystemEntityType), (nameof(SystemEntityType), "systype", false) },
+    { typeof(CoreEntityTypeName), (nameof(CoreEntityTypeName), "coretype", false) },
+    { typeof(SystemEntityTypeName), (nameof(SystemEntityTypeName), "systype", false) },
     { typeof(ObjectName), (nameof(ObjectState.Object), "obj", false) },
     { typeof(SystemName), (nameof(ObjectState.System), "system", false) },
     { typeof(LifecycleStage), (nameof(SystemState.Stage), "stage", false) },

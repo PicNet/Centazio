@@ -9,7 +9,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    var pending = await core.Get(op.State.System, op.State.Object.ToCoreEntityType, op.Checkpoint);
+    var pending = await core.Get(op.State.System, op.State.Object.ToCoreEntityTypeName, op.Checkpoint);
     var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, pending);
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
@@ -26,8 +26,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       return results;  
     }
     
-    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityType, results.EntitiesCreated.Select(e => e.Map).ToList());
-    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityType, results.EntitiesUpdated.Select(e => e.Map).ToList());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesCreated.Select(e => e.Map).ToList());
+    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesUpdated.Select(e => e.Map).ToList());
     return results;
   }
 
@@ -40,7 +40,7 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       var oldcs = cpum.Map.SystemEntityChecksum;
       var newcs = op.FuncConfig.ChecksumAlgorithm.Checksum(cpum.SysEnt);
       var meaningful = String.IsNullOrWhiteSpace(oldcs) || String.IsNullOrWhiteSpace(newcs) || oldcs != newcs;
-      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntityType}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.CoreId})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
+      Log.Debug($"IsMeaningful[{meaningful}] CoreEntity[{cpum.Map.CoreEntityTypeName}] Name(Id)[{cpum.Core.DisplayName}({cpum.Core.CoreId})] Old Checksum[{oldcs}] New Checksum[{newcs}]");
       return meaningful;
     }
   }

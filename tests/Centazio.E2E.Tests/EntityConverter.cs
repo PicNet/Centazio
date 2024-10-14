@@ -25,7 +25,7 @@ public class EntityConverter(TestingInMemoryCoreToSystemMapStore entitymap) {
           : existing with { Name = c.Name, MembershipCoreId = systocoreids[c.MembershipTypeSystemId] };
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
-    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
+    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityTypeName == CoreEntityTypeName.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
@@ -38,7 +38,7 @@ public class EntityConverter(TestingInMemoryCoreToSystemMapStore entitymap) {
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
-    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
+    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityTypeName == CoreEntityTypeName.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 

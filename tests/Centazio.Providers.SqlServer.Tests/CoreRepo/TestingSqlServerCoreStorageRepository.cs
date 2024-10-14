@@ -28,7 +28,7 @@ END
     return this;
   }
   
-  public async Task<E> Get<E>(CoreEntityType coretype, CoreEntityId coreid) where E : class, ICoreEntity {
+  public async Task<E> Get<E>(CoreEntityTypeName coretype, CoreEntityId coreid) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var dto = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {coretype} WHERE CoreId=@coreid", new { coreid });
     if (dto is null) throw new Exception($"Core entity [{coretype}({coreid})] not found");
@@ -36,21 +36,21 @@ END
   }
 
   
-  public async Task<List<E>> Query<E>(CoreEntityType coretype, string query) where E : class, ICoreEntity {
+  public async Task<List<E>> Query<E>(CoreEntityTypeName coretype, string query) where E : class, ICoreEntity {
     await using var conn = SqlConn.Instance.Conn();
     var dtos = await conn.QueryAsync<CoreEntity.Dto>(query);
     return dtos.Select(dto => dto.ToCoreEntity()).Cast<E>().ToList();
   }
   
-  public Task<List<E>> Query<E>(CoreEntityType coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
+  public Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();
   
-  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityType coretype, List<CoreEntityId> coreids) {
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     await using var conn = SqlConn.Instance.Conn();
     var mapping = await conn.QueryAsync<(string CoreId, string CoreEntityChecksum)>($"SELECT CoreId, CoreEntityChecksum FROM {coretype} WHERE CoreId IN (@coreids)", new { coreids });
     return mapping.ToDictionary(t => new CoreEntityId(t.CoreId), t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityType coretype, List<Containers.CoreChecksum> entities) {
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<Containers.CoreChecksum> entities) {
     var sql = $@"MERGE INTO {coretype} T
 USING (VALUES (@CoreId, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated))
 AS c (CoreId, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated)

@@ -5,11 +5,11 @@ namespace Centazio.Core.Write;
 
 
 public record WriteOperationConfig(
-    CoreEntityType CoreEntityType, 
+    CoreEntityTypeName CoreEntityTypeName, 
     ValidCron Cron,
-    ITargetSystemWriter TargetSysWriter) : OperationConfig(CoreEntityType, Cron), ILoggable {
+    ITargetSystemWriter TargetSysWriter) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
   
-  public string LoggableValue => $"{CoreEntityType.Value}";
+  public string LoggableValue => $"{CoreEntityTypeName.Value}";
 }
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time

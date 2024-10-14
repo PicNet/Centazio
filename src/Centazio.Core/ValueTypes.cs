@@ -28,18 +28,18 @@ public sealed record SystemName(string Value) : ValidString(Value) {
 public record ObjectName : ValidString {
   internal ObjectName(string Value) : base(Value) {}
   
-  internal SystemEntityType ToSystemEntityType => this as SystemEntityType ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityType)}'");
-  internal CoreEntityType ToCoreEntityType => this as CoreEntityType ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityType)}'");
+  internal SystemEntityTypeName ToSystemEntityTypeName => this as SystemEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityTypeName)}'");
+  internal CoreEntityTypeName ToCoreEntityTypeName => this as CoreEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityTypeName)}'");
 }
 
-public sealed record SystemEntityType(string Value) : ObjectName(Value) {
-  public static SystemEntityType From<E>() where E : ISystemEntity => new(typeof(E).Name);
-  public static SystemEntityType From<E>(E sysent) where E : ISystemEntity => new(sysent.GetType().Name);
+public sealed record SystemEntityTypeName(string Value) : ObjectName(Value) {
+  public static SystemEntityTypeName From<E>() where E : ISystemEntity => new(typeof(E).Name);
+  public static SystemEntityTypeName From<E>(E sysent) where E : ISystemEntity => new(sysent.GetType().Name);
 }
 
-public sealed record CoreEntityType(string Value) : ObjectName(Value) {
-  public static CoreEntityType From<E>() where E : ICoreEntity => new(typeof(E).Name);
-  public static CoreEntityType From<E>(E core) where E : ICoreEntity => new(core.GetType().Name);
+public sealed record CoreEntityTypeName(string Value) : ObjectName(Value) {
+  public static CoreEntityTypeName From<E>() where E : ICoreEntity => new(typeof(E).Name);
+  public static CoreEntityTypeName From<E>(E core) where E : ICoreEntity => new(core.GetType().Name);
 }
 
 public sealed record LifecycleStage(string Value) : ValidString(Value) {

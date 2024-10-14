@@ -62,7 +62,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
           { "#haskey", AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY }
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(template.System, template.SystemEntityType) }
+          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(template.System, template.SystemEntityTypeName) }
         }
       },
       // this is not efficient, but there is no way to use the 'IN'
@@ -100,7 +100,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
   }
   
   public override async Task<List<StagedEntity>> Update(List<StagedEntity> staged) {
-    var uniques = staged.DistinctBy(e => $"{e.System}|{e.SystemEntityType}|{e.StagedEntityChecksum}").ToList();
+    var uniques = staged.DistinctBy(e => $"{e.System}|{e.SystemEntityTypeName}|{e.StagedEntityChecksum}").ToList();
     await uniques
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
         .Chunk()
@@ -109,7 +109,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return uniques;
   }
   
-  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityType systype, DateTime after, bool incpromoted) {
+  protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       ConsistentRead = true,
@@ -139,7 +139,7 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
         .ToList();
   }
 
-  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityType systype, DateTime before, bool promoted) {
+  protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     var filter = new QueryFilter();
     filter.AddCondition(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(system, systype));
     filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, QueryOperator.LessThan, $"{before:o}");

@@ -112,8 +112,8 @@ public class E2EEnvironment : IAsyncDisposable {
   
   private async Task CompareInvoices() {
     var cores = ctx.CoreStore.GetInvoices();
-    var crmmaps = await ctx.CrmHelpers.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
-    var finmaps = await ctx.FinHelpers.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var crmmaps = await ctx.CrmHelpers.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var finmaps = await ctx.FinHelpers.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
     var core_invoices_for_crm = cores.Select(i => ctx.Converter.CoreInvoiceToCrmInvoice(Guid.Empty, i, crmmaps));
     var core_invoices_for_fin = cores.Select(i => ctx.Converter.CoreInvoiceToFinInvoice(0, i, finmaps));
     

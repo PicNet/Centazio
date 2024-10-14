@@ -20,8 +20,8 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     this.api = api;
     help = new(SimulationConstants.FIN_SYSTEM, ctx.ChecksumAlg, ctx.EntityMap);
     Config = new(SimulationConstants.FIN_SYSTEM, LifecycleStage.Defaults.Write, [
-      new(CoreEntityType.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(CoreEntityType.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+      new(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+      new(CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);
   }
 
@@ -32,7 +32,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
+      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
       return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);

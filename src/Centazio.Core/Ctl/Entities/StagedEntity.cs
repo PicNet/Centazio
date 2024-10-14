@@ -22,15 +22,15 @@ public static class StagedEntityEnumerableExtensions {
 
 public sealed record StagedEntity {
   
-  public static StagedEntity Create(SystemName system, SystemEntityType systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), system, systype, staged, data, checksum);
+  public static StagedEntity Create(SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), system, systype, staged, data, checksum);
   
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(string reason) => this with { IgnoreReason = !String.IsNullOrWhiteSpace(reason.Trim()) ? reason.Trim() : throw new ArgumentNullException(nameof(reason)) };
   
-  internal StagedEntity(Guid id, SystemName system, SystemEntityType systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
+  internal StagedEntity(Guid id, SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
     Id = id;
     System = system;
-    SystemEntityType = systype;
+    SystemEntityTypeName = systype;
     DateStaged = staged;
     Data = data;
     StagedEntityChecksum = checksum;
@@ -38,7 +38,7 @@ public sealed record StagedEntity {
   
   public Guid Id { get; }
   public SystemName System { get; }
-  public SystemEntityType SystemEntityType { get; }
+  public SystemEntityTypeName SystemEntityTypeName { get; }
   public DateTime DateStaged { get; }
   public ValidString Data { get; internal init; }
   public StagedEntityChecksum StagedEntityChecksum { get; }
@@ -51,7 +51,7 @@ public sealed record StagedEntity {
   public Dto ToDto() => new() {
     Id = Id,
     System = System.Value,
-    SystemEntityType = SystemEntityType.Value,
+    SystemEntityTypeName = SystemEntityTypeName.Value,
     DateStaged = DateStaged,
     Data = Data.Value,
     StagedEntityChecksum = StagedEntityChecksum.Value,
@@ -62,7 +62,7 @@ public sealed record StagedEntity {
   public record Dto : IDto<StagedEntity> {
     public Guid? Id { get; init; }
     public string? System { get; init; }
-    public string? SystemEntityType { get; init; }
+    public string? SystemEntityTypeName { get; init; }
     public DateTime? DateStaged { get; init; }
     public string? Data { get; init; }
     public string? StagedEntityChecksum { get; init; }
@@ -74,7 +74,7 @@ public sealed record StagedEntity {
     internal Dto(Guid? id, string syste, string obj, DateTime? staged, string? data, string? checksum, DateTime? promoted = null, string? ignoreres = null) {
       Id = id;
       System = syste;
-      SystemEntityType = obj;
+      SystemEntityTypeName = obj;
       DateStaged = staged;
       Data = data;
       StagedEntityChecksum = checksum;
@@ -85,7 +85,7 @@ public sealed record StagedEntity {
     public StagedEntity ToBase() => new(
         Id ?? throw new ArgumentNullException(nameof(Id)),
         System ?? throw new ArgumentNullException(nameof(System)),
-        new(SystemEntityType ?? throw new ArgumentNullException(nameof(SystemEntityType))),
+        new(SystemEntityTypeName ?? throw new ArgumentNullException(nameof(SystemEntityTypeName))),
         DateStaged ?? throw new ArgumentNullException(nameof(DateStaged)),
         Data ?? throw new ArgumentNullException(nameof(Data)),
         new(StagedEntityChecksum ?? throw new ArgumentNullException(nameof(StagedEntityChecksum)))) {

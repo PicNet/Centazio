@@ -10,7 +10,7 @@ public class ReadFunctionTests {
   
   private readonly SystemName sys = Constants.System1Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
-  private readonly SystemEntityType sysent = Constants.SystemEntityName;
+  private readonly SystemEntityTypeName sysent = Constants.SystemEntityName;
   
   [SetUp] public void SetUp() {
     UtcDate.Utc = new TestingUtcDate();

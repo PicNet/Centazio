@@ -50,8 +50,8 @@ public record ObjectState : ILoggable {
     System = system;
     Stage = stage;
     Object = obj;
-    ObjectIsCoreEntityType = obj is CoreEntityType;
-    ObjectIsSystemEntityType = obj is SystemEntityType;
+    ObjectIsCoreEntityType = obj is CoreEntityTypeName;
+    ObjectIsSystemEntityType = obj is SystemEntityTypeName;
     Active = active;
     DateCreated = UtcDate.UtcNow;
   }
@@ -103,9 +103,9 @@ public record ObjectState : ILoggable {
     
     private ObjectName SafeObjectName() {
       if (String.IsNullOrWhiteSpace(Object)) throw new ArgumentNullException(nameof(Object));
-      if (ObjectIsCoreEntityType) return new CoreEntityType(Object);
-      if (ObjectIsSystemEntityType) return new SystemEntityType(Object);
-      throw new NotSupportedException($"ObjectState.Dto was neither of {nameof(CoreEntityType)} or {nameof(SystemEntityType)}");
+      if (ObjectIsCoreEntityType) return new CoreEntityTypeName(Object);
+      if (ObjectIsSystemEntityType) return new SystemEntityTypeName(Object);
+      throw new NotSupportedException($"ObjectState.Dto was neither of {nameof(CoreEntityTypeName)} or {nameof(SystemEntityTypeName)}");
     }
   }
 

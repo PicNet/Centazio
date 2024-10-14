@@ -42,7 +42,7 @@ public class FunctionHelpers(
       $"\n\tChecksum[{checksum.Checksum(updated)}]");
   }
   
-  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreIds(CoreEntityType coretype, List<ICoreEntity> entities, string foreignkey) {
+  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName coretype, List<ICoreEntity> entities, string foreignkey) {
     var fks = entities.Select(e => new CoreEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
     var maps = await intra.GetExistingMappingsFromCoreIds(system, coretype, fks);
     var dict = maps.ToDictionary(m => m.CoreId, m => m.SystemId);
@@ -53,7 +53,7 @@ public class FunctionHelpers(
     return dict;
   } 
  
-  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(CoreEntityType coretype, List<Containers.StagedSysOptionalCore> entities, string foreignkey, bool mandatory) {
+  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName coretype, List<Containers.StagedSysOptionalCore> entities, string foreignkey, bool mandatory) {
     var fks = entities.Select(e => new SystemEntityId(ReflectionUtils.GetPropValAsString(e.Sys, foreignkey))).Distinct().ToList();
     var dict = (await intra.GetExistingMappingsFromSystemIds(system, coretype, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
     if (!mandatory) return dict;

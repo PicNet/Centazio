@@ -11,8 +11,8 @@ public class PromoteFunctionTests {
 
   private readonly SystemName system1 = Constants.System1Name;
   private readonly LifecycleStage stage = LifecycleStage.Defaults.Promote;
-  private readonly SystemEntityType system = Constants.SystemEntityName;
-  private readonly CoreEntityType coretype = Constants.CoreEntityName;
+  private readonly SystemEntityTypeName system = Constants.SystemEntityName;
+  private readonly CoreEntityTypeName coretype = Constants.CoreEntityName;
   
   private TestingCtlRepository ctl;
   private TestingStagedEntityStore stager;

@@ -56,11 +56,11 @@ public class JsonSerialisationTests {
     var str = nameof(Test_real_dtos);
     
     // Centazio.Core.Ctl.Entities.ObjectState+Dto
-    var oscet = new ObjectState(new(str), new(str), new CoreEntityType(str), true);
+    var oscet = new ObjectState(new(str), new(str), new CoreEntityTypeName(str), true);
     var oscet2 = Json.Deserialize<ObjectState>(Json.Serialize(oscet));
     Assert.That(oscet2, Is.EqualTo(oscet));
     
-    var osset = new ObjectState(new(str), new(str), new SystemEntityType(str), true);
+    var osset = new ObjectState(new(str), new(str), new SystemEntityTypeName(str), true);
     var osset2 = Json.Deserialize<ObjectState>(Json.Serialize(osset));
     Assert.That(osset2, Is.EqualTo(osset));
     
