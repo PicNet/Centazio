@@ -27,8 +27,8 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     if (baset.Name.EndsWith("Map") && (baset.Name.StartsWith("CoreAnd") || baset.Name.StartsWith("CoreSystemAnd"))) return;
     var baseprops = baset.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var basenames = baseprops.Select(p => p.Name).ToList();
-    var dto = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
-    var dtoprops = dto.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
+    var dtot = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
+    var dtoprops = dtot.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var dtonames = dtoprops.Select(p => p.Name).ToList();
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
     var nonnulls = dtoprops.Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
@@ -37,6 +37,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var extra = dtonames.Where(n => !basenames.Contains(n)).ToList();
     var missing = basenames.Where(n => !dtonames.Contains(n)).ToList();
     
+    Assert.That(dtot.GetInterfaces().SingleOrDefault(t => t.Name.Equals("IDto`1")), Is.Not.Null, $"{baset.Name}#Dto does not implement IDto<>");
     Assert.That(baset.GetConstructors().All(c => c.IsPrivate), Is.True, $"{baset.Name} has public constructor");
     Assert.That(setters, Is.Empty, $"{baset.Name} has public setters: {String.Join(",", setters)}");
     Assert.That(nonnulls.Any(), Is.False, $"{baset.Name}#Dto has non-nullable properties: {String.Join(',', nonnulls.Select(p => p.Name))}");

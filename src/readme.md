@@ -4,7 +4,7 @@
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
 - clean up simulation code
 - review all code comments
-- when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc) were 
+- when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc.) were 
     not changed by the client.  May want to separate 'client' fields from ICoreEntity fields
 - PromoteOpRunner is the most complex code in `Centazio.Core`, consider simplifying
 - System/SystemId should not be part of the `ICoreEntity` interface, this information should be part of the
@@ -29,7 +29,7 @@
 - Use `is null` / `is not null` instead of `== null` / `!= null`
 
 ## Logging
-- Logging should prefer lower case.  When describing code (classes, etc) then proper casing is allowed
+- Logging should prefer lower case.  When describing code (classes, etc.) then proper casing is allowed
 - Test all structured logging and add any 'clean' versions of structured output to `LogInitialiser.cs` also override
     class `ToString()` method where appropriate to support clean structured logging
 - Logging of exceptions should use the exception override logging methods: `Log.Information(exception, message)` and
@@ -43,7 +43,7 @@
     - Try not to mix messages and objects like `"This @ObjectName is an object inside the message"`
 
 ## Exceptions
-- Exception messages should be lower case.  When describing code (classes, etc) then proper casing as allowed
+- Exception messages should be lower-case.  When describing code (classes, etc.) then proper casing as allowed
 - Exception messages should be very concise, example: `already initialised` is better than `class XXX should only be
     initialised once, and it appears that it is already initialsed, bad boy`.  The latter adds no additional value
     only opportunity for typos and clutter

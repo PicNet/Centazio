@@ -54,15 +54,6 @@ public class JsonSerialisationTests {
   
   [Test] public void Test_real_dtos() {
     var str = nameof(Test_real_dtos);
-    /*
-     -- useful for printing all system Dtos
-    var dtos = typeof(SystemState).Assembly.GetTypes()
-        .Concat(GetType().Assembly.GetTypes())
-        .Where(t => (t.FullName ?? String.Empty).EndsWith("+Dto"))
-        .ToList();
-     */
-    
-    // todo: standardise on pattern / remove explicit casting operator overrides
     
     // Centazio.Core.Ctl.Entities.ObjectState+Dto
     var oscet = new ObjectState(new(str), new(str), new CoreEntityType(str), true);
