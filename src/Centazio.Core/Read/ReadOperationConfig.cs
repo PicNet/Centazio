@@ -12,7 +12,7 @@ public record ReadOperationConfig(SystemEntityType SystemEntityType, ValidCron C
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   public SystemEntityType SystemEntityType { get; init; } = SystemEntityType;
   
-  public object LoggableValue => $"{SystemEntityType.Value}";
+  public string LoggableValue => $"{SystemEntityType.Value}";
 
 }
         

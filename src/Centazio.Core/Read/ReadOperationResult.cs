@@ -15,7 +15,7 @@ public abstract record ReadOperationResult(
     return new ListRecordsReadOperationResult(lst);
   }
 
-  public object LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
+  public string LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
 
 }
 

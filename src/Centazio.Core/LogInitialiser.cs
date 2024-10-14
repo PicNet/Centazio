@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Serilog;
 using Serilog.Core;
@@ -10,7 +11,7 @@ using Serilog.Parsing;
 namespace Centazio.Core;
 
 public interface ILoggable {
-  object LoggableValue { get; }
+  [JsonIgnore] string LoggableValue { get; }
 }
 
 public static class LogInitialiser {

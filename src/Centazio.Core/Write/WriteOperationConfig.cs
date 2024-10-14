@@ -9,7 +9,7 @@ public record WriteOperationConfig(
     ValidCron Cron,
     ITargetSystemWriter TargetSysWriter) : OperationConfig(CoreEntityType, Cron), ILoggable {
   
-  public object LoggableValue => $"{CoreEntityType.Value}";
+  public string LoggableValue => $"{CoreEntityType.Value}";
 }
 
 // SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time

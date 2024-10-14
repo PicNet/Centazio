@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Tests.Misc;
 
@@ -46,6 +47,16 @@ public class JsonSerialisationTests {
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
+  [Test] public void Test_dto_pattern() {
+    var bt = new BaseT { Status = ESystemStateStatus.Idle, Str1 = new(nameof(Test_dto_pattern)) };
+    var json = Json.Serialize(bt);
+    var bt2 = Json.Deserialize<BaseT.Dto>(json).ToBase();
+    
+    Assert.That(json, Is.EqualTo(@"{""Status"":""Idle"",""Str1"":""Test_dto_pattern""}"));
+    Assert.That(bt2, Is.EqualTo(bt));
+    
+  }
+  
   public record TestValidStrings {
     public ValidString Str1 { get; init; } = null!;
     public ValidString Str2 { get; init; } = null!;
@@ -74,6 +85,23 @@ public class JsonSerialisationTests {
         return new TestValidStringSubclasses { 
           CoreId = new(CoreId ?? throw new Exception()), 
           SystemId = new(SystemId ?? throw new Exception()) };
+      }
+    }
+  }
+  
+  public record BaseT {
+    public ESystemStateStatus Status { get; set; }
+    public ValidString Str1 { get; set; } = null!;
+    
+    public record Dto {
+      public string? Status { get; set; }
+      public string? Str1 { get; set; }
+      
+      public BaseT ToBase() {
+        return new BaseT { 
+          Status = Enum.Parse<ESystemStateStatus>(Status ?? throw new ArgumentNullException()), 
+          Str1 = new(Str1 ?? throw new ArgumentNullException()) 
+        };
       }
     }
   }

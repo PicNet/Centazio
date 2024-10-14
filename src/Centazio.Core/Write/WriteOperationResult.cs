@@ -14,7 +14,7 @@ public abstract record WriteOperationResult(
 
   public int TotalChanges => EntitiesCreated.Count + EntitiesUpdated.Count;
   
-  public object LoggableValue => $"EntitiesCreated[{EntitiesCreated.Count}] EntitiesUpdated[{EntitiesUpdated.Count}] Result[{Result}] Message[{Message}]";
+  public string LoggableValue => $"EntitiesCreated[{EntitiesCreated.Count}] EntitiesUpdated[{EntitiesUpdated.Count}] Result[{Result}] Message[{Message}]";
 }
 
 public record SuccessWriteOperationResult(

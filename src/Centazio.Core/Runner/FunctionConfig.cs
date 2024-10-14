@@ -54,5 +54,5 @@ public record FunctionConfig<C>(
 
   public List<C> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   
-  public object LoggableValue => $"{System}/{Stage} Operations[{Operations.Count}]";
+  public string LoggableValue => $"{System}/{Stage} Operations[{Operations.Count}]";
 }

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Checksum;
+﻿using System.Text.Json.Serialization;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Ctl.Entities;
@@ -29,7 +30,7 @@ public static class Map {
       SystemEntityChecksum = checksum; 
     }
     
-    public Key Key => new(CoreEntityType, CoreId, System, SystemId);
+    [JsonIgnore] public Key Key => new(CoreEntityType, CoreId, System, SystemId);
     
     public CoreEntityType CoreEntityType { get; } 
     public CoreEntityId CoreId { get; } 
@@ -47,7 +48,7 @@ public static class Map {
     public PendingUpdate Update() => new(this);
     
     public record Dto {
-      public string? CoreEntity { get; init; }
+      public string? CoreEntityType { get; init; }
       public string? CoreId { get; init; }
       public string? System { get; init; }
       public string? SystemId { get; init; }
@@ -59,19 +60,19 @@ public static class Map {
       public string? LastError { get; init; }
       public string? SystemEntityChecksum { get; init; }
       
-      public static explicit operator CoreToSystem(Dto dto) => new(
-          new CoreEntityType(dto.CoreEntity ?? throw new ArgumentNullException(nameof(CoreEntity))),
-          new(dto.CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-          dto.System ?? throw new ArgumentNullException(nameof(System)),
-          new (dto.SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
-          Enum.Parse<EEntityMappingStatus>(dto.Status ?? throw new ArgumentNullException(nameof(Status))),
-          new (dto.SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
+      public CoreToSystem ToCoreToSystem() => new(
+          new CoreEntityType(CoreEntityType ?? throw new ArgumentNullException(nameof(CoreEntityType))),
+          new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+          System ?? throw new ArgumentNullException(nameof(System)),
+          new (SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
+          Enum.Parse<EEntityMappingStatus>(Status ?? throw new ArgumentNullException(nameof(Status))),
+          new (SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
         
-        DateCreated = dto.DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-        DateUpdated = dto.DateUpdated,
-        DateLastSuccess = dto.DateLastSuccess,
-        DateLastError = dto.DateLastError,
-        LastError = dto.LastError
+        DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
+        DateUpdated = DateUpdated,
+        DateLastSuccess = DateLastSuccess,
+        DateLastError = DateLastError,
+        LastError = LastError
       };
     }
   }

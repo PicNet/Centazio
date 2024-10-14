@@ -74,7 +74,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     return cores;
 
     Task<ICoreEntity> ToCore(ISystemEntity e) {
-      var exid = ctx.entitymap.Db.SingleOrDefault(m => m.SystemId == e.SystemId)?.CoreId;
+      var exid = ctx.entitymap.Db.Keys.SingleOrDefault(m => m.SystemId == e.SystemId)?.CoreId;
       ICoreEntity result = e switch {
         CrmMembershipType type => ctx.CrmMembershipTypeToCoreMembershipType(type, ctx.core.GetMembershipType(exid)), 
         CrmCustomer customer => ctx.CrmCustomerToCoreCustomer(customer, ctx.core.GetCustomer(exid)), 
@@ -102,7 +102,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore {
-  public List<Map.CoreToSystem> Db => memdb.Values.ToList();
+  public Dictionary<Map.Key, string> Db => memdb;
 }
 
 public class SimulationCtx {
@@ -182,7 +182,7 @@ public class SimulationCtx {
           : existing with { Name = c.Name, MembershipCoreId = systocoreids[c.MembershipTypeSystemId] };
 
   public CoreInvoice CrmInvoiceToCoreInvoice(CrmInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
-    custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
+    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.CRM_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.CustomerSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.CRM_SYSTEM, i.SystemId), i.SystemId, custcoreid, i.AmountCents, i.DueDate, i.PaidDate)
@@ -195,7 +195,7 @@ public class SimulationCtx {
           : existing with { Name = a.Name };
 
   public CoreInvoice FinInvoiceToCoreInvoice(FinInvoice i, CoreInvoice? existing, CoreEntityId? custcoreid = null) {
-    custcoreid ??= entitymap.Db.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
+    custcoreid ??= entitymap.Db.Keys.Single(m => m.System == SimulationConstants.FIN_SYSTEM && m.CoreEntityType == CoreEntityType.From<CoreCustomer>() && m.SystemId == i.AccountSystemId).CoreId;
     if (existing is not null && existing.CustomerCoreId != custcoreid) { throw new Exception("trying to change customer on an invoice which is not allowed"); }
     return existing is null 
         ? new CoreInvoice(NewCoreEntityId<CoreInvoice>(SimulationConstants.FIN_SYSTEM, i.SystemId), i.SystemId, custcoreid, (int)(i.Amount * 100), DateOnly.FromDateTime(i.DueDate), i.PaidDate) 

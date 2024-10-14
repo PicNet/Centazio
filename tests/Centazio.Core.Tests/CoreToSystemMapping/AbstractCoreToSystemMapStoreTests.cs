@@ -34,9 +34,9 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     var updated = (await entitymap.Update(Constants.System1Name, Constants.CoreEntityName, [err])).Single();
     var list2 = await entitymap.GetAll();
     
-    Assert.That(list1, Is.EquivalentTo(new [] { created }));
+    Assert.That(Json.AreJsonEqual(list1.Single(), created));
     Assert.That(updated, Is.EqualTo(err));
-    Assert.That(list2, Is.EquivalentTo(new [] { err }));
+    Assert.That(Json.AreJsonEqual(list2.Single(), err));
   }
   
   [Test] public async Task Test_upsert_enum() {
@@ -51,9 +51,9 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     var list2 = await entitymap.GetAll();
     var exp = created.Select(e => e.Update().Error("Error")).ToList();
         
-    Assert.That(list1, Is.EquivalentTo(created));
+    Assert.That(Json.AreJsonEqual(list1, created));
     Assert.That(updated2, Is.EquivalentTo(exp));
-    Assert.That(list2, Is.EquivalentTo(exp));
+    Assert.That(Json.AreJsonEqual(list2, exp));
   }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {

@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Ctl.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Centazio.Core.Ctl.Entities;
 
 public record ObjectState : ILoggable {
   
@@ -133,6 +135,6 @@ public record ObjectState : ILoggable {
     }
   }
 
-  public object LoggableValue => $"{System}/{Stage}/{Object}";
+  [JsonIgnore] public string LoggableValue => $"{System}/{Stage}/{Object}";
 
 }

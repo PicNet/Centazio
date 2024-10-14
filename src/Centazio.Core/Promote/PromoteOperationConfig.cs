@@ -27,7 +27,7 @@ public record PromoteOperationConfig(
   /// </summary>
   public bool IsBidirectional { get; init; }
   
-  public object LoggableValue => $"{SystemEntityType.Value} -> {CoreEntityType.Value}";
+  public string LoggableValue => $"{SystemEntityType.Value} -> {CoreEntityType.Value}";
 
 }
 

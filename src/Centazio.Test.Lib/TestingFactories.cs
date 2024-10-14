@@ -46,5 +46,8 @@ public class TestingCtlRepository : InMemoryCtlRepository {
 public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystem>> GetAll(); }
 
 public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingInMemoryCoreToSystemMapStore {
-  public Task<List<Map.CoreToSystem>> GetAll() => Task.FromResult(memdb.Values.ToList()); 
+  public Task<List<Map.CoreToSystem>> GetAll() {
+    return Task.FromResult(memdb.Values.Select(Deserialize).Cast<Map.CoreToSystem>().ToList());
+  }
+
 }
