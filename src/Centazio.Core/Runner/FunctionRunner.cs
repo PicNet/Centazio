@@ -19,7 +19,7 @@ public class FunctionRunner<C, R>(
   public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;
     
-    Log.Information("function started {@System} {@Stage}", func.Config.System, func.Config.Stage);
+    Log.Information("function started [{@System}/{@Stage}] - {@Now}", func.Config.System, func.Config.Stage, UtcDate.UtcNow);
     
     var state = await ctl.GetOrCreateSystemState(func.Config.System, func.Config.Stage);
     if (!state.Active) {

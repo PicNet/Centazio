@@ -46,13 +46,12 @@ public abstract class AbstractFunction<C, R> : IDisposable
 
     async Task<R> RunAndSaveOp(OperationStateAndConfig<C> op) {
       var opstart = UtcDate.UtcNow;
-      var desc = new { op.State.System, op.State.Object, op.State.Stage };
-      Log.Information("operation starting [{@SysObjStage}] {@Start:o} {@Checkpoint:o}", desc, opstart, op.Checkpoint);
+      Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
       var result = await RunOp(op);
-      var saved = await SaveOp(op, opstart, result);
+      await SaveOp(op, opstart, result);
       
-      Log.Information("operation completed [{@SysObjStage}] {@Start:o} {@Operation} {@Results} {@UpdatedObjectState} {@Took:0}ms", desc, opstart, op, result, saved, (UtcDate.UtcNow - opstart).TotalMilliseconds);
+      Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result);
       
       return result;
     }
@@ -68,12 +67,12 @@ public abstract class AbstractFunction<C, R> : IDisposable
       }
     }
 
-    async Task<ObjectState> SaveOp(OperationStateAndConfig<C> op, DateTime start, R res) {
+    async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, R res) {
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
           op.State.Success(start, res.AbortVote, message) :
           op.State.Error(start, res.AbortVote, message, res.Exception?.ToString());
-      return await ctl.SaveObjectState(newstate);
+      await ctl.SaveObjectState(newstate);
     }
   }
 

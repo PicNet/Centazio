@@ -96,7 +96,7 @@ public class CrmSystem : ISimulationSystem {
       var toadd = Enumerable.Range(0, count)
           .Select(idx => new CrmCustomer(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(types).CrmTypeId, ctx.NewName(nameof(CrmCustomer), customers, idx)))
           .ToList();
-      ctx.Debug($"CrmSimulation - AddCustomers[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
+      ctx.Debug($"CrmSimulation - AddCustomers[{count}]:\n\t{String.Join("\n\t", toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
       customers.AddRange(toadd);
       return toadd;
     }
@@ -113,7 +113,7 @@ public class CrmSystem : ISimulationSystem {
         var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
         var oldcs = ctx.checksum.Checksum(cust);
         var newcs = ctx.checksum.Checksum(newcust);
-        log.Add($"[{newname}({cust.SystemId})] Orig Name[{name}] Membership[{oldmt}->{newmt}] Checksum[{oldcs}->{newcs}]");
+        log.Add($"{cust.SystemId}: Name[{name}->{newname}] Membership[{oldmt}->{newmt}] CS Changed[{oldcs != newcs}]");
         if (oldcs != newcs) customers[idx] = edited.AddAndReturn(newcust);
       });
       ctx.Debug($"CrmSimulation - EditCustomers[{edited.Count}]:\n\t{String.Join("\n\t", log)}");
@@ -130,7 +130,7 @@ public class CrmSystem : ISimulationSystem {
       Enumerable.Range(0, count).ForEach(_ => 
           toadd.Add(new CrmInvoice(ctx.Guid(), UtcDate.UtcNow, ctx.RandomItem(customers).CrmCustId, ctx.rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60))))));
       
-      ctx.Debug($"CrmSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => {
+      ctx.Debug($"CrmSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => {
         var cust = customers.Single(c => c.SystemId == i.CustomerSystemId);
         return $"Cust:{cust.DisplayName}({cust.SystemId})/Inv:{i.SystemId}:{i.AmountCents}c";
       }))}");
@@ -156,7 +156,7 @@ public class CrmSystem : ISimulationSystem {
         log.Add($"Cust:{inv.CustomerId}({inv.SystemId}) {inv.AmountCents}c -> {newamt}c)");
         invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(ctx.rng.Next(-5, 120)), AmountCents = newamt, Updated = UtcDate.UtcNow };
       });
-      ctx.Debug($"CrmSimulation - EditInvoices[{edited.Count}] - {String.Join(',', log)}");
+      ctx.Debug($"CrmSimulation - EditInvoices[{edited.Count}]:\n\t{String.Join("\n\t", log)}");
       return edited;
     }
 
@@ -171,7 +171,7 @@ public class CrmSystem : ISimulationSystem {
         log.Add($"{old}->{newnm}({types[idx].SystemId})");
         types[idx] = types[idx] with { Name = newnm, Updated = UtcDate.UtcNow };
       });
-      ctx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}] - {String.Join(',', log)}");
+      ctx.Debug($"CrmSimulation - EditMemberships[{idxs.Count}]:\n\t{String.Join("\n\t", log)}");
       return idxs.Select(idx => types[idx]).ToList();
     }
   }

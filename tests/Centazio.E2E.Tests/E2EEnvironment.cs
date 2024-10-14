@@ -89,14 +89,14 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 
   public void Add(ICoreEntity e) {
     if (!added.TryAdd((e.GetType(), e.CoreId), e)) throw new Exception($"entity appears to have already been added: {e}");
-    Log.Information($"Validation.Add[{e.DisplayName}({e.CoreId})]");
+    // Log.Information($"Validation.Add[{e.DisplayName}({e.CoreId})]");
   }
   
   public void Update(ICoreEntity e) {
     // ignore entities that have already been added in this epoch, they will be validated as part of the added validation
     if (added.ContainsKey((e.GetType(), e.CoreId))) return; 
     updated[(e.GetType(), e.CoreId)] = e;
-    Log.Information($"Update.Add[{e.DisplayName}({e.CoreId})]");
+    // Log.Information($"Update.Add[{e.DisplayName}({e.CoreId})]");
   }
 
 }
@@ -112,7 +112,8 @@ public class SimulationCtx {
   public readonly bool ALLOW_BIDIRECTIONAL = true;
   public List<string> LOGGING_FILTERS { get; } = [];
   
-  public readonly Random rng = new(1);
+  private static readonly int RANDOM_SEED = 999;
+  public readonly Random rng = new(RANDOM_SEED);
   
   public Guid Guid() { // random but seedable guid 
     var guid = new byte[16];
@@ -141,7 +142,7 @@ public class SimulationCtx {
     Epoch = new(0, this);
   }
 
-  public readonly int TOTAL_EPOCHS = 250;
+  public readonly int TOTAL_EPOCHS = 10;
   public readonly int CRM_MAX_EDIT_MEMBERSHIPS = 2;
   public readonly int CRM_MAX_NEW_CUSTOMERS = 4;
   public readonly int CRM_MAX_EDIT_CUSTOMERS = 4;
@@ -153,9 +154,9 @@ public class SimulationCtx {
   public readonly int FIN_MAX_NEW_INVOICES = 2;
   public readonly int FIN_MAX_EDIT_INVOICES = 2;
  
- public void Debug(string message) {
+ public void Debug(string message, params object[] args) {
    if (SILENCE_SIMULATION) return;
-   if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message);
+   if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message, args);
    else DevelDebug.WriteLine(message);
  }
  
@@ -290,29 +291,22 @@ public class E2EEnvironment : IAsyncDisposable {
   private async Task RunEpoch(int epoch) {
     ctx.Epoch = new(epoch, ctx);
     RandomTimeStep();
-    ctx.Debug($"Epoch[{epoch}] Starting {{{UtcDate.UtcNow:o}}}");
+    ctx.Debug($"epoch[{epoch}] starting - running simulation step [{{@Now}}]", UtcDate.UtcNow);
     
     crm.Simulation.Step();
     fin.Simulation.Step(); 
     
-    ctx.Debug($"Epoch[{epoch}] Simulation Step Completed - Running Functions");
+    ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-    await RunFunc(crm_read_runner);
-    await RunFunc(crm_promote_runner);
-    await RunFunc(fin_read_runner); 
-    await RunFunc(fin_promote_runner);
-    await RunFunc(crm_write_runner);
-    await RunFunc(fin_write_runner);
+    await crm_read_runner.RunFunction();
+    await crm_promote_runner.RunFunction();
+    await fin_read_runner.RunFunction(); 
+    await fin_promote_runner.RunFunction();
+    await crm_write_runner.RunFunction();
+    await fin_write_runner.RunFunction();
     
-    ctx.Debug($"Epoch[{epoch}] Functions Completed - Validating");
+    ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();
-  }
-  
-  private Task<FunctionRunResults<R>> RunFunc<C, R>(FunctionRunner<C, R> runner) 
-      where C : OperationConfig 
-      where R : OperationResult {
-    ctx.Debug($"Running[{runner.System}/{runner.Stage}] Now[{UtcDate.UtcNow:o}]");
-    return runner.RunFunction(); 
   }
 
   private void RandomTimeStep() {

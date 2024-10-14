@@ -143,9 +143,6 @@ public abstract record CoreEntityBase : ICoreEntity {
   }
 }
 
-// todo: we need a base class for core storage with Impl methods so a lot of the boilerplate can be handled
-// todo: things like setting the DateCreated / DateUpdated should not be left to the implementor
-// todo: we a proper AbstractCoreToSystemMapStore to also do validations
 public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   private readonly Dictionary<CoreEntityType, Dictionary<CoreEntityId, string>> db = new();

@@ -75,7 +75,7 @@ public class FinSystem : ISimulationSystem {
       if (!ctx.ALLOW_BIDIRECTIONAL || count == 0) return [];
       
       var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(ctx.rng.Next(Int32.MaxValue), ctx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
-      ctx.Debug($"FinSimulation - AddAccounts[{count}] - {String.Join(',', toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
+      ctx.Debug($"FinSimulation - AddAccounts[{count}]:\n\t{String.Join("\n\t", toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
       accounts.AddRange(toadd);
       return toadd.ToList();
     }
@@ -95,7 +95,7 @@ public class FinSystem : ISimulationSystem {
         log.Add($"Id[{acc.SystemId}] Name[{name}->{newname}] Checksum[{oldcs}->{newcs}]");
         if (oldcs != newcs) accounts[idx] = edited.AddAndReturn(newacc);
       });
-      ctx.Debug($"FinSimulation - EditAccounts[{edited.Count}] - {String.Join(',', log)}");
+      ctx.Debug($"FinSimulation - EditAccounts[{edited.Count}]:\n\t{String.Join("\n\t", log)}");
       return edited;
     }
 
@@ -105,7 +105,7 @@ public class FinSystem : ISimulationSystem {
       
       var toadd = new List<FinInvoice>();
       Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.rng.Next(Int32.MaxValue), ctx.RandomItem(accounts).FinAccId, ctx.rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(ctx.rng.Next(-10, 60)), null)));
-      ctx.Debug($"FinSimulation - AddInvoices[{count}] - {String.Join(',', toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"))}");
+      ctx.Debug($"FinSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"))}");
       invoices.AddRange(toadd);
       return toadd;
     }
@@ -125,7 +125,7 @@ public class FinSystem : ISimulationSystem {
         log.Add($"Acc:{inv.AccountId}({inv.SystemId}) ${inv.Amount:N2}->${newamt:N2}");
         invoices[idx] = inv with { PaidDate = UtcDate.UtcNow.AddDays(ctx.rng.Next(-5, 120)), Amount = newamt, Updated = UtcDate.UtcNow };
       });
-      ctx.Debug($"FinSimulation - EditInvoices[{edited.Count}] - {String.Join(',', log)}");
+      ctx.Debug($"FinSimulation - EditInvoices[{edited.Count}]:\n\t{String.Join("\n\t", log)}");
       return edited;
     }
   }

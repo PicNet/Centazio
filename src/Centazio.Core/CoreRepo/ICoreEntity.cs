@@ -3,7 +3,6 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
-// todo: should core entity even have System, LastUpdateSystem and SystemId.  This should be managed in Map table
 public interface ICoreEntity : IGetChecksumSubset {
   
   /// <summary>

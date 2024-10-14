@@ -34,7 +34,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
       nameof(CrmInvoice) => await crm.GetInvoices(config.Checkpoint), 
       _ => throw new NotSupportedException(config.State.Object) 
     };
-    if (updates.Any()) ctx.Debug($"CrmReadFunction[{config.State.Object.Value}] Updates[{updates.Count}]\n\t" + String.Join("\n\t", updates));
+    if (updates.Any()) ctx.Debug($"CrmReadFunction.GetUpdatesAfterCheckpoint[{config.State.Object.Value}] Updates[{updates.Count}]\n\t" + String.Join("\n\t", updates));
     return ReadOperationResult.Create(updates);
   }
 }
@@ -57,7 +57,6 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   }
   
   public List<Containers.StagedSys> DeserialiseStagedEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<StagedEntity> staged) {
-    ctx.Debug($"CrmPromoteFunction.DeserialiseStagedEntities[{config.State.Object.Value}] Staged[{staged.Count}]");
     return config.State.Object.Value switch { 
       nameof(CoreMembershipType) => staged.ToStagedSys<CrmMembershipType>(), 
       nameof(CoreCustomer) => staged.ToStagedSys<CrmCustomer>(), 
@@ -66,7 +65,6 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
   }
   
   public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
-    ctx.Debug($"CrmPromoteFunction.BuildCoreEntities[{config.State.Object.Value}] Staged[{staged.Count}]");
     var topromote = config.State.Object.Value switch { 
       nameof(CoreMembershipType) => BuildMembershipTypes(), 
       nameof(CoreCustomer) => BuildCustomers(), 
@@ -110,7 +108,6 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   }
 
   public async Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    ctx.Debug($"CrmWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] Create[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.CoreCustomerToCrmCustomer(Id(id), e));
     }

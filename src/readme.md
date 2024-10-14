@@ -1,6 +1,5 @@
 # Todo
 - check for all new logic added through the simulator and check that its adequately unit tested
-- use simulation to refine logging use Debug for all minor and info for critical tracing details (such as used with DevelDebug.WriteLine)
 - use simulation to optimise the developer experience, add lots of helpers to do common tasks
 - clean up simulation code
 - review all code comments
@@ -15,6 +14,14 @@
 
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
+
+## Low 
+- Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires
+  heavy refactoring.  The purpose of this is that clients should not be able to interact (or even set) the internal
+  meta-data properties.
+- While being dificult to have a abstract implementation of core storage, we should find a way of trying to
+  implement this, so that provider implementers do not have to implement these items
+
 
 
 # Developer Guidelines:
