@@ -1,7 +1,6 @@
 ﻿using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Serilog;
 
 namespace Centazio.Core.Promote;
@@ -9,8 +8,9 @@ namespace Centazio.Core.Promote;
 public class PromotionBag(StagedEntity staged) {
   public StagedEntity StagedEntity { get; init; } = staged;
   public ISystemEntity SystemEntity { get; set; } = null!;
-  public ICoreEntity? ExistingCoreEntity { get; set; }
-  [IgnoreNamingConventions] public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
+  public ICoreEntity? PreExistingCoreEntity { get; set; }
+  public CoreEntityChecksum? PreExistingCoreEntityChecksum { get; set; }
+  public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
   
   public ICoreEntity? UpdatedCoreEntity { get; internal set; }
   public ValidString? IgnoreReason { get; private set; }
@@ -26,7 +26,7 @@ public class PromotionBag(StagedEntity staged) {
     UpdatedCoreEntity = CheckAndSetInternalState();
     
     ICoreEntity CheckAndSetInternalState() {
-      if (ExistingCoreEntity is not null && ExistingCoreEntity.SystemId != coreent.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
+      if (PreExistingCoreEntity is not null && PreExistingCoreEntity.SystemId != coreent.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
       
       coreent.DateUpdated = UtcDate.UtcNow;
       coreent.LastUpdateSystem = system;
@@ -43,6 +43,7 @@ public class PromotionBag(StagedEntity staged) {
     UpdatedCoreEntity!.SystemId = coreent.SystemId;
   }
       
-  public bool IsCreating => ExistingCoreEntity is null;
+  public bool IsCreating => PreExistingCoreEntity is null;
   public bool IsIgnore => IgnoreReason is not null;
+
 }

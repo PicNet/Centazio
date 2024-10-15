@@ -22,7 +22,7 @@ public class PromoteOperationRunner(
     if (op.OpConfig.IsBidirectional) await steps.IdentifyBouncedBackAndSetCorrectId(); 
     else steps.IgnoreEntitiesBouncingBack();
     
-    await steps.IgnoreNonMeaninfulChanges();
+    steps.IgnoreNonMeaninfulChanges();
     await steps.WriteEntitiesToCoreStorageAndUpdateMaps();
     await steps.UpdateAllStagedEntitiesWithNewState(stagestore);
     steps.LogPromotionSteps();
