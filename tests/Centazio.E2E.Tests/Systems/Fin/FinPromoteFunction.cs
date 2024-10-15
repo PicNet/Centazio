@@ -27,13 +27,13 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       _ => throw new NotSupportedException(config.State.Object) };
 
     Task<List<EntityEvaluationResult>> EvaluateCustomers() => Task.FromResult(toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.FinAccountToCoreCustomer(eval.SysEnt.To<FinAccount>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList());
+        eval.MarkForPromotion(ctx.Converter.FinAccountToCoreCustomer(eval.SystemEntity.To<FinAccount>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList());
 
     async Task<List<EntityEvaluationResult>> EvaluateInvoices() {
-      var sysents = toeval.Select(eval => eval.SysEnt).ToList();
+      var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
       var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(FinInvoice.AccountId), true);
       return toeval.Select(eval => {
-        var fininv = eval.SysEnt.To<FinInvoice>();
+        var fininv = eval.SystemEntity.To<FinInvoice>();
         return eval.MarkForPromotion(ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));
       }).ToList();
     }

@@ -31,16 +31,16 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       _ => throw new NotSupportedException(config.State.Object) };
 
     List<EntityEvaluationResult> BuildMembershipTypes() => toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SysEnt.To<CrmMembershipType>(), eval.ExistingCoreEntity?.To<CoreMembershipType>()))).ToList();
+        eval.MarkForPromotion(ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SystemEntity.To<CrmMembershipType>(), eval.ExistingCoreEntity?.To<CoreMembershipType>()))).ToList();
 
     List<EntityEvaluationResult> BuildCustomers() => toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.CrmCustomerToCoreCustomer(eval.SysEnt.To<CrmCustomer>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList();
+        eval.MarkForPromotion(ctx.Converter.CrmCustomerToCoreCustomer(eval.SystemEntity.To<CrmCustomer>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList();
 
     async Task<List<EntityEvaluationResult>> BuildInvoices() {
-      var sysents = toeval.Select(eval => eval.SysEnt).ToList();
+      var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
       var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(CrmInvoice.CustomerId), true);
       return toeval.Select(eval => {
-        var crminv = eval.SysEnt.To<CrmInvoice>();
+        var crminv = eval.SystemEntity.To<CrmInvoice>();
         return eval.MarkForPromotion(ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
       }).ToList();
     }

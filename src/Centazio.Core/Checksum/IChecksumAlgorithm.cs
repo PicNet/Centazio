@@ -3,8 +3,8 @@ using Centazio.Core.CoreRepo;
 namespace Centazio.Core.Checksum;
 
 public interface IChecksumAlgorithm : IDisposable {
-  SystemEntityChecksum Checksum(ISystemEntity e);
-  CoreEntityChecksum Checksum(ICoreEntity e);
+  SystemEntityChecksum Checksum(ISystemEntity sysent);
+  CoreEntityChecksum Checksum(ICoreEntity coreent);
   StagedEntityChecksum Checksum(string str);
 }
 

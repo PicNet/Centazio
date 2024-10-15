@@ -158,7 +158,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results = toeval.Select(eval => IgnoreNext 
         ? eval.MarkForIgnore("ignore") 
-        : eval.MarkForPromotion(eval.SysEnt.To<System1Entity>().ToCoreEntity())).ToList();
+        : eval.MarkForPromotion(eval.SystemEntity.To<System1Entity>().ToCoreEntity())).ToList();
     return Task.FromResult(results); 
   }
   

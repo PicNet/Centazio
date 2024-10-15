@@ -15,8 +15,8 @@ public static class Helpers {
   
   public class ChecksumAlgo : IChecksumAlgorithm {
     
-    public SystemEntityChecksum Checksum(ISystemEntity e) => TestingSystemEntityChecksum(e);
-    public CoreEntityChecksum Checksum(ICoreEntity e) => TestingCoreEntityChecksum(e);
+    public SystemEntityChecksum Checksum(ISystemEntity sysent) => TestingSystemEntityChecksum(sysent);
+    public CoreEntityChecksum Checksum(ICoreEntity coreent) => TestingCoreEntityChecksum(coreent);
     public StagedEntityChecksum Checksum(string str) => TestingStagedEntityChecksum(str);
 
     public void Dispose() {}

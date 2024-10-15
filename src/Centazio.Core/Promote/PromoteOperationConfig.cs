@@ -3,14 +3,14 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
-public record EntityForPromotionEvaluation(ISystemEntity SysEnt, ICoreEntity? ExistingCoreEntity) {
-  public EntityEvaluationResult MarkForPromotion(ICoreEntity updated) => new EntityToPromote(SysEnt, updated);
-  public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SysEnt, reason);
+public record EntityForPromotionEvaluation(ISystemEntity SystemEntity, ICoreEntity? ExistingCoreEntity) {
+  public EntityEvaluationResult MarkForPromotion(ICoreEntity updated) => new EntityToPromote(SystemEntity, updated);
+  public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SystemEntity, reason);
 }
 
-public abstract record EntityEvaluationResult(ISystemEntity SysEnt);
-public sealed record EntityToPromote(ISystemEntity SysEnt, ICoreEntity UpdatedEntity) : EntityEvaluationResult(SysEnt);
-public sealed record EntityToIgnore(ISystemEntity SysEnt, ValidString IgnoreReason) : EntityEvaluationResult(SysEnt);
+public abstract record EntityEvaluationResult(ISystemEntity SystemEntity);
+public sealed record EntityToPromote(ISystemEntity SystemEntity, ICoreEntity UpdatedCoreEntity) : EntityEvaluationResult(SystemEntity);
+public sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
 
 
 public interface IEvaluateEntitiesToPromote {

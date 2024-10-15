@@ -18,11 +18,11 @@ public class FunctionHelpers(
       Func<string, E, ISystemEntity> FromCore) where E : ICoreEntity {
     return (
       tocreate.Select(m => {
-        var sysent = FromCore(String.Empty, m.Core.To<E>()); 
+        var sysent = FromCore(String.Empty, m.CoreEntity.To<E>()); 
         return m.AddSystemEntity(sysent);
       }).ToList(),
       toupdate.Select(m => {
-        var sysent = FromCore(m.Map.SystemId, m.Core.To<E>());
+        var sysent = FromCore(m.Map.SystemId, m.CoreEntity.To<E>());
         TestEntityHasChanges(sysent, m.Map.SystemEntityChecksum);
         return m.AddSystemEntity(sysent);
       }).ToList());
@@ -33,13 +33,13 @@ public class FunctionHelpers(
   /// We originally tried to compare the checksum with the state of the entity in the target system, however this is not
   /// valid as the same change can be made in both the source and target system causing this check to fail. 
   /// </summary>
-  private void TestEntityHasChanges(ISystemEntity updated, SystemEntityChecksum syschksm) {
-    if (syschksm != checksum.Checksum(updated)) return;
+  private void TestEntityHasChanges(ISystemEntity sysent, SystemEntityChecksum syschksm) {
+    if (syschksm != checksum.Checksum(sysent)) return;
     
-    throw new Exception($"TestEntityHasChanges[{system}/{updated.GetType().Name}] - No changes found:" +
+    throw new Exception($"TestEntityHasChanges[{system}/{sysent.GetType().Name}] - No changes found:" +
       $"\n\tExisting Checksum:[{syschksm}]" +
-      $"\n\tUpdated[{updated}]\n\tChecksum Subset[{updated.GetChecksumSubset()}]" +
-      $"\n\tChecksum[{checksum.Checksum(updated)}]");
+      $"\n\tUpdated[{sysent}]\n\tChecksum Subset[{sysent.GetChecksumSubset()}]" +
+      $"\n\tChecksum[{checksum.Checksum(sysent)}]");
   }
   
   public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName coretype, List<ICoreEntity> entities, string foreignkey) {

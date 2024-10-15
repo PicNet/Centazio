@@ -67,19 +67,19 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
     Assert.That(all, Is.EquivalentTo(even.Concat(odd)));
   }
   
-  private Task DoUpsert(ICoreEntity entity) => DoUpsert([entity]);
-  private Task DoUpsert(List<ICoreEntity> entities) {
-    entities.ForEach(ValidateEntityPreUpsert);
-    return repo.Upsert(Constants.CoreEntityName, entities.Select(e => (e, Helpers.TestingCoreEntityChecksum(e))).ToList());
+  private Task DoUpsert(ICoreEntity coreent) => DoUpsert([coreent]);
+  private Task DoUpsert(List<ICoreEntity> coreents) {
+    coreents.ForEach(ValidateEntityPreUpsert);
+    return repo.Upsert(Constants.CoreEntityName, coreents.Select(e => (e, Helpers.TestingCoreEntityChecksum(e))).ToList());
   }
 
-  private void ValidateEntityPreUpsert(ICoreEntity e) {
-    ArgumentNullException.ThrowIfNull(e.CoreId);
-    ArgumentNullException.ThrowIfNull(e.System);
-    ArgumentNullException.ThrowIfNull(e.SystemId);
-    ArgumentNullException.ThrowIfNull(e.LastUpdateSystem);
-    ArgumentOutOfRangeException.ThrowIfEqual(e.DateCreated, DateTime.MinValue);
-    ArgumentOutOfRangeException.ThrowIfEqual(e.DateUpdated, DateTime.MinValue);
+  private void ValidateEntityPreUpsert(ICoreEntity coreent) {
+    ArgumentNullException.ThrowIfNull(coreent.CoreId);
+    ArgumentNullException.ThrowIfNull(coreent.System);
+    ArgumentNullException.ThrowIfNull(coreent.SystemId);
+    ArgumentNullException.ThrowIfNull(coreent.LastUpdateSystem);
+    ArgumentOutOfRangeException.ThrowIfEqual(coreent.DateCreated, DateTime.MinValue);
+    ArgumentOutOfRangeException.ThrowIfEqual(coreent.DateUpdated, DateTime.MinValue);
   }
 
   private async Task<List<CoreEntity>> QueryAll() {

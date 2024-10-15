@@ -8,7 +8,7 @@ namespace Centazio.Core.Promote;
 
 public class PromotionBag(StagedEntity staged) {
   public StagedEntity StagedEntity { get; init; } = staged;
-  public ISystemEntity Sys { get; set; } = null!;
+  public ISystemEntity SystemEntity { get; set; } = null!;
   public ICoreEntity? ExistingCoreEntity { get; set; }
   [IgnoreNamingConventions] public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
   
@@ -23,24 +23,24 @@ public class PromotionBag(StagedEntity staged) {
   } 
   
   public void MarkPromote(SystemName system, ICoreEntity coreent) {
-    UpdatedCoreEntity = CheckAndSetInternalState(coreent);
+    UpdatedCoreEntity = CheckAndSetInternalState();
     
-    ICoreEntity CheckAndSetInternalState(ICoreEntity e) {
-      if (ExistingCoreEntity is not null && ExistingCoreEntity.SystemId != e.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
+    ICoreEntity CheckAndSetInternalState() {
+      if (ExistingCoreEntity is not null && ExistingCoreEntity.SystemId != coreent.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
       
-      e.DateUpdated = UtcDate.UtcNow;
-      e.LastUpdateSystem = system;
-      if (!IsCreating) return e;
+      coreent.DateUpdated = UtcDate.UtcNow;
+      coreent.LastUpdateSystem = system;
+      if (!IsCreating) return coreent;
 
-      e.DateCreated = UtcDate.UtcNow;
-      e.System = system;
-      return e;
+      coreent.DateCreated = UtcDate.UtcNow;
+      coreent.System = system;
+      return coreent;
     }
   }
   
-  public void CorrectBounceBackIds(ICoreEntity orig) {
-    UpdatedCoreEntity!.CoreId = orig.CoreId;
-    UpdatedCoreEntity!.SystemId = orig.SystemId;
+  public void CorrectBounceBackIds(ICoreEntity coreent) {
+    UpdatedCoreEntity!.CoreId = coreent.CoreId;
+    UpdatedCoreEntity!.SystemId = coreent.SystemId;
   }
       
   public bool IsCreating => ExistingCoreEntity is null;

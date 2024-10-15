@@ -8,8 +8,8 @@ public class Sha256ChecksumAlgorithm : IChecksumAlgorithm {
 
   private readonly SHA256 sha = SHA256.Create();
   
-  public SystemEntityChecksum Checksum(ISystemEntity e) => new(Impl(Json.Serialize(e.GetChecksumSubset())));
-  public CoreEntityChecksum Checksum(ICoreEntity e) => new(Impl(Json.Serialize(e.GetChecksumSubset())));
+  public SystemEntityChecksum Checksum(ISystemEntity sysent) => new(Impl(Json.Serialize(sysent.GetChecksumSubset())));
+  public CoreEntityChecksum Checksum(ICoreEntity coreent) => new(Impl(Json.Serialize(coreent.GetChecksumSubset())));
   public StagedEntityChecksum Checksum(string str) => new(Impl(str));
 
   private string Impl(string str) {

@@ -22,17 +22,17 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   
   public void DeserialisePendingStagedEntities() {
     if (IsEmpty()) return;
-    bags.ForEach(bag => bag.Sys = (ISystemEntity) Json.Deserialize(bag.StagedEntity.Data, op.OpConfig.SystemEntityType));
+    bags.ForEach(bag => bag.SystemEntity = (ISystemEntity) Json.Deserialize(bag.StagedEntity.Data, op.OpConfig.SystemEntityType));
   }
   
   public async Task LoadExistingCoreEntities() {
     if (IsEmpty()) return;
-    var sysids = bags.Select(bag => bag.Sys.SystemId).ToList();
+    var sysids = bags.Select(bag => bag.SystemEntity.SystemId).ToList();
     var maps = await entitymap.GetExistingMappingsFromSystemIds(op.State.System, op.OpConfig.CoreEntityTypeName, sysids);
     var coreids = maps.Select(m => m.CoreId).ToList();
     var coreents = await core.Get(op.OpConfig.CoreEntityTypeName, coreids);
     bags.ForEach(bag => {
-      var coreid = maps.SingleOrDefault(m => m.SystemId == bag.Sys.SystemId)?.CoreId;
+      var coreid = maps.SingleOrDefault(m => m.SystemId == bag.SystemEntity.SystemId)?.CoreId;
       bag.ExistingCoreEntity = coreid is null ? null : coreents.Single(e => e.CoreId == coreid);
     });
   }
@@ -41,15 +41,15 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     if (IsEmpty()) return;
     var list = await CallEvaluator();
     list.ForEach(result => {
-      var bag = bags.Single(b => b.Sys.SystemId == result.SysEnt.SystemId);
-      if (result is EntityToPromote topromote) bag.MarkPromote(op.State.System, topromote.UpdatedEntity); 
+      var bag = bags.Single(b => b.SystemEntity.SystemId == result.SystemEntity.SystemId);
+      if (result is EntityToPromote topromote) bag.MarkPromote(op.State.System, topromote.UpdatedCoreEntity); 
       else if (result is EntityToIgnore toignore) bag.MarkIgnore(toignore.IgnoreReason);
       else throw new NotSupportedException(result.GetType().Name);
     });
 
     async Task<List<EntityEvaluationResult>> CallEvaluator() {
       try {
-        return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.Sys, bag.ExistingCoreEntity)).ToList());
+        return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.SystemEntity, bag.ExistingCoreEntity)).ToList());
       }
       catch (Exception e) {
         if (op.FuncConfig.ThrowExceptions) throw;
@@ -62,10 +62,10 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   public void IgnoreUpdatesToSameEntityInBatch() {
     if (IsEmpty()) return;
     var added = new Dictionary<SystemEntityId, bool>();
-    bags = bags.OrderByDescending(bag => bag.Sys.LastUpdatedDate).ToList(); 
+    bags = bags.OrderByDescending(bag => bag.SystemEntity.LastUpdatedDate).ToList(); 
     bags.ForEach(bag => {
       if (bag.IsIgnore) return;
-      if (!added.TryAdd(bag.Sys.SystemId, true)) bag.MarkIgnore("already added in batch, taking most recently updated");
+      if (!added.TryAdd(bag.SystemEntity.SystemId, true)) bag.MarkIgnore("already added in batch, taking most recently updated");
     });
   }
     
@@ -76,7 +76,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     if (!bounces.Any()) return;
     
     var toupdate = bounces.Select(bounce => {
-      var idx = topromote.FindIndex(bag => bag.Sys.SystemId == bounce.SystemId);
+      var idx = topromote.FindIndex(bag => bag.SystemEntity.SystemId == bounce.SystemId);
       var original = bounce.OriginalCoreEntity;
       return (
           bounce.SystemId, 
@@ -155,10 +155,10 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     await core.Upsert(op.State.Object.ToCoreEntityTypeName, topromote.Select(bag => (bag.UpdatedCoreEntity!, bag.UpdatedCoreEntityChecksum!)).ToList());
     
     var existing = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, topromote.Select(bag => bag.UpdatedCoreEntity!).ToList());
-    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, existing.Created.Select(e => e.Map.SuccessCreate(e.Core.SystemId, SysChecksum(e.Core))).ToList());
-    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.Core))).ToList());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, existing.Created.Select(e => e.Map.SuccessCreate(e.CoreEntity.SystemId, SysChecksum(e.CoreEntity))).ToList());
+    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksum(e.CoreEntity))).ToList());
     
-    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(topromote.Single(c => c.UpdatedCoreEntity!.CoreId == e.CoreId).Sys);
+    SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(topromote.Single(c => c.UpdatedCoreEntity!.CoreId == e.CoreId).SystemEntity);
   }
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityStore stagestore) {
@@ -174,7 +174,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   public PromoteOperationResult GetResults() {
     if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
     
-    var topromote = ToPromote().Select(bag => (bag.StagedEntity, bag.Sys, bag.UpdatedCoreEntity!)).ToList();
+    var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, bag.UpdatedCoreEntity!)).ToList();
     var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason!)).ToList();
     return new SuccessPromoteOperationResult(topromote, toignore);
   }

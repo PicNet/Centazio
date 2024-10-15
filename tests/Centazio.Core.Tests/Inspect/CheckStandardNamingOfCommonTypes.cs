@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Centazio.Core.Checksum;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 
@@ -7,17 +8,18 @@ namespace Centazio.Core.Tests.Inspect;
 
 public class CheckStandardNamingOfCommonTypes {
   
-  private readonly Dictionary<Type, (string Uppercase, string Lowercase, bool EndsWith)> EXPECTED = new() {
-    { typeof(CoreEntityTypeName), (nameof(CoreEntityTypeName), "coretype", false) },
-    { typeof(SystemEntityTypeName), (nameof(SystemEntityTypeName), "systype", false) },
-    { typeof(ObjectName), (nameof(ObjectState.Object), "obj", false) },
-    { typeof(SystemName), (nameof(ObjectState.System), "system", false) },
-    { typeof(LifecycleStage), (nameof(SystemState.Stage), "stage", false) },
-    { typeof(CoreEntityChecksum), (nameof(CoreEntityChecksum), "corchksm", false) },
-    { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm", false) },
-    { typeof(CoreEntityId), (nameof(Map.CoreToSystem.CoreId), "coreid", true) },
-    { typeof(SystemEntityId), (nameof(Map.CoreToSystem.SystemId), "systemid", true) },
-    // todo: add ISystemEntity and ICoreEntity
+  private readonly Dictionary<Type, (string UpperCase, string LowerCase, bool EndsWith)> EXPECTED = new() {
+    { typeof(CoreEntityTypeName), ("CoreEntityTypeName", "coretype", false) },
+    { typeof(SystemEntityTypeName), ("SystemEntityTypeName", "systype", false) },
+    { typeof(ObjectName), ("Object", "obj", false) },
+    { typeof(SystemName), ("System", "system", false) },
+    { typeof(LifecycleStage), ("Stage", "stage", false) },
+    { typeof(CoreEntityChecksum), ("CoreEntityChecksum", "corchksm", false) },
+    { typeof(SystemEntityChecksum), ("SystemEntityChecksum", "syschksm", false) },
+    { typeof(CoreEntityId), ("CoreId", "coreid", true) },
+    { typeof(SystemEntityId), ("SystemId", "systemid", true) },
+    { typeof(ISystemEntity), ("SystemEntity", "sysent", true) },
+    { typeof(ICoreEntity), ("CoreEntity", "coreent", true) },
   };
   
   private readonly List<Type> EXP_ORDER = [
@@ -95,11 +97,11 @@ public class CheckStandardNamingOfCommonTypes {
 
         void ValidateImpl(string prefix, Type type, bool upper, string name) {
           EXPECTED.TryGetValue(type, out var check);
-          if (check.Uppercase is not null) Check(type);
+          if (check.UpperCase is not null) Check(type);
           
           void Check(Type exp) {
             if (objtype == exp) return; // do not check naming conventions if the object is the same type we are testing
-            var expected = upper ? check.Uppercase : check.Lowercase;
+            var expected = upper ? check.UpperCase : check.LowerCase;
             if (check.EndsWith ? name.EndsWith(expected) : name == expected) return; // name is correct
             AddErr(prefix, type, $"Name[{name}] Expected[{expected}]");
           }

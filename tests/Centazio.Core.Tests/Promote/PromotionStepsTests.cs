@@ -12,10 +12,10 @@ public class PromotionStepsTests {
     var steps = GetSteps(Constants.System1Name);
     var id = Guid.NewGuid();
     steps.bags = [
-      new(null!) { Sys = new System1Entity(id, "N1", "N1", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(null!) { Sys = new System1Entity(id, "N2", "N2", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(null!) { Sys = new System1Entity(id, "N3", "N3", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(null!) { Sys = new System1Entity(Guid.NewGuid(), "N4", "N4", DateOnly.MinValue, TestingUtcDate.DoTick()) }
+      new(null!) { SystemEntity = new System1Entity(id, "N1", "N1", DateOnly.MinValue, TestingUtcDate.DoTick()) },
+      new(null!) { SystemEntity = new System1Entity(id, "N2", "N2", DateOnly.MinValue, TestingUtcDate.DoTick()) },
+      new(null!) { SystemEntity = new System1Entity(id, "N3", "N3", DateOnly.MinValue, TestingUtcDate.DoTick()) },
+      new(null!) { SystemEntity = new System1Entity(Guid.NewGuid(), "N4", "N4", DateOnly.MinValue, TestingUtcDate.DoTick()) }
     ];
     
     steps.IgnoreUpdatesToSameEntityInBatch();

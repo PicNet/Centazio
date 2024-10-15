@@ -98,18 +98,18 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   
   public Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => {
-      var core = e.Core.To<CoreEntity>();
+      var core = e.CoreEntity.To<CoreEntity>();
       var sysent =  WftHelpers.ToSe(core);
       return new CoreSystemAndPendingCreateMap(core, sysent, e.Map);
     }).ToList();
-    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.Core.To<CoreEntity>()))).ToList();
+    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity.To<CoreEntity>()))).ToList();
     return Task.FromResult((ccreate, cupdate));
   }
 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = tocreate.Select(m => m.SuccessCreate(m.Core.SystemId, Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
-    var updates = toupdate.Select(m => m.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SysEnt))).ToList();
+    var news = tocreate.Select(m => m.SuccessCreate(m.CoreEntity.SystemId, Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
+    var updates = toupdate.Select(m => m.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));

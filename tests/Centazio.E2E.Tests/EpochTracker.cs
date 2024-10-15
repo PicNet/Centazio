@@ -66,14 +66,14 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     }
   }
 
-  public void Add(ICoreEntity e) {
-    if (!added.TryAdd((e.GetType(), e.CoreId), e)) throw new Exception($"entity appears to have already been added: {e}");
+  public void Add(ICoreEntity coreent) {
+    if (!added.TryAdd((coreent.GetType(), coreent.CoreId), coreent)) throw new Exception($"entity appears to have already been added: {coreent}");
   }
   
-  public void Update(ICoreEntity e) {
+  public void Update(ICoreEntity coreent) {
     // ignore entities that have already been added in this epoch, they will be validated as part of the added validation
-    if (added.ContainsKey((e.GetType(), e.CoreId))) return; 
-    updated[(e.GetType(), e.CoreId)] = e;
+    if (added.ContainsKey((coreent.GetType(), coreent.CoreId))) return; 
+    updated[(coreent.GetType(), coreent.CoreId)] = coreent;
   }
 
 }

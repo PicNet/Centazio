@@ -73,7 +73,7 @@ public class PromoteOperationRunnerTests {
   private class SuccessPromoteEvaluator : IEvaluateEntitiesToPromote {
     
     public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
-      var results = toeval.Select((eval, idx) => idx % 2 == 1 ? eval.MarkForIgnore($"Ignore: {idx}") : eval.MarkForPromotion(eval.SysEnt.To<System1Entity>().ToCoreEntity())).ToList();
+      var results = toeval.Select((eval, idx) => idx % 2 == 1 ? eval.MarkForIgnore($"Ignore: {idx}") : eval.MarkForPromotion(eval.SystemEntity.To<System1Entity>().ToCoreEntity())).ToList();
       return Task.FromResult(results);
     }
   }
