@@ -38,8 +38,5 @@ public record CentazioSecrets {
       String.IsNullOrWhiteSpace(AZ_CLIENT_ID) ? throw new ArgumentNullException(nameof(AZ_CLIENT_ID)) : AZ_CLIENT_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : AZ_SECRET_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim());
-
-    public object ToBaseAsObj() => ToBase();
-
   }
 }

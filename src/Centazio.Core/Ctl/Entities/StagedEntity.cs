@@ -74,6 +74,5 @@ public sealed record StagedEntity {
       IgnoreReason = String.IsNullOrWhiteSpace(IgnoreReason) ? null : IgnoreReason.Trim(),
       DatePromoted = DatePromoted
     };
-    public object ToBaseAsObj() => ToBase();
   }
 }

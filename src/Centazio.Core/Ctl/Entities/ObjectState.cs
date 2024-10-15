@@ -99,7 +99,6 @@ public record ObjectState : ILoggable {
       LastRunMessage = LastRunMessage,
       LastRunException = LastRunException
     };
-    public object ToBaseAsObj() => ToBase();
     
     private ObjectName SafeObjectName() {
       if (String.IsNullOrWhiteSpace(Object)) throw new ArgumentNullException(nameof(Object));

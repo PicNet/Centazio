@@ -16,8 +16,6 @@ public record AzureFunctionSettings {
     public AzureFunctionSettings ToBase() => new (
         String.IsNullOrWhiteSpace(FunctionAppId) ? throw new ArgumentNullException(nameof(FunctionAppId)) : FunctionAppId.Trim(),
         String.IsNullOrWhiteSpace(FunctionClassName) ? throw new ArgumentNullException(nameof(FunctionClassName)) : FunctionClassName.Trim());
-    
-    public object ToBaseAsObj() => ToBase();
   }
 }
 
@@ -50,8 +48,6 @@ public record AzureSettings {
         String.IsNullOrWhiteSpace(FunctionStorageAccId) ? throw new ArgumentNullException(nameof(FunctionStorageAccId)) : FunctionStorageAccId.Trim(),
         String.IsNullOrWhiteSpace(AppServicePlanId) ? throw new ArgumentNullException(nameof(AppServicePlanId)) : AppServicePlanId.Trim(),
         Functions is null || !Functions.Any() ? throw new ArgumentNullException(nameof(Functions)) : Functions.Select(f => f.ToBase()).ToList());
-    
-    public object ToBaseAsObj() => ToBase();
   }
 }
 
@@ -66,8 +62,6 @@ public record AwsSettings {
     
     public AwsSettings ToBase() => new (
         String.IsNullOrEmpty(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim());
-    
-    public object ToBaseAsObj() => ToBase();
   }
 }
 
@@ -91,7 +85,5 @@ public record CentazioSettings {
         String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase());
-    
-    public object ToBaseAsObj() => ToBase();
   }
 }

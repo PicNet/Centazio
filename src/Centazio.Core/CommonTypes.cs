@@ -2,9 +2,7 @@
 
 namespace Centazio.Core;
 
-// todo: this ToBase / ToBaseAsObj is horrible
-public interface IDto { object ToBaseAsObj(); }
-public interface IDto<out T> : IDto { T ToBase(); }
+public interface IDto<out T> { T ToBase(); }
 
 /// <summary>
 /// A checksum used to check for unnecessary writes to core storage or the target system.

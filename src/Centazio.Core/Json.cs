@@ -11,20 +11,36 @@ public static class Json {
   public static object Deserialize(string json, Type type) {
     var dtot = GetDtoTypeFromTypeHierarchy(type);
     if (dtot is null) return JsonSerializer.Deserialize(json, type) ?? throw new Exception();
+    
     var dtoobj = JsonSerializer.Deserialize(json, dtot);
-    if (dtoobj is IDto idto) return idto.ToBaseAsObj();
-    
-    var obj = Activator.CreateInstance(type) ?? throw new Exception();
-    var pairs = GetPropPairs(type, dtot);
-    pairs.ForEach(p => p.BasePi.SetValue(obj, GetObjVal(p.BasePi, p.DtoPi)));
-    return obj;
-    
-    object? GetObjVal(PropertyInfo origpi, PropertyInfo dtopi) {
-      var dtoval = dtopi.GetValue(dtoobj);
-      if (dtoval is null) return null;
-      if (origpi.PropertyType.IsEnum) return Enum.Parse(origpi.PropertyType, (string) dtoval);
-      if (origpi.PropertyType.IsAssignableTo(typeof(ValidString))) return Activator.CreateInstance(origpi.PropertyType, dtoval);
-      return Convert.ChangeType(dtoval, origpi.PropertyType) ?? throw new Exception();
+    return TryCallIDtoGetBaseObj(out var baseobj) 
+        ? baseobj 
+        : SetAllBaseObjProps();
+
+    bool TryCallIDtoGetBaseObj(out object result) {
+      result = new object();
+      var iface = dtot.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDto<>));
+      if (iface is null) return false; 
+      var method = iface.GetMethod(nameof(IDto<object>.ToBase));
+      if (method is null) return false;
+      
+      result = method.Invoke(dtoobj, []) ?? throw new Exception();
+      return true;
+    }
+
+    object SetAllBaseObjProps() {
+      var obj = Activator.CreateInstance(type) ?? throw new Exception();
+      var pairs = GetPropPairs(type, dtot);
+      pairs.ForEach(p => p.BasePi.SetValue(obj, GetObjVal(p.BasePi, p.DtoPi)));
+      return obj;
+      
+      object? GetObjVal(PropertyInfo origpi, PropertyInfo dtopi) {
+        var dtoval = dtopi.GetValue(dtoobj);
+        if (dtoval is null) return null;
+        if (origpi.PropertyType.IsEnum) return Enum.Parse(origpi.PropertyType, (string) dtoval);
+        if (origpi.PropertyType.IsAssignableTo(typeof(ValidString))) return Activator.CreateInstance(origpi.PropertyType, dtoval);
+        return Convert.ChangeType(dtoval, origpi.PropertyType) ?? throw new Exception();
+      }
     }
   }
 

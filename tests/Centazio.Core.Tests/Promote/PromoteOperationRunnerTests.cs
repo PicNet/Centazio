@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
