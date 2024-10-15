@@ -4,6 +4,7 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Misc;
+using Centazio.Core.Write;
 
 namespace Centazio.E2E.Tests.Systems;
 
@@ -62,5 +63,12 @@ public class FunctionHelpers(
     if (missing.Any()) throw new Exception($"FunctionHelpers.GetRelatedEntityCoreIdsFromSystemIds[{system}] - Could not find {coretype} with SystemIds [{String.Join(",", missing)}]");
     return dict;
   } 
+  
+  public SuccessWriteOperationResult GetSuccessWriteOperationResult(List<CoreSystemAndPendingCreateMap> tocreate, IEnumerable<ISystemEntity> createdsysents, List<CoreSystemAndPendingUpdateMap> toupdate, IEnumerable<ISystemEntity> updatedsysents) {
+    // todo: this is a bit dodgy, its expecting the created/updated entities to come back in the same order as pre change entities
+    return new SuccessWriteOperationResult(
+          createdsysents.Select((sysent, idx) => tocreate[idx].Map.SuccessCreate(sysent.SystemId, checksum.Checksum(sysent))).ToList(), 
+          updatedsysents.Select((sysent, idx) => toupdate[idx].Map.SuccessUpdate(checksum.Checksum(sysent))).ToList());
+  }
   
 }

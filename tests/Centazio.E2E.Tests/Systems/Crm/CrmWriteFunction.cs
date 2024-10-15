@@ -30,7 +30,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
       return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var cores = tocreate.ToCore().Concat(toupdate.ToCore()).ToList();
+      var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
       var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
       return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToCrmInvoice(Id(id), e, maps));
     }
@@ -42,13 +42,17 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     ctx.Debug($"CrmWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      var (created, updated) = (await api.CreateCustomers(tocreate.ToSysEnt<CrmCustomer>()), await api.UpdateCustomers(toupdate.ToSysEnt<CrmCustomer>()));
-      return new SuccessWriteOperationResult(tocreate.SuccessCreate(created, ctx.ChecksumAlg), toupdate.SuccessUpdate(updated, ctx.ChecksumAlg));
+      var created = await api.CreateCustomers(tocreate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
+      var updated = await api.UpdateCustomers(toupdate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
+      return help.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated);
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
-      var (created, updated) = (await api.CreateInvoices(tocreate.ToSysEnt<CrmInvoice>()), await api.UpdateInvoices(toupdate.ToSysEnt<CrmInvoice>()));
-      return new SuccessWriteOperationResult(tocreate.SuccessCreate(created, ctx.ChecksumAlg), toupdate.SuccessUpdate(updated, ctx.ChecksumAlg));
+      var created = await api.CreateInvoices(tocreate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
+      var updated = await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
+      return help.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated);
     }
     throw new NotSupportedException(config.Object);
+    
+    
   }
 }
