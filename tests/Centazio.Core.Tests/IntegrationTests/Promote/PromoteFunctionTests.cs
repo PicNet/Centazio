@@ -155,10 +155,12 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
 
-  public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
-    var cores = staged.Select(e => e.SetCore(e.Sys.To<System1Entity>().ToCoreEntity())).ToList();
-    return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-        IgnoreNext ? [] : cores, 
-        IgnoreNext ? staged.Select(e => new Containers.StagedIgnore(e.Staged, Ignore: "ignore")).ToList() : [])); 
+  public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+    var results = toeval.Select(eval => IgnoreNext 
+        ? eval.MarkForIgnore("ignore") 
+        : eval.MarkForPromotion(eval.SysEnt.To<System1Entity>().ToCoreEntity())).ToList();
+    return Task.FromResult(results); 
   }
+  
+
 }

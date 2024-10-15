@@ -4,6 +4,7 @@ namespace Centazio.Core.CoreRepo;
 
 public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
 
+  // todo: remove this container, tuple works just as good
   protected readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, Containers.CoreChecksum>> db = new();
 
   public Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
@@ -17,11 +18,11 @@ public class InMemoryCoreStorageUpserter : ICoreStorageUpserter {
     return Task.FromResult(result);
   }
 
-  public Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<Containers.CoreChecksum> entities) {
+  public Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
     if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, Containers.CoreChecksum>();
     var upserted = entities.Select(e => {
-      db[coretype][e.Core.CoreId] = e;
-      return e.Core;
+      db[coretype][e.UpdatedCoreEntity.CoreId] = new Containers.CoreChecksum(e.UpdatedCoreEntity, e.UpdatedCoreEntityChecksum);
+      return e.UpdatedCoreEntity;
     }).ToList();
     return Task.FromResult(upserted);
   }

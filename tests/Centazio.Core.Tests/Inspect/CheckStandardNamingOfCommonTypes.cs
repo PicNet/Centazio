@@ -17,6 +17,7 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(SystemEntityChecksum), (nameof(SystemEntityChecksum), "syschksm", false) },
     { typeof(CoreEntityId), (nameof(Map.CoreToSystem.CoreId), "coreid", true) },
     { typeof(SystemEntityId), (nameof(Map.CoreToSystem.SystemId), "systemid", true) },
+    // todo: add ISystemEntity and ICoreEntity
   };
   
   private readonly List<Type> EXP_ORDER = [

@@ -50,7 +50,7 @@ END
     return mapping.ToDictionary(t => new CoreEntityId(t.CoreId), t => new CoreEntityChecksum(t.CoreEntityChecksum));
   }
 
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<Containers.CoreChecksum> entities) {
+  public async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
     var sql = $@"MERGE INTO {coretype} T
 USING (VALUES (@CoreId, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated))
 AS c (CoreId, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated)
@@ -63,10 +63,10 @@ UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastN
     
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
-      var c = cs.Core.To<CoreEntity>();
-      return new { c.CoreId, cs.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
+      var c = cs.UpdatedCoreEntity.To<CoreEntity>();
+      return new { c.CoreId, cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
     }));
-    return entities.Select(c => c.Core).ToList();
+    return entities.Select(c => c.UpdatedCoreEntity).ToList();
   }
 
   public async ValueTask DisposeAsync() {

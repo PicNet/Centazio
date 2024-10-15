@@ -20,26 +20,22 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     ]);
   }
   
-  public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
-    ctx.Debug($"FinPromoteFunction[{config.OpConfig.Object.Value}] Staged[{staged.Count}]");
-    var topromote = config.State.Object.Value switch { 
+  public async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+    return config.State.Object.Value switch { 
       nameof(CoreCustomer) => await EvaluateCustomers(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
-    return new SuccessPromoteOperationResult(topromote, []);
 
-    Task<List<Containers.StagedSysCore>> EvaluateCustomers() {
-      return Task.FromResult(staged.Select(t => 
-          t.SetCore(ctx.Converter.FinAccountToCoreCustomer(t.Sys.To<FinAccount>(), t.OptCore?.To<CoreCustomer>()))).ToList());
-    }
+    Task<List<EntityEvaluationResult>> EvaluateCustomers() => Task.FromResult(toeval.Select(eval => 
+        eval.MarkForPromotion(ctx.Converter.FinAccountToCoreCustomer(eval.SysEnt.To<FinAccount>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList());
 
-    async Task<List<Containers.StagedSysCore>> EvaluateInvoices() {
-      var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), staged, nameof(FinInvoice.AccountId), true);
-      return staged.Select(t => {
-        var fininv = t.Sys.To<FinInvoice>();
-        return t.SetCore(ctx.Converter.FinInvoiceToCoreInvoice(fininv, t.OptCore?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));
+    async Task<List<EntityEvaluationResult>> EvaluateInvoices() {
+      var sysents = toeval.Select(eval => eval.SysEnt).ToList();
+      var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(FinInvoice.AccountId), true);
+      return toeval.Select(eval => {
+        var fininv = eval.SysEnt.To<FinInvoice>();
+        return eval.MarkForPromotion(ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));
       }).ToList();
     }
   }
-
 }

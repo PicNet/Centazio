@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Promote;
@@ -73,19 +74,16 @@ public class PromoteOperationRunnerTests {
   }
   
   private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
-      return Task.FromResult<PromoteOperationResult>(new SuccessPromoteOperationResult(
-          staged.Where((_, idx) => idx % 2 == 0).Select(e => {
-            var core = e.Sys.To<System1Entity>().ToCoreEntity();
-            return e.SetCore(core);
-          }).ToList(),
-          staged.Where((_, idx) => idx % 2 == 1).Select(e => new Containers.StagedIgnore(e.Staged, Ignore: $"Ignore: {e.Staged.Data}")).ToList()));
+    
+    public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+      var results = toeval.Select((eval, idx) => idx % 2 == 1 ? eval.MarkForIgnore($"Ignore: {idx}") : eval.MarkForPromotion(eval.SysEnt.To<System1Entity>().ToCoreEntity())).ToList();
+      return Task.FromResult(results);
     }
   }
 
   public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
-    public Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> op, List<Containers.StagedSysOptionalCore> staged) {
-      return Task.FromResult((PromoteOperationResult) new ErrorPromoteOperationResult());
+    public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+      return Task.FromResult(new List<EntityEvaluationResult>());
     }
   }
 }
@@ -100,13 +98,14 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       new(null!, null!, F.NewCoreCust("N4", "N4"), true)
     };
     
-    var uniques = PromoteOperationRunner.IgnoreMultipleUpdatesToSameEntity(entities);
-    Assert.That(uniques, Is.EquivalentTo(new [] {entities[0], entities[3]}));
+    // var uniques = PromoteOperationRunner.IgnoreMultipleUpdatesToSameEntity(entities);
+    // Assert.That(uniques, Is.EquivalentTo(new [] {entities[0], entities[3]}));
+    Assert.Fail("todo: imlpement");
   }
   
   [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
     var core = F.CoreRepo();
-    var entities1 = new List<Containers.CoreChecksum> {
+    var entities1 = new List<(ICoreEntity, CoreEntityChecksum)> {
       CCS(F.NewCoreCust("N1", "N1", new("1"))),
       CCS(F.NewCoreCust("N2", "N2", new("2"))),
       CCS(F.NewCoreCust("N3", "N3", new("3"))),
@@ -121,9 +120,10 @@ public class PromoteOperationRunnerHelperExtensionsTests {
       new (null!, null!, F.NewCoreCust("N4", "N4", new("4")), true)
     };
     // ideally these methods should be strongly typed using generics
-    var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
-    Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
+    // var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
+    // Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
+    Assert.Fail("todo: imlpement");
     
-    Containers.CoreChecksum CCS(ICoreEntity e) => new (e, Helpers.TestingCoreEntityChecksum(e));
+    (ICoreEntity, CoreEntityChecksum) CCS(ICoreEntity e) => new (e, Helpers.TestingCoreEntityChecksum(e));
   }
 }

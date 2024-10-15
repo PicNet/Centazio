@@ -1,5 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Test.Lib.CoreStorage;
 using NUnit.Framework;
 
@@ -71,7 +70,7 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   private Task DoUpsert(ICoreEntity entity) => DoUpsert([entity]);
   private Task DoUpsert(List<ICoreEntity> entities) {
     entities.ForEach(ValidateEntityPreUpsert);
-    return repo.Upsert(Constants.CoreEntityName, entities.Select(e => new Containers.CoreChecksum(e, Helpers.TestingCoreEntityChecksum(e))).ToList());
+    return repo.Upsert(Constants.CoreEntityName, entities.Select(e => (e, Helpers.TestingCoreEntityChecksum(e))).ToList());
   }
 
   private void ValidateEntityPreUpsert(ICoreEntity e) {

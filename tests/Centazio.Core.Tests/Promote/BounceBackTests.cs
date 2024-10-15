@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Promote;
-using Centazio.Test.Lib;
+﻿using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Promote;
 
@@ -13,6 +12,8 @@ public class BounceBackTests {
       new(null!, null!, new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), true),
       new(null!, null!, new CoreEntity2(new("4"), UtcDate.UtcNow), true)
     };
+    Assert.Fail("todo: implement");
+    /*
     var promoting1 = PromoteOperationRunner.IgnoreEntitiesBouncingBack(toupdate, Constants.System1Name);
     var promoting2 = PromoteOperationRunner.IgnoreEntitiesBouncingBack(toupdate, Constants.System2Name);
     
@@ -20,5 +21,6 @@ public class BounceBackTests {
     Assert.That(promoting2, Has.Count.EqualTo(2));
     Assert.That(promoting1, Is.EquivalentTo(toupdate.Where(e => e.Core.System == Constants.System1Name)));
     Assert.That(promoting2, Is.EquivalentTo(toupdate.Where(e => e.Core.System == Constants.System2Name)));
+    */
   }
 }

@@ -3,7 +3,7 @@
 namespace Centazio.Core.Promote;
 
 public interface IEvaluateEntitiesToPromote {
-  Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged);
+  Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
 }
 
 public record PromoteOperationConfig(

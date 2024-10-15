@@ -1,31 +1,13 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
 
 namespace Centazio.Core.Ctl.Entities;
-
-public static class StagedEntityEnumerableExtensions {
-  public static List<E> ToSysEnt<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => s.Deserialise<E>()).ToList();
-  
-  public static List<Containers.StagedSys> ToStagedSys<E>(this List<StagedEntity> staged) where E : ISystemEntity => staged.Select(s => {
-    var sysent =  s.Deserialise<E>();
-    return new Containers.StagedSys(s, sysent);
-  }).ToList();
-  
-  public static List<Containers.StagedSysOptionalCore> ToStagedSysCore<E>(this List<StagedEntity> staged, Func<E, ICoreEntity> ToCore) where E : ISystemEntity => staged.Select(s => {
-    var sysent = s.Deserialise<E>();
-    return new Containers.StagedSysOptionalCore(s, sysent, ToCore(sysent));
-  }).ToList();
-  
-  public static List<Containers.StagedSys> Deserialise<E>(this List<StagedEntity> lst) where E : ISystemEntity => 
-      lst.Select(e => new Containers.StagedSys(e, e.Deserialise<E>())).ToList();
-}
 
 public sealed record StagedEntity {
   
   public static StagedEntity Create(SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), system, systype, staged, data, checksum);
   
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
-  public StagedEntity Ignore(string reason) => this with { IgnoreReason = !String.IsNullOrWhiteSpace(reason.Trim()) ? reason.Trim() : throw new ArgumentNullException(nameof(reason)) };
+  public StagedEntity Ignore(ValidString reason) => this with { IgnoreReason = reason };
   
   internal StagedEntity(Guid id, SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) {
     Id = id;

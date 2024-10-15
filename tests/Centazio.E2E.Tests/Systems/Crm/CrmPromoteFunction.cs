@@ -23,27 +23,26 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     ]);
   }
   
-  public async Task<PromoteOperationResult> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<Containers.StagedSysOptionalCore> staged) {
-    var topromote = config.State.Object.Value switch { 
+  public async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+    return config.State.Object.Value switch { 
       nameof(CoreMembershipType) => BuildMembershipTypes(), 
       nameof(CoreCustomer) => BuildCustomers(), 
       nameof(CoreInvoice) => await BuildInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
-    return new SuccessPromoteOperationResult(topromote, []);
 
-    List<Containers.StagedSysCore> BuildMembershipTypes() => staged.Select(t => 
-        t.SetCore(ctx.Converter.CrmMembershipTypeToCoreMembershipType(t.Sys.To<CrmMembershipType>(), t.OptCore?.To<CoreMembershipType>()))).ToList();
+    List<EntityEvaluationResult> BuildMembershipTypes() => toeval.Select(eval => 
+        eval.MarkForPromotion(ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SysEnt.To<CrmMembershipType>(), eval.ExistingCoreEntity?.To<CoreMembershipType>()))).ToList();
 
-    List<Containers.StagedSysCore> BuildCustomers() => staged.Select(t => 
-        t.SetCore(ctx.Converter.CrmCustomerToCoreCustomer(t.Sys.To<CrmCustomer>(), t.OptCore?.To<CoreCustomer>()))).ToList();
+    List<EntityEvaluationResult> BuildCustomers() => toeval.Select(eval => 
+        eval.MarkForPromotion(ctx.Converter.CrmCustomerToCoreCustomer(eval.SysEnt.To<CrmCustomer>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList();
 
-    async Task<List<Containers.StagedSysCore>> BuildInvoices() {
-      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), staged, nameof(CrmInvoice.CustomerId), true);
-      return staged.Select(t => {
-        var crminv = t.Sys.To<CrmInvoice>();
-        return t.SetCore(ctx.Converter.CrmInvoiceToCoreInvoice(crminv, t.OptCore?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
+    async Task<List<EntityEvaluationResult>> BuildInvoices() {
+      var sysents = toeval.Select(eval => eval.SysEnt).ToList();
+      var maps = await help.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(CrmInvoice.CustomerId), true);
+      return toeval.Select(eval => {
+        var crminv = eval.SysEnt.To<CrmInvoice>();
+        return eval.MarkForPromotion(ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
       }).ToList();
     }
   }
-
 }

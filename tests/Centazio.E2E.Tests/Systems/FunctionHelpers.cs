@@ -53,8 +53,8 @@ public class FunctionHelpers(
     return dict;
   } 
  
-  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName coretype, List<Containers.StagedSysOptionalCore> entities, string foreignkey, bool mandatory) {
-    var fks = entities.Select(e => new SystemEntityId(ReflectionUtils.GetPropValAsString(e.Sys, foreignkey))).Distinct().ToList();
+  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory) {
+    var fks = sysents.Select(e => new SystemEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
     var dict = (await intra.GetExistingMappingsFromSystemIds(system, coretype, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
     if (!mandatory) return dict;
     
