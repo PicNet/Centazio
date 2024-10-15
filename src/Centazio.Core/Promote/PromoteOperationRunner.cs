@@ -18,16 +18,16 @@ public class PromoteOperationRunner(
     await steps.LoadExistingCoreEntities();
     await steps.ApplyChangesToCoreEntities();
     steps.IgnoreUpdatesToSampleEntityInBatch();
-    await steps.HandleEntitiesBouncingBack();
+    
+    if (op.OpConfig.IsBidirectional) await steps.IdentifyBouncedBackAndSetCorrectId(); 
+    else steps.IgnoreEntitiesBouncingBack();
+    
     await steps.IgnoreNonMeaninfulChanges();
     await steps.WriteEntitiesToCoreStorageAndUpdateMaps();
     await steps.UpdateAllStagedEntitiesWithNewState(stagestore);
+    steps.LogPromotionSteps();
     
-    // todo: add thoroughly helpful debuggning
-    // Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}] ToIgnore[{toignore.Count}]");
-    
-    
-    return new SuccessPromoteOperationResult([], []);
+    return steps.GetResults();
 
   }
   
