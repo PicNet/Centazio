@@ -17,7 +17,7 @@ public class PromoteOperationRunner(
     steps.DeserialisePendingStagedEntities();
     await steps.LoadExistingCoreEntities();
     await steps.ApplyChangesToCoreEntities();
-    steps.IgnoreUpdatesToSampleEntityInBatch();
+    steps.IgnoreUpdatesToSameEntityInBatch();
     
     if (op.OpConfig.IsBidirectional) await steps.IdentifyBouncedBackAndSetCorrectId(); 
     else steps.IgnoreEntitiesBouncingBack();

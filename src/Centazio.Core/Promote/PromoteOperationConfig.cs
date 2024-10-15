@@ -1,6 +1,17 @@
-﻿using Centazio.Core.Runner;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
+
+public record EntityForPromotionEvaluation(ISystemEntity SysEnt, ICoreEntity? ExistingCoreEntity) {
+  public EntityEvaluationResult MarkForPromotion(ICoreEntity updated) => new EntityToPromote(SysEnt, updated);
+  public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SysEnt, reason);
+}
+
+public abstract record EntityEvaluationResult(ISystemEntity SysEnt);
+public sealed record EntityToPromote(ISystemEntity SysEnt, ICoreEntity UpdatedEntity) : EntityEvaluationResult(SysEnt);
+public sealed record EntityToIgnore(ISystemEntity SysEnt, ValidString IgnoreReason) : EntityEvaluationResult(SysEnt);
+
 
 public interface IEvaluateEntitiesToPromote {
   Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);

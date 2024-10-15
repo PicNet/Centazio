@@ -37,7 +37,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteSuccess()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new SuccessPromoteEvaluator()), DateTime.MinValue));
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -48,7 +48,7 @@ public class PromoteOperationRunnerTests {
         Assert.That(saved.ContainsKey(idx.ToString()), Is.True);
       } else {
         Assert.That(se.DatePromoted, Is.Null);
-        Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {se.Data}"));
+        Assert.That(se.IgnoreReason, Is.EqualTo($"Ignore: {idx}"));
         Assert.That(saved.ContainsKey(idx.ToString()), Is.False);
       }
     });
@@ -59,13 +59,12 @@ public class PromoteOperationRunnerTests {
     await stager.Stage(Constants.System1Name, Constants.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
-        new BaseFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new EvaluateEntitiesToPromoteError()), DateTime.MinValue));
+        new BaseFunctionConfig { ThrowExceptions = false },
+        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new ErrorPromoteEvaluator()), DateTime.MinValue));
+    
     var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
     Assert.That(saved, Is.Empty);
-    
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
-    
     stager.Contents.ForEach(se => {
       Assert.That(se.IgnoreReason, Is.Null);
       Assert.That(se.DatePromoted, Is.Null);
@@ -73,7 +72,7 @@ public class PromoteOperationRunnerTests {
     
   }
   
-  private class EvaluateEntitiesToPromoteSuccess : IEvaluateEntitiesToPromote {
+  private class SuccessPromoteEvaluator : IEvaluateEntitiesToPromote {
     
     public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
       var results = toeval.Select((eval, idx) => idx % 2 == 1 ? eval.MarkForIgnore($"Ignore: {idx}") : eval.MarkForPromotion(eval.SysEnt.To<System1Entity>().ToCoreEntity())).ToList();
@@ -81,49 +80,9 @@ public class PromoteOperationRunnerTests {
     }
   }
 
-  public class EvaluateEntitiesToPromoteError : IEvaluateEntitiesToPromote {
+  public class ErrorPromoteEvaluator : IEvaluateEntitiesToPromote {
     public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
-      return Task.FromResult(new List<EntityEvaluationResult>());
+      throw new Exception(nameof(ErrorPromoteEvaluator));
     }
-  }
-}
-
-public class PromoteOperationRunnerHelperExtensionsTests {
-  [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
-    var id = Constants.CoreE1Id1;
-    var entities = new List<Containers.StagedSysCore> {
-      new(null!, null!, F.NewCoreCust("N1", "N1", id), true),
-      new(null!, null!, F.NewCoreCust("N2", "N2", id), true),
-      new(null!, null!, F.NewCoreCust("N3", "N3", id), true),
-      new(null!, null!, F.NewCoreCust("N4", "N4"), true)
-    };
-    
-    // var uniques = PromoteOperationRunner.IgnoreMultipleUpdatesToSameEntity(entities);
-    // Assert.That(uniques, Is.EquivalentTo(new [] {entities[0], entities[3]}));
-    Assert.Fail("todo: imlpement");
-  }
-  
-  [Test] public async Task Test_IgnoreNonMeaninfulChanges() {
-    var core = F.CoreRepo();
-    var entities1 = new List<(ICoreEntity, CoreEntityChecksum)> {
-      CCS(F.NewCoreCust("N1", "N1", new("1"))),
-      CCS(F.NewCoreCust("N2", "N2", new("2"))),
-      CCS(F.NewCoreCust("N3", "N3", new("3"))),
-      CCS(F.NewCoreCust("N4", "N4", new("4")))
-    };
-    await core.Upsert(Constants.CoreEntityName, entities1);
-    
-    var entities2 = new List<Containers.StagedSysCore> {
-      new (null!, null!, F.NewCoreCust("N1", "N1", new("1")), true),
-      new (null!, null!, F.NewCoreCust("N2", "N2", new("2")), true),
-      new (null!, null!, F.NewCoreCust("N32", "N32",  new("3")), true), // only this one gets updated as the checksum changed
-      new (null!, null!, F.NewCoreCust("N4", "N4", new("4")), true)
-    };
-    // ideally these methods should be strongly typed using generics
-    // var uniques = await PromoteOperationRunner.IgnoreNonMeaninfulChanges(entities2, Constants.CoreEntityName, core, Helpers.TestingCoreEntityChecksum);
-    // Assert.That(uniques, Is.EquivalentTo(new [] {entities2[2]}));
-    Assert.Fail("todo: imlpement");
-    
-    (ICoreEntity, CoreEntityChecksum) CCS(ICoreEntity e) => new (e, Helpers.TestingCoreEntityChecksum(e));
   }
 }

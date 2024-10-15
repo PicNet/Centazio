@@ -64,7 +64,7 @@ UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastN
     await using var conn = SqlConn.Instance.Conn();
     await conn.ExecuteAsync(sql, entities.Select(cs => {
       var c = cs.UpdatedCoreEntity.To<CoreEntity>();
-      return new { c.CoreId, cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
+      return new { c.CoreId, CoreEntityChecksum = cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
     }));
     return entities.Select(c => c.UpdatedCoreEntity).ToList();
   }

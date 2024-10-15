@@ -8,62 +8,12 @@ using Serilog;
 
 namespace Centazio.Core.Promote;
 
-public class PromotionBag(StagedEntity staged) {
-  public StagedEntity StagedEntity { get; init; } = staged;
-  public ISystemEntity Sys { get; set; } = null!;
-  public ICoreEntity? ExistingCoreEntity { get; set; }
-  public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
-  
-  public ICoreEntity? UpdatedCoreEntity { get; private set; }
-  public ValidString? IgnoreReason { get; private set; }
-  
-  public void MarkIgnore(ValidString reason) {
-    Log.Debug($"PromotionBag.MarkIgnore[{UpdatedCoreEntity?.DisplayName}] - reason[{reason}]");
-    
-    UpdatedCoreEntity = null;
-    IgnoreReason = reason;
-  } 
-  
-  public void MarkPromote(SystemName system, ICoreEntity coreent) {
-    UpdatedCoreEntity = CheckAndSetInternalState(coreent);
-    
-    ICoreEntity CheckAndSetInternalState(ICoreEntity e) {
-      if (ExistingCoreEntity is not null && ExistingCoreEntity.SystemId != e.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
-      
-      e.DateUpdated = UtcDate.UtcNow;
-      e.LastUpdateSystem = system;
-      if (!IsCreating) return e;
-
-      e.DateCreated = UtcDate.UtcNow;
-      e.System = system;
-      return e;
-    }
-  }
-  
-  public void CorrectBounceBackIds(ICoreEntity orig) {
-    UpdatedCoreEntity!.CoreId = orig.CoreId;
-    UpdatedCoreEntity!.SystemId = orig.SystemId;
-  }
-      
-  public bool IsCreating => ExistingCoreEntity is null;
-  public bool IsIgnore => IgnoreReason is not null;
-}
-
-public record EntityForPromotionEvaluation(ISystemEntity SysEnt, ICoreEntity? ExistingCoreEntity) {
-  public EntityEvaluationResult MarkForPromotion(ICoreEntity updated) => new EntityToPromote(SysEnt, updated);
-  public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SysEnt, reason);
-}
-
-public abstract record EntityEvaluationResult(ISystemEntity SysEnt);
-public sealed record EntityToPromote(ISystemEntity SysEnt, ICoreEntity UpdatedEntity) : EntityEvaluationResult(SysEnt);
-public sealed record EntityToIgnore(ISystemEntity SysEnt, ValidString IgnoreReason) : EntityEvaluationResult(SysEnt);
-
 public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, OperationStateAndConfig<PromoteOperationConfig> op) {
 
   private readonly CoreEntityTypeName corename = op.State.Object.ToCoreEntityTypeName;
   private readonly DateTime start = UtcDate.UtcNow;
-  
-  private List<PromotionBag> bags = [];
+  private Exception? error;
+  internal List<PromotionBag> bags = [];
   
   public async Task LoadPendingStagedEntities(IStagedEntityStore stagestore) {
     var staged = await stagestore.GetUnpromoted(op.State.System, op.OpConfig.SystemEntityTypeName, op.Checkpoint);
@@ -89,16 +39,27 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   
   public async Task ApplyChangesToCoreEntities() {
     if (IsEmpty()) return;
-    var list = await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.Sys, bag.ExistingCoreEntity)).ToList());
+    var list = await CallEvaluator();
     list.ForEach(result => {
       var bag = bags.Single(b => b.Sys.SystemId == result.SysEnt.SystemId);
       if (result is EntityToPromote topromote) bag.MarkPromote(op.State.System, topromote.UpdatedEntity); 
       else if (result is EntityToIgnore toignore) bag.MarkIgnore(toignore.IgnoreReason);
       else throw new NotSupportedException(result.GetType().Name);
     });
+
+    async Task<List<EntityEvaluationResult>> CallEvaluator() {
+      try {
+        return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.Sys, bag.ExistingCoreEntity)).ToList());
+      }
+      catch (Exception e) {
+        if (op.FuncConfig.ThrowExceptions) throw;
+        error = e;
+        return [];
+      }
+    }
   }
   
-  public void IgnoreUpdatesToSampleEntityInBatch() {
+  public void IgnoreUpdatesToSameEntityInBatch() {
     if (IsEmpty()) return;
     var added = new Dictionary<SystemEntityId, bool>();
     bags = bags.OrderByDescending(bag => bag.Sys.LastUpdatedDate).ToList(); 
@@ -165,9 +126,12 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     }
   }
     
-  public void IgnoreEntitiesBouncingBack() => bags
-      .Where(bag => !bag.IsIgnore && bag.UpdatedCoreEntity!.System != op.State.System)
-      .ForEach(bag => bag.MarkIgnore("update is a bounce-back and entity is not bi-directional"));
+  public void IgnoreEntitiesBouncingBack() {
+    if (IsEmpty()) return;
+    bags
+        .Where(bag => !bag.IsIgnore && bag.UpdatedCoreEntity!.System != op.State.System)
+        .ForEach(bag => bag.MarkIgnore("update is a bounce-back and entity is not bi-directional"));
+  }
 
   public async Task IgnoreNonMeaninfulChanges() {
     if (IsEmpty()) return;
@@ -197,21 +161,25 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     SystemEntityChecksum SysChecksum(ICoreEntity e) => op.FuncConfig.ChecksumAlgorithm.Checksum(topromote.Single(c => c.UpdatedCoreEntity!.CoreId == e.CoreId).Sys);
   }
   
-  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityStore stagestore) => 
-      await stagestore.Update(bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
-  
+  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityStore stagestore) {
+    if (error is not null) return;
+    await stagestore.Update(bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
+  }
+
   public void LogPromotionSteps() {
     // todo: add thoroughly helpful debuggning
     // Log.Information($"PromoteOperationRunner[{op.State.System}/{op.State.Object}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}] ToIgnore[{toignore.Count}]");
   }
   
   public PromoteOperationResult GetResults() {
+    if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
+    
     var topromote = ToPromote().Select(bag => new Containers.StagedSysCore(bag.StagedEntity, bag.Sys, bag.UpdatedCoreEntity!, bag.IsCreating)).ToList();
     var toignore = ToIgnore().Select(bag => new Containers.StagedIgnore(bag.StagedEntity, bag.IgnoreReason!)).ToList();
     return new SuccessPromoteOperationResult(topromote, toignore);
   }
   
-  public bool IsEmpty() => bags.All(bag => bag.IsIgnore);
+  public bool IsEmpty() => error is not null || bags.All(bag => bag.IsIgnore);
   public List<PromotionBag> ToPromote() => bags.Where(bag => !bag.IsIgnore).ToList();
   public List<PromotionBag> ToIgnore() => bags.Where(bag => bag.IsIgnore).ToList();
 }
