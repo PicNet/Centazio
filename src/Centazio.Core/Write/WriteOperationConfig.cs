@@ -12,7 +12,6 @@ public record WriteOperationConfig(
   public string LoggableValue => $"{CoreEntityTypeName.Value}";
 }
 
-// SingleWriteOperationConfig/IWriteSingleEntityToTargetSystem - used when target system only writes one entity at a time
 
 public interface ITargetSystemWriter {
   Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate);

@@ -18,10 +18,7 @@ public class FunctionHelpers(
       List<CoreAndPendingUpdateMap> toupdate,
       Func<string, E, ISystemEntity> FromCore) where E : ICoreEntity {
     return (
-      tocreate.Select(m => {
-        var sysent = FromCore(String.Empty, m.CoreEntity.To<E>()); 
-        return m.AddSystemEntity(sysent);
-      }).ToList(),
+      tocreate.Select(m => m.AddSystemEntity(FromCore(String.Empty, m.CoreEntity.To<E>()))).ToList(),
       toupdate.Select(m => {
         var sysent = FromCore(m.Map.SystemId, m.CoreEntity.To<E>());
         TestEntityHasChanges(sysent, m.Map.SystemEntityChecksum);

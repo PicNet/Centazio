@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Checksum;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
@@ -97,12 +98,8 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   }
   
   public Task<(List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>)> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    var ccreate = tocreate.Select(e => {
-      var core = e.CoreEntity.To<CoreEntity>();
-      var sysent =  WftHelpers.ToSe(core);
-      return new CoreSystemAndPendingCreateMap(core, sysent, e.Map);
-    }).ToList();
-    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity.To<CoreEntity>()))).ToList();
+    var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map)).ToList();
+    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity))).ToList();
     return Task.FromResult((ccreate, cupdate));
   }
 
@@ -118,6 +115,10 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
 }
 
 internal static class WftHelpers {
-  public static SystemEntityChecksum ToSeCs(CoreEntity c) => Helpers.TestingSystemEntityChecksum(ToSe(c));
-  public static System1Entity ToSe(CoreEntity c) => new(Guid.NewGuid(), c.FirstName, c.LastName, DateOnly.FromDateTime(c.DateCreated), UtcDate.UtcNow);
+  public static SystemEntityChecksum ToSeCs(ICoreEntity coreent) => Helpers.TestingSystemEntityChecksum(ToSe(coreent));
+  public static System1Entity ToSe(ICoreEntity coreent) {
+    var c = coreent.To<CoreEntity>();
+    return new System1Entity(Guid.NewGuid(), c.FirstName, c.LastName, DateOnly.FromDateTime(c.DateCreated), UtcDate.UtcNow);
+  }
+
 }
