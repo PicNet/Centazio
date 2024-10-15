@@ -18,8 +18,8 @@ public class WriteFunctionTests {
     var upsert1 = await core.Upsert(Constants.CoreEntityName, [new (customer1, Helpers.TestingCoreEntityChecksum(customer1)), new (customer2, Helpers.TestingCoreEntityChecksum(customer2))]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      new CoreAndCreatedMap(customer1,  Map.Create(Constants.System2Name, customer1).SuccessCreate(customer1.SystemId, WftHelpers.ToSeCs(customer1)) ), 
-      new CoreAndCreatedMap(customer2,  Map.Create(Constants.System2Name, customer2).SuccessCreate(customer2.SystemId, WftHelpers.ToSeCs(customer2)) ) };
+      Map.Create(Constants.System2Name, customer1).SuccessCreate(customer1.SystemId, WftHelpers.ToSeCs(customer1)), 
+      Map.Create(Constants.System2Name, customer2).SuccessCreate(customer2.SystemId, WftHelpers.ToSeCs(customer2)) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -28,7 +28,7 @@ public class WriteFunctionTests {
     var customer22 = customer2 with { FirstName = "22", DateUpdated = UtcDate.UtcNow };
     var upsert2 = await core.Upsert(Constants.CoreEntityName, [new(customer22, Helpers.TestingCoreEntityChecksum(customer22))]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
-    var expresults2 = new [] { new CoreAndUpdatedMap(customer22, expresults1[1].Map.Update().SuccessUpdate(WftHelpers.ToSeCs(customer22)) ) };
+    var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22)) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
     Assert.That(upsert1, Is.EquivalentTo(new [] { customer1, customer2 }));
@@ -79,8 +79,8 @@ public class WriteFunctionTests {
 
 public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
 
-  public List<CoreAndCreatedMap> Created { get; } = [];
-  public List<CoreAndUpdatedMap> Updated { get; } = [];
+  public List<Map.Created> Created { get; } = [];
+  public List<Map.Updated> Updated { get; } = [];
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
   public override FunctionConfig<WriteOperationConfig> Config { get; }
@@ -108,8 +108,8 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
 
   public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = tocreate.Select(m => m.SuccessCreate(m.CoreEntity.SystemId, Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
-    var updates = toupdate.Select(m => m.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
+    var news = tocreate.Select(m => m.Map.SuccessCreate(m.CoreEntity.SystemId, Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
+    var updates = toupdate.Select(m => m.Map.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);
     return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));

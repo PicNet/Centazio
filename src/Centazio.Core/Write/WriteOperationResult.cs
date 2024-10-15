@@ -4,8 +4,8 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Write;
 
 public abstract record WriteOperationResult(
-    List<CoreAndCreatedMap> EntitiesCreated,
-    List<CoreAndUpdatedMap> EntitiesUpdated,
+    List<Map.Created> EntitiesCreated,
+    List<Map.Updated> EntitiesUpdated,
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
@@ -18,8 +18,8 @@ public abstract record WriteOperationResult(
 }
 
 public record SuccessWriteOperationResult(
-    List<CoreAndCreatedMap> EntitiesCreated,
-    List<CoreAndUpdatedMap> EntitiesUpdated,
+    List<Map.Created> EntitiesCreated,
+    List<Map.Updated> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : WriteOperationResult(EntitiesCreated,
         EntitiesUpdated,

@@ -26,8 +26,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       return results;  
     }
     
-    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesCreated.Select(e => e.Map).ToList());
-    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesUpdated.Select(e => e.Map).ToList());
+    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesCreated);
+    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesUpdated);
     return results;
   }
 
