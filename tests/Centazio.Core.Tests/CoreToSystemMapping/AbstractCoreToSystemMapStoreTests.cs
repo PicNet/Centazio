@@ -9,7 +9,7 @@ namespace Centazio.Core.Tests.CoreToSystemMapping;
 public abstract class AbstractCoreToSystemMapStoreTests {
 
   private readonly string STR = nameof(AbstractCoreToSystemMapStoreTests);
-  private readonly string STR2 = nameof(Map.CoreToSystem);
+  private readonly string STR2 = nameof(Map.CoreToSystemMap);
   
   private TestingInMemoryCoreStorageRepository corestore;
   private ITestingInMemoryCoreToSystemMapStore entitymap;

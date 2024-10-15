@@ -33,9 +33,9 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     var coreids = maps.Select(m => m.CoreId).ToList();
     var coreents = await core.Get(corename, coreids);
     bags.ForEach(bag => {
-      var coreid = maps.SingleOrDefault(m => m.SystemId == bag.SystemEntity.SystemId)?.CoreId;
-      bag.PreExistingCoreEntity = coreid is null ? null : coreents.Single(e => e.CoreId == coreid);
-      bag.PreExistingCoreEntityChecksum = bag.PreExistingCoreEntity is null ? null : Checksum(bag.PreExistingCoreEntity);  
+      bag.Map = maps.SingleOrDefault(m => m.SystemId == bag.SystemEntity.SystemId);
+      bag.PreExistingCoreEntity = bag.Map?.CoreId is null ? null : coreents.Single(e => e.CoreId == bag.Map.CoreId);
+      bag.PreExistingCoreEntityChecksum = bag.PreExistingCoreEntity is null ? null : CoreChecksum(bag.PreExistingCoreEntity);  
     });
   }
   
@@ -74,10 +74,10 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   public async Task IdentifyBouncedBackAndSetCorrectId() {
     if (IsEmpty()) return;
     var topromote = ToPromote();
-    var bounces = await GetBounceBacks();
-    if (!bounces.Any()) return;
+    var bouncebacks = await GetBounceBacks();
+    if (!bouncebacks.Any()) return;
     
-    var toupdate = bounces.Select(sysid => {
+    var toupdate = bouncebacks.Select(sysid => {
       var idx = topromote.FindIndex(bag => bag.SystemEntity.SystemId == sysid);
       var bag = topromote[idx];
       var props = (
@@ -86,7 +86,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
           ToPromoteIdx: idx,
           ToPromoteCore: bag.UpdatedCoreEntity!,
           PreChangeChecksumSubset: bag.UpdatedCoreEntity!.GetChecksumSubset(),
-          PreChangeChecksum: Checksum(bag.UpdatedCoreEntity!),
+          PreChangeChecksum: CoreChecksum(bag.UpdatedCoreEntity!),
           PostChangeChecksumSubset: new object(),
           PostChangeChecksum: new CoreEntityChecksum("*"));
       
@@ -99,14 +99,14 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
       //    multiple core records for the same entity.
       topromote[props.ToPromoteIdx].CorrectBounceBackIds(props.OriginalEntity);
       props.PostChangeChecksumSubset = props.ToPromoteCore.GetChecksumSubset();
-      props.PostChangeChecksum = Checksum(props.ToPromoteCore);
+      props.PostChangeChecksum = CoreChecksum(props.ToPromoteCore);
       return props;
     }).ToList();
     
     var msgs = updated.Select(e => $"[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})] -> OriginalCoreId[{e.OriginalEntity.CoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
           $"\n\tOriginal Checksum[{e.OriginalEntity.GetChecksumSubset()}({e.OriginalEntityChecksum})]" +
           $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
-    Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityTypeName}]" + String.Join("\n", msgs), bounces.Count, system, corename);
+    Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityTypeName}]" + String.Join("\n", msgs), bouncebacks.Count, system, corename);
     
     var errs = updated.Where(e => e.PreChangeChecksum != e.PostChangeChecksum)
         .Select(e => $"\n[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})]:" +
@@ -137,7 +137,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     var topromote = ToPromote();
     var toignore = topromote.Where(bag => {
       if (bag.PreExistingCoreEntityChecksum is null) return false;
-      bag.UpdatedCoreEntityChecksum = Checksum(bag.UpdatedCoreEntity!); 
+      bag.UpdatedCoreEntityChecksum = CoreChecksum(bag.UpdatedCoreEntity!); 
       return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityChecksum) && bag.UpdatedCoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
     }).ToList();
     toignore.ForEach(bag => bag.MarkIgnore("no meaningful change detected on entity"));
@@ -145,14 +145,12 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   
   public async Task WriteEntitiesToCoreStorageAndUpdateMaps() {
     if (IsEmpty()) return;
-    var topromote = ToPromote();
-    await core.Upsert(corename, topromote.Select(bag => (bag.UpdatedCoreEntity!, bag.UpdatedCoreEntityChecksum!)).ToList());
-    
-    var existing = await entitymap.GetNewAndExistingMappingsFromCores(system, topromote.Select(bag => bag.UpdatedCoreEntity!).ToList());
-    await entitymap.Create(system, corename, existing.Created.Select(e => e.Map.SuccessCreate(e.CoreEntity.SystemId, SysChecksumFromCore(e.CoreEntity))).ToList());
-    await entitymap.Update(system, corename, existing.Updated.Select(e => e.Map.SuccessUpdate(SysChecksumFromCore(e.CoreEntity))).ToList());
-    
-    SystemEntityChecksum SysChecksumFromCore(ICoreEntity coreent) => Checksum(topromote.Single(c => c.UpdatedCoreEntity!.CoreId == coreent.CoreId).SystemEntity);
+
+    await Task.WhenAll([
+      core.Upsert(corename, ToPromote().Select(bag => (bag.UpdatedCoreEntity!, bag.UpdatedCoreEntityChecksum!)).ToList()),
+      entitymap.Create(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
+      entitymap.Update(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
+    ]);
   }
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityStore stagestore) {
@@ -175,7 +173,8 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   
   public bool IsEmpty() => error is not null || bags.All(bag => bag.IsIgnore);
   public List<PromotionBag> ToPromote() => bags.Where(bag => !bag.IsIgnore).ToList();
+  public List<PromotionBag> ToCreate() => ToPromote().Where(bag => bag.Map is null).ToList();
+  public List<PromotionBag> ToUpdate() => ToPromote().Where(bag => bag.Map is not null).ToList();
   public List<PromotionBag> ToIgnore() => bags.Where(bag => bag.IsIgnore).ToList();
-  public CoreEntityChecksum Checksum(ICoreEntity coreent) => op.FuncConfig.ChecksumAlgorithm.Checksum(coreent);
-  public SystemEntityChecksum Checksum(ISystemEntity sysent) => op.FuncConfig.ChecksumAlgorithm.Checksum(sysent);
+  public CoreEntityChecksum CoreChecksum(ICoreEntity coreent) => op.FuncConfig.ChecksumAlgorithm.Checksum(coreent);
 }

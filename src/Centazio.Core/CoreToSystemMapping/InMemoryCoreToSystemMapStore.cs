@@ -18,10 +18,10 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     return Task.FromResult((news, updates));
   }
   
-  public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
+  public override Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       Task.FromResult(GetById(system, coretype, coreids));
   
-  public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) => 
+  public override Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) => 
       Task.FromResult(GetById(system, coretype, systemids));
 
   public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
@@ -41,7 +41,7 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     }).ToList());
   }
 
-  private List<Map.CoreToSystem> GetById<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString {
+  private List<Map.CoreToSystemMap> GetById<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString {
     var issysid = typeof(V) == typeof(SystemEntityId);
     return ids.Distinct()
         .Select(cid => Deserialize(memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == coretype && (issysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value))
@@ -65,6 +65,6 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   }
   
   [return: NotNullIfNotNull(nameof(json))]
-  protected Map.CoreToSystem? Deserialize(string? json) => json is null ? null : Json.Deserialize<Map.CoreToSystem>(json);
+  protected Map.CoreToSystemMap? Deserialize(string? json) => json is null ? null : Json.Deserialize<Map.CoreToSystemMap>(json);
 
 }
