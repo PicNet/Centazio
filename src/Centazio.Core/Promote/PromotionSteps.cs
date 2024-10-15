@@ -174,8 +174,8 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   public PromoteOperationResult GetResults() {
     if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
     
-    var topromote = ToPromote().Select(bag => new Containers.StagedSysCore(bag.StagedEntity, bag.Sys, bag.UpdatedCoreEntity!, bag.IsCreating)).ToList();
-    var toignore = ToIgnore().Select(bag => new Containers.StagedIgnore(bag.StagedEntity, bag.IgnoreReason!)).ToList();
+    var topromote = ToPromote().Select(bag => (bag.StagedEntity, bag.Sys, bag.UpdatedCoreEntity!)).ToList();
+    var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason!)).ToList();
     return new SuccessPromoteOperationResult(topromote, toignore);
   }
   

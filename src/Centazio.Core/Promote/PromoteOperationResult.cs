@@ -1,11 +1,12 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
 public abstract record PromoteOperationResult(
-    List<Containers.StagedSysCore> ToPromote,
-    List<Containers.StagedIgnore> ToIgnore,
+    List<(StagedEntity StagedEntity, ISystemEntity SystemEntity, ICoreEntity CoreEntity)> ToPromote,
+    List<(StagedEntity StagedEntity, ValidString IgnoreReason)> ToIgnore,
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
@@ -16,8 +17,8 @@ public abstract record PromoteOperationResult(
 }
 
 public record SuccessPromoteOperationResult(
-    List<Containers.StagedSysCore> ToPromote,
-    List<Containers.StagedIgnore> ToIgnore,
+    List<(StagedEntity StagedEntity, ISystemEntity SystemEntity, ICoreEntity CoreEntity)> ToPromote,
+    List<(StagedEntity StagedEntity, ValidString IgnoreReason)> ToIgnore,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
     : PromoteOperationResult(ToPromote,
         ToIgnore,
