@@ -1,10 +1,12 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 
 namespace Centazio.E2E.Tests;
 
+[IgnoreNamingConventions]
 public class EpochTracker(int epoch, SimulationCtx ctx) {
   public int Epoch { get; } = epoch;
   

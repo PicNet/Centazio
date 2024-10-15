@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -123,6 +124,7 @@ public class E2EEnvironment : IAsyncDisposable {
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
   }
   
+  [IgnoreNamingConventions] 
   private void CompareByChecksum(SystemName system, IEnumerable<ISystemEntity> cores, IEnumerable<ISystemEntity> targets) {
     var (corecs, targetscs) = (cores.Select(c => Json.Serialize(c.GetChecksumSubset())).ToList(), targets.Select(t => Json.Serialize(t.GetChecksumSubset())).ToList());
     Assert.That(targetscs, Is.EquivalentTo(corecs), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");

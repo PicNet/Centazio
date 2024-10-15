@@ -8,9 +8,9 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
 
   protected readonly Dictionary<Map.Key, string> memdb = new();
   
-  public override Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> cores) {
+  public override Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> coreents) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
-    cores.ForEach(c => {
+    coreents.ForEach(c => {
       var json = memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == CoreEntityTypeName.From(c) && kvp.Key.CoreId == c.CoreId && kvp.Key.System == system).Value;
       if (json is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(system, c)));
       else updates.Add(new CoreAndPendingUpdateMap(c, Deserialize(json).Update()));
@@ -21,11 +21,11 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
   public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       Task.FromResult(GetById(system, coretype, coreids));
   
-  public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> sysids) => 
-      Task.FromResult(GetById(system, coretype, sysids));
+  public override Task<List<Map.CoreToSystem>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) => 
+      Task.FromResult(GetById(system, coretype, systemids));
 
-  public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> entities) {
-    var lst = GetById(system, coretype, entities.Select(e => e.SystemId).ToList());
+  public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
+    var lst = GetById(system, coretype, coreents.Select(e => e.SystemId).ToList());
     return Task.FromResult(lst.ToDictionary(m => m.SystemId, m => m.CoreId));
   }
 

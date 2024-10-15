@@ -42,8 +42,8 @@ public class FunctionHelpers(
       $"\n\tChecksum[{checksum.Checksum(sysent)}]");
   }
   
-  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName coretype, List<ICoreEntity> entities, string foreignkey) {
-    var fks = entities.Select(e => new CoreEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
+  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey) {
+    var fks = coreents.Select(e => new CoreEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
     var maps = await intra.GetExistingMappingsFromCoreIds(system, coretype, fks);
     var dict = maps.ToDictionary(m => m.CoreId, m => m.SystemId);
     

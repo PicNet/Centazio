@@ -95,15 +95,27 @@ public class CheckStandardNamingOfCommonTypes {
           ValidateImpl(prefix + ".Param", param.ParameterType, isrec, param.Name ?? throw new Exception());
         }
 
-        void ValidateImpl(string prefix, Type type, bool upper, string name) {
-          EXPECTED.TryGetValue(type, out var check);
-          if (check.UpperCase is not null) Check(type);
+        void ValidateImpl(string prefix, Type membertype, bool upper, string name) {
+          var (type, plural) = GetTypeToTest();
+          if (type is null || !EXPECTED.ContainsKey(type)) return;
           
-          void Check(Type exp) {
-            if (objtype == exp) return; // do not check naming conventions if the object is the same type we are testing
-            var expected = upper ? check.UpperCase : check.LowerCase;
-            if (check.EndsWith ? name.EndsWith(expected) : name == expected) return; // name is correct
+          Check();
+          
+          void Check() {
+            if (objtype == type) return; // do not check naming conventions if the object is the same type we are testing
+            var checker = EXPECTED[type];
+            var expected = upper ? checker.UpperCase : checker.LowerCase;
+            if (plural) expected += "s";
+            if (checker.EndsWith ? name.EndsWith(expected) : name == expected) return; // name is correct
             AddErr(prefix, type, $"Name[{name}] Expected[{expected}]");
+          }
+          
+          (Type? TypeToTest, bool IsPlural) GetTypeToTest() {
+            if (membertype.IsAssignableTo(typeof(System.Collections.IEnumerable))) {
+              var args = membertype.GetGenericArguments();
+              if (args.Length == 1) return (args.SingleOrDefault(), true);
+            }
+            return (membertype, false);
           }
         }
         
