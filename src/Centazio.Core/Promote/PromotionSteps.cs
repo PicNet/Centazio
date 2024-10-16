@@ -159,8 +159,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   }
 
   public void LogPromotionSteps() {
-    // todo: add thoroughly helpful debuggning
-    // Log.Information($"PromoteOperationRunner[{system}/{corename}] Bidi[{op.OpConfig.IsBidirectional}] Pending[{pending.Count}] ToPromote[{topromote.Count}] Meaningful[{meaningful.Count}] ToIgnore[{toignore.Count}]");
+    Log.Information($"PromotionSteps completed[{system}/{corename}] Bidi[{op.OpConfig.IsBidirectional}] IsEmpty[{IsEmpty()}] Total[{bags.Count}] ToIgnore[{ToIgnore().Count}] ToPromote[{ToPromote().Count}] ToUpdate[{ToUpdate().Count}] ToCreate[{ToCreate().Count}]");
   }
   
   public PromoteOperationResult GetResults() {

@@ -13,12 +13,10 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   
   private readonly SimulationCtx ctx;
   private readonly FinApi api;
-  private readonly FunctionHelpers help;
 
   public FinWriteFunction(SimulationCtx ctx, FinApi api) {
     this.ctx = ctx;
     this.api = api;
-    help = new(SimulationConstants.FIN_SYSTEM, ctx.ChecksumAlg, ctx.EntityMap);
     Config = new(SimulationConstants.FIN_SYSTEM, LifecycleStage.Defaults.Write, [
       new(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
@@ -28,12 +26,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
   public async Task<CovertCoreEntitiesToSystemEntittiesResult> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
-      return help.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToFinAccount(Id(id), e));
+      return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToFinAccount(Id(id), e));
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
-      var maps = await help.GetRelatedEntitySystemIdsFromCoreIds(CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
-      return help.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
+      var maps = await ctx.EntityMap.GetRelatedEntitySystemIdsFromCoreEntities(Config.System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
+      return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);
     
@@ -45,12 +43,12 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created = await api.CreateAccounts(tocreate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
       var updated = await api.UpdateAccounts(toupdate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
-      return help.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated);
+      return WriteHelpers.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated, ctx.ChecksumAlg);
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var created = await api.CreateInvoices(tocreate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
       var updated = await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
-      return help.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated);
+      return WriteHelpers.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated, ctx.ChecksumAlg);
     }
     throw new NotSupportedException(config.Object);
   }

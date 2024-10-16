@@ -31,7 +31,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
     async Task<List<EntityEvaluationResult>> EvaluateInvoices() {
       var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
-      var maps = await ctx.FinHelpers.GetRelatedEntityCoreIdsFromSystemIds(CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(FinInvoice.AccountId), true);
+      var maps = await ctx.EntityMap.GetRelatedEntityCoreIdsFromSystemIds(Config.System, CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(FinInvoice.AccountId), true);
       return toeval.Select(eval => {
         var fininv = eval.SystemEntity.To<FinInvoice>();
         return eval.MarkForPromotion(ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));

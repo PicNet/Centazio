@@ -3,7 +3,6 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Systems;
 using Serilog;
 using Serilog.Events;
 using C = Centazio.E2E.Tests.SimulationConstants;
@@ -20,16 +19,10 @@ public class SimulationCtx : IAsyncDisposable {
   public IStagedEntityStore StageStore { get; }
   public EntityConverter Converter { get; } 
   
-  // todo: these helpers should be reuseable `Centazio.Core` classes
-  public FunctionHelpers CrmHelpers { get; } 
-  public FunctionHelpers FinHelpers { get; } 
-
   internal SimulationCtx() {
     ChecksumAlg = new Sha256ChecksumAlgorithm();
     CoreStore = new(this);
     StageStore = new InMemoryStagedEntityStore(0, ChecksumAlg.Checksum);
-    CrmHelpers = new FunctionHelpers(C.CRM_SYSTEM, ChecksumAlg, EntityMap);
-    FinHelpers = new FunctionHelpers(C.FIN_SYSTEM, ChecksumAlg, EntityMap);
     Converter = new(EntityMap);
     Epoch = new(0, this);
   }
