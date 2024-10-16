@@ -44,8 +44,8 @@ public class PromotionBag(StagedEntity staged) {
     UpdatedCoreEntity!.SystemId = coreent.SystemId;
   }
 
-  // todo: since this is now abstracted nicely, do we still need Map.PendingCreate
-  public Map.Created MarkCreated(IChecksumAlgorithm checksum) => Ctl.Entities.Map.Create((UpdatedCoreEntity ?? throw new Exception()).System, UpdatedCoreEntity).SuccessCreate(UpdatedCoreEntity!.SystemId, checksum.Checksum(SystemEntity));
+  public Map.Created MarkCreated(IChecksumAlgorithm checksum) => Ctl.Entities.Map.Create((UpdatedCoreEntity ?? throw new Exception()).System, UpdatedCoreEntity)
+      .SuccessCreate(UpdatedCoreEntity!.SystemId, checksum.Checksum(SystemEntity));
   public Map.Updated MarkUpdated(IChecksumAlgorithm checksum) => (Map ?? throw new Exception()).Update().SuccessUpdate(checksum.Checksum(SystemEntity));
   
   public bool IsCreating => PreExistingCoreEntity is null;

@@ -13,11 +13,11 @@ public class FunctionHelpers(
     IChecksumAlgorithm checksum,
     ICoreToSystemMapStore intra) {
   
-  public (List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>) CovertCoreEntitiesToSystemEntitties<E>(
+  public CovertCoreEntitiesToSystemEntittiesResult CovertCoreEntitiesToSystemEntitties<E>(
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
       Func<string, E, ISystemEntity> FromCore) where E : ICoreEntity {
-    return (
+    return new(
       tocreate.Select(m => m.AddSystemEntity(FromCore(String.Empty, m.CoreEntity.To<E>()))).ToList(),
       toupdate.Select(m => {
         var sysent = FromCore(m.Map.SystemId, m.CoreEntity.To<E>());
