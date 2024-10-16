@@ -1,16 +1,10 @@
 # Todo
 
-- check for all new logic added through the simulator and check that its adequately unit tested
-- use simulation to optimise the developer experience, add lots of helpers to do common tasks
-- clean up simulation code
+- simulation to use real stores (not in-memory)
+- check testing coverage
 - review all code comments
 - when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc.) were 
     not changed by the client.  May want to separate 'client' fields from ICoreEntity fields
-- PromoteOpRunner is the most complex code in `Centazio.Core`, consider simplifying
-- System/SystemId should not be part of the `ICoreEntity` interface, this information should be part of the
-  `CoreSystemMap`.
-- consider changing all the records being used to track changes in promoted entities to use interfaces instead, these
-  then do not need so many imlpementations
 - clean up interfaces and types, have stuff everywhere
 
 - set up azure devops testing pipeline (agent is ready)
