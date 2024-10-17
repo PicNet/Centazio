@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text;
-using Centazio.Core;
-using Centazio.Core.Misc;
 
-namespace Centazio.Providers.SqlServer;
+namespace Centazio.Core.Misc;
 
 public record DbFieldType(string name, string type, string length, bool required);
 
@@ -65,6 +63,21 @@ END
     return sql.ToString();
     
     string ToSqlSrv(DbFieldType f) {
+      var typestr = !String.IsNullOrWhiteSpace(f.length) ? $"{f.type}({f.length})" : f.type;
+      var nullstr = f.required ? "not null" : "null";
+      return $"[{f.name}] {typestr} {nullstr}";
+    }
+  }
+  
+  public string GetSqliteCreateTableScript(string table, List<DbFieldType> fields, string[] pkfields, string? additional = null) {
+    var additionaltxt = String.IsNullOrWhiteSpace(additional) ? String.Empty : ",\n  " + additional;
+    return $@"CREATE TABLE IF NOT EXISTS [{table}] (
+  {String.Join(",\n    ", fields.Select(ToSqlite))},
+  PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt})";
+    
+    string ToSqlite(DbFieldType f) {
+      if (f.type == "datetime2") f = f with { type = "datetime" };
+      if (f.type == "nvarchar" && f.length == "max") f = f with { type = "text", length = String.Empty };
       var typestr = !String.IsNullOrWhiteSpace(f.length) ? $"{f.type}({f.length})" : f.type;
       var nullstr = f.required ? "not null" : "null";
       return $"[{f.name}] {typestr} {nullstr}";

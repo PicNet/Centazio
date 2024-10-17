@@ -11,6 +11,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(Map.CoreToSystemMap), [nameof( Map.CoreToSystemMap.LastError)] },
     { nameof(ObjectState), [nameof(ObjectState.LastRunMessage), nameof(ObjectState.LastRunException)] },
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
+    { nameof(DbFieldType), ["*"] },
     { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }
   };
   
@@ -21,6 +22,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     var errors = new List<string>();
     types.ForEach(type => {
       var ignore = Allowed(type);
+      if (ignore.FirstOrDefault() == "*") return;
       var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
           .Where(p => p.PropertyType == typeof(string) && !ignore.Contains(p.Name))
           .ToList();

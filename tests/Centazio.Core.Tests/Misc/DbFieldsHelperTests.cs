@@ -1,7 +1,9 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using System.Text.RegularExpressions;
+using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib;
 
-namespace Centazio.Providers.SqlServer.Tests;
+namespace Centazio.Core.Tests.Misc;
 
 public class DbFieldsHelperTests {
 
@@ -15,7 +17,7 @@ public class DbFieldsHelperTests {
   [Test] public void Test_GetSqlServerCreateTableScript() {
     var dbf = new DbFieldsHelper();
     var sql = dbf.GetSqlServerCreateTableScript("schemaname", nameof(SystemState), dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]);
-    Assert.That(sql.Trim().Replace("\r\n", "\n"), Is.EqualTo(@"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'schemaname')
+    var exp = @"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'schemaname')
   EXEC('CREATE SCHEMA [schemaname] AUTHORIZATION [dbo]');
 
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='SystemState' AND xtype='U')
@@ -31,6 +33,27 @@ BEGIN
     [LastCompleted] datetime2 null,
     PRIMARY KEY (System, Stage)
   )
-END".Replace("\r\n", "\n")));
+END";
+    Assert.That(WS(sql), Is.EqualTo(WS(exp)));
   }
+  
+  [Test] public void Test_GetSqliteCreateTableScript() {
+    var dbf = new DbFieldsHelper();
+    var sql = dbf.GetSqliteCreateTableScript(nameof(SystemState), dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]);
+    var exp = $@"CREATE TABLE IF NOT EXISTS [SystemState] (
+  [System] nvarchar(32) not null,
+  [Stage] nvarchar(32) not null,
+  [DateCreated] datetime not null,
+  [Active] bit not null,
+  [Status] nvarchar(128) not null,
+  [DateUpdated] datetime null,
+  [LastStarted] datetime null,
+  [LastCompleted] datetime null,
+  PRIMARY KEY (System, Stage)
+)
+";
+    Assert.That(WS(sql), Is.EqualTo(WS(exp)));
+  }
+  
+  private string WS(string sql) => Regex.Replace(sql, @"\s+", String.Empty);
 }

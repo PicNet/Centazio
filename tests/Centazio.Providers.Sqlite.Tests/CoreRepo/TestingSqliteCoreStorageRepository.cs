@@ -2,9 +2,11 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
 using Dapper;
+using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
@@ -12,19 +14,10 @@ internal class TestingSqliteCoreStorageRepository : ICoreStorageRepository {
 
   public async Task<ICoreStorageRepository> Initalise() {
     await using var conn = SqliteConn.Instance.Conn();
-    await conn.ExecuteAsync($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{nameof(CoreEntity)}' AND xtype='U')
-BEGIN
-CREATE TABLE {nameof(CoreEntity)} (
-  CoreId nvarchar(64) NOT NULL PRIMARY KEY,
-  CoreEntityChecksum nvarchar(64) NOT NULL,
-  FirstName nvarchar (64) NOT NULL, 
-  LastName nvarchar (64) NOT NULL, 
-  DateOfBirth date NOT NULL,
-  DateCreated datetime2 NOT NULL,
-  DateUpdated datetime2 NOT NULL)
-END
-");
+    var dbf = new DbFieldsHelper();
+    var fields = dbf.GetDbFields<CoreEntity>();
+    fields.Add(new (nameof(CoreEntityChecksum), "nvarchar", ChecksumValue.MAX_LENGTH.ToString(), true));
+    await Exec(conn, dbf.GetSqliteCreateTableScript(nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
     return this;
   }
   
@@ -51,24 +44,32 @@ END
   }
 
   public async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
-    var sql = $@"MERGE INTO {coretype} T
-USING (VALUES (@CoreId, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated))
-AS c (CoreId, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated)
-ON T.CoreId = c.CoreId
-WHEN NOT MATCHED THEN
-INSERT (CoreId, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated)
-VALUES (c.CoreId, c.CoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated)
-WHEN MATCHED THEN 
-UPDATE SET CoreEntityChecksum=c.CoreEntityChecksum, FirstName=c.FirstName, LastName=c.LastName, DateOfBirth=c.DateOfBirth, DateUpdated=c.DateUpdated;";
+    var sql = $@"
+INSERT INTO {coretype} (System, SystemId, CoreId, CoreEntityChecksum, FirstName, LastName, DateOfBirth, DateCreated, DateUpdated, LastUpdateSystem)
+  VALUES (@System, @SystemId, @CoreId, @CoreEntityChecksum, @FirstName, @LastName, @DateOfBirth, @DateCreated, @DateUpdated, @LastUpdateSystem)
+ON CONFLICT DO 
+  UPDATE SET CoreEntityChecksum=@CoreEntityChecksum, FirstName=@FirstName, LastName=@LastName, DateOfBirth=@DateOfBirth, DateUpdated=@DateUpdated, LastUpdateSystem=@LastUpdateSystem
+  WHERE CoreId=@CoreId;";
     
     await using var conn = SqliteConn.Instance.Conn();
-    await conn.ExecuteAsync(sql, entities.Select(cs => {
+    await Exec(conn, sql, entities.Select(cs => {
       var c = cs.UpdatedCoreEntity.To<CoreEntity>();
-      return new { c.CoreId, CoreEntityChecksum = cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated };
+      return new { c.System, c.SystemId, c.CoreId, CoreEntityChecksum = cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.LastUpdateSystem };
     }));
     return entities.Select(c => c.UpdatedCoreEntity).ToList();
   }
 
-  public ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
+  public async ValueTask DisposeAsync() {
+    await using var conn = SqliteConn.Instance.Conn();
+    await Exec(conn, $"DROP TABLE IF EXISTS {nameof(CoreEntity)}");
+  }
+
+  private async Task Exec(SqliteConnection conn, string sql, object? arg = null) {
+    try { await conn.ExecuteAsync(sql, arg); }
+    catch (Exception e) {
+      var argstr = arg is null ? "n/a" : Json.Serialize(arg);
+      throw new Exception($"error running command[{sql}] with arg[{argstr}]", e);
+    }
+  }
 
 }

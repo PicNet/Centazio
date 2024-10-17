@@ -2,6 +2,7 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
 using Dapper;

@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -25,7 +26,7 @@ CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{SCHEMA}].[{STAGED_ENT
   }
 
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
-    // all staged entities will have the same DateStaged so just use first as the id of this bulk insert
+    // all staged entities will have the same DateStaged so just use first as the id of this bulk insert batch
     var dtstaged = staged.First().DateStaged;
     await using var conn = await newconn();
     await conn.ExecuteAsync($@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
@@ -38,6 +39,7 @@ ON
 WHEN NOT MATCHED THEN
  INSERT (Id, System, SystemEntityTypeName, DateStaged, Data, StagedEntityChecksum)
  VALUES (se.Id, se.System, se.SystemEntityTypeName, se.DateStaged, se.Data, se.StagedEntityChecksum)
+
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
 ;", staged.Select(e => e.ToDto()).ToList());
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
@@ -58,7 +60,7 @@ WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.Ign
 
   protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
     await using var conn = await newconn();
-    var limit = Limit > 0 ? $"TOP {Limit}" : String.Empty;
+    var limit = Limit is > 0 and < Int32.MaxValue ? $"TOP {Limit}" : String.Empty;
     var promotedpredicate = incpromoted ? String.Empty : "AND DatePromoted IS NULL";
     var sql = @$"
 SELECT {limit} * 

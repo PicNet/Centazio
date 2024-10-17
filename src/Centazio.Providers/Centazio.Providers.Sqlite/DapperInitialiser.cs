@@ -9,6 +9,7 @@ public class DapperInitialiser {
 
   public static void Initialise() {
     AddAllRequiredValidStringSqlHandlers();
+    SqlMapper.AddTypeHandler(new DateOnlyHandler());
     SqlMapper.AddTypeHandler(new DateTimeHandler());
     SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
     SqlMapper.AddTypeHandler(new GuidHandler());
@@ -24,8 +25,12 @@ public class DapperInitialiser {
     public override void SetValue(IDbDataParameter parameter, T? value) => parameter.Value = value;
   }
 
+  private class DateOnlyHandler : SqliteTypeHandler<DateOnly> {
+    public override DateOnly Parse(object value) => DateOnly.Parse((string)value);
+  }
+  
   private class DateTimeHandler : SqliteTypeHandler<DateTime> {
-    public override DateTime Parse(object value) => DateTime.Parse((string)value).ToUniversalTime();
+    public override DateTime Parse(object value) => DateTime.SpecifyKind(DateTime.Parse((string)value), DateTimeKind.Utc);
   }
   
   private class DateTimeOffsetHandler : SqliteTypeHandler<DateTimeOffset> {

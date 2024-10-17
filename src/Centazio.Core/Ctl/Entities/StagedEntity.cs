@@ -20,8 +20,8 @@ public sealed record StagedEntity {
   }
   
   public Guid Id { get; }
-  [MaxLength(SystemName.MAX_LENGTH)] public SystemName System { get; }
-  [MaxLength(ObjectName.MAX_LENGTH)] public SystemEntityTypeName SystemEntityTypeName { get; }
+  public SystemName System { get; }
+  public SystemEntityTypeName SystemEntityTypeName { get; }
   public DateTime DateStaged { get; }
   [MaxLength(Int32.MaxValue)] public ValidString Data { get; internal init; }
   public StagedEntityChecksum StagedEntityChecksum { get; }

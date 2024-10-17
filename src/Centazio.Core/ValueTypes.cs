@@ -18,17 +18,15 @@ public record ValidString(string Value) {
   }
 }
 
-public abstract record EntityId(string Value) : ValidString(Value) { public const int MAX_LENGTH = 64; }
+[MaxLength2(64)] public abstract record EntityId(string Value) : ValidString(Value);
 public sealed record CoreEntityId(string Value) : EntityId(Value);
 public sealed record SystemEntityId(string Value) : EntityId(Value);
 
 [MaxLength2(32)] public sealed record SystemName(string Value) : ValidString(Value) {
-  public const int MAX_LENGTH = 32; // todo: remove
   public static implicit operator SystemName(string value) => new(value);
 }
 
 [MaxLength2(32)] public record ObjectName : ValidString {
-  public const int MAX_LENGTH = 32; // todo: remove
   internal ObjectName(string Value) : base(Value) {}
   
   internal SystemEntityTypeName ToSystemEntityTypeName => this as SystemEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityTypeName)}'");

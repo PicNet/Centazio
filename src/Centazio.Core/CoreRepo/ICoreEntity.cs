@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
@@ -9,12 +8,12 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// <summary>
   /// The source/originating system where this entity was originally created
   /// </summary>
-  [MaxLength(SystemName.MAX_LENGTH)] public SystemName System { get; set; }
+  public SystemName System { get; set; }
   
   /// <summary>
   /// The id of the entity in the source system 
   /// </summary>
-  [MaxLength(EntityId.MAX_LENGTH)] public SystemEntityId SystemId { get; set; }
+  public SystemEntityId SystemId { get; set; }
 
   /// <summary>
   /// The id of the entity.  Ideally this should be the same id as used in the source
@@ -22,7 +21,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// short string representation of a unique identifier that can be used to map back
   /// to the source system 
   /// </summary>
-  [MaxLength(EntityId.MAX_LENGTH)] public CoreEntityId CoreId { get; set; }
+  public CoreEntityId CoreId { get; set; }
   
   /// <summary>
   /// The date/time when this entity was added to core storage
@@ -39,7 +38,7 @@ public interface ICoreEntity : IGetChecksumSubset {
   /// filter out any changes by a system, when writing back to that system.  I.e. if
   /// System 1 changes a property, then there is no need to write this back to System 1.
   /// </summary>
-  [IgnoreNamingConventions, MaxLength(SystemName.MAX_LENGTH)] public SystemName LastUpdateSystem { get; set; }
+  [IgnoreNamingConventions] public SystemName LastUpdateSystem { get; set; }
   
   /// <summary>
   /// A descriptive field that can be used for debugging and displaying the
