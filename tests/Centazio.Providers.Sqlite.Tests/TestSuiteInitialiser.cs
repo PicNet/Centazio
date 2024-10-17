@@ -1,8 +1,7 @@
 ﻿// this class purposefully omits the namespace to ensure that the initialisation below
 //  occurs for all tests, reagardless of namespace
 
-using Centazio.Providers.SqlServer;
-using Centazio.Providers.SqlServer.Tests;
+using Centazio.Providers.Sqlite;
 using Centazio.Test.Lib;
 
 #pragma warning disable CA1050
@@ -13,9 +12,4 @@ using Centazio.Test.Lib;
     DapperInitialiser.Initialise();
     GlobalTestSuiteInitialiser.Init();
   }
-  
-  [OneTimeTearDown] public async Task GlobalTearDown() {
-    await SqlConn.Instance.Dispose();
-  }
-
 }

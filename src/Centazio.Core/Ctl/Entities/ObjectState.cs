@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Centazio.Core.Ctl.Entities;
 
@@ -61,8 +62,8 @@ public record ObjectState : ILoggable {
   public DateTime? LastSuccessStart { get; internal init; }
   public DateTime? LastCompleted { get; internal init; }
   public DateTime? LastSuccessCompleted { get; internal init; }
-  public string? LastRunMessage { get; internal init; } 
-  public string? LastRunException { get; internal init; }
+  [MaxLength(1024)] public string? LastRunMessage { get; internal init; } 
+  [MaxLength(4000)] public string? LastRunException { get; internal init; }
   
   public record Dto : IDto<ObjectState> {
     public string? System { get; init; }

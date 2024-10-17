@@ -1,25 +1,25 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Providers.SqlServer.Ctl;
+using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Test.Lib.AbstractProviderTests;
 using Dapper;
 
-namespace Centazio.Providers.SqlServer.Tests.Ctl;
+namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
-public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
+public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
 
   internal static readonly string TEST_TABLE = "dbo.TEST_TABLE";
   
   [Test, Ignore("Dapper does not support Enum->string mapping")] public async Task Test_serialisation_of_enums() {
-    await using var conn = await SqlConn.Instance.Conn();
+    await using var conn = SqliteConn.Instance.Conn();
     
     var created = await repo.CreateObjectState(await repo.CreateSystemState(NAME, NAME), new SystemEntityTypeName(NAME));
-    var lr1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
-    var lav1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
+    var lr1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqliteCtlRepository.SCHEMA}.{SqliteCtlRepository.OBJECT_STATE_TBL}");
+    var lav1 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqliteCtlRepository.SCHEMA}.{SqliteCtlRepository.OBJECT_STATE_TBL}");
     var updated = await repo.SaveObjectState(created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, String.Empty));
-    var lr2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
-    var lav2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqlServerCtlRepository.SCHEMA}.{SqlServerCtlRepository.OBJECT_STATE_TBL}");
+    var lr2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastResult FROM {SqliteCtlRepository.SCHEMA}.{SqliteCtlRepository.OBJECT_STATE_TBL}");
+    var lav2 = await conn.ExecuteScalarAsync<string>($"SELECT TOP 1 LastAbortVote FROM {SqliteCtlRepository.SCHEMA}.{SqliteCtlRepository.OBJECT_STATE_TBL}");
     
     Assert.That(created.LastResult, Is.EqualTo(EOperationResult.Unknown));
     Assert.That(created.LastAbortVote, Is.EqualTo(EOperationAbortVote.Unknown));
@@ -35,7 +35,7 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
   [Test, Ignore("No Dapper does not handle proper validation of records, created new Raw objects to handle this")] public async Task Test_Dapper_is_properly_handling_ValidStrings() {
     DapperInitialiser.Initialise(); // is not working?
     
-    await using var conn = await SqlConn.Instance.Conn();
+    await using var conn = SqliteConn.Instance.Conn();
     await conn.ExecuteAsync($"CREATE TABLE {TEST_TABLE} (Valid nvarchar (8) NULL, System nvarchar (8) NULL)");
     await conn.ExecuteAsync($"INSERT INTO {TEST_TABLE} VALUES (null, null)");
 
@@ -43,22 +43,11 @@ public class SqlServerCtlRepositoryTests : CtlRepositoryDefaultTests {
   }
   
   protected override async Task<ICtlRepository> GetRepository() 
-      => await new TestingSqlServerCtlRepository().Initalise();
+      => await new TestingSqliteCtlRepository().Initalise();
 
-  class TestingSqlServerCtlRepository() 
-      : SqlServerCtlRepository(async () => await SqlConn.Instance.Conn()) {
-
-    public override async ValueTask DisposeAsync() {
-      if (!SqlConn.Instance.Real) {
-        await using var conn = await SqlConn.Instance.Conn();
-        await conn.ExecuteAsync($"DROP TABLE IF EXISTS {SCHEMA}.{OBJECT_STATE_TBL}; DROP TABLE IF EXISTS {SCHEMA}.{SYSTEM_STATE_TBL}; DROP TABLE IF EXISTS {TEST_TABLE};");
-      }
-      await base.DisposeAsync(); 
-    }
-  }
+  class TestingSqliteCtlRepository() : SqliteCtlRepository(SqliteConn.Instance.Conn);
   
   record TestRecord {
-
     public ValidString Valid { get; } = null!;
     public SystemName System { get; } = null!;
   }

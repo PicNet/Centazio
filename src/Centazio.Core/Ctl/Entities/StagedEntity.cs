@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Checksum;
+﻿using System.ComponentModel.DataAnnotations;
+using Centazio.Core.Checksum;
 
 namespace Centazio.Core.Ctl.Entities;
 
@@ -19,12 +20,12 @@ public sealed record StagedEntity {
   }
   
   public Guid Id { get; }
-  public SystemName System { get; }
-  public SystemEntityTypeName SystemEntityTypeName { get; }
+  [MaxLength(SystemName.MAX_LENGTH)] public SystemName System { get; }
+  [MaxLength(ObjectName.MAX_LENGTH)] public SystemEntityTypeName SystemEntityTypeName { get; }
   public DateTime DateStaged { get; }
-  public ValidString Data { get; internal init; }
+  [MaxLength(Int32.MaxValue)] public ValidString Data { get; internal init; }
   public StagedEntityChecksum StagedEntityChecksum { get; }
-  public string? IgnoreReason { get; internal init; }
+  [MaxLength(1024)] public string? IgnoreReason { get; internal init; }
   
   public DateTime? DatePromoted { get; internal init; }
   

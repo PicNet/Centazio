@@ -35,6 +35,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Cli.Tests", "tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.E2E.Tests", "tests\Centazio.E2E.Tests\Centazio.E2E.Tests.csproj", "{F68F9E90-3F6F-4854-9DD2-65B93B04438C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Providers.Sqlite", "src\Centazio.Providers\Centazio.Providers.Sqlite\Centazio.Providers.Sqlite.csproj", "{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Providers.Sqlite.Tests", "tests\Centazio.Providers.Sqlite.Tests\Centazio.Providers.Sqlite.Tests.csproj", "{41008760-9463-4448-A148-49043BFC6A21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,14 @@ Global
 		{F68F9E90-3F6F-4854-9DD2-65B93B04438C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F68F9E90-3F6F-4854-9DD2-65B93B04438C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F68F9E90-3F6F-4854-9DD2-65B93B04438C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41008760-9463-4448-A148-49043BFC6A21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41008760-9463-4448-A148-49043BFC6A21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41008760-9463-4448-A148-49043BFC6A21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41008760-9463-4448-A148-49043BFC6A21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1653C645-36BD-429C-A737-1F73144E6D58} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
@@ -95,5 +107,7 @@ Global
 		{1E939A9D-D12B-493E-BAE0-5505ABCB9887} = {85E0FAEE-523F-43E6-9FA8-53EFA08E2F35}
 		{71B815EF-7B16-4B59-8618-786946214EF3} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
 		{F68F9E90-3F6F-4854-9DD2-65B93B04438C} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
+		{D0C7217B-A2ED-414B-BC82-7E2BB6DCDD1B} = {95FE1321-2F07-45ED-ABA6-AA354B308CE7}
+		{41008760-9463-4448-A148-49043BFC6A21} = {60BD8B72-2AC8-4D12-A2BA-87BDD7C803AB}
 	EndGlobalSection
 EndGlobal

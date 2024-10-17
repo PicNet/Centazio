@@ -1,4 +1,7 @@
-﻿namespace Centazio.Core.Misc;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
+
+namespace Centazio.Core.Misc;
 
 public static class ReflectionUtils {
   public static T GetPropVal<T>(object o, string prop) {
@@ -12,4 +15,24 @@ public static class ReflectionUtils {
   }
   
   public static bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
+  
+  public static bool IsNullable(PropertyInfo p) {
+    var nic = new NullabilityInfoContext().Create(p); 
+    return Nullable.GetUnderlyingType(p.PropertyType) is not null ||
+        nic.ReadState == NullabilityState.Nullable ||
+        nic.WriteState == NullabilityState.Nullable;
+  }
+  
+  public static bool IsJsonIgnore(Type t, string prop) => GetPropAttribute<JsonIgnoreAttribute>(t, prop) is not null;
+
+  public static A? GetPropAttribute<A>(Type t, string prop) where A : Attribute {
+    var p = t.GetProperty(prop);
+    if (p is null) return null;
+    if (p.GetCustomAttribute(typeof(A)) is A att) return att;
+    if (p.PropertyType.GetCustomAttribute(typeof(A)) is A att2) return att2;
+    var ifaceatt = t.GetInterfaces().Select(i => GetPropAttribute<A>(i, prop)).FirstOrDefault(a => a is not null); 
+    if (ifaceatt is not null) return ifaceatt;
+    return t.BaseType is not null ? GetPropAttribute<A>(t.BaseType, prop) : null;
+  }
+
 }

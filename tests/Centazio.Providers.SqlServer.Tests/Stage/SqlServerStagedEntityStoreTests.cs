@@ -13,11 +13,11 @@ public class SqlServerStagedEntityStoreTests : StagedEntityStoreDefaultTests {
       => await new TestingSqlServerStagedEntityStore(limit, checksum).Initalise();
 
   class TestingSqlServerStagedEntityStore(int limit, Func<string, StagedEntityChecksum>? checksum = null) 
-      : SqlServerStagedEntityStore(() => SqlConn.Instance.Conn(), limit, checksum ?? Helpers.TestingStagedEntityChecksum ) {
+      : SqlServerStagedEntityStore(async () => await SqlConn.Instance.Conn(), limit, checksum ?? Helpers.TestingStagedEntityChecksum ) {
 
     public override async ValueTask DisposeAsync() {
       if (!SqlConn.Instance.Real) {
-        await using var conn = SqlConn.Instance.Conn();
+        await using var conn = await SqlConn.Instance.Conn();
         await conn.ExecuteAsync($"DROP TABLE IF EXISTS {SCHEMA}.{STAGED_ENTITY_TBL}");
       }
       await base.DisposeAsync(); 

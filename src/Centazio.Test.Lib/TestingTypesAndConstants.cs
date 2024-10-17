@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.ComponentModel.DataAnnotations;
+using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 
@@ -27,17 +28,21 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
 
 public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth) : ICoreEntity {
 
-  public CoreEntityId CoreId { get; set; } = CoreId;
-  public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public SystemName System { get; set; } = Constants.System1Name;
-  public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
+  [MaxLength(EntityId.MAX_LENGTH)] public CoreEntityId CoreId { get; set; } = CoreId;
+  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
+  [MaxLength(64)] public string FirstName { get; init; } = FirstName;
+  // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
+  [MaxLength(64)] public string LastName { get; init; } = LastName;
+  [MaxLength(EntityId.MAX_LENGTH)] public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
+  [MaxLength(SystemName.MAX_LENGTH)] public SystemName System { get; set; } = Constants.System1Name;
+  [MaxLength(SystemName.MAX_LENGTH)] public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
   public DateTime DateUpdated { get; set; }
   public DateTime DateCreated { get; set; }
   public string DisplayName => $"{FirstName} {LastName}";
   
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
-  public record Dto {
+  public record Dto : IDto<CoreEntity> {
     public string? CoreId { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
@@ -46,7 +51,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
     public string? System { get; init; } 
     public DateTime? DateCreated { get; init; } 
     
-    public CoreEntity ToCoreEntity() => new(
+    public CoreEntity ToBase() => new(
         new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
         FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
         LastName ?? throw new ArgumentNullException(nameof(LastName)),

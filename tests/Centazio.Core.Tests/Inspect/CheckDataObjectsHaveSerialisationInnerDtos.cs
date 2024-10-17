@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.Tests.Inspect;
 
@@ -31,7 +32,7 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     var dtoprops = dtot.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var dtonames = dtoprops.Select(p => p.Name).ToList();
     var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
-    var nonnulls = dtoprops.Where(p => !IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
+    var nonnulls = dtoprops.Where(p => !ReflectionUtils.IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
     var setterstoignore = IGNORE_SETTERS.TryGetValue(baset.Name, out var value2) ? value2 : [];
     var setters = baseprops.Where(p => !setterstoignore.Contains(p.Name) && p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
     var extra = dtonames.Where(n => !basenames.Contains(n)).ToList();
@@ -43,12 +44,6 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
     Assert.That(nonnulls.Any(), Is.False, $"{baset.Name}#Dto has non-nullable properties: {String.Join(',', nonnulls.Select(p => p.Name))}");
     Assert.That(extra.Any(), Is.False, $"{baset.Name}#Dto has properties not found in base type: {String.Join(',', extra)}");
     Assert.That(missing.Any(), Is.False, $"{baset.Name}#Dto has missing properties found in base type: {String.Join(',', missing)}");
-
-    bool IsNullable(PropertyInfo property) {
-      var nullabilityInfoContext = new NullabilityInfoContext();
-      var info = nullabilityInfoContext.Create(property);
-      return info.WriteState == NullabilityState.Nullable || info.ReadState == NullabilityState.Nullable;
-    }
   }
 
 }

@@ -3,31 +3,46 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Dapper;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 
-namespace Centazio.Providers.SqlServer.Stage;
+namespace Centazio.Providers.Sqlite.Stage;
 
-public class SqlServerStagedEntityStore(Func<Task<SqlConnection>> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);
 
   public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
 
-  public async Task<SqlServerStagedEntityStore> Initalise() {
-    await using var conn = await newconn();
-    var dbf = new DbFieldsHelper();
-    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)]));
+  public async Task<SqliteStagedEntityStore> Initalise() {
+    await using var conn = newconn();
     await conn.ExecuteAsync($@"
-ALTER TABLE [{SCHEMA}].[{STAGED_ENTITY_TBL}] REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
-CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{SCHEMA}].[{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{SCHEMA}')
+  EXEC('CREATE SCHEMA [{SCHEMA}] AUTHORIZATION [dbo]');
+
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{STAGED_ENTITY_TBL}' AND xtype='U')
+BEGIN
+  CREATE TABLE {SCHEMA}.{STAGED_ENTITY_TBL} (
+    Id uniqueidentifier NOT NULL PRIMARY KEY, 
+    System nvarchar (64) NOT NULL, 
+    SystemEntityTypeName nvarchar (64) NOT NULL, 
+    DateStaged datetime2 NOT NULL, 
+    Data nvarchar (max) NOT NULL,
+    StagedEntityChecksum nvarchar (64) NOT NULL,
+    DatePromoted datetime2 NULL,
+    IgnoreReason nvarchar (256) NULL)
+
+ALTER TABLE {SCHEMA}.{STAGED_ENTITY_TBL} REBUILD PARTITION = ALL WITH (DATA_COMPRESSION = PAGE);
+CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON {SCHEMA}.{STAGED_ENTITY_TBL} (System, SystemEntityTypeName, DateStaged);
+END
+");
     return this;
   }
 
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     // all staged entities will have the same DateStaged so just use first as the id of this bulk insert
     var dtstaged = staged.First().DateStaged;
-    await using var conn = await newconn();
+    await using var conn = newconn();
     await conn.ExecuteAsync($@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
 USING (VALUES (@Id, @System, @SystemEntityTypeName, @DateStaged, @Data, @StagedEntityChecksum))
   AS se (Id, System, SystemEntityTypeName, DateStaged, Data, StagedEntityChecksum)
@@ -45,7 +60,7 @@ WHEN NOT MATCHED THEN
   }
 
   public override async Task Update(List<StagedEntity> staged) {
-    await using var conn = await newconn();
+    await using var conn = newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T
 USING (VALUES (@Id, @System, @SystemEntityTypeName, @DatePromoted, @IgnoreReason)) AS se (Id, System, SystemEntityTypeName, DatePromoted, IgnoreReason)
@@ -57,7 +72,7 @@ WHEN MATCHED THEN UPDATE SET DatePromoted = se.DatePromoted, IgnoreReason=se.Ign
   }
 
   protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
-    await using var conn = await newconn();
+    await using var conn = newconn();
     var limit = Limit > 0 ? $"TOP {Limit}" : String.Empty;
     var promotedpredicate = incpromoted ? String.Empty : "AND DatePromoted IS NULL";
     var sql = @$"
@@ -76,7 +91,7 @@ ORDER BY DateStaged
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
-    await using var conn = await newconn();
+    await using var conn = newconn();
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
     await conn.ExecuteAsync($"DELETE FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE {col} < @before AND System = @system AND SystemEntityTypeName = @systype", new { before, system, systype });
   }

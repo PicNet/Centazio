@@ -12,17 +12,17 @@ public class SqlConn {
   public static readonly SqlConn Instance = new();
   
   public bool Real { get; }
-  public SqlConnection Conn() => String.IsNullOrWhiteSpace(connstr) ? throw new ArgumentNullException(nameof(connstr)) : new SqlConnection(connstr);
-  
+  public async Task<SqlConnection> Conn() {
+    if (String.IsNullOrWhiteSpace(connstr)) { await Init(); }
+    return new SqlConnection(connstr);
+  }
+
   private SqlConn(bool real=false) => Real = real;
   
   private MsSqlContainer? container;
   private string connstr = null!;
 
-  // note: This should only be called by TestSuiteInitialiser.cs
-  internal async Task Init() {
-    if (!String.IsNullOrWhiteSpace(connstr)) throw new Exception("already initialised");
-    
+  private async Task Init() {
     if (Real) {
       var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
       var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.SecretsFolder, "dev").Load();
