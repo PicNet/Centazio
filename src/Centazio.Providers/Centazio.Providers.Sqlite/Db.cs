@@ -1,13 +1,12 @@
-﻿using Centazio.Core;
+﻿using System.Data.Common;
+using Centazio.Core;
 using Dapper;
-using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite;
 
-// simple wrappers to assist in adding debug information when executing queries/commands
 public static class Db {
   
-  public static async Task<int> Exec(SqliteConnection conn, string sql, object? arg = null) {
+  public static async Task<int> Exec(DbConnection conn, string sql, object? arg = null) {
     try { return await conn.ExecuteAsync(sql, arg); }
     catch (Exception e) {
       var argstr = arg is null ? "n/a" : Json.Serialize(arg);
@@ -15,7 +14,7 @@ public static class Db {
     }
   }
   
-  public static async Task<List<T>> Query<T>(SqliteConnection conn, string query, object? arg=null) {
+  public static async Task<List<T>> Query<T>(DbConnection conn, string query, object? arg=null) {
     try { return (await conn.QueryAsync<T>(query, arg)).ToList(); }
     catch (Exception e) {
       var argstr = arg is null ? "n/a" : Json.Serialize(arg);

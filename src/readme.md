@@ -1,6 +1,5 @@
 # Todo
 - simulation to use real stores (not in-memory)
-- Db class should be generic and be used by all sql providers to wrap queries and commands with logging and error logging
 - merge CoreToSystemMapStore into CtlStore (as SystemMap is part of Ctl)
 - check testing coverage
 - review all code comments

@@ -2,7 +2,6 @@
 using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
-using Dapper;
 using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.CoreToSystemMapping;
@@ -26,7 +25,7 @@ public class SqliteCoreToSystemMapStore(Func<SqliteConnection> newconn) : Abstra
 INSERT INTO [{MAPPING_TBL}] (CoreEntityTypeName, CoreId, System, SystemId, SystemEntityChecksum, Status, DateCreated, DateUpdated, DateLastSuccess, DateLastError, LastError)
 VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum, @Status, @DateCreated, @DateUpdated, @DateLastSuccess, @DateLastError, @LastError);", tocreate.Select(DtoHelpers.ToDto)); 
     
-    var ids = (await conn.QueryAsync<CoreEntityId>(
+    var ids = (await Db.Query<CoreEntityId>(conn,
         @$"SELECT CoreId FROM [{MAPPING_TBL}] 
             WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND DateCreated=@DateCreated", new { System=system, CoreEntityTypeName=coretype, tocreate.First().DateCreated }))
         .ToDictionary(id => id);
@@ -40,7 +39,7 @@ UPDATE [{MAPPING_TBL}]
 SET SystemEntityChecksum=@SystemEntityChecksum, Status=@Status, DateUpdated=@DateUpdated, DateLastSuccess=@DateLastSuccess, DateLastError=@DateLastError, LastError=@LastError
 WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId AND SystemId=@SystemId", toupdate.Select(DtoHelpers.ToDto)); 
     
-    var ids = (await conn.QueryAsync<CoreEntityId>(@$"SELECT CoreId FROM [{MAPPING_TBL}] WHERE DateUpdated=@DateUpdated", new { toupdate.First().DateUpdated })).ToDictionary(id => id);
+    var ids = (await Db.Query<CoreEntityId>(conn, @$"SELECT CoreId FROM [{MAPPING_TBL}] WHERE DateUpdated=@DateUpdated", new { toupdate.First().DateUpdated })).ToDictionary(id => id);
     return toupdate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
   }
 

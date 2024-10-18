@@ -3,7 +3,6 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Stage;
-using Dapper;
 using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.Stage;
@@ -36,7 +35,7 @@ VALUES (@Id, @System, @SystemEntityTypeName, @DateStaged, @Data, @StagedEntityCh
 ON CONFLICT (System, SystemEntityTypeName, StagedEntityChecksum) DO NOTHING;
 ", staged.Select(DtoHelpers.ToDto));
     
-    var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM [{STAGED_ENTITY_TBL}] WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
+    var ids = (await Db.Query<Guid>(conn, $"SELECT Id FROM [{STAGED_ENTITY_TBL}] WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
 
@@ -64,8 +63,7 @@ WHERE
 ORDER BY DateStaged
 {limit}
 ";
-    return (await conn.QueryAsync<StagedEntity.Dto>(sql, new { after, system, systype }))
-        .Select(e => e.ToBase()).ToList();
+    return (await Db.Query<StagedEntity.Dto>(conn, sql, new { after, system, systype })).Select(e => e.ToBase()).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
