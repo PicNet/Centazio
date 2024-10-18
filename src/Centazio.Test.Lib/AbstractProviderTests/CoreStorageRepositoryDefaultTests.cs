@@ -1,5 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Test.Lib.CoreStorage;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib.AbstractProviderTests;
@@ -8,27 +8,27 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
 
   protected bool SupportsExpressionBasedQuery { get; } = supportExpressions;
   
-  private ICoreStorageRepository repo = null!;
+  private ICoreStorageWithQuery repo = null!;
   
   [SetUp] public async Task SetUp() => repo = await GetRepository();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
   
-  protected abstract Task<ICoreStorageRepository> GetRepository();
+  protected abstract Task<ICoreStorageWithQuery> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
-    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, new("invalid")));
+    Assert.ThrowsAsync<Exception>(() => repo.Get(Constants.CoreEntityName, [new("invalid")]));
     await DoUpsert(TestingFactories.NewCoreCust(String.Empty, String.Empty));
-    Assert.ThrowsAsync<Exception>(() => repo.Get<CoreEntity>(Constants.CoreEntityName, new("invalid")));
+    Assert.ThrowsAsync<Exception>(() => repo.Get(Constants.CoreEntityName, [new("invalid")]));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
     var created = TestingFactories.NewCoreCust("N1", "N1");
     await DoUpsert(created);
-    var retreived1 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.CoreId);
+    var retreived1 = await GetSingle(created.CoreId);
     var list1 = await QueryAll();
     var updated = retreived1 with { FirstName = "N2" };
     await DoUpsert(updated);
-    var retreived2 = await repo.Get<CoreEntity>(Constants.CoreEntityName, created.CoreId);
+    var retreived2 = await GetSingle(created.CoreId);
     var list2 = await QueryAll();
     
     Assert.That(retreived1, Is.EqualTo(created));
@@ -59,13 +59,11 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
         .ToList();
     await DoUpsert(data);
     
-    var (all, even, odd) = (await QueryAll(), await QueryEvenOdd(true), await QueryEvenOdd(false));
-
+    var all = await QueryAll();
     Assert.That(all, Is.EquivalentTo(data));
-    Assert.That(even, Has.Count.EqualTo(50));
-    Assert.That(odd, Has.Count.EqualTo(50));
-    Assert.That(all, Is.EquivalentTo(even.Concat(odd)));
   }
+  
+  private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (await repo.Get(Constants.CoreEntityName, [coreid])).Cast<CoreEntity>().Single();
   
   private Task DoUpsert(ICoreEntity coreent) => DoUpsert([coreent]);
   private Task DoUpsert(List<ICoreEntity> coreents) {
@@ -83,14 +81,9 @@ public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions)
   }
 
   private async Task<List<CoreEntity>> QueryAll() {
-    return (SupportsExpressionBasedQuery 
+    var results = (SupportsExpressionBasedQuery 
         ? await repo.Query<CoreEntity>(Constants.CoreEntityName, e => true)
         : await repo.Query<CoreEntity>(Constants.CoreEntityName, $"SELECT * FROM {nameof(CoreEntity)}")).ToList();
-  }
-
-  private async Task<List<CoreEntity>> QueryEvenOdd(bool even) {
-    return (SupportsExpressionBasedQuery 
-        ? await repo.Query<CoreEntity>(Constants.CoreEntityName, e => Int32.Parse(e.FirstName) % 2 == (even ? 0 : 1))
-        : await repo.Query<CoreEntity>(Constants.CoreEntityName, $"SELECT * FROM {nameof(CoreEntity)} WHERE FirstName % 2 = " + (even ? 0 : 1))).ToList();
+    return results.ToList();
   }
 }

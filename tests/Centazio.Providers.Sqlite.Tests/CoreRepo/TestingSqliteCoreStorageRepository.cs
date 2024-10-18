@@ -4,14 +4,13 @@ using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.CoreStorage;
 using Dapper;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
-internal class TestingSqliteCoreStorageRepository : ICoreStorageRepository {
+internal class TestingSqliteCoreStorageRepository : ICoreStorageWithQuery {
 
-  public async Task<ICoreStorageRepository> Initalise() {
+  public async Task<ICoreStorageWithQuery> Initalise() {
     await using var conn = SqliteConn.Instance.Conn();
     var dbf = new DbFieldsHelper();
     var fields = dbf.GetDbFields<CoreEntity>();
@@ -20,18 +19,23 @@ internal class TestingSqliteCoreStorageRepository : ICoreStorageRepository {
     return this;
   }
   
-  public async Task<E> Get<E>(CoreEntityTypeName coretype, CoreEntityId coreid) where E : class, ICoreEntity {
+  public async Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     await using var conn = SqliteConn.Instance.Conn();
-    var dto = await conn.QuerySingleOrDefaultAsync<CoreEntity.Dto>($"SELECT * FROM {coretype} WHERE CoreId=@coreid", new { coreid });
-    if (dto is null) throw new Exception($"Core entity [{coretype}({coreid})] not found");
-    return dto.ToBase() as E ?? throw new Exception();
+    var dtos = await Db.Query<CoreEntity.Dto>(conn, $"SELECT * FROM [{coretype}] WHERE [{nameof(ICoreEntity.System)}] != @ExcludeSystem [{nameof(ICoreEntity.DateUpdated)}] > @After", new { After=after, ExcludeSystem=exclude });
+    return dtos.Select(dto => (ICoreEntity) dto.ToBase()).ToList();
   }
 
-  
+  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+    await using var conn = SqliteConn.Instance.Conn();
+    var dtos = await Db.Query<CoreEntity.Dto>(conn, $"SELECT * FROM {coretype} WHERE CoreId IN @CoreIds", new { CoreIds=coreids.Select(id => id.Value) });
+    if (dtos.Count != coreids.Count) throw new Exception($"Some core entities could not be found");
+    return dtos.Select(dto => (ICoreEntity) dto.ToBase()).ToList();
+  }
+
   public async Task<List<E>> Query<E>(CoreEntityTypeName coretype, string query) where E : class, ICoreEntity {
     await using var conn = SqliteConn.Instance.Conn();
     var dtos = await conn.QueryAsync<CoreEntity.Dto>(query);
-    return dtos.Select(dto => dto.ToBase()).Cast<E>().ToList();
+    return dtos.Select(dto => dto.ToBase() as E ?? throw new Exception()).ToList();
   }
   
   public Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity => throw new NotSupportedException();

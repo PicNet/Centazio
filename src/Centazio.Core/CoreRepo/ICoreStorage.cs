@@ -1,7 +1,15 @@
-﻿using Centazio.Core.Checksum;
+﻿using System.Linq.Expressions;
+using Centazio.Core.Checksum;
 using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
+
+public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;
+
+public interface ICoreStorageWithQuery : ICoreStorage {
+  Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity;
+  Task<List<E>> Query<E>(CoreEntityTypeName coretype, string query) where E : class, ICoreEntity;
+}
 
 public interface ICoreStorageGetter : IAsyncDisposable {
 
@@ -35,5 +43,3 @@ public interface ICoreStorageUpserter : IAsyncDisposable {
   /// </summary>
   Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
 }
-
-public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;

@@ -1,5 +1,5 @@
 ﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 using Centazio.Core;
 using Centazio.Core.Checksum;
@@ -164,6 +164,10 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
     var forcores = coreids.Select(id => full.Single(e => e.CoreId == id)).ToList();
     return Task.FromResult(forcores);
   }
+
+  // todo: these two methods 
+  public Task<List<ICoreEntity>> Query(CoreEntityTypeName coretype, Expression<Func<ICoreEntity, bool>> predicate) => throw new NotSupportedException();
+  public Task<List<ICoreEntity>> Query(CoreEntityTypeName coretype, string query) => throw new NotSupportedException();
 
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       (await Get(new("ignore"), coretype, DateTime.MinValue))

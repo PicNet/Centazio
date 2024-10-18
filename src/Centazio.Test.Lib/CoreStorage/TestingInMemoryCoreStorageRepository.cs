@@ -5,12 +5,7 @@ using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.CoreStorage;
 
-public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageRepository, ICoreStorage {
-  
-  public Task<E> Get<E>(CoreEntityTypeName coretype, CoreEntityId coreid) where E : class, ICoreEntity {
-    if (!db.ContainsKey(coretype) || !db[coretype].ContainsKey(coreid)) throw new Exception($"Core entity [{coretype}({coreid})] not found");
-    return Task.FromResult(db[coretype][coreid].CoreEntity.To<E>());
-  }
+public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageWithQuery {
   
   public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
@@ -19,8 +14,13 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   }
 
   public Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
-    var lst = coreids.Select(id => fulllst.Single(e => e.Value.CoreEntity.CoreId == id).Value.CoreEntity).ToList();
+    if (!coreids.Any()) return Task.FromResult(new List<ICoreEntity>());
+    if (!db.TryGetValue(coretype, out var fulllst)) throw new Exception("Could not find all specified core entities");
+    var lst = coreids.Select(id => fulllst.SingleOrDefault(e => e.Value.CoreEntity.CoreId == id).Value.CoreEntity)
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        .Where(e => e is not null)
+        .ToList();
+    if (lst.Count != coreids.Count) throw new Exception("Could not find all specified core entities");
     return Task.FromResult(lst);
   }
 

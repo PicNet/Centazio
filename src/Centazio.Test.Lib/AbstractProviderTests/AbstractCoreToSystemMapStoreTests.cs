@@ -151,7 +151,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
       TestingUtcDate.DoTick();
       var map = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, coretype, dups);
       // var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
-      return await corestore.Get<CoreEntity>(Constants.CoreEntityName, map.Single().Value);
+      return (await corestore.Get(Constants.CoreEntityName, [map.Single().Value])).Cast<CoreEntity>().Single();
     }
     
     // System1 created E1
