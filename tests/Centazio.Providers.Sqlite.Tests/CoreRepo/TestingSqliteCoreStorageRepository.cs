@@ -6,7 +6,6 @@ using Centazio.Core.Misc;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
 using Dapper;
-using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
@@ -17,7 +16,7 @@ internal class TestingSqliteCoreStorageRepository : ICoreStorageRepository {
     var dbf = new DbFieldsHelper();
     var fields = dbf.GetDbFields<CoreEntity>();
     fields.Add(new (nameof(CoreEntityChecksum), "nvarchar", ChecksumValue.MAX_LENGTH.ToString(), true));
-    await Exec(conn, dbf.GetSqliteCreateTableScript(nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
     return this;
   }
   
@@ -52,7 +51,7 @@ ON CONFLICT DO
   WHERE CoreId=@CoreId;";
     
     await using var conn = SqliteConn.Instance.Conn();
-    await Exec(conn, sql, entities.Select(cs => {
+    await Db.Exec(conn, sql, entities.Select(cs => {
       var c = cs.UpdatedCoreEntity.To<CoreEntity>();
       return new { c.System, c.SystemId, c.CoreId, CoreEntityChecksum = cs.UpdatedCoreEntityChecksum, c.FirstName, c.LastName, c.DateOfBirth, c.DateCreated, c.DateUpdated, c.LastUpdateSystem };
     }));
@@ -61,15 +60,6 @@ ON CONFLICT DO
 
   public async ValueTask DisposeAsync() {
     await using var conn = SqliteConn.Instance.Conn();
-    await Exec(conn, $"DROP TABLE IF EXISTS {nameof(CoreEntity)}");
+    await Db.Exec(conn, $"DROP TABLE IF EXISTS {nameof(CoreEntity)}");
   }
-
-  private async Task Exec(SqliteConnection conn, string sql, object? arg = null) {
-    try { await conn.ExecuteAsync(sql, arg); }
-    catch (Exception e) {
-      var argstr = arg is null ? "n/a" : Json.Serialize(arg);
-      throw new Exception($"error running command[{sql}] with arg[{argstr}]", e);
-    }
-  }
-
 }

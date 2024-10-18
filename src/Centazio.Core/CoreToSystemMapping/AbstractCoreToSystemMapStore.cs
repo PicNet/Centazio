@@ -6,11 +6,10 @@ namespace Centazio.Core.CoreToSystemMapping;
 
 public interface ICoreToSystemMapStore : IAsyncDisposable {
 
-  Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> maps);
-  Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> maps);
+  Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
+  Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   
   Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> coreents);
-  Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids);
   Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids);
 
   /// <summary>
@@ -26,13 +25,22 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
 
 public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
 
-  public abstract Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> creates);
-  public abstract Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> updates);
+  public abstract Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
+  public abstract Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   public abstract Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, List<ICoreEntity> coreents);
-  public abstract Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids);
   
-  public abstract Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids);
-  public abstract Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents);
+  public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
+      GetById(system, coretype, coreids);
+  
+  public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) => 
+      GetById(system, coretype, systemids);
+
+  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
+    var lst = await GetById(system, coretype, coreents.Select(e => e.SystemId).ToList());
+    return lst.ToDictionary(m => m.SystemId, m => m.CoreId);
+  }
+  
+  protected abstract Task<List<Map.CoreToSystemMap>> GetById<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
   
   public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreEntities(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey) {
     var fks = coreents.Select(e => new CoreEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();

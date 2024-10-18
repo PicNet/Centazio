@@ -2,8 +2,6 @@
 
 namespace Centazio.Core;
 
-public interface IDto<out T> { T ToBase(); }
-
 /// <summary>
 /// A checksum used to check for unnecessary writes to core storage or the target system.
 /// If this returns null then checksum comparisons will not be made and all updates

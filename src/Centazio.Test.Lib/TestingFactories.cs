@@ -43,11 +43,9 @@ public class TestingCtlRepository : InMemoryCtlRepository {
   public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
 }
 
-public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystemMap>> GetAll(); }
+// public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystemMap>> GetAll(); }
 
-public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingInMemoryCoreToSystemMapStore {
-  public Task<List<Map.CoreToSystemMap>> GetAll() {
-    return Task.FromResult(memdb.Values.Select(Deserialize).Cast<Map.CoreToSystemMap>().ToList());
-  }
-
+public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingCoreToSystemMapStore {
+  public Task<List<Map.CoreToSystemMap>> GetAll() => 
+      Task.FromResult(memdb.Values.Select(Deserialize).Cast<Map.CoreToSystemMap>().ToList());
 }

@@ -17,43 +17,36 @@ public class InMemoryCoreToSystemMapStore : AbstractCoreToSystemMapStore {
     });
     return Task.FromResult((news, updates));
   }
-  
-  public override Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
-      Task.FromResult(GetById(system, coretype, coreids));
-  
-  public override Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) => 
-      Task.FromResult(GetById(system, coretype, systemids));
 
-  public override Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
-    var lst = GetById(system, coretype, coreents.Select(e => e.SystemId).ToList());
-    return Task.FromResult(lst.ToDictionary(m => m.SystemId, m => m.CoreId));
-  }
-
-  public override Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> news) {
-    var duplicates = GetById(system, coretype, news.Select(e => e.SystemId).ToList()).Select(m => m.SystemId).ToList();
-    if (duplicates.Any()) throw new Exception($"attempted to create duplicate CoreToSystemMaps [{system}/{coretype}] Ids[{String.Join(",", duplicates)}]");
-    var nochecksums = news.Where(e => String.IsNullOrWhiteSpace(e.SystemEntityChecksum.Value)).Select(e => e.SystemId.Value).ToList();
+  public override async Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+    // todo: these validations should be done in base class
+    var dudsysids = (await GetById(system, coretype, tocreate.Select(e => e.SystemId).ToList())).Select(m => m.SystemId).ToList();
+    if (dudsysids.Any()) throw new Exception($"attempted to create duplicate CoreToSystemMaps [{system}/{coretype}] SystemIds[{String.Join(",", dudsysids)}]");
+    var dupcoreids = (await GetById(system, coretype, tocreate.Select(e => e.CoreId).ToList())).Select(m => m.CoreId).ToList();
+    if (dupcoreids.Any()) throw new Exception($"attempted to create duplicate CoreToSystemMaps [{system}/{coretype}] CoreIds[{String.Join(",", dupcoreids)}]");
+    var nochecksums = tocreate.Where(e => String.IsNullOrWhiteSpace(e.SystemEntityChecksum.Value)).Select(e => e.SystemId.Value).ToList();
     if (nochecksums.Any()) throw new Exception($"attempted to create CoreToSystemMaps with no SystemEntityChecksum [{system}/{coretype}] Ids[{String.Join(",", nochecksums)}]");
     
-    return Task.FromResult(news.Select(map => {
+    return tocreate.Select(map => {
       memdb[map.Key] = Json.Serialize(map);
       return map;
-    }).ToList());
+    }).ToList();
   }
 
-  private List<Map.CoreToSystemMap> GetById<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString {
+  protected override Task<List<Map.CoreToSystemMap>> GetById<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
     var issysid = typeof(V) == typeof(SystemEntityId);
-    return ids.Distinct()
+    var results = ids.Distinct()
         .Select(cid => Deserialize(memdb.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == coretype && (issysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value))
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         .Where(v => v != default)
         .ToList();
+    return Task.FromResult(results);
   }
 
-  public override Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> updates) {
-    var missing = updates.Where(m => !memdb.ContainsKey(m.Key)).Select(m => m.SystemId).ToList();
+  public override Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+    var missing = toupdate.Where(m => !memdb.ContainsKey(m.Key)).Select(m => m.SystemId).ToList();
     if (missing.Any()) throw new Exception($"attempted to update CoreToSystemMaps that do not exist [{system}/{coretype}] Ids[{String.Join(",", missing)}]");
-    return Task.FromResult(updates.Select(map => {
+    return Task.FromResult(toupdate.Select(map => {
       memdb[map.Key] = Json.Serialize(map);
       return map;
     }).ToList());

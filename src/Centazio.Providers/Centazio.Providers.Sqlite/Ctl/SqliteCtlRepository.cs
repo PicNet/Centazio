@@ -15,21 +15,21 @@ public class SqliteCtlRepository(Func<SqliteConnection> newconn) : ICtlRepositor
   public async Task<SqliteCtlRepository> Initalise() {
     await using var conn = newconn();
       var dbf = new DbFieldsHelper();
-    await Exec(conn, dbf.GetSqliteCreateTableScript(SYSTEM_STATE_TBL, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
-    await Exec(conn, dbf.GetSqliteCreateTableScript(OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(SYSTEM_STATE_TBL, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
         $"FOREIGN KEY ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}]) REFERENCES [{SYSTEM_STATE_TBL}]([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])"));
     return this;
   }
   
   public async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<SystemState.Dto>($"SELECT * FROM {SYSTEM_STATE_TBL} WHERE System=@System AND Stage=@Stage", new { System=system, Stage=stage });
-    return raw?.ToBase();
+    var dto = await conn.QuerySingleOrDefaultAsync<SystemState.Dto>($"SELECT * FROM {SYSTEM_STATE_TBL} WHERE System=@System AND Stage=@Stage", new { System=system, Stage=stage });
+    return dto?.ToBase();
   }
 
   public async Task<SystemState> SaveSystemState(SystemState state) {
     await using var conn = newconn();
-    var count = await Exec(conn, $@"
+    var count = await Db.Exec(conn, $@"
 UPDATE {SYSTEM_STATE_TBL} 
 SET Active=@Active, Status=@Status, DateUpdated=@DateUpdated, LastStarted=@LastStarted, LastCompleted=@LastCompleted
 WHERE System=@System AND Stage=@Stage", state);
@@ -39,7 +39,7 @@ WHERE System=@System AND Stage=@Stage", state);
   public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = newconn();
     var created = SystemState.Create(system, stage);
-    await Exec(conn, $@"
+    await Db.Exec(conn, $@"
 INSERT INTO {SYSTEM_STATE_TBL} 
 (System, Stage, Active, Status, DateCreated)
 VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
@@ -49,16 +49,16 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
 
   public async Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
     await using var conn = newconn();
-    var raw = await conn.QuerySingleOrDefaultAsync<ObjectState.Dto>(@$"
+    var dto = await conn.QuerySingleOrDefaultAsync<ObjectState.Dto>(@$"
   SELECT * FROM {OBJECT_STATE_TBL} 
   WHERE System=@System AND Stage=@Stage AND Object=@Object",
         new { system.System, system.Stage, Object = obj });
-    return raw?.ToBase();
+    return dto?.ToBase();
   }
 
   public async Task<ObjectState> SaveObjectState(ObjectState state) {
     await using var conn = newconn();
-    var count = await Exec(conn, $@"
+    var count = await Db.Exec(conn, $@"
   UPDATE {OBJECT_STATE_TBL} 
   SET 
     Active=@Active, 
@@ -79,7 +79,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     await using var conn = newconn();
 
     var created = ObjectState.Create(system.System, system.Stage, obj);
-    await Exec(conn, $@"
+    await Db.Exec(conn, $@"
   INSERT INTO {OBJECT_STATE_TBL}
   (System, Stage, Object, ObjectIsCoreEntityType, ObjectIsSystemEntityType, Active, DateCreated, LastResult, LastAbortVote)
   VALUES (@System, @System, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
@@ -90,10 +90,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
 
     public async ValueTask DisposeAsync() {
       await using var conn = newconn();
-      await Exec(conn, $"DROP TABLE IF EXISTS {OBJECT_STATE_TBL}; DROP TABLE IF EXISTS {SYSTEM_STATE_TBL};");
+      await Db.Exec(conn, $"DROP TABLE IF EXISTS {OBJECT_STATE_TBL}; DROP TABLE IF EXISTS {SYSTEM_STATE_TBL};");
     }
-
-    private Task<int> Exec(SqliteConnection conn, string sql, object? arg = null) => conn.ExecuteAsync(sql, arg);
-
 }
 

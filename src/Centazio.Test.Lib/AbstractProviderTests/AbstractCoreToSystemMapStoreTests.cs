@@ -1,22 +1,22 @@
-﻿using Centazio.Core.Checksum;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
+using NUnit.Framework;
 
-namespace Centazio.Core.Tests.CoreToSystemMapping;
+namespace Centazio.Test.Lib.AbstractProviderTests;
 
 public abstract class AbstractCoreToSystemMapStoreTests {
 
-  private readonly string STR = nameof(AbstractCoreToSystemMapStoreTests);
-  private readonly string STR2 = nameof(Map.CoreToSystemMap);
+  private const string STR = nameof(AbstractCoreToSystemMapStoreTests);
+  private const string STR2 = nameof(Map.CoreToSystemMap);
+  private TestingInMemoryCoreStorageRepository corestore = null!;
+  private ITestingCoreToSystemMapStore entitymap = null!;
   
-  private TestingInMemoryCoreStorageRepository corestore;
-  private ITestingInMemoryCoreToSystemMapStore entitymap;
-  
-  [SetUp] public void SetUp() {
+  [SetUp] public async Task SetUp() {
     corestore = TestingFactories.CoreRepo();
-    entitymap = GetStore();
+    entitymap = await GetStore();
   }
 
   [TearDown] public async Task TearDown() {
@@ -72,8 +72,8 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create(cid_crm));
     
-    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList()));
-    Assert.That(ex.Message, Is.EqualTo($"attempted to create duplicate CoreToSystemMaps [CRM/CoreEntity] Ids[{cid_crm.Value}]"));
+    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList())) ?? throw new Exception();
+    Assert.That(ex.Message, Is.EqualTo($"attempted to create duplicate CoreToSystemMaps [CRM/CoreEntity] SystemIds[{cid_crm.Value}]"));
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
@@ -98,7 +98,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
-    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate(Constants.Sys1Id2, SCS())]);
+    await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate(Constants.Sys1Id2, SCS())]);
     
     // System2 creates E2 
     // Centazio reads/promotes E2/C2
@@ -113,13 +113,6 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   
-  protected abstract ITestingInMemoryCoreToSystemMapStore GetStore();
+  protected abstract Task<ITestingCoreToSystemMapStore> GetStore();
   private SystemEntityChecksum SCS() => new(Guid.NewGuid().ToString());
 }
-
-public class InMemoryCoreToSystemMapStoreTests : AbstractCoreToSystemMapStoreTests {
-
-  protected override ITestingInMemoryCoreToSystemMapStore GetStore() => new TestingInMemoryCoreToSystemMapStore();
-
-}
-

@@ -30,17 +30,6 @@ public sealed record StagedEntity {
   public DateTime? DatePromoted { get; internal init; }
   
   public T Deserialise<T>() => Json.Deserialize<T>(Data) ?? throw new Exception();
-
-  public Dto ToDto() => new() {
-    Id = Id,
-    System = System.Value,
-    SystemEntityTypeName = SystemEntityTypeName.Value,
-    DateStaged = DateStaged,
-    Data = Data.Value,
-    StagedEntityChecksum = StagedEntityChecksum.Value,
-    DatePromoted = DatePromoted,
-    IgnoreReason = IgnoreReason
-  };
   
   public record Dto : IDto<StagedEntity> {
     public Guid? Id { get; init; }

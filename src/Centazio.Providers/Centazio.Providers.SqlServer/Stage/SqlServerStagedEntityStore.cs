@@ -41,7 +41,7 @@ WHEN NOT MATCHED THEN
  VALUES (se.Id, se.System, se.SystemEntityTypeName, se.DateStaged, se.Data, se.StagedEntityChecksum)
 
 -- OUTPUT Id -- does not work with dapper, replace with second query (SELECT Id FROM...) below
-;", staged.Select(e => e.ToDto()).ToList());
+;", staged.Select(DtoHelpers.ToDto));
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM {SCHEMA}.{STAGED_ENTITY_TBL} WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
@@ -42,7 +43,7 @@ public static class Map {
     public DateTime? DateUpdated { get; internal init; } 
     public DateTime? DateLastSuccess { get; internal init; } 
     public DateTime? DateLastError { get; internal init; }
-    public string? LastError { get; internal init; }
+    [MaxLength(1024)] public string? LastError { get; internal init; }
     
     public PendingUpdate Update() => new(this);
     

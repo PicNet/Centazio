@@ -6,10 +6,10 @@ namespace Centazio.Core;
 
 public static class Json {
   
-  public static string Serialize(object o) => JsonSerializer.Serialize(PrepareDtoForSerialisation(o));
+  public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.ToDto(o) ?? o);
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
   public static object Deserialize(string json, Type type) {
-    var dtot = GetDtoTypeFromTypeHierarchy(type);
+    var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(type);
     if (dtot is null) return JsonSerializer.Deserialize(json, type) ?? throw new Exception();
     
     var dtoobj = JsonSerializer.Deserialize(json, dtot);
@@ -50,33 +50,6 @@ public static class Json {
     throw new Exception($"Expected json representations to be equivalent:\nActual  :{actualjson}\nExpected:{expjson}");
   }
 
-  private static object PrepareDtoForSerialisation(object orig) {
-    var dtot = GetDtoTypeFromTypeHierarchy(orig.GetType());
-    if (dtot is null) return orig;
-    
-    var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
-    var pairs = GetPropPairs(orig.GetType(), dtot);
-    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(p)));
-    return dto;
-    
-    object? GetDtoVal(PropPair p) {
-      var origval = p.BasePi.GetValue(orig);
-      if (origval is null) return origval;
-      if (p.BasePi.PropertyType.IsEnum) return p.BasePi.GetValue(orig)?.ToString();
-      if (p.BasePi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
-      return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
-    }
-  }
-  
-  private static Type? GetDtoTypeFromTypeHierarchy(Type? baset) {
-    while(baset is not null) {
-      var t = baset.Assembly.GetType(baset.FullName + "+Dto");
-      if (t is not null) return t;
-      baset = baset.BaseType;
-    }
-    return null;
-  }
-  
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
     var dtoprops = dtot.GetProperties();
     return baset.GetProperties(BindingFlags.Public | BindingFlags.Instance)

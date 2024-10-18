@@ -15,14 +15,14 @@ public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, 
   public async Task<SqliteStagedEntityStore> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
-    await Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], "UNIQUE(System, SystemEntityTypeName, StagedEntityChecksum)"));
-    await Exec(conn, $"CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], "UNIQUE(System, SystemEntityTypeName, StagedEntityChecksum)"));
+    await Db.Exec(conn, $"CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
     return this;
   }
   
   public override async ValueTask DisposeAsync() {
     await using var conn = newconn();
-    await Exec(conn, $"DROP TABLE IF EXISTS {STAGED_ENTITY_TBL}");
+    await Db.Exec(conn, $"DROP TABLE IF EXISTS {STAGED_ENTITY_TBL}");
   }
 
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
@@ -30,11 +30,11 @@ public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, 
     var dtstaged = staged.First().DateStaged;
     await using var conn = newconn();
     
-    await Exec(conn, $@"
+    await Db.Exec(conn, $@"
 INSERT INTO [{STAGED_ENTITY_TBL}] (Id, System, SystemEntityTypeName, DateStaged, Data, StagedEntityChecksum)
 VALUES (@Id, @System, @SystemEntityTypeName, @DateStaged, @Data, @StagedEntityChecksum)
 ON CONFLICT (System, SystemEntityTypeName, StagedEntityChecksum) DO NOTHING;
-", staged.Select(e => e.ToDto()));
+", staged.Select(DtoHelpers.ToDto));
     
     var ids = (await conn.QueryAsync<Guid>($"SELECT Id FROM [{STAGED_ENTITY_TBL}] WHERE DateStaged=@DateStaged", new { DateStaged = dtstaged })).ToDictionary(id => id);
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
@@ -42,7 +42,7 @@ ON CONFLICT (System, SystemEntityTypeName, StagedEntityChecksum) DO NOTHING;
 
   public override async Task Update(List<StagedEntity> staged) {
     await using var conn = newconn();
-    await Exec(conn, 
+    await Db.Exec(conn, 
         $@"UPDATE [{STAGED_ENTITY_TBL}] 
 SET DatePromoted=@DatePromoted, IgnoreReason=@IgnoreReason
 WHERE System=@System AND SystemEntityTypeName=@SystemEntityTypeName AND Id=@Id;", staged);
@@ -71,10 +71,7 @@ ORDER BY DateStaged
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     await using var conn = newconn();
     var col = promoted ? nameof(StagedEntity.DatePromoted) : nameof(StagedEntity.DateStaged);
-    await Exec(conn, $"DELETE FROM [{STAGED_ENTITY_TBL}] WHERE {col} < @before AND System = @system AND SystemEntityTypeName = @systype", new { before, system, systype });
+    await Db.Exec(conn, $"DELETE FROM [{STAGED_ENTITY_TBL}] WHERE {col} < @before AND System = @system AND SystemEntityTypeName = @systype", new { before, system, systype });
   }
-  
-  private Task<int> Exec(SqliteConnection conn, string sql, object? arg = null) => conn.ExecuteAsync(sql, arg);
-
 }
 
