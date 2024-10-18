@@ -16,17 +16,17 @@ public class SqliteCoreToSystemMapStore(Func<SqliteConnection> newconn) : Abstra
   public async Task<ICoreToSystemMapStore> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
-    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(MAPPING_TBL, dbf.GetDbFields<Map.CoreToSystemMap>(), [nameof(Map.CoreToSystemMap.CoreEntityTypeName), nameof(Map.CoreToSystemMap.CoreId), nameof(Map.CoreToSystemMap.System)]));
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(MAPPING_TBL, dbf.GetDbFields<Map.CoreToSystemMap>(), 
+        [nameof(Map.CoreToSystemMap.System), nameof(Map.CoreToSystemMap.CoreEntityTypeName), nameof(Map.CoreToSystemMap.CoreId)],
+        $"UNIQUE({nameof(Map.CoreToSystemMap.System)}, {nameof(Map.CoreToSystemMap.CoreEntityTypeName)}, {nameof(Map.CoreToSystemMap.SystemId)})"));
     return this;
   }
   
   public override async Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
-    Console.WriteLine($"CREATING [{system}/{coretype}] - {String.Join(",", tocreate.Select(e => e.CoreId))}");
     await using var conn = newconn();
     await Db.Exec(conn, $@"
 INSERT INTO [{MAPPING_TBL}] (CoreEntityTypeName, CoreId, System, SystemId, SystemEntityChecksum, Status, DateCreated, DateUpdated, DateLastSuccess, DateLastError, LastError)
-VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum, @Status, @DateCreated, @DateUpdated, @DateLastSuccess, @DateLastError, @LastError)
-ON CONFLICT DO NOTHING;", tocreate.Select(DtoHelpers.ToDto)); 
+VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum, @Status, @DateCreated, @DateUpdated, @DateLastSuccess, @DateLastError, @LastError);", tocreate.Select(DtoHelpers.ToDto)); 
     
     // all DateCreated are the same for this batch, so use that as the batch identifier
     // todo: ensure this is the case by adding validation in the abstract class, or make it impossible to violate
@@ -36,7 +36,10 @@ ON CONFLICT DO NOTHING;", tocreate.Select(DtoHelpers.ToDto));
         @$"SELECT CoreId FROM [{MAPPING_TBL}] 
             WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND DateCreated=@DateCreated", new { System=system, CoreEntityTypeName=coretype, tocreate.First().DateCreated }))
         .ToDictionary(id => id);
-    return tocreate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
+
+    var duplicates = tocreate.Where(e => !ids.ContainsKey(e.CoreId)).ToList();
+    if (duplicates.Any()) throw new Exception($"attempted to add duplicate SystemIDs to CoreToSystemMapStore: " + String.Join(",", duplicates.Select(e => e.SystemId)));
+    return tocreate;
   }
 
   // todo: this logic of returning the entities actually updated is good and should be replicated in StagedEntityStore also (and other stores)
@@ -45,7 +48,7 @@ ON CONFLICT DO NOTHING;", tocreate.Select(DtoHelpers.ToDto));
     await Db.Exec(conn, $@"
 UPDATE [{MAPPING_TBL}] 
 SET SystemEntityChecksum=@SystemEntityChecksum, Status=@Status, DateUpdated=@DateUpdated, DateLastSuccess=@DateLastSuccess, DateLastError=@DateLastError, LastError=@LastError
-WHERE CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId AND System=@System", toupdate.Select(DtoHelpers.ToDto)); 
+WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId", toupdate.Select(DtoHelpers.ToDto)); 
     
     // all DateUpdated are the same for this batch, so use that as the batch identifier
     // todo: ensure this is the case by adding validation in the abstract class, or make it impossible to violate
@@ -64,7 +67,7 @@ WHERE CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId AND System=@Syst
     await using var conn = newconn();
     var maps = (await Db.Query<Map.CoreToSystemMap.Dto>(conn, $@"
 SELECT * FROM [{MAPPING_TBL}] WHERE  
-CoreEntityTypeName=@CoreEntityTypeName AND System=@System AND CoreId IN(@CoreIds)", new { CoreEntityTypeName=typenm, CoreIds=coreents.Select(e => e.CoreId.Value), System=system }))
+CoreEntityTypeName=@CoreEntityTypeName AND System=@System AND CoreId IN(@CoreIds)", new { CoreEntityTypeName=typenm, CoreIds=coreents.Select(e => e.CoreId.Value), System=system })) // todo: we should not need these '.Values' here, check everywhere we use dapper
             .Select(dto => dto.ToBase()).ToList();
     
     // todo: logic below should be abstracted to base class, query is the only thing that changes in proviers
@@ -83,9 +86,8 @@ CoreEntityTypeName=@CoreEntityTypeName AND System=@System AND CoreId IN(@CoreIds
     await using var conn = newconn();
     // todo: shoudl Db.Query automaticall convert to base obj?
     return (await Db.Query<Map.CoreToSystemMap.Dto>(conn, $@"
-SELECT * FROM [{MAPPING_TBL}] WHERE  
-SET SystemEntityChecksum=@SystemEntityChecksum, Status=@Status, DateUpdated=@DateUpdated, DateLastSuccess=@DateLastSuccess, DateLastError=@DateLastError, LastError=@LastError
-WHERE CoreEntityTypeName=@CoreEntityTypeName, {idfield}=@Id, System=@System", ids.Select(id => new { CoreEntityTypeName=coretype, Id=id, System=system })))
+SELECT * FROM [{MAPPING_TBL}]   
+WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND {idfield} IN @Ids", new { System=system.Value, CoreEntityTypeName=coretype.Value, Ids=ids.Select(id => id.Value) }))
         .Select(dto => dto.ToBase()).ToList();
   }
 

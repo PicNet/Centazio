@@ -45,7 +45,7 @@ public static class Map {
     public DateTime? DateLastError { get; internal init; }
     [MaxLength(1024)] public string? LastError { get; internal init; }
     
-    public PendingUpdate Update() => new(this);
+    public PendingUpdate Update() => new(this) { DateUpdated = UtcDate.UtcNow };
     
     public record Dto : IDto<CoreToSystemMap> {
       public string? CoreEntityTypeName { get; init; }
@@ -105,7 +105,7 @@ public static class Map {
   }
 
   public record PendingUpdate : CoreToSystemMap {
-    internal PendingUpdate(CoreToSystemMap e) : base(e.CoreEntityTypeName, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
+    public PendingUpdate(CoreToSystemMap e) : base(e) {}
     
     public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
       Status = EEntityMappingStatus.SuccessUpdate, 
@@ -114,16 +114,16 @@ public static class Map {
       SystemEntityChecksum = checksum
     });
     
-    public Updated Error(string? error) => new(this with { 
-      Status = EEntityMappingStatus.Error, 
-      DateUpdated = UtcDate.UtcNow, 
-      DateLastError = UtcDate.UtcNow, 
+    public Updated Error(string? error) => new(this with {
+      Status = EEntityMappingStatus.Error,
+      DateUpdated = UtcDate.UtcNow,
+      DateLastError = UtcDate.UtcNow,
       LastError = error
     });
   }
 
   public record Updated : CoreToSystemMap {
-    internal Updated(CoreToSystemMap e) : base(e.CoreEntityTypeName, e.CoreId, e.System, e.SystemId, e.Status, e.SystemEntityChecksum) {}
+    public Updated(CoreToSystemMap e) : base(e) {}
   }
 }
 

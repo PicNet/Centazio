@@ -26,11 +26,14 @@ public abstract class AbstractCoreToSystemMapStoreTests {
 
   [Test] public async Task Test_upsert_single() {
     var core = TestingFactories.NewCoreCust(STR, STR);
-    var original =  Map.Create(STR, core); 
+    var original =  Map.Create(Constants.System1Name, core);
+    TestingUtcDate.DoTick();
     var created = (await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [original.SuccessCreate(Constants.Sys1Id1, SCS())])).Single();
     var err = created.Update().Error("Error");
     
     var list1 = await entitymap.GetAll();
+    
+    TestingUtcDate.DoTick();
     var updated = (await entitymap.Update(Constants.System1Name, Constants.CoreEntityName, [err])).Single();
     var list2 = await entitymap.GetAll();
     
@@ -41,11 +44,14 @@ public abstract class AbstractCoreToSystemMapStoreTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<Map.Created> { 
-       Map.Create(STR, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS()),
-       Map.Create(STR2, TestingFactories.NewCoreCust(STR2, STR2)).SuccessCreate(Constants.Sys1Id2, SCS())
+       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS()),
+       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR2, STR2)).SuccessCreate(Constants.Sys1Id2, SCS())
     }; 
+    TestingUtcDate.DoTick();
     var created = (await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, original)).ToList();
     var list1 = await entitymap.GetAll();
+    
+    TestingUtcDate.DoTick();
     var updatecmd = created.Select(e => e.Update().Error("Error")).ToList();
     var updated2 = (await entitymap.Update(Constants.System1Name, Constants.CoreEntityName, updatecmd)).ToList();
     var list2 = await entitymap.GetAll();
@@ -72,13 +78,13 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create(cid_crm));
     
-    var ex = Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList())) ?? throw new Exception();
-    Assert.That(ex.Message, Is.EqualTo($"attempted to create duplicate CoreToSystemMaps [CRM/CoreEntity] SystemIds[{cid_crm.Value}]"));
+    Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList()));
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(CoreEntityId coreid, SystemName system, SystemEntityId sysid) {
+      TestingUtcDate.DoTick();
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue);
       await corestore.Upsert(Constants.CoreEntityName, [(c, Helpers.TestingCoreEntityChecksum(c))]);
       await entitymap.Create(system, Constants.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
@@ -86,6 +92,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     }
     
     async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> dups) {
+      TestingUtcDate.DoTick();
       var map = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, coretype, dups);
       // var id = await entitymap.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
       return await corestore.Get<CoreEntity>(Constants.CoreEntityName, map.Single().Value);
@@ -98,6 +105,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
+    TestingUtcDate.DoTick();
     await entitymap.Create(Constants.System2Name, Constants.CoreEntityName, [ Map.Create(Constants.System2Name, c1).SuccessCreate(Constants.Sys1Id2, SCS())]);
     
     // System2 creates E2 

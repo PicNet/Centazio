@@ -15,7 +15,7 @@ public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, 
   public async Task<SqliteStagedEntityStore> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
-    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], "UNIQUE(System, SystemEntityTypeName, StagedEntityChecksum)"));
+    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));
     await Db.Exec(conn, $"CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
     return this;
   }
