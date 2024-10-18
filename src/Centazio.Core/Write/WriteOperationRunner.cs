@@ -9,8 +9,9 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
     IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    var pending = await core.Get(op.State.System, op.State.Object.ToCoreEntityTypeName, op.Checkpoint);
-    var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, pending);
+    var coretype = op.State.Object.ToCoreEntityTypeName;
+    var pending = await core.Get(op.State.System, coretype, op.Checkpoint);
+    var (tocreate, toupdate) = await entitymap.GetNewAndExistingMappingsFromCores(op.State.System, coretype, pending);
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
@@ -26,8 +27,8 @@ public class WriteOperationRunner<C>(ICoreToSystemMapStore entitymap, ICoreStora
       return results;  
     }
     
-    await entitymap.Create(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesCreated);
-    await entitymap.Update(op.State.System, op.State.Object.ToCoreEntityTypeName, results.EntitiesUpdated);
+    await entitymap.Create(op.State.System, coretype, results.EntitiesCreated);
+    await entitymap.Update(op.State.System, coretype, results.EntitiesUpdated);
     return results;
   }
 

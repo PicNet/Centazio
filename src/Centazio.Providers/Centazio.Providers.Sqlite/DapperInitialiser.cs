@@ -18,7 +18,12 @@ public class DapperInitialiser {
 
   private static void AddAllRequiredValidStringSqlHandlers() {
     var handler = new ValidStringSqlTypeHandler();
-    ValidString.AllSubclasses().ForEach(t => SqlMapper.AddTypeHandler(t, handler));
+    // var handler2 = new ValidStringEnumerableSqlTypeHandler();
+    ValidString.AllSubclasses().ForEach(t => {
+      SqlMapper.AddTypeHandler(t, handler);
+      // todo: this does not work, which means any dapper query that takes in a list of Ids for instance, has to call .Value on all of them
+      // SqlMapper.AddTypeHandler(typeof(IEnum...<>).MakeGenericType(t), handler2);
+    });
   }
 
   private abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T> {
@@ -47,14 +52,11 @@ public class DapperInitialiser {
 
   private class ValidStringSqlTypeHandler : SqlMapper.ITypeHandler {
 
-    public void SetValue(IDbDataParameter parameter, object value) { 
-      parameter.Value = ((ValidString?)value)?.Value ?? throw new Exception($"{nameof(value)} must ne non-empty");
-    }
+    public void SetValue(IDbDataParameter parameter, object value) { parameter.Value = ((ValidString)value).Value; }
     
     public object Parse(Type type, object value) {
       ArgumentException.ThrowIfNullOrWhiteSpace((string?) value);
       return Activator.CreateInstance(type, (string?) value) ?? throw new UnreachableException();
     }
-
   }
 }

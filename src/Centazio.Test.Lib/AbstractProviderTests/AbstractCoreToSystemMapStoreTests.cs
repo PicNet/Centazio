@@ -61,6 +61,62 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     Assert.That(updated2, Is.EquivalentTo(exp));
     Assert.That(Json.AreJsonEqual(list2, exp));
   }
+  
+  [Test] public async Task Test_creating_unique_by_SystemId_works() {
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id2, SCS());
+    
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map1]);
+    TestingUtcDate.DoTick();
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map2]);
+  }
+  
+  [Test] public async Task Test_creating_duplicates_by_SystemId_throws_error() {
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS()); // same SystemId
+    
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map1]);
+    TestingUtcDate.DoTick();
+    Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map2]));
+  }
+  
+  [Test] public async Task Test_creating_duplicates_by_CoreId_throws_error() {
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR, new(nameof(AbstractCoreToSystemMapStoreTests)))).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR, new(nameof(AbstractCoreToSystemMapStoreTests)))).SuccessCreate(Constants.Sys1Id1, SCS()); // same CoreId
+    
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map1]);
+    TestingUtcDate.DoTick();
+    Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map2]));
+  }
+  
+  [Test] public async Task Test_updating_with_no_missing_works() {
+    var entity = TestingFactories.NewCoreCust(STR, STR);
+    var map = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id1, SCS());
+    
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map]);
+    TestingUtcDate.DoTick();
+    await entitymap.Update(Constants.System1Name, Constants.CoreEntityName, [map.Update().SuccessUpdate(new("newchecksum"))]);
+  }
+  
+  [Test] public async Task Test_updating_missing_by_SystemId_throws_error() {
+    var entity = TestingFactories.NewCoreCust(STR, STR);
+    var map1 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id2, SCS());
+    
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map1]);
+    TestingUtcDate.DoTick();
+    Assert.ThrowsAsync<Exception>(() => entitymap.Update(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
+  }
+  
+  [Test] public async Task Test_updating_missing_by_CoreId_throws_error() {
+    var entity1 = TestingFactories.NewCoreCust(STR, STR);
+    var entity2 = TestingFactories.NewCoreCust(STR, STR);
+    var map1 = Map.Create(Constants.System1Name, entity1).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, entity2).SuccessCreate(Constants.Sys1Id1, SCS());
+    await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, [map1]);
+    TestingUtcDate.DoTick();
+    Assert.ThrowsAsync<Exception>(() => entitymap.Update(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
+  }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
     List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, String.Empty, String.Empty, DateOnly.MinValue)];
@@ -68,7 +124,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     var sid_crm = new SystemEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20");
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] System[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
-    var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create(cid_fin));
+    var gfc1 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Constants.CoreEntityName , Create(cid_fin));
     await entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc1.Created.Select(c =>  c.Map.SuccessCreate(sid_crm, SCS())).ToList());
     
     // This scenario was identified in the simulation, where this GetForCores does not identify this entity as having been created before.
@@ -76,7 +132,7 @@ public abstract class AbstractCoreToSystemMapStoreTests {
     // allowed a duplicate to be inserted.
     // PromoteOperationRunner - GetForCores Id[71c5db4e-971a-45f5-831e-643d6ca77b20] Type[CoreCustomer] System[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
-    var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Create(cid_crm));
+    var gfc2 = await entitymap.GetNewAndExistingMappingsFromCores(Constants.System1Name, Constants.CoreEntityName, Create(cid_crm));
     
     Assert.ThrowsAsync<Exception>(() => entitymap.Create(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList()));
   }
