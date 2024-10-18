@@ -9,8 +9,8 @@ public class DbFieldsHelperTests {
 
   [Test] public void Test_GetObjectDbFields() {
     var list = new DbFieldsHelper().GetDbFields(typeof(CoreEntity));
-    Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.FirstName), "nvarchar", "64", true)));
-    Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.DateOfBirth), "date", String.Empty, true)));
+    Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.FirstName), typeof(string), "64", true)));
+    Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.DateOfBirth), typeof(DateOnly), String.Empty, true)));
     Assert.That(list.FindIndex(t => t.name == nameof(CoreEntity.DisplayName)), Is.EqualTo(-1)); // interface has [JsonIgnore]
   }
   

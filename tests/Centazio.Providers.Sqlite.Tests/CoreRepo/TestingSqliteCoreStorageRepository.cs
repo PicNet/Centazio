@@ -15,7 +15,7 @@ internal class TestingSqliteCoreStorageRepository : ICoreStorageRepository {
     await using var conn = SqliteConn.Instance.Conn();
     var dbf = new DbFieldsHelper();
     var fields = dbf.GetDbFields<CoreEntity>();
-    fields.Add(new (nameof(CoreEntityChecksum), "nvarchar", ChecksumValue.MAX_LENGTH.ToString(), true));
+    fields.Add(new (nameof(CoreEntityChecksum), typeof(string), ChecksumValue.MAX_LENGTH.ToString(), true));
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
     return this;
   }

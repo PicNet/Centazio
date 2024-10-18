@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Centazio.Core.Misc;
 
-public record DbFieldType(string name, string type, string length, bool required);
+public record DbFieldType(string name, Type type, string length, bool required);
 
 public class DbFieldsHelper {
   
@@ -31,15 +31,15 @@ public class DbFieldsHelper {
       if (maxlen is null && failOnMissingLength) throw new Exception($"field[{t.Name}].[{p.Name}] does not have a [MaxLength] attribute");
 
       var len = maxlen ?? DEFAULT_MAX_STR_LENGTH;
-      return new DbFieldType(p.Name, "nvarchar", len == Int32.MaxValue ? "max" : len.ToString(), !ReflectionUtils.IsNullable(p));
+      return new DbFieldType(p.Name, typeof(string), len == Int32.MaxValue ? "max" : len.ToString(), !ReflectionUtils.IsNullable(p));
     }
 
-    if (realpt == typeof(int)) return new DbFieldType(p.Name, "int", String.Empty, !ReflectionUtils.IsNullable(p));
-    if (realpt == typeof(decimal)) return new DbFieldType(p.Name, "decimal", "(14,2)", !ReflectionUtils.IsNullable(p));
-    if (realpt == typeof(DateTime)) return new DbFieldType(p.Name, "datetime2", String.Empty, !ReflectionUtils.IsNullable(p));
-    if (realpt == typeof(DateOnly)) return new DbFieldType(p.Name, "date", String.Empty, !ReflectionUtils.IsNullable(p));
-    if (realpt == typeof(Boolean)) return new DbFieldType(p.Name, "bit", String.Empty, !ReflectionUtils.IsNullable(p));
-    if (realpt == typeof(Guid)) return new DbFieldType(p.Name, "uniqueidentifier", String.Empty, !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(int)) return new DbFieldType(p.Name, realpt, String.Empty, !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(decimal)) return new DbFieldType(p.Name, realpt, "(14,2)", !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(DateTime)) return new DbFieldType(p.Name, realpt, String.Empty, !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(DateOnly)) return new DbFieldType(p.Name, realpt, String.Empty, !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(Boolean)) return new DbFieldType(p.Name, realpt, String.Empty, !ReflectionUtils.IsNullable(p));
+    if (realpt == typeof(Guid)) return new DbFieldType(p.Name, realpt, String.Empty, !ReflectionUtils.IsNullable(p));
 
     throw new NotSupportedException($"Property[{p.Name}] Defined Type[{pt.Name}] Real Type[{realpt.Name}]");
   }
@@ -63,7 +63,16 @@ END
     return sql.ToString();
     
     string ToSqlSrv(DbFieldType f) {
-      var typestr = !String.IsNullOrWhiteSpace(f.length) ? $"{f.type}({f.length})" : f.type;
+      var typestr = 
+          f.type == typeof(int) ? "int" : 
+          f.type == typeof(decimal) ? "decimal" : 
+          f.type == typeof(DateTime) ? "datetime2" : 
+          f.type == typeof(DateOnly) ? "date" : 
+          f.type == typeof(Boolean) ? "bit" : 
+          f.type == typeof(Guid) ? "uniqueidentifier" : 
+          f.type == typeof(string) ? "nvarchar" : 
+          throw new NotImplementedException(f.type.Name);
+      if (!String.IsNullOrWhiteSpace(f.length)) typestr += $"({f.length})";
       var nullstr = f.required ? "not null" : "null";
       return $"[{f.name}] {typestr} {nullstr}";
     }
@@ -76,9 +85,17 @@ END
   PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt})";
     
     string ToSqlite(DbFieldType f) {
-      if (f.type == "datetime2") f = f with { type = "datetime" };
-      if (f.type == "nvarchar" && f.length == "max") f = f with { type = "text", length = String.Empty };
-      var typestr = !String.IsNullOrWhiteSpace(f.length) ? $"{f.type}({f.length})" : f.type;
+      var typestr = 
+          f.type == typeof(int) ? "int" : 
+          f.type == typeof(decimal) ? "decimal" : 
+          f.type == typeof(DateTime) ? "datetime" : 
+          f.type == typeof(DateOnly) ? "date" : 
+          f.type == typeof(Boolean) ? "bit" : 
+          f.type == typeof(Guid) ? "uniqueidentifier" : 
+          f.type == typeof(string) && f.length == "max" ? "text" :
+          f.type == typeof(string) ? "nvarchar" :
+          throw new NotImplementedException(f.type.Name);
+      if (!String.IsNullOrWhiteSpace(f.length) && typestr != "text") typestr += $"({f.length})";
       var nullstr = f.required ? "not null" : "null";
       return $"[{f.name}] {typestr} {nullstr}";
     }

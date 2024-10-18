@@ -1,6 +1,5 @@
 # Todo
 - simulation to use real stores (not in-memory)
-- DbFieldsHelper shoud be abstract with specific implementations for each db
 - Db class should be generic and be used by all sql providers to wrap queries and commands with logging and error logging
 - merge CoreToSystemMapStore into CtlStore (as SystemMap is part of Ctl)
 - check testing coverage
