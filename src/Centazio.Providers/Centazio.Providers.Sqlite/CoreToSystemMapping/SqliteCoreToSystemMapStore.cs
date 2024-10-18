@@ -33,7 +33,6 @@ VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum,
     return tocreate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
   }
 
-  // todo: this logic of returning the entities actually updated is good and should be replicated in StagedEntityStore also (and other stores)
   protected override async Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
     await using var conn = newconn();
     await Db.Exec(conn, $@"

@@ -20,7 +20,6 @@ public class TestingSqliteCoreToSystemMapStore() : SqliteCoreToSystemMapStore(Sq
  
   public override async ValueTask DisposeAsync() {
     await using var conn = SqliteConn.Instance.Conn();
-    // todo: move `await using var conn = SqliteConn.Instance.Conn()` to Db.cs
     await Db.Exec(conn, $"DROP TABLE [{MAPPING_TBL}]");
   }
 }
