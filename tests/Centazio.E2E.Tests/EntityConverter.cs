@@ -1,12 +1,13 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.CoreToSystemMapping;
 using Centazio.E2E.Tests.Infra;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 
 namespace Centazio.E2E.Tests;
 
-public class EntityConverter(TestingInMemoryCoreToSystemMapStore entitymap) {
+public class EntityConverter(ICoreToSystemMapStore entitymap) {
   
   private int ceidcounter;
   private readonly Dictionary<SystemEntityId, CoreEntityId> systocoreids = new();
