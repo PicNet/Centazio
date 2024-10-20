@@ -21,8 +21,8 @@ public abstract class CtlRepositoryDefaultTests {
       await Assert.ThatAsync(() => repo.GetSystemState(NAME, NAME), Is.Null);
 
   [Test] public async Task Test_GetSystemState_returns_correct_state_for_known_system() {
-    var created = await repo.CreateSystemState(NAME, NAME);
-    await Assert.ThatAsync(() => repo.GetSystemState(NAME, NAME), Is.EqualTo(created));
+    var created = await repo.CreateSystemState(new(NAME), new(NAME));
+    await Assert.ThatAsync(() => repo.GetSystemState(new(NAME), new(NAME)), Is.EqualTo(created));
   }
   
   [Test] public async Task Test_CreateSystemState_fails_for_existing_systems() {
@@ -65,7 +65,7 @@ public abstract class CtlRepositoryDefaultTests {
   }
 
   [Test] public async Task Test_GetObjectState_returns_correct_state_for_known_system() {
-    var ss = await repo.CreateSystemState(NAME2, NAME2);
+    var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
     var created = await repo.CreateObjectState(ss, Constants.CoreEntityName);
     var actual = await repo.GetObjectState(ss, Constants.CoreEntityName);
     Assert.That(actual, Is.EqualTo(created));

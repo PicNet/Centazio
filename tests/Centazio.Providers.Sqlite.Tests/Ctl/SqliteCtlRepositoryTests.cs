@@ -10,6 +10,4 @@ public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
       => await new TestingSqliteCtlRepository().Initalise();
 
   class TestingSqliteCtlRepository() : SqliteCtlRepository(SqliteConn.Instance.Conn);
-  
-  
 }

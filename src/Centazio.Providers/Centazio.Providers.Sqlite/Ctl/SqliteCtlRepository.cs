@@ -9,8 +9,8 @@ namespace Centazio.Providers.Sqlite.Ctl;
 
 public class SqliteCtlRepository(Func<SqliteConnection> newconn) : ICtlRepository {
 
-  internal static readonly string SYSTEM_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(SystemState)}";
-  internal static readonly string OBJECT_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(ObjectState)}";
+  internal static readonly string SYSTEM_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(SystemState)}".ToLower();
+  internal static readonly string OBJECT_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(ObjectState)}".ToLower();
 
   public async Task<SqliteCtlRepository> Initalise() {
     await using var conn = newconn();
@@ -82,8 +82,8 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     await Db.Exec(conn, $@"
   INSERT INTO {OBJECT_STATE_TBL}
   (System, Stage, Object, ObjectIsCoreEntityType, ObjectIsSystemEntityType, Active, DateCreated, LastResult, LastAbortVote)
-  VALUES (@System, @System, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
-  ", created);
+  VALUES (@System, @Stage, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
+  ", DtoHelpers.ToDto(created));
 
     return created;
   }

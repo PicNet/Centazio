@@ -8,6 +8,7 @@ using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
+using Centazio.Providers.Sqlite;
 using Centazio.Test.Lib;
 using Serilog;
 using Serilog.Events;
@@ -19,16 +20,20 @@ public class E2EEnvironment : IAsyncDisposable {
   private static readonly SimulationCtx ctx = new();
   
   private readonly CrmApi crm = new(ctx);
-  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner;
+  private FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner = null!;
+  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner = null!;
+  private FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner = null!;
 
   private readonly FinApi fin = new(ctx);
-  private readonly FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner;
-  private readonly FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner;
-  private readonly FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner;
+  private FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner = null!;
+  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner = null!;
+  private FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner = null!;
 
-  public E2EEnvironment() {
+  // todo: improve initialisation and have pluggable providers so we can use Sim to test multiple providers
+  public async Task Initialise() {
+    DapperInitialiser.Initialise();
+    await ctx.Initialise();
+    
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(ctx, crm),
         new ReadOperationRunner(ctx.StageStore),
         ctx.CtlRepo);
@@ -51,8 +56,9 @@ public class E2EEnvironment : IAsyncDisposable {
         new WriteOperationRunner<WriteOperationConfig>(ctx.EntityMap, ctx.CoreStore), 
         ctx.CtlRepo);
   }
-
+  
   [Test] public async Task RunSimulation() {
+    await Initialise();
     if (SimulationConstants.SILENCE_LOGGING) LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
     if (SimulationConstants.LOGGING_FILTERS.Any()) {
       Log.Logger = LogInitialiser.GetConsoleConfig(filters: SimulationConstants.LOGGING_FILTERS).CreateLogger();
@@ -96,8 +102,8 @@ public class E2EEnvironment : IAsyncDisposable {
   private async Task CompareMembershipTypes() {
     var core_types = ctx.CoreStore.GetMembershipTypes().Select(m => ctx.Converter.CoreMembershipTypeToCrmMembershipType(Guid.Empty, m));
     
-    await ctx.Epoch.ValidateAdded<CoreMembershipType>(ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []);
-    await ctx.Epoch.ValidateUpdated<CoreMembershipType>(crm.Simulation.EditedMemberships);
+    await ctx.Epoch.ValidateAdded<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []));
+    await ctx.Epoch.ValidateUpdated<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedMemberships));
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_types, crm.MembershipTypes);
   }
   
@@ -105,8 +111,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var core_customers_for_crm = ctx.CoreStore.GetCustomers().Select(c => ctx.Converter.CoreCustomerToCrmCustomer(Guid.Empty, c));
     var core_customers_for_fin = ctx.CoreStore.GetCustomers().Select(c => ctx.Converter.CoreCustomerToFinAccount(0, c));
     
-    await ctx.Epoch.ValidateAdded<CoreCustomer>(crm.Simulation.AddedCustomers, fin.Simulation.AddedAccounts);
-    await ctx.Epoch.ValidateUpdated<CoreCustomer>(crm.Simulation.EditedCustomers, fin.Simulation.EditedAccounts);
+    await ctx.Epoch.ValidateAdded<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.AddedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.AddedAccounts));
+    await ctx.Epoch.ValidateUpdated<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.EditedAccounts));
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm.Customers);
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin.Accounts);
   }
@@ -118,8 +124,8 @@ public class E2EEnvironment : IAsyncDisposable {
     var core_invoices_for_crm = cores.Select(i => ctx.Converter.CoreInvoiceToCrmInvoice(Guid.Empty, i, crmmaps));
     var core_invoices_for_fin = cores.Select(i => ctx.Converter.CoreInvoiceToFinInvoice(0, i, finmaps));
     
-    await ctx.Epoch.ValidateAdded<CoreInvoice>(crm.Simulation.AddedInvoices, fin.Simulation.AddedInvoices);
-    await ctx.Epoch.ValidateUpdated<CoreInvoice>(crm.Simulation.EditedInvoices, fin.Simulation.EditedInvoices);
+    await ctx.Epoch.ValidateAdded<CoreInvoice>((SimulationConstants.CRM_SYSTEM, crm.Simulation.AddedInvoices), (SimulationConstants.FIN_SYSTEM, fin.Simulation.AddedInvoices));
+    await ctx.Epoch.ValidateUpdated<CoreInvoice>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedInvoices), (SimulationConstants.FIN_SYSTEM, fin.Simulation.EditedInvoices));
     CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_invoices_for_crm, crm.Invoices);
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
   }

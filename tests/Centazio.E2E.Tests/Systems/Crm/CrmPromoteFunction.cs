@@ -37,10 +37,10 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     async Task<List<EntityEvaluationResult>> BuildInvoices() {
       var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
       var maps = await ctx.EntityMap.GetRelatedEntityCoreIdsFromSystemIds(Config.System, CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(CrmInvoice.CustomerId), true);
-      return toeval.Select(eval => {
+      return await toeval.Select(async eval => {
         var crminv = eval.SystemEntity.To<CrmInvoice>();
-        return eval.MarkForPromotion(ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
-      }).ToList();
+        return eval.MarkForPromotion(await ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
+      }).Synchronous();
     }
   }
 }

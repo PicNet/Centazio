@@ -18,23 +18,29 @@ public class SimulationCtx : IAsyncDisposable {
   
   private const string SIM_SQLITE_FILENAME = "centazio_simulation.db";
   private SqliteConnection sqliteconn => new($"Data Source={SIM_SQLITE_FILENAME};");
-  public ICtlRepository CtlRepo { get; }
-  public ICoreToSystemMapStore EntityMap { get; }
+  public ICtlRepository CtlRepo { get; set; } = null!;
+  public ICoreToSystemMapStore EntityMap { get; set; } = null!;
+  public IStagedEntityStore StageStore { get; set; } = null!;
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
-  public CoreStorage CoreStore { get; } 
-  public IStagedEntityStore StageStore { get; }
-  public EntityConverter Converter { get; } 
-  
-  internal SimulationCtx() {
-    CtlRepo = new SqliteCtlRepository(() => sqliteconn);
-    EntityMap = new SqliteCoreToSystemMapStore(() => sqliteconn);
+  public CoreStorage CoreStore { get; set; } = null!; 
+  public EntityConverter Converter { get; set; } = null!;
+
+  public SimulationCtx() {
     ChecksumAlg = new Sha256ChecksumAlgorithm();
-    CoreStore = new(this);
-    StageStore = new SqliteStagedEntityStore(() => sqliteconn, 0, ChecksumAlg.Checksum);
-    Converter = new(EntityMap);
     Epoch = new(0, this);
   }
+  
+  public async Task Initialise() {
+    File.Delete(SIM_SQLITE_FILENAME);
+    
+    CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
+    EntityMap = await new SqliteCoreToSystemMapStore(() => sqliteconn).Initalise();
+    StageStore = await new SqliteStagedEntityStore(() => sqliteconn, 0, ChecksumAlg.Checksum).Initalise();
+    CoreStore = new(this);
+    Converter = new(EntityMap);
+  }
+  
  
   public void Debug(string message, params object[] args) {
     if (C.SILENCE_SIMULATION) return;

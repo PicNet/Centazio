@@ -11,13 +11,7 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
   
   Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents);
   Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids);
-
-  /// <summary>
-  /// Gets a map from `SystemId` to the correct `CoreId` for potential duplicate entities.  These potential
-  /// duplicates can only happen for Bi-directional entities that can bounce back when written to
-  /// a target system.
-  /// </summary>
-  Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents);
+  
   Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreEntities(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey);
   Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory);
 
@@ -26,6 +20,7 @@ public interface ICoreToSystemMapStore : IAsyncDisposable {
 public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
 
   public async Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+    if (!tocreate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, tocreate, true);
     var created = await CreateImpl(system, coretype, tocreate);
     if (created.Count != tocreate.Count) throw new Exception($"created maps({created.Count}) does not match expected number ({tocreate.Count}).  This chould mean that some pre-existing maps were attempted to be created.");
@@ -33,6 +28,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   }
   
   public async Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+    if (!toupdate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, toupdate, false);
     var updated = await UpdateImpl(system, coretype, toupdate);
     if (updated.Count != toupdate.Count) throw new Exception($"updated maps({updated.Count}) does not match expected number ({toupdate.Count}).  This chould mean that some maps may not have existed already in the repository.");
@@ -66,21 +62,13 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
   }
   
   public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    if (coreids.GroupBy(id => id).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate ids");
-    return GetExistingMapsByIds(system, coretype, coreids);
+    if (!coreids.Any()) return Task.FromResult<List<Map.CoreToSystemMap>>([]);
+    return GetExistingMapsByIds(system, coretype, coreids.Distinct().ToList());
   }
 
   public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) {
-    if (systemids.GroupBy(id => id).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate ids");
-    return GetExistingMapsByIds(system, coretype, systemids);
-  }
-
-  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetPreExistingSystemIdToCoreIdMap(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
-    if (!coreents.Any()) return new();
-    ValidateCoreEntitiesForQuery(coretype, coreents, true);
-    
-    return (await GetExistingMapsByIds(system, coretype, coreents.Select(e => e.SystemId).ToList()))
-        .ToDictionary(m => m.SystemId, m => m.CoreId);
+    if (!systemids.Any()) return Task.FromResult<List<Map.CoreToSystemMap>>([]);
+    return GetExistingMapsByIds(system, coretype, systemids.Distinct().ToList());
   }
   
   protected abstract Task<List<Map.CoreToSystemMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;

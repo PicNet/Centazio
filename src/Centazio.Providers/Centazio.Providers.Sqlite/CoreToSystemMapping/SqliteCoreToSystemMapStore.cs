@@ -8,8 +8,8 @@ namespace Centazio.Providers.Sqlite.CoreToSystemMapping;
 
 public class SqliteCoreToSystemMapStore(Func<SqliteConnection> newconn) : AbstractCoreToSystemMapStore {
 
-  protected const string MAPPING_TBL = $"{nameof(Core.Ctl)}_{nameof(Map.CoreToSystemMap)}";
-  
+  protected static readonly string MAPPING_TBL = $"{nameof(Core.Ctl)}_{nameof(Map.CoreToSystemMap)}".ToLower();
+
   public async Task<ICoreToSystemMapStore> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
@@ -39,7 +39,8 @@ UPDATE [{MAPPING_TBL}]
 SET SystemEntityChecksum=@SystemEntityChecksum, Status=@Status, DateUpdated=@DateUpdated, DateLastSuccess=@DateLastSuccess, DateLastError=@DateLastError, LastError=@LastError
 WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId AND SystemId=@SystemId", toupdate.Select(DtoHelpers.ToDto)); 
     
-    var ids = (await Db.Query<CoreEntityId>(conn, @$"SELECT CoreId FROM [{MAPPING_TBL}] WHERE DateUpdated=@DateUpdated", new { toupdate.First().DateUpdated })).ToDictionary(id => id);
+    var ids = (await Db.Query<CoreEntityId>(conn, $"SELECT CoreId FROM [{MAPPING_TBL}] WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND DateUpdated=@DateUpdated", 
+        new { System=system, CoreEntityTypeName=coretype, toupdate.First().DateUpdated })).ToDictionary(id => id);
     return toupdate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
   }
 

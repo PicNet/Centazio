@@ -9,13 +9,13 @@ namespace Centazio.Providers.Sqlite.Stage;
 
 public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
   
-  internal static readonly string STAGED_ENTITY_TBL = $"{nameof(Core.Ctl)}_{nameof(StagedEntity)}";
+  internal static readonly string STAGED_ENTITY_TBL = $"{nameof(Core.Ctl)}_{nameof(StagedEntity)}".ToLower();
 
   public async Task<SqliteStagedEntityStore> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));
-    await Db.Exec(conn, $"CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
+    await Db.Exec(conn, $"CREATE INDEX IF NOT EXISTS ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{STAGED_ENTITY_TBL}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
     return this;
   }
   

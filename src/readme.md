@@ -1,5 +1,6 @@
 # Todo
-- simulation to use real stores (not in-memory)
+- simulation needs improments, has lots of single id hacks using entity map, need better helpers
+- relace NAME/NAME2 usage with Centazio.Test.Lib.Constants.SystemName, etc
 - merge CoreToSystemMapStore into CtlStore (as SystemMap is part of Ctl)
 - check testing coverage
 - review all code comments

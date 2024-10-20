@@ -120,8 +120,9 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     
    
     async Task<List<SystemEntityId>> GetBounceBacks() {
-      var maps = await entitymap.GetPreExistingSystemIdToCoreIdMap(system, corename, topromote.Select(bag => bag.UpdatedCoreEntity!).ToList());
-      return maps.Keys.ToList();
+      return (await entitymap.GetExistingMappingsFromSystemIds(
+          system, corename, topromote.Select(bag => bag.UpdatedCoreEntity!.SystemId).ToList()))
+        .Select(m => m.SystemId).ToList();
     }
   }
     
