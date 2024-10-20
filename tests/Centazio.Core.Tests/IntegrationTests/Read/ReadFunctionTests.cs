@@ -8,9 +8,9 @@ namespace Centazio.Core.Tests.IntegrationTests.Read;
 
 public class ReadFunctionTests {
   
-  private readonly SystemName sys = Constants.System1Name;
+  private readonly SystemName sys = C.System1Name;
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
-  private readonly SystemEntityTypeName sysent = Constants.SystemEntityName;
+  private readonly SystemEntityTypeName sysent = C.SystemEntityName;
   
   [SetUp] public void SetUp() {
     UtcDate.Utc = new TestingUtcDate();
@@ -18,8 +18,8 @@ public class ReadFunctionTests {
   
   [Test] public async Task Test_standalone_read_function() {
     // set up
-    var (start, ctl, stager) = (UtcDate.UtcNow, TestingFactories.CtlRepo(), TestingFactories.SeStore());
-    var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), TestingFactories.ReadRunner(stager));
+    var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeStore());
+    var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), F.ReadRunner(stager));
     var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(func, oprunner, ctl);
     
     // run scenarios
@@ -86,8 +86,8 @@ public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<Read
   private readonly DummyCrmApi crmApi = new();
   
   public ReadFunctionWithSingleReadCustomerOperation() {
-    Config = new(Constants.System1Name, LifecycleStage.Defaults.Read, [
-      new(Constants.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+    Config = new(C.System1Name, LifecycleStage.Defaults.Read, [
+      new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
   

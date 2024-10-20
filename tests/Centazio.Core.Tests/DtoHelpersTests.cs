@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests;
 
@@ -7,7 +6,7 @@ public class DtoHelpersTests {
 
   [Test] public void Test_ToDto() {
     
-    var se = new StagedEntity(Guid.NewGuid(), Constants.System1Name, Constants.SystemEntityName, UtcDate.UtcNow, Guid.NewGuid().ToString(), new(Guid.NewGuid().ToString()));
+    var se = new StagedEntity(Guid.NewGuid(), C.System1Name, C.SystemEntityName, UtcDate.UtcNow, Guid.NewGuid().ToString(), new(Guid.NewGuid().ToString()));
     Assert.That(DtoHelpers.ToDto(se), Is.EqualTo(OriginalToDto(se)));
     Assert.That((DtoHelpers.ToDto(se) as StagedEntity.Dto ?? throw new Exception()).ToBase(), Is.EqualTo(se));
     

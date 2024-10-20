@@ -10,18 +10,18 @@ public class AbstractFunctionStaticHelperTests {
   
   private TestingCtlRepository repo;
   
-  [SetUp] public void SetUp() => repo = TestingFactories.CtlRepo();
+  [SetUp] public void SetUp() => repo = F.CtlRepo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, []));
+    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, []));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
-    var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
+    var ss = await repo.CreateSystemState(C.System1Name, LifecycleStage.Defaults.Read);
     var template = await repo.CreateObjectState(ss, new SystemEntityTypeName("2")); 
     
-    var cfg = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS);
+    var cfg = new FunctionConfig<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
@@ -38,11 +38,11 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
-    var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
+    var ss = await repo.CreateSystemState(C.System1Name, LifecycleStage.Defaults.Read);
     var updated = (await repo.CreateObjectState(ss, new SystemEntityTypeName("2"))).SetActive(false);
     await repo.SaveObjectState(updated);
     
-    var config = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
+    var config = new FunctionConfig<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.OpConfig.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
@@ -77,7 +77,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
-    var runner = TestingFactories.ReadRunner();
+    var runner = F.ReadRunner();
     
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
     var results1 = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.RunOperationsTillAbort(states1, runner, repo);
@@ -96,7 +96,7 @@ public class AbstractFunctionStaticHelperTests {
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
-    var runner = TestingFactories.ReadRunner();
+    var runner = F.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
@@ -117,7 +117,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
     
-    var runner = TestingFactories.ReadRunner();
+    var runner = F.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),

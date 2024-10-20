@@ -1,5 +1,4 @@
 # Todo
-- add constans and factories to default imports of tests
 - simulation needs improments, has lots of single id hacks using entity map, need better helpers
 - merge CoreToSystemMapStore into CtlStore (as SystemMap is part of Ctl)
 - check testing coverage

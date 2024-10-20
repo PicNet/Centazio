@@ -3,16 +3,15 @@ using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
-using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
 
 public class PromoteFunctionTests {
 
-  private readonly SystemName system1 = Constants.System1Name;
+  private readonly SystemName system1 = C.System1Name;
   private readonly LifecycleStage stage = LifecycleStage.Defaults.Promote;
-  private readonly SystemEntityTypeName system = Constants.SystemEntityName;
-  private readonly CoreEntityTypeName coretype = Constants.CoreEntityName;
+  private readonly SystemEntityTypeName system = C.SystemEntityName;
+  private readonly CoreEntityTypeName coretype = C.CoreEntityName;
   
   private TestingCtlRepository ctl;
   private TestingStagedEntityStore stager;
@@ -150,8 +149,8 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
   public bool IgnoreNext { get; set; }
   
   public PromoteFunctionWithSinglePromoteCustomerOperation(SystemName? system=null, bool bidi=false) {
-    Config = new(system ?? Constants.System1Name, LifecycleStage.Defaults.Promote, [
-      new(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
+    Config = new(system ?? C.System1Name, LifecycleStage.Defaults.Promote, [
+      new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   }
 

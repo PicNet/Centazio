@@ -2,14 +2,13 @@
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
-using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.Promote;
 
 public class PromotionStepsTests {
 
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
-    var steps = GetSteps(Constants.System1Name);
+    var steps = GetSteps(C.System1Name);
     var id = Guid.NewGuid();
     steps.bags = [
       new(null!) { SystemEntity = new System1Entity(id, "N1", "N1", DateOnly.MinValue, TestingUtcDate.DoTick()) },
@@ -24,7 +23,7 @@ public class PromotionStepsTests {
   }
   
   [Test] public void Test_IgnoreEntitiesBouncingBack() {
-    var (steps1, steps2) = (GetSteps(Constants.System1Name), GetSteps(Constants.System2Name));
+    var (steps1, steps2) = (GetSteps(C.System1Name), GetSteps(C.System2Name));
     steps1.bags = [
       new(null!) { UpdatedCoreEntity = new CoreEntity(new("1"), "1", "1", DateOnly.MinValue) },
       new(null!) { UpdatedCoreEntity = new CoreEntity2(new("3"), UtcDate.UtcNow) },
@@ -51,9 +50,9 @@ public class PromotionStepsTests {
   
   private OperationStateAndConfig<PromoteOperationConfig> GetOpConfig(SystemName system) {
     var opconf = new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(system, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
+        ObjectState.Create(system, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new PromoteOperationRunnerTests.ErrorPromoteEvaluator()), DateTime.MinValue);
+        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new PromoteOperationRunnerTests.ErrorPromoteEvaluator()), DateTime.MinValue);
     return opconf;
   }
 

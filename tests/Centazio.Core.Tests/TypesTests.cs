@@ -1,6 +1,4 @@
-﻿using Centazio.Test.Lib;
-
-namespace Centazio.Core.Tests;
+﻿namespace Centazio.Core.Tests;
 
 public class TypesTests {
 
@@ -34,11 +32,11 @@ public class TypesTests {
   }
   
   [Test] public void Test_ObjectName_casting_to_SystemEntityType_and_CoreEntityType() {
-    Assert.Throws<Exception>(() => _ = Constants.SystemEntityName.ToCoreEntityTypeName);
-    Assert.Throws<Exception>(() => _ = Constants.CoreEntityName.ToSystemEntityTypeName);
+    Assert.Throws<Exception>(() => _ = C.SystemEntityName.ToCoreEntityTypeName);
+    Assert.Throws<Exception>(() => _ = C.CoreEntityName.ToSystemEntityTypeName);
     
-    Assert.That(Constants.SystemEntityName.ToSystemEntityTypeName.Value, Is.EqualTo(Constants.SystemEntityName.Value));
-    Assert.That(Constants.CoreEntityName.ToCoreEntityTypeName.Value, Is.EqualTo(Constants.CoreEntityName.Value));
+    Assert.That(C.SystemEntityName.ToSystemEntityTypeName.Value, Is.EqualTo(C.SystemEntityName.Value));
+    Assert.That(C.CoreEntityName.ToCoreEntityTypeName.Value, Is.EqualTo(C.CoreEntityName.Value));
   }
 
 }

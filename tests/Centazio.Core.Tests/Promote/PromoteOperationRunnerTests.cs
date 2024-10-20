@@ -4,7 +4,6 @@ using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.CoreStorage;
-using F = Centazio.Test.Lib.TestingFactories;
 
 namespace Centazio.Core.Tests.Promote;
 
@@ -31,12 +30,12 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
-    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, ses.Select(Json.Serialize).ToList());
+    await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
+        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new SuccessPromoteEvaluator()), DateTime.MinValue));
-    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
+        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new SuccessPromoteEvaluator()), DateTime.MinValue));
+    var saved = (await core.Query<CoreEntity>(C.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
@@ -54,13 +53,13 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
-    await stager.Stage(Constants.System1Name, Constants.SystemEntityName, ses.Select(Json.Serialize).ToList());
+    await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName),
+        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig { ThrowExceptions = false },
-        new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new ErrorPromoteEvaluator()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new ErrorPromoteEvaluator()), DateTime.MinValue));
     
-    var saved = (await core.Query<CoreEntity>(Constants.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
+    var saved = (await core.Query<CoreEntity>(C.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
     Assert.That(saved, Is.Empty);
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach(se => {

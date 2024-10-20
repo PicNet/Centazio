@@ -12,7 +12,7 @@ public class ReadOperationRunnerTests {
 
   [SetUp] public void SetUp() {
     store = new TestingStagedEntityStore();
-    repo = TestingFactories.CtlRepo();
+    repo = F.CtlRepo();
   }
   
   [TearDown] public async Task TearDown() {
@@ -21,7 +21,7 @@ public class ReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = TestingFactories.ReadRunner(store);
+    var runner = F.ReadRunner(store);
     var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, new TestingSingleReadOperationImplementation()));
     
     Assert.That(store.Contents, Is.Empty);
@@ -29,7 +29,7 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = TestingFactories.ReadRunner(store);
+    var runner = F.ReadRunner(store);
     var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, new TestingEmptyReadOperationImplementation());
     var actual = await runner.RunOperation(opcfg);
     
@@ -38,7 +38,7 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
-    var runner = TestingFactories.ReadRunner(store);
+    var runner = F.ReadRunner(store);
     var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingSingleReadOperationImplementation()));
 
     var staged = store.Contents.Single();
@@ -47,7 +47,7 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = TestingFactories.ReadRunner(store);
+    var runner = F.ReadRunner(store);
     var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingListReadOperationImplementation()));
     
     var staged = store.Contents;
