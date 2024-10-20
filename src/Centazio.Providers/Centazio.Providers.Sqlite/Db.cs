@@ -11,7 +11,7 @@ public static class Db {
     sql = sql.Trim();
     try { 
       var result = await conn.ExecuteAsync(sql, arg);
-      if (DEBUG_SQL) Log.Debug("Db.Exec[Success]:{@Command}\nArgs:{@Args}\nResult:{@Result}}", sql, arg, result);
+      if (DEBUG_SQL) Log.Debug("Db.Exec[Success]:{@Command}\nArgs:{@Args}\nResult:{@Result}", sql, arg, result);
       return result;
     } catch (Exception e) {
       Log.Error("Db.Exec[Error({@ErrorMessage})]:{@Command}\nArgs:{@Args}", e.Message, sql, arg);
@@ -23,7 +23,7 @@ public static class Db {
     query = query.Trim();
     try { 
       var results = (await conn.QueryAsync<T>(query, arg)).ToList();
-      if (DEBUG_SQL) Log.Debug("Db.Query[Success]:{@Query}\nArgs:{@Args}\nResult:{@Result}}", query, arg, results.Count);
+      if (DEBUG_SQL) Log.Debug("Db.Query[Success]:{@Query}\nArgs:{@Args}\nResult:{@Result}", query, arg, results.Count);
       return results;
     } catch (Exception e) {
       Log.Error("Db.Query[Error({@ErrorMessage})]:{@Command}\nArgs:{@Args}", e.Message, query, arg);

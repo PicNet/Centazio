@@ -5,12 +5,12 @@ namespace Centazio.Core.Tests.Stage;
 
 public class StagedEntityTests {
 
-  private static readonly string NAME = nameof(StagedEntityTests);
+  private readonly string MOCK_DATA = Json.Serialize(new {});
   
   [Test] public void Test_initialisation_handles_ignore_correctly() {
-    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, NAME, Helpers.TestingStagedEntityChecksum(NAME), ignoreres: null).ToBase().IgnoreReason, Is.Null);
-    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, NAME, Helpers.TestingStagedEntityChecksum(NAME), ignoreres: String.Empty).ToBase().IgnoreReason, Is.Null);
-    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, NAME, Helpers.TestingStagedEntityChecksum(NAME), ignoreres: " ").ToBase().IgnoreReason, Is.Null);
-    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), NAME, NAME, UtcDate.UtcNow, NAME, Helpers.TestingStagedEntityChecksum(NAME), ignoreres: "\n\t ").ToBase().IgnoreReason, Is.Null);
+    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), Constants.System1Name, LifecycleStage.Defaults.Read, UtcDate.UtcNow, MOCK_DATA, Helpers.TestingStagedEntityChecksum(MOCK_DATA), ignoreres: null).ToBase().IgnoreReason, Is.Null);
+    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), Constants.System1Name, LifecycleStage.Defaults.Read, UtcDate.UtcNow, MOCK_DATA, Helpers.TestingStagedEntityChecksum(MOCK_DATA), ignoreres: String.Empty).ToBase().IgnoreReason, Is.Null);
+    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), Constants.System1Name, LifecycleStage.Defaults.Read, UtcDate.UtcNow, MOCK_DATA, Helpers.TestingStagedEntityChecksum(MOCK_DATA), ignoreres: " ").ToBase().IgnoreReason, Is.Null);
+    Assert.That(new StagedEntity.Dto(Guid.CreateVersion7(), Constants.System1Name, LifecycleStage.Defaults.Read, UtcDate.UtcNow, MOCK_DATA, Helpers.TestingStagedEntityChecksum(MOCK_DATA), ignoreres: "\n\t ").ToBase().IgnoreReason, Is.Null);
   }
 }

@@ -7,22 +7,21 @@ using Centazio.Test.Lib;
 namespace Centazio.Core.Tests.Runner;
 
 public class AbstractFunctionStaticHelperTests {
-
-  private const string NAME = nameof(AbstractFunctionStaticHelperTests);
+  
   private TestingCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = TestingFactories.CtlRepo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig>(NAME, NAME, []));
+    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, []));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
-    var ss = await repo.CreateSystemState(NAME, NAME);
+    var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
     var template = await repo.CreateObjectState(ss, new SystemEntityTypeName("2")); 
     
-    var cfg = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS);
+    var cfg = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS);
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(cfg, ss, repo);
     
     Assert.That(states, Has.Count.EqualTo(4));
@@ -39,11 +38,11 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_LoadOperationsStates_ignores_innactive_states() {
-    var ss = await repo.CreateSystemState(NAME, NAME);
+    var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
     var updated = (await repo.CreateObjectState(ss, new SystemEntityTypeName("2"))).SetActive(false);
     await repo.SaveObjectState(updated);
     
-    var config = new FunctionConfig<ReadOperationConfig>(NAME, NAME, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
+    var config = new FunctionConfig<ReadOperationConfig>(Constants.System1Name, LifecycleStage.Defaults.Read, Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
     var states = await AbstractFunction<ReadOperationConfig, ReadOperationResult>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.OpConfig.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));

@@ -10,10 +10,12 @@ public class CheckDependenciesBetweenProjects {
     var dependencies = ParseDependencies(files);
     if (dependencies["Centazio.Core"].Any()) errors.Add("Centazio.Core should have no project dependencies");
     if (dependencies["Centazio.Test.Lib"].Count > 1 || dependencies["Centazio.Test.Lib"].Single() != "Centazio.Core") errors.Add("Centazio.Test.Lib should at most depend on Centazio.Core");
-    
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0).ForEach(testproj => {
       var target = testproj.Replace(".Tests", String.Empty);
-      var bad = dependencies[testproj].Where(d => !new [] { "Centazio.Core", "Centazio.Test.Lib", target }.Contains(d)).ToList();
+      var allowed = new List<string> { "Centazio.Core", "Centazio.Test.Lib", target };
+      // simulation can use provider projects for end-to-end testing
+      if (testproj == "Centazio.E2E.Tests") { allowed.Add("Centazio.Providers.Sqlite"); }
+      var bad = dependencies[testproj].Where(d => !allowed.Contains(d)).ToList();
       if (bad.Any()) errors.Add($"Test Project [{testproj}] should at most depend on 'Centazio.Core', 'Centazio.Test.Lib' and '{target}'.  Had extra dependencies: " + String.Join(",", bad));
     });
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) < 0).ForEach(proj => {

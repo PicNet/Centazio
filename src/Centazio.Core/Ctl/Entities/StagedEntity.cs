@@ -43,9 +43,9 @@ public sealed record StagedEntity {
     
     public Dto() {}
     
-    internal Dto(Guid? id, string syste, string obj, DateTime? staged, string? data, string? checksum, DateTime? promoted = null, string? ignoreres = null) {
+    internal Dto(Guid? id, string system, string obj, DateTime? staged, string? data, string? checksum, DateTime? promoted = null, string? ignoreres = null) {
       Id = id;
-      System = syste;
+      System = system;
       SystemEntityTypeName = obj;
       DateStaged = staged;
       Data = data;
