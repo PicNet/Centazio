@@ -8,7 +8,7 @@ namespace Centazio.Core.Tests.Read;
 public class ReadOperationRunnerTests {
 
   private TestingStagedEntityStore store;
-  private TestingCtlRepository repo;
+  private TestingInMemoryCtlRepository repo;
 
   [SetUp] public void SetUp() {
     store = new TestingStagedEntityStore();

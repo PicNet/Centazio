@@ -1,10 +1,8 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
-using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.E2E.Tests.Infra;
-using Centazio.Providers.Sqlite.CoreToSystemMapping;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
 using Microsoft.Data.Sqlite;
@@ -19,7 +17,6 @@ public class SimulationCtx : IAsyncDisposable {
   private const string SIM_SQLITE_FILENAME = "centazio_simulation.db";
   private SqliteConnection sqliteconn => new($"Data Source={SIM_SQLITE_FILENAME};");
   public ICtlRepository CtlRepo { get; set; } = null!;
-  public ICoreToSystemMapStore EntityMap { get; set; } = null!;
   public IStagedEntityStore StageStore { get; set; } = null!;
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
@@ -35,10 +32,9 @@ public class SimulationCtx : IAsyncDisposable {
     File.Delete(SIM_SQLITE_FILENAME);
     
     CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
-    EntityMap = await new SqliteCoreToSystemMapStore(() => sqliteconn).Initalise();
     StageStore = await new SqliteStagedEntityStore(() => sqliteconn, 0, ChecksumAlg.Checksum).Initalise();
     CoreStore = new(this);
-    Converter = new(EntityMap);
+    Converter = new(CtlRepo);
   }
   
  
@@ -58,7 +54,6 @@ public class SimulationCtx : IAsyncDisposable {
 
   public async ValueTask DisposeAsync() {
     await CtlRepo.DisposeAsync();
-    await EntityMap.DisposeAsync();
     await CoreStore.DisposeAsync();
     await StageStore.DisposeAsync();
   }

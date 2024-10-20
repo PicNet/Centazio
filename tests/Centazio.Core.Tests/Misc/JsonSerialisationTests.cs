@@ -75,8 +75,8 @@ public class JsonSerialisationTests {
     Assert.That(se2, Is.EqualTo(se));
     
     // Centazio.Core.Ctl.Entities.Map+CoreToSystem+Dto
-    var c2s = new Map.CoreToSystemMap(new(str), new(str), new(str), new(str), EEntityMappingStatus.Orphaned, new(str));
-    var c2s2 = Json.Deserialize<Map.CoreToSystemMap>(Json.Serialize(c2s));
+    var c2s = new Map.CoreToSysMap(new(str), new(str), new(str), new(str), EEntityMappingStatus.Orphaned, new(str));
+    var c2s2 = Json.Deserialize<Map.CoreToSysMap>(Json.Serialize(c2s));
     Assert.That(c2s2, Is.EqualTo(c2s));
   }
   

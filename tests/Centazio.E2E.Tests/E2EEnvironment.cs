@@ -38,22 +38,22 @@ public class E2EEnvironment : IAsyncDisposable {
         new ReadOperationRunner(ctx.StageStore),
         ctx.CtlRepo);
     crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new CrmPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.EntityMap),
+        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.CtlRepo),
         ctx.CtlRepo);
     
     crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(ctx, crm),
-        new WriteOperationRunner<WriteOperationConfig>(ctx.EntityMap, ctx.CoreStore), 
+        new WriteOperationRunner<WriteOperationConfig>(ctx.CtlRepo, ctx.CoreStore), 
         ctx.CtlRepo);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new FinReadFunction(ctx, fin),
         new ReadOperationRunner(ctx.StageStore),
         ctx.CtlRepo);
     fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new FinPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.EntityMap),
+        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.CtlRepo),
         ctx.CtlRepo);
     
     fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(ctx, fin),
-        new WriteOperationRunner<WriteOperationConfig>(ctx.EntityMap, ctx.CoreStore), 
+        new WriteOperationRunner<WriteOperationConfig>(ctx.CtlRepo, ctx.CoreStore), 
         ctx.CtlRepo);
   }
   
@@ -119,8 +119,8 @@ public class E2EEnvironment : IAsyncDisposable {
   
   private async Task CompareInvoices() {
     var cores = ctx.CoreStore.GetInvoices();
-    var crmmaps = await ctx.EntityMap.GetRelatedEntitySystemIdsFromCoreEntities(SimulationConstants.CRM_SYSTEM,  CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
-    var finmaps = await ctx.EntityMap.GetRelatedEntitySystemIdsFromCoreEntities(SimulationConstants.FIN_SYSTEM, CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var crmmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SimulationConstants.CRM_SYSTEM,  CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var finmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SimulationConstants.FIN_SYSTEM, CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
     var core_invoices_for_crm = cores.Select(i => ctx.Converter.CoreInvoiceToCrmInvoice(Guid.Empty, i, crmmaps));
     var core_invoices_for_fin = cores.Select(i => ctx.Converter.CoreInvoiceToFinInvoice(0, i, finmaps));
     

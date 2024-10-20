@@ -30,7 +30,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     if (config.Object.Value == nameof(CoreInvoice)) {
       var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
-      var maps = await ctx.EntityMap.GetRelatedEntitySystemIdsFromCoreEntities(Config.System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
+      var maps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(Config.System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
       return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
     }
     throw new NotSupportedException(config.Object);

@@ -9,8 +9,8 @@ namespace Centazio.Core.Tests.IntegrationTests.Write;
 
 public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
-    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.CoreSystemMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
+    var (ctl, core) = (F.CtlRepo(), F.CoreRepo());
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(ctl, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
     var customer1 = new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
@@ -46,8 +46,8 @@ public class WriteFunctionTests {
   }
   
   [Test] public async Task Test_WriteFunction_error_handling() {
-    var (ctl, core, entitymap) = (F.CtlRepo(), F.CoreRepo(), F.CoreSystemMap());
-    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(entitymap, core));
+    var (ctl, core) = (F.CtlRepo(), F.CoreRepo());
+    var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(ctl, core));
     func.Throws = true;
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
 
@@ -59,7 +59,7 @@ public class WriteFunctionTests {
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
     var allcusts = await core.Query<CoreEntity>(C.CoreEntityName, c => true);
-    var maps = await entitymap.GetAll();
+    var maps = await ctl.GetAllMaps();
 
     Assert.That(result.EntitiesUpdated, Is.Empty);
     Assert.That(result.EntitiesCreated, Is.Empty);

@@ -45,7 +45,7 @@ public class PromotionStepsTests {
 
   
   private PromotionSteps GetSteps(SystemName system) {
-    return new PromotionSteps(F.CoreRepo(), F.CoreSystemMap(), GetOpConfig(system));
+    return new PromotionSteps(F.CoreRepo(), F.CtlRepo(), GetOpConfig(system));
   }
   
   private OperationStateAndConfig<PromoteOperationConfig> GetOpConfig(SystemName system) {

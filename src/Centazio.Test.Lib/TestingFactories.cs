@@ -2,7 +2,6 @@
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -15,15 +14,14 @@ namespace Centazio.Test.Lib;
 public static class TestingFactories {
     
   public static TestingStagedEntityStore SeStore() => new(); 
-  public static TestingCtlRepository CtlRepo() => new();
+  public static TestingInMemoryCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static TestingInMemoryCoreToSystemMapStore CoreSystemMap() => new();
   public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
   public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(
       IStagedEntityStore? store = null, 
-      ICoreToSystemMapStore? entitymap = null, 
+      ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), entitymap ?? CoreSystemMap());
+      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), ctl ?? CtlRepo());
 
   public static CoreEntity NewCoreCust(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
@@ -31,21 +29,21 @@ public static class TestingFactories {
     return new CoreEntity(id, first, last, dob) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
   }
 
-  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryCoreToSystemMapStore? entitymap = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
-      => new(entitymap ?? CoreSystemMap(), core ?? CoreRepo());
+  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+      => new(ctl ?? CtlRepo(), core ?? CoreRepo());
 
 }
 
 public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
-public class TestingCtlRepository : InMemoryCtlRepository {
-  public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
-  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
-}
 
 // public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystemMap>> GetAll(); }
 
-public class TestingInMemoryCoreToSystemMapStore : InMemoryCoreToSystemMapStore, ITestingCoreToSystemMapStore {
-  public Task<List<Map.CoreToSystemMap>> GetAll() => 
-      Task.FromResult(memdb.Values.Select(Deserialize).Cast<Map.CoreToSystemMap>().ToList());
+public class TestingInMemoryCtlRepository : InMemoryCtlRepository, ITestingCtlRepository {
+  public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
+  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
+  public Dictionary<Map.Key, string> Maps => maps;
+  
+  public Task<List<Map.CoreToSysMap>> GetAllMaps() => 
+      Task.FromResult(maps.Values.Select(Deserialize).Cast<Map.CoreToSysMap>().ToList());
 }

@@ -1,4 +1,9 @@
 # Todo
+- remove STR/STR2 from tests
+- Abstract/Base/Default tests naming clean up and Repo/Store
+- simulation corestorage -> sqlite
+- sql server - mappings test
+- sql server simulation
 - simulation needs improments, has lots of single id hacks using entity map, need better helpers
 - merge CoreToSystemMapStore into CtlStore (as SystemMap is part of Ctl)
 - check testing coverage

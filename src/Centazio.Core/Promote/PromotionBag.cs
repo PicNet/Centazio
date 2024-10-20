@@ -8,7 +8,7 @@ namespace Centazio.Core.Promote;
 public class PromotionBag(StagedEntity staged) {
   public StagedEntity StagedEntity { get; init; } = staged;
   public ISystemEntity SystemEntity { get; set; } = null!;
-  public Map.CoreToSystemMap? Map { get; set; }
+  public Map.CoreToSysMap? Map { get; set; }
   public ICoreEntity? PreExistingCoreEntity { get; set; }
   public CoreEntityChecksum? PreExistingCoreEntityChecksum { get; set; }
   public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }

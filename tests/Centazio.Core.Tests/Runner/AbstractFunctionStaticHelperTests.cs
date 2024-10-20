@@ -8,7 +8,7 @@ namespace Centazio.Core.Tests.Runner;
 
 public class AbstractFunctionStaticHelperTests {
   
-  private TestingCtlRepository repo;
+  private TestingInMemoryCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = F.CtlRepo();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();

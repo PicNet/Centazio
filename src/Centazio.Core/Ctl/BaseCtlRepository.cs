@@ -2,24 +2,28 @@
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 
-namespace Centazio.Core.CoreToSystemMapping;
+namespace Centazio.Core.Ctl;
 
-public interface ICoreToSystemMapStore : IAsyncDisposable {
+public abstract class BaseCtlRepository : ICtlRepository {
 
-  Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
-  Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
+  public abstract Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage);
+  public abstract Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage);
+  public abstract Task<SystemState> SaveSystemState(SystemState state);
   
-  Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents);
-  Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids);
+  public abstract Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj);
+  public abstract Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj);
+  public abstract Task<ObjectState> SaveObjectState(ObjectState state);
   
-  Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreEntities(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey);
-  Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory);
-
-}
-
-public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
-
-  public async Task<List<Map.Created>> Create(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+  public async Task<SystemState> GetOrCreateSystemState(SystemName system, LifecycleStage stage) => await GetSystemState(system, stage) ?? await CreateSystemState(system, stage);
+  public async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
+  
+  protected abstract Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
+  protected abstract Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
+  protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
+  
+  public abstract ValueTask DisposeAsync();
+  
+  public async Task<List<Map.Created>> CreateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     if (!tocreate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, tocreate, true);
     var created = await CreateImpl(system, coretype, tocreate);
@@ -27,7 +31,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     return created;
   }
   
-  public async Task<List<Map.Updated>> Update(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+  public async Task<List<Map.Updated>> UpdateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
     if (!toupdate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, toupdate, false);
     var updated = await UpdateImpl(system, coretype, toupdate);
@@ -35,7 +39,7 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     return updated;
   }
 
-  private static void ValidateMapsToUpsert<M>(SystemName system, CoreEntityTypeName coretype, List<M> maps, bool iscreate) where M : Map.CoreToSystemMap {
+  private static void ValidateMapsToUpsert<M>(SystemName system, CoreEntityTypeName coretype, List<M> maps, bool iscreate) where M : Map.CoreToSysMap {
     if (iscreate && maps.Any(e => e.System != system)) throw new ArgumentException($"All maps should have the same System[{system}]");
     if (maps.Any(e => e.CoreEntityTypeName != coretype)) throw new ArgumentException($"All maps should have the same CoreEntityTypeName[{system}]");
     if (iscreate && maps.Any(e => maps.First().DateCreated != e.DateCreated)) throw new ArgumentException($"All maps should have the same DateCreated[{system}]");
@@ -43,11 +47,8 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     if (maps.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException($"All maps should be for unique system entities (have unique SystemIds)");
     if (maps.GroupBy(e => e.CoreId).Any(g => g.Count() > 1)) throw new ArgumentException($"All maps should be for unique core entities (have unique CoreIds)");
   }
-
-  protected abstract Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
-  protected abstract Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   
-  public async Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMappingsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
+  public async Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMapsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {
     var (news, updates) = (new List<CoreAndPendingCreateMap>(), new List<CoreAndPendingUpdateMap>());
     if (!coreents.Any()) return (news, updates);
     ValidateCoreEntitiesForQuery(coretype, coreents, true);
@@ -61,19 +62,17 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     return (news, updates);
   }
   
-  public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    if (!coreids.Any()) return Task.FromResult<List<Map.CoreToSystemMap>>([]);
+  public Task<List<Map.CoreToSysMap>> GetExistingMappingsFromCoreIds(SystemName system, CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+    if (!coreids.Any()) return Task.FromResult<List<Map.CoreToSysMap>>([]);
     return GetExistingMapsByIds(system, coretype, coreids.Distinct().ToList());
   }
 
-  public Task<List<Map.CoreToSystemMap>> GetExistingMappingsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) {
-    if (!systemids.Any()) return Task.FromResult<List<Map.CoreToSystemMap>>([]);
+  public Task<List<Map.CoreToSysMap>> GetMapsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<SystemEntityId> systemids) {
+    if (!systemids.Any()) return Task.FromResult<List<Map.CoreToSysMap>>([]);
     return GetExistingMapsByIds(system, coretype, systemids.Distinct().ToList());
   }
   
-  protected abstract Task<List<Map.CoreToSystemMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
-  
-  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedEntitySystemIdsFromCoreEntities(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey) {
+  public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedSystemIdsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey) {
     if (!coreents.Any()) return new();
     ValidateCoreEntitiesForQuery(coretype, coreents, false);
     
@@ -86,13 +85,13 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     
     return dict;
   }
-  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedEntityCoreIdsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory) {
+  public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedCoreIdsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory) {
     if (!sysents.Any()) return new();
     if (sysents.Any(e => SystemEntityTypeName.From(e) != SystemEntityTypeName.From(sysents.First()))) throw new ArgumentException($"All system entities should be of the same SystemEntityTypeName[{system}]");
     if (sysents.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate system entities (by SystemId)");
     
     var fks = sysents.Select(e => new SystemEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
-    var dict = (await GetExistingMappingsFromSystemIds(system, coretype, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
+    var dict = (await GetMapsFromSystemIds(system, coretype, fks)).ToDictionary(m => m.SystemId, m => m.CoreId);
     if (!mandatory) return dict;
     
     var missing = fks.Where(fk => !dict.ContainsKey(fk)).ToList();
@@ -100,13 +99,10 @@ public abstract class AbstractCoreToSystemMapStore : ICoreToSystemMapStore {
     return dict;
   }
   
-  public abstract ValueTask DisposeAsync();
-  
   private void ValidateCoreEntitiesForQuery(CoreEntityTypeName coretype, List<ICoreEntity> coreents, bool validatetype) {
     if (validatetype && coreents.Any(e => CoreEntityTypeName.From(e) != coretype)) throw new ArgumentException($"All core entities should match expected CoreEntityTypeName[{coretype}]");
     if (coreents.Any(e => CoreEntityTypeName.From(e) != CoreEntityTypeName.From(coreents.First()))) throw new ArgumentException($"All core entities should be of the same CoreEntityTypeName[{CoreEntityTypeName.From(coreents.First())}]");
     if (coreents.GroupBy(e => e.CoreId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate core entities (by CoreId)");
     if (coreents.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate core entities (by SystemId)");
   }
-
 }

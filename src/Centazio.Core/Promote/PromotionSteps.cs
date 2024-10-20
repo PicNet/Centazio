@@ -1,6 +1,6 @@
 ﻿using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.CoreToSystemMapping;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Centazio.Core.Promote;
 
-public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, OperationStateAndConfig<PromoteOperationConfig> op) {
+public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStateAndConfig<PromoteOperationConfig> op) {
 
   private readonly SystemName system = op.State.System;
   private readonly CoreEntityTypeName corename = op.State.Object.ToCoreEntityTypeName;
@@ -29,7 +29,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
   public async Task LoadExistingCoreEntities() {
     if (IsEmpty()) return;
     var sysids = bags.Select(bag => bag.SystemEntity.SystemId).ToList();
-    var maps = await entitymap.GetExistingMappingsFromSystemIds(system, corename, sysids);
+    var maps = await ctl.GetMapsFromSystemIds(system, corename, sysids);
     var coreids = maps.Select(m => m.CoreId).ToList();
     var coreents = await core.Get(corename, coreids);
     bags.ForEach(bag => {
@@ -120,7 +120,7 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
     
    
     async Task<List<SystemEntityId>> GetBounceBacks() {
-      return (await entitymap.GetExistingMappingsFromSystemIds(
+      return (await ctl.GetMapsFromSystemIds(
           system, corename, topromote.Select(bag => bag.UpdatedCoreEntity!.SystemId).ToList()))
         .Select(m => m.SystemId).ToList();
     }
@@ -149,8 +149,8 @@ public class PromotionSteps(ICoreStorage core, ICoreToSystemMapStore entitymap, 
 
     await Task.WhenAll([
       core.Upsert(corename, ToPromote().Select(bag => (bag.UpdatedCoreEntity!, bag.UpdatedCoreEntityChecksum!)).ToList()),
-      entitymap.Create(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-      entitymap.Update(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
+      ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
+      ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
     ]);
   }
   

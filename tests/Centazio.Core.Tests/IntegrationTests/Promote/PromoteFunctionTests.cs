@@ -13,13 +13,12 @@ public class PromoteFunctionTests {
   private readonly SystemEntityTypeName system = C.SystemEntityName;
   private readonly CoreEntityTypeName coretype = C.CoreEntityName;
   
-  private TestingCtlRepository ctl;
+  private TestingInMemoryCtlRepository ctl;
   private TestingStagedEntityStore stager;
   private TestingInMemoryCoreStorageRepository core;
-  private TestingInMemoryCoreToSystemMapStore entitymap;
 
   [SetUp] public void SetUp() {
-    (ctl, stager, core, entitymap) = (F.CtlRepo(), F.SeStore(), F.CoreRepo(), F.CoreSystemMap());
+    (ctl, stager, core) = (F.CtlRepo(), F.SeStore(), F.CoreRepo());
   }
   
   [Test] public async Task Test_generic_deserialisation() {
@@ -33,7 +32,7 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, ctl, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity
@@ -78,7 +77,7 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, entitymap, core));
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, ctl, core));
     var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
     
     // create single entity

@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 
@@ -20,6 +21,7 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(SystemEntityId), ("SystemId", "systemid", true) },
     { typeof(ISystemEntity), ("SystemEntity", "sysent", true) },
     { typeof(ICoreEntity), ("CoreEntity", "coreent", true) },
+    { typeof(ICtlRepository), ("CtlRepo", "ctl", false) },
   };
   
   private readonly List<Type> EXP_ORDER = [

@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.CoreToSystemMapping;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
@@ -12,14 +11,13 @@ public class PromoteOperationRunnerTests {
   private readonly int RECORDS_COUNT = 100;
   
   private TestingStagedEntityStore stager;
-  private TestingCtlRepository ctl;
+  private TestingInMemoryCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
-  private InMemoryCoreToSystemMapStore entitymap;
   private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
-    (stager, ctl, core, entitymap) = (F.SeStore(), F.CtlRepo(), F.CoreRepo(), F.CoreSystemMap());
-    promoter = F.PromoteRunner(stager, entitymap, core);
+    (stager, ctl, core) = (F.SeStore(), F.CtlRepo(), F.CoreRepo());
+    promoter = F.PromoteRunner(stager, ctl, core);
   }
   
   [TearDown] public async Task TearDown() {

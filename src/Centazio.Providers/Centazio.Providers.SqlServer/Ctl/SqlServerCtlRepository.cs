@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SqlServer.Ctl;
 
-public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : ICtlRepository {
+public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : BaseCtlRepository {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string SYSTEM_STATE_TBL = nameof(SystemState);
@@ -25,13 +25,13 @@ ALTER TABLE [{SCHEMA}].[{OBJECT_STATE_TBL}]
     return this;
   }
   
-  public async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
+  public override async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = await newconn();
     var dto = await conn.QuerySingleOrDefaultAsync<SystemState.Dto>($"SELECT * FROM {SCHEMA}.{SYSTEM_STATE_TBL} WHERE System=@System AND Stage=@Stage", new { System=system, Stage=stage });
     return dto?.ToBase();
   }
 
-  public async Task<SystemState> SaveSystemState(SystemState state) {
+  public override async Task<SystemState> SaveSystemState(SystemState state) {
     await using var conn = await newconn();
     var count = await conn.ExecuteAsync($@"
 UPDATE {SCHEMA}.{SYSTEM_STATE_TBL} 
@@ -40,7 +40,7 @@ WHERE System=@System AND Stage=@Stage", state);
     return count == 0 ? throw new Exception("SaveSystemState failed") : state;
   }
 
-  public async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
+  public override async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     await using var conn = await newconn();
     var created = SystemState.Create(system, stage);
     await conn.ExecuteAsync($@"
@@ -51,7 +51,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
 
-  public async Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
+  public override async Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
     await using var conn = await newconn();
     var dto = await conn.QuerySingleOrDefaultAsync<ObjectState.Dto>(@$"
   SELECT * FROM {SCHEMA}.{OBJECT_STATE_TBL} 
@@ -60,7 +60,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return dto?.ToBase();
   }
 
-  public async Task<ObjectState> SaveObjectState(ObjectState state) {
+  public override async Task<ObjectState> SaveObjectState(ObjectState state) {
     await using var conn = await newconn();
     var count = await conn.ExecuteAsync($@"
   UPDATE {SCHEMA}.{OBJECT_STATE_TBL} 
@@ -79,7 +79,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return count == 0 ? throw new Exception("SaveObjectState failed") : state;
   }
 
-  public async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
+  public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
     await using var conn = await newconn();
 
     var created = ObjectState.Create(system.System, system.Stage, obj);
@@ -91,8 +91,13 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
 
     return created;
   }
+  
+  // todo: implement SqlServer CoreToSystemMap code
+  protected override Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) => throw new NotImplementedException();
+  protected override Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) => throw new NotImplementedException();
+  protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) => throw new NotImplementedException();
 
-  public virtual ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
+  public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
   
 }
 
