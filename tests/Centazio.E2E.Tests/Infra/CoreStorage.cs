@@ -9,22 +9,21 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
   
   private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();
   
-  public CoreMembershipType? GetMembershipType(CoreEntityId? coreid) => GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
-  public List<CoreMembershipType> GetMembershipTypes() => GetList<CoreMembershipType, CoreMembershipType.Dto>();
-  public CoreCustomer? GetCustomer(CoreEntityId? coreid) => GetSingle<CoreCustomer, CoreCustomer.Dto>(coreid);
-  public List<CoreCustomer> GetCustomers() => GetList<CoreCustomer, CoreCustomer.Dto>();
-  public CoreInvoice? GetInvoice(CoreEntityId? coreid) => GetSingle<CoreInvoice, CoreInvoice.Dto>(coreid);
-  public List<CoreInvoice> GetInvoices() => GetList<CoreInvoice, CoreInvoice.Dto>();
+  public async Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
+  public async Task<List<CoreMembershipType>> GetMembershipTypes() => await GetList<CoreMembershipType, CoreMembershipType.Dto>();
+  public async Task<CoreCustomer?> GetCustomer(CoreEntityId? coreid) => await GetSingle<CoreCustomer, CoreCustomer.Dto>(coreid);
+  public async Task<List<CoreCustomer>> GetCustomers() => await GetList<CoreCustomer, CoreCustomer.Dto>();
+  public async Task<CoreInvoice?> GetInvoice(CoreEntityId? coreid) => await GetSingle<CoreInvoice, CoreInvoice.Dto>(coreid);
+  public async Task<List<CoreInvoice>> GetInvoices() => await GetList<CoreInvoice, CoreInvoice.Dto>();
 
-  public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
-    var list = GetList(coretype).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
-    return Task.FromResult(list);
+  public async Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
+    return (await GetList(coretype)).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    var full = GetList(coretype);
+  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+    var full = await GetList(coretype);
     var forcores = coreids.Select(id => full.Single(e => e.CoreId == id)).ToList();
-    return Task.FromResult(forcores);
+    return forcores;
   }
 
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
@@ -49,22 +48,29 @@ public class CoreStorage(SimulationCtx ctx) : ICoreStorage {
 
   public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-  private List<ICoreEntity> GetList(CoreEntityTypeName coretype) {
-    if (coretype.Value == nameof(CoreMembershipType)) return GetList<CoreMembershipType, CoreMembershipType.Dto>().Cast<ICoreEntity>().ToList();
-    if (coretype.Value == nameof(CoreCustomer)) return GetList<CoreCustomer, CoreCustomer.Dto>().Cast<ICoreEntity>().ToList();
-    if (coretype.Value == nameof(CoreInvoice)) return GetList<CoreInvoice, CoreInvoice.Dto>().Cast<ICoreEntity>().ToList();
+  private async Task<List<ICoreEntity>> GetList(CoreEntityTypeName coretype) {
+    if (coretype.Value == nameof(CoreMembershipType)) return (await GetList<CoreMembershipType, CoreMembershipType.Dto>()).Cast<ICoreEntity>().ToList();
+    if (coretype.Value == nameof(CoreCustomer)) return (await GetList<CoreCustomer, CoreCustomer.Dto>()).Cast<ICoreEntity>().ToList();
+    if (coretype.Value == nameof(CoreInvoice)) return (await GetList<CoreInvoice, CoreInvoice.Dto>()).Cast<ICoreEntity>().ToList();
     throw new NotSupportedException(coretype);
   }
   
-  private List<E> GetList<E, D>() 
+  private Task<List<E>> GetList<E, D>() 
       where E : CoreEntityBase 
       where D : CoreEntityBase.Dto<E> {
     var coretype = CoreEntityTypeName.From<E>();
     if (!db.ContainsKey(coretype)) db[coretype] = new();
-    return db[CoreEntityTypeName.From<E>()].Keys.Select(coreid => GetSingle<E, D>(coreid) ?? throw new Exception()).ToList();
+    var results = db[CoreEntityTypeName.From<E>()].Keys.Select(coreid => GetSingleImpl<E, D>(coreid) ?? throw new Exception()).ToList();
+    return Task.FromResult(results);
   }
 
-  private E? GetSingle<E, D>(CoreEntityId? coreid) 
+  private Task<E> GetSingle<E, D>(CoreEntityId? coreid) 
+      where E : CoreEntityBase 
+      where D : CoreEntityBase.Dto<E> {
+    return Task.FromResult(GetSingleImpl<E, D>(coreid) ?? throw new Exception());
+  }
+  
+  private E? GetSingleImpl<E, D>(CoreEntityId? coreid) 
       where E : CoreEntityBase 
       where D : CoreEntityBase.Dto<E> {
     var dict = db[CoreEntityTypeName.From<E>()];

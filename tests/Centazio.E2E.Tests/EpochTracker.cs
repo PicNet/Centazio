@@ -59,12 +59,13 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
 
     async Task<ICoreEntity> ToCore(ISystemEntity e, IDictionary<SystemEntityId, CoreEntityId> idmap) {
       idmap.TryGetValue(e.SystemId, out var exid);
+      // todo: these queries should run once for whole batch not for every single entity
       return e switch {
-        CrmMembershipType type => ctx.Converter.CrmMembershipTypeToCoreMembershipType(type, ctx.CoreStore.GetMembershipType(exid)), 
-        CrmCustomer customer => ctx.Converter.CrmCustomerToCoreCustomer(customer, ctx.CoreStore.GetCustomer(exid)), 
-        CrmInvoice invoice => await ctx.Converter.CrmInvoiceToCoreInvoice(invoice, ctx.CoreStore.GetInvoice(exid)), 
-        FinAccount account => ctx.Converter.FinAccountToCoreCustomer(account, ctx.CoreStore.GetCustomer(exid)), 
-        FinInvoice fininv => await ctx.Converter.FinInvoiceToCoreInvoice(fininv, ctx.CoreStore.GetInvoice(exid)), 
+        CrmMembershipType type => ctx.Converter.CrmMembershipTypeToCoreMembershipType(type, await ctx.CoreStore.GetMembershipType(exid)), 
+        CrmCustomer customer => ctx.Converter.CrmCustomerToCoreCustomer(customer, await ctx.CoreStore.GetCustomer(exid)), 
+        CrmInvoice invoice => await ctx.Converter.CrmInvoiceToCoreInvoice(invoice, await ctx.CoreStore.GetInvoice(exid)), 
+        FinAccount account => ctx.Converter.FinAccountToCoreCustomer(account, await ctx.CoreStore.GetCustomer(exid)), 
+        FinInvoice fininv => await ctx.Converter.FinInvoiceToCoreInvoice(fininv, await ctx.CoreStore.GetInvoice(exid)), 
         _ => throw new NotSupportedException(e.GetType().Name)
       };
     }
