@@ -1,6 +1,5 @@
 # Todo
 - simulation corestorage -> sqlite
-- sql server - mappings implementation and tests
 - sql server simulation
 - simulation needs improments, has lots of single id hacks using entity map, need better helpers
 - check testing coverage

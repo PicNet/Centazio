@@ -61,9 +61,7 @@ BEGIN
   )
 END
 ");
-    var sqlstr = sql.ToString().Trim();
-    Console.WriteLine(sqlstr);
-    return sqlstr;
+    return sql.ToString().Trim();
     
     string ToSqlSrv(DbFieldType f) {
       var typestr = 

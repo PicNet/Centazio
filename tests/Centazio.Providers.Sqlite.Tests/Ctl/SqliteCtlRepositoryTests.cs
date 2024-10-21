@@ -3,7 +3,6 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
-using Dapper;
 
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
@@ -12,14 +11,14 @@ public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
 }
 
 public class SqliteCtlRepoMappingsTests : BaseCtlRepoMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository)await new TestingSqliteCtlRepository().Initalise();
+  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingSqliteCtlRepository().Initalise();
 }
 
 internal class TestingSqliteCtlRepository() : SqliteCtlRepository(SqliteConn.Instance.Conn), ITestingCtlRepository {
 
   public async Task<List<Map.CoreToSysMap>> GetAllMaps() {
     await using var conn = SqliteConn.Instance.Conn();
-    var dtos = await conn.QueryAsync<Map.CoreToSysMap.Dto>($"SELECT * FROM [{MAPPING_TBL}]");
+    var dtos = await Db.Query<Map.CoreToSysMap.Dto>(conn, $"SELECT * FROM [{MAPPING_TBL}]");
     return dtos.Select(dto => dto.ToBase()).ToList();
   }
 

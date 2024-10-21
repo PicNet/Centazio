@@ -22,11 +22,6 @@ public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : BaseCtl
     await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), 
         [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
         $"FOREIGN KEY ([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}]) REFERENCES [{SCHEMA}].[{SYSTEM_STATE_TBL}]([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}])"));
-    // todo: remove if qoeks
-    /*await conn.ExecuteAsync($@"ALTER TABLE [{SCHEMA}].[{OBJECT_STATE_TBL}]
-  ADD CONSTRAINT FK_{nameof(ObjectState)}_{nameof(SystemState)} FOREIGN KEY ([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}])
-  REFERENCES [{SCHEMA}].[{SYSTEM_STATE_TBL}] ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])");
-  */
     await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, MAPPING_TBL, dbf.GetDbFields<Map.CoreToSysMap>(), 
         [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)], 
         $"CONSTRAINT UNIQUE_SystemId UNIQUE ({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
@@ -100,10 +95,38 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
   
-  // todo: implement SqlServer CoreToSystemMap code
-  protected override Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) => throw new NotImplementedException();
-  protected override Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) => throw new NotImplementedException();
-  protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) => throw new NotImplementedException();
+  protected override async Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+    await using var conn = await newconn();
+    await conn.ExecuteAsync($@"INSERT INTO [{SCHEMA}].[{MAPPING_TBL}] (CoreEntityTypeName, CoreId, System, SystemId, SystemEntityChecksum, Status, DateCreated, DateUpdated, DateLastSuccess, DateLastError, LastError)
+VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum, @Status, @DateCreated, @DateUpdated, @DateLastSuccess, @DateLastError, @LastError);", tocreate.Select(DtoHelpers.ToDto)); 
+    
+    var ids = (await conn.QueryAsync<CoreEntityId>(@$"SELECT CoreId FROM [{SCHEMA}].[{MAPPING_TBL}] 
+            WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND DateCreated=@DateCreated", new { System=system, CoreEntityTypeName=coretype, tocreate.First().DateCreated }))
+        .ToDictionary(id => id);
+    return tocreate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
+  }
+
+  protected override async Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+    await using var conn = await newconn();
+    await conn.ExecuteAsync($@"
+UPDATE [{SCHEMA}].[{MAPPING_TBL}] 
+SET SystemEntityChecksum=@SystemEntityChecksum, Status=@Status, DateUpdated=@DateUpdated, DateLastSuccess=@DateLastSuccess, DateLastError=@DateLastError, LastError=@LastError
+WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND CoreId=@CoreId AND SystemId=@SystemId", toupdate.Select(DtoHelpers.ToDto)); 
+    
+    var ids = (await conn.QueryAsync<CoreEntityId>($"SELECT CoreId FROM [{SCHEMA}].[{MAPPING_TBL}] WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND DateUpdated=@DateUpdated", 
+        new { System=system, CoreEntityTypeName=coretype, toupdate.First().DateUpdated })).ToDictionary(id => id);
+    return toupdate.Where(e => ids.ContainsKey(e.CoreId)).ToList();
+  }
+  
+  protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
+    var issysid = typeof(V) == typeof(SystemEntityId);
+    var idfield = issysid ? nameof(Map.CoreToSysMap.SystemId) : nameof(Map.CoreToSysMap.CoreId);
+    await using var conn = await newconn();
+    return (await conn.QueryAsync<Map.CoreToSysMap.Dto>($@"
+SELECT * FROM [{SCHEMA}].[{MAPPING_TBL}]   
+WHERE System=@System AND CoreEntityTypeName=@CoreEntityTypeName AND {idfield} IN @Ids", new { System=system, CoreEntityTypeName=coretype, Ids=ids.Select(id => id.Value) }))
+        .Select(dto => dto.ToBase()).ToList();
+  }
 
   public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
   

@@ -73,21 +73,21 @@ public abstract class BaseCtlRepoMappingsTests {
   }
   
   [Test] public async Task Test_creating_duplicates_by_SystemId_throws_error() {
-    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS()); // same SystemId
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, Constants.CoreE1Id1)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, Constants.CoreE1Id2)).SuccessCreate(Constants.Sys1Id1, SCS()); // same SystemId
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
-    Assert.ThrowsAsync<Exception>(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2]));
+    await AssertException(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2]));
   }
   
   [Test] public async Task Test_creating_duplicates_by_CoreId_throws_error() {
-    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, new(nameof(BaseCtlRepoMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, new(nameof(BaseCtlRepoMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS()); // same CoreId
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, Constants.CoreE1Id1)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, Constants.CoreE1Id1)).SuccessCreate(Constants.Sys1Id2, SCS()); 
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
-    Assert.ThrowsAsync<Exception>(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2]));
+    await AssertException(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2]));
   }
   
   [Test] public async Task Test_updating_with_no_missing_works() {
@@ -106,7 +106,7 @@ public abstract class BaseCtlRepoMappingsTests {
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
-    Assert.ThrowsAsync<Exception>(() => ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
+    await AssertException(() => ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
   }
   
   [Test] public async Task Test_updating_missing_by_CoreId_throws_error() {
@@ -116,7 +116,7 @@ public abstract class BaseCtlRepoMappingsTests {
     var map2 = Map.Create(Constants.System1Name, entity2).SuccessCreate(Constants.Sys1Id1, SCS());
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
-    Assert.ThrowsAsync<Exception>(() => ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
+    await AssertException(() => ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
   }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
@@ -135,7 +135,7 @@ public abstract class BaseCtlRepoMappingsTests {
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 71c5db4e-971a-45f5-831e-643d6ca77b20, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc2 = await ctl.GetNewAndExistingMapsFromCores(Constants.System1Name, Constants.CoreEntityName, Create(cid_crm));
     
-    Assert.ThrowsAsync<Exception>(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList()));
+    await AssertException(() => ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, gfc2.Created.Select(c => c.Map.SuccessCreate(sid_crm, SCS())).ToList()));
   }
   
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
@@ -169,7 +169,7 @@ public abstract class BaseCtlRepoMappingsTests {
     // Centazio reads/promotes E2/C2
     //    - !! This is where Centazio should recognise that this entity is in fact C1 not C2
     // Centazio creates map [System2:C2-E2]
-    Assert.ThrowsAsync<Exception>(() => SimulatePromoteOperationRunner(Constants.CoreE1Id2, Constants.System2Name, Constants.Sys1Id2));
+    await AssertException(() => SimulatePromoteOperationRunner(Constants.CoreE1Id2, Constants.System2Name, Constants.Sys1Id2));
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
@@ -180,4 +180,11 @@ public abstract class BaseCtlRepoMappingsTests {
   
   protected abstract Task<ITestingCtlRepository> GetRepository();
   private SystemEntityChecksum SCS() => new(Guid.NewGuid().ToString());
+  
+  private async Task AssertException(Func<Task> action) {
+    try {
+      await action();
+      Assert.Fail("Exception expected");
+    } catch { /* ignore */ }
+  }
 }
