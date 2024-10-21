@@ -44,8 +44,9 @@ public class DbFieldsHelper {
     throw new NotSupportedException($"Property[{p.Name}] Defined Type[{pt.Name}] Real Type[{realpt.Name}]");
   }
 
-  public string GetSqlServerCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields) {
+  public string GetSqlServerCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null) {
     var sql = new StringBuilder();
+    var additionaltxt = String.IsNullOrWhiteSpace(additional) ? String.Empty : ",\n    " + additional;
     if (!String.IsNullOrWhiteSpace(schema)) {
       sql.AppendLine($@"
 IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{schema}')
@@ -56,11 +57,13 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
 BEGIN
   CREATE TABLE [{schema}].[{table}] (
     {String.Join(",\n    ", fields.Select(ToSqlSrv))},
-    PRIMARY KEY ({String.Join(", ", pkfields)})
+    PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt}
   )
 END
 ");
-    return sql.ToString();
+    var sqlstr = sql.ToString().Trim();
+    Console.WriteLine(sqlstr);
+    return sqlstr;
     
     string ToSqlSrv(DbFieldType f) {
       var typestr = 
@@ -97,7 +100,7 @@ END
           throw new NotImplementedException(f.type.Name);
       if (!String.IsNullOrWhiteSpace(f.length) && typestr != "text") typestr += $"({f.length})";
       var nullstr = f.required ? "not null" : "null";
-      return $"[{f.name}] {typestr} {nullstr}";
+      return $"[{f.name}] {typestr} {nullstr}".Trim();
     }
   }
 }

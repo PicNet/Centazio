@@ -10,18 +10,26 @@ namespace Centazio.Providers.SqlServer.Ctl;
 public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : BaseCtlRepository {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
-  internal const string SYSTEM_STATE_TBL = nameof(SystemState);
-  internal const string OBJECT_STATE_TBL = nameof(ObjectState);
+  internal static readonly string SYSTEM_STATE_TBL = nameof(SystemState).ToLower();
+  internal static readonly string OBJECT_STATE_TBL = nameof(ObjectState).ToLower();
+  internal static readonly string MAPPING_TBL = nameof(Map.CoreToSysMap).ToLower();
 
   public async Task<SqlServerCtlRepository> Initalise() {
     await using var conn = await newconn();
     var dbf = new DbFieldsHelper();
-    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, SYSTEM_STATE_TBL, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
-    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)]));
-    await conn.ExecuteAsync($@"
-ALTER TABLE [{SCHEMA}].[{OBJECT_STATE_TBL}]
+    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, SYSTEM_STATE_TBL, dbf.GetDbFields<SystemState>(), 
+        [nameof(SystemState.System), nameof(SystemState.Stage)]));
+    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), 
+        [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
+        $"FOREIGN KEY ([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}]) REFERENCES [{SCHEMA}].[{SYSTEM_STATE_TBL}]([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}])"));
+    // todo: remove if qoeks
+    /*await conn.ExecuteAsync($@"ALTER TABLE [{SCHEMA}].[{OBJECT_STATE_TBL}]
   ADD CONSTRAINT FK_{nameof(ObjectState)}_{nameof(SystemState)} FOREIGN KEY ([{nameof(ObjectState.System)}], [{nameof(ObjectState.Stage)}])
   REFERENCES [{SCHEMA}].[{SYSTEM_STATE_TBL}] ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])");
+  */
+    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, MAPPING_TBL, dbf.GetDbFields<Map.CoreToSysMap>(), 
+        [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)], 
+        $"CONSTRAINT UNIQUE_SystemId UNIQUE ({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
     return this;
   }
   
@@ -86,7 +94,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     await conn.ExecuteAsync($@"
   INSERT INTO {SCHEMA}.{OBJECT_STATE_TBL}
   (System, Stage, Object, ObjectIsCoreEntityType, ObjectIsSystemEntityType, Active, DateCreated, LastResult, LastAbortVote)
-  VALUES (@System, @System, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
+  VALUES (@System, @Stage, @Object, @ObjectIsCoreEntityType, @ObjectIsSystemEntityType, @Active, @DateCreated, @LastResult, @LastAbortVote)
   ", created);
 
     return created;
