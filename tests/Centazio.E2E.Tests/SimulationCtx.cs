@@ -16,9 +16,10 @@ public class SimulationCtx : IAsyncDisposable {
   
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
+  public ISimulationCoreStorage CoreStore { get; set; } = null!;
+  
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
-  public CoreStorage CoreStore { get; set; } = null!; 
   public EntityConverter Converter { get; set; } = null!;
 
   public SimulationCtx(ISimulationProvider provider) {

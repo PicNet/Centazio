@@ -8,12 +8,12 @@ public class InMemorySimulationProvider : ISimulationProvider {
 
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
-  public CoreStorage CoreStore { get; private set; } = null!;
+  public ISimulationCoreStorage CoreStore { get; private set; } = null!;
   
   public Task Initialise(SimulationCtx ctx) {
     CtlRepo = new InMemoryCtlRepository();
     StageRepository = new InMemoryStagedEntityRepository(0, ctx.ChecksumAlg.Checksum);
-    CoreStore = new(ctx);
+    CoreStore = new InMemoryCoreStorage(ctx);
     
     return Task.CompletedTask;
   }

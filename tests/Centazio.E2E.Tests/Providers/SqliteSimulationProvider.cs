@@ -15,7 +15,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
   
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
-  public CoreStorage CoreStore { get; private set; } = null!;
+  public ISimulationCoreStorage CoreStore { get; private set; } = null!;
   
   public async Task Initialise(SimulationCtx ctx) {
     DapperInitialiser.Initialise();
@@ -24,7 +24,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
     
     CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
     StageRepository = await new SqliteStagedEntityRepository(() => sqliteconn, 0, ctx.ChecksumAlg.Checksum).Initalise();
-    CoreStore = new(ctx);
+    CoreStore = new InMemoryCoreStorage(ctx);
   }
   
   public async ValueTask DisposeAsync() {
