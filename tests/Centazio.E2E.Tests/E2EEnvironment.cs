@@ -35,10 +35,10 @@ public class E2EEnvironment : IAsyncDisposable {
     await ctx.Initialise();
     
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(ctx, crm),
-        new ReadOperationRunner(ctx.StageStore),
+        new ReadOperationRunner(ctx.StageRepository),
         ctx.CtlRepo);
     crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new CrmPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.CtlRepo),
+        new PromoteOperationRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo),
         ctx.CtlRepo);
     
     crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(ctx, crm),
@@ -46,10 +46,10 @@ public class E2EEnvironment : IAsyncDisposable {
         ctx.CtlRepo);
     
     fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new FinReadFunction(ctx, fin),
-        new ReadOperationRunner(ctx.StageStore),
+        new ReadOperationRunner(ctx.StageRepository),
         ctx.CtlRepo);
     fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new FinPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageStore, ctx.CoreStore, ctx.CtlRepo),
+        new PromoteOperationRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo),
         ctx.CtlRepo);
     
     fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(ctx, fin),

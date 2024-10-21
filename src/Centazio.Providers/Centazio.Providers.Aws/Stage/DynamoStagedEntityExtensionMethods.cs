@@ -10,8 +10,8 @@ public static class DynamoStagedEntityExtensionMethods {
 
   public static Dictionary<string, AttributeValue> ToDynamoDict(this StagedEntity e) {
     var dict = new Dictionary<string, AttributeValue> {
-      { AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoHashKey(e.System, e.SystemEntityTypeName)) },
-      { AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, new AttributeValue(AwsStagedEntityStoreHelpers.ToDynamoRangeKey(e.DateStaged, e.Id)) },
+      { AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, new AttributeValue(AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(e.System, e.SystemEntityTypeName)) },
+      { AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, new AttributeValue(AwsStagedEntityRepositoryHelpers.ToDynamoRangeKey(e.DateStaged, e.Id)) },
       { nameof(e.StagedEntityChecksum), new AttributeValue(e.StagedEntityChecksum) },
       { nameof(e.Data), new AttributeValue(e.Data) }
     };
@@ -22,8 +22,8 @@ public static class DynamoStagedEntityExtensionMethods {
   
   public static List<StagedEntity> AwsDocumentsToDynamoStagedEntities(this List<Document> docs) {
     return docs.Select(d => {
-      var (system, entity, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
-      var (staged, suffix, _) = d[AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
+      var (system, entity, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
+      var (staged, suffix, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
       return new StagedEntity.Dto {
         Id = Guid.Parse(suffix),
         System = system, 

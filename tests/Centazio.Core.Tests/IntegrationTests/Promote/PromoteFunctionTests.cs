@@ -14,11 +14,11 @@ public class PromoteFunctionTests {
   private readonly CoreEntityTypeName coretype = C.CoreEntityName;
   
   private TestingInMemoryCtlRepository ctl;
-  private TestingStagedEntityStore stager;
+  private TestingStagedEntityRepository stager;
   private TestingInMemoryCoreStorageRepository core;
 
   [SetUp] public void SetUp() {
-    (ctl, stager, core) = (F.CtlRepo(), F.SeStore(), F.CoreRepo());
+    (ctl, stager, core) = (F.CtlRepo(), F.SeRepo(), F.CoreRepo());
   }
   
   [Test] public async Task Test_generic_deserialisation() {

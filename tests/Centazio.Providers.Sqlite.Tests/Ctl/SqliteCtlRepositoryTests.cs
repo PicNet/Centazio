@@ -2,7 +2,7 @@
 using Centazio.Core.Ctl.Entities;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.AbstractProviderTests;
+using Centazio.Test.Lib.BaseProviderTests;
 using Dapper;
 
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
@@ -11,8 +11,8 @@ public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
   protected override async Task<ICtlRepository> GetRepository() => await new TestingSqliteCtlRepository().Initalise();
 }
 
-public class SqliteCtlMappingsTests : AbstractCtlMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetStore() => (ITestingCtlRepository)await new TestingSqliteCtlRepository().Initalise();
+public class SqliteCtlRepoMappingsTests : BaseCtlRepoMappingsTests {
+  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository)await new TestingSqliteCtlRepository().Initalise();
 }
 
 internal class TestingSqliteCtlRepository() : SqliteCtlRepository(SqliteConn.Instance.Conn), ITestingCtlRepository {

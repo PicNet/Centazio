@@ -8,8 +8,8 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
-    : AbstractStagedEntityStore(limit, checksum) {
+public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
+    : AbstractStagedEntityRepository(limit, checksum) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
@@ -21,7 +21,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
     return ValueTask.CompletedTask;
   }
 
-  public async Task<S3StagedEntityStore> Initalise() {
+  public async Task<S3StagedEntityRepository> Initalise() {
     var tables = (await Client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
     if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
@@ -33,7 +33,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
     var se = staged.First();
     var existing = (await ListAll(se.System, se.SystemEntityTypeName))
-        .Select(o => AwsStagedEntityStoreHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
+        .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
         .ToDictionary(cs => cs);
     
     var tostage = staged.Where(s => !existing.ContainsKey(s.StagedEntityChecksum)).ToList();
@@ -92,7 +92,7 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
   public PutObjectRequest ToPutObjectRequest(StagedEntity se) {
     var req = new PutObjectRequest { 
       BucketName = bucket, 
-      Key = AwsStagedEntityStoreHelpers.ToS3Key(se), 
+      Key = AwsStagedEntityRepositoryHelpers.ToS3Key(se), 
       ContentBody = se.Data
     };
     if (se.DatePromoted is not null) req.Metadata[DATE_PROMOTED_META_KEY] = $"{se.DatePromoted:o}";
@@ -102,14 +102,14 @@ public class S3StagedEntityStore(IAmazonS3 client, string bucket, int limit, Fun
 
 }
 
-internal static class S3StagedEntityStore_StagedEntityExtensions {
+internal static class S3StagedEntityRepository_StagedEntityExtensions {
   
   public static async Task<StagedEntity> FromS3Response(this GetObjectResponse r) {
-    if (r.Metadata[S3StagedEntityStore.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
-    var details = AwsStagedEntityStoreHelpers.ParseS3Key(r.Key);
-    var promoted = r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY] is null 
+    if (r.Metadata[S3StagedEntityRepository.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
+    var details = AwsStagedEntityRepositoryHelpers.ParseS3Key(r.Key);
+    var promoted = r.Metadata[S3StagedEntityRepository.DATE_PROMOTED_META_KEY] is null 
         ? (DateTime?) null 
-        : DateTime.Parse(r.Metadata[S3StagedEntityStore.DATE_PROMOTED_META_KEY]).ToUniversalTime();
+        : DateTime.Parse(r.Metadata[S3StagedEntityRepository.DATE_PROMOTED_META_KEY]).ToUniversalTime();
     
     await using var stream = r.ResponseStream;
     using var reader = new StreamReader(stream);

@@ -5,18 +5,19 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Test.Lib.CoreStorage;
 using NUnit.Framework;
 
-namespace Centazio.Test.Lib.AbstractProviderTests;
+namespace Centazio.Test.Lib.BaseProviderTests;
 
-public abstract class AbstractCtlMappingsTests {
+public abstract class BaseCtlRepoMappingsTests {
 
-  private const string STR = nameof(AbstractCtlMappingsTests);
-  private const string STR2 = nameof(Map.CoreToSysMap);
+  private const string FIRST_NAME = nameof(FIRST_NAME);
+  private const string LAST_NAME = nameof(LAST_NAME);
+  
   private TestingInMemoryCoreStorageRepository corestore = null!;
   private ITestingCtlRepository ctl = null!;
   
   [SetUp] public async Task SetUp() {
     corestore = TestingFactories.CoreRepo();
-    ctl = await GetStore();
+    ctl = await GetRepository();
   }
 
   [TearDown] public async Task TearDown() {
@@ -25,7 +26,7 @@ public abstract class AbstractCtlMappingsTests {
   }
 
   [Test] public async Task Test_upsert_single() {
-    var core = TestingFactories.NewCoreCust(STR, STR);
+    var core = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
     var original =  Map.Create(Constants.System1Name, core);
     TestingUtcDate.DoTick();
     var created = (await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [original.SuccessCreate(Constants.Sys1Id1, SCS())])).Single();
@@ -44,8 +45,8 @@ public abstract class AbstractCtlMappingsTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<Map.Created> { 
-       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS()),
-       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR2, STR2)).SuccessCreate(Constants.Sys1Id2, SCS())
+       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS()),
+       Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(LAST_NAME, LAST_NAME)).SuccessCreate(Constants.Sys1Id2, SCS())
     }; 
     TestingUtcDate.DoTick();
     var created = (await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, original)).ToList();
@@ -63,8 +64,8 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_creating_unique_by_SystemId_works() {
-    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id2, SCS());
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id2, SCS());
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
@@ -72,8 +73,8 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_creating_duplicates_by_SystemId_throws_error() {
-    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR)).SuccessCreate(Constants.Sys1Id1, SCS()); // same SystemId
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME)).SuccessCreate(Constants.Sys1Id1, SCS()); // same SystemId
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
@@ -81,8 +82,8 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_creating_duplicates_by_CoreId_throws_error() {
-    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR, new(nameof(AbstractCtlMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(STR, STR, new(nameof(AbstractCtlMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS()); // same CoreId
+    var map1 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, new(nameof(BaseCtlRepoMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS());
+    var map2 = Map.Create(Constants.System1Name, TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME, new(nameof(BaseCtlRepoMappingsTests)))).SuccessCreate(Constants.Sys1Id1, SCS()); // same CoreId
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
     TestingUtcDate.DoTick();
@@ -90,7 +91,7 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_updating_with_no_missing_works() {
-    var entity = TestingFactories.NewCoreCust(STR, STR);
+    var entity = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
     var map = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id1, SCS());
     
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map]);
@@ -99,7 +100,7 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_updating_missing_by_SystemId_throws_error() {
-    var entity = TestingFactories.NewCoreCust(STR, STR);
+    var entity = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
     var map1 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id1, SCS());
     var map2 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id2, SCS());
     
@@ -109,8 +110,8 @@ public abstract class AbstractCtlMappingsTests {
   }
   
   [Test] public async Task Test_updating_missing_by_CoreId_throws_error() {
-    var entity1 = TestingFactories.NewCoreCust(STR, STR);
-    var entity2 = TestingFactories.NewCoreCust(STR, STR);
+    var entity1 = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
+    var entity2 = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
     var map1 = Map.Create(Constants.System1Name, entity1).SuccessCreate(Constants.Sys1Id1, SCS());
     var map2 = Map.Create(Constants.System1Name, entity2).SuccessCreate(Constants.Sys1Id1, SCS());
     await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
@@ -177,6 +178,6 @@ public abstract class AbstractCtlMappingsTests {
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   
-  protected abstract Task<ITestingCtlRepository> GetStore();
+  protected abstract Task<ITestingCtlRepository> GetRepository();
   private SystemEntityChecksum SCS() => new(Guid.NewGuid().ToString());
 }

@@ -10,13 +10,13 @@ public class PromoteOperationRunnerTests {
 
   private readonly int RECORDS_COUNT = 100;
   
-  private TestingStagedEntityStore stager;
+  private TestingStagedEntityRepository stager;
   private TestingInMemoryCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
   private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
-    (stager, ctl, core) = (F.SeStore(), F.CtlRepo(), F.CoreRepo());
+    (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());
     promoter = F.PromoteRunner(stager, ctl, core);
   }
   

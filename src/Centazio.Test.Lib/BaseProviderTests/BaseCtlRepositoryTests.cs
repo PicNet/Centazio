@@ -3,7 +3,7 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using NUnit.Framework;
 
-namespace Centazio.Test.Lib.AbstractProviderTests;
+namespace Centazio.Test.Lib.BaseProviderTests;
 
 public abstract class CtlRepositoryDefaultTests {
 

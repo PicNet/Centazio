@@ -17,7 +17,7 @@ public class SimulationCtx : IAsyncDisposable {
   private const string SIM_SQLITE_FILENAME = "centazio_simulation.db";
   private SqliteConnection sqliteconn => new($"Data Source={SIM_SQLITE_FILENAME};");
   public ICtlRepository CtlRepo { get; set; } = null!;
-  public IStagedEntityStore StageStore { get; set; } = null!;
+  public IStagedEntityRepository StageRepository { get; set; } = null!;
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
   public CoreStorage CoreStore { get; set; } = null!; 
@@ -32,7 +32,7 @@ public class SimulationCtx : IAsyncDisposable {
     File.Delete(SIM_SQLITE_FILENAME);
     
     CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
-    StageStore = await new SqliteStagedEntityStore(() => sqliteconn, 0, ChecksumAlg.Checksum).Initalise();
+    StageRepository = await new SqliteStagedEntityRepository(() => sqliteconn, 0, ChecksumAlg.Checksum).Initalise();
     CoreStore = new(this);
     Converter = new(CtlRepo);
   }
@@ -55,7 +55,7 @@ public class SimulationCtx : IAsyncDisposable {
   public async ValueTask DisposeAsync() {
     await CtlRepo.DisposeAsync();
     await CoreStore.DisposeAsync();
-    await StageStore.DisposeAsync();
+    await StageRepository.DisposeAsync();
   }
 
 }

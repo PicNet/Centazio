@@ -5,13 +5,13 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.AbstractProviderTests;
+using Centazio.Test.Lib.BaseProviderTests;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.Minio;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
+public class S3StagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests {
 
   private MinioContainer container;
   
@@ -27,15 +27,15 @@ public class S3StagedEntityStoreTests : StagedEntityStoreDefaultTests {
     await container.DisposeAsync();
   }
   
-  protected override async Task<IStagedEntityStore> GetStore(int limit = 0, Func<string, StagedEntityChecksum>? checksum = null) {
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit = 0, Func<string, StagedEntityChecksum>? checksum = null) {
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
-    return await new TestingS3StagedEntityStore(client, limit).Initalise();
+    return await new TestingS3StagedEntityRepository(client, limit).Initalise();
   }
 
-  class TestingS3StagedEntityStore(IAmazonS3 client, int limit = 100) : S3StagedEntityStore(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
+  class TestingS3StagedEntityRepository(IAmazonS3 client, int limit = 100) : S3StagedEntityRepository(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
     
-    private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityStore).ToLower(CultureInfo.InvariantCulture);
+    private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityRepository).ToLower(CultureInfo.InvariantCulture);
 
     public override async ValueTask DisposeAsync() {
       var objs = await Client.ListObjectsAsync(new ListObjectsRequest { BucketName = BUCKET_NAME });

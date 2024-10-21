@@ -7,7 +7,7 @@ using Centazio.Core.Stage;
 namespace Centazio.Core.Promote;
 
 public class PromoteOperationRunner(
-    IStagedEntityStore stagestore,
+    IStagedEntityRepository stagestore,
     ICoreStorage core,
     ICtlRepository ctl) : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
   

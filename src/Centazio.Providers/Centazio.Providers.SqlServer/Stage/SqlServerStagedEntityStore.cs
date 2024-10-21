@@ -8,14 +8,14 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SqlServer.Stage;
 
-public class SqlServerStagedEntityStore(Func<Task<SqlConnection>> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class SqlServerStagedEntityRepository(Func<Task<SqlConnection>> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal const string STAGED_ENTITY_TBL = nameof(StagedEntity);
 
   public override ValueTask DisposeAsync() { return ValueTask.CompletedTask; }
 
-  public async Task<SqlServerStagedEntityStore> Initalise() {
+  public async Task<SqlServerStagedEntityRepository> Initalise() {
     await using var conn = await newconn();
     var dbf = new DbFieldsHelper();
     await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript(SCHEMA, STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)]));

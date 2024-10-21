@@ -4,7 +4,7 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class AwsStagedEntityStoreHelpers {
+public class AwsStagedEntityRepositoryHelpers {
 
   public static readonly string DYNAMO_HASH_KEY = $"{nameof(StagedEntity.System)}|{nameof(StagedEntity.SystemEntityTypeName)}";
   public static readonly string DYNAMO_RANGE_KEY = $"{nameof(StagedEntity.DateStaged)}|Guid";

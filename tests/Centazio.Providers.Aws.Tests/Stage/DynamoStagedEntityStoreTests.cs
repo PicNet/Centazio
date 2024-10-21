@@ -4,12 +4,12 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.AbstractProviderTests;
+using Centazio.Test.Lib.BaseProviderTests;
 using Testcontainers.DynamoDb;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
+public class DynamoStagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests {
   
   private DynamoDbContainer container;
   
@@ -23,14 +23,14 @@ public class DynamoStagedEntityStoreTests : StagedEntityStoreDefaultTests {
     await container.DisposeAsync();
   }
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) {
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) {
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
-    return await new TestingDynamoStagedEntityStore(client, limit, checksum).Initalise();
+    return await new TestingDynamoStagedEntityRepository(client, limit, checksum).Initalise();
     
   }
 
-  class TestingDynamoStagedEntityStore(IAmazonDynamoDB client, int limit = 100, Func<string, StagedEntityChecksum>? checksum = null) : DynamoStagedEntityStore(client, TABLE_NAME, limit, checksum ?? Helpers.TestingStagedEntityChecksum) {
-    private const string TABLE_NAME = nameof(TestingDynamoStagedEntityStore);
+  class TestingDynamoStagedEntityRepository(IAmazonDynamoDB client, int limit = 100, Func<string, StagedEntityChecksum>? checksum = null) : DynamoStagedEntityRepository(client, TABLE_NAME, limit, checksum ?? Helpers.TestingStagedEntityChecksum) {
+    private const string TABLE_NAME = nameof(TestingDynamoStagedEntityRepository);
 
     public override async ValueTask DisposeAsync() {
       await Client.DeleteTableAsync(TABLE_NAME);

@@ -18,7 +18,7 @@ public class ReadFunctionTests {
   
   [Test] public async Task Test_standalone_read_function() {
     // set up
-    var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeStore());
+    var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeRepo());
     var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), F.ReadRunner(stager));
     var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(func, oprunner, ctl);
     

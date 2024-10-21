@@ -7,11 +7,11 @@ using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.Stage;
 
-public class SqliteStagedEntityStore(Func<SqliteConnection> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class SqliteStagedEntityRepository(Func<SqliteConnection> newconn, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
   
   internal static readonly string STAGED_ENTITY_TBL = $"{nameof(Core.Ctl)}_{nameof(StagedEntity)}".ToLower();
 
-  public async Task<SqliteStagedEntityStore> Initalise() {
+  public async Task<SqliteStagedEntityRepository> Initalise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(STAGED_ENTITY_TBL, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));

@@ -8,7 +8,7 @@ public interface IEntityStager : IAsyncDisposable {
   Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas);
 }
     
-public interface IStagedEntityStore : IEntityStager {
+public interface IStagedEntityRepository : IEntityStager {
   int Limit { get; set; }
   Task Update(StagedEntity staged);
   Task Update(List<StagedEntity> staged);
@@ -20,7 +20,7 @@ public interface IStagedEntityStore : IEntityStager {
   Task DeleteStagedBefore(SystemName system, SystemEntityTypeName systype, DateTime before);
 }
 
-public abstract class AbstractStagedEntityStore(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityStore {
+public abstract class AbstractStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityRepository {
 
   private int lim = limit;
   

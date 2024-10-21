@@ -13,15 +13,15 @@ namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
     
-  public static TestingStagedEntityStore SeStore() => new(); 
+  public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityStore? store = null) => new ReadOperationRunner(store ?? SeStore());
+  public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityRepository? serepo = null) => new ReadOperationRunner(serepo ?? SeRepo());
   public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(
-      IStagedEntityStore? store = null, 
+      IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new PromoteOperationRunner(store ?? SeStore(), core ?? CoreRepo(), ctl ?? CtlRepo());
+      new PromoteOperationRunner(serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
 
   public static CoreEntity NewCoreCust(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
@@ -34,10 +34,7 @@ public static class TestingFactories {
 
 }
 
-public class TestingStagedEntityStore() : InMemoryStagedEntityStore(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
-
-
-// public interface ITestingInMemoryCoreToSystemMapStore : ICoreToSystemMapStore { Task<List<Map.CoreToSystemMap>> GetAll(); }
+public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
 public class TestingInMemoryCtlRepository : InMemoryCtlRepository, ITestingCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;

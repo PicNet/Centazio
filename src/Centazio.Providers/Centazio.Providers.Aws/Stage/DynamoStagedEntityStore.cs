@@ -10,7 +10,7 @@ using Serilog;
 namespace Centazio.Providers.Aws.Stage;
 
 /// <summary>
-/// A note on DynamoStagedEntityStore design
+/// A note on DynamoStagedEntityRepository design
 /// Hash Key: `System|Object`
 /// Main Range Key: `DateStaged` used for querying
 /// Secondary Range Key (set up as a Global Secondary Index - GSI): `Checksum` used for batch inserts
@@ -20,7 +20,7 @@ namespace Centazio.Providers.Aws.Stage;
 /// Batch inserting is done by first querying the GSI for all duplicate `System|Object` + `Checksums`.
 ///    We then filter these out before doing a BatchWriteItem operation
 /// </summary>
-public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityStore(limit, checksum) {
+public class DynamoStagedEntityRepository(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
   
   protected IAmazonDynamoDB Client => client;
   
@@ -29,17 +29,17 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
     return ValueTask.CompletedTask;
   }
 
-  public async Task<IStagedEntityStore> Initalise() {
+  public async Task<IStagedEntityRepository> Initalise() {
     if ((await Client.ListTablesAsync()).TableNames
         .Contains(table, StringComparer.OrdinalIgnoreCase)) return this;
 
     Log.Debug("creating table {Table}", table);
     
     var status = (await Client.CreateTableAsync(
-        new(table, [ new(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, KeyType.HASH), new(AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, KeyType.RANGE)]) {
+        new(table, [ new(AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, KeyType.HASH), new(AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, KeyType.RANGE)]) {
             AttributeDefinitions = [ 
-              new (AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, ScalarAttributeType.S), 
-              new (AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, ScalarAttributeType.S)],
+              new (AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, ScalarAttributeType.S), 
+              new (AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, ScalarAttributeType.S)],
 
             BillingMode = BillingMode.PAY_PER_REQUEST
           })).TableDescription.TableStatus;
@@ -59,10 +59,10 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval",
         ExpressionAttributeNames = new() {
-          { "#haskey", AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY }
+          { "#haskey", AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY }
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(template.System, template.SystemEntityTypeName) }
+          { ":hashval", AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(template.System, template.SystemEntityTypeName) }
         }
       },
       // this is not efficient, but there is no way to use the 'IN'
@@ -116,11 +116,11 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
       KeyExpression = new() {
         ExpressionStatement = $"#haskey = :hashval AND #rangekey > :rangeval",
         ExpressionAttributeNames = new() {
-          { "#haskey", AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY },
-          { "#rangekey", AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY },
+          { "#haskey", AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY },
+          { "#rangekey", AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY },
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", AwsStagedEntityStoreHelpers.ToDynamoHashKey(system, systype) },
+          { ":hashval", AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(system, systype) },
           { ":rangeval", $"{after:o}|z" }
         }
       },
@@ -141,13 +141,13 @@ public class DynamoStagedEntityStore(IAmazonDynamoDB client, string table, int l
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     var filter = new QueryFilter();
-    filter.AddCondition(AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, QueryOperator.Equal, AwsStagedEntityStoreHelpers.ToDynamoHashKey(system, systype));
-    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
+    filter.AddCondition(AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, QueryOperator.Equal, AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(system, systype));
+    filter.AddCondition(promoted ? nameof(StagedEntity.DatePromoted) : AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, QueryOperator.LessThan, $"{before:o}");
     var queryconf = new QueryOperationConfig { 
       ConsistentRead = true, 
       Filter = filter,
       Select = SelectValues.SpecificAttributes,
-      AttributesToGet = [AwsStagedEntityStoreHelpers.DYNAMO_HASH_KEY, AwsStagedEntityStoreHelpers.DYNAMO_RANGE_KEY]
+      AttributesToGet = [AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY]
     };
     var tbl = Table.LoadTable(client, table);
     var search = tbl.Query(queryconf);

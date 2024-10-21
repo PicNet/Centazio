@@ -2,17 +2,17 @@
 using Centazio.Core.Stage;
 using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.AbstractProviderTests;
+using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Sqlite.Tests.Stage;
 
-public class SqliteStagedEntityStoreTests : StagedEntityStoreDefaultTests {
+public class SqliteStagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests {
 
-  protected override async Task<IStagedEntityStore> GetStore(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) 
-      => await new TestingSqlServerStagedEntityStore(limit, checksum).Initalise();
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) 
+      => await new TestingSqlServerStagedEntityRepository(limit, checksum).Initalise();
 
-  class TestingSqlServerStagedEntityStore(int limit, Func<string, StagedEntityChecksum>? checksum = null) 
-      : SqliteStagedEntityStore(SqliteConn.Instance.Conn, limit, checksum ?? Helpers.TestingStagedEntityChecksum );
+  class TestingSqlServerStagedEntityRepository(int limit, Func<string, StagedEntityChecksum>? checksum = null) 
+      : SqliteStagedEntityRepository(SqliteConn.Instance.Conn, limit, checksum ?? Helpers.TestingStagedEntityChecksum );
 
 }
 

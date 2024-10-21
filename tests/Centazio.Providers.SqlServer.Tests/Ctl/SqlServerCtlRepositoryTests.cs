@@ -3,7 +3,7 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Providers.SqlServer.Ctl;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.AbstractProviderTests;
+using Centazio.Test.Lib.BaseProviderTests;
 using Dapper;
 
 namespace Centazio.Providers.SqlServer.Tests.Ctl;

@@ -2,9 +2,9 @@
 using Centazio.Core.CoreRepo;
 using NUnit.Framework;
 
-namespace Centazio.Test.Lib.AbstractProviderTests;
+namespace Centazio.Test.Lib.BaseProviderTests;
 
-public abstract class CoreStorageRepositoryDefaultTests(bool supportExpressions) {
+public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
 
   protected bool SupportsExpressionBasedQuery { get; } = supportExpressions;
   

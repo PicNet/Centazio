@@ -7,10 +7,10 @@ namespace Centazio.Core.Tests.Stage;
 public class EntityStagerTests {
   
   
-  private IStagedEntityStore stager;
+  private IStagedEntityRepository stager;
   
   [SetUp] public void SetUp() {
-    stager = new InMemoryStagedEntityStore(100, Helpers.TestingStagedEntityChecksum);
+    stager = new InMemoryStagedEntityRepository(100, Helpers.TestingStagedEntityChecksum);
   }
   
   [TearDown] public async Task TearDown() {

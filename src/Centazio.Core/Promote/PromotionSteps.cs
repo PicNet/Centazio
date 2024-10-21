@@ -16,7 +16,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   private Exception? error;
   internal List<PromotionBag> bags = [];
   
-  public async Task LoadPendingStagedEntities(IStagedEntityStore stagestore) {
+  public async Task LoadPendingStagedEntities(IStagedEntityRepository stagestore) {
     var staged = await stagestore.GetUnpromoted(system, op.OpConfig.SystemEntityTypeName, op.Checkpoint);
     bags = staged.Select(se => new PromotionBag(se)).ToList();
   }
@@ -154,7 +154,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     ]);
   }
   
-  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityStore stagestore) {
+  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) {
     if (error is not null) return;
     await stagestore.Update(bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
   }

@@ -6,7 +6,7 @@ namespace Centazio.Core.Write;
 
 public static class WriteHelpers {
 
-  public static CovertCoreEntitiesToSystemEntittiesResult CovertCoreEntitiesToSystemEntitties<E>(
+  public static CovertCoreEntitiesToSystemEntitiesResult CovertCoreEntitiesToSystemEntitties<E>(
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
       IChecksumAlgorithm checksum,

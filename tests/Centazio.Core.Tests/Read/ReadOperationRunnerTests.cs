@@ -7,50 +7,50 @@ namespace Centazio.Core.Tests.Read;
 
 public class ReadOperationRunnerTests {
 
-  private TestingStagedEntityStore store;
+  private TestingStagedEntityRepository repository;
   private TestingInMemoryCtlRepository repo;
 
   [SetUp] public void SetUp() {
-    store = new TestingStagedEntityStore();
+    repository = new TestingStagedEntityRepository();
     repo = F.CtlRepo();
   }
   
   [TearDown] public async Task TearDown() {
-    await store.DisposeAsync();
+    await repository.DisposeAsync();
     await repo.DisposeAsync();
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = F.ReadRunner(store);
+    var runner = F.ReadRunner(repository);
     var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, new TestingSingleReadOperationImplementation()));
     
-    Assert.That(store.Contents, Is.Empty);
+    Assert.That(repository.Contents, Is.Empty);
     ValidateResult(new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ErrorReadOperationResult(), actual);
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = F.ReadRunner(store);
+    var runner = F.ReadRunner(repository);
     var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, new TestingEmptyReadOperationImplementation());
     var actual = await runner.RunOperation(opcfg);
     
-    Assert.That(store.Contents, Is.Empty);
+    Assert.That(repository.Contents, Is.Empty);
     ValidateResult(new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new EmptyReadOperationResult(), actual);
   }
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
-    var runner = F.ReadRunner(store);
+    var runner = F.ReadRunner(repository);
     var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingSingleReadOperationImplementation()));
 
-    var staged = store.Contents.Single();
+    var staged = repository.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity.Dto(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.StagedEntityChecksum).ToBase()));
     ValidateResult(new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new SingleRecordReadOperationResult(actual.Payload), actual);
   }
   
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = F.ReadRunner(store);
+    var runner = F.ReadRunner(repository);
     var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingListReadOperationImplementation()));
     
-    var staged = store.Contents;
+    var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
         staged.Select(s => new StagedEntity.Dto(s.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum).ToBase())));
     ValidateResult(new SystemState.Dto(EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), true, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ListRecordsReadOperationResult(actual.PayloadList), actual);
