@@ -3,9 +3,7 @@ using Centazio.Core.Checksum;
 using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.E2E.Tests.Infra;
-using Centazio.Providers.Sqlite.Ctl;
-using Centazio.Providers.Sqlite.Stage;
-using Microsoft.Data.Sqlite;
+using Centazio.E2E.Tests.Providers;
 using Serilog;
 using Serilog.Events;
 using C = Centazio.E2E.Tests.SimulationConstants;
@@ -14,8 +12,8 @@ namespace Centazio.E2E.Tests;
 
 public class SimulationCtx : IAsyncDisposable {
   
-  private const string SIM_SQLITE_FILENAME = "centazio_simulation.db";
-  private SqliteConnection sqliteconn => new($"Data Source={SIM_SQLITE_FILENAME};");
+  private readonly ISimulationProvider provider;
+  
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
   public IChecksumAlgorithm ChecksumAlg { get; }
@@ -23,17 +21,20 @@ public class SimulationCtx : IAsyncDisposable {
   public CoreStorage CoreStore { get; set; } = null!; 
   public EntityConverter Converter { get; set; } = null!;
 
-  public SimulationCtx() {
+  public SimulationCtx(ISimulationProvider provider) {
+    this.provider = provider;
+    
     ChecksumAlg = new Sha256ChecksumAlgorithm();
     Epoch = new(0, this);
   }
   
   public async Task Initialise() {
-    File.Delete(SIM_SQLITE_FILENAME);
+    await provider.Initialise(this);
     
-    CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
-    StageRepository = await new SqliteStagedEntityRepository(() => sqliteconn, 0, ChecksumAlg.Checksum).Initalise();
-    CoreStore = new(this);
+    CtlRepo = provider.CtlRepo;
+    StageRepository = provider.StageRepository;
+    CoreStore = provider.CoreStore;
+    
     Converter = new(CtlRepo);
   }
   
@@ -53,9 +54,6 @@ public class SimulationCtx : IAsyncDisposable {
   }
 
   public async ValueTask DisposeAsync() {
-    await CtlRepo.DisposeAsync();
-    await CoreStore.DisposeAsync();
-    await StageRepository.DisposeAsync();
+    await provider.DisposeAsync();
   }
-
 }

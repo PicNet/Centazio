@@ -6,9 +6,9 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.E2E.Tests.Infra;
+using Centazio.E2E.Tests.Providers;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
-using Centazio.Providers.Sqlite;
 using Centazio.Test.Lib;
 using Serilog;
 using Serilog.Events;
@@ -17,7 +17,8 @@ namespace Centazio.E2E.Tests;
 
 public class E2EEnvironment : IAsyncDisposable {
 
-  private static readonly SimulationCtx ctx = new();
+  private static readonly SimulationCtx ctx = new(new SqliteSimulationProvider());
+  // private static readonly SimulationCtx ctx = new(new InMemorySimulationProvider());
   
   private readonly CrmApi crm = new(ctx);
   private FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner = null!;
@@ -29,9 +30,7 @@ public class E2EEnvironment : IAsyncDisposable {
   private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner = null!;
   private FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner = null!;
 
-  // todo: improve initialisation and have pluggable providers so we can use Sim to test multiple providers
   public async Task Initialise() {
-    DapperInitialiser.Initialise();
     await ctx.Initialise();
     
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(ctx, crm),
