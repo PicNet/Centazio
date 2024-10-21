@@ -1,7 +1,6 @@
 # Todo
-- simulation corestorage -> sqlite
 - sql server simulation
-- simulation needs improments, has lots of single id hacks using entity map, need better helpers
+- simulation needs improments, has lots of single id hacks using entity map, select * in core storage, need better helpers
 - check testing coverage
 - review all code comments
 - when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc.) were 

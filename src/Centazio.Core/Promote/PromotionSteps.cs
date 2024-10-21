@@ -44,7 +44,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var list = await CallEvaluator();
     list.ForEach(result => {
       var bag = bags.Single(b => b.SystemEntity.SystemId == result.SystemEntity.SystemId);
-      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.UpdatedCoreEntity); 
+      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.UpdatedCoreEntity, op.FuncConfig.ChecksumAlgorithm); 
       else if (result is EntityToIgnore toignore) bag.MarkIgnore(toignore.IgnoreReason);
       else throw new NotSupportedException(result.GetType().Name);
     });
@@ -138,8 +138,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var topromote = ToPromote();
     var toignore = topromote.Where(bag => {
       if (bag.PreExistingCoreEntityChecksum is null) return false;
-      bag.UpdatedCoreEntityChecksum = CoreChecksum(bag.UpdatedCoreEntity!); 
-      return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityChecksum) && bag.UpdatedCoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
+      return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityChecksum ?? throw new Exception()) && bag.UpdatedCoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
     }).ToList();
     toignore.ForEach(bag => bag.MarkIgnore("no meaningful change detected on entity"));
   } 

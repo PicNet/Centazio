@@ -23,8 +23,9 @@ public class PromotionBag(StagedEntity staged) {
     IgnoreReason = reason;
   } 
   
-  public void MarkPromote(SystemName system, ICoreEntity coreent) {
+  public void MarkPromote(SystemName system, ICoreEntity coreent, IChecksumAlgorithm checksum) {
     UpdatedCoreEntity = CheckAndSetInternalState();
+    UpdatedCoreEntityChecksum = checksum.Checksum(UpdatedCoreEntity);
     
     ICoreEntity CheckAndSetInternalState() {
       if (PreExistingCoreEntity is not null && PreExistingCoreEntity.SystemId != coreent.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");

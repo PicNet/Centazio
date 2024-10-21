@@ -12,19 +12,20 @@ public static class DtoHelpers {
     ArgumentNullException.ThrowIfNull(baseobj);
 
     var dtot = GetDtoTypeFromTypeHierarchy(baseobj.GetType());
-    if (dtot is null) return null;
+    if (dtot is null) return null; // todo: do we allow this?  Try throw
     var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
     var pairs = GetPropPairs(baseobj.GetType(), dtot);
-    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(p)));
+    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(baseobj, p)));
     return dto;
-    
-    object? GetDtoVal(PropPair p) {
-      var origval = p.BasePi.GetValue(baseobj);
-      if (origval is null) return origval;
-      if (p.BasePi.PropertyType.IsEnum) return p.BasePi.GetValue(baseobj)?.ToString();
-      if (p.BasePi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
-      return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
-    }
+  }
+  
+  public static Dictionary<string, object?> ToDtoAsDict(object baseobj) {
+    ArgumentNullException.ThrowIfNull(baseobj);
+
+    var dtot = GetDtoTypeFromTypeHierarchy(baseobj.GetType());
+    if (dtot is null) throw new Exception($"Could not find a Dto type for [{baseobj.GetType().FullName}]");
+    var pairs = GetPropPairs(baseobj.GetType(), dtot);
+    return pairs.ToDictionary(pair => pair.BasePi.Name, pair => GetDtoVal(baseobj, pair));
   }
   
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
@@ -36,6 +37,14 @@ public static class DtoHelpers {
           return new PropPair(pi, dtopi);
         }).ToList();
   } 
+  
+  private static object? GetDtoVal(object baseobj, PropPair p) {
+    var origval = p.BasePi.GetValue(baseobj);
+    if (origval is null) return origval;
+    if (p.BasePi.PropertyType.IsEnum) return p.BasePi.GetValue(baseobj)?.ToString();
+    if (p.BasePi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
+    return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
+  }
 
   public static Type? GetDtoTypeFromTypeHierarchy(Type? baset) {
     while(baset is not null) {

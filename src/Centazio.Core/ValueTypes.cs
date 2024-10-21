@@ -41,6 +41,7 @@ public sealed record SystemEntityTypeName(string Value) : ObjectName(Value) {
 public sealed record CoreEntityTypeName(string Value) : ObjectName(Value) {
   public static CoreEntityTypeName From<E>() where E : ICoreEntity => new(typeof(E).Name);
   public static CoreEntityTypeName From<E>(E core) where E : ICoreEntity => new(core.GetType().Name);
+  public static CoreEntityTypeName From(Type coretype) => new(coretype.Name);
 }
 
 [MaxLength2(32)] public sealed record LifecycleStage(string Value) : ValidString(Value) {

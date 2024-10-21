@@ -22,9 +22,10 @@ public class SqliteSimulationProvider : ISimulationProvider {
     
     File.Delete(SIM_SQLITE_FILENAME);
     
-    CtlRepo = await new SqliteCtlRepository(() => sqliteconn).Initalise();
-    StageRepository = await new SqliteStagedEntityRepository(() => sqliteconn, 0, ctx.ChecksumAlg.Checksum).Initalise();
-    CoreStore = new InMemoryCoreStorage(ctx);
+    var getconn = () => sqliteconn;
+    CtlRepo = await new SqliteCtlRepository(getconn).Initalise();
+    StageRepository = await new SqliteStagedEntityRepository(getconn, 0, ctx.ChecksumAlg.Checksum).Initalise();
+    CoreStore = await new SqliteCoreStorage(ctx, getconn).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

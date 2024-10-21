@@ -1,4 +1,5 @@
 ﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Centazio.Core;
 using Centazio.Core.CoreRepo;
@@ -7,7 +8,7 @@ namespace Centazio.E2E.Tests.Infra;
 
 public record CoreCustomer : CoreEntityBase {
   
-  public string Name { get; init; }
+  [MaxLength(128)] public string Name { get; init; }
   public override string DisplayName => Name;
   public CoreEntityId MembershipCoreId { get; internal init; }
   
@@ -23,7 +24,7 @@ public record CoreCustomer : CoreEntityBase {
     public string? Name { get; init; }
     public string? MembershipCoreId { get; init; }
     
-    public override CoreCustomer ToCoreEntity() {
+    public override CoreCustomer ToBase() {
       var target = new CoreCustomer { 
         Name = new(Name ?? throw new ArgumentNullException(nameof(Name))),
         MembershipCoreId = new(MembershipCoreId ?? throw new ArgumentNullException(nameof(MembershipCoreId)))
@@ -35,7 +36,7 @@ public record CoreCustomer : CoreEntityBase {
 
 public record CoreMembershipType : CoreEntityBase {
 
-  public string Name { get; init; }
+  [MaxLength(128)] public string Name { get; init; }
   public override string DisplayName => Name;
   
   private CoreMembershipType() {}
@@ -48,7 +49,7 @@ public record CoreMembershipType : CoreEntityBase {
   public record Dto : Dto<CoreMembershipType> {
     public string? Name { get; init; }
     
-    public override CoreMembershipType ToCoreEntity() {
+    public override CoreMembershipType ToBase() {
       var target = new CoreMembershipType { Name = new(Name ?? throw new ArgumentNullException(nameof(Name))) };
       return FillBaseProperties(target);
     }
@@ -79,7 +80,7 @@ public record CoreInvoice : CoreEntityBase {
     public DateOnly? DueDate { get; init; }
     public DateTime? PaidDate { get; init; }
     
-    public override CoreInvoice ToCoreEntity() {
+    public override CoreInvoice ToBase() {
       var target = new CoreInvoice {
         CustomerCoreId = new(CustomerCoreId ?? throw new ArgumentNullException(nameof(CustomerCoreId))),
         Cents = Cents ?? throw new ArgumentNullException(nameof(Cents)),
@@ -108,7 +109,8 @@ public abstract record CoreEntityBase : ICoreEntity {
     CoreId = coreid;
   }
   
-  public abstract record Dto<E> where E : CoreEntityBase {
+  public abstract record Dto<E> : IDto<E> 
+      where E : CoreEntityBase {
     public string? System { get; init; }
     public string? SystemId { get; init; }
     public string? CoreId { get; init; }
@@ -127,7 +129,7 @@ public abstract record CoreEntityBase : ICoreEntity {
       LastUpdateSystem = lastsystem;
     }
     
-    public abstract E ToCoreEntity();
+    public abstract E ToBase();
     
     protected E FillBaseProperties(E e) { 
       e.System = new(System ?? throw new ArgumentNullException(nameof(System)));

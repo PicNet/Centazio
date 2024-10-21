@@ -26,10 +26,8 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
     return (await GetList(coretype)).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
   }
 
-  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    var full = await GetList(coretype);
-    return coreids.Select(id => full.Single(e => e.CoreId == id)).ToList();
-  }
+  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
+      (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToList();
 
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToDictionary(e => e.CoreId, checksum);
@@ -41,15 +39,10 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
     throw new NotSupportedException(coretype);
   }
   
-  private Task<E> GetSingle<E, D>(CoreEntityId? coreid) 
-      where E : CoreEntityBase 
-      where D : CoreEntityBase.Dto<E> {
-    return Task.FromResult(GetSingleImpl<E, D>(coreid) ?? throw new Exception());
-  }
-  
   public abstract Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
   public abstract ValueTask DisposeAsync();
   
+  protected abstract Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : class, IDto<E>;
+  // todo: GetList is a `SELECT *` so needs to be removed
   protected abstract Task<List<E>> GetList<E, D>() where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;
-  protected abstract E? GetSingleImpl<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;
 }

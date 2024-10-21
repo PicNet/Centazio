@@ -15,7 +15,7 @@ public class SqliteCtlRepository(Func<SqliteConnection> newconn) : BaseCtlReposi
   
   public async Task<SqliteCtlRepository> Initalise() {
     await using var conn = newconn();
-      var dbf = new DbFieldsHelper();
+    var dbf = new DbFieldsHelper();
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(SYSTEM_STATE_TBL, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(OBJECT_STATE_TBL, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
         $"FOREIGN KEY ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}]) REFERENCES [{SYSTEM_STATE_TBL}]([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])"));
