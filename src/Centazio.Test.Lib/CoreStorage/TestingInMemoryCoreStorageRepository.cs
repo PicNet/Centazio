@@ -7,13 +7,13 @@ namespace Centazio.Test.Lib.CoreStorage;
 
 public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageWithQuery {
   
-  public Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
+  public Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
     var lst = fulllst.Where(c => c.Value.CoreEntity.LastUpdateSystem != exclude.Value && c.Value.CoreEntity.DateCreated > after || c.Value.CoreEntity.DateUpdated > after).Select(c => c.Value.CoreEntity).ToList();
     return Task.FromResult(lst);
   }
 
-  public Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+  public Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     if (!coreids.Any()) return Task.FromResult(new List<ICoreEntity>());
     if (!db.TryGetValue(coretype, out var fulllst)) throw new Exception("Could not find all specified core entities");
     var lst = coreids.Select(id => fulllst.SingleOrDefault(e => e.Value.CoreEntity.CoreId == id).Value.CoreEntity)

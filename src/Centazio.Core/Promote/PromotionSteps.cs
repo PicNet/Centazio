@@ -31,7 +31,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var sysids = bags.Select(bag => bag.SystemEntity.SystemId).ToList();
     var maps = await ctl.GetMapsFromSystemIds(system, corename, sysids);
     var coreids = maps.Select(m => m.CoreId).ToList();
-    var coreents = await core.Get(corename, coreids);
+    var coreents = await core.GetExistingEntities(corename, coreids);
     bags.ForEach(bag => {
       bag.Map = maps.SingleOrDefault(m => m.SystemId == bag.SystemEntity.SystemId);
       bag.PreExistingCoreEntity = bag.Map?.CoreId is null ? null : coreents.Single(e => e.CoreId == bag.Map.CoreId);

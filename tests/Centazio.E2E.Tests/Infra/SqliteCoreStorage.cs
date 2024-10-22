@@ -35,7 +35,7 @@ public class SqliteCoreStorage(SimulationCtx ctx, Func<SqliteConnection> newconn
   }
   
   public override async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
-    var existing = (await Get(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
+    var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
     entities.ForEach(e => {
       if (existing.ContainsKey(e.UpdatedCoreEntity.CoreId)) { ctx.Epoch.Update(e.UpdatedCoreEntity); } 
       else { ctx.Epoch.Add(e.UpdatedCoreEntity); }

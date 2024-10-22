@@ -15,22 +15,27 @@ public interface ISimulationCoreStorage : ICoreStorage {
 
 public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorage {
   
+  public async Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) => 
+      (await GetList(coretype)).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
+
+  public async Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
+      (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToList();
+
+  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
+      (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToDictionary(e => e.CoreId, checksum);
+  
+  public abstract Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
+  
+  public abstract ValueTask DisposeAsync();
+  
+  // Simulation Specific Methods
+  
   public async Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
   public async Task<List<CoreMembershipType>> GetMembershipTypes() => await GetList<CoreMembershipType, CoreMembershipType.Dto>();
   public async Task<CoreCustomer?> GetCustomer(CoreEntityId? coreid) => await GetSingle<CoreCustomer, CoreCustomer.Dto>(coreid);
   public async Task<List<CoreCustomer>> GetCustomers() => await GetList<CoreCustomer, CoreCustomer.Dto>();
   public async Task<CoreInvoice?> GetInvoice(CoreEntityId? coreid) => await GetSingle<CoreInvoice, CoreInvoice.Dto>(coreid);
   public async Task<List<CoreInvoice>> GetInvoices() => await GetList<CoreInvoice, CoreInvoice.Dto>();
-
-  public async Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
-    return (await GetList(coretype)).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
-  }
-
-  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
-      (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToList();
-
-  public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
-      (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToDictionary(e => e.CoreId, checksum);
 
   private async Task<List<ICoreEntity>> GetList(CoreEntityTypeName coretype) {
     if (coretype.Value == nameof(CoreMembershipType)) return (await GetList<CoreMembershipType, CoreMembershipType.Dto>()).Cast<ICoreEntity>().ToList();
@@ -39,10 +44,8 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
     throw new NotSupportedException(coretype);
   }
   
-  public abstract Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
-  public abstract ValueTask DisposeAsync();
-  
   protected abstract Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : class, IDto<E>;
+  
   // todo: GetList is a `SELECT *` so needs to be removed
   protected abstract Task<List<E>> GetList<E, D>() where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;
 }

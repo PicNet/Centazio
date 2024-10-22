@@ -46,7 +46,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       var (system, sysentlst) = (sysents.Item1, sysents.Item2.ToList());
       if (!sysentlst.Any()) continue;
       var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
-      var existing = await ctx.CoreStore.Get(coretype, idmap.Values.ToList());
+      var existing = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
       var syscores = await sysentlst.Select(e => ToCore(e, idmap, existing)).Synchronous();
       var sums = syscores.Select(c => ctx.ChecksumAlg.Checksum(c)).Distinct().ToList();
       if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from a system to be unique.  Found some entities that resulted in the same ICoreEntity checksum");

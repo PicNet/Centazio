@@ -4,6 +4,7 @@ using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.CoreStorage;
 using Dapper;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
@@ -19,13 +20,13 @@ internal class TestingSqliteCoreStorageRepository : ICoreStorageWithQuery {
     return this;
   }
   
-  public async Task<List<ICoreEntity>> Get(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
+  public async Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     await using var conn = SqliteConn.Instance.Conn();
     var dtos = await Db.Query<CoreEntity.Dto>(conn, $"SELECT * FROM [{coretype}] WHERE [{nameof(ICoreEntity.System)}] != @ExcludeSystem [{nameof(ICoreEntity.DateUpdated)}] > @After", new { After=after, ExcludeSystem=exclude });
     return dtos.Select(dto => (ICoreEntity) dto.ToBase()).ToList();
   }
 
-  public async Task<List<ICoreEntity>> Get(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+  public async Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     await using var conn = SqliteConn.Instance.Conn();
     var dtos = await Db.Query<CoreEntity.Dto>(conn, $"SELECT * FROM {coretype} WHERE CoreId IN @CoreIds", new { CoreIds=coreids.Select(id => id.Value) });
     if (dtos.Count != coreids.Count) throw new Exception($"Some core entities could not be found");

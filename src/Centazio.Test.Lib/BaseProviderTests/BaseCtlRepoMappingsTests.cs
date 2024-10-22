@@ -152,7 +152,7 @@ public abstract class BaseCtlRepoMappingsTests {
       TestingUtcDate.DoTick();
       var map = await ctl.GetMapsFromSystemIds(system, coretype, dups.Select(e => e.SystemId).ToList());
       // var id = await ctl.GetCoreIdForSystem(Constants.CoreEntityName, sysid, system) ?? throw new Exception();
-      return (await corestore.Get(Constants.CoreEntityName, [map.Single().CoreId])).Cast<CoreEntity>().Single();
+      return (await corestore.GetExistingEntities(Constants.CoreEntityName, [map.Single().CoreId])).Cast<CoreEntity>().Single();
     }
     
     // System1 created E1

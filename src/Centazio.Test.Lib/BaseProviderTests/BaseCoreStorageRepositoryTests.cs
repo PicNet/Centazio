@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Test.Lib.CoreStorage;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
@@ -16,9 +17,9 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
   protected abstract Task<ICoreStorageWithQuery> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
-    Assert.ThrowsAsync<Exception>(() => repo.Get(Constants.CoreEntityName, [new("invalid")]));
+    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(Constants.CoreEntityName, [new("invalid")]));
     await DoUpsert(TestingFactories.NewCoreCust(String.Empty, String.Empty));
-    Assert.ThrowsAsync<Exception>(() => repo.Get(Constants.CoreEntityName, [new("invalid")]));
+    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(Constants.CoreEntityName, [new("invalid")]));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
@@ -63,7 +64,7 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
     Assert.That(all, Is.EquivalentTo(data));
   }
   
-  private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (await repo.Get(Constants.CoreEntityName, [coreid])).Cast<CoreEntity>().Single();
+  private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (await repo.GetExistingEntities(Constants.CoreEntityName, [coreid])).Cast<CoreEntity>().Single();
   
   private Task DoUpsert(ICoreEntity coreent) => DoUpsert([coreent]);
   private Task DoUpsert(List<ICoreEntity> coreents) {
