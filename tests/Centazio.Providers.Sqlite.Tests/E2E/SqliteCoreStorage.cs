@@ -2,12 +2,12 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.Providers.Sqlite;
+using Centazio.Test.Lib.E2E;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Serilog;
 
-namespace Centazio.E2E.Tests.Infra;
+namespace Centazio.Providers.Sqlite.Tests.E2E;
 
 public class SqliteCoreStorage(SimulationCtx ctx, Func<SqliteConnection> newconn) : AbstractCoreStorage(ctx.ChecksumAlg.Checksum) {
   

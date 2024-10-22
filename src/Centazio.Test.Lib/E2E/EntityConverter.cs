@@ -1,11 +1,10 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
-using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Systems.Crm;
-using Centazio.E2E.Tests.Systems.Fin;
+using Centazio.Test.Lib.E2E.Crm;
+using Centazio.Test.Lib.E2E.Fin;
 
-namespace Centazio.E2E.Tests;
+namespace Centazio.Test.Lib.E2E;
 
 public class EntityConverter(ICtlRepository ctl) {
   

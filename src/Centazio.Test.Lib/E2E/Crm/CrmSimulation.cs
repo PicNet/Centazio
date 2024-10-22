@@ -1,6 +1,6 @@
 ﻿using Centazio.Core;
 
-namespace Centazio.E2E.Tests.Systems.Crm;
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     

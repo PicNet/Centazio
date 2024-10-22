@@ -1,12 +1,19 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
-using Centazio.E2E.Tests.Infra;
-using Centazio.Providers.Sqlite;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
+using Centazio.Test.Lib.E2E;
 using Microsoft.Data.Sqlite;
 
-namespace Centazio.E2E.Tests.Providers;
+namespace Centazio.Providers.Sqlite.Tests.E2E;
+
+public class E2E {
+
+  [Test] public async Task Run_e2e_simulation_and_tests() {
+    await new E2EEnvironment(new SqliteSimulationProvider()).RunSimulation();
+  }
+
+}
 
 public class SqliteSimulationProvider : ISimulationProvider {
 

@@ -1,7 +1,7 @@
 ﻿using Centazio.Core;
-using C = Centazio.E2E.Tests.SimulationConstants;
+using C = Centazio.Test.Lib.E2E.SimulationConstants;
 
-namespace Centazio.E2E.Tests.Systems.Crm;
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmApi {
   

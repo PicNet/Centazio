@@ -1,6 +1,6 @@
 ﻿using Centazio.Core;
 
-namespace Centazio.E2E.Tests.Systems.Fin;
+namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<FinInvoice> invoices) {
 

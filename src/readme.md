@@ -2,10 +2,6 @@
 - sql server simulation
 - simulation needs improments, has lots of single id hacks using entity map, select * in core storage, need better helpers
 - check testing coverage
-- review all code comments
-- when core entities are updated need to check that the internals of the core entity (ids, dates, status, etc.) were 
-    not changed by the client.  May want to separate 'client' fields from ICoreEntity fields
-- clean up interfaces and types, have stuff everywhere
 
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
@@ -14,9 +10,7 @@
 - Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires
   heavy refactoring.  The purpose of this is that clients should not be able to interact (or even set) the internal
   meta-data properties.
-- While being dificult to have a abstract implementation of core storage, we should find a way of trying to
-  implement this, so that provider implementers do not have to implement these items
-
+- review all code comments
 
 
 # Developer Guidelines:

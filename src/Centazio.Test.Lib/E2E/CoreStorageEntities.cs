@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using Centazio.Core;
 using Centazio.Core.CoreRepo;
 
-namespace Centazio.E2E.Tests.Infra;
+namespace Centazio.Test.Lib.E2E;
 
 public record CoreCustomer : CoreEntityBase {
   

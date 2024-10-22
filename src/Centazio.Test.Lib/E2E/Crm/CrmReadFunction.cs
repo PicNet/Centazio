@@ -1,9 +1,8 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
-using Centazio.Test.Lib;
 
-namespace Centazio.E2E.Tests.Systems.Crm;
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
 

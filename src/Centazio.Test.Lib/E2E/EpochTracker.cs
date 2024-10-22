@@ -1,11 +1,10 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Systems.Crm;
-using Centazio.E2E.Tests.Systems.Fin;
+using Centazio.Test.Lib.E2E.Crm;
+using Centazio.Test.Lib.E2E.Fin;
 
-namespace Centazio.E2E.Tests;
+namespace Centazio.Test.Lib.E2E;
 
 [IgnoreNamingConventions]
 public class EpochTracker(int epoch, SimulationCtx ctx) {
@@ -17,11 +16,11 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
   public async Task ValidateAdded<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
-    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"Expected {typeof(T).Name} Created({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
         $"\nActual {typeof(T).Name} Created({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
     
-    Assert.That(actual.All(e => e.DateUpdated == UtcDate.UtcNow));
-    Assert.That(actual.All(e => e.DateCreated == UtcDate.UtcNow));
+    if(actual.Any(e => e.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
+    if(actual.Any(e => e.DateCreated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
   }
 
   public async Task ValidateUpdated<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
@@ -33,10 +32,10 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
         .Where(e => !eadded.Contains(e)) 
         .ToList();
     var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
-    Assert.That(actual.Count, Is.EqualTo(ascore.Count), $"Expected {typeof(T).Name} Updated({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
+    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Updated({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
         $"\nActual {typeof(T).Name} Updated({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.DisplayName}({e.CoreId})")));
-    Assert.That(actual.All(e => e.DateUpdated == UtcDate.UtcNow));
-    Assert.That(actual.All(e => e.DateCreated < UtcDate.UtcNow));
+    if(actual.Any(e => e.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
+    if(actual.Any(e => e.DateCreated >= UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
   }
   
   private async Task<List<ICoreEntity>> SysEntsToCore(CoreEntityTypeName coretype, params (SystemName, IEnumerable<ISystemEntity>)[] expected) {

@@ -5,27 +5,23 @@ using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
-using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Providers;
-using Centazio.E2E.Tests.Systems.Crm;
-using Centazio.E2E.Tests.Systems.Fin;
-using Centazio.Test.Lib;
+using Centazio.Test.Lib.E2E.Crm;
+using Centazio.Test.Lib.E2E.Fin;
 using Serilog;
 using Serilog.Events;
 
-namespace Centazio.E2E.Tests;
+namespace Centazio.Test.Lib.E2E;
 
-public class E2EEnvironment : IAsyncDisposable {
+public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
 
-  private static readonly SimulationCtx ctx = new(new SqliteSimulationProvider());
-  // private static readonly SimulationCtx ctx = new(new InMemorySimulationProvider());
+  private readonly SimulationCtx ctx = new(provider);
   
-  private readonly CrmApi crm = new(ctx);
+  private CrmApi crm = null!;
   private FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner = null!;
   private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner = null!;
   private FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner = null!;
 
-  private readonly FinApi fin = new(ctx);
+  private FinApi fin = null!;
   private FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner = null!;
   private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner = null!;
   private FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner = null!;
@@ -33,6 +29,7 @@ public class E2EEnvironment : IAsyncDisposable {
   public async Task Initialise() {
     await ctx.Initialise();
     
+    (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
     crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(ctx, crm),
         new ReadOperationRunner(ctx.StageRepository),
         ctx.CtlRepo);
@@ -56,7 +53,7 @@ public class E2EEnvironment : IAsyncDisposable {
         ctx.CtlRepo);
   }
   
-  [Test] public async Task RunSimulation() {
+  public async Task RunSimulation() {
     await Initialise();
     if (SimulationConstants.SILENCE_LOGGING) LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
     if (SimulationConstants.LOGGING_FILTERS.Any()) {
@@ -129,9 +126,8 @@ public class E2EEnvironment : IAsyncDisposable {
     CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
   }
   
-  [IgnoreNamingConventions] 
-  private void CompareByChecksum(SystemName system, IEnumerable<ISystemEntity> cores, IEnumerable<ISystemEntity> targets) {
-    var (corecs, targetscs) = (cores.Select(c => Json.Serialize(c.GetChecksumSubset())).ToList(), targets.Select(t => Json.Serialize(t.GetChecksumSubset())).ToList());
-    Assert.That(targetscs, Is.EquivalentTo(corecs), $"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");
+  [IgnoreNamingConventions] private void CompareByChecksum(SystemName system, IEnumerable<ISystemEntity> cores, IEnumerable<ISystemEntity> targets) {
+    var (corecs, targetscs) = (cores.Select(c => Json.Serialize(c.GetChecksumSubset())).OrderBy(str => str).ToList(), targets.Select(t => Json.Serialize(t.GetChecksumSubset())).OrderBy(str => str).ToList());
+    if (!corecs.SequenceEqual(targetscs)) throw new E2ETestFailedException($"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");
   }
 }

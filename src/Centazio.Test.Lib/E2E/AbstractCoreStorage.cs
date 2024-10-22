@@ -2,7 +2,7 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
-namespace Centazio.E2E.Tests.Infra;
+namespace Centazio.Test.Lib.E2E;
 
 public interface ISimulationCoreStorage : ICoreStorage {
   Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid);

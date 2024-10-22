@@ -1,9 +1,9 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Misc;
-using Centazio.E2E.Tests.Systems.Crm;
-using Centazio.E2E.Tests.Systems.Fin;
+using Centazio.Test.Lib.E2E.Crm;
+using Centazio.Test.Lib.E2E.Fin;
 
-namespace Centazio.E2E.Tests;
+namespace Centazio.Test.Lib.E2E;
 
 [IgnoreNamingConventions]
 public static class SimulationConstants {

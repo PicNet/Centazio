@@ -2,13 +2,11 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
-using Centazio.E2E.Tests.Infra;
-using Centazio.E2E.Tests.Providers;
 using Serilog;
 using Serilog.Events;
-using C = Centazio.E2E.Tests.SimulationConstants;
+using C = Centazio.Test.Lib.E2E.SimulationConstants;
 
-namespace Centazio.E2E.Tests;
+namespace Centazio.Test.Lib.E2E;
 
 public class SimulationCtx : IAsyncDisposable {
   

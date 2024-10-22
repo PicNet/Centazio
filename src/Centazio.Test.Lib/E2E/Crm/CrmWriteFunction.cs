@@ -2,10 +2,8 @@
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
-using Centazio.E2E.Tests.Infra;
-using Centazio.Test.Lib;
 
-namespace Centazio.E2E.Tests.Systems.Crm;
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
   

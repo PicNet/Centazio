@@ -1,10 +1,8 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
-using Centazio.E2E.Tests.Infra;
-using Centazio.Test.Lib;
 
-namespace Centazio.E2E.Tests.Systems.Crm;
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
   

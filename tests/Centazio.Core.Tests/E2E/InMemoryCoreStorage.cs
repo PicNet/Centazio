@@ -1,9 +1,9 @@
-﻿using Centazio.Core;
-using Centazio.Core.Checksum;
+﻿using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Test.Lib.E2E;
 using Serilog;
 
-namespace Centazio.E2E.Tests.Infra;
+namespace Centazio.Core.Tests.E2E;
 
 public class InMemoryCoreStorage(SimulationCtx ctx) : AbstractCoreStorage(ctx.ChecksumAlg.Checksum) {
   private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();

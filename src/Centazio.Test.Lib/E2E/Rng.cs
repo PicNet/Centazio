@@ -1,4 +1,4 @@
-﻿namespace Centazio.E2E.Tests;
+﻿namespace Centazio.Test.Lib.E2E;
 
 public static class Rng {
 
