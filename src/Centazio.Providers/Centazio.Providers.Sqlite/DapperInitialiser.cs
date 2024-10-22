@@ -18,12 +18,10 @@ public class DapperInitialiser {
 
   private static void AddAllRequiredValidStringSqlHandlers() {
     var handler = new ValidStringSqlTypeHandler();
-    // var handler2 = new ValidStringEnumerableSqlTypeHandler();
-    ValidString.AllSubclasses().ForEach(t => {
-      SqlMapper.AddTypeHandler(t, handler);
-      // todo: this does not work, which means any dapper query that takes in a list of Ids for instance, has to call .Value on all of them
-      // SqlMapper.AddTypeHandler(typeof(IEnum...<>).MakeGenericType(t), handler2);
-    });
+    // note: it is not possible to add a TypeHandler for List<ValidString>, it causes SQL syntax errors
+    //    so for list parameters you will still need to do a `new { Ids=ids.Select(id => id.Value) }` when
+    //    calling Dapper
+    ValidString.AllSubclasses().ForEach(t => SqlMapper.AddTypeHandler(t, handler));
   }
 
   private abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T> {

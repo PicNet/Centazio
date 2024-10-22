@@ -72,7 +72,7 @@ END
           f.type == typeof(Boolean) ? "bit" : 
           f.type == typeof(Guid) ? "uniqueidentifier" : 
           f.type == typeof(string) ? "nvarchar" : 
-          throw new NotImplementedException(f.type.Name);
+          throw new NotSupportedException(f.type.Name);
       if (!String.IsNullOrWhiteSpace(f.length)) typestr += $"({f.length})";
       var nullstr = f.required ? "not null" : "null";
       return $"[{f.name}] {typestr} {nullstr}";
@@ -95,7 +95,7 @@ END
           f.type == typeof(Guid) ? "uniqueidentifier" : 
           f.type == typeof(string) && f.length == "max" ? "text" :
           f.type == typeof(string) ? "nvarchar" :
-          throw new NotImplementedException(f.type.Name);
+          throw new NotSupportedException(f.type.Name);
       if (!String.IsNullOrWhiteSpace(f.length) && typestr != "text") typestr += $"({f.length})";
       var nullstr = f.required ? "not null" : "null";
       return $"[{f.name}] {typestr} {nullstr}".Trim();

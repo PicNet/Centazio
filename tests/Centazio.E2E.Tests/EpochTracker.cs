@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
+using Centazio.E2E.Tests.Infra;
 using Centazio.E2E.Tests.Systems.Crm;
 using Centazio.E2E.Tests.Systems.Fin;
 
@@ -45,7 +46,8 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
       var (system, sysentlst) = (sysents.Item1, sysents.Item2.ToList());
       if (!sysentlst.Any()) continue;
       var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
-      var syscores = await sysentlst.Select(e => ToCore(e, idmap)).Synchronous();
+      var existing = await ctx.CoreStore.Get(coretype, idmap.Values.ToList());
+      var syscores = await sysentlst.Select(e => ToCore(e, idmap, existing)).Synchronous();
       var sums = syscores.Select(c => ctx.ChecksumAlg.Checksum(c)).Distinct().ToList();
       if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from a system to be unique.  Found some entities that resulted in the same ICoreEntity checksum");
       syscores.ForEach((c, idx) => {
@@ -57,15 +59,15 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     }
     return cores;
 
-    async Task<ICoreEntity> ToCore(ISystemEntity e, IDictionary<SystemEntityId, CoreEntityId> idmap) {
-      idmap.TryGetValue(e.SystemId, out var exid);
-      // todo: these queries should run once for whole batch not for every single entity
+    async Task<ICoreEntity> ToCore(ISystemEntity e, IDictionary<SystemEntityId, CoreEntityId> idmap, List<ICoreEntity> existings) {
+      var hasexisting = idmap.TryGetValue(e.SystemId, out var exid);
+      var existing = hasexisting ? existings.Single(e2 => e2.CoreId == exid) : null;
       return e switch {
-        CrmMembershipType type => ctx.Converter.CrmMembershipTypeToCoreMembershipType(type, await ctx.CoreStore.GetMembershipType(exid)), 
-        CrmCustomer customer => ctx.Converter.CrmCustomerToCoreCustomer(customer, await ctx.CoreStore.GetCustomer(exid)), 
-        CrmInvoice invoice => await ctx.Converter.CrmInvoiceToCoreInvoice(invoice, await ctx.CoreStore.GetInvoice(exid)), 
-        FinAccount account => ctx.Converter.FinAccountToCoreCustomer(account, await ctx.CoreStore.GetCustomer(exid)), 
-        FinInvoice fininv => await ctx.Converter.FinInvoiceToCoreInvoice(fininv, await ctx.CoreStore.GetInvoice(exid)), 
+        CrmMembershipType type => ctx.Converter.CrmMembershipTypeToCoreMembershipType(type, (CoreMembershipType?) existing), 
+        CrmCustomer customer => ctx.Converter.CrmCustomerToCoreCustomer(customer, (CoreCustomer?) existing), 
+        CrmInvoice invoice => await ctx.Converter.CrmInvoiceToCoreInvoice(invoice, (CoreInvoice?) existing), 
+        FinAccount account => ctx.Converter.FinAccountToCoreCustomer(account, (CoreCustomer?) existing), 
+        FinInvoice fininv => await ctx.Converter.FinInvoiceToCoreInvoice(fininv, (CoreInvoice?) existing), 
         _ => throw new NotSupportedException(e.GetType().Name)
       };
     }

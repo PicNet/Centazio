@@ -12,7 +12,8 @@ public static class DtoHelpers {
     ArgumentNullException.ThrowIfNull(baseobj);
 
     var dtot = GetDtoTypeFromTypeHierarchy(baseobj.GetType());
-    if (dtot is null) return null; // todo: do we allow this?  Try throw
+    // must allow null as Json.Serialize uses this to test if the object is a Dto base type
+    if (dtot is null) return null; 
     var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
     var pairs = GetPropPairs(baseobj.GetType(), dtot);
     pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(baseobj, p)));
