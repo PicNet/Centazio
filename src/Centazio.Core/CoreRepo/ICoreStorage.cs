@@ -3,9 +3,7 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
-public interface ICoreStorage : ICoreStorageGetter, ICoreStorageUpserter;
-
-public interface ICoreStorageGetter : IAsyncDisposable {
+public interface ICoreStorage : IAsyncDisposable {
 
   /// <summary>
   /// Gets all core entities that have been created/updated after the given `after` parameter.
@@ -18,9 +16,6 @@ public interface ICoreStorageGetter : IAsyncDisposable {
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
   Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
-}
-
-public interface ICoreStorageUpserter : IAsyncDisposable {
   
   /// <summary>
   /// Gets the existing checksums of the specified entities that are already in core storage.

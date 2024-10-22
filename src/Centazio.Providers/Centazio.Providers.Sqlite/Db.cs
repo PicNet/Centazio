@@ -5,8 +5,7 @@ using Serilog;
 namespace Centazio.Providers.Sqlite;
 
 public static class Db {
-  #pragma warning disable CS0162 // Unreachable code detected
-  private const bool DEBUG_SQL = false;
+  private static readonly bool DEBUG_SQL = false;
   
   public static async Task<int> Exec(DbConnection conn, string sql, object? arg = null) { 
     sql = sql.Trim();

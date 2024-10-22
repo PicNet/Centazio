@@ -2,7 +2,7 @@
 using Centazio.Core;
 using Centazio.Core.CoreRepo;
 
-namespace Centazio.Test.Lib.CoreStorage;
+namespace Centazio.Test.Lib;
 
 public interface ICoreStorageWithQuery : ICoreStorage {
   Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity;

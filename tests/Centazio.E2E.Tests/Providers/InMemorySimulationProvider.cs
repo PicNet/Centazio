@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.E2E.Tests.Infra;
+using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.E2E.Tests.Providers;
 

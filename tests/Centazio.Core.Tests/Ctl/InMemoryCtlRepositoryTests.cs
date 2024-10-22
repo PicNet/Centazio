@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
+using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Core.Tests.Ctl;
 

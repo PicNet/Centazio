@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 
-namespace Centazio.Core.Ctl;
+namespace Centazio.Test.Lib.InMemRepos;
 
 public class InMemoryCtlRepository : BaseCtlRepository {
 

@@ -1,6 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
-using Centazio.Test.Lib.CoreStorage;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 

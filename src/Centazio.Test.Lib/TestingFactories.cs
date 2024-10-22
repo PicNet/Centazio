@@ -7,7 +7,7 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
-using Centazio.Test.Lib.CoreStorage;
+using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Test.Lib;
 

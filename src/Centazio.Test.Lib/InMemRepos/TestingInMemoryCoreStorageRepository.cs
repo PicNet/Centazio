@@ -3,9 +3,11 @@ using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
-namespace Centazio.Test.Lib.CoreStorage;
+namespace Centazio.Test.Lib.InMemRepos;
 
-public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter, ICoreStorageWithQuery {
+public class TestingInMemoryCoreStorageRepository : ICoreStorageWithQuery {
+  
+  private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, (ICoreEntity CoreEntity, CoreEntityChecksum CoreEntityChecksum)>> db = new();
   
   public Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<ICoreEntity>());
@@ -23,6 +25,26 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
     if (lst.Count != coreids.Count) throw new Exception("Could not find all specified core entities");
     return Task.FromResult(lst);
   }
+  
+  public Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+    var checksums = new Dictionary<CoreEntityId, CoreEntityChecksum>();
+    if (!coreids.Any()) return Task.FromResult(checksums);
+    if (!db.TryGetValue(coretype, out var dbtype)) return Task.FromResult(checksums);
+    var result = coreids
+        .Where(coreid => dbtype.ContainsKey(coreid))
+        .Select(coreid => dbtype[coreid])
+        .ToDictionary(t => t.CoreEntity.CoreId, e => new CoreEntityChecksum(e.CoreEntityChecksum));
+    return Task.FromResult(result);
+  }
+
+  public Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+    if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, (ICoreEntity CoreEntity, CoreEntityChecksum CoreEntityChecksum)>();
+    var upserted = entities.Select(e => {
+      db[coretype][e.UpdatedCoreEntity.CoreId] = (e.UpdatedCoreEntity, e.UpdatedCoreEntityChecksum);
+      return e.UpdatedCoreEntity;
+    }).ToList();
+    return Task.FromResult(upserted);
+  }
 
   public Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<E>());
@@ -33,5 +55,8 @@ public class TestingInMemoryCoreStorageRepository : InMemoryCoreStorageUpserter,
   public Task<List<E>> Query<E>(CoreEntityTypeName coretype, string query) where E : class, ICoreEntity => 
       throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
   
-  public Dictionary<CoreEntityTypeName, Dictionary<ValidString, (ICoreEntity CoreEntity, CoreEntityChecksum CoreEntityChecksum)>> MemDb => db; 
+  public ValueTask DisposeAsync() {
+    db.Clear();
+    return ValueTask.CompletedTask;
+  }
 }

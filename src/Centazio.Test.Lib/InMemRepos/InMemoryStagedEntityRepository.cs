@@ -1,10 +1,11 @@
-﻿using Centazio.Core.Checksum;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Stage;
 
-namespace Centazio.Core.Stage;
+namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) 
-    : AbstractStagedEntityRepository(limit, checksum) {
+public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
 
   private readonly Dictionary<string, bool> checksums = new();
   protected readonly List<StagedEntity> saved = [];

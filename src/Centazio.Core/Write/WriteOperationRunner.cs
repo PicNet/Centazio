@@ -5,7 +5,7 @@ using Centazio.Core.Runner;
 using Serilog;
 
 namespace Centazio.Core.Write;
-public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorageGetter core) : 
+public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : 
     IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
   
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {

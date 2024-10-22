@@ -2,7 +2,7 @@
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
-using Centazio.Test.Lib.CoreStorage;
+using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Core.Tests.IntegrationTests.Promote;
 
