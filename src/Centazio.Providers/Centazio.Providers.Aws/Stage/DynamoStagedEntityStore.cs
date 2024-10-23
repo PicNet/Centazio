@@ -52,7 +52,7 @@ public class DynamoStagedEntityRepository(IAmazonDynamoDB client, string table, 
     return this;
   }
 
-  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     var template = staged.First();
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
@@ -99,7 +99,7 @@ public class DynamoStagedEntityRepository(IAmazonDynamoDB client, string table, 
     return tostage;
   }
   
-  public override async Task<List<StagedEntity>> Update(List<StagedEntity> staged) {
+  public override async Task<List<StagedEntity>> Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     var uniques = staged.DistinctBy(e => $"{e.System}|{e.SystemEntityTypeName}|{e.StagedEntityChecksum}").ToList();
     await uniques
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))

@@ -25,7 +25,7 @@ CREATE INDEX ix_{STAGED_ENTITY_TBL}_source_obj_staged ON [{SCHEMA}].[{STAGED_ENT
     return this;
   }
 
-  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     // all staged entities will have the same DateStaged so just use first as the id of this bulk insert batch
     var dtstaged = staged.First().DateStaged;
     await using var conn = await newconn();
@@ -46,7 +46,7 @@ WHEN NOT MATCHED THEN
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
 
-  public override async Task Update(List<StagedEntity> staged) {
+  public override async Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var conn = await newconn();
     await conn.ExecuteAsync(
         $@"MERGE INTO {SCHEMA}.{STAGED_ENTITY_TBL} T

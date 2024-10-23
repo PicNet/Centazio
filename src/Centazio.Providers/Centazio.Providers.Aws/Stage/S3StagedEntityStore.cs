@@ -30,7 +30,7 @@ public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit
     return this;
   }
   
-  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     var se = staged.First();
     var existing = (await ListAll(se.System, se.SystemEntityTypeName))
         .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
@@ -42,7 +42,7 @@ public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit
     return tostage;
   }
   
-  public override async Task Update(List<StagedEntity> staged) {
+  public override async Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 

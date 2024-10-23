@@ -7,14 +7,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Stage;
 
+// todo: EFCore should handle `ValidStrings` like Dapper does
 public class EFCoreStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
 
   internal static readonly string STAGED_ENTITY_TBL = $"{nameof(Core.Ctl)}_{nameof(StagedEntity)}".ToLower();
   
-  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var db = new StagedEntityContext();
     var newsums = staged.Select(s => s.StagedEntityChecksum.Value);
-    var duplicates = db.Staged
+    var duplicates = Query(db, system, systype)
         .Where(s => newsums.Contains(s.StagedEntityChecksum ?? ""))
         .ToDictionary(s => s.StagedEntityChecksum!);
     
@@ -25,16 +26,11 @@ public class EFCoreStagedEntityRepository(int limit, Func<string, StagedEntityCh
     return toinsert;
   }
   
-  // todo: EFCore should handle `ValidStrings` like Dapper does
-  public override async Task Update(List<StagedEntity> staged) {
+  public override async Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     if (!staged.Any()) return;
     await using var db = new StagedEntityContext();
-    // todo: remove `first`. This method should take in `System`, `SystemEntityTypeName` and base class should
-    // validate that all entities are from that system/systype, this would be consistent with other repositories.
-    // Base class should also not call this if there are no entities, same with StageImpl
-    var first = staged.First(); 
     var ids = staged.Select(e => e.Id).ToList();
-    var existing = db.Staged.Where(e => e.System == first.System.Value && e.SystemEntityTypeName == first.SystemEntityTypeName.Value && ids.Contains((Guid) e.Id!)).ToList();
+    var existing = Query(db, system, systype).Where(e => ids.Contains((Guid) e.Id!)).ToList();
     existing.ForEach(e => {
       var source = staged.Single(s => s.Id == e.Id);
       e.DatePromoted = source.DatePromoted;
@@ -45,7 +41,7 @@ public class EFCoreStagedEntityRepository(int limit, Func<string, StagedEntityCh
 
   protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
     await using var db = new StagedEntityContext();
-    var query = db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value && e.DateStaged > after && e.IgnoreReason == null);
+    var query = Query(db, system, systype).Where(e => e.DateStaged > after && e.IgnoreReason == null);
     if (!incpromoted) query = query.Where(e => !e.DatePromoted.HasValue);
     if (Limit is > 0 and < Int32.MaxValue) query = query.Take(Limit);
     return query.ToList().Select(dto => dto.ToBase()).ToList();
@@ -53,11 +49,13 @@ public class EFCoreStagedEntityRepository(int limit, Func<string, StagedEntityCh
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
     await using var db = new StagedEntityContext();
-    var query = db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
+    var query = Query(db, system, systype); 
     query = promoted ? query.Where(e => e.DatePromoted < before) : query.Where(e => e.DateStaged < before);
     await query.ExecuteDeleteAsync();
   }
 
+  private IQueryable<StagedEntity.Dto> Query(StagedEntityContext db, SystemName system, SystemEntityTypeName systype) => db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
+  
   public async Task<EFCoreStagedEntityRepository> Initialise() {
     await using var db = new StagedEntityContext();
     var dbf = new DbFieldsHelper();

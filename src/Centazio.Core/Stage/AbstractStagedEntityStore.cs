@@ -11,7 +11,7 @@ public interface IEntityStager : IAsyncDisposable {
 public interface IStagedEntityRepository : IEntityStager {
   int Limit { get; set; }
   Task Update(StagedEntity staged);
-  Task Update(List<StagedEntity> staged);
+  Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
   
   Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after);
   Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after);
@@ -38,16 +38,16 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
     var ses = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, data, checksum(data))).ToList();
     if (!ses.Any()) return ses;
-    return await StageImpl(ses);
+    return await StageImpl(system, systype, ses);
   }
 
   /// <summary>
   /// Implementing provider can assume that `staged` has already been de-duped and has at least 1 entity.
   /// </summary>
-  protected abstract Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged);
+  protected abstract Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
   
-  public Task Update(StagedEntity staged) => Update([staged]);
-  public abstract Task Update(List<StagedEntity> staged);
+  public Task Update(StagedEntity staged) => Update(staged.System, staged.SystemEntityTypeName, [staged]);
+  public abstract Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
 
   public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, true);
   public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, false);

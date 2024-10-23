@@ -24,7 +24,7 @@ public class SqliteStagedEntityRepository(Func<SqliteConnection> newconn, int li
     await Db.Exec(conn, $"DROP TABLE IF EXISTS {STAGED_ENTITY_TBL}");
   }
 
-  protected override async Task<List<StagedEntity>> StageImpl(List<StagedEntity> staged) {
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     // all staged entities will have the same DateStaged so just use first as the id of this bulk insert bacth
     var dtstaged = staged.First().DateStaged;
     await using var conn = newconn();
@@ -39,7 +39,7 @@ ON CONFLICT (System, SystemEntityTypeName, StagedEntityChecksum) DO NOTHING;
     return staged.Where(e => ids.ContainsKey(e.Id)).ToList();
   }
 
-  public override async Task Update(List<StagedEntity> staged) {
+  public override async Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var conn = newconn();
     await Db.Exec(conn, 
         $@"UPDATE [{STAGED_ENTITY_TBL}] 
