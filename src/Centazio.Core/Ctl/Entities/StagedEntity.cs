@@ -38,8 +38,8 @@ public sealed record StagedEntity {
     public DateTime? DateStaged { get; init; }
     public string? Data { get; init; }
     public string? StagedEntityChecksum { get; init; }
-    public DateTime? DatePromoted { get; init; }
-    public string? IgnoreReason { get; init; }
+    public DateTime? DatePromoted { get; set; }
+    public string? IgnoreReason { get; set; }
     
     public Dto() {}
     

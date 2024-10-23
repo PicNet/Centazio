@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Centazio.Core.Misc;
 
+// todo: make abstract and have specific implementations by provider
 public record DbFieldType(string name, Type type, string length, bool required);
 
 public class DbFieldsHelper {

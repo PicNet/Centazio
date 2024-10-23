@@ -9,10 +9,10 @@ namespace Centazio.Providers.Sqlite.Tests.Stage;
 public class SqliteStagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests {
 
   protected override async Task<IStagedEntityRepository> GetRepository(int limit=0, Func<string, StagedEntityChecksum>? checksum = null) 
-      => await new TestingSqlServerStagedEntityRepository(limit, checksum).Initalise();
+      => await new TestingSqlServerStagedEntityRepository(limit, checksum).Initialise();
 
   class TestingSqlServerStagedEntityRepository(int limit, Func<string, StagedEntityChecksum>? checksum = null) 
-      : SqliteStagedEntityRepository(SqliteConn.Instance.Conn, limit, checksum ?? Helpers.TestingStagedEntityChecksum );
+      : EFCoreStagedEntityRepository(limit, checksum ?? Helpers.TestingStagedEntityChecksum);
 
 }
 
