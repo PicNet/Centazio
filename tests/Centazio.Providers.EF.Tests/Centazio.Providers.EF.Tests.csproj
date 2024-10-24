@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Centazio.Core\Centazio.Core.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.EF\Centazio.Providers.EF.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+    </ItemGroup>
+
+</Project>

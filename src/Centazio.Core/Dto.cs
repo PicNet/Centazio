@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 namespace Centazio.Core;
 
 public interface IDto<out T> { T ToBase(); }
+public interface ICoreEntityDto<out T> : IDto<T> { string? CoreId { get; init; } }
 
 record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
 

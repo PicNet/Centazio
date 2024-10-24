@@ -1,5 +1,5 @@
 # Todo
-- remove dapper once completed with ef core migration
+- remove dapper once completed with ef core migration (sql server migration required)
 - test all providers implement all reposiroties (there should be 3 repos I think).  And test that there are tests
     that extends from BaseTests for that repo / provider.
 - sql server simulation

@@ -41,7 +41,7 @@ public abstract class AbstractCtlRepositoryDbContext(string schema, string sys_t
         $"UNIQUE({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
   }
   
-  public async Task DropTable() {
+  public async Task DropTables() {
     #pragma warning disable EF1002
     await Database.ExecuteSqlRawAsync($"DROP TABLE IF EXISTS {CoreToSystemMapTableName}; DROP TABLE IF EXISTS {ObjectStateTableName}; DROP TABLE IF EXISTS {SystemStateTableName};");
     #pragma warning restore EF1002

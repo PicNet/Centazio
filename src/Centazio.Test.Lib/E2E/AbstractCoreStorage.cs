@@ -44,7 +44,7 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
     throw new NotSupportedException(coretype);
   }
   
-  protected abstract Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : class, IDto<E>;
+  protected abstract Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : class, ICoreEntityDto<E>;
   
   // todo: GetList is a `SELECT *` so needs to be removed
   protected abstract Task<List<E>> GetList<E, D>() where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;

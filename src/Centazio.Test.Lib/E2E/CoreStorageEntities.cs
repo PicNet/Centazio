@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.E2E;
@@ -99,6 +100,7 @@ public abstract record CoreEntityBase : ICoreEntity {
   public DateTime DateCreated { get; set; }
   public DateTime DateUpdated { get; set; }
   public SystemName LastUpdateSystem { get; set; }
+  public CoreEntityChecksum? CoreEntityChecksum { get; set; }
   
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
@@ -109,7 +111,7 @@ public abstract record CoreEntityBase : ICoreEntity {
     CoreId = coreid;
   }
   
-  public abstract record Dto<E> : IDto<E> 
+  public abstract record Dto<E> : ICoreEntityDto<E> 
       where E : CoreEntityBase {
     public string? System { get; init; }
     public string? SystemId { get; init; }
@@ -117,17 +119,7 @@ public abstract record CoreEntityBase : ICoreEntity {
     public DateTime? DateCreated { get; init; }
     public DateTime? DateUpdated { get; init; }
     public string? LastUpdateSystem { get; init; }
-    
-    protected Dto() {}
-    
-    internal Dto(string? system, string? systemid, string coreid, DateTime? created, DateTime? updated, string? lastsystem) {
-      System = system;
-      SystemId = systemid;
-      CoreId = coreid; 
-      DateCreated = created;
-      DateUpdated = updated;
-      LastUpdateSystem = lastsystem;
-    }
+    public string? CoreEntityChecksum { get; init; }
     
     public abstract E ToBase();
     
@@ -138,6 +130,7 @@ public abstract record CoreEntityBase : ICoreEntity {
       e.DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated));
       e.DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated));
       e.LastUpdateSystem = LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem));
+      e.CoreEntityChecksum = CoreEntityChecksum is null ? null : new(CoreEntityChecksum);
       return e;
     }
   }

@@ -15,7 +15,7 @@ public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : A
   
   public override async ValueTask DisposeAsync() { 
     await using var db = getdb();
-    await db.DropTable();
+    await db.DropTables();
   }
   
   public override async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
