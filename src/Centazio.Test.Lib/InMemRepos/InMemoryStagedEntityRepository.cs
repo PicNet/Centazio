@@ -10,7 +10,7 @@ public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntity
   private readonly Dictionary<string, bool> checksums = new();
   protected readonly List<StagedEntity> saved = [];
 
-  public override Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
+  public override Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     staged.ForEach(s => {
       var idx = saved.FindIndex(e => e.System == s.System && e.SystemEntityTypeName == s.SystemEntityTypeName && e.Id == s.Id);
       if (idx < 0) throw new Exception($"could not find StagedEntity[{s.Id}]");

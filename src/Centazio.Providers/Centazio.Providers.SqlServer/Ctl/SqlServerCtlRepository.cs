@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Centazio.Providers.SqlServer.Ctl;
 
-public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : BaseCtlRepository {
+public class SqlServerCtlRepository(Func<Task<SqlConnection>> newconn) : AbstractCtlRepository {
 
   internal static readonly string SCHEMA = nameof(Core.Ctl).ToLower();
   internal static readonly string SYSTEM_STATE_TBL = nameof(SystemState).ToLower();
@@ -95,7 +95,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
   
-  protected override async Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+  protected override async Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     await using var conn = await newconn();
     await conn.ExecuteAsync($@"INSERT INTO [{SCHEMA}].[{MAPPING_TBL}] (CoreEntityTypeName, CoreId, System, SystemId, SystemEntityChecksum, Status, DateCreated, DateUpdated, DateLastSuccess, DateLastError, LastError)
 VALUES (@CoreEntityTypeName, @CoreId, @System, @SystemId, @SystemEntityChecksum, @Status, @DateCreated, @DateUpdated, @DateLastSuccess, @DateLastError, @LastError);", tocreate.Select(DtoHelpers.ToDto)); 

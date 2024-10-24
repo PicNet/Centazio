@@ -12,17 +12,21 @@ public class SqlConn {
   public static readonly SqlConn Instance = new();
   
   public bool Real { get; }
-  public async Task<SqlConnection> Conn() {
-    if (String.IsNullOrWhiteSpace(connstr)) { await Init(); }
-    return new SqlConnection(connstr);
+  
+  public async Task<string> ConnStr() {
+    await Init();
+    return connstr ?? throw new Exception();
   }
-
+  public async Task<SqlConnection> Conn() => new(await ConnStr());
+  
   private SqlConn(bool real=false) => Real = real;
   
   private MsSqlContainer? container;
-  private string connstr = null!;
+  private string? connstr;
 
   private async Task Init() {
+    if (connstr is not null) return;
+    
     if (Real) {
       var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
       var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.SecretsFolder, "dev").Load();

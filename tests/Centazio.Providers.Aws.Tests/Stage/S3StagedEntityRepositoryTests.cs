@@ -11,7 +11,7 @@ using Testcontainers.Minio;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-public class S3StagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests {
+public class S3StagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
 
   private MinioContainer container;
   
@@ -27,7 +27,7 @@ public class S3StagedEntityRepositoryTests : StagedEntityRepositoryDefaultTests 
     await container.DisposeAsync();
   }
   
-  protected override async Task<IStagedEntityRepository> GetRepository(int limit = 0, Func<string, StagedEntityChecksum>? checksum = null) {
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
     return await new TestingS3StagedEntityRepository(client, limit).Initalise();

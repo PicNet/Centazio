@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
+using Centazio.Providers.EF;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib.E2E;
@@ -8,11 +9,9 @@ using Microsoft.Data.Sqlite;
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
 public class E2E {
-
   [Test] public async Task Run_e2e_simulation_and_tests() {
     await new E2EEnvironment(new SqliteSimulationProvider()).RunSimulation();
   }
-
 }
 
 public class SqliteSimulationProvider : ISimulationProvider {
@@ -29,10 +28,9 @@ public class SqliteSimulationProvider : ISimulationProvider {
     
     File.Delete(SIM_SQLITE_FILENAME);
     
-    var getconn = () => sqliteconn;
-    CtlRepo = await new SqliteCtlRepository(getconn).Initalise();
-    StageRepository = await new SqliteStagedEntityRepository(getconn, 0, ctx.ChecksumAlg.Checksum).Initalise();
-    CoreStore = await new SqliteCoreStorage(ctx, getconn).Initialise();
+    CtlRepo = await new EFCoreCtlRepository(() => new SqliteCtlContext()).Initalise();
+    StageRepository = await new EFCoreStagedEntityRepository(new EFCoreStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext())).Initialise();
+    CoreStore = await new SqliteCoreStorage(ctx, () => sqliteconn).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

@@ -7,7 +7,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Centazio.Providers.Sqlite.Ctl;
 
-public class SqliteCtlRepository(Func<SqliteConnection> newconn) : BaseCtlRepository {
+public class SqliteCtlRepository(Func<SqliteConnection> newconn) : AbstractCtlRepository {
 
   internal static readonly string SYSTEM_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(SystemState)}".ToLower();
   internal static readonly string OBJECT_STATE_TBL = $"{nameof(Core.Ctl)}_{nameof(ObjectState)}".ToLower();
@@ -92,7 +92,7 @@ VALUES (@System, @Stage, @Active, @Status, @DateCreated)", created);
     return created;
   }
   
-  protected override async Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+  protected override async Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     await using var conn = newconn();
     await Db.Exec(conn, $@"
 INSERT INTO [{MAPPING_TBL}] (CoreEntityTypeName, CoreId, System, SystemId, SystemEntityChecksum, Status, DateCreated, DateUpdated, DateLastSuccess, DateLastError, LastError)

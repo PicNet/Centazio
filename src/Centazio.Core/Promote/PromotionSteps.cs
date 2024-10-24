@@ -155,7 +155,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) {
     if (error is not null) return;
-    await stagestore.Update(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
+    await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
   }
 
   public void LogPromotionSteps() {

@@ -44,6 +44,11 @@ public static class Json {
     }
   }
 
+  public static bool AreJsonEqual(IEnumerable<object> actual, IEnumerable<object> expected) {
+    return AreJsonEqual((object) 
+        actual.Select(Serialize).OrderBy(s => s).ToList(), 
+        expected.Select(Serialize).OrderBy(s => s).ToList());
+  }
   public static bool AreJsonEqual(object actual, object expected) {
     var (actualjson, expjson) = (JsonSerializer.Serialize(actual), JsonSerializer.Serialize(expected));
     if (actualjson == expjson) return true;

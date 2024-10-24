@@ -1,4 +1,7 @@
 # Todo
+- remove dapper once completed with ef core migration
+- test all providers implement all reposiroties (there should be 3 repos I think).  And test that there are tests
+    that extends from BaseTests for that repo / provider.
 - sql server simulation
 - simulation needs improments, has lots of single id hacks using entity map, select * in core storage, need better helpers
 - check testing coverage

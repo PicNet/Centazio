@@ -4,7 +4,7 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.Ctl;
 
-public abstract class BaseCtlRepository : ICtlRepository {
+public abstract class AbstractCtlRepository : ICtlRepository {
 
   public abstract Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage);
   public abstract Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage);
@@ -17,7 +17,7 @@ public abstract class BaseCtlRepository : ICtlRepository {
   public async Task<SystemState> GetOrCreateSystemState(SystemName system, LifecycleStage stage) => await GetSystemState(system, stage) ?? await CreateSystemState(system, stage);
   public async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
   
-  protected abstract Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
+  protected abstract Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
   protected abstract Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
   
@@ -26,7 +26,7 @@ public abstract class BaseCtlRepository : ICtlRepository {
   public async Task<List<Map.Created>> CreateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     if (!tocreate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, tocreate, true);
-    var created = await CreateImpl(system, coretype, tocreate);
+    var created = await CreateMapImpl(system, coretype, tocreate);
     if (created.Count != tocreate.Count) throw new Exception($"created maps({created.Count}) does not match expected number ({tocreate.Count}).  This chould mean that some pre-existing maps were attempted to be created.");
     return created;
   }

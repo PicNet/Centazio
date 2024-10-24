@@ -11,7 +11,7 @@ public interface IEntityStager : IAsyncDisposable {
 public interface IStagedEntityRepository : IEntityStager {
   int Limit { get; set; }
   Task Update(StagedEntity staged);
-  Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
+  Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
   
   Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after);
   Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after);
@@ -36,18 +36,22 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
 
   public async Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas) {
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
-    var ses = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, data, checksum(data))).ToList();
-    if (!ses.Any()) return ses;
-    return await StageImpl(system, systype, ses);
+    var staged = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, data, checksum(data))).ToList();
+    if (!staged.Any()) return staged;
+    if (staged.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
+    return await StageImpl(system, systype, staged);
   }
 
-  /// <summary>
-  /// Implementing provider can assume that `staged` has already been de-duped and has at least 1 entity.
-  /// </summary>
   protected abstract Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
   
   public Task Update(StagedEntity staged) => Update(staged.System, staged.SystemEntityTypeName, [staged]);
-  public abstract Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
+  public Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
+    if (!staged.Any()) return Task.CompletedTask; 
+    if (staged.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
+    return UpdateImpl(system, systype, staged);
+  }
+
+  public abstract Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
 
   public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, true);
   public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, false);

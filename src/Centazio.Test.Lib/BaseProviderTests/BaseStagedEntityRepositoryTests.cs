@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
 
-public abstract class StagedEntityRepositoryDefaultTests {
+public abstract class BaseStagedEntityRepositoryTests {
 
   private const int LARGE_BATCH_SIZE = 100;
   private readonly string MOCK_DATA = Json.Serialize(new {});
@@ -14,7 +14,7 @@ public abstract class StagedEntityRepositoryDefaultTests {
   private IStagedEntityRepository repo = null!;
   private TestingUtcDate dt = null!;
   
-  protected abstract Task<IStagedEntityRepository> GetRepository(int limit=0, Func<string, StagedEntityChecksum>? checksum = null);
+  protected abstract Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum);
   
   [SetUp] public async Task SetUp() {
     repo = await GetRepository(0, Hash);
@@ -165,7 +165,7 @@ public abstract class StagedEntityRepositoryDefaultTests {
   
   [Test] public async Task Test_single_ignore_update() {
     var staged = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, nameof(StagedEntity.Data)) ?? throw new Exception();
-    await repo.Update(Constants.System1Name, Constants.SystemEntityName, [staged with { IgnoreReason = nameof(StagedEntity.IgnoreReason) }]);
+    await repo.UpdateImpl(Constants.System1Name, Constants.SystemEntityName, [staged with { IgnoreReason = nameof(StagedEntity.IgnoreReason) }]);
     var all = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, DateTime.MinValue);
     Assert.That(all, Is.Empty);
   }
@@ -181,19 +181,16 @@ public abstract class StagedEntityRepositoryDefaultTests {
     await Create(name2, "not ignore: 2", "\r");
     await Create(name3, "not ignore: 3", null);
     
-    await repo.Update(name1, new(name1), [
+    await repo.UpdateImpl(name1, new(name1), [
       await Create(name1, "ignore: 1.1", "ignore: 1.1"),
       await Create(name1, "ignore: 1.2", "ignore: 1.2")
     ]);
-    await repo.Update(name2, new(name2), [
+    await repo.UpdateImpl(name2, new(name2), [
       await Create(name2, "ignore: 2", "ignore: 2"),
     ]);
-    await repo.Update(name3, new(name3), [
+    await repo.UpdateImpl(name3, new(name3), [
       await Create(name3, "ignore: 3", "ignore: 3")
     ]);
-    var all = await repo.GetAll(name2, new(name2), start);
-    Console.WriteLine("IN DB: " + Json.Serialize(all));
-    
     
     await Assert.ThatAsync(() => repo.GetAll(name1, new(name1), staged2), Is.Empty);
     await Assert.ThatAsync(() => repo.GetAll(name2, new(name1), start), Is.Empty);
@@ -286,9 +283,9 @@ public abstract class StagedEntityRepositoryDefaultTests {
     await repo.Stage(name2, new(name2), name2);
     await repo.Stage(name3, new(name3), name3);
     
-    await repo.Update(name1, new(name1), (await repo.GetAll(name1, new(name1), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
-    await repo.Update(name2, new(name2), (await repo.GetAll(name2, new(name2), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
-    await repo.Update(name3, new(name3), (await repo.GetAll(name3, new(name3), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(name1, new(name1), (await repo.GetAll(name1, new(name1), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(name2, new(name2), (await repo.GetAll(name2, new(name2), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(name3, new(name3), (await repo.GetAll(name3, new(name3), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
     
     await repo.DeletePromotedBefore(name1, new(name1), promoted2);
     

@@ -5,7 +5,7 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryCtlRepository : BaseCtlRepository {
+public class InMemoryCtlRepository : AbstractCtlRepository {
 
   protected readonly Dictionary<(SystemName, LifecycleStage), SystemState> systems = new();
   protected readonly Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> objects = new();
@@ -42,7 +42,7 @@ public class InMemoryCtlRepository : BaseCtlRepository {
     return Task.FromResult(objects[key] = os);
   }
   
-  protected override Task<List<Map.Created>> CreateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
+  protected override Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     var existingcoreids = maps.Keys.Where(k => k.System == system && k.CoreEntityTypeName == coretype).ToDictionary(k => k.CoreId);
     var existingsysids = maps.Keys.Where(k => k.System == system && k.CoreEntityTypeName == coretype).ToDictionary(k => k.SystemId);
     var results = tocreate.Select(map => {

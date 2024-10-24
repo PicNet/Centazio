@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
+      <ProjectReference Include="..\Centazio.Providers.EF\Centazio.Providers.EF.csproj" />
     </ItemGroup>
 
     <ItemGroup>

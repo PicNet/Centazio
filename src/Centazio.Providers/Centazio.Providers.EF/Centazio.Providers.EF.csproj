@@ -8,14 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.1.35" />
-      <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0-rc.2.24474.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0-rc.2.24474.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0-rc.2.24474.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0-rc.2.24474.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
-      <ProjectReference Include="..\Centazio.Providers.EF\Centazio.Providers.EF.csproj" />
     </ItemGroup>
 
 </Project>

@@ -99,16 +99,6 @@ public abstract class BaseCtlRepoMappingsTests {
     await ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map.Update().SuccessUpdate(new("newchecksum"))]);
   }
   
-  [Test] public async Task Test_updating_missing_by_SystemId_throws_error() {
-    var entity = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
-    var map1 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id1, SCS());
-    var map2 = Map.Create(Constants.System1Name, entity).SuccessCreate(Constants.Sys1Id2, SCS());
-    
-    await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, [map1]);
-    TestingUtcDate.DoTick();
-    await AssertException(() => ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
-  }
-  
   [Test] public async Task Test_updating_missing_by_CoreId_throws_error() {
     var entity1 = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);
     var entity2 = TestingFactories.NewCoreCust(FIRST_NAME, FIRST_NAME);

@@ -42,7 +42,7 @@ public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit
     return tostage;
   }
   
-  public override async Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
+  public override async Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await staged.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
   }
 
