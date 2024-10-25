@@ -4,7 +4,7 @@ using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.E2E;
 
-public interface ISimulationCoreStorage : ICoreStorage {
+public interface ISimulationCoreStorageRepository : ICoreStorage {
   Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid);
   Task<List<CoreMembershipType>> GetMembershipTypes();
   Task<CoreCustomer?> GetCustomer(CoreEntityId? coreid);
@@ -13,7 +13,7 @@ public interface ISimulationCoreStorage : ICoreStorage {
   Task<List<CoreInvoice>> GetInvoices();
 }
 
-public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorage {
+public abstract class AbstractCoreStorageRepository(Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorageRepository {
   
   public async Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) => 
       (await GetList(coretype)).Where(e => e.LastUpdateSystem != exclude.Value && e.DateUpdated > after).ToList();
@@ -25,8 +25,6 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
       (await GetList(coretype)).Where(e => coreids.Contains(e.CoreId)).ToDictionary(e => e.CoreId, checksum);
   
   public abstract Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
-  
-  public abstract ValueTask DisposeAsync();
   
   // Simulation Specific Methods
   
@@ -48,4 +46,6 @@ public abstract class AbstractCoreStorage(Func<ICoreEntity, CoreEntityChecksum> 
   
   // todo: GetList is a `SELECT *` so needs to be removed
   protected abstract Task<List<E>> GetList<E, D>() where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;
+  
+  public abstract ValueTask DisposeAsync();
 }

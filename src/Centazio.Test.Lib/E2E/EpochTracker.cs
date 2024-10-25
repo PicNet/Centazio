@@ -6,13 +6,22 @@ using Centazio.Test.Lib.E2E.Fin;
 
 namespace Centazio.Test.Lib.E2E;
 
-[IgnoreNamingConventions]
-public class EpochTracker(int epoch, SimulationCtx ctx) {
-  public int Epoch { get; } = epoch;
+public interface IEpochTracker {
+  int Epoch { get; }
   
-  private readonly Dictionary<(Type, string), ICoreEntity> added = new();
-  private readonly Dictionary<(Type, string), ICoreEntity> updated = new();
+  void SetEpoch(int epoch);
+  void Update(ICoreEntity coreent);
+  void Add(ICoreEntity coreent);
+}
+
+[IgnoreNamingConventions] public class EpochTracker(SimulationCtx ctx) : IEpochTracker {
+  public int Epoch { get; private set; }
   
+  private Dictionary<(Type, string), ICoreEntity> added = new();
+  private Dictionary<(Type, string), ICoreEntity> updated = new();
+  
+  public void SetEpoch(int epoch) => (Epoch, added, updated) = (epoch, new(), new());
+
   public async Task ValidateAdded<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
     var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
@@ -76,6 +85,7 @@ public class EpochTracker(int epoch, SimulationCtx ctx) {
     if (!added.TryAdd((coreent.GetType(), coreent.CoreId), coreent)) throw new Exception($"entity appears to have already been added: {coreent}");
   }
   
+
   public void Update(ICoreEntity coreent) {
     // ignore entities that have already been added in this epoch, they will be validated as part of the added validation
     if (added.ContainsKey((coreent.GetType(), coreent.CoreId))) return; 

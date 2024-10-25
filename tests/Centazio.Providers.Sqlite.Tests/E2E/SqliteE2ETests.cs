@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
+using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib.E2E;
@@ -16,14 +17,14 @@ public class E2E {
 public class SqliteSimulationProvider : ISimulationProvider {
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
-  public ISimulationCoreStorage CoreStore { get; private set; } = null!;
+  public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
   public async Task Initialise(SimulationCtx ctx) {
     DapperInitialiser.Initialise();
     
     CtlRepo = await new EFCoreCtlRepository(() => new SqliteCtlContext()).Initalise();
     StageRepository = await new EFCoreStagedEntityRepository(new EFCoreStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext())).Initialise();
-    CoreStore = await new EFCoreStorage(ctx, () => new SqliteCoreStorageDbContext()).Initialise();
+    CoreStore = await new EfCoreStorageRepository(ctx, () => new SqliteCoreStorageDbContext()).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

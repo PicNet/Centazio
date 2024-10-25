@@ -7,5 +7,5 @@ public interface ISimulationProvider : IAsyncDisposable {
   Task Initialise(SimulationCtx simulationCtx);
   ICtlRepository CtlRepo { get; }
   IStagedEntityRepository StageRepository { get; }
-  ISimulationCoreStorage CoreStore { get; } 
+  ISimulationCoreStorageRepository CoreStore { get; } 
 }

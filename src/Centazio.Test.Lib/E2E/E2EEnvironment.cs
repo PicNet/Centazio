@@ -67,7 +67,7 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   public async ValueTask DisposeAsync() => await ctx.DisposeAsync();
 
   private async Task RunEpoch(int epoch) {
-    ctx.Epoch = new(epoch, ctx);
+    ctx.Epoch.SetEpoch(epoch);
     RandomTimeStep();
     ctx.Debug($"epoch[{epoch}] starting - running simulation step [{{@Now}}]", UtcDate.UtcNow);
     

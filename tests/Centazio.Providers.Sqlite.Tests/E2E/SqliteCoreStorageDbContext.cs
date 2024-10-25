@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Centazio.Providers.EF.Tests.E2E;
+using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 

@@ -13,6 +13,7 @@ public class CheckDependenciesBetweenProjects {
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0).ForEach(testproj => {
       var target = testproj.Replace(".Tests", String.Empty);
       var allowed = new List<string> { "Centazio.Core", "Centazio.Test.Lib", target };
+      if (target.StartsWith("Centazio.Providers.")) allowed.Add("Centazio.Providers.EF.Tests");
       var bad = dependencies[testproj].Where(d => !allowed.Contains(d)).ToList();
       if (bad.Any()) errors.Add($"Test Project [{testproj}] should at most depend on 'Centazio.Core', 'Centazio.Test.Lib' and '{target}'.  Had extra dependencies: " + String.Join(",", bad));
     });

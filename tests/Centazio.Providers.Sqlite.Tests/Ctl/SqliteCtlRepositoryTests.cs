@@ -2,7 +2,6 @@
 using Centazio.Core.Ctl.Entities;
 using Centazio.Providers.EF;
 using Centazio.Providers.Sqlite.Ctl;
-using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
 using Microsoft.EntityFrameworkCore;

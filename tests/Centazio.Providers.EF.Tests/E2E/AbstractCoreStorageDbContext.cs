@@ -1,11 +1,9 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.Providers.EF;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Providers.Sqlite.Tests.E2E;
+namespace Centazio.Providers.EF.Tests.E2E;
 
 public abstract class AbstractCoreStorageDbContext(string schema) : CentazioDbContext {
   

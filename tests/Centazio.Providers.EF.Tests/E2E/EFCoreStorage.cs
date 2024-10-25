@@ -5,11 +5,11 @@ using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
-namespace Centazio.Providers.Sqlite.Tests.E2E;
+namespace Centazio.Providers.EF.Tests.E2E;
 
-public class EFCoreStorage(SimulationCtx ctx, Func<AbstractCoreStorageDbContext> getdb) : AbstractCoreStorage(ctx.ChecksumAlg.Checksum) {
+public class EfCoreStorageRepository(SimulationCtx ctx, Func<AbstractCoreStorageDbContext> getdb) : AbstractCoreStorageRepository(ctx.ChecksumAlg.Checksum) {
   
-  public async Task<EFCoreStorage> Initialise() {
+  public async Task<EfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await db.CreateTableIfNotExists();
     return this;

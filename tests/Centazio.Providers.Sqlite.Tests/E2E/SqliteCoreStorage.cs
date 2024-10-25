@@ -9,7 +9,10 @@ using Serilog;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
-public class SqliteCoreStorage(SimulationCtx ctx, Func<SqliteConnection> newconn) : AbstractCoreStorage(ctx.ChecksumAlg.Checksum) {
+public class SqliteCoreStorageRepository(
+    IEpochTracker tracker, 
+    Func<ICoreEntity, CoreEntityChecksum> checksum, 
+    Func<SqliteConnection> newconn) : AbstractCoreStorageRepository(checksum) {
   
   private static readonly string SCHEMA_PREFIX = nameof(ICoreStorage).Substring(1).ToLower();
   
@@ -17,7 +20,7 @@ public class SqliteCoreStorage(SimulationCtx ctx, Func<SqliteConnection> newconn
   private static string Table(Type e) => Table(CoreEntityTypeName.From(e));
   private static string Table(CoreEntityTypeName typenm) => $"{SCHEMA_PREFIX}_" + typenm.Value.ToLower();
   
-  public async Task<SqliteCoreStorage> Initialise() {
+  public async Task<SqliteCoreStorageRepository> Initialise() {
     await using var conn = newconn();
     var dbf = new DbFieldsHelper();
     await Db.Exec(conn, dbf.GetSqliteCreateTableScript(Table<CoreMembershipType>(), GetFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
@@ -37,8 +40,8 @@ public class SqliteCoreStorage(SimulationCtx ctx, Func<SqliteConnection> newconn
   public override async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
     var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
     entities.ForEach(e => {
-      if (existing.ContainsKey(e.UpdatedCoreEntity.CoreId)) { ctx.Epoch.Update(e.UpdatedCoreEntity); } 
-      else { ctx.Epoch.Add(e.UpdatedCoreEntity); }
+      if (existing.ContainsKey(e.UpdatedCoreEntity.CoreId)) { tracker.Update(e.UpdatedCoreEntity); } 
+      else { tracker.Add(e.UpdatedCoreEntity); }
     });
     
     var dicts = entities.Select(e => {

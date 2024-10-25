@@ -14,7 +14,7 @@ public class SimulationCtx : IAsyncDisposable {
   
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
-  public ISimulationCoreStorage CoreStore { get; set; } = null!;
+  public ISimulationCoreStorageRepository CoreStore { get; set; } = null!;
   
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
@@ -24,7 +24,7 @@ public class SimulationCtx : IAsyncDisposable {
     this.provider = provider;
     
     ChecksumAlg = new Sha256ChecksumAlgorithm();
-    Epoch = new(0, this);
+    Epoch = new(this);
   }
   
   public async Task Initialise() {
