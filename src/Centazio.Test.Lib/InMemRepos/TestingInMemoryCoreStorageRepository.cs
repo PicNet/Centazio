@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
@@ -46,13 +45,9 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
     return Task.FromResult(upserted);
   }
 
-  public Task<List<CoreEntity>> GetAllCoreEntities() => GetAll<CoreEntity>(CoreEntityTypeName.From<CoreEntity>(), e => true);
-  
-  // todo: do we need this method (replace with GetAllCoreEntities) 
-  public Task<List<E>> GetAll<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
-    if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<E>());
-    var compiled = predicate.Compile();
-    return Task.FromResult(fulllst.Values.Select(ec => ec.CoreEntity.To<E>()).Where(compiled).ToList());
+  public Task<List<CoreEntity>> GetAllCoreEntities() {
+    if (!db.TryGetValue(CoreEntityTypeName.From<CoreEntity>(), out var fulllst)) return Task.FromResult(new List<CoreEntity>());
+    return Task.FromResult(fulllst.Values.Select(ec => ec.CoreEntity.To<CoreEntity>()).ToList());
   }
   
   public ValueTask DisposeAsync() {

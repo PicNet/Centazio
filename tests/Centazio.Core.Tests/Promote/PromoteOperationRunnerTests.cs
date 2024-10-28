@@ -33,7 +33,7 @@ public class PromoteOperationRunnerTests {
         ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig(),
         new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new SuccessPromoteEvaluator()), DateTime.MinValue));
-    var saved = (await core.GetAll<CoreEntity>(C.CoreEntityName, t => true)).ToDictionary(c => c.FirstName);
+    var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
@@ -57,7 +57,7 @@ public class PromoteOperationRunnerTests {
         new BaseFunctionConfig { ThrowExceptions = false },
         new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new ErrorPromoteEvaluator()), DateTime.MinValue));
     
-    var saved = (await core.GetAll<CoreEntity>(C.CoreEntityName, t => true)).ToDictionary(c => c.CoreId);
+    var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.CoreId);
     Assert.That(saved, Is.Empty);
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach(se => {

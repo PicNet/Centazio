@@ -58,7 +58,7 @@ public class WriteFunctionTests {
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
-    var allcusts = await core.GetAll<CoreEntity>(C.CoreEntityName, c => true);
+    var allcusts = await core.GetAllCoreEntities();
     var maps = await ctl.GetAllMaps();
 
     Assert.That(result.EntitiesUpdated, Is.Empty);
