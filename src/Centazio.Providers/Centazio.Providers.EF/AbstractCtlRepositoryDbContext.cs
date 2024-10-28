@@ -29,14 +29,12 @@ public abstract class AbstractCtlRepositoryDbContext(string schema, string sys_t
         e.HasKey(nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId));
       });
 
-  // todo: code below is db scpecific (drop table should be moved to tests)
-  public async Task CreateTableIfNotExists() {
-    var dbf = new DbFieldsHelper();
-    
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
+  // todo: create/drop table code should be part of tests, not Centazio.Core
+  public async Task CreateTableIfNotExists(IDbFieldsHelper dbf) {
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
         $"FOREIGN KEY ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}]) REFERENCES [{SystemStateTableName}]([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])"));
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(CoreToSystemMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreToSystemMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
         [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)],
         $"UNIQUE({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
   }

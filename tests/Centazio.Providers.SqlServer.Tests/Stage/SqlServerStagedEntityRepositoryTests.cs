@@ -10,7 +10,7 @@ public class SqlServerStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var connstr = await SqlConn.Instance.ConnStr();
     var opts = new EFCoreStagedEntityRepositoryOptions(limit, checksum, () => new SqlServerStagedEntityContext(connstr));
-    return await new EFCoreStagedEntityRepository(opts).Initialise();
+    return await new EFCoreStagedEntityRepository(opts).Initialise(new SqlServerDbFieldsHelper());
   }
 
 }

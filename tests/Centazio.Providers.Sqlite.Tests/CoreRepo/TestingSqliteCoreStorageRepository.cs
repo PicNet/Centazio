@@ -10,12 +10,11 @@ namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
 internal class TestingSqliteCoreStorageRepository : ICoreStorageWithQuery {
 
-  public async Task<ICoreStorageWithQuery> Initalise() {
+  public async Task<ICoreStorageWithQuery> Initalise(IDbFieldsHelper dbf) {
     await using var conn = SqliteConn.Instance.Conn();
-    var dbf = new DbFieldsHelper();
     var fields = dbf.GetDbFields<CoreEntity>();
     fields.Add(new (nameof(CoreEntityChecksum), typeof(string), ChecksumValue.MAX_LENGTH.ToString(), true));
-    await Db.Exec(conn, dbf.GetSqliteCreateTableScript(nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
+    await Db.Exec(conn, dbf.GenerateCreateTableScript("core", nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
     return this;
   }
   

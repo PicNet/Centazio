@@ -1,13 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using System.Text;
 
 namespace Centazio.Core.Misc;
 
-// todo: make abstract and have specific implementations by provider
 public record DbFieldType(string name, Type type, string length, bool required);
 
-public class DbFieldsHelper {
+public interface IDbFieldsHelper {
+  List<DbFieldType> GetDbFields<T>(bool failOnMissingLength=true);
+  List<DbFieldType> GetDbFields(Type t, bool failOnMissingLength=true);
+  string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null);
+  string GenerateIndexScript(string schema, string table, params string[] columns);
+  string GenerateDropTableScript(string schema, string table);
+
+}
+
+public abstract class AbstractDbFieldsHelper : IDbFieldsHelper {
   
   private const int DEFAULT_MAX_STR_LENGTH = 128;
 
@@ -44,62 +51,10 @@ public class DbFieldsHelper {
 
     throw new NotSupportedException($"Property[{p.Name}] Defined Type[{pt.Name}] Real Type[{realpt.Name}]");
   }
-
-  public string GetSqlServerCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null) {
-    var sql = new StringBuilder();
-    var additionaltxt = String.IsNullOrWhiteSpace(additional) ? String.Empty : ",\n    " + additional;
-    if (!String.IsNullOrWhiteSpace(schema)) {
-      sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{schema}')
-  EXEC('CREATE SCHEMA [{schema}] AUTHORIZATION [dbo]');");
-    }
-    sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
-BEGIN
-  CREATE TABLE [{schema}].[{table}] (
-    {String.Join(",\n    ", fields.Select(ToSqlSrv))},
-    PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt}
-  )
-END
-");
-    return sql.ToString().Trim();
-    
-    string ToSqlSrv(DbFieldType f) {
-      var typestr = 
-          f.type == typeof(int) ? "int" : 
-          f.type == typeof(decimal) ? "decimal" : 
-          f.type == typeof(DateTime) ? "datetime2" : 
-          f.type == typeof(DateOnly) ? "date" : 
-          f.type == typeof(Boolean) ? "bit" : 
-          f.type == typeof(Guid) ? "uniqueidentifier" : 
-          f.type == typeof(string) ? "nvarchar" : 
-          throw new NotSupportedException(f.type.Name);
-      if (!String.IsNullOrWhiteSpace(f.length)) typestr += $"({f.length})";
-      var nullstr = f.required ? "not null" : "null";
-      return $"[{f.name}] {typestr} {nullstr}";
-    }
-  }
   
-  public string GetSqliteCreateTableScript(string table, List<DbFieldType> fields, string[] pkfields, string? additional = null) {
-    var additionaltxt = String.IsNullOrWhiteSpace(additional) ? String.Empty : ",\n  " + additional;
-    return $@"CREATE TABLE IF NOT EXISTS [{table}] (
-  {String.Join(",\n    ", fields.Select(ToSqlite))},
-  PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt})";
-    
-    string ToSqlite(DbFieldType f) {
-      var typestr = 
-          f.type == typeof(int) ? "int" : 
-          f.type == typeof(decimal) ? "decimal" : 
-          f.type == typeof(DateTime) ? "datetime" : 
-          f.type == typeof(DateOnly) ? "date" : 
-          f.type == typeof(Boolean) ? "bit" : 
-          f.type == typeof(Guid) ? "uniqueidentifier" : 
-          f.type == typeof(string) && f.length == "max" ? "text" :
-          f.type == typeof(string) ? "nvarchar" :
-          throw new NotSupportedException(f.type.Name);
-      if (!String.IsNullOrWhiteSpace(f.length) && typestr != "text") typestr += $"({f.length})";
-      var nullstr = f.required ? "not null" : "null";
-      return $"[{f.name}] {typestr} {nullstr}".Trim();
-    }
-  }
+  
+  public abstract string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null);
+  public abstract string GenerateIndexScript(string schema, string table, params string[] columns);
+  public abstract string GenerateDropTableScript(string schema, string table);
+
 }

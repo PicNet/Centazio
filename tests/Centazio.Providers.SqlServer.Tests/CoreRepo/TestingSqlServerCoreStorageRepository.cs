@@ -10,12 +10,11 @@ namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
 internal class TestingSqlServerCoreStorageRepository : ICoreStorageWithQuery {
   
-  public async Task<ICoreStorageWithQuery> Initalise() {
+  public async Task<ICoreStorageWithQuery> Initalise(IDbFieldsHelper dbf) {
     await using var conn = await SqlConn.Instance.Conn();
-    var dbf = new DbFieldsHelper();
     var fields = dbf.GetDbFields<CoreEntity>();
     fields.Add(new (nameof(CoreEntityChecksum), typeof(string), ChecksumValue.MAX_LENGTH.ToString(), true));
-    await conn.ExecuteAsync(dbf.GetSqlServerCreateTableScript("dbo", nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
+    await conn.ExecuteAsync(dbf.GenerateCreateTableScript("dbo", nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
     return this;
   }
   

@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
 public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
-  protected override async Task<ICtlRepository> GetRepository() => await new TestingSqliteCtlRepository().Initalise();
+  protected override async Task<ICtlRepository> GetRepository() => await new TestingSqliteCtlRepository().Initalise(new SqliteDbFieldsHelper());
 }
 
 public class SqliteCtlRepoMappingsTests : BaseCtlRepoMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingSqliteCtlRepository().Initalise();
+  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingSqliteCtlRepository().Initalise(new SqliteDbFieldsHelper());
 }
 
 internal class TestingSqliteCtlRepository() : EFCoreCtlRepository(() => new SqliteCtlContext()), ITestingCtlRepository {

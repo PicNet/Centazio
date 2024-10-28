@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,16 +55,17 @@ public class EFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions op
   private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
-  public async Task<EFCoreStagedEntityRepository> Initialise(bool reset=false) {
+  // todo: this should only be for tests and should not be in this base class
+  public async Task<EFCoreStagedEntityRepository> Initialise(IDbFieldsHelper dbf, bool reset=false) {
     await using var db = opts.Db();
-    if (reset) await db.DropTable();
-    await db.CreateTableIfNotExists();
+    if (reset) await db.DropTable(dbf);
+    await db.CreateTableIfNotExists(dbf);
     return this;
   }
 
-  // todo: this DropTable should only be for tests and should not be in this base class
+  // todo: this should only be for tests and should not be in this base class
   public override async ValueTask DisposeAsync() {
     await using var db = opts.Db();
-    await db.DropTable();
+    // await db.DropTable();
   }
 }

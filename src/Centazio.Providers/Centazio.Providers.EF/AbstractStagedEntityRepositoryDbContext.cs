@@ -15,19 +15,13 @@ public abstract class AbstractStagedEntityRepositoryDbContext(string schema, str
           .HasDefaultSchema(SchemaName)
           .Entity<StagedEntity.Dto>(e => e.ToTable(StagedEntityTableName));
 
-  // todo: code below is db specific
-  public async Task CreateTableIfNotExists() {
-    var dbf = new DbFieldsHelper();
-    // todo: this use of `table` does not handle schema and will fail in Sql Server
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(StagedEntityTableName, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));
-    #pragma warning disable EF1002
-    await Database.ExecuteSqlRawAsync($"CREATE INDEX IF NOT EXISTS ix_{StagedEntityTableName}_source_obj_staged ON [{StagedEntityTableName}] ({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.DateStaged)});");
-    #pragma warning restore EF1002
+  // todo: move create/drop table code to tests, not Centazio.Core
+  public async Task CreateTableIfNotExists(IDbFieldsHelper dbf) {
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, StagedEntityTableName, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));
+    await Database.ExecuteSqlRawAsync(dbf.GenerateIndexScript(SchemaName, StagedEntityTableName, [nameof(StagedEntity.System), nameof(StagedEntity.SystemEntityTypeName), nameof(StagedEntity.DateStaged)]));
   }
   
-  public async Task DropTable() {
-    #pragma warning disable EF1002
-    await Database.ExecuteSqlRawAsync($"DROP TABLE IF EXISTS {StagedEntityTableName}");
-    #pragma warning restore EF1002
+  public async Task DropTable(IDbFieldsHelper dbf) {
+    await Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(SchemaName, StagedEntityTableName));
   }
 }

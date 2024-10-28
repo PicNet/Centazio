@@ -1,16 +1,17 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
 public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
 
-  public async Task<EFCoreCtlRepository> Initalise(bool reset=false) {
+  public async Task<EFCoreCtlRepository> Initalise(IDbFieldsHelper dbf, bool reset=false) {
     await using var db = getdb();
     if (reset) await db.DropTables();
-    await db.CreateTableIfNotExists();
+    await db.CreateTableIfNotExists(dbf);
     return this;
   }
   

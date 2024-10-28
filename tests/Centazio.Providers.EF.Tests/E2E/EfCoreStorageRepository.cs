@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -9,10 +10,10 @@ namespace Centazio.Providers.EF.Tests.E2E;
 
 public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
   
-  public async Task<EfCoreStorageRepository> Initialise(bool reset = false) {
+  public async Task<EfCoreStorageRepository> Initialise(IDbFieldsHelper dbf, bool reset = false) {
     await using var db = getdb();
     if (reset) await db.DropTables();
-    await db.CreateTableIfNotExists();
+    await db.CreateTableIfNotExists(dbf);
     return this;
   }
   

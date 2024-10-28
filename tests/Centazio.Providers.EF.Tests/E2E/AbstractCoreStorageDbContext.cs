@@ -28,12 +28,11 @@ public abstract class AbstractCoreStorageDbContext(string schema) : CentazioDbCo
         e.HasKey(e2 => e2.CoreId);
       });
   
-  public async Task CreateTableIfNotExists() {
-    var dbf = new DbFieldsHelper();
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
+  public async Task CreateTableIfNotExists(IDbFieldsHelper dbf) {
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
         $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
-    await Database.ExecuteSqlRawAsync(dbf.GetSqliteCreateTableScript(CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
+    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
         $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
     
   }

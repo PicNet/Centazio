@@ -5,6 +5,6 @@ namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
 public class SqlServerBaseCoreRepositoryTests() : BaseCoreStorageRepositoryTests(false) {
   
-  protected override async Task<ICoreStorageWithQuery> GetRepository() => await new TestingSqlServerCoreStorageRepository().Initalise();
+  protected override async Task<ICoreStorageWithQuery> GetRepository() => await new TestingSqlServerCoreStorageRepository().Initalise(new SqlServerDbFieldsHelper());
 }
 
