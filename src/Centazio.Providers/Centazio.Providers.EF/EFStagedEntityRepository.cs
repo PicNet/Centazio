@@ -43,7 +43,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     var query = Query(system, systype, db).Where(e => e.DateStaged > after && String.IsNullOrEmpty(e.IgnoreReason));
     if (!incpromoted) query = query.Where(e => !e.DatePromoted.HasValue);
     if (Limit is > 0 and < Int32.MaxValue) query = query.Take(Limit);
-    return query.ToList().Select(dto => dto.ToBase()).ToList();
+    return query.OrderBy(e => e.DateStaged).ToList().Select(dto => dto.ToBase()).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {

@@ -11,6 +11,7 @@ public interface IDbFieldsHelper {
   string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null);
   string GenerateIndexScript(string schema, string table, params string[] columns);
   string GenerateDropTableScript(string schema, string table);
+  string TableName(string schema, string table);
 
 }
 
@@ -56,5 +57,6 @@ public abstract class AbstractDbFieldsHelper : IDbFieldsHelper {
   public abstract string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional=null);
   public abstract string GenerateIndexScript(string schema, string table, params string[] columns);
   public abstract string GenerateDropTableScript(string schema, string table);
+  public abstract string TableName(string schema, string table);
 
 }

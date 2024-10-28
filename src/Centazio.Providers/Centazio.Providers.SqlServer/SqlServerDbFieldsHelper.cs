@@ -16,7 +16,7 @@ IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{schema}')
     sql.AppendLine($@"
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
 BEGIN
-  CREATE TABLE [{schema}].[{table}] (
+  CREATE TABLE {TableName(schema, table)} (
     {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
     PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt}
   )
@@ -40,11 +40,12 @@ END
     return $"[{f.name}] {typestr} {nullstr}";
   }
 
-  public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS [{schema}].[{table}]";
-  
+  public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";
+  public override string TableName(string schema, string table) => $"[{schema}].[{table}]";
+
   public override string GenerateIndexScript(string schema, string table, params string[] columns) {
     var name = $"ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))}";
-    return $"DROP INDEX IF EXISTS {name} ON [{schema}].[{table}];\nCREATE INDEX {name} ON [{schema}].[{table}] ({String.Join(", ", columns)});";
+    return $"DROP INDEX IF EXISTS {name} ON {TableName(schema, table)};\nCREATE INDEX {name} ON {TableName(schema, table)} ({String.Join(", ", columns)});";
   }
 
 }
