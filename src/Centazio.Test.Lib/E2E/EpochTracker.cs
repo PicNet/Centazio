@@ -54,8 +54,8 @@ public interface IEpochTracker {
       var (system, sysentlst) = (sysents.Item1, sysents.Item2.ToList());
       if (!sysentlst.Any()) continue;
       var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
-      var existing = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
-      var syscores = await sysentlst.Select(e => ToCore(e, idmap, existing)).Synchronous();
+      var existings = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
+      var syscores = await sysentlst.Select(e => ToCore(e, existings.Single(e2 => e2.CoreId == idmap[e.SystemId]))).Synchronous();
       var sums = syscores.Select(c => ctx.ChecksumAlg.Checksum(c)).Distinct().ToList();
       if (syscores.Count != sums.Count) throw new Exception($"Expected all core entities from a system to be unique.  Found some entities that resulted in the same ICoreEntity checksum");
       syscores.ForEach((c, idx) => {
@@ -67,9 +67,7 @@ public interface IEpochTracker {
     }
     return cores;
 
-    async Task<ICoreEntity> ToCore(ISystemEntity e, IDictionary<SystemEntityId, CoreEntityId> idmap, List<ICoreEntity> existings) {
-      var hasexisting = idmap.TryGetValue(e.SystemId, out var exid);
-      var existing = hasexisting ? existings.Single(e2 => e2.CoreId == exid) : null;
+    async Task<ICoreEntity> ToCore(ISystemEntity e, ICoreEntity existing) {
       return e switch {
         CrmMembershipType type => ctx.Converter.CrmMembershipTypeToCoreMembershipType(type, (CoreMembershipType?) existing), 
         CrmCustomer customer => ctx.Converter.CrmCustomerToCoreCustomer(customer, (CoreCustomer?) existing), 

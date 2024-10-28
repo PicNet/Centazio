@@ -54,8 +54,9 @@ public class EFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions op
   private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
-  public async Task<EFCoreStagedEntityRepository> Initialise() {
+  public async Task<EFCoreStagedEntityRepository> Initialise(bool reset=false) {
     await using var db = opts.Db();
+    if (reset) await db.DropTable();
     await db.CreateTableIfNotExists();
     return this;
   }

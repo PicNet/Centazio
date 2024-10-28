@@ -7,8 +7,9 @@ namespace Centazio.Providers.EF;
 
 public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
 
-  public async Task<EFCoreCtlRepository> Initalise() {
+  public async Task<EFCoreCtlRepository> Initalise(bool reset=false) {
     await using var db = getdb();
+    if (reset) await db.DropTables();
     await db.CreateTableIfNotExists();
     return this;
   }

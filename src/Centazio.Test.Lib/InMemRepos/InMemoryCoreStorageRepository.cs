@@ -1,9 +1,10 @@
-﻿using Centazio.Core.Checksum;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Test.Lib.E2E;
 using Serilog;
 
-namespace Centazio.Core.Tests.E2E;
+namespace Centazio.Test.Lib.InMemRepos;
 
 public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
   private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();

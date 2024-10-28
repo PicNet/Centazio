@@ -38,9 +38,9 @@ public abstract class BaseCtlRepoMappingsTests {
     var updated = (await ctl.UpdateSysMap(Constants.System1Name, Constants.CoreEntityName, [err])).Single();
     var list2 = await ctl.GetAllMaps();
     
-    Assert.That(Json.AreJsonEqual(list1.Single(), created));
+    Assert.That(Json.ValidateJsonEqual(list1.Single(), created));
     Assert.That(updated, Is.EqualTo(err));
-    Assert.That(Json.AreJsonEqual(list2.Single(), err));
+    Assert.That(Json.ValidateJsonEqual(list2.Single(), err));
   }
   
   [Test] public async Task Test_upsert_enum() {
@@ -58,9 +58,9 @@ public abstract class BaseCtlRepoMappingsTests {
     var list2 = await ctl.GetAllMaps();
     var exp = created.Select(e => e.Update().Error("Error")).ToList();
         
-    Assert.That(Json.AreJsonEqual(list1, created));
+    Assert.That(Json.ValidateJsonEqual(list1, created));
     Assert.That(updated2, Is.EquivalentTo(exp));
-    Assert.That(Json.AreJsonEqual(list2, exp));
+    Assert.That(Json.ValidateJsonEqual(list2, exp));
   }
   
   [Test] public async Task Test_creating_unique_by_SystemId_works() {

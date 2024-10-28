@@ -7,10 +7,11 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class EfCoreStorageRepository(SimulationCtx ctx, Func<AbstractCoreStorageDbContext> getdb) : AbstractCoreStorageRepository(ctx.ChecksumAlg.Checksum) {
+public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
   
-  public async Task<EfCoreStorageRepository> Initialise() {
+  public async Task<EfCoreStorageRepository> Initialise(bool reset = false) {
     await using var db = getdb();
+    if (reset) await db.DropTables();
     await db.CreateTableIfNotExists();
     return this;
   }
@@ -21,14 +22,10 @@ public class EfCoreStorageRepository(SimulationCtx ctx, Func<AbstractCoreStorage
     await using var db = getdb();
     entities.ForEach(t => {
       var e = (CoreEntityBase) t.UpdatedCoreEntity;
-      if (e.CoreEntityChecksum != t.UpdatedCoreEntityChecksum) throw new Exception($"is it set old[{e.CoreEntityChecksum}] new[{t.UpdatedCoreEntityChecksum}]");
-      e.CoreEntityChecksum = t.UpdatedCoreEntityChecksum;
       var dto = DtoHelpers.ToDto(e) ?? throw new Exception();
       db.Attach(dto);
-      if (existing.ContainsKey(e.CoreId)) {
-        ctx.Epoch.Update(e); 
-      } 
-      else { ctx.Epoch.Add(e); }
+      if (existing.ContainsKey(e.CoreId)) { tracker.Update(e); } 
+      else { tracker.Add(e); }
       db.Entry(dto).State = existing.ContainsKey(e.CoreId) ? EntityState.Modified : EntityState.Added;
     });
     await db.SaveChangesAsync();
@@ -39,7 +36,8 @@ public class EfCoreStorageRepository(SimulationCtx ctx, Func<AbstractCoreStorage
   
   protected override async Task<List<E>> GetList<E, D>() {
     await using var db = getdb();
-    return (await db.Set<D>().ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    var lst = (await db.Set<D>().ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    return lst;
   }
   
   // todo: why is coreid nullable

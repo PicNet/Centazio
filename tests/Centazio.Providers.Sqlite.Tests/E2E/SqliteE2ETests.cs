@@ -8,7 +8,7 @@ using Centazio.Test.Lib.E2E;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
-public class E2E {
+public class SqliteE2ETests {
   [Test] public async Task Run_e2e_simulation_and_tests() {
     await new E2EEnvironment(new SqliteSimulationProvider()).RunSimulation();
   }
@@ -22,9 +22,9 @@ public class SqliteSimulationProvider : ISimulationProvider {
   public async Task Initialise(SimulationCtx ctx) {
     DapperInitialiser.Initialise();
     
-    CtlRepo = await new EFCoreCtlRepository(() => new SqliteCtlContext()).Initalise();
-    StageRepository = await new EFCoreStagedEntityRepository(new EFCoreStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext())).Initialise();
-    CoreStore = await new EfCoreStorageRepository(ctx, () => new SqliteCoreStorageDbContext()).Initialise();
+    CtlRepo = await new EFCoreCtlRepository(() => new SqliteCtlContext()).Initalise(true);
+    StageRepository = await new EFCoreStagedEntityRepository(new EFCoreStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext())).Initialise(true);
+    CoreStore = await new EfCoreStorageRepository(() => new SqliteCoreStorageDbContext(), ctx.Epoch, ctx.ChecksumAlg.Checksum).Initialise(true);
   }
   
   public async ValueTask DisposeAsync() {

@@ -44,15 +44,15 @@ public static class Json {
     }
   }
 
-  public static bool AreJsonEqual(IEnumerable<object> actual, IEnumerable<object> expected) {
-    return AreJsonEqual((object) 
-        actual.Select(Serialize).OrderBy(s => s).ToList(), 
-        expected.Select(Serialize).OrderBy(s => s).ToList());
+  public static bool ValidateJsonEqual(IEnumerable<object> a, IEnumerable<object> b, string aname="Actual", string bname="Expected") {
+    return ValidateJsonEqual((object) 
+        a.Select(Serialize).OrderBy(s => s).ToList(), 
+        b.Select(Serialize).OrderBy(s => s).ToList(), aname, bname);
   }
-  public static bool AreJsonEqual(object actual, object expected) {
+  public static bool ValidateJsonEqual(object? actual, object? expected, string aname="Actual", string bname="Expected") {
     var (actualjson, expjson) = (JsonSerializer.Serialize(actual), JsonSerializer.Serialize(expected));
     if (actualjson == expjson) return true;
-    throw new Exception($"Expected json representations to be equivalent:\nActual  :{actualjson}\nExpected:{expjson}");
+    throw new Exception($"Expected json representations to be equivalent:\n{aname}: {actualjson}\n{bname}: {expjson}");
   }
 
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
