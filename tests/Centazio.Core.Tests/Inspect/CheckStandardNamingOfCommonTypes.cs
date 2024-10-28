@@ -7,6 +7,7 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.Tests.Inspect;
 
+// note: to get many projects that work with EF Core, we need to install the EF Core NuGet in this project also
 public class CheckStandardNamingOfCommonTypes {
   
   private readonly Dictionary<Type, (string UpperCase, string LowerCase, bool EndsWith)> EXPECTED = new() {
@@ -36,6 +37,7 @@ public class CheckStandardNamingOfCommonTypes {
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
+      Console.WriteLine("VALIDATING ASSEMBLY: " + ass.GetName().FullName);
       ass.GetTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {

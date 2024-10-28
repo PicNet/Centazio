@@ -1,5 +1,4 @@
 ﻿using Centazio.Providers.EF.Tests.CoreRepo;
-using Centazio.Providers.EF.Tests.E2E;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;

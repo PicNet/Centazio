@@ -1,9 +1,10 @@
 ﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib.E2E;
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryEpochTracker : IEpochTracker {
+[IgnoreNamingConventions] public class InMemoryEpochTracker : IEpochTracker {
 
   private List<ICoreEntity> added = new();
   private List<ICoreEntity> updated = new();
