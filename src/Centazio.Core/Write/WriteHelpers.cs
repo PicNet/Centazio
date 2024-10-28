@@ -24,7 +24,7 @@ public static class WriteHelpers {
       List<CoreSystemAndPendingCreateMap> tocreate, IEnumerable<ISystemEntity> created, 
       List<CoreSystemAndPendingUpdateMap> toupdate, IEnumerable<ISystemEntity> updated,
       IChecksumAlgorithm chksm) {
-    // todo: this is a bit dodgy, its expecting the created/updated entities to come back in the same order as pre change entities
+    // todo-low: this is a bit dodgy, its expecting the created/updated entities to come back in the same order as pre change entities
     return new SuccessWriteOperationResult(
           created.Select((sysent, idx) => tocreate[idx].Map.SuccessCreate(sysent.SystemId, chksm.Checksum(sysent))).ToList(), 
           updated.Select((sysent, idx) => toupdate[idx].Map.SuccessUpdate(chksm.Checksum(sysent))).ToList());

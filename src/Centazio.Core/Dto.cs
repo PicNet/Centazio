@@ -4,7 +4,7 @@ using Centazio.Core.Misc;
 namespace Centazio.Core;
 
 public interface IDto<out T> { T ToBase(); }
-public interface ICoreEntityDto<out T> : IDto<T> { string? CoreId { get; init; } }
+public interface ICoreEntityDto<out T> : IDto<T> { string CoreId { get; } }
 
 record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
 

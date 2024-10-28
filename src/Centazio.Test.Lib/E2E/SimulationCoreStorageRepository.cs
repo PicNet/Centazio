@@ -24,10 +24,9 @@ public abstract class AbstractCoreStorageRepository(Func<ICoreEntity, CoreEntity
 
   public async Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     var strids = coreids.Select(id => id.Value).ToList();
-    // todo: do not allow dto CoreId to be null, find better way to handle this
-    if (coretype.Value == nameof(CoreMembershipType)) return (await GetList<CoreMembershipType, CoreMembershipType.Dto>(e => e.CoreId != null && strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
-    if (coretype.Value == nameof(CoreCustomer)) return (await GetList<CoreCustomer, CoreCustomer.Dto>(e => e.CoreId != null && strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
-    if (coretype.Value == nameof(CoreInvoice)) return (await GetList<CoreInvoice, CoreInvoice.Dto>(e => e.CoreId != null && strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
+    if (coretype.Value == nameof(CoreMembershipType)) return (await GetList<CoreMembershipType, CoreMembershipType.Dto>(e => strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
+    if (coretype.Value == nameof(CoreCustomer)) return (await GetList<CoreCustomer, CoreCustomer.Dto>(e => strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
+    if (coretype.Value == nameof(CoreInvoice)) return (await GetList<CoreInvoice, CoreInvoice.Dto>(e => strids.Contains(e.CoreId))).Cast<ICoreEntity>().ToList();
     throw new NotSupportedException(coretype);
   }
 

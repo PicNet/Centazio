@@ -113,9 +113,9 @@ public abstract record CoreEntityBase : ICoreEntity {
   
   public abstract record Dto<E> : ICoreEntityDto<E> 
       where E : CoreEntityBase {
+    public string CoreId { get; init; } = null!;
     public string? System { get; init; }
     public string? SystemId { get; init; }
-    public string? CoreId { get; init; }
     public DateTime? DateCreated { get; init; }
     public DateTime? DateUpdated { get; init; }
     public string? LastUpdateSystem { get; init; }
@@ -124,9 +124,9 @@ public abstract record CoreEntityBase : ICoreEntity {
     public abstract E ToBase();
     
     protected E FillBaseProperties(E e) { 
+      e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
       e.System = new(System ?? throw new ArgumentNullException(nameof(System)));
       e.SystemId = new (SystemId ?? throw new ArgumentNullException(nameof(SystemId)));
-      e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
       e.DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated));
       e.DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated));
       e.LastUpdateSystem = LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem));

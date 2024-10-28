@@ -42,10 +42,11 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
-  public record Dto : IDto<CoreEntity> {
+  public record Dto : ICoreEntityDto<CoreEntity> {
+    public string CoreId { get; init; } = null!;
+    
     public string? System { get; init; }
     public string? SystemId { get; init; }
-    public string? CoreId { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public DateOnly? DateOfBirth { get; init; }
