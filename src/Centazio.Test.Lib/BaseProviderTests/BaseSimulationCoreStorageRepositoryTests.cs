@@ -26,7 +26,7 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
     var adding = CreateMemType();
     var added = await repo.Upsert(CORETYPE, [(adding, Helpers.TestingCoreEntityChecksum(adding))]);
     var single = await repo.GetMembershipType(adding.CoreId);
-    var queried1 = await repo.GetMembershipTypes();
+    var queried1 = await repo.GetMembershipTypes(m => true);
     var queried2 = await repo.GetExistingEntities(CORETYPE, [adding.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow);
@@ -48,7 +48,7 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
     var updating = entity with { Name = nameof(Test_updating_entity), DateUpdated = UtcDate.UtcNow };
     var updated = await repo.Upsert(CORETYPE, [(updating, Helpers.TestingCoreEntityChecksum(updating))]);
     var single = await repo.GetMembershipType(entity.CoreId);
-    var queried1 = await repo.GetMembershipTypes();
+    var queried1 = await repo.GetMembershipTypes(m => true);
     var queried2 = await repo.GetExistingEntities(CORETYPE, [updating.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow);

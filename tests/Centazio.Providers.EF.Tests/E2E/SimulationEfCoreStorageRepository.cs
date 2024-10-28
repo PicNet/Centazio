@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Linq.Expressions;
+using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
@@ -20,7 +21,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
         $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{db.CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
     return this;
   }
-  
+
   public override async ValueTask DisposeAsync() {
     await using var db = getdb();
     await DropTablesImpl(db);
@@ -47,9 +48,9 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     return entities.Select(c => c.UpdatedCoreEntity).ToList();
   }
   
-  protected override async Task<List<E>> GetList<E, D>() {
+  protected override async Task<List<E>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
     await using var db = getdb();
-    var lst = (await db.Set<D>().ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    var lst = (await db.Set<D>().Where(predicate).ToListAsync()).Select(dto => dto.ToBase()).ToList();
     return lst;
   }
   

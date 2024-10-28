@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
@@ -26,9 +27,9 @@ public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageReposit
     return ValidateAndReturn(result1, result2);
   }
   
-  protected override async Task<List<E>> GetList<E, D>() {
-    var result1 = await (Task<List<E>>) repo1.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [])!;
-    var result2 = await (Task<List<E>>) repo2.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [])!;
+  protected override async Task<List<E>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
+    var result1 = await (Task<List<E>>) repo1.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [predicate])!;
+    var result2 = await (Task<List<E>>) repo2.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [predicate])!;
     return ValidateAndReturn(result1, result2);
   }
 
