@@ -7,19 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.EF;
 
 public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
+  
+  protected readonly Func<AbstractCtlRepositoryDbContext> getdb = getdb;
 
-  public async Task<EFCoreCtlRepository> Initalise(IDbFieldsHelper dbf, bool reset=false) {
-    await using var db = getdb();
-    if (reset) await db.DropTables();
-    await db.CreateTableIfNotExists(dbf);
-    return this;
-  }
-  
-  public override async ValueTask DisposeAsync() { 
-    await using var db = getdb();
-    await db.DropTables();
-  }
-  
+  public override Task<AbstractCtlRepository> Initalise() => Task.FromResult<AbstractCtlRepository>(this);
+  public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
   public override async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {
     await using var db = getdb();
     return (await db.SystemStates.SingleOrDefaultAsync(s => s.System == system.Value && s.Stage == stage.Value))?.ToBase();
@@ -84,5 +77,32 @@ public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : A
         : db.CoreToSystemMaps.Where(m => m.System == system.Value && m.CoreEntityTypeName == coretype.Value && idvals.Contains(m.CoreId));
     return (await query.ToListAsync()).Select(dto => dto.ToBase()).ToList();
   }
+}
+
+public class TestingEFCoreCtlRepository(IDbFieldsHelper dbf, Func<AbstractCtlRepositoryDbContext> getdb) : EFCoreCtlRepository(getdb) {
+  public override async Task<AbstractCtlRepository> Initalise() {
+    await using var db = getdb();
+    await DropTablesImpl(db);
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
+        $"FOREIGN KEY ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}]) REFERENCES [{db.SystemStateTableName}]([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])"));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreToSystemMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
+        [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)],
+        $"UNIQUE({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
+    
+    return await base.Initalise();
+  }
+  
+  public override async ValueTask DisposeAsync() {
+    await using var db = getdb();
+    await DropTablesImpl(db);
+  }
+
+  private async Task DropTablesImpl(AbstractCtlRepositoryDbContext db) { 
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreToSystemMapTableName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.ObjectStateTableName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.SystemStateTableName));
+  }
+
 }
 

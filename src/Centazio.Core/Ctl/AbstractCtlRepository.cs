@@ -21,6 +21,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   protected abstract Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
   
+  public abstract Task<AbstractCtlRepository> Initalise();
   public abstract ValueTask DisposeAsync();
   
   public async Task<List<Map.Created>> CreateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {

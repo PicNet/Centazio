@@ -9,14 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
 public class SqliteCtlRepositoryTests : CtlRepositoryDefaultTests {
-  protected override async Task<ICtlRepository> GetRepository() => await new TestingSqliteCtlRepository().Initalise(new SqliteDbFieldsHelper());
+  protected override async Task<ICtlRepository> GetRepository() => await new TestingSqliteCtlRepository().Initalise();
 }
 
 public class SqliteCtlRepoMappingsTests : BaseCtlRepoMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingSqliteCtlRepository().Initalise(new SqliteDbFieldsHelper());
+  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingSqliteCtlRepository().Initalise();
 }
 
-internal class TestingSqliteCtlRepository() : EFCoreCtlRepository(() => new SqliteCtlContext()), ITestingCtlRepository {
+// todo: we do not need this TestingSqliteCtlRepository and TestingSqlServerCtlRepository, just use  TestingEFCoreCtlRepository directly
+internal class TestingSqliteCtlRepository() : TestingEFCoreCtlRepository(new SqliteDbFieldsHelper(), () => new SqliteCtlContext()), ITestingCtlRepository {
 
   public async Task<List<Map.CoreToSysMap>> GetAllMaps() {
     await using var conn = new SqliteCtlContext();
