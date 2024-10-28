@@ -33,16 +33,13 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   }
 
   public override async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
-    // todo: clean this code
     var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
     await using var db = getdb();
     entities.ForEach(t => {
       var e = (CoreEntityBase) t.UpdatedCoreEntity;
-      var dto = DtoHelpers.ToDto(e) ?? throw new Exception();
-      db.Attach(dto);
-      if (existing.ContainsKey(e.CoreId)) { tracker.Update(e); } 
-      else { tracker.Add(e); }
-      db.Entry(dto).State = existing.ContainsKey(e.CoreId) ? EntityState.Modified : EntityState.Added;
+      var isexisting = existing.ContainsKey(e.CoreId);
+      if (isexisting) { tracker.Update(e); } else { tracker.Add(e); }
+      db.Attach(DtoHelpers.ToDto(e)).State = isexisting ? EntityState.Modified : EntityState.Added;
     });
     await db.SaveChangesAsync();
 

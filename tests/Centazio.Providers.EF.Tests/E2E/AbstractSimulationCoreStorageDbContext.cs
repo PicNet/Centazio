@@ -12,7 +12,6 @@ public abstract class AbstractSimulationCoreStorageDbContext(string schema) : Ce
   
   protected sealed override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema(SchemaName)
-      // todo: do we need `HasKey`
       .Entity<CoreMembershipType.Dto>(e => {
         e.ToTable(CoreMembershipTypeName);
         e.HasKey(e2 => e2.CoreId);

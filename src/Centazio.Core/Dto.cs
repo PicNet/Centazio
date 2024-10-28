@@ -9,27 +9,24 @@ public interface ICoreEntityDto<out T> : IDto<T> { string? CoreId { get; init; }
 record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
 
 public static class DtoHelpers {
-  public static object? ToDto(object baseobj) {
+  public static D ToDto<E, D>(E baseobj) where D : class, IDto<E> {
+    ArgumentNullException.ThrowIfNull(baseobj);
+    return (D) ToDto(baseobj);
+  }
+  
+  public static object ToDto(object baseobj) {
     ArgumentNullException.ThrowIfNull(baseobj);
 
     var dtot = GetDtoTypeFromTypeHierarchy(baseobj.GetType());
-    // must allow null as Json.Serialize uses this to test if the object is a Dto base type
-    if (dtot is null) return null; 
+    if (dtot is null) throw new Exception($"baseobj does not have a associated Dto.  Call `DtoHelpers.HasDto` before calling `ToDto`."); 
     var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
     var pairs = GetPropPairs(baseobj.GetType(), dtot);
     pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(baseobj, p)));
     return dto;
   }
   
-  public static Dictionary<string, object?> ToDtoAsDict(object baseobj) {
-    ArgumentNullException.ThrowIfNull(baseobj);
+  public static bool HasDto(object baseobj) => GetDtoTypeFromTypeHierarchy(baseobj.GetType()) is not null;
 
-    var dtot = GetDtoTypeFromTypeHierarchy(baseobj.GetType());
-    if (dtot is null) throw new Exception($"Could not find a Dto type for [{baseobj.GetType().FullName}]");
-    var pairs = GetPropPairs(baseobj.GetType(), dtot);
-    return pairs.ToDictionary(pair => pair.BasePi.Name, pair => GetDtoVal(baseobj, pair));
-  }
-  
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
     var dtoprops = dtot.GetProperties();
     return baset.GetProperties(BindingFlags.Public | BindingFlags.Instance)
