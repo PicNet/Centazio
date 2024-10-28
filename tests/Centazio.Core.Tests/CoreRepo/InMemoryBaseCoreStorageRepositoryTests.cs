@@ -6,6 +6,6 @@ namespace Centazio.Core.Tests.CoreRepo;
 
 public class InMemoryBaseCoreStorageRepositoryTests() : BaseCoreStorageRepositoryTests(true) {
 
-  protected override Task<ICoreStorageWithQuery> GetRepository() => Task.FromResult((ICoreStorageWithQuery) new TestingInMemoryCoreStorageRepository());
+  protected override Task<ITestingCoreStorage> GetRepository() => Task.FromResult((ITestingCoreStorage) new TestingInMemoryCoreStorageRepository());
 
 }

@@ -5,7 +5,7 @@ using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class TestingInMemoryCoreStorageRepository : ICoreStorageWithQuery {
+public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   
   private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, (ICoreEntity CoreEntity, CoreEntityChecksum CoreEntityChecksum)>> db = new();
   
@@ -46,14 +46,14 @@ public class TestingInMemoryCoreStorageRepository : ICoreStorageWithQuery {
     return Task.FromResult(upserted);
   }
 
-  public Task<List<E>> Query<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
+  public Task<List<CoreEntity>> GetAllCoreEntities() => GetAll<CoreEntity>(CoreEntityTypeName.From<CoreEntity>(), e => true);
+  
+  // todo: do we need this method (replace with GetAllCoreEntities) 
+  public Task<List<E>> GetAll<E>(CoreEntityTypeName coretype, Expression<Func<E, bool>> predicate) where E : class, ICoreEntity {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<E>());
     var compiled = predicate.Compile();
     return Task.FromResult(fulllst.Values.Select(ec => ec.CoreEntity.To<E>()).Where(compiled).ToList());
   }
-
-  public Task<List<E>> Query<E>(CoreEntityTypeName coretype, string query) where E : class, ICoreEntity => 
-      throw new NotSupportedException("InMemoryCoreStorageRepository does not support `Query<E>(string query)`.  Use `Query<E>(Expression<Func<E, bool>> predicate)` instead.");
   
   public ValueTask DisposeAsync() {
     db.Clear();

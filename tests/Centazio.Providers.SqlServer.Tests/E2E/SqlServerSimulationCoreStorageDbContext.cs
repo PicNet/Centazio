@@ -3,6 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Tests.E2E;
 
-public class SqlServerCoreStorageDbContext(string connstr) : AbstractCoreStorageDbContext("dbo") {
+public class SqlServerSimulationCoreStorageDbContext(string connstr) : AbstractSimulationCoreStorageDbContext("dbo") {
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlServer(connstr);
 }

@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class SimulationEfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
+public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
@@ -26,7 +26,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractCoreStorageDbContext
     await DropTablesImpl(db);
   }
 
-  private async Task DropTablesImpl(AbstractCoreStorageDbContext db) {
+  private async Task DropTablesImpl(AbstractSimulationCoreStorageDbContext db) {
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreInvoiceName));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreCustomerName));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreMembershipTypeName));

@@ -8,12 +8,12 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
 
   protected bool SupportsExpressionBasedQuery { get; } = supportExpressions;
   
-  private ICoreStorageWithQuery repo = null!;
+  private ITestingCoreStorage repo = null!;
   
   [SetUp] public async Task SetUp() => repo = await GetRepository();
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
   
-  protected abstract Task<ICoreStorageWithQuery> GetRepository();
+  protected abstract Task<ITestingCoreStorage> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
     Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(Constants.CoreEntityName, [new("invalid")]));
@@ -25,11 +25,11 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
     var created = TestingFactories.NewCoreCust("N1", "N1");
     await DoUpsert(created);
     var retreived1 = await GetSingle(created.CoreId);
-    var list1 = await QueryAll();
+    var list1 = await repo.GetAllCoreEntities();
     var updated = retreived1 with { FirstName = "N2" };
     await DoUpsert(updated);
     var retreived2 = await GetSingle(created.CoreId);
-    var list2 = await QueryAll();
+    var list2 = await repo.GetAllCoreEntities();
     
     Assert.That(retreived1, Is.EqualTo(created));
     Assert.That(list1, Is.EquivalentTo(new [] { created }));
@@ -41,13 +41,13 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
   [Test] public async Task Test_batch_upsert() {
     var batch1 = new List<ICoreEntity> { TestingFactories.NewCoreCust("N1", "N1"), TestingFactories.NewCoreCust("N2", "N2") };
     await DoUpsert(batch1);
-    var list1 = await QueryAll();
+    var list1 = await repo.GetAllCoreEntities();
     
     var batch2 = new List<ICoreEntity> { 
       (CoreEntity) batch1[0] with { FirstName = "Updated entity" }, 
       TestingFactories.NewCoreCust("N3", "N3") };
     await DoUpsert(batch2);
-    var list2 = await QueryAll();
+    var list2 = await repo.GetAllCoreEntities();
     
     Assert.That(list1, Is.EquivalentTo(batch1));
     Assert.That(list2, Is.EquivalentTo(new [] { batch2[0], batch1[1], batch2[1] }));
@@ -59,7 +59,7 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
         .ToList();
     await DoUpsert(data);
     
-    var all = await QueryAll();
+    var all = await repo.GetAllCoreEntities();
     Assert.That(all, Is.EquivalentTo(data));
   }
   
@@ -78,12 +78,5 @@ public abstract class BaseCoreStorageRepositoryTests(bool supportExpressions) {
     ArgumentNullException.ThrowIfNull(coreent.LastUpdateSystem);
     ArgumentOutOfRangeException.ThrowIfEqual(coreent.DateCreated, DateTime.MinValue);
     ArgumentOutOfRangeException.ThrowIfEqual(coreent.DateUpdated, DateTime.MinValue);
-  }
-
-  private async Task<List<CoreEntity>> QueryAll() {
-    var results = (SupportsExpressionBasedQuery 
-        ? await repo.Query<CoreEntity>(Constants.CoreEntityName, e => true)
-        : await repo.Query<CoreEntity>(Constants.CoreEntityName, $"SELECT * FROM {nameof(CoreEntity)}")).ToList();
-    return results.ToList();
   }
 }

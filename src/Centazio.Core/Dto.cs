@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core;
 
@@ -33,7 +34,7 @@ public static class DtoHelpers {
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
     var dtoprops = dtot.GetProperties();
     return baset.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+        .Where(p => !ReflectionUtils.IsJsonIgnore(baset, p.Name))
         .Select(pi => {
           var dtopi = dtoprops.SingleOrDefault(pi2 => pi2.Name == pi.Name) ?? throw new Exception($"could not find property[{pi.Name}] in Dto[{dtot.FullName}]");
           return new PropPair(pi, dtopi);

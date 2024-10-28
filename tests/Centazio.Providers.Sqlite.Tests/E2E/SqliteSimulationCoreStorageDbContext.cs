@@ -3,6 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
-public class SqliteCoreStorageDbContext() : AbstractCoreStorageDbContext("dbo") {
+public class SqliteSimulationCoreStorageDbContext() : AbstractSimulationCoreStorageDbContext("dbo") {
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlite($"Data Source=core_storage.db");
 }

@@ -52,6 +52,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
     public DateTime? DateUpdated { get; init; }
     public string? LastUpdateSystem { get; init; }
     public DateTime? DateCreated { get; init; } 
+    public string? CoreEntityChecksum { get; init; }
     
     public CoreEntity ToBase() => new(
         new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),

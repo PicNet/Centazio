@@ -10,7 +10,6 @@ namespace Centazio.Providers.SqlServer.Tests;
 #pragma warning restore CA1050
   
   [OneTimeSetUp] public void GlobalSetUp() {
-    DapperInitialiser.Initialise();
     GlobalTestSuiteInitialiser.Init();
   }
   

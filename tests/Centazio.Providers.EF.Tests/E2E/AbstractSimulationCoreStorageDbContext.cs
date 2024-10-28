@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public abstract class AbstractCoreStorageDbContext(string schema) : CentazioDbContext {
+public abstract class AbstractSimulationCoreStorageDbContext(string schema) : CentazioDbContext {
   
   public string SchemaName { get; } = schema;
   public string CoreMembershipTypeName { get; } = nameof(CoreMembershipType).ToLower();

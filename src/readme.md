@@ -12,7 +12,7 @@
 ## Low 
 - Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires
   heavy refactoring.  The purpose of this is that clients should not be able to interact (or even set) the internal
-  meta-data properties.
+  meta-data properties (Dates, Checksums, Originating System, Last Update System, etc).
 - review all code comments
 
 

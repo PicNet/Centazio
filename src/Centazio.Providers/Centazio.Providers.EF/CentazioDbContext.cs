@@ -20,7 +20,7 @@ public abstract class CentazioDbContext : DbContext {
   }
   
   protected abstract void CreateCentazioModel(ModelBuilder builder);
-  protected abstract void ConfigureDbSpecificOptions(DbContextOptionsBuilder builder);
+  protected abstract void ConfigureDbSpecificOptions(DbContextOptionsBuilder options);
   
   public async Task<int> ToDtoAttachAndUpdate<E, D>(IEnumerable<E> entities) 
       where E : class 
