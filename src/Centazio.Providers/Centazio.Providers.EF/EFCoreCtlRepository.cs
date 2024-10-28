@@ -1,7 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
@@ -78,31 +77,3 @@ public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : A
     return (await query.ToListAsync()).Select(dto => dto.ToBase()).ToList();
   }
 }
-
-public class TestingEFCoreCtlRepository(IDbFieldsHelper dbf, Func<AbstractCtlRepositoryDbContext> getdb) : EFCoreCtlRepository(getdb) {
-  public override async Task<AbstractCtlRepository> Initalise() {
-    await using var db = getdb();
-    await DropTablesImpl(db);
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)], 
-        $"FOREIGN KEY ([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}]) REFERENCES [{db.SystemStateTableName}]([{nameof(SystemState.System)}], [{nameof(SystemState.Stage)}])"));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreToSystemMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
-        [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)],
-        $"UNIQUE({nameof(Map.CoreToSysMap.System)}, {nameof(Map.CoreToSysMap.CoreEntityTypeName)}, {nameof(Map.CoreToSysMap.SystemId)})"));
-    
-    return await base.Initalise();
-  }
-  
-  public override async ValueTask DisposeAsync() {
-    await using var db = getdb();
-    await DropTablesImpl(db);
-  }
-
-  private async Task DropTablesImpl(AbstractCtlRepositoryDbContext db) { 
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreToSystemMapTableName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.ObjectStateTableName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.SystemStateTableName));
-  }
-
-}
-

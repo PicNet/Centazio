@@ -28,6 +28,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.SqlServer\Centazio.Providers.SqlServer.csproj" />
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+      <ProjectReference Include="..\Centazio.Providers.EF.Tests\Centazio.Providers.EF.Tests.csproj" />
     </ItemGroup>
 
 </Project>

@@ -24,6 +24,7 @@ public class DynamoStagedEntityRepository(IAmazonDynamoDB client, string table, 
   
   protected IAmazonDynamoDB Client => client;
   
+  public override Task<AbstractStagedEntityRepository> Initialise() => Task.FromResult<AbstractStagedEntityRepository>(this);
   public override ValueTask DisposeAsync() {
     Client.Dispose();
     return ValueTask.CompletedTask;

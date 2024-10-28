@@ -8,6 +8,7 @@ using Dapper;
 
 namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
+// todo: remove and replace with EFCoreStorageRepository
 internal class TestingSqlServerCoreStorageRepository : ICoreStorageWithQuery {
   
   public async Task<ICoreStorageWithQuery> Initalise(IDbFieldsHelper dbf) {

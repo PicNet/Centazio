@@ -12,7 +12,7 @@ public class SqliteDbFieldsHelper : AbstractDbFieldsHelper {
   }
 
   public override string GenerateIndexScript(string schema, string table, params string[] columns) => 
-      $"CREATE INDEX IF NOT EXISTS ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))} ON [{table}] ({String.Join(", ", columns)};";
+      $"CREATE INDEX IF NOT EXISTS ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))} ON [{table}] ({String.Join(", ", columns)});";
 
   public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS [{table}]";
 

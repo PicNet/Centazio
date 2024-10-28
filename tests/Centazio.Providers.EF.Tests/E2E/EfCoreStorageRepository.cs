@@ -8,15 +8,31 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
+// todo: rename all EFCore -> EF as EFCore and CoreStorage are confusing
+public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
   
-  public async Task<EfCoreStorageRepository> Initialise(IDbFieldsHelper dbf, bool reset = false) {
+  public async Task<EfCoreStorageRepository> Initialise() {
     await using var db = getdb();
-    if (reset) await db.DropTables();
-    await db.CreateTableIfNotExists(dbf);
+    await DropTablesImpl(db);
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
+        $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{db.CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
+        $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{db.CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
     return this;
   }
   
+  public override async ValueTask DisposeAsync() {
+    await using var db = getdb();
+    await DropTablesImpl(db);
+  }
+
+  private async Task DropTablesImpl(AbstractCoreStorageDbContext db) {
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreInvoiceName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreCustomerName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreMembershipTypeName));
+  }
+
   public override async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
     // todo: clean this code
     var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
@@ -47,10 +63,4 @@ public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, I
     await using var db = getdb();
     return (await db.Set<D>().SingleAsync(dto => dto.CoreId == coreid.Value)).ToBase();
   }
-  
-  public override async ValueTask DisposeAsync() {
-    await using var db = getdb();
-    await db.DropTables();
-  }
-
 }

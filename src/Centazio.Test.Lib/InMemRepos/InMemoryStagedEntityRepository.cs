@@ -47,6 +47,8 @@ public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntity
     return Task.CompletedTask;
   }
 
+  public override Task<AbstractStagedEntityRepository> Initialise() => Task.FromResult<AbstractStagedEntityRepository>(this);
+
   public override ValueTask DisposeAsync() { 
     saved.Clear();
     return ValueTask.CompletedTask;

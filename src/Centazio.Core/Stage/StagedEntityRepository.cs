@@ -70,6 +70,7 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
   public async Task DeleteStagedBefore(SystemName system, SystemEntityTypeName systype, DateTime before) => await DeleteBeforeImpl(system, systype, before, false);
   protected abstract Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted);
   
+  public abstract Task<AbstractStagedEntityRepository> Initialise();
   public abstract ValueTask DisposeAsync();
 
 }

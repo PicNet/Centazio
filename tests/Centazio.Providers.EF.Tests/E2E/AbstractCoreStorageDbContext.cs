@@ -1,6 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
-using Centazio.Test.Lib.E2E;
+﻿using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests.E2E;
@@ -27,20 +25,4 @@ public abstract class AbstractCoreStorageDbContext(string schema) : CentazioDbCo
         e.ToTable(CoreInvoiceName);
         e.HasKey(e2 => e2.CoreId);
       });
-  
-  public async Task CreateTableIfNotExists(IDbFieldsHelper dbf) {
-    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
-    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
-        $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
-    await Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(SchemaName, CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
-        $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
-    
-  }
-  
-  public async Task DropTables() {
-    #pragma warning disable EF1002
-    await Database.ExecuteSqlRawAsync($"DROP TABLE IF EXISTS {CoreInvoiceName}; DROP TABLE IF EXISTS {CoreCustomerName}; DROP TABLE IF EXISTS {CoreMembershipTypeName};");
-    #pragma warning restore EF1002
-  }
-
 }

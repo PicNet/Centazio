@@ -1,7 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +13,8 @@ public record EFCoreStagedEntityRepositoryOptions(
 
 public class EFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions opts) : 
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
+  
+  protected readonly EFCoreStagedEntityRepositoryOptions opts = opts;
   
   protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var db = opts.Db();
@@ -55,17 +56,7 @@ public class EFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions op
   private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
-  // todo: this should only be for tests and should not be in this base class
-  public async Task<EFCoreStagedEntityRepository> Initialise(IDbFieldsHelper dbf, bool reset=false) {
-    await using var db = opts.Db();
-    if (reset) await db.DropTable(dbf);
-    await db.CreateTableIfNotExists(dbf);
-    return this;
-  }
+  public override Task<AbstractStagedEntityRepository> Initialise() => Task.FromResult<AbstractStagedEntityRepository>(this);
+  public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-  // todo: this should only be for tests and should not be in this base class
-  public override async ValueTask DisposeAsync() {
-    await using var db = opts.Db();
-    // await db.DropTable();
-  }
 }
