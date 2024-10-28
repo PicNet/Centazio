@@ -5,11 +5,8 @@ using Centazio.Core.CoreRepo;
 namespace Centazio.Test.Lib.E2E;
 
 public interface ISimulationCoreStorageRepository : ICoreStorage {
-  Task<CoreMembershipType> GetMembershipType(CoreEntityId coreid);
   Task<List<CoreMembershipType>> GetMembershipTypes();
-  Task<CoreCustomer> GetCustomer(CoreEntityId coreid);
   Task<List<CoreCustomer>> GetCustomers();
-  Task<CoreInvoice> GetInvoice(CoreEntityId coreid);
   Task<List<CoreInvoice>> GetInvoices();
 }
 
