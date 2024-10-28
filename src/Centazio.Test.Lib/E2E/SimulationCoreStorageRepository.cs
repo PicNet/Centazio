@@ -5,11 +5,11 @@ using Centazio.Core.CoreRepo;
 namespace Centazio.Test.Lib.E2E;
 
 public interface ISimulationCoreStorageRepository : ICoreStorage {
-  Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid);
+  Task<CoreMembershipType> GetMembershipType(CoreEntityId coreid);
   Task<List<CoreMembershipType>> GetMembershipTypes();
-  Task<CoreCustomer?> GetCustomer(CoreEntityId? coreid);
+  Task<CoreCustomer> GetCustomer(CoreEntityId coreid);
   Task<List<CoreCustomer>> GetCustomers();
-  Task<CoreInvoice?> GetInvoice(CoreEntityId? coreid);
+  Task<CoreInvoice> GetInvoice(CoreEntityId coreid);
   Task<List<CoreInvoice>> GetInvoices();
 }
 
@@ -28,11 +28,11 @@ public abstract class AbstractCoreStorageRepository(Func<ICoreEntity, CoreEntity
   
   // Simulation Specific Methods
   
-  public async Task<CoreMembershipType?> GetMembershipType(CoreEntityId? coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
+  public async Task<CoreMembershipType> GetMembershipType(CoreEntityId coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
   public async Task<List<CoreMembershipType>> GetMembershipTypes() => await GetList<CoreMembershipType, CoreMembershipType.Dto>();
-  public async Task<CoreCustomer?> GetCustomer(CoreEntityId? coreid) => await GetSingle<CoreCustomer, CoreCustomer.Dto>(coreid);
+  public async Task<CoreCustomer> GetCustomer(CoreEntityId coreid) => await GetSingle<CoreCustomer, CoreCustomer.Dto>(coreid);
   public async Task<List<CoreCustomer>> GetCustomers() => await GetList<CoreCustomer, CoreCustomer.Dto>();
-  public async Task<CoreInvoice?> GetInvoice(CoreEntityId? coreid) => await GetSingle<CoreInvoice, CoreInvoice.Dto>(coreid);
+  public async Task<CoreInvoice> GetInvoice(CoreEntityId coreid) => await GetSingle<CoreInvoice, CoreInvoice.Dto>(coreid);
   public async Task<List<CoreInvoice>> GetInvoices() => await GetList<CoreInvoice, CoreInvoice.Dto>();
 
   private async Task<List<ICoreEntity>> GetList(CoreEntityTypeName coretype) {
@@ -42,7 +42,7 @@ public abstract class AbstractCoreStorageRepository(Func<ICoreEntity, CoreEntity
     throw new NotSupportedException(coretype);
   }
   
-  protected abstract Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : CoreEntityBase where D : class, ICoreEntityDto<E>;
+  protected abstract Task<E> GetSingle<E, D>(CoreEntityId coreid) where E : CoreEntityBase where D : class, ICoreEntityDto<E>;
   
   // todo: GetList is a `SELECT *` so needs to be removed
   protected abstract Task<List<E>> GetList<E, D>() where E : CoreEntityBase where D : CoreEntityBase.Dto<E>;

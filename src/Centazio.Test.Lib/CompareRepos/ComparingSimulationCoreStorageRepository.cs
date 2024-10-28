@@ -20,7 +20,7 @@ public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageReposit
     await repo2.DisposeAsync();
   }
   
-  protected override async Task<E> GetSingle<E, D>(CoreEntityId? coreid) {
+  protected override async Task<E> GetSingle<E, D>(CoreEntityId coreid) {
     var result1 = await (Task<E>) repo1.GetType().GetMethod(nameof(GetSingle), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [coreid])!;
     var result2 = await (Task<E>) repo2.GetType().GetMethod(nameof(GetSingle), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [coreid])!;
     return ValidateAndReturn(result1, result2);

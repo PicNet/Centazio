@@ -53,9 +53,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     return lst;
   }
   
-  // todo: why is coreid nullable
-  protected override async Task<E> GetSingle<E, D>(CoreEntityId? coreid) where E : class {
-    if (coreid is null) throw new Exception("todo: why is coreid nullable");
+  protected override async Task<E> GetSingle<E, D>(CoreEntityId coreid) where E : class {
     await using var db = getdb();
     return (await db.Set<D>().SingleAsync(dto => dto.CoreId == coreid.Value)).ToBase();
   }

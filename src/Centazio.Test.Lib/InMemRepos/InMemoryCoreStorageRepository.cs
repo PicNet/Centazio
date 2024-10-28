@@ -25,22 +25,22 @@ public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEnti
     return Task.FromResult(upserted);
   }
   
-  protected override Task<E> GetSingle<E, D>(CoreEntityId? coreid) {
+  protected override Task<E> GetSingle<E, D>(CoreEntityId coreid) {
     return Task.FromResult(GetSingleImpl<E, D>(coreid) ?? throw new Exception());
   }
   
   protected override Task<List<E>> GetList<E, D>() {
     var coretype = CoreEntityTypeName.From<E>();
     if (!db.ContainsKey(coretype)) db[coretype] = new();
-    var results = db[CoreEntityTypeName.From<E>()].Keys.Select(coreid => GetSingleImpl<E, D>(coreid) ?? throw new Exception()).ToList();
+    var results = db[CoreEntityTypeName.From<E>()].Keys.Select(GetSingleImpl<E, D>).ToList();
     return Task.FromResult(results);
   }
 
   
   
-  protected E? GetSingleImpl<E, D>(CoreEntityId? coreid) where E : class, ICoreEntity where D : class, IDto<E> { 
+  private E GetSingleImpl<E, D>(CoreEntityId coreid) where E : class, ICoreEntity where D : class, IDto<E> { 
     var dict = db[CoreEntityTypeName.From<E>()];
-    if (coreid is null || !dict.TryGetValue(coreid, out var json)) return default;
+    if (!dict.TryGetValue(coreid, out var json)) throw new Exception();
 
     return (Json.Deserialize<D>(json) ?? throw new Exception()).ToBase();
   }
