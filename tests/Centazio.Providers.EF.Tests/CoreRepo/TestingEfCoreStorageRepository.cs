@@ -55,10 +55,8 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
     var ids = entities.Select(e => e.UpdatedCoreEntity.CoreId.Value);
     var existings = conn.CoreEntities.Where(e => ids.Contains(e.CoreId)).Select(e => e.CoreId);
     entities.ForEach(e => {
-      // todo: why does ToDto return nullable
-      var dto = (CoreEntity.Dto) DtoHelpers.ToDto(e.UpdatedCoreEntity)! with { CoreEntityChecksum = e.UpdatedCoreEntityChecksum };
-      conn.Attach(dto);
-      conn.Entry(dto).State = existings.Contains(dto.CoreId) ? EntityState.Modified : EntityState.Added;
+      var dto = (CoreEntity.Dto) DtoHelpers.ToDto(e.UpdatedCoreEntity) with { CoreEntityChecksum = e.UpdatedCoreEntityChecksum };
+      conn.Attach(dto).State = existings.Contains(dto.CoreId) ? EntityState.Modified : EntityState.Added;
     });
     await conn.SaveChangesAsync();
     return entities.Select(c => c.UpdatedCoreEntity).ToList();

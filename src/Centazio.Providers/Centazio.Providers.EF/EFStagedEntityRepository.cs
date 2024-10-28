@@ -25,7 +25,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     
     var toinsert = staged.Where(s => !duplicates.ContainsKey(s.StagedEntityChecksum.Value)).ToList();
     // todo: DtoHelpers.ToDto should return the actual dto instance type, not object
-    var dtos = toinsert.Select(se => (StagedEntity.Dto) (DtoHelpers.ToDto(se) ?? throw new Exception()));
+    var dtos = toinsert.Select(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>);
     db.Staged.AddRange(dtos);
     await db.SaveChangesAsync();
     

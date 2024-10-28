@@ -37,7 +37,6 @@ public class CheckStandardNamingOfCommonTypes {
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
-      Console.WriteLine("VALIDATING ASSEMBLY: " + ass.GetName().FullName);
       ass.GetTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {

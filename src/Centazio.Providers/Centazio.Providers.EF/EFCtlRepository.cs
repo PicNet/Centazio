@@ -27,7 +27,7 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
     var created = SystemState.Create(system, stage);
     
     await using var db = getdb();
-    db.SystemStates.Add((SystemState.Dto) DtoHelpers.ToDto(created)!);
+    db.SystemStates.Add(DtoHelpers.ToDto<SystemState, SystemState.Dto>(created));
     var count = await db.SaveChangesAsync();
     if (count != 1) throw new Exception($"Error creating SystemState");
     return created;
@@ -48,7 +48,7 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
     var created = ObjectState.Create(system.System, system.Stage, obj);
     
     await using var db = getdb();
-    db.ObjectStates.Add((ObjectState.Dto) DtoHelpers.ToDto(created)!);
+    db.ObjectStates.Add(DtoHelpers.ToDto<ObjectState, ObjectState.Dto>(created)!);
     var count = await db.SaveChangesAsync();
     if (count != 1) throw new Exception($"Error creating ObjectState");
     return created;                                     

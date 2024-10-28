@@ -25,8 +25,7 @@ public abstract class CentazioDbContext : DbContext {
   public async Task<int> ToDtoAttachAndUpdate<E, D>(IEnumerable<E> entities) 
       where E : class 
       where D : class, IDto<E> {
-    // todo: make DtoHelpers.ToDto return non nullable
-    var dtos = entities.Select(DtoHelpers.ToDto).Cast<D>().ToList();
+    var dtos = entities.Select(DtoHelpers.ToDto<E, D>).ToList();
     AttachRange(dtos);
     dtos.ForEach(dto => Entry(dto).State = EntityState.Modified);
     return await SaveChangesAsync();
@@ -35,8 +34,7 @@ public abstract class CentazioDbContext : DbContext {
   public async Task<int> ToDtoAttachAndCreate<E, D>(IEnumerable<E> entities) 
       where E : class 
       where D : class, IDto<E> {
-    // todo: make DtoHelpers.ToDto return non nullable
-    var dtos = entities.Select(DtoHelpers.ToDto).Cast<D>().ToList();
+    var dtos = entities.Select(DtoHelpers.ToDto<E, D>).ToList();
     await AddRangeAsync(dtos);
     return await SaveChangesAsync();
   }

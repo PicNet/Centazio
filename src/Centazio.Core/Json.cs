@@ -6,7 +6,7 @@ namespace Centazio.Core;
 
 public static class Json {
   
-  public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.ToDto(o) ?? o);
+  public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o);
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
   public static object Deserialize(string json, Type type) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(type);
