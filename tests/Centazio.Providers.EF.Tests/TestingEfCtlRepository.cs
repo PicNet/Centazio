@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests;
 
-public class TestingEFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf) : EFCoreCtlRepository(getdb), ITestingCtlRepository {
+public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf) : EFCtlRepository(getdb), ITestingCtlRepository {
 
   public async Task<List<Map.CoreToSysMap>> GetAllMaps() {
     await using var conn = getdb();

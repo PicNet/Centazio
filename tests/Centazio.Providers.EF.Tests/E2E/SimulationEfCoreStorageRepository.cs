@@ -8,10 +8,9 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-// todo: rename all EFCore -> EF as EFCore and CoreStorage are confusing
-public class EfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
+public class SimulationEfCoreStorageRepository(Func<AbstractCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
   
-  public async Task<EfCoreStorageRepository> Initialise() {
+  public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));

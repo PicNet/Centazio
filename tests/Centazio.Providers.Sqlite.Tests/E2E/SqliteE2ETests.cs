@@ -24,9 +24,9 @@ public class SqliteSimulationProvider : ISimulationProvider {
     DapperInitialiser.Initialise();
     
     var dbf = new SqliteDbFieldsHelper();
-    CtlRepo = await new TestingEFCoreCtlRepository(() => new SqliteCtlContext(), dbf).Initalise();
-    StageRepository = await new TestingEFCoreStagedEntityRepository(new EFCoreStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext()), dbf).Initialise();
-    CoreStore = await new EfCoreStorageRepository(() => new SqliteCoreStorageDbContext(), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
+    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlContext(), dbf).Initalise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext()), dbf).Initialise();
+    CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteCoreStorageDbContext(), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

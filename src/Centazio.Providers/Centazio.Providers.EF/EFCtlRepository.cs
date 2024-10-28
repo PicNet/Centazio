@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public class EFCoreCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
+public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
   
   protected readonly Func<AbstractCtlRepositoryDbContext> getdb = getdb;
 

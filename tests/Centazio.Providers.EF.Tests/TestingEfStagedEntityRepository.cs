@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests;
 
-public class TestingEFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf) : EFCoreStagedEntityRepository(opts) {
+public class TestingEfStagedEntityRepository(EFStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf) : EFStagedEntityRepository(opts) {
   
   public override async Task<AbstractStagedEntityRepository> Initialise() {
     await using var db = opts.Db();

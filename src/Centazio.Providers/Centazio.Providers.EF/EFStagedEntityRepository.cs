@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public record EFCoreStagedEntityRepositoryOptions(
+public record EFStagedEntityRepositoryOptions(
     int Limit, 
     Func<string, StagedEntityChecksum> StagedEntityDataChecksum,
     Func<AbstractStagedEntityRepositoryDbContext> Db);
 
-public class EFCoreStagedEntityRepository(EFCoreStagedEntityRepositoryOptions opts) : 
+public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) : 
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
   
-  protected readonly EFCoreStagedEntityRepositoryOptions opts = opts;
+  protected readonly EFStagedEntityRepositoryOptions opts = opts;
   
   protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var db = opts.Db();
