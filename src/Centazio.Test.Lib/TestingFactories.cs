@@ -14,7 +14,7 @@ namespace Centazio.Test.Lib;
 public static class TestingFactories {
     
   public static TestingStagedEntityRepository SeRepo() => new(); 
-  public static TestingInMemoryCtlRepository CtlRepo() => new();
+  public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
   public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityRepository? serepo = null) => new ReadOperationRunner(serepo ?? SeRepo());
   public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(
@@ -29,14 +29,14 @@ public static class TestingFactories {
     return new CoreEntity(id, first, last, dob) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
   }
 
-  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
+  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryBaseCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
       => new(ctl ?? CtlRepo(), core ?? CoreRepo());
 
 }
 
 public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
-public class TestingInMemoryCtlRepository : InMemoryCtlRepository, ITestingCtlRepository {
+public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITestingCtlRepository {
   public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
   public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
   public Dictionary<Map.Key, string> Maps => maps;

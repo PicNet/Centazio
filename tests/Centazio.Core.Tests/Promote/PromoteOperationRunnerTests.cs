@@ -11,18 +11,18 @@ public class PromoteOperationRunnerTests {
   private readonly int RECORDS_COUNT = 100;
   
   private TestingStagedEntityRepository stager;
-  private TestingInMemoryCtlRepository ctl;
+  private TestingInMemoryBaseCtlRepository baseCtl;
   private TestingInMemoryCoreStorageRepository core;
   private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
 
   [SetUp] public void SetUp() {
-    (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());
-    promoter = F.PromoteRunner(stager, ctl, core);
+    (stager, baseCtl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());
+    promoter = F.PromoteRunner(stager, baseCtl, core);
   }
   
   [TearDown] public async Task TearDown() {
     await stager.DisposeAsync();
-    await ctl.DisposeAsync();
+    await baseCtl.DisposeAsync();
     await core.DisposeAsync();
   } 
   

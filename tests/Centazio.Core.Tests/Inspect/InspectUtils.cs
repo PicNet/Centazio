@@ -7,12 +7,13 @@ internal static class InspectUtils {
   private static string? solndir;
   internal static string SolnDir => solndir ??= GetSolutionRootDirectory();
   
-  private static List<string>? csfiles;
-  public static List<string> CsFiles(string? dir, params string[] ignore) => (csfiles ??= GetSolnFiles(dir, "*.cs")).Where(f => !ignore.Any(f.EndsWith) && !f.Contains("\\obj\\")).ToList();
+  public static List<string> CsFiles(string? dir, params string[] ignore) => GetSolnFiles(dir, "*.cs")
+      .Where(f => !ignore.Any(f.EndsWith) && !f.Contains(@"\obj\"))
+      .ToList();
   
   public static List<string> GetCentazioDllFiles() {
     var centazios = GetSolnFiles(null, "*.dll")
-        .Where(dll => dll.IndexOf("\\obj\\", StringComparison.OrdinalIgnoreCase) < 0 && dll.Split("\\").Last().IndexOf("Centazio", StringComparison.OrdinalIgnoreCase) >= 0)
+        .Where(dll => dll.IndexOf(@"\obj\", StringComparison.OrdinalIgnoreCase) < 0 && dll.Split("\\").Last().IndexOf("Centazio", StringComparison.OrdinalIgnoreCase) >= 0)
         .ToList();
     var distinct = new Dictionary<string, (DateTime LastWrite, string Full)>();
     centazios.ForEach(file => {
@@ -27,7 +28,7 @@ internal static class InspectUtils {
   
   public static List<string> GetSolnFiles(string? dir, string extension) => Directory.GetFiles(dir ?? SolnDir, extension, SearchOption.AllDirectories).ToList();
 
-  private static string GetSolutionRootDirectory() {
+  internal static string GetSolutionRootDirectory() {
     var file = "azure-pipelines.yml";
 
     string? Impl(string dir) {

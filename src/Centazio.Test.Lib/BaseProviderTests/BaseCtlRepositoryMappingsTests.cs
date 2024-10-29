@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
 
-public abstract class BaseCtlRepoMappingsTests {
+public abstract class BaseCtlRepositoryMappingsTests {
 
   private const string FIRST_NAME = nameof(FIRST_NAME);
   private const string LAST_NAME = nameof(LAST_NAME);

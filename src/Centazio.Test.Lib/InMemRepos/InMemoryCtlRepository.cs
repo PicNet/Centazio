@@ -5,7 +5,7 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryCtlRepository : AbstractCtlRepository {
+public class InMemoryBaseCtlRepository : AbstractCtlRepository {
 
   protected readonly Dictionary<(SystemName, LifecycleStage), SystemState> systems = new();
   protected readonly Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> objects = new();

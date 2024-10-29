@@ -10,7 +10,7 @@ public class FunctionRunnerTests {
 
   private readonly DoNothingOpRunner oprunner = new();
   private readonly EmptyFunction emptufunc = new();
-  private TestingInMemoryCtlRepository repo;
+  private TestingInMemoryBaseCtlRepository repo;
   
   [SetUp] public void SetUp() {
     repo = F.CtlRepo();

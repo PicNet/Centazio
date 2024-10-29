@@ -11,7 +11,7 @@ using Testcontainers.Minio;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-public class S3StagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
+public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
 
   private MinioContainer container;
   
@@ -30,12 +30,12 @@ public class S3StagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
-    return await new TestingS3StagedEntityRepository(client, limit).Initalise();
+    return await new TestingS3AwsStagedEntityRepository(client, limit).Initalise();
   }
 
-  class TestingS3StagedEntityRepository(IAmazonS3 client, int limit = 100) : S3StagedEntityRepository(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
+  class TestingS3AwsStagedEntityRepository(IAmazonS3 client, int limit = 100) : S3AwsStagedEntityRepository(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
     
-    private static readonly string BUCKET_NAME = nameof(TestingS3StagedEntityRepository).ToLower(CultureInfo.InvariantCulture);
+    private static readonly string BUCKET_NAME = nameof(TestingS3AwsStagedEntityRepository).ToLower(CultureInfo.InvariantCulture);
 
     public override async ValueTask DisposeAsync() {
       var objs = await Client.ListObjectsAsync(new ListObjectsRequest { BucketName = BUCKET_NAME });

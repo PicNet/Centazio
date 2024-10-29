@@ -13,12 +13,12 @@ public class PromoteFunctionTests {
   private readonly SystemEntityTypeName system = C.SystemEntityName;
   private readonly CoreEntityTypeName coretype = C.CoreEntityName;
   
-  private TestingInMemoryCtlRepository ctl;
+  private TestingInMemoryBaseCtlRepository baseCtl;
   private TestingStagedEntityRepository stager;
   private TestingInMemoryCoreStorageRepository core;
 
   [SetUp] public void SetUp() {
-    (ctl, stager, core) = (F.CtlRepo(), F.SeRepo(), F.CoreRepo());
+    (baseCtl, stager, core) = (F.CtlRepo(), F.SeRepo(), F.CoreRepo());
   }
   
   [Test] public async Task Test_generic_deserialisation() {
@@ -32,8 +32,8 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_standalone_Promote_function() {
     // set up
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, ctl, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, baseCtl, core));
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, baseCtl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -41,7 +41,7 @@ public class PromoteFunctionTests {
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (s1, obj1) = (baseCtl.Systems.Values.ToList(), baseCtl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -61,7 +61,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys23, obj23) = (baseCtl.Systems.Values.ToList(), baseCtl.Objects.Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
@@ -77,8 +77,8 @@ public class PromoteFunctionTests {
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
     // set up
-    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, ctl, core));
-    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, ctl);
+    var (func, oprunner) = (new PromoteFunctionWithSinglePromoteCustomerOperation(), F.PromoteRunner(stager, baseCtl, core));
+    var funcrunner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(func, oprunner, baseCtl);
     
     // create single entity
     var start = TestingUtcDate.DoTick();
@@ -86,7 +86,7 @@ public class PromoteFunctionTests {
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (s1, obj1) = (baseCtl.Systems.Values.ToList(), baseCtl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
@@ -107,7 +107,7 @@ public class PromoteFunctionTests {
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
     var result23 = (await funcrunner.RunFunction()).OpResults.Single();
-    var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
+    var (sys23, obj23) = (baseCtl.Systems.Values.ToList(), baseCtl.Objects.Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));

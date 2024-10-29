@@ -8,7 +8,7 @@ using Testcontainers.DynamoDb;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-public class DynamoStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
+public class DynamoAwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
   
   private DynamoDbContainer container;
   
@@ -24,12 +24,12 @@ public class DynamoStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests
 
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
-    return await new TestingDynamoStagedEntityRepository(client, limit, checksum).Initalise();
+    return await new TestingDynamoAwsStagedEntityRepository(client, limit, checksum).Initalise();
     
   }
 
-  class TestingDynamoStagedEntityRepository(IAmazonDynamoDB client, int limit, Func<string, StagedEntityChecksum> checksum) : DynamoStagedEntityRepository(client, TABLE_NAME, limit, checksum) {
-    private const string TABLE_NAME = nameof(TestingDynamoStagedEntityRepository);
+  class TestingDynamoAwsStagedEntityRepository(IAmazonDynamoDB client, int limit, Func<string, StagedEntityChecksum> checksum) : DynamoAwsStagedEntityRepository(client, TABLE_NAME, limit, checksum) {
+    private const string TABLE_NAME = nameof(TestingDynamoAwsStagedEntityRepository);
 
     public override async ValueTask DisposeAsync() {
       await Client.DeleteTableAsync(TABLE_NAME);

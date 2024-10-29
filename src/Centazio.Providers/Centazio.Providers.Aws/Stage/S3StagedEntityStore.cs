@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
+public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
     : AbstractStagedEntityRepository(limit, checksum) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
@@ -22,7 +22,7 @@ public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit
     return ValueTask.CompletedTask;
   }
 
-  public async Task<S3StagedEntityRepository> Initalise() {
+  public async Task<S3AwsStagedEntityRepository> Initalise() {
     var tables = (await Client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
     if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
@@ -106,11 +106,11 @@ public class S3StagedEntityRepository(IAmazonS3 client, string bucket, int limit
 internal static class S3StagedEntityRepository_StagedEntityExtensions {
   
   public static async Task<StagedEntity> FromS3Response(this GetObjectResponse r) {
-    if (r.Metadata[S3StagedEntityRepository.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
+    if (r.Metadata[S3AwsStagedEntityRepository.IGNORE_META_KEY] is not null) throw new Exception("S3 objects that are marked as 'Ignore' should not be created");
     var details = AwsStagedEntityRepositoryHelpers.ParseS3Key(r.Key);
-    var promoted = r.Metadata[S3StagedEntityRepository.DATE_PROMOTED_META_KEY] is null 
+    var promoted = r.Metadata[S3AwsStagedEntityRepository.DATE_PROMOTED_META_KEY] is null 
         ? (DateTime?) null 
-        : DateTime.Parse(r.Metadata[S3StagedEntityRepository.DATE_PROMOTED_META_KEY]).ToUniversalTime();
+        : DateTime.Parse(r.Metadata[S3AwsStagedEntityRepository.DATE_PROMOTED_META_KEY]).ToUniversalTime();
     
     await using var stream = r.ResponseStream;
     using var reader = new StreamReader(stream);

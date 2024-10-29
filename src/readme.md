@@ -1,11 +1,11 @@
 # Todo
-- test all providers implement all reposiroties (there should be 3 repos I think).  And test that there are tests
-    that extends from BaseTests for that repo / provider.
 - simulation needs improments, has lots of single id hacks using entity map, select * in core storage, need better helpers
 - check testing coverage
 
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
+- azure runner
+- aws runner
 
 ## Low 
 - Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires

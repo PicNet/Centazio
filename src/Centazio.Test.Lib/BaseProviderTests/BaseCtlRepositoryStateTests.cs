@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
 
-public abstract class CtlRepositoryDefaultTests {
+public abstract class BaseCtlRepositoryStateTests {
 
   protected abstract Task<ICtlRepository> GetRepository();
   
@@ -92,7 +92,7 @@ public abstract class CtlRepositoryDefaultTests {
     var ss = await repo.CreateSystemState(Constants.System2Name, LifecycleStage.Defaults.Promote);
     var prior = await repo.GetObjectState(ss, Constants.CoreEntityName);
     var created = await repo.GetOrCreateObjectState(ss, Constants.CoreEntityName);
-    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, nameof(CtlRepositoryDefaultTests));
+    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, nameof(BaseCtlRepositoryStateTests));
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, Constants.CoreEntityName);
     var expected = ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName);
