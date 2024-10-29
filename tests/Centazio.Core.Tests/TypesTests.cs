@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests;
+﻿using Centazio.Core.Checksum;
+
+namespace Centazio.Core.Tests;
 
 public class TypesTests {
 
@@ -37,6 +39,12 @@ public class TypesTests {
     
     Assert.That(C.SystemEntityName.ToSystemEntityTypeName.Value, Is.EqualTo(C.SystemEntityName.Value));
     Assert.That(C.CoreEntityName.ToCoreEntityTypeName.Value, Is.EqualTo(C.CoreEntityName.Value));
+  }
+  
+  [Test] public void Test_ValidString_AllSubclasses() {
+    var types = ValidString.AllSubclasses();
+    var expected = new [] { typeof(ValidString), typeof(CoreEntityId),typeof(SystemEntityId), typeof(SystemName), typeof(ObjectName),typeof(SystemEntityTypeName),typeof(CoreEntityTypeName),typeof(LifecycleStage),typeof(StagedEntityChecksum),typeof(SystemEntityChecksum),typeof(CoreEntityChecksum) };
+    Assert.That(expected.All(t => types.IndexOf(t) >= 0), Is.True);
   }
 
 }

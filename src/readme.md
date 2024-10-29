@@ -1,6 +1,4 @@
 # Todo
-- check testing coverage
-
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - azure runner
