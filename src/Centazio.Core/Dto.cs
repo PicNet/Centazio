@@ -45,12 +45,15 @@ public static class DtoHelpers {
     return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
   }
 
-  public static Type? GetDtoTypeFromTypeHierarchy(Type? baset) {
-    while(baset is not null) {
-      var t = baset.Assembly.GetType(baset.FullName + "+Dto");
-      if (t is not null) return t;
-      baset = baset.BaseType;
+  private static readonly Dictionary<Type, Type?> dto_cache = new();
+  public static Type? GetDtoTypeFromTypeHierarchy(Type baset) {
+    if (dto_cache.TryGetValue(baset, out var dtot)) return dtot;
+    var tmp = baset; 
+    while(tmp is not null) {
+      var t = tmp.Assembly.GetType(tmp.FullName + "+Dto");
+      if (t is not null) return dto_cache[baset] = t;
+      tmp = tmp.BaseType;
     }
-    return null;
+    return dto_cache[baset] = null;
   }
 }

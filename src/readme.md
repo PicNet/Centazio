@@ -1,5 +1,4 @@
 # Todo
-- simulation needs improments, has lots of single id hacks using entity map, select * in core storage, need better helpers
 - check testing coverage
 
 - set up azure devops testing pipeline (agent is ready)
