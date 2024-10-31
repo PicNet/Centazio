@@ -1,4 +1,5 @@
 # Todo
+- for consistency no DateUpdated should be nullable, if new just set it to DateCreated
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - azure runner

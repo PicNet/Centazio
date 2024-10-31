@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Centazio.Core;
-using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.E2E;
@@ -14,7 +13,7 @@ public record CoreCustomer : CoreEntityBase {
   public CoreEntityId MembershipCoreId { get; internal init; }
   
   private CoreCustomer() {}
-  internal CoreCustomer(CoreEntityId coreid, SystemEntityId sysid, string name, CoreEntityId membershipid) : base(coreid, sysid) {
+  internal CoreCustomer(CoreEntityId coreid, string name, CoreEntityId membershipid) : base(coreid) {
     Name = name;
     MembershipCoreId = membershipid;
   }
@@ -41,7 +40,7 @@ public record CoreMembershipType : CoreEntityBase {
   public override string DisplayName => Name;
   
   private CoreMembershipType() {}
-  internal CoreMembershipType(CoreEntityId coreid, SystemEntityId sysid, string name) : base(coreid, sysid) {
+  internal CoreMembershipType(CoreEntityId coreid, string name) : base(coreid) {
     Name = name;
   }
   
@@ -66,7 +65,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateTime? PaidDate { get; set; }
   
   private CoreInvoice() {}
-  internal CoreInvoice(CoreEntityId coreid, SystemEntityId sysid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, sysid) {
+  internal CoreInvoice(CoreEntityId coreid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid) {
     CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;
@@ -94,43 +93,22 @@ public record CoreInvoice : CoreEntityBase {
 }
 
 public abstract record CoreEntityBase : ICoreEntity {
-  public SystemName System { get; set; }
-  public SystemEntityId SystemId { get; set; }
   public CoreEntityId CoreId { get; set; }
-  public DateTime DateCreated { get; set; }
-  public DateTime DateUpdated { get; set; }
-  public SystemName LastUpdateSystem { get; set; }
-  public CoreEntityChecksum? CoreEntityChecksum { get; set; }
   
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase() {}
-  protected CoreEntityBase(CoreEntityId coreid, SystemEntityId sysid) {
-    SystemId = sysid;
-    CoreId = coreid;
-  }
-  
+  protected CoreEntityBase(CoreEntityId coreid) => CoreId = coreid;
+
   public abstract record Dto<E> : ICoreEntityDto<E> 
       where E : CoreEntityBase {
     public string CoreId { get; init; } = null!;
-    public string? System { get; init; }
-    public string? SystemId { get; init; }
-    public DateTime? DateCreated { get; init; }
-    public DateTime? DateUpdated { get; init; }
-    public string? LastUpdateSystem { get; init; }
-    public string? CoreEntityChecksum { get; init; }
     
     public abstract E ToBase();
     
     protected E FillBaseProperties(E e) { 
       e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
-      e.System = new(System ?? throw new ArgumentNullException(nameof(System)));
-      e.SystemId = new (SystemId ?? throw new ArgumentNullException(nameof(SystemId)));
-      e.DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated));
-      e.DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated));
-      e.LastUpdateSystem = LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem));
-      e.CoreEntityChecksum = CoreEntityChecksum is null ? null : new(CoreEntityChecksum);
       return e;
     }
   }

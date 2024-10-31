@@ -40,16 +40,9 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
 
   public record Dto : ICoreEntityDto<CoreEntity> {
     public string CoreId { get; init; } = null!;
-    
-    public string? System { get; init; }
-    public string? SystemId { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public DateOnly? DateOfBirth { get; init; }
-    public DateTime? DateUpdated { get; init; }
-    public string? LastUpdateSystem { get; init; }
-    public DateTime? DateCreated { get; init; } 
-    public string? CoreEntityChecksum { get; init; }
     
     public CoreEntity ToBase() => new(
         new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
@@ -61,11 +54,6 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
 
 public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEntity {
   public CoreEntityId CoreId { get; set; } = CoreId;
-  public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public SystemName System { get; set; } = Constants.System2Name;
-  public SystemName LastUpdateSystem { get; set; } = Constants.System2Name;
-  public DateTime DateUpdated { get; set; } = DateUpdated;
-  public DateTime DateCreated { get; set; } = DateUpdated;
   
   public string DisplayName { get; } = CoreId;
   
