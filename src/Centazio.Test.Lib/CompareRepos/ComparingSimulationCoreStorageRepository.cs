@@ -9,13 +9,13 @@ namespace Centazio.Test.Lib.CompareRepos;
 
 public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageRepository repo1, AbstractCoreStorageRepository repo2, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
 
-  public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+  public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
     // var (result1, result2) = (await repo1.Upsert(coretype, entities), await repo2.Upsert(coretype, entities));
     var result1 = await repo1.Upsert(coretype, entities);
     var result2 = await repo2.Upsert(coretype, entities);
     return ValidateAndReturn(result1, result2);
   }
-  
+
   public override async ValueTask DisposeAsync() {
     await repo1.DisposeAsync();
     await repo2.DisposeAsync();
@@ -27,7 +27,7 @@ public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageReposit
     return ValidateAndReturn(result1, result2);
   }
   
-  protected override async Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
+  protected override async Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<CoreEntityAndMetaDtos<D>, bool>> predicate) {
     var result1 = await (Task<List<CoreEntityAndMeta>>) repo1.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [predicate])!;
     var result2 = await (Task<List<CoreEntityAndMeta>>) repo2.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [predicate])!;
     return ValidateAndReturn(result1, result2);

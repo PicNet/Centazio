@@ -26,9 +26,8 @@ public static class TestingFactories {
   public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
-    return new CoreEntityAndMeta(
-        new CoreEntity(id, first, last, dob),
-        new CoreStorageMeta(Constants.System1Name, new (id.Value), Constants.CoreEntityName, id, UtcDate.UtcNow, UtcDate.UtcNow, Constants.System1Name));
+    var core = new CoreEntity(id, first, last, dob);
+    return CoreEntityAndMeta.Create(Constants.System1Name, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
   }
 
   public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryBaseCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  

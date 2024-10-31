@@ -52,19 +52,26 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     await using var conn = getdb();
     var idstrs = coreids.Select(id => id.Value);
-    return await conn.CoreEntities.Where(e => idstrs.Contains(e.CoreId)).ToDictionaryAsync(dto => new CoreEntityId(dto.CoreId ?? throw new Exception()), dto => new CoreEntityChecksum(dto.CoreEntityChecksum ?? throw new Exception()));
+    return await conn.Metas
+        .Where(m => idstrs.Contains(m.CoreId))
+        .ToDictionaryAsync(
+            dto => new CoreEntityId(dto.CoreId ?? throw new Exception()), 
+            dto => new CoreEntityChecksum(dto.CoreEntityChecksum ?? throw new Exception()));
   }
   
-  public async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+
+  public async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
     await using var conn = getdb();
-    var ids = entities.Select(e => e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId.Value);
-    var existings = conn.CoreEntities.Where(e => ids.Contains(e.CoreId)).Select(e => e.CoreId);
+    var ids = entities.Select(e => e.CoreEntity.CoreId.Value);
+    var existings = conn.CoreEntities.Where(e => ids.Contains(e.CoreId)).Select(e => e.CoreId).ToList();
     entities.ForEach(e => {
-      var dto = (CoreEntity.Dto) DtoHelpers.ToDto(e.UpdatedCoreEntityAndMeta) with { CoreEntityChecksum = e.UpdatedCoreEntityChecksum };
-      conn.Attach(dto).State = existings.Contains(dto.CoreId) ? EntityState.Modified : EntityState.Added;
+      var dtos = e.ToDtos();
+      var isupdate = existings.Contains(e.CoreEntity.CoreId.Value);
+      conn.Attach(dtos.coreentdto).State = isupdate ? EntityState.Modified : EntityState.Added;
+      conn.Attach(dtos.metadto).State = isupdate ? EntityState.Modified : EntityState.Added;
     });
     await conn.SaveChangesAsync();
-    return entities.Select(c => c.UpdatedCoreEntityAndMeta).ToList();
+    return entities;
   }
 
   public async ValueTask DisposeAsync() {

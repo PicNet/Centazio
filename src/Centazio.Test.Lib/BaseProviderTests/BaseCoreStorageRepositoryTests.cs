@@ -70,9 +70,10 @@ public abstract class BaseCoreStorageRepositoryTests {
   private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (CoreEntity) (await repo.GetExistingEntities(Constants.CoreEntityName, [coreid])).Single().CoreEntity;
   
   private Task DoUpsert(CoreEntityAndMeta coreent) => DoUpsert([coreent]);
+  
   private Task DoUpsert(List<CoreEntityAndMeta> coreents) {
     coreents.ForEach(ValidateEntityPreUpsert);
-    return repo.Upsert(Constants.CoreEntityName, coreents.Select(e => (e, Helpers.TestingCoreEntityChecksum(e.CoreEntity))).ToList());
+    return repo.Upsert(Constants.CoreEntityName, coreents);
   }
 
   private void ValidateEntityPreUpsert(CoreEntityAndMeta coreent) {

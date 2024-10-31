@@ -11,15 +11,13 @@ public class PromotionBag(StagedEntity staged) {
   public Map.CoreToSysMap? Map { get; set; }
   public CoreEntityAndMeta? PreExistingCoreEntityAndMeta { get; set; }
   public CoreEntityChecksum? PreExistingCoreEntityChecksum { get; set; }
-  public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
-  
   public CoreEntityAndMeta? UpdatedCoreEntityAndMeta { get; internal set; }
   public ValidString? IgnoreReason { get; private set; }
   
   public CoreEntityAndMeta CoreEntityAndMeta => UpdatedCoreEntityAndMeta ?? throw new Exception();
   
   public void MarkIgnore(ValidString reason) {
-    Log.Debug($"PromotionBag.MarkIgnore[{CoreEntityAndMeta.CoreEntity.DisplayName}] - reason[{reason}]");
+    Log.Debug($"PromotionBag.MarkIgnore[{UpdatedCoreEntityAndMeta?.CoreEntity.DisplayName}] - reason[{reason}]");
     
     UpdatedCoreEntityAndMeta = null;
     IgnoreReason = reason;
@@ -27,7 +25,6 @@ public class PromotionBag(StagedEntity staged) {
   
   public void MarkPromote(SystemName system, CoreEntityAndMeta coreent, IChecksumAlgorithm checksum) {
     UpdatedCoreEntityAndMeta = CheckAndSetInternalState();
-    UpdatedCoreEntityChecksum = checksum.Checksum(UpdatedCoreEntityAndMeta.CoreEntity);
     
     CoreEntityAndMeta CheckAndSetInternalState() => coreent with {
       Meta = coreent.Meta with {
@@ -35,6 +32,7 @@ public class PromotionBag(StagedEntity staged) {
         LastUpdateSystem = system,
         DateCreated = IsCreating ? UtcDate.UtcNow : coreent.Meta.DateCreated,
         OriginalSystem = IsCreating ? system : coreent.Meta.OriginalSystem,
+        CoreEntityChecksum = checksum.Checksum(coreent.CoreEntity)
       }
     };
   }

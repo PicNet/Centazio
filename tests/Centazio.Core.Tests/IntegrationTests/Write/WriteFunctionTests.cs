@@ -13,9 +13,9 @@ public class WriteFunctionTests {
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(ctl, core));
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
     
-    var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)));
-    var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)));
-    var upsert1 = await core.Upsert(C.CoreEntityName, [(customer1, Helpers.TestingCoreEntityChecksum(customer1.CoreEntity)), (customer2, Helpers.TestingCoreEntityChecksum(customer2.CoreEntity))]);
+    var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    var upsert1 = await core.Upsert(C.CoreEntityName, [customer1, customer2]);
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
       Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(customer1.Meta.OriginalSystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
@@ -25,8 +25,8 @@ public class WriteFunctionTests {
     
     TestingUtcDate.DoTick();
     
-    var customer22 = customer2.Update((CoreEntity) customer2.CoreEntity with { FirstName = "22" }, C.System2Name);
-    var upsert2 = await core.Upsert(C.CoreEntityName, [(customer22, Helpers.TestingCoreEntityChecksum(customer22.CoreEntity))]);
+    var customer22 = customer2.Update(C.System2Name, (CoreEntity) customer2.CoreEntity with { FirstName = "22" }, Helpers.TestingCoreEntityChecksum);
+    var upsert2 = await core.Upsert(C.CoreEntityName, [customer22]);
     var res2 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22.CoreEntity)) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
@@ -52,8 +52,8 @@ public class WriteFunctionTests {
     var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
 
     // add some data, as the write function will not be called if there is nothing to 'write'
-    var ceam = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)));
-    await core.Upsert(C.CoreEntityName, [(ceam, Helpers.TestingCoreEntityChecksum(ceam.CoreEntity))]);
+    var ceam = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    await core.Upsert(C.CoreEntityName, [ceam]);
     
     var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
@@ -72,7 +72,7 @@ public class WriteFunctionTests {
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(C.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
     Assert.That(obj.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName)));
     Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName).Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? String.Empty, func.Thrown?.ToString())));
-    Assert.That(allcusts, Is.EquivalentTo(new [] { ceam }));
+    Assert.That(allcusts, Is.EquivalentTo(new [] { ceam.CoreEntity }));
     Assert.That(maps, Is.Empty);
   }
 }

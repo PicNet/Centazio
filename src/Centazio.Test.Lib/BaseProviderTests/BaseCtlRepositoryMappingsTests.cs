@@ -133,7 +133,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
     async Task<CoreEntity> SimulatePromoteOperationRunner(CoreEntityId coreid, SystemName system, SystemEntityId sysid) {
       TestingUtcDate.DoTick();
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue);
-      await corestore.Upsert(Constants.CoreEntityName, [(new CoreEntityAndMeta(c, new CoreStorageMeta(system, sysid, Constants.CoreEntityName, c.CoreId, UtcDate.UtcNow, UtcDate.UtcNow, system)), Helpers.TestingCoreEntityChecksum(c))]);
+      await corestore.Upsert(Constants.CoreEntityName, [CoreEntityAndMeta.Create(system, sysid, c, Helpers.TestingCoreEntityChecksum(c))]);
       await ctl.CreateSysMap(system, Constants.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
       return c;
     }
@@ -162,8 +162,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
-    var c2dup = new CoreEntity(Constants.CoreE1Id1, name, name, DateOnly.MinValue);
-    var c2cem = new CoreEntityAndMeta(c2dup, new CoreStorageMeta(Constants.System1Name, Constants.Sys1Id2, Constants.CoreEntityName, c2dup.CoreId, UtcDate.UtcNow, UtcDate.UtcNow, Constants.System1Name));
+    var c2cem = CoreEntityAndMeta.Create(Constants.System1Name, Constants.Sys1Id2, new CoreEntity(Constants.CoreE1Id1, name, name, DateOnly.MinValue), Helpers.TestingCoreEntityChecksum);
     var c2 = await SimulatePromoteOperationRunnerFixed(Constants.System2Name, Constants.CoreEntityName, [c2cem]);
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }

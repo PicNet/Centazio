@@ -6,12 +6,12 @@ namespace Centazio.Test.Lib.InMemRepos;
 
 public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   
-  private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, (CoreEntityAndMeta CoreEntityAndMeta, CoreEntityChecksum CoreEntityChecksum)>> db = new();
+  private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, CoreEntityAndMeta>> db = new();
   
   public Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<CoreEntityAndMeta>());
     var lst = fulllst
-        .Where(c => c.Value.CoreEntityAndMeta.Meta.LastUpdateSystem != exclude.Value && c.Value.CoreEntityAndMeta.Meta.DateCreated > after || c.Value.CoreEntityAndMeta.Meta.DateUpdated > after).Select(c => c.Value.CoreEntityAndMeta)
+        .Where(c => c.Value.Meta.LastUpdateSystem != exclude.Value && c.Value.Meta.DateCreated > after || c.Value.Meta.DateUpdated > after).Select(c => c.Value)
         .ToList();
     return Task.FromResult(lst);
   }
@@ -20,7 +20,7 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   public Task<List<CoreEntityAndMeta>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     if (!coreids.Any()) return Task.FromResult(new List<CoreEntityAndMeta>());
     if (!db.TryGetValue(coretype, out var fulllst)) throw new Exception("Could not find all specified core entities");
-    var lst = coreids.Select(id => fulllst.SingleOrDefault(e => e.Value.CoreEntityAndMeta.CoreEntity.CoreId == id).Value.CoreEntityAndMeta)
+    var lst = coreids.Select(id => fulllst.SingleOrDefault(e => e.Value.CoreEntity.CoreId == id).Value)
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         .Where(e => e is not null)
         .ToList();
@@ -35,22 +35,21 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
     var result = coreids
         .Where(coreid => dbtype.ContainsKey(coreid))
         .Select(coreid => dbtype[coreid])
-        .ToDictionary(t => t.CoreEntityAndMeta.CoreEntity.CoreId, e => new CoreEntityChecksum(e.CoreEntityChecksum));
+        .ToDictionary(t => t.CoreEntity.CoreId, e => e.Meta.CoreEntityChecksum);
     return Task.FromResult(result);
   }
 
-  public Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
-    if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, (CoreEntityAndMeta CoreEntity, CoreEntityChecksum CoreEntityChecksum)>();
+  public Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
+    if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, CoreEntityAndMeta>();
     var upserted = entities.Select(e => {
-      db[coretype][e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId] = (e.UpdatedCoreEntityAndMeta, e.UpdatedCoreEntityChecksum);
-      return e.UpdatedCoreEntityAndMeta;
+      return db[coretype][e.CoreEntity.CoreId] = e;
     }).ToList();
     return Task.FromResult(upserted);
   }
 
   public Task<List<CoreEntity>> GetAllCoreEntities() {
     if (!db.TryGetValue(CoreEntityTypeName.From<CoreEntity>(), out var fulllst)) return Task.FromResult(new List<CoreEntity>());
-    return Task.FromResult(fulllst.Values.Select(ec => ec.CoreEntityAndMeta.As<CoreEntity>()).ToList());
+    return Task.FromResult(fulllst.Values.Select(ec => ec.As<CoreEntity>()).ToList());
   }
   
   public ValueTask DisposeAsync() {

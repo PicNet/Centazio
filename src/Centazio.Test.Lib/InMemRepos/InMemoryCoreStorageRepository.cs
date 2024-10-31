@@ -10,19 +10,19 @@ namespace Centazio.Test.Lib.InMemRepos;
 public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
   private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();
   
-  public override Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+  public override Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
     if (!db.ContainsKey(coretype)) db[coretype] = new();
     var target = db[coretype];
-    var updated = entities.Count(e => target.ContainsKey(e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId));
+    var updated = entities.Count(e => target.ContainsKey(e.CoreEntity.CoreId));
     var upserted = entities.Select(e => {
-      if (target.ContainsKey(e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId)) { tracker.Update(e.UpdatedCoreEntityAndMeta); } 
-      else { tracker.Add(e.UpdatedCoreEntityAndMeta); }
+      if (target.ContainsKey(e.CoreEntity.CoreId)) { tracker.Update(e); } 
+      else { tracker.Add(e); }
       
-      target[e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId] = Json.Serialize(e.UpdatedCoreEntityAndMeta.ToDtos());
-      return e.UpdatedCoreEntityAndMeta;
+      target[e.CoreEntity.CoreId] = Json.Serialize(e.ToDtos());
+      return e;
     }).ToList();
     
-    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.UpdatedCoreEntityAndMeta.CoreEntity.DisplayName}({e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId})")) + $"] Created[{entities.Count - updated}] Updated[{updated}]");
+    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")) + $"] Created[{entities.Count - updated}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
   
@@ -33,14 +33,14 @@ public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEnti
     return Task.FromResult(CoreEntityAndMeta.FromJson<E, D>(json).As<E>());
   }
 
-  protected override Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
+  protected override Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<CoreEntityAndMetaDtos<D>, bool>> predicate) {
     var coretype = CoreEntityTypeName.From<E>();
     if (!db.ContainsKey(coretype)) db[coretype] = new();
     
-    var where = predicate.Compile();
     var results = db[coretype].Values
-        .Select(CoreEntityAndMeta.FromJson<E, D>)
-        .Where(ceam => where(DtoHelpers.ToDto<E, D>((E) ceam.CoreEntity)))
+        .Select(Json.Deserialize<CoreEntityAndMetaDtos<D>>)
+        .Where(predicate.Compile())
+        .Select(dtos => new CoreEntityAndMeta(dtos.coreentdto.ToBase(), dtos.metadto.ToBase()))
         .ToList();
     return Task.FromResult(results);
   }

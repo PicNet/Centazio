@@ -25,9 +25,9 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
 
   [Test] public async Task Test_adding_new_entity() {
     var adding = CreateMemTypeCEAM();
-    var added = await repo.Upsert(CORETYPE, [(adding, Helpers.TestingCoreEntityChecksum(adding.CoreEntity))]);
+    var added = await repo.Upsert(CORETYPE, [adding]);
     var single = await repo.GetMembershipType(adding.CoreEntity.CoreId);
-    var queried1 = await repo.GetMembershipTypes(m => true);
+    var queried1 = await repo.GetMembershipTypes(_ => true);
     var queried2 = await repo.GetExistingEntities(CORETYPE, [adding.CoreEntity.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow);
@@ -43,13 +43,14 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
 
   [Test] public async Task Test_updating_entity() {
     var ceam = CreateMemTypeCEAM();
-    var added = await repo.Upsert(CORETYPE, [(ceam, Helpers.TestingCoreEntityChecksum(ceam.CoreEntity))]);
+    var added = await repo.Upsert(CORETYPE, [ceam]);
     TestingUtcDate.DoTick();
     
-    var updating = ceam.Update((CoreMembershipType) ceam.CoreEntity with { Name = nameof(Test_updating_entity)} , SYS); 
-    var updated = await repo.Upsert(CORETYPE, [(updating, Helpers.TestingCoreEntityChecksum(updating.CoreEntity))]);
+    var coreupdate = (CoreMembershipType) ceam.CoreEntity with { Name = nameof(Test_updating_entity)};
+    var updating = ceam.Update(SYS, coreupdate, Helpers.TestingCoreEntityChecksum(coreupdate)); 
+    var updated = await repo.Upsert(CORETYPE, [updating]);
     var single = await repo.GetMembershipType(ceam.CoreEntity.CoreId);
-    var queried1 = await repo.GetMembershipTypes(m => true);
+    var queried1 = await repo.GetMembershipTypes(_ => true);
     var queried2 = await repo.GetExistingEntities(CORETYPE, [updating.CoreEntity.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore exclude"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore exclude"), CORETYPE, UtcDate.UtcNow);
@@ -63,13 +64,13 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
     Assert.That(queried2.Single(), Is.EqualTo(updating));
     Assert.That(queried3.Single(), Is.EqualTo(updating));
     Assert.That(queried4, Is.Empty);
-    Assert.That(tracker.Added.Single(), Is.EqualTo(ceam));
-    Assert.That(tracker.Updated.Single(), Is.EqualTo(updating));
+    Assert.That(tracker.Added.Single(), Is.EqualTo(ceam.CoreEntity));
+    Assert.That(tracker.Updated.Single(), Is.EqualTo(updating.CoreEntity));
   }
 
   private CoreEntityAndMeta CreateMemTypeCEAM() {
     var core = new CoreMembershipType(new(Guid.NewGuid().ToString()), nameof(CoreMembershipType));
-    return new CoreEntityAndMeta(core, new CoreStorageMeta(SYS, new(Guid.NewGuid().ToString()), CoreEntityTypeName.From<CoreMembershipType>(), core.CoreId, UtcDate.UtcNow, UtcDate.UtcNow, SYS));
+    return CoreEntityAndMeta.Create(SYS, new(Guid.NewGuid().ToString()), core, Helpers.TestingCoreEntityChecksum(core));
   }
 
 }

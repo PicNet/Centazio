@@ -156,7 +156,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     var results = toeval.Select(eval => {
       if (IgnoreNext) return eval.MarkForIgnore("ignore");
       var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-      var ceam = eval.ExistingCoreEntityAndMeta?.Update(core, Config.System) ?? CoreEntityAndMeta.Create(Config.System, eval.SystemEntity.SystemId, core);
+      var ceam = eval.ExistingCoreEntityAndMeta?.Update(Config.System, core, Config.ChecksumAlgorithm.Checksum(core)) ?? CoreEntityAndMeta.Create(Config.System, eval.SystemEntity.SystemId, core, Config.ChecksumAlgorithm.Checksum(core));
       return eval.MarkForPromotion(ceam);
     }).ToList();
     return Task.FromResult(results); 

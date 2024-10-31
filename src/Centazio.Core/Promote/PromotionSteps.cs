@@ -136,7 +136,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var topromote = ToPromote();
     var toignore = topromote.Where(bag => {
       if (bag.PreExistingCoreEntityChecksum is null) return false;
-      return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityChecksum ?? throw new Exception()) && bag.UpdatedCoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
+      return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum ?? throw new Exception()) && bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
     }).ToList();
     toignore.ForEach(bag => bag.MarkIgnore("no meaningful change detected on entity"));
   } 
@@ -145,7 +145,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (IsEmpty()) return;
 
     await Task.WhenAll([
-      core.Upsert(corename, ToPromote().Select(bag => (bag.UpdatedCoreEntityAndMeta!, bag.UpdatedCoreEntityChecksum!)).ToList()),
+      core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
       ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
       ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
     ]);

@@ -75,7 +75,7 @@ public class PromoteOperationRunnerTests {
         if (idx % 2 == 1) return eval.MarkForIgnore($"Ignore: {idx}");
         var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
         // todo: move this code to the `MarkForPromotion` method so it can be reused
-        var ceam = eval.ExistingCoreEntityAndMeta?.Update(core, config.State.System) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core);
+        var ceam = eval.ExistingCoreEntityAndMeta?.Update(config.State.System, core, Helpers.TestingCoreEntityChecksum) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core, Helpers.TestingCoreEntityChecksum);
         return eval.MarkForPromotion(ceam);
       }).ToList();
       return Task.FromResult(results);
