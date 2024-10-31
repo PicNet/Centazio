@@ -4,7 +4,7 @@ using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
-public class SqliteCoreStorageRepositoryTests() : BaseCoreStorageRepositoryTests(false) {
+public class SqliteCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
   
   protected override async Task<ITestingCoreStorage> GetRepository() => await new TestingEfCoreStorageRepository(() => new SqliteTestingCoreStorageDbContext(), new SqliteDbFieldsHelper()).Initalise();
 }

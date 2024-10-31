@@ -104,6 +104,5 @@ public abstract class AbstractCtlRepository : ICtlRepository {
     if (validatetype && coreents.Any(e => CoreEntityTypeName.From(e) != coretype)) throw new ArgumentException($"All core entities should match expected CoreEntityTypeName[{coretype}]");
     if (coreents.Any(e => CoreEntityTypeName.From(e) != CoreEntityTypeName.From(coreents.First()))) throw new ArgumentException($"All core entities should be of the same CoreEntityTypeName[{CoreEntityTypeName.From(coreents.First())}]");
     if (coreents.GroupBy(e => e.CoreId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate core entities (by CoreId)");
-    if (coreents.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate core entities (by SystemId)");
   }
 }

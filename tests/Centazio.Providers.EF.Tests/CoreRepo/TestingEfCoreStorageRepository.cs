@@ -18,25 +18,30 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
     return this;
   }
   
-  public async Task<List<ICoreEntity>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
+  public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (coretype != CoreEntityTypeName.From<CoreEntity>()) throw new Exception();
+    // todo: rename conn to db everywhere
     await using var conn = getdb();
-    return conn.CoreEntities
-        .Where(e => e.System != exclude.Value && e.DateUpdated > after)
-        .ToList()
-        .Select(dto => (ICoreEntity) dto.ToBase()).ToList();
+    var metas = await conn.Metas.Where(m => m.OriginalSystem != exclude.Value && m.CoreEntityTypeName == coretype.Value && m.DateUpdated > after).ToListAsync();
+    var cids = metas.Select(m => m.CoreId);
+    var cores = await conn.CoreEntities.Where(e => cids.Contains(e.CoreId)).ToListAsync();
+    return metas.Select(m => {
+      var core = cores.Single(e => e.CoreId == m.CoreId); 
+      return new CoreEntityAndMeta(core.ToBase(), m.ToBase());
+    }).ToList();
   }
 
-  public async Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
+  public async Task<List<CoreEntityAndMeta>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     if (coretype != CoreEntityTypeName.From<CoreEntity>()) throw new Exception();
     await using var conn = getdb();
     var idstrs = coreids.Select(id => id.Value);
-    var entities = conn.CoreEntities
-        .Where(e => idstrs.Contains(e.CoreId))
-        .ToList()
-        .Select(dto => (ICoreEntity) dto.ToBase()).ToList();
-    if (entities.Count != coreids.Count) throw new Exception($"Some core entities could not be found");
-    return entities;
+    var metas = await conn.Metas.Where(m => m.CoreEntityTypeName == coretype.Value && idstrs.Contains(m.CoreId)).ToListAsync();
+    var cores = await conn.CoreEntities.Where(e => idstrs.Contains(e.CoreId)).ToListAsync();
+    if (cores.Count != coreids.Count) throw new Exception($"Some core entities could not be found");
+    return metas.Select(m => {
+      var core = cores.Single(e => e.CoreId == m.CoreId); 
+      return new CoreEntityAndMeta(core.ToBase(), m.ToBase());
+    }).ToList();
   }
   
   public async Task<List<CoreEntity>> GetAllCoreEntities() {
@@ -49,17 +54,17 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
     var idstrs = coreids.Select(id => id.Value);
     return await conn.CoreEntities.Where(e => idstrs.Contains(e.CoreId)).ToDictionaryAsync(dto => new CoreEntityId(dto.CoreId ?? throw new Exception()), dto => new CoreEntityChecksum(dto.CoreEntityChecksum ?? throw new Exception()));
   }
-
-  public async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+  
+  public async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
     await using var conn = getdb();
-    var ids = entities.Select(e => e.UpdatedCoreEntity.CoreId.Value);
+    var ids = entities.Select(e => e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId.Value);
     var existings = conn.CoreEntities.Where(e => ids.Contains(e.CoreId)).Select(e => e.CoreId);
     entities.ForEach(e => {
-      var dto = (CoreEntity.Dto) DtoHelpers.ToDto(e.UpdatedCoreEntity) with { CoreEntityChecksum = e.UpdatedCoreEntityChecksum };
+      var dto = (CoreEntity.Dto) DtoHelpers.ToDto(e.UpdatedCoreEntityAndMeta) with { CoreEntityChecksum = e.UpdatedCoreEntityChecksum };
       conn.Attach(dto).State = existings.Contains(dto.CoreId) ? EntityState.Modified : EntityState.Added;
     });
     await conn.SaveChangesAsync();
-    return entities.Select(c => c.UpdatedCoreEntity).ToList();
+    return entities.Select(c => c.UpdatedCoreEntityAndMeta).ToList();
   }
 
   public async ValueTask DisposeAsync() {

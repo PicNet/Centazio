@@ -3,6 +3,51 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core.CoreRepo;
 
+// todo: add checksum?
+public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId OriginalSystemId, CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, DateTime DateCreated, DateTime DateUpdated, SystemName? LastUpdateSystem) {
+  public record Dto : IDto<CoreStorageMeta> {
+    public string CoreId { get; init; } = null!;
+    
+    public string? OriginalSystem { get; init; }
+    public string? OriginalSystemId { get; init; }
+    public string? CoreEntityTypeName { get; init; }
+    public DateTime? DateCreated { get; init; }
+    public DateTime? DateUpdated { get; init; }
+    public string? LastUpdateSystem { get; init; }
+    
+    public string? CoreEntityChecksum { get; init; }
+    
+    public CoreStorageMeta ToBase() => new(
+      new (OriginalSystem ?? throw new ArgumentNullException(nameof(OriginalSystem))),
+      new (OriginalSystemId ?? throw new ArgumentNullException(nameof(OriginalSystemId))),
+      new (CoreEntityTypeName ?? throw new ArgumentNullException(nameof(CoreEntityTypeName))),
+      new (CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
+      DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
+      new (LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem)))
+    );
+  }
+}
+
+public record CoreEntityAndMetaDtos(object coreentdto, CoreStorageMeta.Dto metadto);
+public record CoreEntityAndMetaDtos<D>(D coreentdto, CoreStorageMeta.Dto metadto);
+
+public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
+  public E As<E>() => (E) CoreEntity;
+  public static CoreEntityAndMeta Create(SystemName system, SystemEntityId sysentid, ICoreEntity coreent) => 
+      new(coreent, new CoreStorageMeta(system, sysentid, new(coreent.GetType().Name), coreent.CoreId, UtcDate.UtcNow, UtcDate.UtcNow, system));
+
+  public CoreEntityAndMeta Update(ICoreEntity coreent, SystemName system) => 
+      new(coreent, Meta with { DateUpdated = UtcDate.UtcNow, LastUpdateSystem = system });
+  
+  public CoreEntityAndMetaDtos ToDtos() => new(DtoHelpers.ToDto(CoreEntity), DtoHelpers.ToDto<CoreStorageMeta, CoreStorageMeta.Dto>(Meta));
+  
+  public static CoreEntityAndMeta FromJson<E, D>(string json) where E : ICoreEntity where D : class, ICoreEntityDto<E> {
+    var raw = Json.Deserialize<CoreEntityAndMetaDtos<D>>(json);
+    return new CoreEntityAndMeta(raw.coreentdto.ToBase(), raw.metadto.ToBase());
+  }
+}
+
 public interface ICoreStorage : IAsyncDisposable {
 
   /// <summary>
@@ -10,12 +55,12 @@ public interface ICoreStorage : IAsyncDisposable {
   /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
   /// systems writing back their own changes.
   /// </summary>
-  Task<List<ICoreEntity>> GetEntitiesToWrite([IgnoreNamingConventions] SystemName exclude, CoreEntityTypeName coretype, DateTime after);
+  Task<List<CoreEntityAndMeta>> GetEntitiesToWrite([IgnoreNamingConventions] SystemName exclude, CoreEntityTypeName coretype, DateTime after);
   
   /// <summary>
   /// Gets all core entities of the specified type with the given Ids 
   /// </summary>
-  Task<List<ICoreEntity>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
+  Task<List<CoreEntityAndMeta>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
   
   /// <summary>
   /// Gets the existing checksums of the specified entities that are already in core storage.
@@ -30,5 +75,5 @@ public interface ICoreStorage : IAsyncDisposable {
   /// <summary>
   /// Upsert all entities into core storage
   /// </summary>
-  Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
+  Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities);
 }

@@ -4,7 +4,7 @@ using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
-public class SqlServerCoreStorageRepositoryTests() : BaseCoreStorageRepositoryTests(false) {
+public class SqlServerCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
   
   protected override async Task<ITestingCoreStorage> GetRepository() {
     var connstr = await SqlConn.Instance.ConnStr();

@@ -47,7 +47,6 @@ public class ReflectionUtilsTests {
   [Test] public void Test_IsPropJsonIgnored() {
     Assert.That(U.IsJsonIgnore(typeof(ICoreEntity), nameof(ICoreEntity.DisplayName)), Is.True);
     Assert.That(U.IsJsonIgnore(typeof(CoreEntity), nameof(CoreEntity.DisplayName)), Is.True); // inherited
-    Assert.That(U.IsJsonIgnore(typeof(ICoreEntity), nameof(ICoreEntity.System)), Is.False);
     Assert.That(U.IsJsonIgnore(typeof(CoreEntity), nameof(CoreEntity.FirstName)), Is.False);
   }
 

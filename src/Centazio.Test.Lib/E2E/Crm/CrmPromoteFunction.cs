@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 
@@ -26,19 +27,29 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       nameof(CoreInvoice) => await BuildInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
 
-    List<EntityEvaluationResult> BuildMembershipTypes() => toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SystemEntity.To<CrmMembershipType>(), eval.ExistingCoreEntity?.To<CoreMembershipType>()))).ToList();
+    List<EntityEvaluationResult> BuildMembershipTypes() => toeval.Select(eval => {
+      var core = ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SystemEntity.To<CrmMembershipType>(), eval.ExistingCoreEntityAndMeta?.As<CoreMembershipType>());
+      return MarkForPromotion(eval, core);
+    }).ToList();
 
-    List<EntityEvaluationResult> BuildCustomers() => toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.CrmCustomerToCoreCustomer(eval.SystemEntity.To<CrmCustomer>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList();
+    List<EntityEvaluationResult> BuildCustomers() => toeval.Select(eval => {
+      var core = ctx.Converter.CrmCustomerToCoreCustomer(eval.SystemEntity.To<CrmCustomer>(), eval.ExistingCoreEntityAndMeta?.As<CoreCustomer>());
+      return MarkForPromotion(eval, core);
+    }).ToList();
 
     async Task<List<EntityEvaluationResult>> BuildInvoices() {
       var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
       var maps = await ctx.CtlRepo.GetRelatedCoreIdsFromSystemIds(Config.System, CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(CrmInvoice.CustomerId), true);
       return await toeval.Select(async eval => {
         var crminv = eval.SystemEntity.To<CrmInvoice>();
-        return eval.MarkForPromotion(await ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[crminv.CustomerSystemId]));
+        var core = await ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntityAndMeta?.As<CoreInvoice>(), maps[crminv.CustomerSystemId]);
+        return MarkForPromotion(eval, core);
       }).Synchronous();
+    }
+    
+    EntityEvaluationResult MarkForPromotion(EntityForPromotionEvaluation eval, ICoreEntity core) {
+      var ceam = eval.ExistingCoreEntityAndMeta?.Update(core, SimulationConstants.CRM_SYSTEM) ?? CoreEntityAndMeta.Create(SimulationConstants.CRM_SYSTEM, eval.SystemEntity.SystemId, core);
+      return eval.MarkForPromotion(ceam);
     }
   }
 }

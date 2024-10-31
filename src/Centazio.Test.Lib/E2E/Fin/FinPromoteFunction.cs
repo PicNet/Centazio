@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 
@@ -24,15 +25,20 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       nameof(CoreInvoice) => await EvaluateInvoices(), 
       _ => throw new NotSupportedException(config.State.Object) };
 
-    Task<List<EntityEvaluationResult>> EvaluateCustomers() => Task.FromResult(toeval.Select(eval => 
-        eval.MarkForPromotion(ctx.Converter.FinAccountToCoreCustomer(eval.SystemEntity.To<FinAccount>(), eval.ExistingCoreEntity?.To<CoreCustomer>()))).ToList());
+    Task<List<EntityEvaluationResult>> EvaluateCustomers() => Task.FromResult(toeval.Select(eval => {
+      var core = ctx.Converter.FinAccountToCoreCustomer(eval.SystemEntity.To<FinAccount>(), eval.ExistingCoreEntityAndMeta?.As<CoreCustomer>());
+      var ceam = eval.ExistingCoreEntityAndMeta?.Update(core, config.State.System) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core);
+      return eval.MarkForPromotion(ceam);
+    }).ToList());
 
     async Task<List<EntityEvaluationResult>> EvaluateInvoices() {
       var sysents = toeval.Select(eval => eval.SystemEntity).ToList();
       var maps = await ctx.CtlRepo.GetRelatedCoreIdsFromSystemIds(Config.System, CoreEntityTypeName.From<CoreCustomer>(), sysents, nameof(FinInvoice.AccountId), true);
       return await toeval.Select(async eval => {
         var fininv = eval.SystemEntity.To<FinInvoice>();
-        return eval.MarkForPromotion(await ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntity?.To<CoreInvoice>(), maps[fininv.AccountSystemId]));
+        var core = await ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntityAndMeta?.As<CoreInvoice>(), maps[fininv.AccountSystemId]);
+        var ceam = eval.ExistingCoreEntityAndMeta?.Update(core, config.State.System) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core);
+        return eval.MarkForPromotion(ceam);
       }).Synchronous();
     }
   }

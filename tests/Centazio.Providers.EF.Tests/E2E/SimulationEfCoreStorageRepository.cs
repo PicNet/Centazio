@@ -33,24 +33,30 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreMembershipTypeName));
   }
 
-  public override async Task<List<ICoreEntity>> Upsert(CoreEntityTypeName coretype, List<(ICoreEntity UpdatedCoreEntity, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
-    var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreId);
+  public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<(CoreEntityAndMeta UpdatedCoreEntityAndMeta, CoreEntityChecksum UpdatedCoreEntityChecksum)> entities) {
+    var existing = (await GetExistingEntities(coretype, entities.Select(e => e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreEntity.CoreId);
     await using var db = getdb();
     entities.ForEach(t => {
-      var e = (CoreEntityBase) t.UpdatedCoreEntity;
-      var isexisting = existing.ContainsKey(e.CoreId);
-      if (isexisting) { tracker.Update(e); } else { tracker.Add(e); }
-      db.Attach(DtoHelpers.ToDto(e)).State = isexisting ? EntityState.Modified : EntityState.Added;
+      var isexisting = existing.ContainsKey(t.UpdatedCoreEntityAndMeta.CoreEntity.CoreId);
+      if (isexisting) { tracker.Update(t.UpdatedCoreEntityAndMeta); } else { tracker.Add(t.UpdatedCoreEntityAndMeta); }
+      var dtos = t.UpdatedCoreEntityAndMeta.ToDtos();
+      db.Attach(dtos.coreentdto).State = isexisting ? EntityState.Modified : EntityState.Added;
+      db.Attach(dtos.metadto).State = isexisting ? EntityState.Modified : EntityState.Added;
     });
     await db.SaveChangesAsync();
 
-    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.UpdatedCoreEntity.DisplayName}({e.UpdatedCoreEntity.CoreId})")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}]");
-    return entities.Select(c => c.UpdatedCoreEntity).ToList();
+    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.UpdatedCoreEntityAndMeta.CoreEntity.DisplayName}({e.UpdatedCoreEntityAndMeta.CoreEntity.CoreId})")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}]");
+    return entities.Select(c => c.UpdatedCoreEntityAndMeta).ToList();
   }
   
-  protected override async Task<List<E>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
+  protected override async Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<D, bool>> predicate) {
     await using var db = getdb();
-    var lst = (await db.Set<D>().Where(predicate).ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    var cores = await db.Set<D>().Where(predicate).ToListAsync();
+    var metas = await db.Metas.Where(m => cores.Select(c => c.CoreId).Contains(m.CoreId)).ToListAsync();
+    var lst = cores.Select(dto => {
+      var meta = metas.Single(m => m.CoreId == dto.CoreId);
+      return new CoreEntityAndMeta(dto.ToBase(), meta.ToBase());
+    }).ToList();
     return lst;
   }
   

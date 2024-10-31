@@ -33,11 +33,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   [MaxLength(64)] public string FirstName { get; init; } = FirstName;
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   [MaxLength(64)] public string LastName { get; init; } = LastName;
-  public SystemEntityId SystemId { get; set; } = new(CoreId.Value);
-  public SystemName System { get; set; } = Constants.System1Name;
-  public SystemName LastUpdateSystem { get; set; }  = Constants.System1Name;
-  public DateTime DateUpdated { get; set; }
-  public DateTime DateCreated { get; set; }
+  
   public string DisplayName => $"{FirstName} {LastName}";
   
   public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
@@ -59,13 +55,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
         new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
         FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
         LastName ?? throw new ArgumentNullException(nameof(LastName)),
-        DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth))) {
-      System = System ?? throw new ArgumentNullException(nameof(System)),
-      SystemId = new(SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
-      LastUpdateSystem = new(LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem))),
-      DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
-      DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated))
-    };
+        DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth)));
   }
 }
 

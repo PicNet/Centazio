@@ -23,10 +23,12 @@ public static class TestingFactories {
       ICoreStorage? core = null) => 
       new PromoteOperationRunner(serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
 
-  public static CoreEntity NewCoreCust(string first, string last, CoreEntityId? id = null) {
+  public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
-    return new CoreEntity(id, first, last, dob) { DateCreated = UtcDate.UtcNow, DateUpdated = UtcDate.UtcNow };
+    return new CoreEntityAndMeta(
+        new CoreEntity(id, first, last, dob),
+        new CoreStorageMeta(Constants.System1Name, new (id.Value), Constants.CoreEntityName, id, UtcDate.UtcNow, UtcDate.UtcNow, Constants.System1Name));
   }
 
   public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryBaseCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  

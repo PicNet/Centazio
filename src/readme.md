@@ -8,6 +8,8 @@
 - Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires
   heavy refactoring.  The purpose of this is that clients should not be able to interact (or even set) the internal
   meta-data properties (Dates, Checksums, Originating System, Last Update System, etc).
+  - Remove all `Meta` fields from ICoreEntity and create new table to store them 
+  - Hide `Meta` from classes that should not know about this data
 - review all code comments
 
 

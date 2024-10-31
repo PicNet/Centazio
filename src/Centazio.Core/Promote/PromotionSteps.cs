@@ -34,8 +34,8 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var coreents = await core.GetExistingEntities(corename, coreids);
     bags.ForEach(bag => {
       bag.Map = maps.SingleOrDefault(m => m.SystemId == bag.SystemEntity.SystemId);
-      bag.PreExistingCoreEntity = bag.Map?.CoreId is null ? null : coreents.Single(e => e.CoreId == bag.Map.CoreId);
-      bag.PreExistingCoreEntityChecksum = bag.PreExistingCoreEntity is null ? null : CoreChecksum(bag.PreExistingCoreEntity);  
+      bag.PreExistingCoreEntityAndMeta = bag.Map?.CoreId is null ? null : coreents.Single(e => e.Meta.CoreId == bag.Map.CoreId);
+      bag.PreExistingCoreEntityChecksum = bag.PreExistingCoreEntityAndMeta is null ? null : CoreChecksum(bag.PreExistingCoreEntityAndMeta.CoreEntity);  
     });
   }
   
@@ -44,15 +44,13 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     var list = await CallEvaluator();
     list.ForEach(result => {
       var bag = bags.Single(b => b.SystemEntity.SystemId == result.SystemEntity.SystemId);
-      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.UpdatedCoreEntity, op.FuncConfig.ChecksumAlgorithm); 
+      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.CoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm); 
       else if (result is EntityToIgnore toignore) bag.MarkIgnore(toignore.IgnoreReason);
       else throw new NotSupportedException(result.GetType().Name);
     });
 
     async Task<List<EntityEvaluationResult>> CallEvaluator() {
-      try {
-        return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.SystemEntity, bag.PreExistingCoreEntity)).ToList());
-      }
+      try { return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.SystemEntity, bag.PreExistingCoreEntityAndMeta)).ToList()); }
       catch (Exception e) {
         if (op.FuncConfig.ThrowExceptions) throw;
         error = e;
@@ -81,12 +79,12 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       var idx = topromote.FindIndex(bag => bag.SystemEntity.SystemId == sysid);
       var bag = topromote[idx];
       var props = (
-          OriginalEntity: bag.PreExistingCoreEntity ?? throw new Exception(),
+          OriginalEntityAndMeta: bag.PreExistingCoreEntityAndMeta ?? throw new Exception(),
           OriginalEntityChecksum: bag.PreExistingCoreEntityChecksum,
           ToPromoteIdx: idx,
-          ToPromoteCore: bag.UpdatedCoreEntity!,
-          PreChangeChecksumSubset: bag.UpdatedCoreEntity!.GetChecksumSubset(),
-          PreChangeChecksum: CoreChecksum(bag.UpdatedCoreEntity!),
+          ToPromoteEntityAndMeta: bag.UpdatedCoreEntityAndMeta ?? throw new Exception(),
+          PreChangeChecksumSubset: bag.CoreEntityAndMeta.CoreEntity.GetChecksumSubset(),
+          PreChangeChecksum: CoreChecksum(bag.CoreEntityAndMeta.CoreEntity),
           PostChangeChecksumSubset: new object(),
           PostChangeChecksum: new CoreEntityChecksum("*"));
       
@@ -97,19 +95,19 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       // If the entity is bouncing back, it will have a new Core and SystemId (as it would have been created in the second system).
       //    We need to correct the process here and make it point to the original Core/System Id as we do not want
       //    multiple core records for the same entity.
-      topromote[props.ToPromoteIdx].CorrectBounceBackIds(props.OriginalEntity);
-      props.PostChangeChecksumSubset = props.ToPromoteCore.GetChecksumSubset();
-      props.PostChangeChecksum = CoreChecksum(props.ToPromoteCore);
+      topromote[props.ToPromoteIdx].CorrectBounceBackIds(props.OriginalEntityAndMeta);
+      props.PostChangeChecksumSubset = props.ToPromoteEntityAndMeta.CoreEntity.GetChecksumSubset();
+      props.PostChangeChecksum = CoreChecksum(props.ToPromoteEntityAndMeta.CoreEntity);
       return props;
     }).ToList();
     
-    var msgs = updated.Select(e => $"[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})] -> OriginalCoreId[{e.OriginalEntity.CoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
-          $"\n\tOriginal Checksum[{e.OriginalEntity.GetChecksumSubset()}({e.OriginalEntityChecksum})]" +
+    var msgs = updated.Select(e => $"[{e.ToPromoteEntityAndMeta.CoreEntity.DisplayName}({e.ToPromoteEntityAndMeta.Meta.CoreId})] -> OriginalCoreId[{e.OriginalEntityAndMeta.CoreEntity.CoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
+          $"\n\tOriginal Checksum[{e.OriginalEntityAndMeta.CoreEntity.GetChecksumSubset()}({e.OriginalEntityChecksum})]" +
           $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
     Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityTypeName}]" + String.Join("\n", msgs), bouncebacks.Count, system, corename);
     
     var errs = updated.Where(e => e.PreChangeChecksum != e.PostChangeChecksum)
-        .Select(e => $"\n[{e.ToPromoteCore.DisplayName}({e.ToPromoteCore.CoreId})]:" +
+        .Select(e => $"\n[{e.ToPromoteEntityAndMeta.CoreEntity.DisplayName}({e.ToPromoteEntityAndMeta.Meta.CoreId})]:" +
           $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
           $"\n\tPostchange Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]")
         .ToList();
@@ -121,7 +119,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
    
     async Task<List<SystemEntityId>> GetBounceBacks() {
       return (await ctl.GetMapsFromSystemIds(
-          system, corename, topromote.Select(bag => bag.UpdatedCoreEntity!.SystemId).ToList()))
+          system, corename, topromote.Select(bag => bag.CoreEntityAndMeta.Meta.OriginalSystemId).ToList()))
         .Select(m => m.SystemId).ToList();
     }
   }
@@ -129,7 +127,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public void IgnoreEntitiesBouncingBack() {
     if (IsEmpty()) return;
     bags
-        .Where(bag => !bag.IsIgnore && bag.UpdatedCoreEntity!.System != system)
+        .Where(bag => !bag.IsIgnore && bag.CoreEntityAndMeta.Meta.OriginalSystem != system)
         .ForEach(bag => bag.MarkIgnore("update is a bounce-back and entity is not bi-directional"));
   }
 
@@ -147,7 +145,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (IsEmpty()) return;
 
     await Task.WhenAll([
-      core.Upsert(corename, ToPromote().Select(bag => (bag.UpdatedCoreEntity!, bag.UpdatedCoreEntityChecksum!)).ToList()),
+      core.Upsert(corename, ToPromote().Select(bag => (bag.UpdatedCoreEntityAndMeta!, bag.UpdatedCoreEntityChecksum!)).ToList()),
       ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
       ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
     ]);
@@ -165,7 +163,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public PromoteOperationResult GetResults() {
     if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
     
-    var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, bag.UpdatedCoreEntity!)).ToList();
+    var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, Entity: bag.CoreEntityAndMeta.CoreEntity)).ToList();
     var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason!)).ToList();
     return new SuccessPromoteOperationResult(topromote, toignore);
   }

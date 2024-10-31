@@ -9,47 +9,51 @@ public class PromotionBag(StagedEntity staged) {
   public StagedEntity StagedEntity { get; init; } = staged;
   public ISystemEntity SystemEntity { get; set; } = null!;
   public Map.CoreToSysMap? Map { get; set; }
-  public ICoreEntity? PreExistingCoreEntity { get; set; }
+  public CoreEntityAndMeta? PreExistingCoreEntityAndMeta { get; set; }
   public CoreEntityChecksum? PreExistingCoreEntityChecksum { get; set; }
   public CoreEntityChecksum? UpdatedCoreEntityChecksum { get; set; }
   
-  public ICoreEntity? UpdatedCoreEntity { get; internal set; }
+  public CoreEntityAndMeta? UpdatedCoreEntityAndMeta { get; internal set; }
   public ValidString? IgnoreReason { get; private set; }
   
+  public CoreEntityAndMeta CoreEntityAndMeta => UpdatedCoreEntityAndMeta ?? throw new Exception();
+  
   public void MarkIgnore(ValidString reason) {
-    Log.Debug($"PromotionBag.MarkIgnore[{UpdatedCoreEntity?.DisplayName}] - reason[{reason}]");
+    Log.Debug($"PromotionBag.MarkIgnore[{CoreEntityAndMeta.CoreEntity.DisplayName}] - reason[{reason}]");
     
-    UpdatedCoreEntity = null;
+    UpdatedCoreEntityAndMeta = null;
     IgnoreReason = reason;
   } 
   
-  public void MarkPromote(SystemName system, ICoreEntity coreent, IChecksumAlgorithm checksum) {
-    UpdatedCoreEntity = CheckAndSetInternalState();
-    UpdatedCoreEntityChecksum = checksum.Checksum(UpdatedCoreEntity);
+  public void MarkPromote(SystemName system, CoreEntityAndMeta coreent, IChecksumAlgorithm checksum) {
+    UpdatedCoreEntityAndMeta = CheckAndSetInternalState();
+    UpdatedCoreEntityChecksum = checksum.Checksum(UpdatedCoreEntityAndMeta.CoreEntity);
     
-    ICoreEntity CheckAndSetInternalState() {
-      if (PreExistingCoreEntity is not null && PreExistingCoreEntity.SystemId != coreent.SystemId) throw new Exception($"PromoteEvaluator.BuildCoreEntities should never change the core entities SystemId");
-      
-      coreent.DateUpdated = UtcDate.UtcNow;
-      coreent.LastUpdateSystem = system;
-      if (!IsCreating) return coreent;
-
-      coreent.DateCreated = UtcDate.UtcNow;
-      coreent.System = system;
-      return coreent;
-    }
+    CoreEntityAndMeta CheckAndSetInternalState() => coreent with {
+      Meta = coreent.Meta with {
+        DateUpdated = UtcDate.UtcNow,
+        LastUpdateSystem = system,
+        DateCreated = IsCreating ? UtcDate.UtcNow : coreent.Meta.DateCreated,
+        OriginalSystem = IsCreating ? system : coreent.Meta.OriginalSystem,
+      }
+    };
   }
   
-  public void CorrectBounceBackIds(ICoreEntity coreent) {
-    UpdatedCoreEntity!.CoreId = coreent.CoreId;
-    UpdatedCoreEntity!.SystemId = coreent.SystemId;
+  public void CorrectBounceBackIds(CoreEntityAndMeta coreent) {
+    if (UpdatedCoreEntityAndMeta is null) throw new Exception();
+    UpdatedCoreEntityAndMeta = UpdatedCoreEntityAndMeta with {
+      Meta = UpdatedCoreEntityAndMeta.Meta with {
+        CoreId = coreent.Meta.CoreId,
+        OriginalSystemId = coreent.Meta.OriginalSystemId,
+      }
+    }; 
   }
 
-  public Map.Created MarkCreated(IChecksumAlgorithm checksum) => Ctl.Entities.Map.Create((UpdatedCoreEntity ?? throw new Exception()).System, UpdatedCoreEntity)
-      .SuccessCreate(UpdatedCoreEntity!.SystemId, checksum.Checksum(SystemEntity));
+  public Map.Created MarkCreated(IChecksumAlgorithm checksum) => Ctl.Entities.Map.Create(CoreEntityAndMeta.Meta.OriginalSystem, CoreEntityAndMeta.CoreEntity)
+      .SuccessCreate(CoreEntityAndMeta.Meta.OriginalSystemId, checksum.Checksum(SystemEntity));
   public Map.Updated MarkUpdated(IChecksumAlgorithm checksum) => (Map ?? throw new Exception()).Update().SuccessUpdate(checksum.Checksum(SystemEntity));
   
-  public bool IsCreating => PreExistingCoreEntity is null;
+  public bool IsCreating => PreExistingCoreEntityAndMeta is null;
   public bool IsIgnore => IgnoreReason is not null;
 
 }

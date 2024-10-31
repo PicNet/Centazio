@@ -11,7 +11,7 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) :
   public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var coretype = op.State.Object.ToCoreEntityTypeName;
     var pending = await core.GetEntitiesToWrite(op.State.System, coretype, op.Checkpoint);
-    var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending);
+    var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending.Select(t => t.CoreEntity).ToList());
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);

@@ -4,7 +4,7 @@ using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Core.Tests.CoreRepo;
 
-public class InMemoryCoreStorageRepositoryTests() : BaseCoreStorageRepositoryTests(true) {
+public class InMemoryCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
 
   protected override Task<ITestingCoreStorage> GetRepository() => Task.FromResult((ITestingCoreStorage) new TestingInMemoryCoreStorageRepository());
 

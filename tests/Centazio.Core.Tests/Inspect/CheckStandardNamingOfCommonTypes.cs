@@ -14,7 +14,7 @@ public class CheckStandardNamingOfCommonTypes {
     { typeof(CoreEntityTypeName), ("CoreEntityTypeName", "coretype", false) },
     { typeof(SystemEntityTypeName), ("SystemEntityTypeName", "systype", false) },
     { typeof(ObjectName), ("Object", "obj", false) },
-    { typeof(SystemName), ("System", "system", false) },
+    { typeof(SystemName), ("System", "system", true) },
     { typeof(LifecycleStage), ("Stage", "stage", false) },
     { typeof(CoreEntityChecksum), ("CoreEntityChecksum", "corchksm", true) },
     { typeof(SystemEntityChecksum), ("SystemEntityChecksum", "syschksm", true) },

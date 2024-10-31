@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
@@ -25,16 +26,16 @@ public class PromotionStepsTests {
   [Test] public void Test_IgnoreEntitiesBouncingBack() {
     var (steps1, steps2) = (GetSteps(C.System1Name), GetSteps(C.System2Name));
     steps1.bags = [
-      new(null!) { UpdatedCoreEntity = new CoreEntity(new("1"), "1", "1", DateOnly.MinValue) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity2(new("3"), UtcDate.UtcNow) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity(new("2"), "2", "2", DateOnly.MinValue) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity2(new("4"), UtcDate.UtcNow) }
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow)) }
     ];
     steps2.bags = [
-      new(null!) { UpdatedCoreEntity = new CoreEntity(new("1"), "1", "1", DateOnly.MinValue) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity2(new("3"), UtcDate.UtcNow) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity(new("2"), "2", "2", DateOnly.MinValue) },
-      new(null!) { UpdatedCoreEntity = new CoreEntity2(new("4"), UtcDate.UtcNow) }
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue)) },
+      new(null!) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow)) }
     ];
     
     steps1.IgnoreEntitiesBouncingBack(); steps2.IgnoreEntitiesBouncingBack();
