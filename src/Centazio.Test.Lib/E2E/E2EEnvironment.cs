@@ -96,7 +96,7 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   }
 
   private async Task CompareMembershipTypes() {
-    var core_types = (await ctx.CoreStore.GetMembershipTypes(ceam => true)).Select(m => ctx.Converter.CoreMembershipTypeToCrmMembershipType(Guid.Empty, m));
+    var core_types = (await ctx.CoreStore.GetMembershipTypes()).Select(m => ctx.Converter.CoreMembershipTypeToCrmMembershipType(Guid.Empty, m));
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []));
     await ctx.Epoch.ValidateUpdated<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedMemberships));
@@ -104,8 +104,8 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   }
   
   private async Task CompareCustomers() {
-    var core_customers_for_crm = (await ctx.CoreStore.GetCustomers(ceam => true)).Select(c => ctx.Converter.CoreCustomerToCrmCustomer(Guid.Empty, c));
-    var core_customers_for_fin = (await ctx.CoreStore.GetCustomers(ceam => true)).Select(c => ctx.Converter.CoreCustomerToFinAccount(0, c));
+    var core_customers_for_crm = (await ctx.CoreStore.GetCustomers()).Select(c => ctx.Converter.CoreCustomerToCrmCustomer(Guid.Empty, c));
+    var core_customers_for_fin = (await ctx.CoreStore.GetCustomers()).Select(c => ctx.Converter.CoreCustomerToFinAccount(0, c));
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.AddedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.AddedAccounts));
     await ctx.Epoch.ValidateUpdated<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.EditedAccounts));
@@ -114,7 +114,7 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   }
   
   private async Task CompareInvoices() {
-    var cores = await ctx.CoreStore.GetInvoices(ceam => true);
+    var cores = await ctx.CoreStore.GetInvoices();
     var crmmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SimulationConstants.CRM_SYSTEM,  CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
     var finmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SimulationConstants.FIN_SYSTEM, CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
     var core_invoices_for_crm = cores.Select(i => ctx.Converter.CoreInvoiceToCrmInvoice(Guid.Empty, i, crmmaps));

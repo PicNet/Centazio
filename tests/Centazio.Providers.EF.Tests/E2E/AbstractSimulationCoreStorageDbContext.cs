@@ -7,15 +7,18 @@ namespace Centazio.Providers.EF.Tests.E2E;
 public abstract class AbstractSimulationCoreStorageDbContext(string schema) : CentazioDbContext {
   
   public string SchemaName { get; } = schema;
+  
+  public string CoreStorageMetaName { get; } = nameof(CoreStorageMeta).ToLower();
   public string CoreMembershipTypeName { get; } = nameof(CoreMembershipType).ToLower();
   public string CoreCustomerName { get; } = nameof(CoreCustomer).ToLower();
   public string CoreInvoiceName { get; } = nameof(CoreInvoice).ToLower();
-  public string CoreStorageMetaName { get; } = nameof(CoreStorageMeta).ToLower();
-  
-  public DbSet<CoreStorageMeta.Dto> Metas { get; set; } 
   
   protected sealed override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema(SchemaName)
+      .Entity<CoreStorageMeta.Dto>(e => {
+        e.ToTable(CoreStorageMetaName);
+        e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
+      })
       .Entity<CoreMembershipType.Dto>(e => {
         e.ToTable(CoreMembershipTypeName);
         e.HasKey(e2 => e2.CoreId);
@@ -26,10 +29,6 @@ public abstract class AbstractSimulationCoreStorageDbContext(string schema) : Ce
       })
       .Entity<CoreInvoice.Dto>(e => {
         e.ToTable(CoreInvoiceName);
-        e.HasKey(e2 => e2.CoreId);
-      })
-      .Entity<CoreStorageMeta.Dto>(e => {
-        e.ToTable(CoreStorageMetaName);
         e.HasKey(e2 => e2.CoreId);
       });
 }

@@ -29,8 +29,8 @@ public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId Original
   }
 }
 
-public record CoreEntityAndMetaDtos(object coreentdto, CoreStorageMeta.Dto metadto);
-public record CoreEntityAndMetaDtos<D>(D coreentdto, CoreStorageMeta.Dto metadto);
+public record CoreEntityAndMetaDtos(object CoreEntityDto, CoreStorageMeta.Dto MetaDto);
+public record CoreEntityAndMetaDtos<D>(D CoreEntityDto, CoreStorageMeta.Dto MetaDto);
 
 public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
   public E As<E>() => (E) CoreEntity;
@@ -50,7 +50,7 @@ public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) {
   
   public static CoreEntityAndMeta FromJson<E, D>(string json) where E : ICoreEntity where D : class, ICoreEntityDto<E> {
     var raw = Json.Deserialize<CoreEntityAndMetaDtos<D>>(json);
-    return new CoreEntityAndMeta(raw.coreentdto.ToBase(), raw.metadto.ToBase());
+    return new CoreEntityAndMeta(raw.CoreEntityDto.ToBase(), raw.MetaDto.ToBase());
   }
 }
 

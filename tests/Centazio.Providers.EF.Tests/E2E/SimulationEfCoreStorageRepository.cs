@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
@@ -14,6 +13,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
         $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{db.CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
@@ -31,6 +31,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreInvoiceName));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreCustomerName));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreMembershipTypeName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreStorageMetaName));
   }
 
   public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
@@ -40,23 +41,33 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
       var isexisting = existing.ContainsKey(t.CoreEntity.CoreId);
       if (isexisting) { tracker.Update(t); } else { tracker.Add(t); }
       var dtos = t.ToDtos();
-      db.Attach(dtos.coreentdto).State = isexisting ? EntityState.Modified : EntityState.Added;
-      db.Attach(dtos.metadto).State = isexisting ? EntityState.Modified : EntityState.Added;
+      db.Attach(dtos.CoreEntityDto).State = isexisting ? EntityState.Modified : EntityState.Added;
+      db.Attach(dtos.MetaDto).State = isexisting ? EntityState.Modified : EntityState.Added;
     });
     await db.SaveChangesAsync();
 
     Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}]");
     return entities;
   }
-  
-  protected override async Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<CoreEntityAndMetaDtos<D>, bool>> predicate) {
+
+  protected override async Task<List<CoreEntityAndMeta>> GetExistingEntities<E, D>(List<CoreEntityId> coreids)  {
     await using var db = getdb();
-    var ceams = await db.Set<D>()
-        .Join(db.Metas, e => e.CoreId, m => m.CoreId, (e, m) => new CoreEntityAndMetaDtos<D>(e, m))
-        .Where(predicate)
-        .ToListAsync();
-    return ceams
-        .Select(dto => new CoreEntityAndMeta(dto.coreentdto.ToBase(), dto.metadto.ToBase()))
+    var strids = coreids.Select(id => id.Value);
+    return (await db.Set<D>()
+        .Join(db.Set<CoreStorageMeta.Dto>(), d => d.CoreId, m => m.CoreId, (e, m) => new { CoreEntity=e, Meta=m })
+        .Where(dtos => strids.Contains(dtos.Meta.CoreId))
+        .ToListAsync())
+        .Select(dto => new CoreEntityAndMeta(dto.CoreEntity.ToBase(), dto.Meta.ToBase()))
+        .ToList();
+  }
+
+  protected override async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite<E, D>(SystemName exclude, DateTime after) {
+    await using var db = getdb();
+    return (await db.Set<D>()
+        .Join(db.Set<CoreStorageMeta.Dto>(), d => d.CoreId, m => m.CoreId, (e, m) => new { CoreEntity=e, Meta=m })
+        .Where(dtos => dtos.Meta.DateUpdated > after && dtos.Meta.OriginalSystem != exclude.Value)
+        .ToListAsync())
+        .Select(dto => new CoreEntityAndMeta(dto.CoreEntity.ToBase(), dto.Meta.ToBase()))
         .ToList();
   }
   

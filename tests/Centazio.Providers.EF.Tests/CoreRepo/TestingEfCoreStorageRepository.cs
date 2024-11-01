@@ -66,8 +66,8 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
     entities.ForEach(e => {
       var dtos = e.ToDtos();
       var isupdate = existings.Contains(e.CoreEntity.CoreId.Value);
-      conn.Attach(dtos.coreentdto).State = isupdate ? EntityState.Modified : EntityState.Added;
-      conn.Attach(dtos.metadto).State = isupdate ? EntityState.Modified : EntityState.Added;
+      conn.Attach(dtos.CoreEntityDto).State = isupdate ? EntityState.Modified : EntityState.Added;
+      conn.Attach(dtos.MetaDto).State = isupdate ? EntityState.Modified : EntityState.Added;
     });
     await conn.SaveChangesAsync();
     return entities;

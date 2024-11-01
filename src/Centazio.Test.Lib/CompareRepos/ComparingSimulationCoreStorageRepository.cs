@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
+﻿using System.Reflection;
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
@@ -16,6 +15,18 @@ public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageReposit
     return ValidateAndReturn(result1, result2);
   }
 
+  protected override async Task<List<CoreEntityAndMeta>> GetExistingEntities<E, D>(List<CoreEntityId> coreids) {
+    var result1 = await (Task<List<CoreEntityAndMeta>>) repo1.GetType().GetMethod(nameof(GetExistingEntities), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [coreids])!;
+    var result2 = await (Task<List<CoreEntityAndMeta>>) repo2.GetType().GetMethod(nameof(GetExistingEntities), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [coreids])!;
+    return ValidateAndReturn(result1, result2);
+  }
+
+  protected override async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite<E, D>(SystemName exclude, DateTime after) {
+    var result1 = await (Task<List<CoreEntityAndMeta>>) repo1.GetType().GetMethod(nameof(GetEntitiesToWrite), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [exclude, after])!;
+    var result2 = await (Task<List<CoreEntityAndMeta>>) repo2.GetType().GetMethod(nameof(GetEntitiesToWrite), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [exclude, after])!;
+    return ValidateAndReturn(result1, result2);
+  }
+
   public override async ValueTask DisposeAsync() {
     await repo1.DisposeAsync();
     await repo2.DisposeAsync();
@@ -26,13 +37,6 @@ public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageReposit
     var result2 = await (Task<E>) repo2.GetType().GetMethod(nameof(GetSingle), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [coreid])!;
     return ValidateAndReturn(result1, result2);
   }
-  
-  protected override async Task<List<CoreEntityAndMeta>> GetList<E, D>(Expression<Func<CoreEntityAndMetaDtos<D>, bool>> predicate) {
-    var result1 = await (Task<List<CoreEntityAndMeta>>) repo1.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo1, [predicate])!;
-    var result2 = await (Task<List<CoreEntityAndMeta>>) repo2.GetType().GetMethod(nameof(GetList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(E), typeof(D)).Invoke(repo2, [predicate])!;
-    return ValidateAndReturn(result1, result2);
-  }
-
   
   private T ValidateAndReturn<T>(T a, T b) {
     Json.ValidateJsonEqual(a, b, repo1.GetType().Name, repo2.GetType().Name);

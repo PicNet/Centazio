@@ -27,7 +27,7 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
     var adding = CreateMemTypeCEAM();
     var added = await repo.Upsert(CORETYPE, [adding]);
     var single = await repo.GetMembershipType(adding.CoreEntity.CoreId);
-    var queried1 = await repo.GetMembershipTypes(_ => true);
+    var queried1 = await repo.GetMembershipTypes();
     var queried2 = await repo.GetExistingEntities(CORETYPE, [adding.CoreEntity.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore"), CORETYPE, UtcDate.UtcNow);
@@ -50,7 +50,7 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
     var updating = ceam.Update(SYS, coreupdate, Helpers.TestingCoreEntityChecksum(coreupdate)); 
     var updated = await repo.Upsert(CORETYPE, [updating]);
     var single = await repo.GetMembershipType(ceam.CoreEntity.CoreId);
-    var queried1 = await repo.GetMembershipTypes(_ => true);
+    var queried1 = await repo.GetMembershipTypes();
     var queried2 = await repo.GetExistingEntities(CORETYPE, [updating.CoreEntity.CoreId]);
     var queried3 = await repo.GetEntitiesToWrite(new("ignore exclude"), CORETYPE, UtcDate.UtcNow.AddSeconds(-1));
     var queried4 = await repo.GetEntitiesToWrite(new("ignore exclude"), CORETYPE, UtcDate.UtcNow);
