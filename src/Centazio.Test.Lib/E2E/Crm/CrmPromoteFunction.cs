@@ -47,9 +47,6 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       }).Synchronous();
     }
     
-    EntityEvaluationResult MarkForPromotion(EntityForPromotionEvaluation eval, ICoreEntity core) {
-      var ceam = eval.ExistingCoreEntityAndMeta?.Update(SimulationConstants.CRM_SYSTEM, core, ctx.ChecksumAlg.Checksum(core)) ?? CoreEntityAndMeta.Create(SimulationConstants.CRM_SYSTEM, eval.SystemEntity.SystemId, core, ctx.ChecksumAlg.Checksum(core));
-      return eval.MarkForPromotion(ceam);
-    }
+    EntityEvaluationResult MarkForPromotion(EntityForPromotionEvaluation eval, ICoreEntity core) => eval.MarkForPromotion(eval, SimulationConstants.CRM_SYSTEM, core, ctx.ChecksumAlg.Checksum);
   }
 }

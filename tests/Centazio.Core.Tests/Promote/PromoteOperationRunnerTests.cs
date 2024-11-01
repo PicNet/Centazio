@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
@@ -74,9 +73,7 @@ public class PromoteOperationRunnerTests {
       var results = toeval.Select((eval, idx) => {
         if (idx % 2 == 1) return eval.MarkForIgnore($"Ignore: {idx}");
         var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-        // todo: move this code to the `MarkForPromotion` method so it can be reused
-        var ceam = eval.ExistingCoreEntityAndMeta?.Update(config.State.System, core, Helpers.TestingCoreEntityChecksum) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core, Helpers.TestingCoreEntityChecksum);
-        return eval.MarkForPromotion(ceam);
+        return eval.MarkForPromotion(eval, config.State.System, core, Helpers.TestingCoreEntityChecksum);
       }).ToList();
       return Task.FromResult(results);
     }

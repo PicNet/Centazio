@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
@@ -156,8 +155,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunctio
     var results = toeval.Select(eval => {
       if (IgnoreNext) return eval.MarkForIgnore("ignore");
       var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-      var ceam = eval.ExistingCoreEntityAndMeta?.Update(Config.System, core, Config.ChecksumAlgorithm.Checksum(core)) ?? CoreEntityAndMeta.Create(Config.System, eval.SystemEntity.SystemId, core, Config.ChecksumAlgorithm.Checksum(core));
-      return eval.MarkForPromotion(ceam);
+      return eval.MarkForPromotion(eval, config.State.System, core, Config.ChecksumAlgorithm.Checksum);
     }).ToList();
     return Task.FromResult(results); 
   }

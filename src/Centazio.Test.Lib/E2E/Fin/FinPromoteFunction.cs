@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 
@@ -27,8 +26,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
 
     Task<List<EntityEvaluationResult>> EvaluateCustomers() => Task.FromResult(toeval.Select(eval => {
       var core = ctx.Converter.FinAccountToCoreCustomer(eval.SystemEntity.To<FinAccount>(), eval.ExistingCoreEntityAndMeta?.As<CoreCustomer>());
-      var ceam = eval.ExistingCoreEntityAndMeta?.Update(config.State.System, core, ctx.ChecksumAlg.Checksum(core)) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core, ctx.ChecksumAlg.Checksum(core));
-      return eval.MarkForPromotion(ceam);
+      return eval.MarkForPromotion(eval, config.State.System, core, ctx.ChecksumAlg.Checksum);
     }).ToList());
 
     async Task<List<EntityEvaluationResult>> EvaluateInvoices() {
@@ -37,8 +35,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
       return await toeval.Select(async eval => {
         var fininv = eval.SystemEntity.To<FinInvoice>();
         var core = await ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntityAndMeta?.As<CoreInvoice>(), maps[fininv.AccountSystemId]);
-        var ceam = eval.ExistingCoreEntityAndMeta?.Update(config.State.System, core, ctx.ChecksumAlg.Checksum(core)) ?? CoreEntityAndMeta.Create(config.State.System, eval.SystemEntity.SystemId, core, ctx.ChecksumAlg.Checksum(core));
-        return eval.MarkForPromotion(ceam);
+        return eval.MarkForPromotion(eval, config.State.System, core, ctx.ChecksumAlg.Checksum);
       }).Synchronous();
     }
   }

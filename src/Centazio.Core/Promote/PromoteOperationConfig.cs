@@ -1,10 +1,16 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.Checksum;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Promote;
 
 public record EntityForPromotionEvaluation(ISystemEntity SystemEntity, CoreEntityAndMeta? ExistingCoreEntityAndMeta) {
-  public EntityEvaluationResult MarkForPromotion(CoreEntityAndMeta updated) => new EntityToPromote(SystemEntity, updated);
+  public EntityEvaluationResult MarkForPromotion(EntityForPromotionEvaluation eval, SystemName system, ICoreEntity core, Func<ICoreEntity, CoreEntityChecksum> checksum) => 
+      new EntityToPromote(
+          SystemEntity, 
+          eval.ExistingCoreEntityAndMeta?.Update(system, core, checksum) 
+              ?? CoreEntityAndMeta.Create(system, eval.SystemEntity.SystemId, core, checksum));
+  
   public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SystemEntity, reason);
 }
 
