@@ -20,7 +20,7 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (coretype != CoreEntityTypeName.From<CoreEntity>()) throw new Exception();
     await using var db = getdb();
-    var metas = await db.Metas.Where(m => m.OriginalSystem != exclude.Value && m.CoreEntityTypeName == coretype.Value && m.DateUpdated > after).ToListAsync();
+    var metas = await db.Metas.Where(m => m.LastUpdateSystem != exclude.Value && m.CoreEntityTypeName == coretype.Value && m.DateUpdated > after).ToListAsync();
     var cids = metas.Select(m => m.CoreId);
     var cores = await db.CoreEntities.Where(e => cids.Contains(e.CoreId)).ToListAsync();
     return metas.Select(m => {

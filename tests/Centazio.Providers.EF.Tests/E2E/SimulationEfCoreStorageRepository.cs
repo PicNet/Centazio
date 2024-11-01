@@ -13,6 +13,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
+    // todo: move CoreStorageMeta to Ctl schema ?!?!?
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
@@ -65,7 +66,7 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     await using var db = getdb();
     return (await db.Set<D>()
         .Join(db.Set<CoreStorageMeta.Dto>(), d => d.CoreId, m => m.CoreId, (e, m) => new { CoreEntity=e, Meta=m })
-        .Where(dtos => dtos.Meta.DateUpdated > after && dtos.Meta.OriginalSystem != exclude.Value)
+        .Where(dtos => dtos.Meta.DateUpdated > after && dtos.Meta.LastUpdateSystem != exclude.Value)
         .ToListAsync())
         .Select(dto => new CoreEntityAndMeta(dto.CoreEntity.ToBase(), dto.Meta.ToBase()))
         .ToList();

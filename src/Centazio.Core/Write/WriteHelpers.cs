@@ -10,12 +10,24 @@ public static class WriteHelpers {
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
       IChecksumAlgorithm checksum,
+      // todo: this string should be SystemEntityId and FromCore should be called something better, like `ConvertCoreToSystemEntityForWriting`
       Func<string, E, ISystemEntity> FromCore) where E : ICoreEntity {
     return new(
-      tocreate.Select(m => m.AddSystemEntity(FromCore(String.Empty, m.CoreEntity.To<E>()))).ToList(),
+      tocreate.Select(m => {
+        var core = m.CoreEntity.To<E>();
+        var sysent = FromCore(String.Empty, core);
+        return m.AddSystemEntity(sysent);
+      }).ToList(),
       toupdate.Select(m => {
-        var sysent = FromCore(m.Map.SystemId, m.CoreEntity.To<E>());
-        TestEntityHasChanges(sysent, m.Map.SystemEntityChecksum, checksum);
+        var core = m.CoreEntity.To<E>();
+        var sysent = FromCore(m.Map.SystemId, core);
+        if (m.Map.SystemEntityChecksum == checksum.Checksum(sysent)) throw new Exception($"No changes found on [{typeof(E).Name}] -> [{sysent.GetType().Name}]:" + 
+          $"\n\tUpdated Core Entity:[{Json.Serialize(core)}]" +
+          $"\n\tUpdated Sys Entity[{sysent}]" +
+          $"\n\tExisting Checksum:[{m.Map.SystemEntityChecksum}]" +
+          $"\n\tChecksum Subset[{sysent.GetChecksumSubset()}]" +
+          $"\n\tChecksum[{checksum.Checksum(sysent)}]");
+        
         return m.AddSystemEntity(sysent);
       }).ToList());
   }
@@ -29,19 +41,4 @@ public static class WriteHelpers {
           created.Select((sysent, idx) => tocreate[idx].Map.SuccessCreate(sysent.SystemId, chksm.Checksum(sysent))).ToList(), 
           updated.Select((sysent, idx) => toupdate[idx].Map.SuccessUpdate(chksm.Checksum(sysent))).ToList());
   }
-  
-  /// <summary>
-  /// This method compares the checksum of the entity to be updated with the checksum in the database (Mapping table).
-  /// We originally tried to compare the checksum with the state of the entity in the target system, however this is not
-  /// valid as the same change can be made in both the source and target system causing this check to fail. 
-  /// </summary>
-  private static void TestEntityHasChanges(ISystemEntity sysent, SystemEntityChecksum originalchksm, IChecksumAlgorithm checksum) {
-    if (originalchksm != checksum.Checksum(sysent)) return;
-    
-    throw new Exception($"No changes found on {sysent.GetType().Name}:" +
-      $"\n\tExisting Checksum:[{originalchksm}]" +
-      $"\n\tUpdated[{sysent}]\n\tChecksum Subset[{sysent.GetChecksumSubset()}]" +
-      $"\n\tChecksum[{checksum.Checksum(sysent)}]");
-  }
-
 }

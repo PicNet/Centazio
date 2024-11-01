@@ -14,6 +14,14 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) :
     var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending.Select(t => t.CoreEntity).ToList());
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
+    // todo: move these validation to `AbstractCtlRepository`
+    var (createids, updateids) = (tocreate.Select(e => e.CoreEntity.CoreId).ToList(), toupdate.Select(e => e.CoreEntity.CoreId).ToList());
+    var (createdups, updatedups) = (createids.GroupBy(id => id).Where(g => g.Count() > 1).ToList(), updateids.GroupBy(id => id).Where(g => g.Count() > 1).ToList());
+    var boths = updateids.Distinct().Where(id => createids.Contains(id)).ToList();
+    if (createdups.Any()) throw new Exception($"ctl.GetNewAndExistingMapsFromCores returned multiple copies of entities to create [{String.Join(", ", createdups.Select(g => g.Key))}]");
+    if (updatedups.Any()) throw new Exception($"ctl.GetNewAndExistingMapsFromCores returned multiple copies of entities to update [{String.Join(", ", updatedups.Select(g => g.Key))}]");
+    if (boths.Any()) throw new Exception($"ctl.GetNewAndExistingMapsFromCores returned entities to both create and update [{String.Join(", ", boths)}]");
+        
     var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntitties(op.OpConfig, tocreate, toupdate);
     
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
