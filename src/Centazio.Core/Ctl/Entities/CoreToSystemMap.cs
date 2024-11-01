@@ -39,8 +39,8 @@ public static class Map {
     public SystemEntityChecksum SystemEntityChecksum { get; internal init; }
     public EEntityMappingStatus Status { get; internal init; }
     public DateTime DateCreated { get; internal init; } 
+    public DateTime DateUpdated { get; internal init; }
     
-    public DateTime? DateUpdated { get; internal init; } 
     public DateTime? DateLastSuccess { get; internal init; } 
     public DateTime? DateLastError { get; internal init; }
     [MaxLength(1024)] public string? LastError { get; internal init; }
@@ -69,7 +69,7 @@ public static class Map {
           new (SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
         
         DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-        DateUpdated = DateUpdated,
+        DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
         DateLastSuccess = DateLastSuccess,
         DateLastError = DateLastError,
         LastError = LastError

@@ -26,9 +26,9 @@ BEGIN
     [System] nvarchar(32) not null,
     [Stage] nvarchar(32) not null,
     [DateCreated] datetime2 not null,
+    [DateUpdated] datetime2 not null,
     [Active] bit not null,
-    [Status] nvarchar(128) not null,
-    [DateUpdated] datetime2 null,
+    [Status] nvarchar(128) not null,    
     [LastStarted] datetime2 null,
     [LastCompleted] datetime2 null,
     PRIMARY KEY (System, Stage)

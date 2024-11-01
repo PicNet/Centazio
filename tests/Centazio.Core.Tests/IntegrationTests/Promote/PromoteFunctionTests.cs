@@ -121,7 +121,7 @@ public class PromoteFunctionTests {
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
   }
   
-  private SystemState SS(DateTime start, DateTime updated) => new SystemState.Dto(system1, stage, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated).ToBase();
+  private SystemState SS(DateTime start, DateTime updated) => new SystemState.Dto(system1, stage, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
   private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(system1, stage, coretype, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,

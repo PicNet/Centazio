@@ -32,10 +32,10 @@ public class ReflectionUtilsTests {
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.System))), Is.False);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.Stage))), Is.False);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.DateCreated))), Is.False);
+    Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.DateUpdated))), Is.False);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.Active))), Is.False);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.Status))), Is.False);
     
-    Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.DateUpdated))), Is.True);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.LastStarted))), Is.True);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.LastCompleted))), Is.True);
     

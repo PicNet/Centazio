@@ -43,9 +43,17 @@ public record ObjectState : ILoggable {
   public bool ObjectIsCoreEntityType { get; }
   public bool ObjectIsSystemEntityType { get; }
   public bool Active { get; private init; } 
-  public DateTime DateCreated { get; internal init; } 
+  public DateTime DateCreated { get; internal init; }
+  public DateTime DateUpdated { get; internal init; }
   public EOperationResult LastResult { get; internal init; } = EOperationResult.Unknown;
   public EOperationAbortVote LastAbortVote { get; internal init; } = EOperationAbortVote.Unknown;
+  
+  public DateTime? LastStart { get; internal init; }
+  public DateTime? LastSuccessStart { get; internal init; }
+  public DateTime? LastCompleted { get; internal init; }
+  public DateTime? LastSuccessCompleted { get; internal init; }
+  [MaxLength(1024)] public string? LastRunMessage { get; internal init; } 
+  [MaxLength(4000)] public string? LastRunException { get; internal init; }
   
   internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, bool active) {
     System = system;
@@ -54,16 +62,8 @@ public record ObjectState : ILoggable {
     ObjectIsCoreEntityType = obj is CoreEntityTypeName;
     ObjectIsSystemEntityType = obj is SystemEntityTypeName;
     Active = active;
-    DateCreated = UtcDate.UtcNow;
+    DateCreated = DateUpdated = UtcDate.UtcNow;
   }
-  
-  public DateTime? DateUpdated { get; internal init; } 
-  public DateTime? LastStart { get; internal init; }
-  public DateTime? LastSuccessStart { get; internal init; }
-  public DateTime? LastCompleted { get; internal init; }
-  public DateTime? LastSuccessCompleted { get; internal init; }
-  [MaxLength(1024)] public string? LastRunMessage { get; internal init; } 
-  [MaxLength(4000)] public string? LastRunException { get; internal init; }
   
   public record Dto : IDto<ObjectState> {
     public string? System { get; init; }
@@ -73,9 +73,9 @@ public record ObjectState : ILoggable {
     public bool ObjectIsSystemEntityType { get; init; }
     public bool? Active { get; init; }
     public DateTime? DateCreated { get; init; }
+    public DateTime? DateUpdated { get; init; }
     public string? LastResult { get; init; } 
     public string? LastAbortVote { get; init; }  
-    public DateTime? DateUpdated { get; init; }
     public DateTime? LastStart { get; init; }
     public DateTime? LastSuccessStart { get; init; }
     public DateTime? LastSuccessCompleted { get; init; }
@@ -92,7 +92,7 @@ public record ObjectState : ILoggable {
       LastResult =  Enum.Parse<EOperationResult>(LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
       LastAbortVote = Enum.Parse<EOperationAbortVote>(LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
       DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-      DateUpdated = DateUpdated,
+      DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
       LastStart = LastStart,
       LastSuccessStart = LastSuccessStart,
       LastCompleted = LastCompleted,

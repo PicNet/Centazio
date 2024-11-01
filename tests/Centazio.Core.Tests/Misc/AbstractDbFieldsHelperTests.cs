@@ -24,10 +24,10 @@ public class AbstractDbFieldsHelperTests {
 
   class TestDbFieldsHelper : AbstractDbFieldsHelper {
 
-    public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional = null) => throw new NotImplementedException();
-    public override string GenerateIndexScript(string schema, string table, params string[] columns) => throw new NotImplementedException();
-    public override string GenerateDropTableScript(string schema, string table) => throw new NotImplementedException();
-    public override string TableName(string schema, string table) => throw new NotImplementedException();
+    public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional = null) => throw new Exception();
+    public override string GenerateIndexScript(string schema, string table, params string[] columns) => throw new Exception();
+    public override string GenerateDropTableScript(string schema, string table) => throw new Exception();
+    public override string TableName(string schema, string table) => throw new Exception();
 
   }
 }

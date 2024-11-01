@@ -1,16 +1,11 @@
 # Todo
-- for consistency no DateUpdated should be nullable, if new just set it to DateCreated
+- Hide `Meta` from classes that should not know about this data
 - set up azure devops testing pipeline (agent is ready)
 - self-hosted runner
 - azure runner
 - aws runner
 
-## Low 
-- Ideally ICoreEntity needs to be separated from its meta-data.  However, this is a very intrusive change that requires
-  heavy refactoring.  The purpose of this is that clients should not be able to interact (or even set) the internal
-  meta-data properties (Dates, Checksums, Originating System, Last Update System, etc).
-  - Remove all `Meta` fields from ICoreEntity and create new table to store them 
-  - Hide `Meta` from classes that should not know about this data
+## Low
 - review all code comments
 
 

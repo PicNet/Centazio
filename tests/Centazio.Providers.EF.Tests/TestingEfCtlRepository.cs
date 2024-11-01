@@ -9,8 +9,8 @@ namespace Centazio.Providers.EF.Tests;
 public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf) : EFCtlRepository(getdb), ITestingCtlRepository {
 
   public async Task<List<Map.CoreToSysMap>> GetAllMaps() {
-    await using var conn = getdb();
-    return (await conn.CoreToSystemMaps.ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    await using var db = getdb();
+    return (await db.CoreToSystemMaps.ToListAsync()).Select(dto => dto.ToBase()).ToList();
   }
   
   public override async Task<AbstractCtlRepository> Initalise() {

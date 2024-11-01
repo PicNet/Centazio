@@ -21,9 +21,9 @@ public class SqliteDbFieldsHelperTests {
   [System] nvarchar(32) not null,
   [Stage] nvarchar(32) not null,
   [DateCreated] datetime not null,
+  [DateUpdated] datetime not null,
   [Active] bit not null,
-  [Status] nvarchar(128) not null,
-  [DateUpdated] datetime null,
+  [Status] nvarchar(128) not null,  
   [LastStarted] datetime null,
   [LastCompleted] datetime null,
   PRIMARY KEY (System, Stage)

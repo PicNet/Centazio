@@ -63,7 +63,7 @@ public class ReadFunctionTests {
     Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, 1)));
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
-    SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, ESystemStateStatus.Idle.ToString(), updated, updated, updated).ToBase();
+    SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
     ObjectState OS(DateTime updated, int len) => new(sys, stg, sysent, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success,
