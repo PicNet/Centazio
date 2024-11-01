@@ -12,9 +12,8 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
   public async Task<ITestingCoreStorage> Initalise() {
     await using var conn = getdb();
     
-    var fields = dbf.GetDbFields<CoreEntity>();
-    fields.Add(new (nameof(CoreEntityChecksum), typeof(string), ChecksumValue.MAX_LENGTH.ToString(), true));
-    await conn.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(conn.SchemaName, nameof(CoreEntity), fields, [nameof(CoreEntity.CoreId)]));
+    await conn.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(conn.SchemaName, nameof(CoreEntity), dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
+    await conn.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(conn.SchemaName, nameof(CoreStorageMeta), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
     return this;
   }
   
