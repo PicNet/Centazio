@@ -44,9 +44,9 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
-  protected override async Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
-    var result1 = await (Task<List<Map.Updated>>) repo1.GetType().GetMethod(nameof(UpdateImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo1, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
-    var result2 = await (Task<List<Map.Updated>>) repo2.GetType().GetMethod(nameof(UpdateImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo2, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
+  protected override async Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+    var result1 = await (Task<List<Map.Updated>>) repo1.GetType().GetMethod(nameof(UpdateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo1, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
+    var result2 = await (Task<List<Map.Updated>>) repo2.GetType().GetMethod(nameof(UpdateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo2, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
     return ValidateAndReturn(result1, result2);
   }
 

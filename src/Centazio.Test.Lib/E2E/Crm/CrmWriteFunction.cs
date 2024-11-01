@@ -32,7 +32,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     throw new NotSupportedException(config.Object);
     
-    Guid Id(string id) => id == String.Empty ? Guid.Empty : Guid.Parse(id);
+    Guid Id(SystemEntityId id) => id == SystemEntityId.DEFAULT_VALUE ? Guid.Empty : Guid.Parse(id);
   }
 
   public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(

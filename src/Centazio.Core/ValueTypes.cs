@@ -3,6 +3,8 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core;
 
+// todo: reconsider these implicit conversions, can cause issues
+
 public record ValidString(string Value) {
   public string Value { get; } = !String.IsNullOrWhiteSpace(Value) 
       ? Value.Trim() : throw new ArgumentException("Value must be a non-empty string", nameof(Value));
@@ -20,7 +22,9 @@ public record ValidString(string Value) {
 
 [MaxLength2(64)] public abstract record EntityId(string Value) : ValidString(Value);
 public sealed record CoreEntityId(string Value) : EntityId(Value);
-public sealed record SystemEntityId(string Value) : EntityId(Value);
+public sealed record SystemEntityId(string Value) : EntityId(Value) {
+  public static readonly SystemEntityId DEFAULT_VALUE = new("*");
+}
 
 [MaxLength2(32)] public sealed record SystemName(string Value) : ValidString(Value) {
   public static implicit operator SystemName(string value) => new(value);

@@ -18,7 +18,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   public async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
   
   protected abstract Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
-  protected abstract Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
+  protected abstract Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
   protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
   
   public abstract Task<AbstractCtlRepository> Initalise();
@@ -35,7 +35,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   public async Task<List<Map.Updated>> UpdateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
     if (!toupdate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, toupdate, false);
-    var updated = await UpdateImpl(system, coretype, toupdate);
+    var updated = await UpdateMapImpl(system, coretype, toupdate);
     if (updated.Count != toupdate.Count) throw new Exception($"updated maps({updated.Count}) does not match expected number ({toupdate.Count}).  This chould mean that some maps may not have existed already in the repository.");
     return updated;
   }

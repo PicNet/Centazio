@@ -53,7 +53,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
     return Task.FromResult(results);
   }
   
-  protected override Task<List<Map.Updated>> UpdateImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
+  protected override Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
     var results = toupdate.Select(map => {
       if (!maps.ContainsKey(map.Key)) return null;
       maps[map.Key] = Json.Serialize(map);

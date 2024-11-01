@@ -33,7 +33,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     }
     throw new NotSupportedException(config.Object);
     
-    int Id(string id) => id == String.Empty ? 0 : Int32.Parse(id);
+    int Id(SystemEntityId id) => id == SystemEntityId.DEFAULT_VALUE ? 0 : Int32.Parse(id);
   }
 
   public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {

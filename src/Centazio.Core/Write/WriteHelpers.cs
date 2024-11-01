@@ -10,17 +10,16 @@ public static class WriteHelpers {
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
       IChecksumAlgorithm checksum,
-      // todo: this string should be SystemEntityId and FromCore should be called something better, like `ConvertCoreToSystemEntityForWriting`
-      Func<string, E, ISystemEntity> FromCore) where E : ICoreEntity {
+      Func<SystemEntityId, E, ISystemEntity> ConvertCoreToSystemEntityForWriting) where E : ICoreEntity {
     return new(
       tocreate.Select(m => {
         var core = m.CoreEntity.To<E>();
-        var sysent = FromCore(String.Empty, core);
+        var sysent = ConvertCoreToSystemEntityForWriting(SystemEntityId.DEFAULT_VALUE, core);
         return m.AddSystemEntity(sysent);
       }).ToList(),
       toupdate.Select(m => {
         var core = m.CoreEntity.To<E>();
-        var sysent = FromCore(m.Map.SystemId, core);
+        var sysent = ConvertCoreToSystemEntityForWriting(m.Map.SystemId, core);
         if (m.Map.SystemEntityChecksum == checksum.Checksum(sysent)) throw new Exception($"No changes found on [{typeof(E).Name}] -> [{sysent.GetType().Name}]:" + 
           $"\n\tUpdated Core Entity:[{Json.Serialize(core)}]" +
           $"\n\tUpdated Sys Entity[{sysent}]" +
