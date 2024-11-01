@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public abstract class AbstractSimulationCoreStorageDbContext(string schema) : CentazioDbContext {
+public abstract class AbstractSimulationCoreStorageDbContext(string coreschema, string ctlschema) : CentazioDbContext {
+  protected static string DEFAULT_CORE_SCHEMA_NAME = "dbo";
   
-  public string SchemaName { get; } = schema;
+  public string CoreSchemaName { get; } = coreschema;
+  public string CtlSchemaName { get; } = ctlschema;
   
   public string CoreStorageMetaName { get; } = nameof(CoreStorageMeta).ToLower();
   public string CoreMembershipTypeName { get; } = nameof(CoreMembershipType).ToLower();
@@ -14,9 +16,9 @@ public abstract class AbstractSimulationCoreStorageDbContext(string schema) : Ce
   public string CoreInvoiceName { get; } = nameof(CoreInvoice).ToLower();
   
   protected sealed override void CreateCentazioModel(ModelBuilder builder) => builder
-      .HasDefaultSchema(SchemaName)
+      .HasDefaultSchema(CoreSchemaName)
       .Entity<CoreStorageMeta.Dto>(e => {
-        e.ToTable(CoreStorageMetaName);
+        e.ToTable(CoreStorageMetaName, CtlSchemaName);
         e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
       })
       .Entity<CoreMembershipType.Dto>(e => {

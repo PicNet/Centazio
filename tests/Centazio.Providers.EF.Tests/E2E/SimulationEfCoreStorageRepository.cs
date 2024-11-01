@@ -13,12 +13,12 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
-    // todo: move CoreStorageMeta to Ctl schema ?!?!?
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CtlSchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
+    
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
         $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{db.CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
         $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{db.CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
     return this;
   }
@@ -29,10 +29,11 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   }
 
   private async Task DropTablesImpl(AbstractSimulationCoreStorageDbContext db) {
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreInvoiceName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreCustomerName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreMembershipTypeName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreStorageMetaName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreInvoiceName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreCustomerName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreMembershipTypeName));
+    
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CtlSchemaName, db.CoreStorageMetaName));
   }
 
   public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
