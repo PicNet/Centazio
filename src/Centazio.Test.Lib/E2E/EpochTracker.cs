@@ -24,7 +24,7 @@ public interface IEpochTracker {
 
   public async Task ValidateAdded<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
-    var actual = added.Values.Where(e => e.GetType() == typeof(T)).ToList();
+    var actual = added.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
     if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
         $"\nActual {typeof(T).Name} Created({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")));
     
@@ -40,7 +40,7 @@ public interface IEpochTracker {
         // they will be validated in the `ValidateAdded` method
         .Where(e => !eadded.Contains(e)) 
         .ToList();
-    var actual = updated.Values.Where(e => e.GetType() == typeof(T)).ToList();
+    var actual = updated.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
     if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Updated({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.DisplayName}({e.CoreId})")) + 
         $"\nActual {typeof(T).Name} Updated({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")));
     if(actual.Any(e => e.Meta.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
