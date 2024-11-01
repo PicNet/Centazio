@@ -71,7 +71,7 @@ public class PromoteOperationRunnerTests {
     
     public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
       var results = toeval.Select((eval, idx) => {
-        if (idx % 2 == 1) return eval.MarkForIgnore($"Ignore: {idx}");
+        if (idx % 2 == 1) return eval.MarkForIgnore(new($"Ignore: {idx}"));
         var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
         return eval.MarkForPromotion(eval, config.State.System, core, Helpers.TestingCoreEntityChecksum);
       }).ToList();

@@ -63,7 +63,7 @@ public static class Map {
       public CoreToSysMap ToBase() => new(
           new CoreEntityTypeName(CoreEntityTypeName ?? throw new ArgumentNullException(nameof(CoreEntityTypeName))),
           new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-          System ?? throw new ArgumentNullException(nameof(System)),
+          new(System ?? throw new ArgumentNullException(nameof(System))),
           new (SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
           Enum.Parse<EEntityMappingStatus>(Status ?? throw new ArgumentNullException(nameof(Status))),
           new (SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {

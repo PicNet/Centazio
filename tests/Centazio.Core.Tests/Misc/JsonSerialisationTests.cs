@@ -20,7 +20,7 @@ public class JsonSerialisationTests {
   }
 
   [Test] public void Test_serialisation_of_objects_with_child_valid_strings() {
-    var obj = new TestValidStrings { Str1 = nameof(TestValidStrings.Str1), Str2 = nameof(TestValidStrings.Str2) };
+    var obj = new TestValidStrings { Str1 = new(nameof(TestValidStrings.Str1)), Str2 = new(nameof(TestValidStrings.Str2)) };
     var serialised = JsonSerializer.Serialize(obj);
     var deserialised = JsonSerializer.Deserialize<TestValidStrings>(serialised);
     Assert.That(obj, Is.EqualTo(deserialised));
@@ -34,7 +34,7 @@ public class JsonSerialisationTests {
   }
   
   [Test] public void Test_serialisation_of_object_dtos_with_child_valid_strings() {
-    var obj = new TestValidStrings { Str1 = nameof(TestValidStrings.Str1), Str2 = nameof(TestValidStrings.Str2) };
+    var obj = new TestValidStrings { Str1 = new(nameof(TestValidStrings.Str1)), Str2 = new(nameof(TestValidStrings.Str2)) };
     var serialised = Json.Serialize(obj);
     var deserialised = JsonSerializer.Deserialize<TestValidStrings.Dto>(serialised)!.FromDto();
     Assert.That(obj, Is.EqualTo(deserialised));
@@ -65,12 +65,12 @@ public class JsonSerialisationTests {
     Assert.That(osset2, Is.EqualTo(osset));
     
     // Centazio.Core.Ctl.Entities.SystemState+Dto
-    var ss = SystemState.Create(str, str);
+    var ss = SystemState.Create(new(str), new(str));
     var ss2 = Json.Deserialize<SystemState>(Json.Serialize(ss));
     Assert.That(ss2, Is.EqualTo(ss));
     
     // Centazio.Core.Ctl.Entities.StagedEntity+Dto
-    var se = new StagedEntity(Guid.NewGuid(), str, new(str), UtcDate.UtcNow, "data", new("checksum"));
+    var se = new StagedEntity(Guid.NewGuid(), new(str), new(str), UtcDate.UtcNow, new("data"), new("checksum"));
     var se2 = Json.Deserialize<StagedEntity>(Json.Serialize(se));
     Assert.That(se2, Is.EqualTo(se));
     

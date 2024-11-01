@@ -29,7 +29,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     var minus1 =  await GetSingle(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1));
     
     Assert.That(fromnow, Is.Empty);
-    Assert.That(minus1, Is.EqualTo(new StagedEntity(minus1.Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, MOCK_DATA, Hash(MOCK_DATA))));
+    Assert.That(minus1, Is.EqualTo(new StagedEntity(minus1.Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(MOCK_DATA), Hash(MOCK_DATA))));
   }
   
   [Test] public async Task Test_updating_single_entity() {
@@ -54,7 +54,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(fromnow, Is.Empty);
     Assert.That(staged.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, idx.ToString(), Hash(idx)))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
   
   [Test] public async Task Test_get_returns_in_sorted_order() {
@@ -104,7 +104,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(staged.GroupBy(e => e.StagedEntityChecksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
     Assert.That(staged, Has.Count.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Has.Count.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, idx.ToString(), Hash(idx)))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
 
   [Test] public async Task Test_saving_multiple_large_entities() {
@@ -129,7 +129,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(staged.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(staged));
-    var exp = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, str + idx, Hash(str + idx)))
+    var exp = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(str + idx), Hash(str + idx)))
         .Select(e => SetData(e, e.Data.Value.Split('_')[1]))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -141,26 +141,26 @@ public abstract class BaseStagedEntityRepositoryTests {
     var basenm = Constants.System1Name;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
     
-    await repo.Stage(name1, new(name1), name1);
+    await repo.Stage(new(name1), new(name1), name1);
     var staged2 = dt.Tick();
-    await repo.Stage(name1, new(name1), data2);
-    await repo.Stage(name2, new(name2), name2);
-    await repo.Stage(name3, new(name3), name3);
+    await repo.Stage(new(name1), new(name1), data2);
+    await repo.Stage(new(name2), new(name2), name2);
+    await repo.Stage(new(name3), new(name3), name3);
     
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name1), staged2), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name2, new(name1), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name2), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name2, new(name3), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name3, new(name2), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name1), staged2), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name2), new(name1), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name2), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name2), new(name3), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name3), new(name2), start), Is.Empty);
     
-    var se1_2 = await GetSingle(name1, new(name1), staged1);
-    var ses1 = await repo.GetAll(name1, new(name1), start);
-    var ses2 = await repo.GetAll(name2, new(name2), staged1);
-    var ses3 = await repo.GetAll(name3, new(name3), staged1);
+    var se1_2 = await GetSingle(new(name1), new(name1), staged1);
+    var ses1 = await repo.GetAll(new(name1), new(name1), start);
+    var ses2 = await repo.GetAll(new(name2), new(name2), staged1);
+    var ses3 = await repo.GetAll(new(name3), new(name3), staged1);
     Assert.That(ses1.Count, Is.EqualTo(2));
-    Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, new(name1), staged2, data2, Hash(data2))));
-    Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, new(name2), staged2, name2, Hash(name2)) }));
-    Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, new(name3), staged2, name3, Hash(name3)) }));
+    Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, new(name1), new(name1), staged2, new(data2), Hash(data2))));
+    Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, new(name2), new(name2), staged2, new(name2), Hash(name2)) }));
+    Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, new(name3), new(name3), staged2, new(name3), Hash(name3)) }));
   }
   
   [Test] public async Task Test_single_ignore_update() {
@@ -175,41 +175,41 @@ public abstract class BaseStagedEntityRepositoryTests {
     var name = Constants.System1Name.Value;
     var (name1, name2, name3) = (name + 1, name + 2 , name + 3);
     
-    await Create(name1, "not ignore: 1.1", String.Empty);
+    await Create(new(name1), "not ignore: 1.1", String.Empty);
     var staged2 = dt.Tick();
-    await Create(name1, "not ignore: 1.2", " ");
-    await Create(name2, "not ignore: 2", "\r");
-    await Create(name3, "not ignore: 3", null);
+    await Create(new(name1), "not ignore: 1.2", " ");
+    await Create(new(name2), "not ignore: 2", "\r");
+    await Create(new(name3), "not ignore: 3", null);
     
-    await repo.UpdateImpl(name1, new(name1), [
-      await Create(name1, "ignore: 1.1", "ignore: 1.1"),
-      await Create(name1, "ignore: 1.2", "ignore: 1.2")
+    await repo.UpdateImpl(new(name1), new(name1), [
+      await Create(new(name1), "ignore: 1.1", "ignore: 1.1"),
+      await Create(new(name1), "ignore: 1.2", "ignore: 1.2")
     ]);
-    await repo.UpdateImpl(name2, new(name2), [
-      await Create(name2, "ignore: 2", "ignore: 2"),
+    await repo.UpdateImpl(new(name2), new(name2), [
+      await Create(new(name2), "ignore: 2", "ignore: 2"),
     ]);
-    await repo.UpdateImpl(name3, new(name3), [
-      await Create(name3, "ignore: 3", "ignore: 3")
+    await repo.UpdateImpl(new(name3), new(name3), [
+      await Create(new(name3), "ignore: 3", "ignore: 3")
     ]);
     
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name1), staged2), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name2, new(name1), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name2), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name2, new(name3), start), Is.Empty);
-    await Assert.ThatAsync(() => repo.GetAll(name3, new(name2), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name1), staged2), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name2), new(name1), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name2), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name2), new(name3), start), Is.Empty);
+    await Assert.ThatAsync(() => repo.GetAll(new(name3), new(name2), start), Is.Empty);
 
-    var ses1 = await repo.GetAll(name1, new(name1), start);
-    var se1_2 = await GetSingle(name1, new(name1), staged1);
-    var ses2 = (await repo.GetAll(name2, new(name2), staged1)).ToList();
-    var ses3 = (await repo.GetAll(name3, new(name3), staged1)).ToList();
-    Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, name1, new(name1), staged2, "not ignore: 1.2", Hash("not ignore: 1.2"))));
+    var ses1 = await repo.GetAll(new(name1), new(name1), start);
+    var se1_2 = await GetSingle(new(name1), new(name1), staged1);
+    var ses2 = (await repo.GetAll(new(name2), new(name2), staged1)).ToList();
+    var ses3 = (await repo.GetAll(new(name3), new(name3), staged1)).ToList();
+    Assert.That(se1_2, Is.EqualTo(new StagedEntity(se1_2.Id, new(name1), new(name1), staged2, new("not ignore: 1.2"), Hash("not ignore: 1.2"))));
     Assert.That(ses1.Count, Is.EqualTo(2));
-    Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, name2, new(name2), staged2, "not ignore: 2", Hash("not ignore: 2")) }));
-    Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, name3, new(name3), staged2, "not ignore: 3", Hash("not ignore: 3")) }));
+    Assert.That(ses2, Is.EquivalentTo(new List<StagedEntity> { new(ses2.Single().Id, new(name2), new(name2), staged2, new("not ignore: 2"), Hash("not ignore: 2")) }));
+    Assert.That(ses3, Is.EquivalentTo(new List<StagedEntity> { new(ses3.Single().Id, new(name3), new(name3), staged2, new("not ignore: 3"), Hash("not ignore: 3")) }));
     
     async Task<StagedEntity> Create(string nm, string data, string? ignore) {
-      var staged = await repo.Stage(nm, new(nm), data) ?? throw new Exception();
-      return String.IsNullOrWhiteSpace(ignore) ? staged : staged.Ignore(ignore);
+      var staged = await repo.Stage(new(nm), new(nm), data) ?? throw new Exception();
+      return String.IsNullOrWhiteSpace(ignore) ? staged : staged.Ignore(new(ignore));
     }
   }
   
@@ -244,27 +244,27 @@ public abstract class BaseStagedEntityRepositoryTests {
     var (get_all, delete_all) = (dt.Today, dt.Now.AddHours(1));
     var basenm = Constants.System1Name.Value;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
-    await repo.Stage(name1, new(name1), name1);
+    await repo.Stage(new(name1), new(name1), name1);
     var staged2 = dt.Tick();
-    await repo.Stage(name1, new(name1), data2);
-    await repo.Stage(name2, new(name2), name2);
-    await repo.Stage(name3, new(name3), name3);
+    await repo.Stage(new(name1), new(name1), data2);
+    await repo.Stage(new(name2), new(name2), name2);
+    await repo.Stage(new(name3), new(name3), name3);
 
-    await repo.DeleteStagedBefore(name1, new(name1), staged2); // will delete name1@staged1
-    var se1 = await GetSingle(name1, new(name1), get_all);
-    var se2 = await GetSingle(name2, new(name2), get_all);
-    var se3 = await GetSingle(name3, new(name3), get_all);
+    await repo.DeleteStagedBefore(new(name1), new(name1), staged2); // will delete name1@staged1
+    var se1 = await GetSingle(new(name1), new(name1), get_all);
+    var se2 = await GetSingle(new(name2), new(name2), get_all);
+    var se3 = await GetSingle(new(name3), new(name3), get_all);
     
-    Assert.That(se1, Is.EqualTo(new StagedEntity(se1.Id, name1, new(name1), staged2, data2, Hash(data2))));
-    Assert.That(se2, Is.EqualTo(new StagedEntity(se2.Id, name2, new(name2), staged2, name2, Hash(name2))));
-    Assert.That(se3, Is.EqualTo(new StagedEntity(se3.Id, name3, new(name3), staged2, name3, Hash(name3))));
+    Assert.That(se1, Is.EqualTo(new StagedEntity(se1.Id, new(name1), new(name1), staged2, new(data2), Hash(data2))));
+    Assert.That(se2, Is.EqualTo(new StagedEntity(se2.Id, new(name2), new(name2), staged2, new(name2), Hash(name2))));
+    Assert.That(se3, Is.EqualTo(new StagedEntity(se3.Id, new(name3), new(name3), staged2, new(name3), Hash(name3))));
    
-    await repo.DeleteStagedBefore(name1, new(name1), delete_all); // will delete remaining name1
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name1), get_all), Is.Empty);
-    var se22 = await GetSingle(name2, new(name2), get_all);
-    var se23 = await GetSingle(name3, new(name3), get_all);
-    Assert.That(se22, Is.EqualTo(new StagedEntity(se22.Id, name2, new(name2), staged2, name2, Hash(name2))));
-    Assert.That(se23, Is.EqualTo(new StagedEntity(se23.Id, name3, new(name3), staged2, name3, Hash(name3))));
+    await repo.DeleteStagedBefore(new(name1), new(name1), delete_all); // will delete remaining name1
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name1), get_all), Is.Empty);
+    var se22 = await GetSingle(new(name2), new(name2), get_all);
+    var se23 = await GetSingle(new(name3), new(name3), get_all);
+    Assert.That(se22, Is.EqualTo(new StagedEntity(se22.Id, new(name2), new(name2), staged2, new(name2), Hash(name2))));
+    Assert.That(se23, Is.EqualTo(new StagedEntity(se23.Id, new(name3), new(name3), staged2, new(name3), Hash(name3))));
   }
   
   [Test] public async Task Test_delete_large_batch() {
@@ -277,33 +277,33 @@ public abstract class BaseStagedEntityRepositoryTests {
     var (get_all, delete_all) = (dt.Now.AddHours(-1), dt.Now.AddHours(1));
     var basenm = Constants.System1Name;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
-    await repo.Stage(name1, new(name1), name1);
+    await repo.Stage(new(name1), new(name1), name1);
     var (staged2, promoted2) = (dt.Tick(), dt.Now.AddDays(1));
-    await repo.Stage(name1, new(name1), data2);
-    await repo.Stage(name2, new(name2), name2);
-    await repo.Stage(name3, new(name3), name3);
+    await repo.Stage(new(name1), new(name1), data2);
+    await repo.Stage(new(name2), new(name2), name2);
+    await repo.Stage(new(name3), new(name3), name3);
     
-    await repo.UpdateImpl(name1, new(name1), (await repo.GetAll(name1, new(name1), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
-    await repo.UpdateImpl(name2, new(name2), (await repo.GetAll(name2, new(name2), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
-    await repo.UpdateImpl(name3, new(name3), (await repo.GetAll(name3, new(name3), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(new(name1), new(name1), (await repo.GetAll(new(name1), new(name1), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(new(name2), new(name2), (await repo.GetAll(new(name2), new(name2), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
+    await repo.UpdateImpl(new(name3), new(name3), (await repo.GetAll(new(name3), new(name3), get_all)).Select(se => se.Promote(se.DateStaged.AddDays(1))).ToList());
     
-    await repo.DeletePromotedBefore(name1, new(name1), promoted2);
+    await repo.DeletePromotedBefore(new(name1), new(name1), promoted2);
     
-    var se1 = await GetSingle(name1, new(name1), get_all);
-    var se2 = await GetSingle(name2, new(name2), get_all);
-    var se3 = await GetSingle(name3, new(name3), get_all);
-    Assert.That(se1, Is.EqualTo(new StagedEntity(se1.Id, name1, new(name1), staged2, data2, Hash(data2)) { DatePromoted = promoted2 }));
-    Assert.That(se2, Is.EqualTo(new StagedEntity(se2.Id, name2, new(name2), staged2, name2, Hash(name2)) { DatePromoted = promoted2 }));
-    Assert.That(se3, Is.EqualTo(new StagedEntity(se3.Id, name3, new(name3), staged2, name3, Hash(name3)) { DatePromoted = promoted2 }));
+    var se1 = await GetSingle(new(name1), new(name1), get_all);
+    var se2 = await GetSingle(new(name2), new(name2), get_all);
+    var se3 = await GetSingle(new(name3), new(name3), get_all);
+    Assert.That(se1, Is.EqualTo(new StagedEntity(se1.Id, new(name1), new(name1), staged2, new(data2), Hash(data2)) { DatePromoted = promoted2 }));
+    Assert.That(se2, Is.EqualTo(new StagedEntity(se2.Id, new(name2), new(name2), staged2, new(name2), Hash(name2)) { DatePromoted = promoted2 }));
+    Assert.That(se3, Is.EqualTo(new StagedEntity(se3.Id, new(name3), new(name3), staged2, new(name3), Hash(name3)) { DatePromoted = promoted2 }));
     
-    await repo.DeleteStagedBefore(name1, new(name1), delete_all);
+    await repo.DeleteStagedBefore(new(name1), new(name1), delete_all);
     
-    var se21 = await GetSingle(name2, new(name2), get_all);
-    var se22 = await GetSingle(name3, new(name3), get_all);
+    var se21 = await GetSingle(new(name2), new(name2), get_all);
+    var se22 = await GetSingle(new(name3), new(name3), get_all);
     
-    await Assert.ThatAsync(() => repo.GetAll(name1, new(name1), get_all), Is.Empty);
-    Assert.That(se21, Is.EqualTo(new StagedEntity(se21.Id, name2, new(name2), staged2, name2, Hash(name2)) { DatePromoted = promoted2 }));
-    Assert.That(se22, Is.EqualTo(new StagedEntity(se22.Id, name3, new(name3), staged2, name3, Hash(name3)) { DatePromoted = promoted2 }));
+    await Assert.ThatAsync(() => repo.GetAll(new(name1), new(name1), get_all), Is.Empty);
+    Assert.That(se21, Is.EqualTo(new StagedEntity(se21.Id, new(name2), new(name2), staged2, new(name2), Hash(name2)) { DatePromoted = promoted2 }));
+    Assert.That(se22, Is.EqualTo(new StagedEntity(se22.Id, new(name3), new(name3), staged2, new(name3), Hash(name3)) { DatePromoted = promoted2 }));
   }
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
@@ -312,7 +312,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     dt.Tick();
     var duplicate = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, data);
     
-    var expected = new StagedEntity(staged.Id, Constants.System1Name, Constants.SystemEntityName, stageddt, data, Hash(data));
+    var expected = new StagedEntity(staged.Id, Constants.System1Name, Constants.SystemEntityName, stageddt, new(data), Hash(data));
     var ses = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Today)).ToList();
     
     Assert.That(duplicate, Is.Null);
@@ -327,7 +327,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
-    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, idx.ToString(), Hash(idx)))));
+    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
   
   [Test] public async Task Test_GetAll_GetUnpromoted_respect_DatePromoted_state() {
@@ -343,7 +343,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(unpromoted, Is.EquivalentTo(new [] {s1, s3}));
   }
   
-  private StagedEntity SetData(StagedEntity e, string data) => e with { Data = data };
+  private StagedEntity SetData(StagedEntity e, string data) => e with { Data = new(data) };
   private StagedEntityChecksum Hash(object o) => Helpers.TestingStagedEntityChecksum(o.ToString() ?? throw new Exception());
   
   private async Task<StagedEntity> GetSingle(SystemName system, SystemEntityTypeName systype, DateTime after) => (await repo.GetAll(system, systype, after)).Single();

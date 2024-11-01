@@ -69,7 +69,7 @@ public class ReadOperationRunnerTests {
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
     => new (
-        await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new SystemEntityTypeName(result.ToString())),
+        await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString())),
         new BaseFunctionConfig(),
         new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl), DateTime.MinValue);
   
@@ -84,7 +84,7 @@ public class ReadOperationRunnerTests {
   private class TestingSingleReadOperationImplementation : IGetObjectsToStage {
     public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
       var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
-      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(Guid.NewGuid().ToString());
+      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(new(Guid.NewGuid().ToString()));
       return Task.FromResult(res);
     }
   }

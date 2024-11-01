@@ -56,10 +56,10 @@ public sealed record StagedEntity {
     
     public StagedEntity ToBase() => new(
         Id ?? throw new ArgumentNullException(nameof(Id)),
-        System ?? throw new ArgumentNullException(nameof(System)),
+        new(System ?? throw new ArgumentNullException(nameof(System))),
         new(SystemEntityTypeName ?? throw new ArgumentNullException(nameof(SystemEntityTypeName))),
         DateStaged ?? throw new ArgumentNullException(nameof(DateStaged)),
-        Data ?? throw new ArgumentNullException(nameof(Data)),
+        new(Data ?? throw new ArgumentNullException(nameof(Data))),
         new(StagedEntityChecksum ?? throw new ArgumentNullException(nameof(StagedEntityChecksum)))) {
       IgnoreReason = String.IsNullOrWhiteSpace(IgnoreReason) ? null : IgnoreReason.Trim(),
       DatePromoted = DatePromoted

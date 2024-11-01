@@ -84,8 +84,8 @@ public record ObjectState : ILoggable {
     public string? LastRunException { get; init; }
     
     public ObjectState ToBase() => new(
-        System ?? throw new ArgumentNullException(nameof(System)),
-        Stage ?? throw new ArgumentNullException(nameof(Stage)),
+        new(System ?? throw new ArgumentNullException(nameof(System))),
+        new(Stage ?? throw new ArgumentNullException(nameof(Stage))),
         SafeObjectName(),
         Active ?? throw new ArgumentNullException(nameof(Active))) {
       

@@ -36,7 +36,7 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
 
   public async Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas) {
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
-    var staged = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, data, checksum(data))).ToList();
+    var staged = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data), checksum(data))).ToList();
     if (!staged.Any()) return staged;
     if (staged.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
     return await StageImpl(system, systype, staged);

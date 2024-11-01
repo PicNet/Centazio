@@ -55,8 +55,8 @@ public record SystemState {
     }
     
     public SystemState ToBase() => new(
-        System ?? throw new ArgumentNullException(nameof(System)), 
-        Stage ?? throw new ArgumentNullException(nameof(Stage)), 
+        new(System ?? throw new ArgumentNullException(nameof(System))), 
+        new(Stage ?? throw new ArgumentNullException(nameof(Stage))), 
         Active ?? throw new ArgumentNullException(nameof(Active)),
         DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
         DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),

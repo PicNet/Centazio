@@ -25,7 +25,7 @@ public class EntityStagerTests {
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();
     
     var staged = results1.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, nameof(EntityStagerTests), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(nameof(EntityStagerTests)), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
     Assert.That(results2, Is.Empty);
   }
 
@@ -36,7 +36,7 @@ public class EntityStagerTests {
     var results1 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow.AddMicroseconds(-1))).ToList();
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();
     
-    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, idx.ToString(), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
+    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(idx.ToString()), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
     Assert.That(results1, Is.EqualTo(exp));
     Assert.That(results2, Is.Empty);
   }

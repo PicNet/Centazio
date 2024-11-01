@@ -10,7 +10,7 @@ public record ValidString(string Value) {
       ? Value.Trim() : throw new ArgumentException("Value must be a non-empty string", nameof(Value));
   
   public static implicit operator string(ValidString value) => value.Value;
-  public static implicit operator ValidString(string value) => new(value);
+  public static explicit operator ValidString(string value) => new(value);
   
   public sealed override string ToString() => Value;
   
@@ -26,9 +26,7 @@ public sealed record SystemEntityId(string Value) : EntityId(Value) {
   public static readonly SystemEntityId DEFAULT_VALUE = new("*");
 }
 
-[MaxLength2(32)] public sealed record SystemName(string Value) : ValidString(Value) {
-  public static implicit operator SystemName(string value) => new(value);
-}
+[MaxLength2(32)] public sealed record SystemName(string Value) : ValidString(Value);
 
 [MaxLength2(32)] public record ObjectName : ValidString {
   internal ObjectName(string Value) : base(Value) {}
@@ -49,8 +47,6 @@ public sealed record CoreEntityTypeName(string Value) : ObjectName(Value) {
 }
 
 [MaxLength2(32)] public sealed record LifecycleStage(string Value) : ValidString(Value) {
-  public static implicit operator LifecycleStage(string value) => new((ValidString) value);
-  
   [IgnoreNamingConventions] 
   public static class Defaults {
     public static readonly LifecycleStage Read = new(nameof(Read));

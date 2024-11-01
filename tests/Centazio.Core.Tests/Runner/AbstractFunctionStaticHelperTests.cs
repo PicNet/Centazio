@@ -50,7 +50,7 @@ public class AbstractFunctionStaticHelperTests {
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
     OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(
-        new ObjectState(name, name, new SystemEntityTypeName(name), true) { 
+        new ObjectState(new(name), new(name), new SystemEntityTypeName(name), true) { 
           LastCompleted = last,
           LastResult = EOperationResult.Success,
           LastAbortVote = EOperationAbortVote.Continue
@@ -138,7 +138,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, string exmessage="na") {
-    return new ObjectState(res.ToString(), res.ToString(), new SystemEntityTypeName(res.ToString()), true) {
+    return new ObjectState(new(res.ToString()), new(res.ToString()), new SystemEntityTypeName(res.ToString()), true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res, 
       LastAbortVote = vote, 
@@ -157,7 +157,7 @@ public class AbstractFunctionStaticHelperTests {
   static class Factories {
     public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
         => new (
-            await repo.CreateObjectState(await repo.CreateSystemState(result.ToString(), result.ToString()), new SystemEntityTypeName(result.ToString())),
+            await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString())),
             new BaseFunctionConfig(),
             new (new SystemEntityTypeName(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), new TestingAbortingAndEmptyReadOperationImplementation()), 
             DateTime.MinValue);

@@ -14,7 +14,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
   public FinReadFunction(SimulationCtx ctx, FinApi api) {
     this.ctx = ctx;
     this.api = api;
-    Config = new(nameof(FinApi), LifecycleStage.Defaults.Read, [
+    Config = new(new(nameof(FinApi)), LifecycleStage.Defaults.Read, [
       new(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
       new(SystemEntityTypeName.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
     ]);

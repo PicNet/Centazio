@@ -65,7 +65,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     bags = bags.OrderByDescending(bag => bag.SystemEntity.LastUpdatedDate).ToList(); 
     bags.ForEach(bag => {
       if (bag.IsIgnore) return;
-      if (!added.TryAdd(bag.SystemEntity.SystemId, true)) bag.MarkIgnore("already added in batch, taking most recently updated");
+      if (!added.TryAdd(bag.SystemEntity.SystemId, true)) bag.MarkIgnore(new("already added in batch, taking most recently updated"));
     });
   }
     
@@ -128,7 +128,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (IsEmpty()) return;
     bags
         .Where(bag => !bag.IsIgnore && bag.CoreEntityAndMeta.Meta.OriginalSystem != system)
-        .ForEach(bag => bag.MarkIgnore("update is a bounce-back and entity is not bi-directional"));
+        .ForEach(bag => bag.MarkIgnore(new("update is a bounce-back and entity is not bi-directional")));
   }
 
   public void IgnoreNonMeaninfulChanges() {
@@ -138,7 +138,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       if (bag.PreExistingCoreEntityChecksum is null) return false;
       return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum ?? throw new Exception()) && bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
     }).ToList();
-    toignore.ForEach(bag => bag.MarkIgnore("no meaningful change detected on entity"));
+    toignore.ForEach(bag => bag.MarkIgnore(new("no meaningful change detected on entity")));
   } 
   
   public async Task WriteEntitiesToCoreStorageAndUpdateMaps() {

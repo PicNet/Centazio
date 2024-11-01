@@ -16,7 +16,7 @@ public class AwsStagedEntityRepositoryHelpers {
   public static S3KeyComponents ParseS3Key(string key) {
     var (system, entity, rest, _) = key.Split('/');
     var (stagedstr, checksum, idstr, _) = rest.Split('_');
-    return new S3KeyComponents(system, new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), new(checksum), Guid.Parse(idstr));
+    return new S3KeyComponents(new(system), new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), new(checksum), Guid.Parse(idstr));
   } 
 }
 

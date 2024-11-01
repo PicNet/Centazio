@@ -19,19 +19,6 @@ public class TypesTests {
     Assert.Throws<ArgumentException>(() => { _ = (ValidString) String.Empty; });
   }
   
-  [Test] public void Test_SystemName_conversions() {
-    var str = nameof(TypesTests);
-    
-    Assert.That((SystemName) str, Is.EqualTo((SystemName) nameof(TypesTests)));
-    
-    Assert.That((string) new SystemName(str), Is.EqualTo(str));
-    Assert.That(new SystemName(str).Value, Is.EqualTo(str));
-    Assert.That(new SystemName(str), Is.EqualTo((SystemName) str));
-    Assert.That(new SystemName(str), Is.EqualTo((SystemName) str));
-    Assert.That(new SystemName(new ValidString(str)).Value, Is.EqualTo(str));
-    Assert.That(new SystemName(new ValidString(str)), Is.EqualTo((SystemName) str));
-    Assert.That(new SystemName(new ValidString(str)), Is.EqualTo((SystemName) str));
-  }
   
   [Test] public void Test_ObjectName_casting_to_SystemEntityType_and_CoreEntityType() {
     Assert.Throws<Exception>(() => _ = C.SystemEntityName.ToCoreEntityTypeName);

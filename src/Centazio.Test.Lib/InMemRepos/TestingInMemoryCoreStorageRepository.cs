@@ -11,7 +11,7 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   public Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<CoreEntityAndMeta>());
     var lst = fulllst
-        .Where(c => c.Value.Meta.LastUpdateSystem != exclude.Value && c.Value.Meta.DateCreated > after || c.Value.Meta.DateUpdated > after).Select(c => c.Value)
+        .Where(c => c.Value.Meta.LastUpdateSystem != exclude && c.Value.Meta.DateCreated > after || c.Value.Meta.DateUpdated > after).Select(c => c.Value)
         .ToList();
     return Task.FromResult(lst);
   }
