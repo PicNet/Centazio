@@ -16,10 +16,15 @@ public class WriteFunctionTests {
     var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     var upsert1 = await core.Upsert(C.CoreEntityName, [customer1, customer2]);
+    
+    // update ids that were set by the write function
+    // customer1 = customer1 with { Meta = customer1.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
+    // customer2 = customer2 with { Meta = customer2.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
+    
     var res1 = (await funcrunner.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(customer1.Meta.OriginalSystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
-      Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(customer2.Meta.OriginalSystemId, WftHelpers.ToSeCs(customer2.CoreEntity)) };
+      Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
+      Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, WftHelpers.ToSeCs(customer2.CoreEntity)) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -98,7 +103,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
   
   public Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map)).ToList();
-    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity))).ToList();
+    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)))).ToList();
     return Task.FromResult(new CovertCoreEntitiesToSystemEntitiesResult(ccreate, cupdate));
   }
 
@@ -115,9 +120,9 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
 
 internal static class WftHelpers {
   public static SystemEntityChecksum ToSeCs(ICoreEntity coreent) => Helpers.TestingSystemEntityChecksum(ToSe(coreent));
-  public static System1Entity ToSe(ICoreEntity coreent) {
+  public static System1Entity ToSe(ICoreEntity coreent, Guid? sysid = null) {
     var c = coreent.To<CoreEntity>();
-    return new System1Entity(Guid.NewGuid(), c.FirstName, c.LastName, c.DateOfBirth, UtcDate.UtcNow);
+    return new System1Entity(sysid ?? Guid.NewGuid(), c.FirstName, c.LastName, c.DateOfBirth, UtcDate.UtcNow);
   }
 
 }
