@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.EF.Tests.CoreRepo;
 
 public abstract class AbstractTestingCoreStorageDbContext(string schema) : CentazioDbContext {
+
+  public static readonly string DEFAULT_CORE_SCHEMA_NAME = "dbo";
   
   public string SchemaName { get; } = schema;
   public string CoreEntityName { get; } = nameof(CoreEntity).ToLower();

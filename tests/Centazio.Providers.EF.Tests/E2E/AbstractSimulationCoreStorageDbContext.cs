@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.EF.Tests.E2E;
 
 public abstract class AbstractSimulationCoreStorageDbContext(string coreschema, string ctlschema) : CentazioDbContext {
-  protected static string DEFAULT_CORE_SCHEMA_NAME = "dbo";
   
   public string CoreSchemaName { get; } = coreschema;
   public string CtlSchemaName { get; } = ctlschema;

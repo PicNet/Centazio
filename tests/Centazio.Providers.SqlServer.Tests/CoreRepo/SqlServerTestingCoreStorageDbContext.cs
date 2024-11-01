@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
-public class SqlServerTestingCoreStorageDbContext(string connstr) : AbstractTestingCoreStorageDbContext("core") {
+public class SqlServerTestingCoreStorageDbContext(string connstr) : AbstractTestingCoreStorageDbContext(DEFAULT_CORE_SCHEMA_NAME) {
 
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlServer(connstr);
 
