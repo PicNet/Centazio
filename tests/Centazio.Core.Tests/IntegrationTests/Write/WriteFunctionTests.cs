@@ -101,7 +101,7 @@ public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, 
     Updated.Clear();
   }
   
-  public Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map)).ToList();
     var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)))).ToList();
     return Task.FromResult(new CovertCoreEntitiesToSystemEntitiesResult(ccreate, cupdate));

@@ -21,7 +21,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntitties(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     if (config.Object.Value == nameof(CoreCustomer)) {
       return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e));
     }
