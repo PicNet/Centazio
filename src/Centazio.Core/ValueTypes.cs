@@ -3,8 +3,6 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Core;
 
-// todo: reconsider these implicit conversions, can cause issues
-
 public record ValidString(string Value) {
   public string Value { get; } = !String.IsNullOrWhiteSpace(Value) 
       ? Value.Trim() : throw new ArgumentException("Value must be a non-empty string", nameof(Value));

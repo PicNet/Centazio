@@ -1,47 +1,57 @@
-﻿using System.Diagnostics;
-using Centazio.Core.Secrets;
+﻿using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
-using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
 
 namespace Centazio.Providers.SqlServer.Tests;
 
 public class SqlConn {
   
-  public static readonly SqlConn Instance = new();
+  private static SqlConn? instance;
+  
+  public static async Task<SqlConn> GetInstance(bool real) {
+    if (instance is not null) return instance.Real == real ? instance : throw new Exception($"cannot change Real/Container between tests");
+    instance = new SqlConn(real);
+    return await instance.Init();
+  }
   
   public bool Real { get; }
   
-  public async Task<string> ConnStr() {
-    await Init();
-    return connstr ?? throw new Exception();
-  }
-  public async Task<SqlConnection> Conn() => new(await ConnStr());
-  
-  private SqlConn(bool real=false) => Real = real;
-  
   private MsSqlContainer? container;
   private string? connstr;
+  
+  public string ConnStr => connstr ?? throw new Exception("not initialised");
 
-  private async Task Init() {
-    if (connstr is not null) return;
+  private SqlConn(bool real) {
+    if (instance is not null) throw new NotSupportedException();
+    Real = real;
+    instance = this;
+  }
+  
+  private async Task<SqlConn> Init() {
+    if (connstr is not null) throw new Exception("already initialised");
     
-    if (Real) {
+    connstr = Real ? RealInit() : await ContainerInit();
+    if (connstr is null) throw new Exception("connstr was not initialised");
+    return this;
+    
+    string RealInit() {
       var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
       var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.SecretsFolder, "dev").Load();
-      connstr = secrets.SQL_CONN_STR;
-      return;
+      return secrets.SQL_CONN_STR;
     }
-    container = new MsSqlBuilder().Build();
-    await container.StartAsync();
-    connstr = container.GetConnectionString();
+
+    async Task<string> ContainerInit() {
+      container = new MsSqlBuilder().Build();
+      await container.StartAsync();
+      return container.GetConnectionString();
+    }
   }
 
   // note: This should only be called by TestSuiteInitialiser.cs
   internal async Task Dispose() {
     if (Real) return;
-    if (container is null) throw new UnreachableException();
+    if (container is null) throw new Exception("not initialised");
     
     await container.StopAsync();
     await container.DisposeAsync();

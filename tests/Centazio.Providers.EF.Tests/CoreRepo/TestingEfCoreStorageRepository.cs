@@ -12,8 +12,8 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
   public async Task<ITestingCoreStorage> Initalise() {
     await using var db = getdb();
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, nameof(CoreEntity), dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, nameof(CoreStorageMeta), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CtlSchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreEntityName, dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
     return this;
   }
   
@@ -74,6 +74,7 @@ public class TestingEfCoreStorageRepository(Func<AbstractTestingCoreStorageDbCon
 
   public async ValueTask DisposeAsync() {
     await using var db = getdb();
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.CoreEntityName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreEntityName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CtlSchemaName, db.CoreStorageMetaName));
   }
 }

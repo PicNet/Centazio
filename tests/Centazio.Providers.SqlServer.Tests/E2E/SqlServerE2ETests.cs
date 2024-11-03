@@ -10,7 +10,6 @@ using Centazio.Test.Lib.E2E;
 namespace Centazio.Providers.SqlServer.Tests.E2E;
 
 public class SqlServerE2ETests {
-  // todo: this test is failing when run in suite
   [Test] public async Task Run_e2e_simulation_and_tests() {
     await new E2EEnvironment(new SqlServerSimulationProvider()).RunSimulation();
   }
@@ -23,7 +22,7 @@ public class SqlServerSimulationProvider : ISimulationProvider {
   
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqlServerDbFieldsHelper();
-    var connstr = await SqlConn.Instance.ConnStr();
+    var connstr = (await SqlConn.GetInstance(false)).ConnStr;
     CtlRepo = await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(connstr), dbf).Initalise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(connstr)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(() => new SqlServerSimulationCoreStorageDbContext(connstr), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();

@@ -7,7 +7,7 @@ namespace Centazio.Providers.SqlServer.Tests.Ctl;
 
 public class SqlServerCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
   protected override async Task<ICtlRepository> GetRepository() {
-    var connstr = await SqlConn.Instance.ConnStr();
+    var connstr = (await SqlConn.GetInstance(false)).ConnStr;
     return await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(connstr), new SqlServerDbFieldsHelper()).Initalise();
   }
 }
