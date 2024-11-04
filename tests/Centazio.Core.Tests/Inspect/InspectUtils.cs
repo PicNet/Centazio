@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.Tests.Inspect;
 
 internal static class InspectUtils {
 
   private static string? solndir;
-  internal static string SolnDir => solndir ??= GetSolutionRootDirectory();
+  internal static string SolnDir => solndir ??= ReflectionUtils.GetSolutionRootDirectory();
   
   public static List<string> CsFiles(string? dir, params string[] ignore) => GetSolnFiles(dir, "*.cs")
       .Where(f => !ignore.Any(f.EndsWith) && !f.Contains(@"\obj\"))
@@ -27,18 +28,4 @@ internal static class InspectUtils {
   public static List<Assembly> LoadCentazioAssemblies() => GetCentazioDllFiles().Select(Assembly.LoadFrom).ToList();
   
   public static List<string> GetSolnFiles(string? dir, string extension) => Directory.GetFiles(dir ?? SolnDir, extension, SearchOption.AllDirectories).ToList();
-
-  internal static string GetSolutionRootDirectory() {
-    var file = "azure-pipelines.yml";
-
-    string? Impl(string dir) {
-      var path = Path.Combine(dir, file);
-      if (File.Exists(path)) return dir;
-
-      var parent = Directory.GetParent(dir)?.FullName;
-      return parent is null ? null : Impl(parent);
-    }
-
-    return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
-  }
 }

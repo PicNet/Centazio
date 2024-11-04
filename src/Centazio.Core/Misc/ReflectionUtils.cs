@@ -34,5 +34,18 @@ public static class ReflectionUtils {
     if (ifaceatt is not null) return ifaceatt;
     return t.BaseType is not null ? GetPropAttribute<A>(t.BaseType, prop) : null;
   }
+  
+  public static string GetSolutionRootDirectory() {
+    var file = "azure-pipelines.yml";
+
+    string? Impl(string dir) {
+      var path = Path.Combine(dir, file);
+      if (File.Exists(path)) return dir;
+
+      var parent = Directory.GetParent(dir)?.FullName;
+      return parent is null ? null : Impl(parent);
+    }
+    return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
+  }
 
 }

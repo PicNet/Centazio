@@ -1,15 +1,16 @@
-﻿using Centazio.Test.Lib.BaseProviderTests;
+﻿using Centazio.Core.Misc;
+using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Core.Tests.Inspect;
 
 public class CheckProvidersImplementCorrectInterfacesAndTests {
   
   [Test] public void Test_all_providers_implement_base_provider_tests() {
-    var basetestsdir = Path.Combine(InspectUtils.GetSolutionRootDirectory(), "src/Centazio.Test.Lib/BaseProviderTests");
+    var basetestsdir = Path.Combine(ReflectionUtils.GetSolutionRootDirectory(), "src/Centazio.Test.Lib/BaseProviderTests");
     var tests = InspectUtils.CsFiles(basetestsdir).Select(f => f.Split('\\').Last().Split('.').First()).Where(n => n != nameof(BaseSimulationCoreStorageRepositoryTests)).ToList();
-    var provsdir = Path.Combine(InspectUtils.GetSolutionRootDirectory(), "src/Centazio.Providers");
+    var provsdir = Path.Combine(ReflectionUtils.GetSolutionRootDirectory(), "src/Centazio.Providers");
     var provs = Directory.GetDirectories(provsdir).Where(dir => !dir.EndsWith("Centazio.Providers.EF")).ToList();
-    var testsdir = Path.Combine(InspectUtils.GetSolutionRootDirectory(), "tests");
+    var testsdir = Path.Combine(ReflectionUtils.GetSolutionRootDirectory(), "tests");
     var provtests = Directory.GetDirectories(testsdir).Where(d => d.IndexOf("\\Centazio.Providers.", StringComparison.OrdinalIgnoreCase) >= 0).ToList();
     
     var errors = new List<string>();
