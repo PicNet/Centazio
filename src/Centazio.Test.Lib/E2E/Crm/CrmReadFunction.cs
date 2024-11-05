@@ -4,7 +4,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class CrmReadFunction : ReadFunction {
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   
@@ -21,7 +21,7 @@ public class CrmReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     ]);
   }
   
-  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
+  public override async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
       nameof(CrmMembershipType) => await api.GetMembershipTypes(config.Checkpoint), 
       nameof(CrmCustomer) => await api.GetCustomers(config.Checkpoint), 

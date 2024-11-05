@@ -11,7 +11,7 @@ public class WriteFunctionTests {
   [Test] public async Task Test_WriteFunction() {
     var (ctl, core) = (F.CtlRepo(), F.CoreRepo());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(ctl, core));
-    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(oprunner, ctl);
     
     var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
@@ -21,7 +21,7 @@ public class WriteFunctionTests {
     // customer1 = customer1 with { Meta = customer1.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     // customer2 = customer2 with { Meta = customer2.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     
-    var res1 = (await funcrunner.RunFunction()).OpResults.Single();
+    var res1 = (await funcrunner.RunFunction(func)).OpResults.Single();
     var expresults1 = new [] { 
       Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
       Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, WftHelpers.ToSeCs(customer2.CoreEntity)) };
@@ -32,7 +32,7 @@ public class WriteFunctionTests {
     
     var customer22 = customer2.Update(C.System2Name, (CoreEntity) customer2.CoreEntity with { FirstName = "22" }, Helpers.TestingCoreEntityChecksum);
     var upsert2 = await core.Upsert(C.CoreEntityName, [customer22]);
-    var res2 = (await funcrunner.RunFunction()).OpResults.Single();
+    var res2 = (await funcrunner.RunFunction(func)).OpResults.Single();
     var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22.CoreEntity)) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
@@ -54,13 +54,13 @@ public class WriteFunctionTests {
     var (ctl, core) = (F.CtlRepo(), F.CoreRepo());
     var (func, oprunner) = (new TestingBatchWriteFunction(), F.WriteRunner<WriteOperationConfig>(ctl, core));
     func.Throws = true;
-    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(oprunner, ctl);
 
     // add some data, as the write function will not be called if there is nothing to 'write'
     var ceam = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     await core.Upsert(C.CoreEntityName, [ceam]);
     
-    var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
+    var result = (ErrorWriteOperationResult) (await funcrunner.RunFunction(func)).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
     var allcusts = await core.GetAllCoreEntities();

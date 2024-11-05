@@ -22,7 +22,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_creates_state_if_it_does_not_exist() {
     Assert.That(repo.Systems, Is.Empty);
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
+    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -33,7 +33,7 @@ public class FunctionRunnerTests {
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
     
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
+    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -43,7 +43,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
     var count = 10;
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new SimpleFunction(count), oprunner, repo).RunFunction();
+    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(new SimpleFunction(count));
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -54,7 +54,7 @@ public class FunctionRunnerTests {
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
     
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(emptufunc, oprunner, repo).RunFunction();
+    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -64,7 +64,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new SimpleFunction(1), oprunner, repo).RunFunction();
+    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(new SimpleFunction(1));
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);

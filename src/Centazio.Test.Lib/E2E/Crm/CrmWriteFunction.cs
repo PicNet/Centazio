@@ -1,11 +1,12 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
+public class CrmWriteFunction : WriteFunction {
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
@@ -21,7 +22,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public override async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     if (config.Object.Value == nameof(CoreCustomer)) {
       return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e));
     }
@@ -35,7 +36,7 @@ public class CrmWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     Guid Id(SystemEntityId id) => id == SystemEntityId.DEFAULT_VALUE ? Guid.Empty : Guid.Parse(id);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(
+  public override async Task<WriteOperationResult> WriteEntitiesToTargetSystem(
       WriteOperationConfig config, 
       List<CoreSystemAndPendingCreateMap> tocreate, 
       List<CoreSystemAndPendingUpdateMap> toupdate) {

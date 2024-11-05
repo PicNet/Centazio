@@ -17,40 +17,31 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   private readonly SimulationCtx ctx = new(provider);
   
   private CrmApi crm = null!;
-  private FunctionRunner<ReadOperationConfig, ReadOperationResult> crm_read_runner = null!;
-  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> crm_promote_runner = null!;
-  private FunctionRunner<WriteOperationConfig, WriteOperationResult> crm_write_runner = null!;
-
   private FinApi fin = null!;
-  private FunctionRunner<ReadOperationConfig, ReadOperationResult> fin_read_runner = null!;
-  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> fin_promote_runner = null!;
-  private FunctionRunner<WriteOperationConfig, WriteOperationResult> fin_write_runner = null!;
+  
+  private CrmReadFunction crm_read = null!;
+  private CrmPromoteFunction crm_promote = null!;
+  private CrmWriteFunction crm_write = null!;
+  private FinReadFunction fin_read = null!;
+  private FinPromoteFunction fin_promote = null!;
+  private FinWriteFunction fin_write = null!;
+  
+  private ReadFunctionRunner read_runner = null!;
+  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> promote_runner = null!;
+  private FunctionRunner<WriteOperationConfig, WriteOperationResult> write_runner = null!;
 
   public async Task Initialise() {
     await ctx.Initialise();
     
     (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
-    crm_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new CrmReadFunction(ctx, crm),
-        new ReadOperationRunner(ctx.StageRepository),
-        ctx.CtlRepo);
-    crm_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new CrmPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo),
-        ctx.CtlRepo);
     
-    crm_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new CrmWriteFunction(ctx, crm),
-        new WriteOperationRunner<WriteOperationConfig>(ctx.CtlRepo, ctx.CoreStore), 
-        ctx.CtlRepo);
+    (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
+    (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
     
-    fin_read_runner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(new FinReadFunction(ctx, fin),
-        new ReadOperationRunner(ctx.StageRepository),
-        ctx.CtlRepo);
-    fin_promote_runner = new FunctionRunner<PromoteOperationConfig, PromoteOperationResult>(new FinPromoteFunction(ctx),
-        new PromoteOperationRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo),
-        ctx.CtlRepo);
-    
-    fin_write_runner = new FunctionRunner<WriteOperationConfig, WriteOperationResult>(new FinWriteFunction(ctx, fin),
-        new WriteOperationRunner<WriteOperationConfig>(ctx.CtlRepo, ctx.CoreStore), 
-        ctx.CtlRepo);
+    (read_runner, promote_runner, write_runner) = (
+        new ReadFunctionRunner(ctx.StageRepository, ctx.CtlRepo), 
+        new PromoteFunctionRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo), 
+        new WriteFunctionRunner(ctx.CoreStore, ctx.CtlRepo));
   }
   
   public async Task RunSimulation() {
@@ -76,12 +67,12 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-    await crm_read_runner.RunFunction();
-    await crm_promote_runner.RunFunction();
-    await fin_read_runner.RunFunction(); 
-    await fin_promote_runner.RunFunction();
-    await crm_write_runner.RunFunction();
-    await fin_write_runner.RunFunction();
+    await read_runner.RunFunction(crm_read);
+    await promote_runner.RunFunction(crm_promote);
+    await read_runner.RunFunction(fin_read); 
+    await promote_runner.RunFunction(fin_promote);
+    await write_runner.RunFunction(crm_write);
+    await write_runner.RunFunction(fin_write);
     
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();

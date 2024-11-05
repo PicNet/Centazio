@@ -1,11 +1,12 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Promote;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class CrmPromoteFunction : PromoteFunction {
   
   public override FunctionConfig<PromoteOperationConfig> Config { get; }
   
@@ -20,7 +21,7 @@ public class CrmPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     ]);
   }
   
-  public async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+  public override async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     return config.State.Object.Value switch { 
       nameof(CoreMembershipType) => BuildMembershipTypes(), 
       nameof(CoreCustomer) => BuildCustomers(), 

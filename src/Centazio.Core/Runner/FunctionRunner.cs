@@ -5,18 +5,13 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionRunner<C, R>(
-    AbstractFunction<C, R> func, 
+public class FunctionRunner<C, R>( 
     IOperationRunner<C, R> oprunner, 
-    ICtlRepository ctl) : IDisposable
+    ICtlRepository ctl) 
         where C : OperationConfig
         where R : OperationResult {
 
-  public SystemName System { get; } = func.Config.System;
-  public LifecycleStage Stage { get; } = func.Config.Stage;
-  public FunctionConfig<C> Config { get; } = func.Config;
-
-  public async Task<FunctionRunResults<R>> RunFunction() {
+  public async Task<FunctionRunResults<R>> RunFunction(AbstractFunction<C, R> func) {
     var start = UtcDate.UtcNow;
     
     Log.Information("function started [{@System}/{@Stage}] - {@Now}", func.Config.System, func.Config.Stage, UtcDate.UtcNow);
@@ -50,9 +45,6 @@ public class FunctionRunner<C, R>(
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
-
-  public void Dispose() { func.Dispose(); }
-
 }
 
 public abstract record FunctionRunResults<R>(List<R> OpResults, string Message) where R : OperationResult; 

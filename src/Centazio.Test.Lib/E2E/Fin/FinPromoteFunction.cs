@@ -1,10 +1,11 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Promote;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
+public class FinPromoteFunction : PromoteFunction {
   
   public override FunctionConfig<PromoteOperationConfig> Config { get; }
   
@@ -18,7 +19,7 @@ public class FinPromoteFunction : AbstractFunction<PromoteOperationConfig, Promo
     ]);
   }
   
-  public async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+  public override async Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     return config.State.Object.Value switch { 
       nameof(CoreCustomer) => await EvaluateCustomers(), 
       nameof(CoreInvoice) => await EvaluateInvoices(), 

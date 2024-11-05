@@ -4,7 +4,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class FinReadFunction : ReadFunction {
 
   public override FunctionConfig<ReadOperationConfig> Config { get; }
   
@@ -20,7 +20,7 @@ public class FinReadFunction : AbstractFunction<ReadOperationConfig, ReadOperati
     ]);
   }
   
-  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
+  public override async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 
       nameof(FinAccount) => await api.GetAccounts(config.Checkpoint), 
       nameof(FinInvoice) => await api.GetInvoices(config.Checkpoint), 

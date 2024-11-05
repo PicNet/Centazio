@@ -1,11 +1,12 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
+public class FinWriteFunction : WriteFunction {
   
   public override FunctionConfig<WriteOperationConfig> Config { get; }
   
@@ -21,7 +22,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     ]);
   }
 
-  public async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public override async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     ctx.Debug($"FinWriteFunction.CovertCoreEntitiesToSystemEntitties[{config.Object.Value}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToFinAccount(Id(id), e));
@@ -36,7 +37,7 @@ public class FinWriteFunction : AbstractFunction<WriteOperationConfig, WriteOper
     int Id(SystemEntityId id) => id == SystemEntityId.DEFAULT_VALUE ? 0 : Int32.Parse(id);
   }
 
-  public async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
+  public override async Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     ctx.Debug($"FinWriteFunction.WriteEntitiesToTargetSystem[{config.Object.Value}] Created[{tocreate.Count}] Updated[{toupdate.Count}]");
     if (config.Object.Value == nameof(CoreCustomer)) {
       var created = await api.CreateAccounts(tocreate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());

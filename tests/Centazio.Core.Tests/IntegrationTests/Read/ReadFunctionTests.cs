@@ -20,25 +20,25 @@ public class ReadFunctionTests {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeRepo());
     var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), F.ReadRunner(stager));
-    var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(func, oprunner, ctl);
+    var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, ctl);
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged0 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this run should be empty as no TestingUtcDate.DoTick
-    var r1 = (await funcrunner.RunFunction()).OpResults.Single();
+    var r1 = (await funcrunner.RunFunction(func)).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged1 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction()).OpResults.Single();
+    var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction(func)).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
-    var r3 = (await funcrunner.RunFunction()).OpResults; 
+    var r3 = (await funcrunner.RunFunction(func)).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged3 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     

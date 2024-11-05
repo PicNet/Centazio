@@ -4,18 +4,26 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Host;
 
-public record HostSettings(string FunctionFilter);
+public record HostSettings(string FunctionFilter) {
+  public List<string> ParseFunctionFilters() => FunctionFilter.Split([',', ';', '|', ' ']).Select(f => f.Trim()).Where(f => !String.IsNullOrEmpty(f)).ToList();
+}
 
 public class CentazioHost(HostSettings settings) {
   
   public Task Run() {
-    var filters = settings.FunctionFilter.Split([',', ';', '|', ' ']).Select(f => f.Trim()).Where(f => !String.IsNullOrEmpty(f)).ToList();
-    var functions = GetFunctionsToRun(filters);
-    Console.WriteLine($"Found Functions [{settings.FunctionFilter}]({functions.Count}):\n\t" + String.Join("\n\t", functions.Select(f => f.FullName)));
+    var types = GetCentazioFunctionTypess(settings.ParseFunctionFilters());
+    // var functions = types.Select(InitialiseCentazioFunction).ToList();
+    // Console.WriteLine($"Found Functions [{settings.FunctionFilter}]({types.Count}):\n\t" + String.Join("\n\t", types.Select(f => f.FullName)));
     return Task.CompletedTask;
   }
 
-  private List<Type> GetFunctionsToRun(List<string> filters) {
+  private AbstractFunction<C, R> InitialiseCentazioFunction<C, R>(Type functype) 
+      where C : OperationConfig
+      where R : OperationResult { 
+    return null!;
+  }
+
+  private List<Type> GetCentazioFunctionTypess(List<string> filters) {
     var ignore = new [] {"AWSSDK", "Microsoft", "Azure", "nunit", "Serilog", "System", "Testcontainers", "Cronos", "Docker", "Centazio.Providers", "Centazio.Core", "Centazio.Test", "Centazio.Cli", "e_sqlite3"};
     var root = ReflectionUtils.GetSolutionRootDirectory();
     var done = new Dictionary<string, bool>();

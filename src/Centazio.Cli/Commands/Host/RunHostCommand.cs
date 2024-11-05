@@ -5,7 +5,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
 
-public class RunHostCommand() : AbstractCentazioCommand<RunHostCommand.RunHostCommandSettings>{
+public class RunHostCommand : AbstractCentazioCommand<RunHostCommand.RunHostCommandSettings>{
 
   protected override Task RunInteractiveCommandImpl() => 
       ExecuteImpl(new RunHostCommandSettings { FunctionFilter = UiHelpers.Ask("Function Filter", "all") });
