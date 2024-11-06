@@ -6,12 +6,12 @@ namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmReadFunction : ReadFunction {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  protected override FunctionConfig<ReadOperationConfig> Config { get; }
   
   private readonly SimulationCtx ctx;
   private readonly CrmApi api;
   
-  public CrmReadFunction(SimulationCtx ctx, CrmApi api) {
+  public CrmReadFunction(SimulationCtx ctx, CrmApi api) : base (ctx.StageRepository, ctx.CtlRepo) {
     this.ctx = ctx;
     this.api = api;
     Config = new(new(nameof(CrmApi)), LifecycleStage.Defaults.Read, [

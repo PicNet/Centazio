@@ -1,10 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.Core.Promote;
-using Centazio.Core.Read;
-using Centazio.Core.Runner;
-using Centazio.Core.Write;
 using Centazio.Test.Lib.E2E.Crm;
 using Centazio.Test.Lib.E2E.Fin;
 using Serilog;
@@ -26,10 +22,6 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
   
-  private ReadFunctionRunner read_runner = null!;
-  private FunctionRunner<PromoteOperationConfig, PromoteOperationResult> promote_runner = null!;
-  private FunctionRunner<WriteOperationConfig, WriteOperationResult> write_runner = null!;
-
   public async Task Initialise() {
     await ctx.Initialise();
     
@@ -37,11 +29,6 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
-    
-    (read_runner, promote_runner, write_runner) = (
-        new ReadFunctionRunner(ctx.StageRepository, ctx.CtlRepo), 
-        new PromoteFunctionRunner(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo), 
-        new WriteFunctionRunner(ctx.CoreStore, ctx.CtlRepo));
   }
   
   public async Task RunSimulation() {
@@ -67,12 +54,12 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-    await read_runner.RunFunction(crm_read);
-    await promote_runner.RunFunction(crm_promote);
-    await read_runner.RunFunction(fin_read); 
-    await promote_runner.RunFunction(fin_promote);
-    await write_runner.RunFunction(crm_write);
-    await write_runner.RunFunction(fin_write);
+    await crm_read.RunFunction();
+    await crm_promote.RunFunction();
+    await fin_read.RunFunction(); 
+    await fin_promote.RunFunction();
+    await crm_write.RunFunction();
+    await fin_write.RunFunction();
     
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();

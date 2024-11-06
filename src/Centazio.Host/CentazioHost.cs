@@ -13,7 +13,6 @@ public class CentazioHost(HostSettings settings) {
   public Task Run() {
     var types = GetCentazioFunctionTypess(settings.ParseFunctionFilters());
     // var functions = types.Select(InitialiseCentazioFunction).ToList();
-    // Console.WriteLine($"Found Functions [{settings.FunctionFilter}]({types.Count}):\n\t" + String.Join("\n\t", types.Select(f => f.FullName)));
     return Task.CompletedTask;
   }
 

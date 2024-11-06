@@ -3,22 +3,28 @@
 namespace Centazio.Core.Tests.Inspect;
 
 public class CheckDependenciesBetweenProjects {
+  
+  private readonly Dictionary<string, List<string>> ADDITIONAL_ALLOWS = new() { { "Centazio.Cli", ["Centazio.Host"] } };
+  private readonly List<string> TEST_PROJ_DEFAULT_ALLOWS = ["Centazio.Core", "Centazio.Test.Lib"];
+  private readonly List<string> SRC_PROJ_DEFAULT_ALLOWS = ["Centazio.Core"];
 
-  [Test] public void Check_project_references(){
+  [Test] public void Check_project_references() {
     var errors = new List<string>();
     var files = InspectUtils.GetSolnFiles(null, "*.csproj");
     var dependencies = ParseDependencies(files);
     if (dependencies["Centazio.Core"].Any()) errors.Add("Centazio.Core should have no project dependencies");
-    if (dependencies["Centazio.Test.Lib"].Count > 1 || dependencies["Centazio.Test.Lib"].Single() != "Centazio.Core") errors.Add("Centazio.Test.Lib should at most depend on Centazio.Core");
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0).ForEach(testproj => {
       var target = testproj.Replace(".Tests", String.Empty);
-      var allowed = new List<string> { "Centazio.Core", "Centazio.Test.Lib", target };
+      var allowed = ADDITIONAL_ALLOWS.TryGetValue(testproj, out var value) ? value : [];
+      allowed.AddRange(TEST_PROJ_DEFAULT_ALLOWS.Concat([target]));
       if (target.StartsWith("Centazio.Providers.")) allowed.Add("Centazio.Providers.EF.Tests");
       var bad = dependencies[testproj].Where(d => !allowed.Contains(d)).ToList();
       if (bad.Any()) errors.Add($"Test Project [{testproj}] should at most depend on 'Centazio.Core', 'Centazio.Test.Lib' and '{target}'.  Had extra dependencies: " + String.Join(",", bad));
     });
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) < 0).ForEach(proj => {
-      var allowed = new List<string> { "Centazio.Core" };
+      var allowed = ADDITIONAL_ALLOWS.TryGetValue(proj, out var value) ? value : [];
+      allowed.AddRange(SRC_PROJ_DEFAULT_ALLOWS);
+      
       if (proj.StartsWith("Centazio.Providers.")) allowed.Add("Centazio.Providers.EF");
       var bad = dependencies[proj].Where(d => !allowed.Contains(d)).ToList();
       if (bad.Any()) errors.Add($"Project [{proj}] should at most depend on 'Centazio.Core'.  Had extra dependencies: " + String.Join(",", bad));

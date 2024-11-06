@@ -1,7 +1,9 @@
 ﻿using System.Collections;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
+using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.IntegrationTests.Read;
@@ -19,26 +21,25 @@ public class ReadFunctionTests {
   [Test] public async Task Test_standalone_read_function() {
     // set up
     var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeRepo());
-    var (func, oprunner) = (new ReadFunctionWithSingleReadCustomerOperation(), F.ReadRunner(stager));
-    var funcrunner = new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, ctl);
+    var func = new ReadFunctionWithSingleReadCustomerOperation(stager, ctl);
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged0 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this run should be empty as no TestingUtcDate.DoTick
-    var r1 = (await funcrunner.RunFunction(func)).OpResults.Single();
+    var r1 = (await func.RunFunction()).OpResults.Single();
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged1 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListRecordsReadOperationResult) (await funcrunner.RunFunction(func)).OpResults.Single();
+    var r2 = (ListRecordsReadOperationResult) (await func.RunFunction()).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
-    var r3 = (await funcrunner.RunFunction(func)).OpResults; 
+    var r3 = (await func.RunFunction()).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged3 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
@@ -80,12 +81,13 @@ public class ReadFunctionTests {
   }
 }
 
+// todo: change all of these `: AbstractFunction` to appropriate base classes
 public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  protected override FunctionConfig<ReadOperationConfig> Config { get; }
   private readonly DummyCrmApi crmApi = new();
   
-  public ReadFunctionWithSingleReadCustomerOperation() {
+  public ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : base(new ReadOperationRunner(stager), ctl) {
     Config = new(C.System1Name, LifecycleStage.Defaults.Read, [
       new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
     ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };

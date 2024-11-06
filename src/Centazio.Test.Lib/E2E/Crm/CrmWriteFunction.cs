@@ -7,13 +7,13 @@ using Centazio.Core.Write;
 namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmWriteFunction : WriteFunction {
-  
-  public override FunctionConfig<WriteOperationConfig> Config { get; }
+
+  protected override FunctionConfig<WriteOperationConfig> Config { get; }
   
   private readonly SimulationCtx ctx;
   private readonly CrmApi api;
 
-  public CrmWriteFunction(SimulationCtx ctx, CrmApi api) {
+  public CrmWriteFunction(SimulationCtx ctx, CrmApi api) : base(ctx.CoreStore, ctx.CtlRepo) {
     this.ctx = ctx;
     this.api = api;
     Config = new(SimulationConstants.CRM_SYSTEM, LifecycleStage.Defaults.Write, [

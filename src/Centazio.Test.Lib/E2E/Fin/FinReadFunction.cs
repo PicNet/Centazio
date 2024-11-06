@@ -6,12 +6,12 @@ namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinReadFunction : ReadFunction {
 
-  public override FunctionConfig<ReadOperationConfig> Config { get; }
+  protected override FunctionConfig<ReadOperationConfig> Config { get; }
   
   private readonly SimulationCtx ctx;
   private readonly FinApi api;
   
-  public FinReadFunction(SimulationCtx ctx, FinApi api) {
+  public FinReadFunction(SimulationCtx ctx, FinApi api) : base (ctx.StageRepository, ctx.CtlRepo) {
     this.ctx = ctx;
     this.api = api;
     Config = new(new(nameof(FinApi)), LifecycleStage.Defaults.Read, [

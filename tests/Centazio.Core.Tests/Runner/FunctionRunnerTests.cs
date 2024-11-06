@@ -7,13 +7,13 @@ using Centazio.Test.Lib;
 namespace Centazio.Core.Tests.Runner;
 
 public class FunctionRunnerTests {
-
-  private readonly DoNothingOpRunner oprunner = new();
-  private readonly EmptyFunction emptufunc = new();
+  
   private TestingInMemoryBaseCtlRepository repo;
+  private EmptyFunction emptufunc;
   
   [SetUp] public void SetUp() {
     repo = F.CtlRepo();
+    emptufunc = new(repo);
   }
   
   [TearDown] public async Task TearDown() {
@@ -22,7 +22,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_creates_state_if_it_does_not_exist() {
     Assert.That(repo.Systems, Is.Empty);
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
+    var results = await emptufunc.RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -33,7 +33,7 @@ public class FunctionRunnerTests {
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
     
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
+    var results = await emptufunc.RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -43,7 +43,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
     var count = 10;
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(new SimpleFunction(count));
+    var results = await new SimpleFunction(repo, count).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -54,7 +54,7 @@ public class FunctionRunnerTests {
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
     
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(emptufunc);
+    var results = await emptufunc.RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -64,7 +64,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
     repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
-    var results = await new FunctionRunner<ReadOperationConfig, ReadOperationResult>(oprunner, repo).RunFunction(new SimpleFunction(1));
+    var results = await new SimpleFunction(repo, 1).RunFunction();
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -81,24 +81,28 @@ public class FunctionRunnerTests {
     }
   }
   
-  class EmptyFunction : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
+  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(new DoNothingOpRunner(), ctl) {
 
-    public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    private readonly ICtlRepository ctlrepo = ctl;
     
-    public override async Task<List<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
-      var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
+    protected override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+
+    protected internal override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+      var state = await ctlrepo.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return [];
     }
 
   }
   
-  class SimpleFunction(int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult> {
+  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(new DoNothingOpRunner(), ctl) {
 
-    public override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    private readonly ICtlRepository ctlrepo = ctl;
     
-    public override async Task<List<ReadOperationResult>> RunFunctionOperations(IOperationRunner<ReadOperationConfig, ReadOperationResult> runner, ICtlRepository ctl) {
-      var state = await ctl.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
+    protected override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+
+    protected internal override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+      var state = await ctlrepo.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Enumerable.Range(0, results).Select(_ => (ReadOperationResult) new EmptyReadOperationResult()).ToList();
     }

@@ -5,7 +5,7 @@ namespace Centazio.Core.Tests.Inspect;
 public class CheckNamespacesAreCorrect {
 
   [Test] public void Test_all_namespace_declarations_are_correct() {
-    var roots = new [] { "Centazio.Providers", "src", "tests"};
+    var roots = new [] { "Centazio.Providers", "src", "tests", "sample"};
     var errors = new List<string>();
     InspectUtils.CsFiles(null, "CliBootstrapper.cs", "Assembly.cs", "TestSuiteInitialiser.cs", "Properties.cs", "GlobalUsings.cs").ForEach(file => {
       var contents = File.ReadAllText(file);

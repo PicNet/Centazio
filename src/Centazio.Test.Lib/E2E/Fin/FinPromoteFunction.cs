@@ -6,12 +6,12 @@ using Centazio.Core.Runner;
 namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinPromoteFunction : PromoteFunction {
-  
-  public override FunctionConfig<PromoteOperationConfig> Config { get; }
+
+  protected override FunctionConfig<PromoteOperationConfig> Config { get; }
   
   private readonly SimulationCtx ctx;
 
-  public FinPromoteFunction(SimulationCtx ctx) {
+  public FinPromoteFunction(SimulationCtx ctx) : base(ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
     this.ctx = ctx;
     Config = new(new(nameof(FinApi)), LifecycleStage.Defaults.Promote, [
       new(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = true },
