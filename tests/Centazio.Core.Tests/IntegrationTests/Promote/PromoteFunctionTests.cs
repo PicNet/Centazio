@@ -141,18 +141,15 @@ public class PromoteFunctionTests {
 
 }
 
-public class PromoteFunctionWithSinglePromoteCustomerOperation : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>, IEvaluateEntitiesToPromote {
-
-  protected override FunctionConfig<PromoteOperationConfig> Config { get; }
+public class PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepository stager, ICoreStorage core, ICtlRepository ctl, SystemName? system=null, bool bidi=false) : PromoteFunction(system ?? C.System1Name, stager, core, ctl) {
+  
   public bool IgnoreNext { get; set; }
   
-  public PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepository stager, ICoreStorage core, ICtlRepository ctl, SystemName? system=null, bool bidi=false) : base(new PromoteOperationRunner(stager, core, ctl), ctl) {
-    Config = new(system ?? C.System1Name, LifecycleStage.Defaults.Promote, [
-      new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
-    ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
-  }
+  protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
+    new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
+  ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
 
-  public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+  public override Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results = toeval.Select(eval => {
       if (IgnoreNext) return eval.MarkForIgnore(new("ignore"));
       var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();

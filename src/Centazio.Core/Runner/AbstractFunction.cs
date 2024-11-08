@@ -5,18 +5,34 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<C, R>(IOperationRunner<C, R> oprunner, ICtlRepository ctl) : IDisposable  
+public abstract class AbstractFunction<C, R> : IDisposable  
     where C : OperationConfig
-    where R : OperationResult{
+    where R : OperationResult {
 
-  protected abstract FunctionConfig<C> Config { get; }
+  private readonly IOperationRunner<C, R> oprunner;
+  private readonly ICtlRepository ctl;
+  
+  protected FunctionConfig<C> Config { get; }
+  protected SystemName System { get; }
+  protected LifecycleStage Stage { get; }
+
+  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C, R> oprunner, ICtlRepository ctl) {
+    System = system;
+    Stage = stage;
+    this.oprunner = oprunner;
+    this.ctl = ctl;
+    
+    Config = GetFunctionConfiguration();
+  }
+
+  protected abstract FunctionConfig<C> GetFunctionConfiguration();
 
   public async Task<FunctionRunResults<R>> RunFunction() {
     var start = UtcDate.UtcNow;
     
-    Log.Information("function started [{@System}/{@Stage}] - {@Now}", Config.System, Config.Stage, UtcDate.UtcNow);
+    Log.Information("function started [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
     
-    var state = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
+    var state = await ctl.GetOrCreateSystemState(System, Stage);
     if (!state.Active) {
       Log.Information("function is inactive, ignoring run {@SystemState}", state);
       return new InactiveFunctionRunResults<R>();
@@ -46,8 +62,8 @@ public abstract class AbstractFunction<C, R>(IOperationRunner<C, R> oprunner, IC
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
 
-  protected internal virtual async Task<List<R>> RunFunctionOperations() {
-    var sys = await ctl.GetOrCreateSystemState(Config.System, Config.Stage);
+  protected virtual async Task<List<R>> RunFunctionOperations() {
+    var sys = await ctl.GetOrCreateSystemState(System, Stage);
     var states = await LoadOperationsStates(Config, sys, ctl);
     var ready = GetReadyOperations(states);
     var results = await RunOperationsTillAbort(ready, oprunner, ctl, Config.ThrowExceptions);

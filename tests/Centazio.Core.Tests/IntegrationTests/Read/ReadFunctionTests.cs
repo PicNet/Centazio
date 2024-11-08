@@ -81,23 +81,18 @@ public class ReadFunctionTests {
   }
 }
 
-// todo: change all of these `: AbstractFunction` to appropriate base classes
-public class ReadFunctionWithSingleReadCustomerOperation : AbstractFunction<ReadOperationConfig, ReadOperationResult>, IGetObjectsToStage {
+public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl) {
 
-  protected override FunctionConfig<ReadOperationConfig> Config { get; }
   private readonly DummyCrmApi crmApi = new();
+
+  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+    new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+  ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
   
-  public ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : base(new ReadOperationRunner(stager), ctl) {
-    Config = new(C.System1Name, LifecycleStage.Defaults.Read, [
-      new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
-  }
-  
-  public async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
+  public override async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListRecordsReadOperationResult(customers)
         : new EmptyReadOperationResult();
   }
-
 }

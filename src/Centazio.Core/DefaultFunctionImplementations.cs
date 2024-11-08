@@ -9,15 +9,18 @@ using Centazio.Core.Write;
 
 namespace Centazio.Core;
 
-public abstract class ReadFunction(IEntityStager stager, ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(new ReadOperationRunner(stager), ctl), IGetObjectsToStage {
+public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
+    AbstractFunction<ReadOperationConfig, ReadOperationResult>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl), IGetObjectsToStage {
   public abstract Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
 }
 
-public abstract class PromoteFunction(IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(new PromoteOperationRunner(stage, core, ctl), ctl), IEvaluateEntitiesToPromote {
+public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
+    AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl), IEvaluateEntitiesToPromote {
   public abstract Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
 }
 
-public abstract class WriteFunction(ICoreStorage core, ICtlRepository ctl) : AbstractFunction<WriteOperationConfig, WriteOperationResult>(new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl), ITargetSystemWriter {
+public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
+    AbstractFunction<WriteOperationConfig, WriteOperationResult>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl), ITargetSystemWriter {
   public abstract Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate);
   public abstract Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate);
 }

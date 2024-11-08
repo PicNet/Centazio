@@ -4,22 +4,13 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmReadFunction : ReadFunction {
+public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
 
-  protected override FunctionConfig<ReadOperationConfig> Config { get; }
-  
-  private readonly SimulationCtx ctx;
-  private readonly CrmApi api;
-  
-  public CrmReadFunction(SimulationCtx ctx, CrmApi api) : base (ctx.StageRepository, ctx.CtlRepo) {
-    this.ctx = ctx;
-    this.api = api;
-    Config = new(new(nameof(CrmApi)), LifecycleStage.Defaults.Read, [
-      new(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(SystemEntityTypeName.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(SystemEntityTypeName.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
-    ]);
-  }
+  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+    new(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, this),
+    new(SystemEntityTypeName.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, this),
+    new(SystemEntityTypeName.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+  ]);
   
   public override async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 

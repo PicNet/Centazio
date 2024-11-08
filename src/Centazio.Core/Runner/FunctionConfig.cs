@@ -47,12 +47,9 @@ public record BaseFunctionConfig : IFunctionConfig {
   public void Dispose() { checksum?.Dispose(); }
 }
 
-public record FunctionConfig<C>(
-    SystemName System, 
-    LifecycleStage Stage, 
-    List<C> Operations) : BaseFunctionConfig, ILoggable where C : OperationConfig {
+public record FunctionConfig<C>(List<C> Operations) : BaseFunctionConfig, ILoggable where C : OperationConfig {
 
   public List<C> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   
-  public string LoggableValue => $"{System}/{Stage} Operations[{Operations.Count}]";
+  public string LoggableValue => $"Operations[{Operations.Count}]";
 }

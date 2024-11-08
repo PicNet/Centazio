@@ -81,32 +81,29 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction : AbstractFunction<WriteOperationConfig, WriteOperationResult>, ITargetSystemWriter {
+public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : WriteFunction(C.System2Name, core, ctl) {
 
   public List<Map.Created> Created { get; } = [];
   public List<Map.Updated> Updated { get; } = [];
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
-  protected override FunctionConfig<WriteOperationConfig> Config { get; }
-
-  public TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : base(new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl) {
-    Config = new FunctionConfig<WriteOperationConfig>(C.System2Name, LifecycleStage.Defaults.Write, [
-      new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
-    ]) { ThrowExceptions = false, ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
-  }
+  
+  protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
+    new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+  ]) { ThrowExceptions = false, ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
 
   public void Reset() {
     Created.Clear();
     Updated.Clear();
   }
   
-  public Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  public override Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map)).ToList();
     var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)))).ToList();
     return Task.FromResult(new CovertCoreEntitiesToSystemEntitiesResult(ccreate, cupdate));
   }
 
-  public Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
+  public override Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
     var news = tocreate.Select(m => m.Map.SuccessCreate(m.SystemEntity.SystemId, Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
     var updates = toupdate.Select(m => m.Map.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();

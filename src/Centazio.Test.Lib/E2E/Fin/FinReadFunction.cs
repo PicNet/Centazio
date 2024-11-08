@@ -4,21 +4,12 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinReadFunction : ReadFunction {
+public class FinReadFunction(SimulationCtx ctx, FinApi api) : ReadFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
 
-  protected override FunctionConfig<ReadOperationConfig> Config { get; }
-  
-  private readonly SimulationCtx ctx;
-  private readonly FinApi api;
-  
-  public FinReadFunction(SimulationCtx ctx, FinApi api) : base (ctx.StageRepository, ctx.CtlRepo) {
-    this.ctx = ctx;
-    this.api = api;
-    Config = new(new(nameof(FinApi)), LifecycleStage.Defaults.Read, [
-      new(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
-      new(SystemEntityTypeName.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
-    ]);
-  }
+  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+    new(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, this),
+    new(SystemEntityTypeName.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, this)
+  ]);
   
   public override async Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
     var updates = config.State.Object.Value switch { 

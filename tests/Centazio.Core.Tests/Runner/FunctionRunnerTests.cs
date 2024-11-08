@@ -72,7 +72,7 @@ public class FunctionRunnerTests {
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }
   
-  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, [
+  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>([
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults())
   ]) {
     
@@ -81,28 +81,28 @@ public class FunctionRunnerTests {
     }
   }
   
-  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(new DoNothingOpRunner(), ctl) {
+  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
-    protected override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected internal override async Task<List<ReadOperationResult>> RunFunctionOperations() {
-      var state = await ctlrepo.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
+    protected override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+      var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return [];
     }
 
   }
   
-  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(new DoNothingOpRunner(), ctl) {
+  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
-    protected override FunctionConfig<ReadOperationConfig> Config { get; } = new EmptyFunctionConfig();
+    protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected internal override async Task<List<ReadOperationResult>> RunFunctionOperations() {
-      var state = await ctlrepo.GetSystemState(Config.System, Config.Stage) ?? throw new Exception();
+    protected override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+      var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return Enumerable.Range(0, results).Select(_ => (ReadOperationResult) new EmptyReadOperationResult()).ToList();
     }
