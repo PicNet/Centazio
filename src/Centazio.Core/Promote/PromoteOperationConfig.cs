@@ -19,16 +19,12 @@ public sealed record EntityToPromote(ISystemEntity SystemEntity, CoreEntityAndMe
 public sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
 
 
-public interface IEvaluateEntitiesToPromote {
-  Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
-}
-
 public record PromoteOperationConfig(
     Type SystemEntityType, 
     SystemEntityTypeName SystemEntityTypeName,
     CoreEntityTypeName CoreEntityTypeName,
     ValidCron Cron, 
-    IEvaluateEntitiesToPromote PromoteEvaluator) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
+    Func<OperationStateAndConfig<PromoteOperationConfig>, List<EntityForPromotionEvaluation>, Task<List<EntityEvaluationResult>>> BuildCoreEntities) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
 
   public SystemEntityTypeName SystemEntityTypeName { get; } = SystemEntityTypeName;
   public CoreEntityTypeName CoreEntityTypeName { get; } = CoreEntityTypeName;

@@ -146,10 +146,10 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepo
   public bool IgnoreNext { get; set; }
   
   protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this) { IsBidirectional = bidi }
+    new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, BuildCoreEntities) { IsBidirectional = bidi }
   ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
 
-  public override Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+  public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results = toeval.Select(eval => {
       if (IgnoreNext) return eval.MarkForIgnore(new("ignore"));
       var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();

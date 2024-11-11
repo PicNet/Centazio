@@ -13,9 +13,7 @@ public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtl
     AbstractFunction<ReadOperationConfig, ReadOperationResult>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl);
 
 public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl), IEvaluateEntitiesToPromote {
-  public abstract Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
-}
+    AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl);
 
 public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
     AbstractFunction<WriteOperationConfig, WriteOperationResult>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl), ITargetSystemWriter {

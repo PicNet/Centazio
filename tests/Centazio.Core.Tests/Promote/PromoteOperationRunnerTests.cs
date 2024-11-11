@@ -32,7 +32,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new SuccessPromoteEvaluator()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, SuccessfulConversionToCore), DateTime.MinValue));
     var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -55,7 +55,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
         new BaseFunctionConfig { ThrowExceptions = false },
-        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, new ErrorPromoteEvaluator()), DateTime.MinValue));
+        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
     
     var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.CoreId);
     Assert.That(saved, Is.Empty);
@@ -67,21 +67,16 @@ public class PromoteOperationRunnerTests {
     
   }
   
-  private class SuccessPromoteEvaluator : IEvaluateEntitiesToPromote {
-    
-    public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
-      var results = toeval.Select((eval, idx) => {
-        if (idx % 2 == 1) return eval.MarkForIgnore(new($"Ignore: {idx}"));
-        var core = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-        return eval.MarkForPromotion(eval, config.State.System, core, Helpers.TestingCoreEntityChecksum);
-      }).ToList();
-      return Task.FromResult(results);
-    }
+  internal static Task<List<EntityEvaluationResult>> SuccessfulConversionToCore(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+    var results = toeval.Select((eval, idx) => {
+      if (idx % 2 == 1) return eval.MarkForIgnore(new($"Ignore: {idx}"));
+      var ce = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
+      return eval.MarkForPromotion(eval, config.State.System, ce, Helpers.TestingCoreEntityChecksum);
+    }).ToList();
+    return Task.FromResult(results);
   }
-
-  public class ErrorPromoteEvaluator : IEvaluateEntitiesToPromote {
-    public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
-      throw new Exception(nameof(ErrorPromoteEvaluator));
-    }
+  
+  internal static Task<List<EntityEvaluationResult>> ErrorConvertingToCore(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
+    throw new Exception(nameof(ErrorConvertingToCore));
   }
 }

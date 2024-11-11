@@ -50,7 +50,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     });
 
     async Task<List<EntityEvaluationResult>> CallEvaluator() {
-      try { return await op.OpConfig.PromoteEvaluator.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.SystemEntity, bag.PreExistingCoreEntityAndMeta)).ToList()); }
+      try { return await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(bag.SystemEntity, bag.PreExistingCoreEntityAndMeta)).ToList()); }
       catch (Exception e) {
         if (op.FuncConfig.ThrowExceptions) throw;
         error = e;
