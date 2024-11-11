@@ -2,11 +2,7 @@
 
 namespace Centazio.Core.Read;
 
-public interface IGetObjectsToStage {
-  Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
-}
-
-public record ReadOperationConfig(SystemEntityTypeName SystemEntityTypeName, ValidCron Cron, IGetObjectsToStage GetObjectsToStage) 
+public record ReadOperationConfig(SystemEntityTypeName SystemEntityTypeName, ValidCron Cron, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> GetUpdatesAfterCheckpoint) 
         : OperationConfig(SystemEntityTypeName, Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration

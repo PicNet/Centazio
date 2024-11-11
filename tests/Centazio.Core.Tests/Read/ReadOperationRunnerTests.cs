@@ -22,7 +22,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
     var runner = F.ReadRunner(repository);
-    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, new TestingSingleReadOperationImplementation()));
+    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, GetSingleOrErrorResults));
     
     Assert.That(repository.Contents, Is.Empty);
     ValidateResult(new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ErrorReadOperationResult(), actual);
@@ -30,7 +30,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_empty_results_are_not_staged() {
     var runner = F.ReadRunner(repository);
-    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, new TestingEmptyReadOperationImplementation());
+    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, GetEmptyOrErrorResults);
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(repository.Contents, Is.Empty);
@@ -39,7 +39,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_Single_results_are_staged() {
     var runner = F.ReadRunner(repository);
-    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingSingleReadOperationImplementation()));
+    var actual = (SingleRecordReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetSingleOrErrorResults));
 
     var staged = repository.Contents.Single();
     Assert.That(staged, Is.EqualTo(new StagedEntity.Dto(staged.Id, EOperationResult.Success.ToString(), EOperationResult.Success.ToString(), UtcDate.UtcNow, staged.Data, staged.StagedEntityChecksum).ToBase()));
@@ -48,7 +48,7 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = F.ReadRunner(repository);
-    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, new TestingListReadOperationImplementation()));
+    var actual = (ListRecordsReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetListOrErrorResults));
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
@@ -67,33 +67,17 @@ public class ReadOperationRunnerTests {
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss.ToBase()));
   }
   
-  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, IGetObjectsToStage Impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString())),
         new BaseFunctionConfig(),
-        new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, Impl), DateTime.MinValue);
+        new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, impl), DateTime.MinValue);
   
-  private class TestingEmptyReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
-      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object);
-      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new EmptyReadOperationResult();
-      return Task.FromResult(res);
-    }
-  }
-  
-  private class TestingSingleReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
-      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
-      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new SingleRecordReadOperationResult(new(Guid.NewGuid().ToString()));
-      return Task.FromResult(res);
-    }
-  }
-  
-  private class TestingListReadOperationImplementation : IGetObjectsToStage {
-    public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) {
-      var result = Enum.Parse<EOperationResult>(config.OpConfig.Object); 
-      ReadOperationResult res = result == EOperationResult.Error ? new ErrorReadOperationResult() : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
-      return Task.FromResult(res); 
-    }
-  }
+  private async Task<ReadOperationResult> GetEmptyOrErrorResults(OperationStateAndConfig<ReadOperationConfig> config) => await GetResultsImpl(config) ?? new EmptyReadOperationResult();
+  private async Task<ReadOperationResult> GetSingleOrErrorResults(OperationStateAndConfig<ReadOperationConfig> config) => await GetResultsImpl(config) ?? new SingleRecordReadOperationResult(new(Guid.NewGuid().ToString()));
+  private async Task<ReadOperationResult> GetListOrErrorResults(OperationStateAndConfig<ReadOperationConfig> config) => await GetResultsImpl(config) ?? new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
+  private Task<ReadOperationResult?> GetResultsImpl(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult?>(
+      Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error ? 
+          new ErrorReadOperationResult() : null);
+
 }

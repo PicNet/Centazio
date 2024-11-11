@@ -73,13 +73,8 @@ public class FunctionRunnerTests {
   }
   
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>([
-    new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, new EmptyResults())
-  ]) {
-    
-    private class EmptyResults : IGetObjectsToStage {
-      public Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
-    }
-  }
+    new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
+  ]);
   
   class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
 

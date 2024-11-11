@@ -10,9 +10,7 @@ using Centazio.Core.Write;
 namespace Centazio.Core;
 
 public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
-    AbstractFunction<ReadOperationConfig, ReadOperationResult>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl), IGetObjectsToStage {
-  public abstract Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config);
-}
+    AbstractFunction<ReadOperationConfig, ReadOperationResult>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl);
 
 public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
     AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl), IEvaluateEntitiesToPromote {

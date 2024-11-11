@@ -8,7 +8,7 @@ namespace Centazio.Core.Read;
 public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
 
   public async Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
-    var res = await op.OpConfig.GetObjectsToStage.GetUpdatesAfterCheckpoint(op);
+    var res = await op.OpConfig.GetUpdatesAfterCheckpoint(op);
     if (res.ResultLength > 0) await DoStage();
     return res;
 
