@@ -15,13 +15,13 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) :
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     
     ValidateToCreateAndUpdates();
-    var (syscreates, sysupdates) = await op.OpConfig.TargetSysWriter.CovertCoreEntitiesToSystemEntities(op.OpConfig, tocreate, toupdate);
+    var (syscreates, sysupdates) = await op.OpConfig.CovertCoreEntitiesToSystemEntities(op.OpConfig, tocreate, toupdate);
     
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
     Log.Information($"WriteOperationRunner [{op.State.System.Value}/{op.State.Object.Value}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful[{meaningful.Count}]");
     if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
     
-    var results = await op.OpConfig.TargetSysWriter.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
+    var results = await op.OpConfig.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning("error occurred calling `WriteEntitiesToTargetSystem` {@Results}", results);

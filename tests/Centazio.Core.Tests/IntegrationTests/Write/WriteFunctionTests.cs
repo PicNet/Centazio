@@ -89,7 +89,7 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   public Exception? Thrown { get; private set; }
   
   protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
-    new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, this)
+    new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
   ]) { ThrowExceptions = false, ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
 
   public void Reset() {
@@ -97,13 +97,13 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
     Updated.Clear();
   }
   
-  public override Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map)).ToList();
     var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)))).ToList();
     return Task.FromResult(new CovertCoreEntitiesToSystemEntitiesResult(ccreate, cupdate));
   }
 
-  public override Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
+  private Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
     var news = tocreate.Select(m => m.Map.SuccessCreate(m.SystemEntity.SystemId, Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
     var updates = toupdate.Select(m => m.Map.SuccessUpdate(Helpers.TestingSystemEntityChecksum(m.SystemEntity))).ToList();
