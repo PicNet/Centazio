@@ -3,11 +3,14 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
 
+public record ConvertCoreEntitiesToSystemEntitiesArgs(WriteOperationConfig Config, List<CoreAndPendingCreateMap> ToCreate, List<CoreAndPendingUpdateMap> ToUpdate);
+public record WriteEntitiesToTargetSystemArgs(WriteOperationConfig Config, List<CoreSystemAndPendingCreateMap> ToCreate, List<CoreSystemAndPendingUpdateMap> ToUpdate);
+
 public record WriteOperationConfig(
     CoreEntityTypeName CoreEntityTypeName, 
     ValidCron Cron,
-    Func<WriteOperationConfig, List<CoreAndPendingCreateMap>, List<CoreAndPendingUpdateMap>, Task<CovertCoreEntitiesToSystemEntitiesResult>> CovertCoreEntitiesToSystemEntities,
-    Func<WriteOperationConfig, List<CoreSystemAndPendingCreateMap>, List<CoreSystemAndPendingUpdateMap>, Task<WriteOperationResult>> WriteEntitiesToTargetSystem) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
+    Func<ConvertCoreEntitiesToSystemEntitiesArgs, Task<CovertCoreEntitiesToSystemEntitiesResult>> CovertCoreEntitiesToSystemEntities,
+    Func<WriteEntitiesToTargetSystemArgs, Task<WriteOperationResult>> WriteEntitiesToTargetSystem) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
   
   public string LoggableValue => $"{CoreEntityTypeName.Value}";
 }
