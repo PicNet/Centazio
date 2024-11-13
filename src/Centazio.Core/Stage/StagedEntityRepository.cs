@@ -3,6 +3,10 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Stage;
 
+public interface IStagedEntityRepositoryFactory {
+  public Task<IStagedEntityRepository> GetRepository();
+}
+
 public interface IEntityStager : IAsyncDisposable {
   Task<StagedEntity?> Stage(SystemName system, SystemEntityTypeName systype, string data);
   Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas);

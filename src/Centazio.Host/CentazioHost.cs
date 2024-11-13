@@ -1,48 +1,60 @@
-﻿using System.Reflection;
+﻿using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
+using Centazio.Core.Settings;
+using Centazio.Core.Stage;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace Centazio.Host;
 
-public record HostSettings(string FunctionFilter) {
+public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings, CentazioSecrets Secrets) {
   public List<string> ParseFunctionFilters() => FunctionFilter.Split([',', ';', '|', ' ']).Select(f => f.Trim()).Where(f => !String.IsNullOrEmpty(f)).ToList();
 }
 
 public class CentazioHost(HostSettings settings) {
   
   public Task Run() {
+    Log.Logger = LogInitialiser
+        .GetFileAndConsoleConfig()
+        .CreateLogger();
     var types = GetCentazioFunctionTypess(settings.ParseFunctionFilters());
-    // var functions = types.Select(InitialiseCentazioFunction).ToList();
+    Log.Information($"CentazioHost found functions:\n\t" + String.Join("\n\t", types.Select(type => type.Name)));
+    var svcs = InitialiseDi(types); 
+    var functions = InitialiseFunctions(svcs, types);
     return Task.CompletedTask;
   }
 
-  private AbstractFunction<C, R> InitialiseCentazioFunction<C, R>(Type functype) 
-      where C : OperationConfig
-      where R : OperationResult { 
-    return null!;
-  }
-
   private List<Type> GetCentazioFunctionTypess(List<string> filters) {
-    var ignore = new [] {"AWSSDK", "Microsoft", "Azure", "nunit", "Serilog", "System", "Testcontainers", "Cronos", "Docker", "Centazio.Providers", "Centazio.Core", "Centazio.Test", "Centazio.Cli", "e_sqlite3"};
-    var root = ReflectionUtils.GetSolutionRootDirectory();
-    var done = new Dictionary<string, bool>();
-    return Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories).SelectMany(dll => {
-      var assname = dll.Split('\\').Last();
-      if (ignore.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))) return [];
-      if (!done.TryAdd(assname, true)) return [];
-      return Assembly.LoadFrom(dll).GetTypes()
-          .Where(type => 
-              type.FullName is not null && 
-              !type.IsAbstract && 
-              MatchesFilter(type.FullName) && 
-              IsCentazioFunction(type));
-    }).ToList();
-    
+    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<,>)).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
     bool MatchesFilter(string name) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => name.Contains(filter, StringComparison.OrdinalIgnoreCase));
-    
-    bool IsCentazioFunction(Type typ) => 
-      (typ.IsGenericType && typ.GetGenericTypeDefinition() == typeof(AbstractFunction<,>))
-      || (typ.BaseType is not null && IsCentazioFunction(typ.BaseType));
   }
+
+  private ServiceProvider InitialiseDi(List<Type> functypes) {
+    var svcs = new ServiceCollection();
+    svcs.AddSingleton<CentazioSettings>();
+    svcs.AddSingleton(typeof(IStagedEntityRepositoryFactory), GetFactoryType<IStagedEntityRepositoryFactory>(settings.CoreSettings.StagedEntityRepository.Provider));
+    svcs.AddSingleton<IStagedEntityRepository>(prov => 
+        prov.GetRequiredService<IStagedEntityRepositoryFactory>().GetRepository().GetAwaiter().GetResult());
+    
+    functypes.ForEach(type => svcs.AddSingleton(type));
+    return svcs.BuildServiceProvider();
+    
+    // todo: instead of having all these hacks to support async Initialise methods, why not just call
+    //    initialise on all repositorues at a later stage and leave DI to just manage construction not initialisation
+    Type GetFactoryType<F>(string provider) {
+      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F)); 
+      return potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
+          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
+    }
+    
+  }
+
+  // todo: add Runnable interface
+  private List<object> InitialiseFunctions(ServiceProvider svcs, List<Type> types) {
+    return types.Select(svcs.GetRequiredService).ToList();
+  }
+
 }

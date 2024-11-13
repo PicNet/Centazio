@@ -1,4 +1,10 @@
 ﻿{
   "SecretsFolder": "\\\\aus-syd-dc05.internal.picnet.com.au\\secrets\\centazio3",
-  "DefaultResourceGroup": ""
+  "StagedEntityRepository": {
+    "Provider": "SqlServer",
+    "ConnectionString": "Server=localhost;Database=centazio3;Trusted_Connection=True;",
+    "SchemaName": "ctl",
+    "TableName": "staging",
+    "CreateSchema": false
+  }
 }

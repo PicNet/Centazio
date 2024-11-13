@@ -75,7 +75,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
   [return: NotNullIfNotNull(nameof(json))]
   protected Map.CoreToSysMap? Deserialize(string? json) => json is null ? null : Json.Deserialize<Map.CoreToSysMap>(json);
 
-  public override Task<AbstractCtlRepository> Initalise() => Task.FromResult<AbstractCtlRepository>(this);
+  public override Task<AbstractCtlRepository> Initialise() => Task.FromResult<AbstractCtlRepository>(this);
   public override ValueTask DisposeAsync() {
     systems.Clear();
     objects.Clear();

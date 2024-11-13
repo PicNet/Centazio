@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Settings;
+﻿using Centazio.Core.Ctl.Entities;
+
+namespace Centazio.Core.Settings;
 
 public record AzureFunctionSettings {
   public string FunctionAppId { get; } 
@@ -65,25 +67,115 @@ public record AwsSettings {
   }
 }
 
+public record StagedEntityRepositorySettings {
+  public string Provider { get; }
+  public string ConnectionString { get; }
+  public string SchemaName { get; }
+  public string TableName { get; }
+  public int Limit { get; }
+  public bool CreateSchema { get; }
+  
+  private StagedEntityRepositorySettings(string provider, string connstr, string schemanm, string tablenm, int limit, bool create) {
+    Provider = provider;
+    ConnectionString = connstr;
+    SchemaName = schemanm;
+    TableName = tablenm;
+    Limit = limit;
+    CreateSchema = create;
+  } 
+  
+  public record Dto : IDto<StagedEntityRepositorySettings> {
+    public string? Provider { get; init; }
+    public string? ConnectionString { get; init; }
+    public string? SchemaName { get; init; }
+    public string? TableName { get; init; }
+    public int? Limit { get; init; }
+    public bool? CreateSchema { get; init; }
+    
+    public StagedEntityRepositorySettings ToBase() => new (
+        String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+        String.IsNullOrEmpty(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+        SchemaName?.Trim() ?? nameof(Ctl).ToLower(),
+        TableName?.Trim() ?? nameof(StagedEntity).ToLower(),
+        Limit ?? 0,
+        CreateSchema ?? false);
+  }
+}
+
+public record CtlRepositorySettings {
+  public string Provider { get; }
+  public string ConnectionString { get; }
+  public string SchemaName { get; }
+  public string SystemStateTableName { get; }
+  public string ObjectStateTableName { get; }
+  public string CoreToSysMapTableName { get; }
+  public bool CreateSchema { get; }
+  
+  private CtlRepositorySettings(string provider, string connstr, string schemanm, string systemstatenm, string objectstatenm, string coretosysmapnm, bool create) {
+    Provider = provider;
+    ConnectionString = connstr;
+    SchemaName = schemanm;
+    SystemStateTableName = systemstatenm;
+    ObjectStateTableName = objectstatenm;
+    CoreToSysMapTableName = coretosysmapnm;
+    CreateSchema = create;
+  } 
+  
+  public record Dto : IDto<CtlRepositorySettings> {
+    public string? Provider { get; init; }
+    public string? ConnectionString { get; init; }
+    public string? SchemaName { get; init; }
+    public string? SystemStateTableName { get; init; }
+    public string? ObjectStateTableName { get; init; }
+    public string? CoreToSysMapTableName { get; init; }
+    public bool? CreateSchema { get; init; }
+    
+    public CtlRepositorySettings ToBase() => new (
+        String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+        String.IsNullOrEmpty(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+        SchemaName?.Trim() ?? nameof(Ctl).ToLower(),
+        SystemStateTableName?.Trim() ?? nameof(SystemState).ToLower(),
+        ObjectStateTableName?.Trim() ?? nameof(ObjectState).ToLower(),
+        CoreToSysMapTableName?.Trim() ?? nameof(Map.CoreToSysMap).ToLower(),
+        CreateSchema ?? false);
+  }
+}
+
 public record CentazioSettings {
   public string SecretsFolder { get; }
-  public AwsSettings? AwsSettings { get; }
-  public AzureSettings? AzureSettings { get; }
   
-  private CentazioSettings (string secrets, AwsSettings? aws, AzureSettings? azure) {
+  public readonly AwsSettings? _AwsSettings;
+  public AwsSettings? AwsSettings => _AwsSettings ?? throw new Exception($"AwsSettings section missing from CentazioSettings");
+  
+  public readonly AzureSettings? _AzureSettings;
+  public AzureSettings? AzureSettings => _AzureSettings ?? throw new Exception($"AzureSettings section missing from CentazioSettings");
+  
+  private readonly StagedEntityRepositorySettings? _StagedEntityRepository;
+  public StagedEntityRepositorySettings StagedEntityRepository => _StagedEntityRepository ?? throw new Exception($"StagedEntityRepository section missing from CentazioSettings");
+  
+  private readonly CtlRepositorySettings? _CtlRepository;
+  public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new Exception($"CtlRepository section missing from CentazioSettings");
+
+  private CentazioSettings (string secrets, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo) {
     SecretsFolder = secrets;
-    AwsSettings = aws;
-    AzureSettings = azure;
+    _AwsSettings = aws;
+    _AzureSettings = azure;
+    _StagedEntityRepository = staged;
+    _CtlRepository = ctlrepo;
   }
     
   public record Dto : IDto<CentazioSettings> {
     public string? SecretsFolder { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
+    public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
+    public CtlRepositorySettings.Dto? CtlRepository { get; init; }
     
     public CentazioSettings ToBase() => new (
         String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
         AwsSettings?.ToBase(),
-        AzureSettings?.ToBase());
+        AzureSettings?.ToBase(),
+        StagedEntityRepository?.ToBase(),
+        CtlRepository?.ToBase());
   }
 }

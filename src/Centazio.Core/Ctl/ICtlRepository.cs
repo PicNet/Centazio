@@ -3,6 +3,10 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Ctl;
 
+public interface ICtlRepositoryFactory {
+  public Task<ICtlRepository> GetRepository();
+}
+
 public interface ICtlRepository : IAsyncDisposable {
 
   Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage);

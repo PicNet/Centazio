@@ -22,7 +22,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
   
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqliteDbFieldsHelper();
-    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(), dbf).Initalise();
+    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext()), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationCoreStorageDbContext(), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
   }

@@ -15,17 +15,14 @@ return new CliBootstrapper().Initialise().Start(args);
 internal class CliBootstrapper {
 
   public Cli Initialise() { 
-    InitialiseLogger();
+    Log.Logger = LogInitialiser.GetFileConfig().CreateLogger();
     var services = InitialiseDi();
     var cli = services.GetRequiredService<Cli>();
+    
     InitialiseExceptionHandler(cli);
     return cli;
   }
-
-  private static void InitialiseLogger() => Log.Logger = LogInitialiser.GetBaseConfig()
-      .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
-      .MinimumLevel.Debug()
-      .CreateLogger();
+  
 
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
