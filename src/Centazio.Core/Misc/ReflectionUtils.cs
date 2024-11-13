@@ -48,15 +48,13 @@ public static class ReflectionUtils {
     return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
   }
 
-  public static List<Type> GetAllTypesThatImplement(Type t) {
-    // todo: pass this in as a parameter allowing settings to control allowed assembly namespaces
-    var allowed = new [] { "Centazio" };
+  public static List<Type> GetAllTypesThatImplement(Type t, List<string> assnames) {
     var ignore = new [] { "Centazio.Core", "Centazio.Test", "Centazio.Cli" };
     var root = GetSolutionRootDirectory();
     var done = new Dictionary<string, bool>();
     return Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories).SelectMany(dll => {
       var assname = dll.Split('\\').Last();
-      if (!allowed.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
+      if (!assnames.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
           || ignore.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
           || !done.TryAdd(assname, true)) return [];
 

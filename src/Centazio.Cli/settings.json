@@ -1,10 +1,21 @@
 ﻿{
   "SecretsFolder": "\\\\aus-syd-dc05.internal.picnet.com.au\\secrets\\centazio3",
+  "AllowedFunctionAssemblies": ["Centazio"],
+  "AllowedProviderAssemblies": ["Centazio"],
   "StagedEntityRepository": {
     "Provider": "SqlServer",
     "ConnectionString": "Server=localhost;Database=centazio3;Trusted_Connection=True;",
     "SchemaName": "ctl",
     "TableName": "staging",
+    "CreateSchema": false
+  },
+  "CtlRepository": {
+    "Provider": "SqlServer",
+    "ConnectionString": "Server=localhost;Database=centazio3;Trusted_Connection=True;",
+    "SchemaName": "ctl",
+    "SystemStateTableName":  "system_state",
+    "ObjectStateTableName":  "object_state", 
+    "CoreToSysMapTableName": "core_sys_map",
     "CreateSchema": false
   }
 }

@@ -7,7 +7,7 @@ namespace Centazio.Providers.EF.Tests;
 
 public class TestingEfStagedEntityRepository(EFStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf) : EFStagedEntityRepository(opts) {
   
-  public override async Task<AbstractStagedEntityRepository> Initialise() {
+  public override async Task<IStagedEntityRepository> Initialise() {
     await using var db = opts.Db();
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.StagedEntityTableName));
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.StagedEntityTableName, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));

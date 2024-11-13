@@ -8,7 +8,7 @@ namespace Centazio.Cli.Commands.Az;
 public class AddResourceGroupCommand(CentazioSettings clisetts, IAzResourceGroups impl) : AbstractCentazioCommand<AddResourceGroupCommand.AddResourceGroupCommandSettings> {
   
   protected override Task RunInteractiveCommandImpl() => 
-      ExecuteImpl(new AddResourceGroupCommandSettings { ResourceGroupName = UiHelpers.Ask("Resource Group Name", clisetts.AzureSettings?.ResourceGroup) });
+      ExecuteImpl(new AddResourceGroupCommandSettings { ResourceGroupName = UiHelpers.Ask("Resource Group Name", clisetts.AzureSettings.ResourceGroup) });
 
   protected override async Task ExecuteImpl(AddResourceGroupCommandSettings settings) {
     ArgumentException.ThrowIfNullOrWhiteSpace(settings.ResourceGroupName);

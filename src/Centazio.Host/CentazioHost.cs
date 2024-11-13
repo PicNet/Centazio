@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
@@ -15,43 +16,51 @@ public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings,
 
 public class CentazioHost(HostSettings settings) {
   
-  public Task Run() {
+  public async Task Run() {
     Log.Logger = LogInitialiser
         .GetFileAndConsoleConfig()
         .CreateLogger();
     var types = GetCentazioFunctionTypess(settings.ParseFunctionFilters());
     Log.Information($"CentazioHost found functions:\n\t" + String.Join("\n\t", types.Select(type => type.Name)));
-    var svcs = InitialiseDi(types); 
-    var functions = InitialiseFunctions(svcs, types);
-    return Task.CompletedTask;
+    var prov = InitialiseDi(types);
+    await InitialiseCoreServices(prov);
+    var functions = InitialiseFunctions(prov, types);
   }
 
   private List<Type> GetCentazioFunctionTypess(List<string> filters) {
-    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<,>)).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
+    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<,>), settings.CoreSettings.AllowedFunctionAssemblies).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
     bool MatchesFilter(string name) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => name.Contains(filter, StringComparison.OrdinalIgnoreCase));
   }
 
   private ServiceProvider InitialiseDi(List<Type> functypes) {
     var svcs = new ServiceCollection();
-    svcs.AddSingleton<CentazioSettings>();
-    svcs.AddSingleton(typeof(IStagedEntityRepositoryFactory), GetFactoryType<IStagedEntityRepositoryFactory>(settings.CoreSettings.StagedEntityRepository.Provider));
-    svcs.AddSingleton<IStagedEntityRepository>(prov => 
-        prov.GetRequiredService<IStagedEntityRepositoryFactory>().GetRepository().GetAwaiter().GetResult());
+    svcs.AddSingleton(settings.CoreSettings);
+    
+    AddService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.CoreSettings.StagedEntityRepository.Provider);
+    AddService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CoreSettings.CtlRepository.Provider);
     
     functypes.ForEach(type => svcs.AddSingleton(type));
     return svcs.BuildServiceProvider();
     
-    // todo: instead of having all these hacks to support async Initialise methods, why not just call
-    //    initialise on all repositorues at a later stage and leave DI to just manage construction not initialisation
+    void AddService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
+      svcs.AddSingleton(typeof(F), GetFactoryType<F>(provider));
+      svcs.AddSingleton<I>(prov => prov.GetRequiredService<F>().GetService());
+    }
+    
     Type GetFactoryType<F>(string provider) {
-      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F)); 
+      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), settings.CoreSettings.AllowedFunctionAssemblies); 
       return potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
           ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
     }
     
   }
 
+  private async Task InitialiseCoreServices(ServiceProvider prov) {
+    await prov.GetRequiredService<IStagedEntityRepository>().Initialise();
+    await prov.GetRequiredService<ICtlRepository>().Initialise();
+  }
+  
   // todo: add Runnable interface
   private List<object> InitialiseFunctions(ServiceProvider svcs, List<Type> types) {
     return types.Select(svcs.GetRequiredService).ToList();

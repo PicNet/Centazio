@@ -16,7 +16,7 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
 
   protected IAmazonS3 Client => client;
 
-  public override Task<AbstractStagedEntityRepository> Initialise() => Task.FromResult<AbstractStagedEntityRepository>(this);
+  public override Task<IStagedEntityRepository> Initialise() => Task.FromResult<IStagedEntityRepository>(this);
   public override ValueTask DisposeAsync() {
     Client.Dispose();
     return ValueTask.CompletedTask;

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Checksum;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
@@ -8,19 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Stage;
 
-public class SqlServerStagedEntityRepositoryFactory(CentazioSettings settings) : IStagedEntityRepositoryFactory {
-  public async Task<IStagedEntityRepository> GetRepository() {
+public class SqlServerStagedEntityRepositoryFactory(CentazioSettings settings) : IServiceFactory<IStagedEntityRepository> {
+  public IStagedEntityRepository GetService() {
     var sesetts = settings.StagedEntityRepository;
     var opts = new EFStagedEntityRepositoryOptions(
         sesetts.Limit, 
         new Sha256ChecksumAlgorithm().Checksum, 
         () => new SqlServerStagedEntityContext(sesetts.ConnectionString, sesetts.SchemaName, sesetts.TableName));
-    return await new SqlServerStagedEntityRepository(opts, new SqlServerDbFieldsHelper(), sesetts.CreateSchema).Initialise();
+    return new SqlServerStagedEntityRepository(opts, new SqlServerDbFieldsHelper(), sesetts.CreateSchema);
   }
 }
 
 public class SqlServerStagedEntityRepository(EFStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf, bool createschema) : EFStagedEntityRepository(opts) {
-  public override async Task<AbstractStagedEntityRepository> Initialise() {
+  public override async Task<IStagedEntityRepository> Initialise() {
     if (!createschema) return this;
     
     await using var db = opts.Db();

@@ -30,3 +30,7 @@ public interface ISystemEntity : IGetChecksumSubset {
   
   public E To<E>() where E : ISystemEntity => (E) this;
 }
+
+public interface IServiceFactory<out S> {
+  S GetService();
+}

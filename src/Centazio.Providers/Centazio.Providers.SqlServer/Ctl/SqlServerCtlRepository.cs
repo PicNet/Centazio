@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
@@ -7,10 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Ctl;
 
-public class SqlServerCtlRepositoryFactory(CentazioSettings settings) : ICtlRepositoryFactory {
-  public async Task<ICtlRepository> GetRepository() {
+public class SqlServerCtlRepositoryFactory(CentazioSettings settings) : IServiceFactory<ICtlRepository> {
+  public ICtlRepository GetService() {
     var ctlsetts = settings.CtlRepository;
-    return await new SqlServerCtlRepository(Getdb, new SqlServerDbFieldsHelper(), ctlsetts.CreateSchema).Initialise();
+    return new SqlServerCtlRepository(Getdb, new SqlServerDbFieldsHelper(), ctlsetts.CreateSchema);
     
     AbstractCtlRepositoryDbContext Getdb() => new SqlServerCtlRepositoryDbContext(ctlsetts.ConnectionString, ctlsetts.SchemaName, ctlsetts.SystemStateTableName, ctlsetts.ObjectStateTableName, ctlsetts.CoreToSysMapTableName);
   }
@@ -18,7 +19,7 @@ public class SqlServerCtlRepositoryFactory(CentazioSettings settings) : ICtlRepo
 
 public class SqlServerCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : EFCtlRepository(getdb) {
   
-  public override async Task<AbstractCtlRepository> Initialise() {
+  public override async Task<ICtlRepository> Initialise() {
     if (!createschema) return this;
     
     await using var db = getdb();

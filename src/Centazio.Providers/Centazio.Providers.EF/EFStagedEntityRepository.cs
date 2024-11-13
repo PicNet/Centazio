@@ -55,7 +55,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
   private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
-  public override Task<AbstractStagedEntityRepository> Initialise() => Task.FromResult<AbstractStagedEntityRepository>(this);
+  public override Task<IStagedEntityRepository> Initialise() => Task.FromResult<IStagedEntityRepository>(this);
   public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
 }

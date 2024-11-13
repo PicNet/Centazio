@@ -9,7 +9,7 @@ public class AddAccountCommand(CentazioSettings clisetts, IAwsAccounts impl)
     : AbstractCentazioCommand<AddAccountCommand.AddAccountCommandSettings> {
   
   protected override Task RunInteractiveCommandImpl() => 
-      ExecuteImpl(new AddAccountCommandSettings { AccountName = UiHelpers.Ask("Account Name", clisetts.AwsSettings?.AccountName) });
+      ExecuteImpl(new AddAccountCommandSettings { AccountName = UiHelpers.Ask("Account Name", clisetts.AwsSettings.AccountName) });
 
   protected override async Task ExecuteImpl(AddAccountCommandSettings settings) {
     if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "AccountName is required" : "<ACCOUNT_NAME> is required");

@@ -143,12 +143,14 @@ public record CtlRepositorySettings {
 
 public record CentazioSettings {
   public string SecretsFolder { get; }
+  public List<string> AllowedFunctionAssemblies { get; }
+  public List<string> AllowedProviderAssemblies { get; }
   
   public readonly AwsSettings? _AwsSettings;
-  public AwsSettings? AwsSettings => _AwsSettings ?? throw new Exception($"AwsSettings section missing from CentazioSettings");
+  public AwsSettings AwsSettings => _AwsSettings ?? throw new Exception($"AwsSettings section missing from CentazioSettings");
   
   public readonly AzureSettings? _AzureSettings;
-  public AzureSettings? AzureSettings => _AzureSettings ?? throw new Exception($"AzureSettings section missing from CentazioSettings");
+  public AzureSettings AzureSettings => _AzureSettings ?? throw new Exception($"AzureSettings section missing from CentazioSettings");
   
   private readonly StagedEntityRepositorySettings? _StagedEntityRepository;
   public StagedEntityRepositorySettings StagedEntityRepository => _StagedEntityRepository ?? throw new Exception($"StagedEntityRepository section missing from CentazioSettings");
@@ -156,8 +158,11 @@ public record CentazioSettings {
   private readonly CtlRepositorySettings? _CtlRepository;
   public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new Exception($"CtlRepository section missing from CentazioSettings");
 
-  private CentazioSettings (string secrets, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo) {
+  private CentazioSettings (string secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo) {
     SecretsFolder = secrets;
+    AllowedFunctionAssemblies = funcass;
+    AllowedProviderAssemblies = provass;
+    
     _AwsSettings = aws;
     _AzureSettings = azure;
     _StagedEntityRepository = staged;
@@ -166,6 +171,8 @@ public record CentazioSettings {
     
   public record Dto : IDto<CentazioSettings> {
     public string? SecretsFolder { get; init; }
+    public List<string>? AllowedFunctionAssemblies { get; init; }
+    public List<string>? AllowedProviderAssemblies { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
     public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
@@ -173,6 +180,8 @@ public record CentazioSettings {
     
     public CentazioSettings ToBase() => new (
         String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
+        AllowedFunctionAssemblies ?? [nameof(Centazio)],
+        AllowedProviderAssemblies ?? [nameof(Centazio)],
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase(),
         StagedEntityRepository?.ToBase(),

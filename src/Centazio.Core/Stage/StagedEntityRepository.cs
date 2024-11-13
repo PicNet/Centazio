@@ -3,16 +3,14 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Stage;
 
-public interface IStagedEntityRepositoryFactory {
-  public Task<IStagedEntityRepository> GetRepository();
-}
-
 public interface IEntityStager : IAsyncDisposable {
   Task<StagedEntity?> Stage(SystemName system, SystemEntityTypeName systype, string data);
   Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas);
 }
     
 public interface IStagedEntityRepository : IEntityStager {
+  public Task<IStagedEntityRepository> Initialise();
+  
   int Limit { get; set; }
   Task Update(StagedEntity staged);
   Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
@@ -74,7 +72,7 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
   public async Task DeleteStagedBefore(SystemName system, SystemEntityTypeName systype, DateTime before) => await DeleteBeforeImpl(system, systype, before, false);
   protected abstract Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted);
   
-  public abstract Task<AbstractStagedEntityRepository> Initialise();
+  public abstract Task<IStagedEntityRepository> Initialise();
   public abstract ValueTask DisposeAsync();
 
 }

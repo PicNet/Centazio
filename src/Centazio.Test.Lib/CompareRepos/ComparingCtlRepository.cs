@@ -56,7 +56,7 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
-  public override Task<AbstractCtlRepository> Initialise() => Task.FromResult<AbstractCtlRepository>(this);
+  public override Task<ICtlRepository> Initialise() => Task.FromResult<ICtlRepository>(this);
 
   public override async ValueTask DisposeAsync() {
     await repo1.DisposeAsync();

@@ -9,7 +9,7 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
   
   protected readonly Func<AbstractCtlRepositoryDbContext> getdb = getdb;
 
-  public override Task<AbstractCtlRepository> Initialise() => Task.FromResult<AbstractCtlRepository>(this);
+  public override Task<ICtlRepository> Initialise() => Task.FromResult<ICtlRepository>(this);
   public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
   public override async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {

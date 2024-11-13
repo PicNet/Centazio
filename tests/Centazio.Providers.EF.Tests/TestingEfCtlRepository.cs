@@ -13,7 +13,7 @@ public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, 
     return (await db.CoreToSystemMaps.ToListAsync()).Select(dto => dto.ToBase()).ToList();
   }
   
-  public override async Task<AbstractCtlRepository> Initialise() {
+  public override async Task<ICtlRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
