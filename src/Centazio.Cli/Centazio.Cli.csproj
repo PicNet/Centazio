@@ -33,11 +33,20 @@
       <Content Include="swirl.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="log\**" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Centazio.Core\Centazio.Core.csproj" />
       <ProjectReference Include="..\Centazio.Host\Centazio.Host.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="log\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="log\**" />
     </ItemGroup>
 
 </Project>

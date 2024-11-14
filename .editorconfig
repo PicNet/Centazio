@@ -1,5 +1,4 @@
-
 [*]
 
 # ReSharper properties
-resharper_default_private_modifier=explicit
+resharper_default_private_modifier = explicit

@@ -1,4 +1,5 @@
 # Todo
+- change Funcs/Actions into delegates, eg: `public delegate void TimerCallback(object? state);`
 - Hide `Meta` from classes that should not know about this data
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug

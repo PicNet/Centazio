@@ -18,9 +18,12 @@ public class UtcDate : AbstractUtcDate {
   
   public override DateTime Now => DateTime.UtcNow;
   
-  // Static Helpers:
-  private static IUtcDate? instance;
-  public static IUtcDate Utc { get => instance ?? throw new Exception($"UtcDate.Utc has not been initialised"); set => instance = value ?? throw new ArgumentNullException(nameof(Utc)); }
+  private static IUtcDate instance = new RealUtcDate();
+  internal static IUtcDate Utc { get => instance; set => instance = value ?? throw new ArgumentNullException(nameof(Utc)); }
+  
   public static DateTime UtcNow => Utc.Now;
   public static DateTime UtcToday => Utc.Today;
 }
+
+
+public class RealUtcDate : AbstractUtcDate { public override DateTime Now => DateTime.UtcNow; }

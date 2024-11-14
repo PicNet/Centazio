@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Timers;
+using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -7,6 +8,7 @@ using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Timer = System.Threading.Timer;
 
 namespace Centazio.Host;
 
@@ -25,6 +27,13 @@ public class CentazioHost(HostSettings settings) {
     var prov = InitialiseDi(types);
     await InitialiseCoreServices(prov);
     var functions = InitialiseFunctions(prov, types);
+    var timer = new Timer(sender => functions.ForEach(RunFunction), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    Console.WriteLine("press 'Enter' to exit");
+    Console.ReadLine();
+  }
+  
+  private void RunFunction(object function) {
+    Log.Information($"running function[{function.GetType().Name}]");
   }
 
   private List<Type> GetCentazioFunctionTypess(List<string> filters) {
@@ -41,6 +50,10 @@ public class CentazioHost(HostSettings settings) {
     AddService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CoreSettings.CtlRepository.Provider);
     
     functypes.ForEach(type => svcs.AddSingleton(type));
+    ReflectionUtils.GetAllTypesThatImplement(typeof(IFunctionInitialiser), settings.CoreSettings.AllowedFunctionAssemblies).ForEach(type => {
+      var initialiser = Activator.CreateInstance(type) as IFunctionInitialiser ?? throw new Exception();
+      initialiser.RegisterServices(svcs);
+    });
     return svcs.BuildServiceProvider();
     
     void AddService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
