@@ -1,11 +1,5 @@
-﻿using Centazio.Core;
-using Centazio.Core.Ctl;
-using Centazio.Core.Misc;
-using Centazio.Core.Runner;
+﻿using Centazio.Core.Runner;
 using Centazio.Core.Settings;
-using Centazio.Core.Stage;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 using Timer = System.Threading.Timer;
 
 namespace Centazio.Host;
@@ -17,68 +11,21 @@ public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings)
 public class CentazioHost(HostSettings settings) {
   
   public async Task Run() {
-    Log.Logger = LogInitialiser
-        .GetFileAndConsoleConfig()
-        .CreateLogger();
-    var types = GetCentazioFunctionTypess(settings.ParseFunctionFilters());
-    Log.Information($"CentazioHost found functions:\n\t" + String.Join("\n\t", types.Select(type => type.Name)));
-    var prov = InitialiseDi(types);
-    await InitialiseCoreServices(prov);
-    var functions = InitialiseFunctions(prov, types);
+    var functions = await new HostBootstrapper(settings.CoreSettings)
+        .InitHost(settings.ParseFunctionFilters());
 
-    await using var timer = new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    await using var timer = StartHost(functions);
+    DisplatInstructions();
+  }
+
+  private Timer StartHost(List<IRunnableFunction> functions) {
+    return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    async void RunFunctions(object? state) => await Task.WhenAll(functions.Select(async f => await f.RunFunction()));
+  }
+
+  private void DisplatInstructions() {
     Console.WriteLine("press 'Enter' to exit");
     Console.ReadLine();
-    
-    async void RunFunctions(object? state) {
-      await Task.WhenAll(functions.Select(RunFunction));
-    }
   }
-  
-  private async Task RunFunction(IRunnableFunction function) {
-    Log.Information($"running function[{function.GetType().Name}]");
-    await function.RunFunction();
-  }
-
-  private List<Type> GetCentazioFunctionTypess(List<string> filters) {
-    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), settings.CoreSettings.AllowedFunctionAssemblies).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
-    bool MatchesFilter(string name) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
-        || filters.Any(filter => name.Contains(filter, StringComparison.OrdinalIgnoreCase));
-  }
-
-  private ServiceProvider InitialiseDi(List<Type> functypes) {
-    var svcs = new ServiceCollection();
-    svcs.AddSingleton(settings.CoreSettings);
-    
-    AddService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.CoreSettings.StagedEntityRepository.Provider);
-    AddService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CoreSettings.CtlRepository.Provider);
-    
-    functypes.ForEach(type => svcs.AddSingleton(type));
-    ReflectionUtils.GetAllTypesThatImplement(typeof(IFunctionInitialiser), settings.CoreSettings.AllowedFunctionAssemblies).ForEach(type => {
-      var initialiser = Activator.CreateInstance(type) as IFunctionInitialiser ?? throw new Exception();
-      initialiser.RegisterServices(svcs);
-    });
-    return svcs.BuildServiceProvider();
-    
-    void AddService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
-      svcs.AddSingleton(typeof(F), GetFactoryType<F>(provider));
-      svcs.AddSingleton<I>(prov => prov.GetRequiredService<F>().GetService());
-    }
-    
-    Type GetFactoryType<F>(string provider) {
-      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), settings.CoreSettings.AllowedFunctionAssemblies); 
-      return potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
-          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
-    }
-    
-  }
-
-  private async Task InitialiseCoreServices(ServiceProvider prov) {
-    await prov.GetRequiredService<IStagedEntityRepository>().Initialise();
-    await prov.GetRequiredService<ICtlRepository>().Initialise();
-  }
-  
-  private List<IRunnableFunction> InitialiseFunctions(ServiceProvider svcs, List<Type> types) => 
-      types.Select(svcs.GetRequiredService).Cast<IRunnableFunction>().ToList();
 
 }

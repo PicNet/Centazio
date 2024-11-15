@@ -4,18 +4,18 @@
   "AllowedProviderAssemblies": ["Centazio"],
   "StagedEntityRepository": {
     "Provider": "SqlServer",
-    "ConnectionString": "Server=localhost;Database=centazio3;Trusted_Connection=True;",
+    "ConnectionString": "Server=DEV-DB-WINDOWS;Database=centazio3;Trusted_Connection=True;TrustServerCertificate=true;",
     "SchemaName": "ctl",
     "TableName": "staging",
-    "CreateSchema": false
+    "CreateSchema": true
   },
   "CtlRepository": {
     "Provider": "SqlServer",
-    "ConnectionString": "Server=localhost;Database=centazio3;Trusted_Connection=True;",
+    "ConnectionString": "Server=DEV-DB-WINDOWS;Database=centazio3;Trusted_Connection=True;TrustServerCertificate=true;",
     "SchemaName": "ctl",
     "SystemStateTableName":  "system_state",
     "ObjectStateTableName":  "object_state", 
     "CoreToSysMapTableName": "core_sys_map",
-    "CreateSchema": false
+    "CreateSchema": true
   }
 }

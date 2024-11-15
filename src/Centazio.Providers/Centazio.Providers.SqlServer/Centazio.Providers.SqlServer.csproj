@@ -18,7 +18,7 @@
 
     <ItemGroup>
       <PackageReference Include="Azure.Identity" Version="1.13.0-beta.1" />
-      <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
+      <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0-preview2.24304.8" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0-rc.2.24474.1" />
     </ItemGroup>
 

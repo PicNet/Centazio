@@ -11,10 +11,10 @@ public record DummySystemEntyity(Guid Id, string Name);
 public class DummyReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, DummySystemApi api) :
     ReadFunction(new(nameof(DummyReadFunction)), stager, ctl) {
 
-  private readonly string EVERY_SECOND_NCRON = "* * * * * *";
+  private readonly string EVERY_X_SECONDS_NCRON = "*/5 * * * * *";
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new ReadOperationConfig(new(nameof(DummySystemEntyity)), EVERY_SECOND_NCRON, GetDummySystemEntyityUpdates)
+    new ReadOperationConfig(new(nameof(DummySystemEntyity)), EVERY_X_SECONDS_NCRON, GetDummySystemEntyityUpdates)
   ]);
 
   private async Task<ReadOperationResult> GetDummySystemEntyityUpdates(OperationStateAndConfig<ReadOperationConfig> config) => ReadOperationResult.Create(await api.GetDummySystemEntitiesAfter(config.Checkpoint));
