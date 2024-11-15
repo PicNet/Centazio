@@ -5,10 +5,9 @@ using Centazio.Core.Runner;
 using Serilog;
 
 namespace Centazio.Core.Write;
-public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : 
-    IOperationRunner<C, WriteOperationResult> where C : WriteOperationConfig {
+public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IOperationRunner<C> where C : WriteOperationConfig {
   
-  public async Task<WriteOperationResult> RunOperation(OperationStateAndConfig<C> op) {
+  public async Task<OperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var coretype = op.State.Object.ToCoreEntityTypeName;
     var pending = await core.GetEntitiesToWrite(op.State.System, coretype, op.Checkpoint);
     var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending.Select(t => t.CoreEntity).ToList());
@@ -58,5 +57,5 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) :
     }
   }
 
-  public WriteOperationResult BuildErrorResult(OperationStateAndConfig<C> op, Exception ex) => new ErrorWriteOperationResult(EOperationAbortVote.Abort, ex);
+  public OperationResult BuildErrorResult(OperationStateAndConfig<C> op, Exception ex) => new ErrorWriteOperationResult(EOperationAbortVote.Abort, ex);
 }

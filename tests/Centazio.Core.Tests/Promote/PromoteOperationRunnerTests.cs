@@ -13,7 +13,7 @@ public class PromoteOperationRunnerTests {
   private TestingStagedEntityRepository stager;
   private TestingInMemoryBaseCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
-  private IOperationRunner<PromoteOperationConfig, PromoteOperationResult> promoter;
+  private IOperationRunner<PromoteOperationConfig> promoter;
 
   [SetUp] public void SetUp() {
     (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());

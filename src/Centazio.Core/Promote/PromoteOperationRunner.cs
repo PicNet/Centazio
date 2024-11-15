@@ -9,9 +9,9 @@ namespace Centazio.Core.Promote;
 public class PromoteOperationRunner(
     IStagedEntityRepository stagestore,
     ICoreStorage core,
-    ICtlRepository ctl) : IOperationRunner<PromoteOperationConfig, PromoteOperationResult> {
+    ICtlRepository ctl) : IOperationRunner<PromoteOperationConfig> {
   
-  public async Task<PromoteOperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
+  public async Task<OperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var steps = new PromotionSteps(core, ctl, op);
     await steps.LoadPendingStagedEntities(stagestore);
     steps.DeserialisePendingStagedEntities();
@@ -32,7 +32,7 @@ public class PromoteOperationRunner(
   }
   
 
-  public PromoteOperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
+  public OperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
   
   
 }

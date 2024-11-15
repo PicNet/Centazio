@@ -9,10 +9,10 @@ using Centazio.Core.Write;
 namespace Centazio.Core;
 
 public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
-    AbstractFunction<ReadOperationConfig, ReadOperationResult>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl);
+    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl);
 
 public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<PromoteOperationConfig, PromoteOperationResult>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl);
+    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl);
 
 public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<WriteOperationConfig, WriteOperationResult>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl);
+    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl);

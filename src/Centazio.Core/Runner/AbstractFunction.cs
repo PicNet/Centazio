@@ -5,18 +5,20 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-public abstract class AbstractFunction<C, R> : IDisposable  
-    where C : OperationConfig
-    where R : OperationResult {
+public interface IRunnableFunction : IDisposable {
+  Task<FunctionRunResults> RunFunction();
+}
 
-  private readonly IOperationRunner<C, R> oprunner;
+public abstract class AbstractFunction<C> : IRunnableFunction where C : OperationConfig {
+
+  private readonly IOperationRunner<C> oprunner;
   private readonly ICtlRepository ctl;
   
   protected FunctionConfig<C> Config { get; }
   protected SystemName System { get; }
   protected LifecycleStage Stage { get; }
 
-  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C, R> oprunner, ICtlRepository ctl) {
+  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C> oprunner, ICtlRepository ctl) {
     System = system;
     Stage = stage;
     this.oprunner = oprunner;
@@ -27,7 +29,7 @@ public abstract class AbstractFunction<C, R> : IDisposable
 
   protected abstract FunctionConfig<C> GetFunctionConfiguration();
 
-  public async Task<FunctionRunResults<R>> RunFunction() {
+  public async Task<FunctionRunResults> RunFunction() {
     var start = UtcDate.UtcNow;
     
     Log.Information("function started [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
@@ -35,13 +37,13 @@ public abstract class AbstractFunction<C, R> : IDisposable
     var state = await ctl.GetOrCreateSystemState(System, Stage);
     if (!state.Active) {
       Log.Information("function is inactive, ignoring run {@SystemState}", state);
-      return new InactiveFunctionRunResults<R>();
+      return new InactiveFunctionRunResults();
     }
     if (state.Status != ESystemStateStatus.Idle) {
       var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
       if (minutes <= Config.TimeoutMinutes) {
         Log.Information("function is already running, ignoring run {@SystemState}", state);
-        return new AlreadyRunningFunctionRunResults<R>();
+        return new AlreadyRunningFunctionRunResults();
       }
       Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, Config.TimeoutMinutes, minutes);
     }
@@ -51,18 +53,18 @@ public abstract class AbstractFunction<C, R> : IDisposable
       state = await ctl.SaveSystemState(state.Running());
       var results = await RunFunctionOperations();
       await SaveCompletedState();
-      return new SuccessFunctionRunResults<R>(results);
+      return new SuccessFunctionRunResults(results);
     } catch (Exception ex) {
       await SaveCompletedState();
       Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
       if (Config.ThrowExceptions) throw;
-      return new ErrorFunctionRunResults<R>(ex);
+      return new ErrorFunctionRunResults(ex);
     }
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
 
-  protected virtual async Task<List<R>> RunFunctionOperations() {
+  protected virtual async Task<List<OperationResult>> RunFunctionOperations() {
     var sys = await ctl.GetOrCreateSystemState(System, Stage);
     var states = await LoadOperationsStates(Config, sys, ctl);
     var ready = GetReadyOperations(states);
@@ -89,12 +91,12 @@ public abstract class AbstractFunction<C, R> : IDisposable
     return states.Where(IsOperationReady).ToList();
   }
   
-  internal static async Task<List<R>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, IOperationRunner<C, R> runner, ICtlRepository ctl, bool throws = true) {
+  internal static async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, IOperationRunner<C> runner, ICtlRepository ctl, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
 
-    async Task<R> RunAndSaveOp(OperationStateAndConfig<C> op) {
+    async Task<OperationResult> RunAndSaveOp(OperationStateAndConfig<C> op) {
       var opstart = UtcDate.UtcNow;
       Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
@@ -106,7 +108,7 @@ public abstract class AbstractFunction<C, R> : IDisposable
       return result;
     }
     
-    async Task<R> RunOp(OperationStateAndConfig<C> op) {
+    async Task<OperationResult> RunOp(OperationStateAndConfig<C> op) {
       try { return await runner.RunOperation(op); } 
       catch (Exception ex) {
         var res = runner.BuildErrorResult(op, ex);
@@ -117,7 +119,7 @@ public abstract class AbstractFunction<C, R> : IDisposable
       }
     }
 
-    async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, R res) {
+    async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, OperationResult res) {
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
           op.State.Success(start, res.AbortVote, message) :
@@ -130,9 +132,9 @@ public abstract class AbstractFunction<C, R> : IDisposable
 
 }
 
-public abstract record FunctionRunResults<R>(List<R> OpResults, string Message) where R : OperationResult; 
-public record SuccessFunctionRunResults<R>(List<R> OpResults) : FunctionRunResults<R>(OpResults, "SuccessFunctionRunResults") where R : OperationResult;
-public record AlreadyRunningFunctionRunResults<R>() : FunctionRunResults<R>([], "AlreadyRunningFunctionRunResults") where R : OperationResult;
-public record InactiveFunctionRunResults<R>() : FunctionRunResults<R>([], "InactiveFunctionRunResults") where R : OperationResult;
+public abstract record FunctionRunResults(List<OperationResult> OpResults, string Message); 
+public record SuccessFunctionRunResults(List<OperationResult> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
+public record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
+public record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
 // ReSharper disable once NotAccessedPositionalProperty.Global
-public record ErrorFunctionRunResults<R>(Exception Exception) : FunctionRunResults<R>([], Exception.ToString()) where R : OperationResult;
+public record ErrorFunctionRunResults(Exception Exception) : FunctionRunResults([], Exception.ToString());

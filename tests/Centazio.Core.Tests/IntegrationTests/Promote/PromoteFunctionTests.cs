@@ -42,11 +42,12 @@ public class PromoteFunctionTests {
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
-    var result1 = (await func.RunFunction()).OpResults.Single();
+    var result1 = (PromoteOperationResult) (await func.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
     Assert.That(staged1, Is.EqualTo(expse));
+    Assert.That(result1, Is.Not.Null);
     Assert.That(result1.ToPromote.Single().StagedEntity, Is.EqualTo(staged1));
     Assert.That(result1.ToPromote.Single().CoreEntity, Is.EqualTo(ToCore(json1)));
     Assert.That(result1.ToIgnore, Is.Empty);
@@ -62,11 +63,12 @@ public class PromoteFunctionTests {
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
-    var result23 = (await func.RunFunction()).OpResults.Single();
+    var result23 = (PromoteOperationResult) (await func.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
     Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
+    Assert.That(result23, Is.Not.Null);
     Assert.That(result23.ToPromote.Select(t => t.CoreEntity), Is.EquivalentTo(new [] { ToCore(json2), ToCore(json3) }));
     Assert.That(result23.ToPromote.Select(t => t.StagedEntity), Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
     Assert.That(result23.ToIgnore, Is.Empty); 
@@ -86,7 +88,7 @@ public class PromoteFunctionTests {
     var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
-    var result1 = (await func.RunFunction()).OpResults.Single();
+    var result1 = (PromoteOperationResult) (await func.RunFunction()).OpResults.Single();
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
     var expse = SE(json1, staged1.Id);
@@ -107,7 +109,7 @@ public class PromoteFunctionTests {
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
-    var result23 = (await func.RunFunction()).OpResults.Single();
+    var result23 = (PromoteOperationResult) (await func.RunFunction()).OpResults.Single();
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change

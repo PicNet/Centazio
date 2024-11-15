@@ -26,7 +26,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -37,7 +37,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo(nameof(InactiveFunctionRunResults<ReadOperationResult>)));
+    Assert.That(results.Message, Is.EqualTo(nameof(InactiveFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -47,7 +47,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
   }
   
@@ -58,7 +58,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo(nameof(AlreadyRunningFunctionRunResults<ReadOperationResult>)));
+    Assert.That(results.Message, Is.EqualTo(nameof(AlreadyRunningFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
@@ -68,7 +68,7 @@ public class FunctionRunnerTests {
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
-    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults<ReadOperationResult>)));
+    Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
   }
   
@@ -76,13 +76,13 @@ public class FunctionRunnerTests {
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
   ]);
   
-  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
+  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
     protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+    protected override async Task<List<OperationResult>> RunFunctionOperations() {
       var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
       return [];
@@ -90,24 +90,24 @@ public class FunctionRunnerTests {
 
   }
   
-  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig, ReadOperationResult>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
+  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
     protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<ReadOperationResult>> RunFunctionOperations() {
+    protected override async Task<List<OperationResult>> RunFunctionOperations() {
       var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
-      return Enumerable.Range(0, results).Select(_ => (ReadOperationResult) new EmptyReadOperationResult()).ToList();
+      return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult()).Cast<OperationResult>().ToList();
     }
 
   }
   
-  class DoNothingOpRunner : IOperationRunner<ReadOperationConfig, ReadOperationResult> {
+  class DoNothingOpRunner : IOperationRunner<ReadOperationConfig> {
 
-    public Task<ReadOperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
-    public ReadOperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => throw new Exception();
+    public Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
+    public OperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => throw new Exception();
 
   }
 }

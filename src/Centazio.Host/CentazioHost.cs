@@ -1,9 +1,7 @@
-﻿using System.Timers;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +10,7 @@ using Timer = System.Threading.Timer;
 
 namespace Centazio.Host;
 
-public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings, CentazioSecrets Secrets) {
+public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings) {
   public List<string> ParseFunctionFilters() => FunctionFilter.Split([',', ';', '|', ' ']).Select(f => f.Trim()).Where(f => !String.IsNullOrEmpty(f)).ToList();
 }
 
@@ -28,17 +26,22 @@ public class CentazioHost(HostSettings settings) {
     await InitialiseCoreServices(prov);
     var functions = InitialiseFunctions(prov, types);
 
-    await using var timer = new Timer(_ => functions.ForEach(RunFunction), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    await using var timer = new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     Console.WriteLine("press 'Enter' to exit");
     Console.ReadLine();
+    
+    async void RunFunctions(object? state) {
+      await Task.WhenAll(functions.Select(RunFunction));
+    }
   }
   
-  private void RunFunction(object function) {
+  private async Task RunFunction(IRunnableFunction function) {
     Log.Information($"running function[{function.GetType().Name}]");
+    await function.RunFunction();
   }
 
   private List<Type> GetCentazioFunctionTypess(List<string> filters) {
-    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<,>), settings.CoreSettings.AllowedFunctionAssemblies).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
+    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), settings.CoreSettings.AllowedFunctionAssemblies).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
     bool MatchesFilter(string name) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => name.Contains(filter, StringComparison.OrdinalIgnoreCase));
   }
@@ -75,9 +78,7 @@ public class CentazioHost(HostSettings settings) {
     await prov.GetRequiredService<ICtlRepository>().Initialise();
   }
   
-  // todo: add Runnable interface
-  private List<object> InitialiseFunctions(ServiceProvider svcs, List<Type> types) {
-    return types.Select(svcs.GetRequiredService).ToList();
-  }
+  private List<IRunnableFunction> InitialiseFunctions(ServiceProvider svcs, List<Type> types) => 
+      types.Select(svcs.GetRequiredService).Cast<IRunnableFunction>().ToList();
 
 }

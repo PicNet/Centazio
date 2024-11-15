@@ -16,8 +16,8 @@ public static class TestingFactories {
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static IOperationRunner<ReadOperationConfig, ReadOperationResult> ReadRunner(IStagedEntityRepository? serepo = null) => new ReadOperationRunner(serepo ?? SeRepo());
-  public static IOperationRunner<PromoteOperationConfig, PromoteOperationResult> PromoteRunner(
+  public static IOperationRunner<ReadOperationConfig> ReadRunner(IStagedEntityRepository? serepo = null) => new ReadOperationRunner(serepo ?? SeRepo());
+  public static IOperationRunner<PromoteOperationConfig> PromoteRunner(
       IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 

@@ -21,7 +21,7 @@ public class WriteFunctionTests {
     // customer1 = customer1 with { Meta = customer1.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     // customer2 = customer2 with { Meta = customer2.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     
-    var res1 = (await func.RunFunction()).OpResults.Single();
+    var res1 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
       Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
       Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, WftHelpers.ToSeCs(customer2.CoreEntity)) };
@@ -32,7 +32,7 @@ public class WriteFunctionTests {
     
     var customer22 = customer2.Update(C.System2Name, (CoreEntity) customer2.CoreEntity with { FirstName = "22" }, Helpers.TestingCoreEntityChecksum);
     var upsert2 = await core.Upsert(C.CoreEntityName, [customer22]);
-    var res2 = (await func.RunFunction()).OpResults.Single();
+    var res2 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
     var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22.CoreEntity)) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
