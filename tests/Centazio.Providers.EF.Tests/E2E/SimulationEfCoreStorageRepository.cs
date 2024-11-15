@@ -12,6 +12,8 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
+    await DropTablesImpl(db);
+    
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CtlSchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
     
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));

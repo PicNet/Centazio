@@ -6,6 +6,8 @@ namespace Centazio.Providers.Sqlite.Tests.CoreRepo;
 
 public class SqliteCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
   
-  protected override async Task<ITestingCoreStorage> GetRepository() => await new TestingEfCoreStorageRepository(() => new SqliteTestingCoreStorageDbContext(), new SqliteDbFieldsHelper()).Initalise();
+  protected override async Task<ITestingCoreStorage> GetRepository() => 
+      await new TestingEfCoreStorageRepository(() => new SqliteTestingCoreStorageDbContext("core_storage.db"), new SqliteDbFieldsHelper()).Initalise();
+
 }
 

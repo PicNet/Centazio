@@ -6,5 +6,8 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
 public class SqliteCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetRepository() => (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(), new SqliteDbFieldsHelper()).Initialise();
+  protected override async Task<ITestingCtlRepository> GetRepository() {
+    return (ITestingCtlRepository)await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext("centazio_ctl.db"), new SqliteDbFieldsHelper()).Initialise();
+  }
+
 }
