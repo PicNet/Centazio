@@ -27,7 +27,8 @@ public class CentazioHost(HostSettings settings) {
     var prov = InitialiseDi(types);
     await InitialiseCoreServices(prov);
     var functions = InitialiseFunctions(prov, types);
-    var timer = new Timer(sender => functions.ForEach(RunFunction), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+    await using var timer = new Timer(_ => functions.ForEach(RunFunction), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     Console.WriteLine("press 'Enter' to exit");
     Console.ReadLine();
   }
