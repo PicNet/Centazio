@@ -4,13 +4,15 @@ using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Write;
 
-public static class WriteHelpers {
+public delegate ISystemEntity ConvertCoreToSystemEntityForWritingHandler<E>(SystemEntityId systemid, E coreent) where E : ICoreEntity;
 
+public static class WriteHelpers {
+  
   public static CovertCoreEntitiesToSystemEntitiesResult CovertCoreEntitiesToSystemEntitties<E>(
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
       IChecksumAlgorithm checksum,
-      Func<SystemEntityId, E, ISystemEntity> ConvertCoreToSystemEntityForWriting) where E : ICoreEntity {
+      ConvertCoreToSystemEntityForWritingHandler<E> ConvertCoreToSystemEntityForWriting) where E : ICoreEntity {
     return new(
       tocreate.Select(m => {
         var core = m.CoreEntity.To<E>();

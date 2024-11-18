@@ -1,5 +1,10 @@
 # Todo
-- change Funcs/Actions into delegates, eg: `public delegate void TimerCallback(object? state);`
+- Code stylle check for lower cammel case for method arguments, and upper camel for types and record args
+- Good case study:
+  - crm
+  - finance
+  - smartsheest
+  - email/reporting
 - Hide `Meta` from classes that should not know about this data
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug

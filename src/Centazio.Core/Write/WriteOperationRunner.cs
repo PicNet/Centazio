@@ -15,14 +15,14 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IO
     
     ValidateToCreateAndUpdates();
     Log.Debug($"WriteOperationRunner calling CovertCoreEntitiesToSystemEntitties[{op.State.System}/{op.State.Object}] ToCreate[{tocreate.Count}] ToUpdate[{toupdate.Count}]");
-    var (syscreates, sysupdates) = await op.OpConfig.CovertCoreEntitiesToSystemEntities(new (op.OpConfig, tocreate, toupdate));
+    var (syscreates, sysupdates) = await op.OpConfig.CovertCoreEntitiesToSystemEntities(op.OpConfig, tocreate, toupdate);
     
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
     Log.Information($"WriteOperationRunner [{op.State.System}/{op.State.Object}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful[{meaningful.Count}]");
     if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
     
     Log.Debug($"WriteOperationRunner calling WriteEntitiesToTargetSystem[{op.State.System}/{op.State.Object}] Created[{syscreates.Count}] Updated[{sysupdates.Count}]");
-    var results = await op.OpConfig.WriteEntitiesToTargetSystem(new (op.OpConfig, syscreates, sysupdates));
+    var results = await op.OpConfig.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {
       Log.Warning("error occurred calling `WriteEntitiesToTargetSystem` {@Results}", results);

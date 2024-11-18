@@ -67,7 +67,7 @@ public class ReadOperationRunnerTests {
     Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss.ToBase()));
   }
   
-  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, Func<OperationStateAndConfig<ReadOperationConfig>, Task<ReadOperationResult>> impl) 
+  private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, GetUpdatesAfterCheckpointHandler impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString())),
         new BaseFunctionConfig(),
