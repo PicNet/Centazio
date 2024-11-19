@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Centazio.Core.Misc;
 
-public record DbFieldType(string name, Type type, string length, bool required);
+public record DbFieldType(string Name, Type FieldType, string Length, bool Required);
 
 public interface IDbFieldsHelper {
   List<DbFieldType> GetDbFields<T>();

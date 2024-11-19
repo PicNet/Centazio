@@ -59,7 +59,7 @@ public class CheckStandardNamingOfCommonTypes {
 
         void ValidateCtor(ConstructorInfo ctor) {
           if (Ignore(ctor)) return;
-          ctor.GetParameters().ForEach(p => ValidateParam("Ctor", p));
+          ctor.GetParameters().ForEach(p => ValidateParam("Ctor", p, true));
         }
 
         void ValidateProp(PropertyInfo prop) {
@@ -75,7 +75,7 @@ public class CheckStandardNamingOfCommonTypes {
             var iparams = imethods.SelectMany(m => m.GetParameters().Where(p => p.Name == param.Name));
             if (iparams.Any(Ignore)) return;
             
-            ValidateParam($"Method[{method.Name}]", param);
+            ValidateParam($"Method[{method.Name}]", param, false);
           });
         }
         
@@ -94,16 +94,37 @@ public class CheckStandardNamingOfCommonTypes {
           ValidateImpl($"Field", field.FieldType, true, field.Name);
         }
 
-        void ValidateParam(string prefix, ParameterInfo param) {
-          ValidateImpl(prefix + ".Param", param.ParameterType, isrec, param.Name ?? throw new Exception());
+        void ValidateParam(string prefix, ParameterInfo param, bool isctor) {
+          var name = param.Name ?? throw new Exception();
+          var isRecordPrimaryCtorParam = isrec && isctor && objtype.GetProperty(name) is not null;
+          ValidateImpl(prefix + ".Param", param.ParameterType, isRecordPrimaryCtorParam, name);
         }
 
         void ValidateImpl(string prefix, Type membertype, bool upper, string name) {
           var (type, plural) = GetTypeToTest();
-          if (type is null || !EXPECTED.ContainsKey(type)) return;
+          if (type is null || name.IndexOf("__", StringComparison.Ordinal) >= 0 || name.IndexOf("<>", StringComparison.Ordinal) >= 0) return;
+          if (!EXPECTED.ContainsKey(type)) {
+            CheckCammelCaseUsage();
+            return;
+          }
           
           Check();
+
+          (Type? TypeToTest, bool IsPlural) GetTypeToTest() {
+            if (membertype.IsAssignableTo(typeof(System.Collections.IEnumerable))) {
+              var args = membertype.GetGenericArguments();
+              if (args.Length == 1) return (args.SingleOrDefault(), true);
+            }
+            return (membertype, false);
+          }
           
+          void CheckCammelCaseUsage() {
+            var totest = name.StartsWith('_') ? name.Substring(1) : name;
+            if (totest.Length == 0) return;
+            if (upper && !Char.IsUpper(totest[0])) AddErr(prefix, type, $"Name[{name}] should be upper cammel-case");
+            if (!upper && Char.IsUpper(totest[0])) AddErr(prefix, type, $"Name[{name}] should be lower cammel-case");
+          }
+
           void Check() {
             if (objtype == type) return; // do not check naming conventions if the object is the same type we are testing
             var checker = EXPECTED[type];
@@ -111,14 +132,6 @@ public class CheckStandardNamingOfCommonTypes {
             if (plural) expected += "s";
             if (checker.EndsWith ? name.EndsWith(expected) : name == expected) return; // name is correct
             AddErr(prefix, type, $"Name[{name}] Expected[{expected}]");
-          }
-          
-          (Type? TypeToTest, bool IsPlural) GetTypeToTest() {
-            if (membertype.IsAssignableTo(typeof(System.Collections.IEnumerable))) {
-              var args = membertype.GetGenericArguments();
-              if (args.Length == 1) return (args.SingleOrDefault(), true);
-            }
-            return (membertype, false);
           }
         }
         

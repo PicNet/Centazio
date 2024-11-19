@@ -19,18 +19,18 @@ public class SqliteDbFieldsHelper : AbstractDbFieldsHelper {
 
   protected string GetDbFieldTypeString(DbFieldType f) {
     var typestr = 
-        f.type == typeof(int) ? "int" : 
-        f.type == typeof(decimal) ? "decimal" : 
-        f.type == typeof(DateTime) ? "datetime" : 
-        f.type == typeof(DateOnly) ? "date" : 
-        f.type == typeof(Boolean) ? "bit" : 
-        f.type == typeof(Guid) ? "uniqueidentifier" : 
-        f.type == typeof(string) && f.length == "max" ? "text" :
-        f.type == typeof(string) ? "nvarchar" :
-        throw new NotSupportedException(f.type.Name);
-    if (!String.IsNullOrWhiteSpace(f.length) && typestr != "text") typestr += $"({f.length})";
-    var nullstr = f.required ? "not null" : "null";
-    return $"[{f.name}] {typestr} {nullstr}".Trim();
+        f.FieldType == typeof(int) ? "int" : 
+        f.FieldType == typeof(decimal) ? "decimal" : 
+        f.FieldType == typeof(DateTime) ? "datetime" : 
+        f.FieldType == typeof(DateOnly) ? "date" : 
+        f.FieldType == typeof(Boolean) ? "bit" : 
+        f.FieldType == typeof(Guid) ? "uniqueidentifier" : 
+        f.FieldType == typeof(string) && f.Length == "max" ? "text" :
+        f.FieldType == typeof(string) ? "nvarchar" :
+        throw new NotSupportedException(f.FieldType.Name);
+    if (!String.IsNullOrWhiteSpace(f.Length) && typestr != "text") typestr += $"({f.Length})";
+    var nullstr = f.Required ? "not null" : "null";
+    return $"[{f.Name}] {typestr} {nullstr}".Trim();
   }
 
 }

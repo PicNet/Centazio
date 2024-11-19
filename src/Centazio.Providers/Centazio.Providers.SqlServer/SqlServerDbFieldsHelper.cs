@@ -27,17 +27,17 @@ END
 
   private string GetDbFieldTypeString(DbFieldType f) {
     var typestr = 
-        f.type == typeof(int) ? "int" : 
-        f.type == typeof(decimal) ? "decimal" : 
-        f.type == typeof(DateTime) ? "datetime2" : 
-        f.type == typeof(DateOnly) ? "date" : 
-        f.type == typeof(Boolean) ? "bit" : 
-        f.type == typeof(Guid) ? "uniqueidentifier" : 
-        f.type == typeof(string) ? "nvarchar" : 
-        throw new NotSupportedException(f.type.Name);
-    if (!String.IsNullOrWhiteSpace(f.length)) typestr += $"({f.length})";
-    var nullstr = f.required ? "not null" : "null";
-    return $"[{f.name}] {typestr} {nullstr}";
+        f.FieldType == typeof(int) ? "int" : 
+        f.FieldType == typeof(decimal) ? "decimal" : 
+        f.FieldType == typeof(DateTime) ? "datetime2" : 
+        f.FieldType == typeof(DateOnly) ? "date" : 
+        f.FieldType == typeof(Boolean) ? "bit" : 
+        f.FieldType == typeof(Guid) ? "uniqueidentifier" : 
+        f.FieldType == typeof(string) ? "nvarchar" : 
+        throw new NotSupportedException(f.FieldType.Name);
+    if (!String.IsNullOrWhiteSpace(f.Length)) typestr += $"({f.Length})";
+    var nullstr = f.Required ? "not null" : "null";
+    return $"[{f.Name}] {typestr} {nullstr}";
   }
 
   public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";

@@ -11,7 +11,7 @@ public class SqliteDbFieldsHelperTests {
     var list = new SqliteDbFieldsHelper().GetDbFields(typeof(CoreEntity));
     Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.FirstName), typeof(string), "64", true)));
     Assert.That(list, Has.Member(new DbFieldType(nameof(CoreEntity.DateOfBirth), typeof(DateOnly), String.Empty, true)));
-    Assert.That(list.FindIndex(t => t.name == nameof(CoreEntity.DisplayName)), Is.EqualTo(-1)); // interface has [JsonIgnore]
+    Assert.That(list.FindIndex(t => t.Name == nameof(CoreEntity.DisplayName)), Is.EqualTo(-1)); // interface has [JsonIgnore]
   }
   
   [Test] public void Test_GenerateCreateTableScript() {
