@@ -141,6 +141,26 @@ public record CtlRepositorySettings {
   }
 }
 
+public record ClickUpSettings {
+  public string BaseUrl { get; }
+  public string ListId { get; }
+  
+  private ClickUpSettings(string baseurl, string listid) {
+    BaseUrl = baseurl;
+    ListId = listid;
+  } 
+  
+  public record Dto : IDto<ClickUpSettings> {
+    public string? BaseUrl { get; init; }
+    public string? ListId { get; init; }
+    
+    public ClickUpSettings ToBase() => new (
+      String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
+      String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim()
+    );
+  }
+}
+
 public record CentazioSettings {
   public string SecretsFolder { get; }
   public List<string> AllowedFunctionAssemblies { get; }
@@ -157,8 +177,12 @@ public record CentazioSettings {
   
   private readonly CtlRepositorySettings? _CtlRepository;
   public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new Exception($"CtlRepository section missing from CentazioSettings");
+  
+  // todo: make dynamic, should not be part of core settings
+  private readonly ClickUpSettings? _ClickUp;
+  public ClickUpSettings ClickUp => _ClickUp ?? throw new Exception($"ClickUp section missing from CentazioSettings");
 
-  private CentazioSettings (string secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo) {
+  private CentazioSettings (string secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, ClickUpSettings? clickup) {
     SecretsFolder = secrets;
     AllowedFunctionAssemblies = funcass;
     AllowedProviderAssemblies = provass;
@@ -167,6 +191,8 @@ public record CentazioSettings {
     _AzureSettings = azure;
     _StagedEntityRepository = staged;
     _CtlRepository = ctlrepo;
+    
+    _ClickUp = clickup;
   }
     
   public record Dto : IDto<CentazioSettings> {
@@ -177,6 +203,7 @@ public record CentazioSettings {
     public AzureSettings.Dto? AzureSettings { get; init; }
     public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
     public CtlRepositorySettings.Dto? CtlRepository { get; init; }
+    public ClickUpSettings.Dto? ClickUp { get; init; }
     
     public CentazioSettings ToBase() => new (
         String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
@@ -185,6 +212,7 @@ public record CentazioSettings {
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase(),
         StagedEntityRepository?.ToBase(),
-        CtlRepository?.ToBase());
+        CtlRepository?.ToBase(),
+        ClickUp?.ToBase());
   }
 }

@@ -1,4 +1,5 @@
 ﻿using Centazio.Cli.Infra.Aws;
+using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Aws;
 

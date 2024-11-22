@@ -1,0 +1,7 @@
+{
+  "SecretsFolder": "\\\\aus-syd-dc05.internal.picnet.com.au\\secrets\\centazio3",
+  "ClickUp": {
+    "BaseUrl": "https://api.clickup.com/api/v2/",
+    "ListId": "54751406"
+  }
+}

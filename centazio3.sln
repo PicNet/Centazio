@@ -14,7 +14,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{85E0FAEE-523F-43E6-9FA8-53EFA08E2F35}"
 	ProjectSection(SolutionItems) = preProject
 		src\readme.md = src\readme.md
+		src\tutorial.md = src\tutorial.md
 		src\settings.json = src\settings.json
+		\\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env = \\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Centazio.Providers", "Centazio.Providers", "{95FE1321-2F07-45ED-ABA6-AA354B308CE7}"
@@ -44,6 +46,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Host", "src\Centazio.Host\Centazio.Host.csproj", "{00E9AA93-78A0-46FA-AEB3-16F0689C2FA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Sample", "sample\Centazio.Sample\Centazio.Sample.csproj", "{F9228BE1-ACA5-443C-9A37-3628C9C57B02}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{A6ED965F-9625-4DBC-A9A3-BB53C946433B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Sample.Tests", "sample\Centazio.Sample.Tests\Centazio.Sample.Tests.csproj", "{CFE28708-102C-4880-98F9-18138C102B8A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +117,10 @@ Global
 		{F9228BE1-ACA5-443C-9A37-3628C9C57B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9228BE1-ACA5-443C-9A37-3628C9C57B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9228BE1-ACA5-443C-9A37-3628C9C57B02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFE28708-102C-4880-98F9-18138C102B8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFE28708-102C-4880-98F9-18138C102B8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFE28708-102C-4880-98F9-18138C102B8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFE28708-102C-4880-98F9-18138C102B8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1653C645-36BD-429C-A737-1F73144E6D58} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
@@ -129,5 +139,7 @@ Global
 		{29E96B20-7A48-435D-8C2A-F7E07F96A330} = {95FE1321-2F07-45ED-ABA6-AA354B308CE7}
 		{B2153D96-FE8B-4851-B9BD-B2ACCF240B3D} = {60BD8B72-2AC8-4D12-A2BA-87BDD7C803AB}
 		{00E9AA93-78A0-46FA-AEB3-16F0689C2FA1} = {85E0FAEE-523F-43E6-9FA8-53EFA08E2F35}
+		{F9228BE1-ACA5-443C-9A37-3628C9C57B02} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
+		{CFE28708-102C-4880-98F9-18138C102B8A} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
 	EndGlobalSection
 EndGlobal

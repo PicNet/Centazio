@@ -6,7 +6,7 @@ namespace Centazio.Sample;
 public class Initialiser : IFunctionInitialiser {
 
   public void RegisterServices(IServiceCollection svcs) {
-    svcs.AddSingleton<DummySystemApi>();
+    svcs.AddSingleton<ClickUpApi>();
   }
 
 }
