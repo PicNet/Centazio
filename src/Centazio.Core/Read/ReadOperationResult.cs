@@ -9,12 +9,10 @@ public abstract record ReadOperationResult(
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception), ILoggable {
+    
+  public static ReadOperationResult Create(string value) => String.IsNullOrWhiteSpace(value) ? new EmptyReadOperationResult() : new SingleRecordReadOperationResult(new (value));
+  public static ReadOperationResult Create(List<string> lst) => !lst.Any() ? new EmptyReadOperationResult() : new ListRecordsReadOperationResult(lst);
   
-  public static ReadOperationResult Create(List<string> lst) {
-    if (!lst.Any()) return new EmptyReadOperationResult();
-    return new ListRecordsReadOperationResult(lst);
-  }
-
   public string LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
 
 }

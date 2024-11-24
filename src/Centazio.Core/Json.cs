@@ -6,13 +6,17 @@ namespace Centazio.Core;
 
 public static class Json {
   
-  public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o);
+  internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
+    RespectNullableAnnotations = true
+  };
+  
+  public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
   public static object Deserialize(string json, Type type) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(type);
-    if (dtot is null) return JsonSerializer.Deserialize(json, type) ?? throw new Exception();
+    if (dtot is null) return JsonSerializer.Deserialize(json, type, DEFAULT_OPTS) ?? throw new Exception();
     
-    var dtoobj = JsonSerializer.Deserialize(json, dtot);
+    var dtoobj = JsonSerializer.Deserialize(json, dtot, DEFAULT_OPTS);
     return TryCallIDtoGetBaseObj(out var baseobj) 
         ? baseobj 
         : SetAllBaseObjProps();
@@ -50,7 +54,7 @@ public static class Json {
         b.Select(Serialize).OrderBy(s => s).ToList(), aname, bname);
   }
   public static bool ValidateJsonEqual(object? actual, object? expected, string aname="Actual", string bname="Expected") {
-    var (actualjson, expjson) = (JsonSerializer.Serialize(actual), JsonSerializer.Serialize(expected));
+    var (actualjson, expjson) = (JsonSerializer.Serialize(actual, DEFAULT_OPTS), JsonSerializer.Serialize(expected, DEFAULT_OPTS));
     if (actualjson == expjson) return true;
     throw new Exception($"Expected json representations to be equivalent:\n{aname}: {actualjson}\n{bname}: {expjson}");
   }

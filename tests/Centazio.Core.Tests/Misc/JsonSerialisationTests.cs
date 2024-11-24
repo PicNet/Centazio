@@ -80,6 +80,15 @@ public class JsonSerialisationTests {
     Assert.That(c2s2, Is.EqualTo(c2s));
   }
   
+  [Test] public void Test_RespectNullableAnnotations() {
+    var x = Json.Deserialize<ObjWithNullables>("{}");
+    var x2 = JsonSerializer.Deserialize<ObjWithNullables>("{}", new JsonSerializerOptions {
+      RespectNullableAnnotations = true,
+      RespectRequiredConstructorParameters = true
+    });
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>("{}"));
+  }
+  
   private void TestDtoImpl<T>(T baseobj) {
     ArgumentNullException.ThrowIfNull(baseobj);
     
@@ -87,6 +96,17 @@ public class JsonSerialisationTests {
     var deserialised = Json.Deserialize<T>(json); // should automatically detect the Dto 
     
     Assert.That(deserialised, Is.EqualTo(baseobj));
+  }
+  
+  public record ObjWithNullables {
+    public string NonNullStr { get; init; } = null!;
+    public string? NullStr { get; init; }
+    
+    public DateTime NonNullDt { get; init; } = DateTime.MinValue;
+    public DateTime? NullDt { get; init; }
+    
+    public TestValidStrings NonNullObj { get; init; } = null!;
+    public TestValidStrings? NullObj { get; init; }
   }
   
   public record TestValidStrings {
