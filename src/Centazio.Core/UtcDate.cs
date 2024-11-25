@@ -23,6 +23,8 @@ public class UtcDate : AbstractUtcDate {
   
   public static DateTime UtcNow => Utc.Now;
   public static DateTime UtcToday => Utc.Today;
+  
+  public static DateTime FromMillis(long millis) => DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeMilliseconds(millis).DateTime, DateTimeKind.Utc);
 }
 
 

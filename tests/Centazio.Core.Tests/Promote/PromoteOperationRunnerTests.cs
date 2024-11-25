@@ -30,7 +30,7 @@ public class PromoteOperationRunnerTests {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
+        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
         new BaseFunctionConfig(),
         new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, SuccessfulConversionToCore), DateTime.MinValue));
     var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.FirstName);
@@ -53,7 +53,7 @@ public class PromoteOperationRunnerTests {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName),
+        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
         new BaseFunctionConfig { ThrowExceptions = false },
         new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
     

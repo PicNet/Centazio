@@ -54,7 +54,7 @@ public class PromoteFunctionTests {
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
-    Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
+    Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, start, 1, 0)));
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
     
     // create two more entities and also include the previous one (without any changes
@@ -75,7 +75,7 @@ public class PromoteFunctionTests {
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
-    Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 2, 0)));
+    Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, UtcDate.UtcNow, 2, 0)));
     Assert.That(await core.GetAllCoreEntities(), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
   }
   
@@ -99,7 +99,7 @@ public class PromoteFunctionTests {
     var exp = new SuccessPromoteOperationResult(result1.ToPromote, result1.ToIgnore);
     Assert.That(result1, Is.EqualTo(exp));
     Assert.That(s1.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
-    Assert.That(obj1.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 1, 0)));
+    Assert.That(obj1.Single(), Is.EqualTo(OS(start, start, start, 1, 0)));
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
     
     // lets ignore all staged entities from now
@@ -119,12 +119,12 @@ public class PromoteFunctionTests {
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
-    Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, 0, 2)));
+    Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, UtcDate.UtcNow, 0, 2)));
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
   }
   
   private SystemState SS(DateTime start, DateTime updated) => new SystemState.Dto(system1, stage, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
-  private ObjectState OS(DateTime start, DateTime updated, int promoted, int ignored) => new(system1, stage, coretype, true) {
+  private ObjectState OS(DateTime start, DateTime updated, DateTime nextcheckpoint, int promoted, int ignored) => new(system1, stage, coretype, nextcheckpoint, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,
     LastAbortVote = EOperationAbortVote.Continue,

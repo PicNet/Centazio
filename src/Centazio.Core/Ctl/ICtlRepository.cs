@@ -13,9 +13,9 @@ public interface ICtlRepository : IAsyncDisposable {
   Task<SystemState> GetOrCreateSystemState(SystemName system, LifecycleStage stage);
   
   Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj);
-  Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj);
+  Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint);
   Task<ObjectState> SaveObjectState(ObjectState state);
-  Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj);
+  Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj, DateTime firstcheckpoint);
   
   Task<List<Map.Created>> CreateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
   Task<List<Map.Updated>> UpdateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);

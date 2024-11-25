@@ -7,6 +7,7 @@ public abstract record OperationResult(
     EOperationResult Result,
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
+    DateTime? NextCheckpoint = null,
     [property: JsonIgnore]
     Exception? Exception = null) {
   

@@ -40,10 +40,9 @@ public class CheckStandardNamingOfCommonTypes {
       ass.GetTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {
-        if (objtype.Name.IndexOf("__", StringComparison.Ordinal) >= 0) return;
+        if (objtype.Name.IndexOf("__", StringComparison.Ordinal) >= 0 || Ignore(objtype)) return;
+
         var ifaces = objtype.GetInterfaces();
-        if (Ignore(objtype) || ifaces.Any(Ignore)) { return; }
-        
         var isrec = ReflectionUtils.IsRecord(objtype);
         
         objtype.GetConstructors().ForEach(ValidateCtor);
@@ -142,7 +141,12 @@ public class CheckStandardNamingOfCommonTypes {
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
   }
 
-  private bool Ignore(ICustomAttributeProvider? prov) => 
-      prov is not null && prov.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0;
+  private bool Ignore(ICustomAttributeProvider? prov) {
+    if (prov is null) return false;
+    if (prov.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0) return true;
+    var ifaces = (prov as Type)?.GetInterfaces() ?? [];
+    if (ifaces.Any(Ignore)) return true;
+    return Ignore((prov as Type)?.DeclaringType);
+  }
 
 }

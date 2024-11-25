@@ -11,7 +11,7 @@ public abstract record PromoteOperationResult(
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     Exception? Exception = null)
-    : OperationResult(Result, Message, AbortVote, Exception), ILoggable {
+    : OperationResult(Result, Message, AbortVote, null, Exception), ILoggable {
 
     public string LoggableValue => $"ToPromote[{ToPromote.Count}] ToIgnore[{ToIgnore.Count}] Result[{Result}] Message[{Message}]";
 }

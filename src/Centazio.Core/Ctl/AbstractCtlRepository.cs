@@ -13,11 +13,11 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   public abstract Task<SystemState> SaveSystemState(SystemState state);
   
   public abstract Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj);
-  public abstract Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj);
+  public abstract Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint);
   public abstract Task<ObjectState> SaveObjectState(ObjectState state);
   
   public async Task<SystemState> GetOrCreateSystemState(SystemName system, LifecycleStage stage) => await GetSystemState(system, stage) ?? await CreateSystemState(system, stage);
-  public async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj);
+  public async Task<ObjectState> GetOrCreateObjectState(SystemState system, ObjectName obj, DateTime firstcheckpoint) => await GetObjectState(system, obj) ?? await CreateObjectState(system, obj, firstcheckpoint);
   
   protected abstract Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
   protected abstract Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);

@@ -62,40 +62,40 @@ public abstract class BaseCtlRepositoryStateTests {
 
   [Test] public async Task Test_GetObjectState_returns_correct_state_for_known_system() {
     var ss = await repo.CreateSystemState(Constants.System1Name, LifecycleStage.Defaults.Read);
-    var created = await repo.CreateObjectState(ss, Constants.CoreEntityName);
+    var created = await repo.CreateObjectState(ss, Constants.CoreEntityName, UtcDate.UtcToday);
     var actual = await repo.GetObjectState(ss, Constants.CoreEntityName);
     Assert.That(actual, Is.EqualTo(created));
   }
   
   [Test] public async Task Test_CreateObjectState_fails_for_existing_object() {
     var ss = await repo.CreateSystemState(Constants.System2Name, LifecycleStage.Defaults.Promote);
-    await repo.CreateObjectState(ss, Constants.CoreEntityName);
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(ss, Constants.CoreEntityName));
+    await repo.CreateObjectState(ss, Constants.CoreEntityName, UtcDate.UtcToday);
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.CreateObjectState(ss, Constants.CoreEntityName, UtcDate.UtcToday));
   }
   
   [Test] public async Task Test_SaveObjectState_updates_existing_state() {
     var ss = await repo.CreateSystemState(Constants.System2Name, LifecycleStage.Defaults.Promote);
-    var created = await repo.CreateObjectState(ss, Constants.CoreEntityName);
-    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, LifecycleStage.Defaults.Read);
+    var created = await repo.CreateObjectState(ss, Constants.CoreEntityName, UtcDate.UtcToday);
+    var updated = created.Success(UtcDate.UtcNow, UtcDate.UtcNow, EOperationAbortVote.Continue, LifecycleStage.Defaults.Read);
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, Constants.CoreEntityName) ?? throw new Exception();
-    Assert.That(created, Is.EqualTo(ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName)));
+    Assert.That(created, Is.EqualTo(ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName, UtcDate.UtcToday)));
     Assert.That(updated2, Is.EqualTo(updated));
     Assert.That(current, Is.EqualTo(updated2));
   }
   
   [Test] public void Test_SaveObjectState_fails_if_SystemState_does_not_exist() {
-    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Read, Constants.CoreEntityName)));
+    Assert.ThrowsAsync(Is.Not.Null, () => repo.SaveObjectState(ObjectState.Create(Constants.System1Name, LifecycleStage.Defaults.Read, Constants.CoreEntityName, UtcDate.UtcToday)));
   }
   
   [Test] public async Task Test_GetOrCreateObjectState_creates_if_not_existing() {
     var ss = await repo.CreateSystemState(Constants.System2Name, LifecycleStage.Defaults.Promote);
     var prior = await repo.GetObjectState(ss, Constants.CoreEntityName);
-    var created = await repo.GetOrCreateObjectState(ss, Constants.CoreEntityName);
-    var updated = created.Success(UtcDate.UtcNow, EOperationAbortVote.Continue, nameof(BaseCtlRepositoryStateTests));
+    var created = await repo.GetOrCreateObjectState(ss, Constants.CoreEntityName, UtcDate.UtcToday);
+    var updated = created.Success(UtcDate.UtcNow, UtcDate.UtcNow, EOperationAbortVote.Continue, nameof(BaseCtlRepositoryStateTests));
     var updated2 = await repo.SaveObjectState(updated);
     var current = await repo.GetObjectState(ss, Constants.CoreEntityName);
-    var expected = ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName);
+    var expected = ObjectState.Create(Constants.System2Name, LifecycleStage.Defaults.Promote, Constants.CoreEntityName, UtcDate.UtcToday);
     
     Assert.That(prior, Is.Null);
     Assert.That(created, Is.EqualTo(expected));

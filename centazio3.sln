@@ -15,7 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{85E0FAEE-523
 	ProjectSection(SolutionItems) = preProject
 		src\readme.md = src\readme.md
 		src\tutorial.md = src\tutorial.md
-		src\settings.json = src\settings.json
 		\\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env = \\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env
 	EndProjectSection
 EndProject
@@ -50,6 +49,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{A6ED965F-9625-4DBC-A9A3-BB53C946433B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Sample.Tests", "sample\Centazio.Sample.Tests\Centazio.Sample.Tests.csproj", "{CFE28708-102C-4880-98F9-18138C102B8A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5B4D-4D47-AC74-75CC2F6CB6AF}"
+	ProjectSection(SolutionItems) = preProject
+		settings.json = settings.json
+		azure-pipelines.yml = azure-pipelines.yml
+		.gitignore = .gitignore
+		\\aus-syd-dc05.internal.picnet.com.au\Secrets\centazio3\dev.env = \\aus-syd-dc05.internal.picnet.com.au\Secrets\centazio3\dev.env
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

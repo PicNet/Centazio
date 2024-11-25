@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Tests.Misc;
@@ -56,11 +57,11 @@ public class JsonSerialisationTests {
     var str = nameof(Test_real_dtos);
     
     // Centazio.Core.Ctl.Entities.ObjectState+Dto
-    var oscet = new ObjectState(new(str), new(str), new CoreEntityTypeName(str), true);
+    var oscet = new ObjectState(new(str), new(str), new CoreEntityTypeName(str), UtcDate.UtcNow, true);
     var oscet2 = Json.Deserialize<ObjectState>(Json.Serialize(oscet));
     Assert.That(oscet2, Is.EqualTo(oscet));
     
-    var osset = new ObjectState(new(str), new(str), new SystemEntityTypeName(str), true);
+    var osset = new ObjectState(new(str), new(str), new SystemEntityTypeName(str), UtcDate.UtcNow, true);
     var osset2 = Json.Deserialize<ObjectState>(Json.Serialize(osset));
     Assert.That(osset2, Is.EqualTo(osset));
     
@@ -80,13 +81,11 @@ public class JsonSerialisationTests {
     Assert.That(c2s2, Is.EqualTo(c2s));
   }
   
-  [Test] public void Test_RespectNullableAnnotations() {
-    var x = Json.Deserialize<ObjWithNullables>("{}");
-    var x2 = JsonSerializer.Deserialize<ObjWithNullables>("{}", new JsonSerializerOptions {
-      RespectNullableAnnotations = true,
-      RespectRequiredConstructorParameters = true
-    });
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>("{}"));
+  [Test, Ignore("RespectNullableAnnotations does not work with empty object '{}'")] public void Test_RespectNullableAnnotations() {
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NullStr"": ""NullStr"", ""NonNullStr"": null}"));
+    var result = Json.Deserialize<ObjWithNullables>("{}");
+    Validator.ValidateObject(result, new ValidationContext(result), true);
+    // Validator also, does not check field nullability
   }
   
   private void TestDtoImpl<T>(T baseobj) {

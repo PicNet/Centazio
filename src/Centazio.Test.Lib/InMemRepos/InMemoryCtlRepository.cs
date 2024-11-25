@@ -35,10 +35,10 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
     return Task.FromResult(objects[key] = state);
   }
   
-  public override Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
+  public override Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) {
     var key = (system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    var os = new ObjectState(system.System, system.Stage, obj, true);
+    var os = new ObjectState(system.System, system.Stage, obj, nextcheckpoint, true);
     return Task.FromResult(objects[key] = os);
   }
   

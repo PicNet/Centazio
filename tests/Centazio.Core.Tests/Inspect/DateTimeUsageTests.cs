@@ -12,4 +12,12 @@ public class DateTimeUsageTests {
     });
     Assert.That(errors, Is.Empty);
   }
+  
+  [Test] public void Test_DateTimeOffset_from_millis_converts_correctly() {
+    var now = UtcDate.UtcNow;
+    var dt = UtcDate.FromMillis(new DateTimeOffset(now).ToUnixTimeMilliseconds());
+    
+    Assert.That(dt.Kind, Is.EqualTo(DateTimeKind.Utc));
+    Assert.That(dt, Is.EqualTo(now));
+  } 
 }

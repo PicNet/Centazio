@@ -5,6 +5,7 @@
   - smartsheest
   - email/reporting
   - web scrape
+- separate out the sample project from main repository
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug
 - set up azure devops testing pipeline (agent is ready)

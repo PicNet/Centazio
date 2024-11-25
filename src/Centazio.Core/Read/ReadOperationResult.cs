@@ -4,46 +4,41 @@ using Centazio.Core.Runner;
 namespace Centazio.Core.Read;
 
 public abstract record ReadOperationResult(
-    EOperationResult Result, 
+    EOperationResult Result,
     string Message, 
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
-    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, Exception), ILoggable {
-    
-  public static ReadOperationResult Create(string value) => String.IsNullOrWhiteSpace(value) ? new EmptyReadOperationResult() : new SingleRecordReadOperationResult(new (value));
-  public static ReadOperationResult Create(List<string> lst) => !lst.Any() ? new EmptyReadOperationResult() : new ListRecordsReadOperationResult(lst);
+    DateTime? NextCheckpoint = null,
+    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, NextCheckpoint, Exception), ILoggable {
+  
+  public static ReadOperationResult EmptyResult() => new EmptyReadOperationResult();
+  public static ReadOperationResult Create(string value, DateTime nextcheckpoint) => String.IsNullOrWhiteSpace(value) ? throw new Exception("Empty results should return ReadOperationResult.EmptyResult()") : new SingleRecordReadOperationResult(new (value), nextcheckpoint);
+  public static ReadOperationResult Create(List<string> lst, DateTime nextcheckpoint) => !lst.Any() ? throw new Exception("Empty results should return ReadOperationResult.EmptyResult()") : new ListRecordsReadOperationResult(lst, nextcheckpoint);
   
   public string LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
 
 }
 
 public record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-        : ReadOperationResult(
-                EOperationResult.Error, 
-                $"ErrorReadOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 
-                0, 
-                AbortVote, 
-                Exception);
+        : ReadOperationResult(EOperationResult.Error, $"ErrorReadOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 0, AbortVote, null, Exception);
 
 public record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
-    : ReadOperationResult(
-        EOperationResult.Success, 
-        "EmptyReadOperationResult", 
-        0, 
-        AbortVote);
+    : ReadOperationResult(EOperationResult.Success, "EmptyReadOperationResult", 0, AbortVote);
 
-public record SingleRecordReadOperationResult(ValidString Payload, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+// ReSharper disable once NotAccessedPositionalProperty.Global
+public record SingleRecordReadOperationResult(ValidString Payload, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
         : ReadOperationResult(
-            EOperationResult.Success, 
-            $"SingleRecordReadOperationResult[{Payload.Value.Length}]", 
-            Payload.Value.Length, AbortVote);
+            EOperationResult.Success,
+            $"SingleRecordReadOperationResult[{Payload.Value.Length}]",
+            Payload.Value.Length, AbortVote, SpecificNextCheckpoint);
 
-public record ListRecordsReadOperationResult(List<string> PayloadList, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+// ReSharper disable once NotAccessedPositionalProperty.Global
+public record ListRecordsReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(
-        EOperationResult.Success, 
+        EOperationResult.Success,
         $"ListRecordsReadOperationResult[{PayloadList.Count}]", 
         PayloadList.Any() ? PayloadList.Count : throw new ArgumentNullException(), 
-        AbortVote) {
+        AbortVote, SpecificNextCheckpoint) {
   public List<string> PayloadList { get; } = PayloadList.Any() && !PayloadList.Any(String.IsNullOrWhiteSpace) 
       ? PayloadList : throw new ArgumentNullException(nameof(PayloadList));
 }

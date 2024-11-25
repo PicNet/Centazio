@@ -44,8 +44,8 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
     return count == 0 ? throw new Exception("SaveObjectState failed") : state;
   }
 
-  public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
-    var created = ObjectState.Create(system.System, system.Stage, obj);
+  public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) {
+    var created = ObjectState.Create(system.System, system.Stage, obj, nextcheckpoint);
     
     await using var db = getdb();
     db.ObjectStates.Add(DtoHelpers.ToDto<ObjectState, ObjectState.Dto>(created));

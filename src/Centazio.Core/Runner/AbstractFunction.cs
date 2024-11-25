@@ -14,6 +14,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   private readonly IOperationRunner<C> oprunner;
   private readonly ICtlRepository ctl;
   
+  protected DateTime FunctionStartTime { get; private set; }
   protected FunctionConfig<C> Config { get; }
   protected SystemName System { get; }
   protected LifecycleStage Stage { get; }
@@ -30,7 +31,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected abstract FunctionConfig<C> GetFunctionConfiguration();
 
   public async Task<FunctionRunResults> RunFunction() {
-    var start = UtcDate.UtcNow;
+    FunctionStartTime = UtcDate.UtcNow;
     
     Log.Information("function started [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
     
@@ -61,7 +62,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       return new ErrorFunctionRunResults(ex);
     }
 
-    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
+    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(FunctionStartTime));
   }
 
   protected virtual async Task<List<OperationResult>> RunFunctionOperations() {
@@ -75,9 +76,8 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations
             .Select(async op => {
-      var state = await ctl.GetOrCreateObjectState(system, op.Object);
-      var checkpoint = state.LastSuccessStart ?? op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint;
-      return new OperationStateAndConfig<C>(state, conf, op, checkpoint);
+      var state = await ctl.GetOrCreateObjectState(system, op.Object, op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint);
+      return new OperationStateAndConfig<C>(state, conf, op, state.NextCheckpoint);
     }).Synchronous())
     .Where(op => op.State.Active)
     .ToList();
@@ -101,6 +101,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
       var result = await RunOp(op);
+      
       await SaveOp(op, opstart, result);
       
       Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result);
@@ -122,7 +123,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, OperationResult res) {
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
-          op.State.Success(start, res.AbortVote, message) :
+          op.State.Success(res.NextCheckpoint ?? start, start, res.AbortVote, message) :
           op.State.Error(start, res.AbortVote, message, res.Exception?.ToString());
       await ctl.SaveObjectState(newstate);
     }

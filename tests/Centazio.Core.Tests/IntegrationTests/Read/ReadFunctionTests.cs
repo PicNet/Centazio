@@ -46,26 +46,26 @@ public class ReadFunctionTests {
     // validate results
     var expjson = Json.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult([expjson]).ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult([expjson], UtcDate.UtcNow).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
     Assert.That(new List<IEnumerable> { sys0, obj0, staged0 }, Is.All.Empty);
     
     Assert.That(sys1.Single(), Is.EqualTo(SS(start)));
-    Assert.That(obj1.Single(), Is.EqualTo(OS(start, 0)));
+    Assert.That(obj1.Single(), Is.EqualTo(OS(start, start, 0)));
     Assert.That(staged1, Is.Empty);
     
     Assert.That(sys2.Single(), Is.EqualTo(SS(onetick)));
-    Assert.That(obj2.Single(), Is.EqualTo(OS(onetick, 1)));
+    Assert.That(obj2.Single(), Is.EqualTo(OS(onetick, onetick, 1)));
     Assert.That(staged2.Single(), Is.EqualTo(SE(staged2.Single().Id)));
     
     Assert.That(sys3.Single(), Is.EqualTo(SS(onetick)));
-    Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, 1)));
+    Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, onetick, 1)));
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
-    ObjectState OS(DateTime updated, int len) => new(sys, stg, sysent, true) {
+    ObjectState OS(DateTime updated, DateTime nextcheckpoint, int len) => new(sys, stg, sysent, nextcheckpoint, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success,
       LastAbortVote = EOperationAbortVote.Continue,
@@ -92,7 +92,7 @@ public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository
   public async Task<ReadOperationResult> GetUpdatesCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
-        new ListRecordsReadOperationResult(customers)
+        new ListRecordsReadOperationResult(customers, UtcDate.UtcNow)
         : new EmptyReadOperationResult();
   }
 }

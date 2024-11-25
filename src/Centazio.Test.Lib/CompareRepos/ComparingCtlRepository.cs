@@ -28,8 +28,8 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
-  public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj) {
-    var (result1, result2) = (await repo1.CreateObjectState(system, obj), await repo2.CreateObjectState(system, obj));
+  public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) {
+    var (result1, result2) = (await repo1.CreateObjectState(system, obj, nextcheckpoint), await repo2.CreateObjectState(system, obj, nextcheckpoint));
     return ValidateAndReturn(result1, result2);
   }
 
