@@ -1,6 +1,8 @@
-﻿using Centazio.Core.Secrets;
+﻿using System.Runtime.InteropServices;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
+using DotNet.Testcontainers.Builders;
 using Testcontainers.MsSql;
 
 namespace Centazio.Providers.SqlServer.Tests;
@@ -42,7 +44,12 @@ public class SqlConn {
     }
 
     async Task<string> ContainerInit() {
-      container = new MsSqlBuilder().Build();
+      var iswin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+      var builder = iswin ? new MsSqlBuilder() : new MsSqlBuilder()
+        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted("/opt/mssql-tools18/bin/sqlcmd", "-C", "-Q", "SELECT 1;"));
+      
+      container = builder.Build();
       await container.StartAsync();
       return container.GetConnectionString();
     }
