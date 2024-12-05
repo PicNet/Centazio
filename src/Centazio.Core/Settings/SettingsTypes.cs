@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Centazio.Core.Settings;
 
@@ -43,6 +44,7 @@ public record AzureSettings {
     public string? ResourceGroup { get; init; }
     public string? FunctionStorageAccId { get; init; }
     public string? AppServicePlanId { get; init; }
+    // ReSharper disable once CollectionNeverUpdated.Global
     public List<AzureFunctionSettings.Dto>? Functions { get; init; }
     
     public AzureSettings ToBase() => new (
