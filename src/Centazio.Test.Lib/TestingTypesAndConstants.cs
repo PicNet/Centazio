@@ -61,13 +61,15 @@ public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEnti
 }
 
 public record TestSettingsRaw {
-  public string? SecretsFolder { get; init; }
+  public List<string>? SecretsFolders { get; init; }
   
   public static explicit operator TestSettings(TestSettingsRaw raw) => new(
-      raw.SecretsFolder ?? throw new ArgumentNullException(nameof(SecretsFolder)));
+      raw.SecretsFolders ?? throw new ArgumentNullException(nameof(SecretsFolders)));
 }
 
-public record TestSettings(string SecretsFolder);
+public record TestSettings(List<string> SecretsFolders) {
+  public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
+}
 
 public record TestSecretsRaw {
   public string? AWS_KEY { get; init; }

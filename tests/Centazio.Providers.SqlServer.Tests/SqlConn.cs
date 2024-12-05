@@ -39,7 +39,7 @@ public class SqlConn {
     
     string RealInit() {
       var settings = (TestSettings) new SettingsLoader<TestSettingsRaw>().Load("dev");
-      var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.SecretsFolder, "dev").Load();
+      var secrets = (TestSecrets) new NetworkLocationEnvFileSecretsLoader<TestSecretsRaw>(settings.GetSecretsFolder(), "dev").Load();
       return secrets.SQL_CONN_STR;
     }
 

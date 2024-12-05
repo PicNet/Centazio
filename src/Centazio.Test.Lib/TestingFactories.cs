@@ -16,7 +16,7 @@ namespace Centazio.Test.Lib;
 public static class TestingFactories {
   
   public static CentazioSettings Settings() => new SettingsLoader<CentazioSettings.Dto>().Load("dev").ToBase();
-  public static CentazioSecrets Secrets() => new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(Settings().SecretsFolder, "dev").Load().ToBase();
+  public static CentazioSecrets Secrets() => new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(Settings().GetSecretsFolder(), "dev").Load().ToBase();
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

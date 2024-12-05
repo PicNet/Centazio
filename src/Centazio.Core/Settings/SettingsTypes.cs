@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 
 namespace Centazio.Core.Settings;
 
@@ -162,7 +163,7 @@ public record ClickUpSettings {
 }
 
 public record CentazioSettings {
-  public string SecretsFolder { get; }
+  public List<string> SecretsFolders { get; }
   public List<string> AllowedFunctionAssemblies { get; }
   public List<string> AllowedProviderAssemblies { get; }
   
@@ -182,8 +183,8 @@ public record CentazioSettings {
   private readonly ClickUpSettings? _ClickUp;
   public ClickUpSettings ClickUp => _ClickUp ?? throw new Exception($"ClickUp section missing from CentazioSettings");
 
-  private CentazioSettings (string secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, ClickUpSettings? clickup) {
-    SecretsFolder = secrets;
+  private CentazioSettings (List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, ClickUpSettings? clickup) {
+    SecretsFolders = secrets;
     AllowedFunctionAssemblies = funcass;
     AllowedProviderAssemblies = provass;
     
@@ -194,9 +195,11 @@ public record CentazioSettings {
     
     _ClickUp = clickup;
   }
-    
+
+  public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
+
   public record Dto : IDto<CentazioSettings> {
-    public string? SecretsFolder { get; init; }
+    public List<string>? SecretsFolders { get; init; }
     public List<string>? AllowedFunctionAssemblies { get; init; }
     public List<string>? AllowedProviderAssemblies { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
@@ -206,7 +209,7 @@ public record CentazioSettings {
     public ClickUpSettings.Dto? ClickUp { get; init; }
     
     public CentazioSettings ToBase() => new (
-        String.IsNullOrWhiteSpace(SecretsFolder) ? throw new ArgumentNullException(nameof(SecretsFolder)) : SecretsFolder.Trim(),
+        SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
         AllowedFunctionAssemblies ?? [nameof(Centazio)],
         AllowedProviderAssemblies ?? [nameof(Centazio)],
         AwsSettings?.ToBase(),
@@ -215,4 +218,5 @@ public record CentazioSettings {
         CtlRepository?.ToBase(),
         ClickUp?.ToBase());
   }
+
 }

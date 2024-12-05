@@ -9,16 +9,16 @@ internal static class InspectUtils {
   internal static string SolnDir => solndir ??= ReflectionUtils.GetSolutionRootDirectory();
   
   public static List<string> CsFiles(string? dir, params string[] ignore) => GetSolnFiles(dir, "*.cs")
-      .Where(f => !ignore.Any(f.EndsWith) && !f.Contains(@"\obj\"))
+      .Where(f => !ignore.Any(f.EndsWith) && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
       .ToList();
   
   public static List<string> GetCentazioDllFiles() {
     var centazios = GetSolnFiles(null, "*.dll")
-        .Where(dll => dll.IndexOf(@"\obj\", StringComparison.OrdinalIgnoreCase) < 0 && dll.Split("\\").Last().IndexOf("Centazio", StringComparison.OrdinalIgnoreCase) >= 0)
+        .Where(dll => dll.IndexOf($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) < 0 && dll.Split(Path.DirectorySeparatorChar).Last().IndexOf("Centazio", StringComparison.OrdinalIgnoreCase) >= 0)
         .ToList();
     var distinct = new Dictionary<string, (DateTime LastWrite, string Full)>();
     centazios.ForEach(file => {
-      var (lastwrite, filename) = (File.GetLastWriteTime(file), file.Split("\\").Last());
+      var (lastwrite, filename) = (File.GetLastWriteTime(file), file.Split(Path.DirectorySeparatorChar).Last());
       if (!distinct.ContainsKey(filename) || distinct[filename].LastWrite < lastwrite) 
         distinct[filename] = (lastwrite, file); 
     });

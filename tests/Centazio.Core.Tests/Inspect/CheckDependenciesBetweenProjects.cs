@@ -39,7 +39,7 @@ public class CheckDependenciesBetweenProjects {
         .Select(m => TrimProj(m.Groups[1].Value))
         .ToList());
     
-    string TrimProj(string file) => file.Split("\\").Last().Replace(".csproj", String.Empty);
+    string TrimProj(string file) => file.Split('\\', '/').Last().Replace(".csproj", String.Empty);
   }
 
 }

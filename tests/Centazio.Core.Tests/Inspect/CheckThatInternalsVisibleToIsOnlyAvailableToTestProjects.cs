@@ -8,7 +8,7 @@ public class CheckThatInternalsVisibleToIsOnlyAvailableToTestProjects {
   [Test] public void Go() {
     var errors = new List<string>();
     InspectUtils.GetCentazioDllFiles().ForEach(dll => {
-      var filename = dll.Split("\\").Last();
+      var filename = dll.Split(Path.DirectorySeparatorChar).Last();
       var istest = filename.IndexOf("test", StringComparison.OrdinalIgnoreCase) >= 0;
       
       var friends = Assembly.LoadFile(dll).CustomAttributes

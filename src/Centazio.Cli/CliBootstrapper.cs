@@ -40,7 +40,7 @@ internal class CliBootstrapper {
         .AddSingleton<CentazioSettings>(_ => new SettingsLoader<CentazioSettings.Dto>().Load("dev").ToBase())
         .AddSingleton<CentazioSecrets>(provider => {
           var settings = provider.GetRequiredService<CentazioSettings>();
-          return new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(settings.SecretsFolder, "dev").Load().ToBase();
+          return new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(settings.GetSecretsFolder(), "dev").Load().ToBase();
         })
         
         .AddSingleton<Cli>()
