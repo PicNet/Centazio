@@ -8,7 +8,6 @@ namespace Centazio.Core.Write;
 public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IOperationRunner<C> where C : WriteOperationConfig {
   
   public async Task<OperationResult> RunOperation(OperationStateAndConfig<C> op) {
-    // todo: remove all DateTime.MinValue, should have no magic 'values' like this.  Do throughout system
     var coretype = op.State.Object.ToCoreEntityTypeName;
     var pending = await core.GetEntitiesToWrite(op.State.System, coretype, op.Checkpoint);
     var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending.Select(t => t.CoreEntity).ToList());
