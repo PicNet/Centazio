@@ -14,6 +14,8 @@ public static class ReflectionUtils {
     return rprop.GetValue(o)?.ToString() ?? throw new Exception();
   }
   
+  public static bool IsDefault(object val) => val.GetType().IsValueType && val.Equals(Activator.CreateInstance(val.GetType()));
+  
   public static bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
   
   public static bool IsNullable(PropertyInfo p) {

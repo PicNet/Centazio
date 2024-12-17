@@ -1,4 +1,7 @@
 # Todo
+- all internal methods used only for testing should be extension methods in the test project to remove need
+  of poluting core code with testing boilerplate
+- add Newtonsoft usage unit test
 - Good case study:
   - crm
   - finance

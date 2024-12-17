@@ -7,6 +7,7 @@ public interface ISecretsLoader<out T>  {
   T Load();
 }
 
+// todo: add validation to secrets loader base class
 public class NetworkLocationEnvFileSecretsLoader<T>(string dir, string environment) : ISecretsLoader<T> where T : new() {
   private readonly string path = Path.Combine(dir, $"{environment}.env");
   public T Load() {
