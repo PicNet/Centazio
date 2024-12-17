@@ -7,8 +7,7 @@ public interface ISettingsLoader<out TOut> {
   TOut Load(string environment);
 }
 
-public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_NAME) 
-    : ISettingsLoader<T> where T : class, new() {
+public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_NAME) : ISettingsLoader<T> where T : new() {
 
   private const string DEFAULT_FILE_NAME = "settings.json";
   

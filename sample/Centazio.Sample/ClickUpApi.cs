@@ -1,10 +1,8 @@
 ﻿using Centazio.Core;
-using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 
 namespace Centazio.Sample;
 
-public class ClickUpApi(CentazioSettings settings, CentazioSecrets secrets) {
+public class ClickUpApi(SampleSettings settings, SampleSecrets secrets) {
 
   private static HttpClient? http; 
   

@@ -11,9 +11,19 @@ public record CentazioSecrets {
   public string AZ_SECRET_ID { get; }
   public string AZ_SUBSCRIPTION_ID { get; }
   
-  public string CLICKUP_TOKEN { get; }
   
-  private CentazioSecrets(string AWS_KEY, string AWS_SECRET, string AWS_REGION, string AZ_TENANT_ID, string AZ_CLIENT_ID, string AZ_SECRET_ID, string AZ_SUBSCRIPTION_ID, string CLICKUP_TOKEN) {
+  
+  protected CentazioSecrets(CentazioSecrets other) {
+    this.AWS_KEY = other.AWS_KEY;
+    this.AWS_SECRET = other.AWS_SECRET;
+    this.AWS_REGION = other.AWS_REGION;
+    this.AZ_TENANT_ID = other.AZ_TENANT_ID;
+    this.AZ_CLIENT_ID = other.AZ_CLIENT_ID;
+    this.AZ_SECRET_ID = other.AZ_SECRET_ID;
+    this.AZ_SUBSCRIPTION_ID = other.AZ_SUBSCRIPTION_ID;
+  }
+  
+  private CentazioSecrets(string AWS_KEY, string AWS_SECRET, string AWS_REGION, string AZ_TENANT_ID, string AZ_CLIENT_ID, string AZ_SECRET_ID, string AZ_SUBSCRIPTION_ID) {
     this.AWS_KEY = AWS_KEY;
     this.AWS_SECRET = AWS_SECRET;
     this.AWS_REGION = AWS_REGION;
@@ -21,7 +31,6 @@ public record CentazioSecrets {
     this.AZ_CLIENT_ID = AZ_CLIENT_ID;
     this.AZ_SECRET_ID = AZ_SECRET_ID;
     this.AZ_SUBSCRIPTION_ID = AZ_SUBSCRIPTION_ID;
-    this.CLICKUP_TOKEN = CLICKUP_TOKEN;
   }
   
   public record Dto : IDto<CentazioSecrets> {
@@ -44,10 +53,6 @@ public record CentazioSecrets {
       String.IsNullOrWhiteSpace(AZ_TENANT_ID) ? throw new ArgumentNullException(nameof(AZ_TENANT_ID)) : AZ_TENANT_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_CLIENT_ID) ? throw new ArgumentNullException(nameof(AZ_CLIENT_ID)) : AZ_CLIENT_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : AZ_SECRET_ID.Trim(),
-      String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim(),
-      
-      // todo: secrets and settings should be dynamic
-      String.IsNullOrWhiteSpace(CLICKUP_TOKEN) ? throw new ArgumentNullException(nameof(CLICKUP_TOKEN)) : CLICKUP_TOKEN.Trim()
-    );
+      String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim());
   }
 }
