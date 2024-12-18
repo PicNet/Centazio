@@ -7,7 +7,6 @@ public interface ISecretsLoader  {
   T Load<T>();
 }
 
-// todo: add validation to secrets loader base class, so this will work even for ENV VARIABLE loader
 public class NetworkLocationEnvFileSecretsLoader(string dir, string environment) : ISecretsLoader {
   private readonly string path = Path.Combine(dir, $"{environment}.env");
   public T Load<T>() {
