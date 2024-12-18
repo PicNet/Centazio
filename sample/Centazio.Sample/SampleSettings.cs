@@ -3,8 +3,6 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Sample;
 
-// todo: this is not great, consider using `newjson` branch
-//    code for automatic json deserialisation for settings and secrets?
 public record SampleSettings : CentazioSettings {
 
   private readonly ClickUpSettings? _ClickUp;

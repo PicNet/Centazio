@@ -37,10 +37,10 @@ internal class CliBootstrapper {
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMeneCommand>()
-        .AddSingleton<CentazioSettings>(_ => new SettingsLoader<CentazioSettings.Dto>().Load("dev").ToBase())
+        .AddSingleton<CentazioSettings>(_ => new SettingsLoader().Load<CentazioSettings>("dev"))
         .AddSingleton<CentazioSecrets>(provider => {
           var settings = provider.GetRequiredService<CentazioSettings>();
-          return new NetworkLocationEnvFileSecretsLoader<CentazioSecrets.Dto>(settings.GetSecretsFolder(), "dev").Load().ToBase();
+          return new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder(), "dev").Load<CentazioSecrets>();
         })
         
         .AddSingleton<Cli>()

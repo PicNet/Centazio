@@ -3,15 +3,15 @@ using Serilog;
 
 namespace Centazio.Core.Settings;
 
-public interface ISettingsLoader<out TOut> {
-  TOut Load(string environment);
+public interface ISettingsLoader {
+  T Load<T>(string environment);
 }
 
-public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_NAME) : ISettingsLoader<T> where T : new() {
+public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) : ISettingsLoader {
 
   private const string DEFAULT_FILE_NAME = "settings.json";
   
-  public T Load(string environment) {
+  public T Load<T>(string environment) {
     if (!filename.EndsWith(".json")) throw new Exception("settings file should have a json extension");
     
     var basefile = SearchForSettingsFile(filename) ?? throw new Exception($"could not find settings file [{filename}] in the current directory hierarchy");
@@ -21,9 +21,10 @@ public class SettingsLoader<T>(string filename = SettingsLoader<T>.DEFAULT_FILE_
         SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
     if (envfile is not null) { builder.AddJsonFile(envfile, false); }
     
-    var obj = new T();
+    var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
+    var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
     builder.Build().Bind(obj);
-    return obj;
+    return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
   }
 
   private string? SearchForSettingsFile(string file) {

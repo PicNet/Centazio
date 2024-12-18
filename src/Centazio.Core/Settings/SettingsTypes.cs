@@ -150,10 +150,10 @@ public record CentazioSettings {
   public List<string> AllowedFunctionAssemblies { get; }
   public List<string> AllowedProviderAssemblies { get; }
   
-  public readonly AwsSettings? _AwsSettings;
+  private readonly AwsSettings? _AwsSettings;
   public AwsSettings AwsSettings => _AwsSettings ?? throw new Exception($"AwsSettings section missing from CentazioSettings");
   
-  public readonly AzureSettings? _AzureSettings;
+  private readonly AzureSettings? _AzureSettings;
   public AzureSettings AzureSettings => _AzureSettings ?? throw new Exception($"AzureSettings section missing from CentazioSettings");
   
   private readonly StagedEntityRepositorySettings? _StagedEntityRepository;

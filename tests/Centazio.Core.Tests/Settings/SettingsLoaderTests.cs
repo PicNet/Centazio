@@ -25,11 +25,16 @@ public class SettingsLoaderTests {
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "Overriden", "No longer empty", "No longer missing")));
   }
   
+  [Test] public void Test_settings_loader_nullable_but_innacessible_properties() {
+    var settings = F.Settings();
+    Assert.Throws<Exception>(() => { _ = settings.AwsSettings; });
+  }
+  
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
       File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);
       File.WriteAllText(Path.Combine(dir, $"test_settings.{environment}.json"), test_settings_env_json);
-      return (TestSettingsObj) new SettingsLoader<TestSettingsObjRaw>("test_settings.json").Load(environment); 
+      return (TestSettingsObj) new SettingsLoader("test_settings.json").Load<TestSettingsObjRaw>(environment); 
     } finally { 
       File.Delete(Path.Combine(dir, "test_settings.json"));
       File.Delete(Path.Combine(dir, $"test_settings.{environment}.json"));
@@ -49,4 +54,6 @@ internal record TestSettingsObjRaw {
       raw.EmptySetting ?? throw new ArgumentNullException(nameof(EmptySetting)),
       raw.MissingSetting);
 }
+
+// ReSharper disable NotAccessedPositionalProperty.Global
 internal record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string? MissingSetting);

@@ -7,7 +7,7 @@ namespace Centazio.Sample.Tests;
 public class ClickUpApiTests {
 
   [Test] public async Task Test_ClickUpApi_GetTasksAfter() {
-    var (settings, secrets) = (TestingFactories.Settings<SampleSettings, SampleSettings.Dto>(), TestingFactories.Secrets<SampleSecrets, SampleSecrets.Dto>());
+    var (settings, secrets) = (TestingFactories.Settings<SampleSettings>(), TestingFactories.Secrets<SampleSecrets>());
     var empty = await new ClickUpApi(settings, secrets).GetTasksAfter(UtcDate.UtcNow);
     var all = await new ClickUpApi(settings, secrets).GetTasksAfter(DateTime.MinValue.ToUniversalTime());
     var page1_dt_updateds = Regex.Matches(all, @"""date_updated"":""([^""]+)""").Select(m => Int64.Parse(m.Groups[1].Value)).ToList();
