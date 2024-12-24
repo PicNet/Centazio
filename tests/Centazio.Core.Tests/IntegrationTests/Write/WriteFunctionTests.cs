@@ -36,14 +36,14 @@ public class WriteFunctionTests {
     var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22.CoreEntity)) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
-    Assert.That(upsert1, Is.EquivalentTo(new [] { customer1, customer2 }));
+    Assert.That(upsert1, Is.EquivalentTo([customer1, customer2]));
     Assert.That(res1.EntitiesUpdated, Is.Empty);
 
     Assert.That(res1.EntitiesCreated, Is.EquivalentTo(expresults1));
     Assert.That(created1, Is.EquivalentTo(expresults1));
     Assert.That(updated1, Is.Empty);
     
-    Assert.That(upsert2, Is.EquivalentTo(new [] { customer22 }));
+    Assert.That(upsert2, Is.EquivalentTo([customer22]));
     Assert.That(res2.EntitiesCreated, Is.Empty);
     Assert.That(res2.EntitiesUpdated, Is.EquivalentTo(expresults2));
     Assert.That(created2, Is.Empty);
@@ -77,7 +77,7 @@ public class WriteFunctionTests {
     Assert.That(obj.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName)));
     Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName, func.ExposeConfig.DefaultFirstTimeCheckpoint)
         .Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? String.Empty, func.Thrown?.ToString())));
-    Assert.That(allcusts, Is.EquivalentTo(new [] { ceam.CoreEntity }));
+    Assert.That(allcusts, Is.EquivalentTo([ceam.CoreEntity]));
     Assert.That(maps, Is.Empty);
   }
 }

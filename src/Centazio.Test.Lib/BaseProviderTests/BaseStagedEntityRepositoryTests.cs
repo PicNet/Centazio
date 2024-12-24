@@ -317,7 +317,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     
     Assert.That(duplicate, Is.Null);
     Assert.That(staged, Is.EqualTo(expected));
-    Assert.That(ses, Is.EquivalentTo(new [] {expected}));
+    Assert.That(ses, Is.EquivalentTo([expected]));
   }
   
   [Test] public async Task Test_staging_multiple_entities_ignores_duplicates() {
@@ -339,8 +339,8 @@ public abstract class BaseStagedEntityRepositoryTests {
     var all = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Today);
     var unpromoted = await repo.GetUnpromoted(Constants.System1Name, Constants.SystemEntityName, dt.Today);
 
-    Assert.That(all, Is.EquivalentTo(new [] {s1, s2, s3}));
-    Assert.That(unpromoted, Is.EquivalentTo(new [] {s1, s3}));
+    Assert.That(all, Is.EquivalentTo([s1, s2, s3]));
+    Assert.That(unpromoted, Is.EquivalentTo([s1, s3]));
   }
   
   private StagedEntity SetData(StagedEntity e, string data) => e with { Data = new(data) };

@@ -45,7 +45,7 @@ public class AbstractFunctionStaticHelperTests {
     var config = new FunctionConfig<ReadOperationConfig>(Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
     var states = await AbstractFunction<ReadOperationConfig>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.OpConfig.Object.Value).ToList();
-    Assert.That(names, Is.EquivalentTo(new [] {"1", "3", "4"}));
+    Assert.That(names, Is.EquivalentTo(["1", "3", "4"]));
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
@@ -73,7 +73,7 @@ public class AbstractFunctionStaticHelperTests {
       Op("6", "0 0 * * * *", Dt("2024-08-01T01:00:00Z"))    // Hourly at 00 minutes, not yet ready
     } ;
     var ready = AbstractFunction<ReadOperationConfig>.GetReadyOperations(ops); 
-    Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(new [] { "1", "2", "3" }));
+    Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(["1", "2", "3"]));
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
@@ -87,8 +87,8 @@ public class AbstractFunctionStaticHelperTests {
     
     var newstates = repo.Objects.Values.ToList();
 
-    Assert.That(results1, Is.EquivalentTo(new [] { new EmptyReadOperationResult() }));
-    Assert.That(results2, Is.EquivalentTo(new [] { new ErrorReadOperationResult(EOperationAbortVote.Abort) }));
+    Assert.That(results1, Is.EquivalentTo([new EmptyReadOperationResult()]));
+    Assert.That(results2, Is.EquivalentTo([new ErrorReadOperationResult(EOperationAbortVote.Abort)]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue, 0, UtcDate.UtcNow)));
@@ -106,9 +106,9 @@ public class AbstractFunctionStaticHelperTests {
     var results = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo);
     var newstates = repo.Objects.Values.ToList();
     
-    Assert.That(results, Is.EquivalentTo(new [] { 
+    Assert.That(results, Is.EquivalentTo([
       new ErrorReadOperationResult(EOperationAbortVote.Abort)
-    }));
+    ]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow)));

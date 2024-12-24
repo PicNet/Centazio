@@ -69,7 +69,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
-    Assert.That(results.OpResults, Is.EquivalentTo(new[] { new EmptyReadOperationResult() }));
+    Assert.That(results.OpResults, Is.EquivalentTo([new EmptyReadOperationResult()]));
   }
   
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>([

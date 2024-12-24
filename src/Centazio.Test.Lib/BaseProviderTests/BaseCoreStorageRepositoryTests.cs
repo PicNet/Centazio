@@ -32,10 +32,10 @@ public abstract class BaseCoreStorageRepositoryTests {
     var list2 = await repo.GetAllCoreEntities();
     
     Assert.That(retreived1, Is.EqualTo(created.CoreEntity));
-    Assert.That(list1, Is.EquivalentTo(new [] { created.CoreEntity }));
+    Assert.That(list1, Is.EquivalentTo([created.CoreEntity]));
     Assert.That(retreived1, Is.Not.EqualTo(updated.CoreEntity));
     Assert.That(retreived2, Is.EqualTo(updated.CoreEntity));
-    Assert.That(list2, Is.EquivalentTo(new [] { updated.CoreEntity }));
+    Assert.That(list2, Is.EquivalentTo([updated.CoreEntity]));
   }
   
   [Test] public async Task Test_batch_upsert() {
@@ -54,7 +54,7 @@ public abstract class BaseCoreStorageRepositoryTests {
     var list2 = await repo.GetAllCoreEntities();
     
     Assert.That(list1, Is.EquivalentTo(batch1.Select(e => e.CoreEntity)));
-    Assert.That(list2, Is.EquivalentTo(new [] { batch2[0].CoreEntity, batch1[1].CoreEntity, batch2[1].CoreEntity }));
+    Assert.That(list2, Is.EquivalentTo([batch2[0].CoreEntity, batch1[1].CoreEntity, batch2[1].CoreEntity]));
   }
   
   [Test] public async Task Test_query() {

@@ -67,16 +67,16 @@ public class PromoteFunctionTests {
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored as it has already been staged and checksum did not change
-    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
+    Assert.That(staged23, Is.EquivalentTo([SE(json2, staged23[0].Id), SE(json3, staged23[1].Id)]));
     Assert.That(result23, Is.Not.Null);
-    Assert.That(result23.ToPromote.Select(t => t.CoreEntity), Is.EquivalentTo(new [] { ToCore(json2), ToCore(json3) }));
-    Assert.That(result23.ToPromote.Select(t => t.StagedEntity), Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
+    Assert.That(result23.ToPromote.Select(t => t.CoreEntity), Is.EquivalentTo([ToCore(json2), ToCore(json3)]));
+    Assert.That(result23.ToPromote.Select(t => t.StagedEntity), Is.EquivalentTo([SE(json2, staged23[0].Id), SE(json3, staged23[1].Id)]));
     Assert.That(result23.ToIgnore, Is.Empty); 
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));
     Assert.That(obj23.Single(), Is.EqualTo(OS(start, UtcDate.UtcNow, UtcDate.UtcNow, 2, 0)));
-    Assert.That(await core.GetAllCoreEntities(), Is.EquivalentTo(new [] { ToCore(json1), ToCore(json2), ToCore(json3) }));
+    Assert.That(await core.GetAllCoreEntities(), Is.EquivalentTo([ToCore(json1), ToCore(json2), ToCore(json3)]));
   }
   
   [Test] public async Task Test_standalone_Promote_function_that_ignores_staged_entities() {
@@ -113,9 +113,9 @@ public class PromoteFunctionTests {
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
     // cust1 is ignored (and not staged) as it has already been staged and checksum did not change
-    Assert.That(staged23, Is.EquivalentTo(new [] { SE(json2, staged23[0].Id), SE(json3, staged23[1].Id) }));
+    Assert.That(staged23, Is.EquivalentTo([SE(json2, staged23[0].Id), SE(json3, staged23[1].Id)]));
     Assert.That(result23.ToPromote.ToList(), Has.Count.EqualTo(0));
-    Assert.That(result23.ToIgnore, Is.EquivalentTo(new [] { (SE(json2, staged23[0].Id), new ValidString("ignore")), (SE(json3, staged23[1].Id), new ValidString("ignore")) }));
+    Assert.That(result23.ToIgnore, Is.EquivalentTo([(SE(json2, staged23[0].Id), new ValidString("ignore")), (SE(json3, staged23[1].Id), new ValidString("ignore"))]));
     var exp23 = new SuccessPromoteOperationResult(result23.ToPromote, result23.ToIgnore);
     Assert.That(result23, Is.EqualTo(exp23));
     Assert.That(sys23.Single(), Is.EqualTo(SS(start, UtcDate.UtcNow)));

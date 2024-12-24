@@ -20,7 +20,7 @@ public class PromotionStepsTests {
     
     steps.IgnoreUpdatesToSameEntityInBatch();
     
-    Assert.That(steps.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo(new [] { true, true, false, false }));
+    Assert.That(steps.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo([true, true, false, false]));
   }
   
   [Test] public void Test_IgnoreEntitiesBouncingBack() {
@@ -40,8 +40,8 @@ public class PromotionStepsTests {
     
     steps1.IgnoreEntitiesBouncingBack(); steps2.IgnoreEntitiesBouncingBack();
     
-    Assert.That(steps1.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo(new [] { false, true, false, true }));
-    Assert.That(steps2.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo(new [] { true, false, true, false }));
+    Assert.That(steps1.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo([false, true, false, true]));
+    Assert.That(steps2.bags.Select(bag => bag.IsIgnore), Is.EquivalentTo([true, false, true, false]));
   }
 
   
