@@ -3,7 +3,6 @@
   of poluting core code with testing boilerplate
 - staging should only allow array of entities, not whole payload to do differential checks.  This will need
   json helpers to split the payload into elements
-- add Newtonsoft usage unit test
 - bootstrapper that allows all configuration and creation of required components in a guided fashion
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - working sample project using sqlite
