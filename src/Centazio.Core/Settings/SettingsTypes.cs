@@ -205,5 +205,5 @@ public record CentazioSettings {
         CtlRepository?.ToBase());
   }
 
-  class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
+  internal class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 }

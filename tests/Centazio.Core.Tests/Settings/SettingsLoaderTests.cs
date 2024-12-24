@@ -27,7 +27,7 @@ public class SettingsLoaderTests {
   
   [Test] public void Test_settings_loader_nullable_but_innacessible_properties() {
     var settings = F.Settings();
-    Assert.Throws<Exception>(() => { _ = settings.AwsSettings; });
+    Assert.Throws<CentazioSettings.SettingsSectionMissingException>(() => { _ = settings.AwsSettings; });
   }
   
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
