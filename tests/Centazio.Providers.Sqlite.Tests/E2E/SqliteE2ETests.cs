@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -22,9 +23,14 @@ public class SqliteSimulationProvider : ISimulationProvider {
   
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqliteDbFieldsHelper();
-    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext("centazio_ctl.db"), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("staged_entity.db")), dbf).Initialise();
-    CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationCoreStorageDbContext("core_storage.db"), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
+    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
+        "Data Source=centazio_ctl.db",
+        nameof(Core.Ctl).ToLower(), 
+        nameof(SystemState).ToLower(), 
+        nameof(ObjectState).ToLower(), 
+        nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), dbf).Initialise();
+    CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationCoreStorageDbContext("Data Source=core_storage.db"), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

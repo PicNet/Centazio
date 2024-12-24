@@ -15,6 +15,8 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
     if (!filename.EndsWith(".json")) throw new Exception("settings file should have a json extension");
     
     var basefile = SearchForSettingsFile(filename) ?? throw new Exception($"could not find settings file [{filename}] in the current directory hierarchy");
+    Log.Debug($"loading settings - file[{basefile}] environment[{environment}]");
+    
     var builder = new ConfigurationBuilder().AddJsonFile(basefile, false);
     var envfile = String.IsNullOrEmpty(environment) ? 
         null : 
@@ -30,10 +32,8 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
   private string? SearchForSettingsFile(string file) {
     string? Impl(string dir) {
       var path = Path.Combine(dir, file);
-      if (File.Exists(path)) {
-        Log.Debug("loading settings {Path}", path);
-        return path;
-      }
+      if (File.Exists(path)) return path;
+      
       var parent = Directory.GetParent(dir)?.FullName;
       return parent is null ? null : Impl(parent);
     }

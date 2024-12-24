@@ -37,22 +37,9 @@ public static class ReflectionUtils {
     return t.BaseType is not null ? GetPropAttribute<A>(t.BaseType, prop) : null;
   }
   
-  public static string GetSolutionRootDirectory() {
-    var file = "azure-pipelines.yml";
-
-    string? Impl(string dir) {
-      var path = Path.Combine(dir, file);
-      if (File.Exists(path)) return dir;
-
-      var parent = Directory.GetParent(dir)?.FullName;
-      return parent is null ? null : Impl(parent);
-    }
-    return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
-  }
-
   public static List<Type> GetAllTypesThatImplement(Type t, List<string> assnames) {
     var ignore = new [] { "Centazio.Core", "Centazio.Test", "Centazio.Cli" };
-    var root = GetSolutionRootDirectory();
+    var root = FsUtils.GetSolutionRootDirectory();
     var done = new Dictionary<string, bool>();
     return Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories).SelectMany(dll => {
       var assname = dll.Split('\\').Last();

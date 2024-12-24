@@ -1,7 +1,13 @@
 # Todo
+- update all nugets
 - all internal methods used only for testing should be extension methods in the test project to remove need
   of poluting core code with testing boilerplate
+- staging should only allow array of entities, not whole payload to do differential checks.  This will need
+  json helpers to split the payload into elements
 - add Newtonsoft usage unit test
+- bootstrapper that allows all configuration and creation of required components in a guided fashion
+- a code generated (runtime) wrapper to deploy to lambda/azure/gcp
+- working sample project using sqlite
 - Good case study:
   - crm
   - finance
@@ -12,7 +18,6 @@
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug
 - set up azure devops testing pipeline (agent is ready)
-- self-hosted runner
 - azure runner
 - aws runner
 

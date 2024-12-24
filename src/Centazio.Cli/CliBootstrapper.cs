@@ -15,7 +15,7 @@ return new CliBootstrapper().Initialise().Start(args);
 internal class CliBootstrapper {
 
   public Cli Initialise() { 
-    Log.Logger = LogInitialiser.GetFileConfig().CreateLogger();
+    Log.Logger = LogInitialiser.GetFileAndConsoleConfig().CreateLogger();
     var services = InitialiseDi();
     var cli = services.GetRequiredService<Cli>();
     
@@ -40,7 +40,7 @@ internal class CliBootstrapper {
         .AddSingleton<CentazioSettings>(_ => new SettingsLoader().Load<CentazioSettings>("dev"))
         .AddSingleton<CentazioSecrets>(provider => {
           var settings = provider.GetRequiredService<CentazioSettings>();
-          return new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder(), "dev").Load<CentazioSecrets>();
+          return new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev");
         })
         
         .AddSingleton<Cli>()

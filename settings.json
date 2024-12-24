@@ -3,5 +3,21 @@
   "ClickUp": {
     "BaseUrl": "https://api.clickup.com/api/v2/",
     "ListId": "186791674"
+  },
+  "StagedEntityRepository": {
+    "Provider": "Sqlite",
+    "ConnectionString": "Data Source=staging.db",
+    "SchemaName": "ctl",
+    "TableName": "staging",
+    "CreateSchema": true
+  },
+  "CtlRepository": {
+    "Provider": "Sqlite",
+    "ConnectionString": "Data Source=ctl.db",
+    "SchemaName": "ctl",
+    "SystemStateTableName":  "system_state",
+    "ObjectStateTableName":  "object_state", 
+    "CoreToSysMapTableName": "core_sys_map",
+    "CreateSchema": true
   }
 }

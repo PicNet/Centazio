@@ -151,16 +151,16 @@ public record CentazioSettings {
   public List<string> AllowedProviderAssemblies { get; }
   
   private readonly AwsSettings? _AwsSettings;
-  public AwsSettings AwsSettings => _AwsSettings ?? throw new Exception($"AwsSettings section missing from CentazioSettings");
+  public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
   
   private readonly AzureSettings? _AzureSettings;
-  public AzureSettings AzureSettings => _AzureSettings ?? throw new Exception($"AzureSettings section missing from CentazioSettings");
+  public AzureSettings AzureSettings => _AzureSettings ?? throw new SettingsSectionMissingException(nameof(AzureSettings));
   
   private readonly StagedEntityRepositorySettings? _StagedEntityRepository;
-  public StagedEntityRepositorySettings StagedEntityRepository => _StagedEntityRepository ?? throw new Exception($"StagedEntityRepository section missing from CentazioSettings");
+  public StagedEntityRepositorySettings StagedEntityRepository => _StagedEntityRepository ?? throw new SettingsSectionMissingException(nameof(StagedEntityRepository));
   
   private readonly CtlRepositorySettings? _CtlRepository;
-  public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new Exception($"CtlRepository section missing from CentazioSettings");
+  public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new SettingsSectionMissingException(nameof(CtlRepository));
   
   protected CentazioSettings (CentazioSettings other) {
     SecretsFolders = other.SecretsFolders;
@@ -205,4 +205,5 @@ public record CentazioSettings {
         CtlRepository?.ToBase());
   }
 
+  class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 }

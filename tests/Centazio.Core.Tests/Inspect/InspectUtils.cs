@@ -4,9 +4,6 @@ using Centazio.Core.Misc;
 namespace Centazio.Core.Tests.Inspect;
 
 internal static class InspectUtils {
-
-  private static string? solndir;
-  internal static string SolnDir => solndir ??= ReflectionUtils.GetSolutionRootDirectory();
   
   public static List<string> CsFiles(string? dir, params string[] ignore) => GetSolnFiles(dir, "*.cs")
       .Where(f => !ignore.Any(f.EndsWith) && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
@@ -27,5 +24,5 @@ internal static class InspectUtils {
   
   public static List<Assembly> LoadCentazioAssemblies() => GetCentazioDllFiles().Select(Assembly.LoadFrom).ToList();
   
-  public static List<string> GetSolnFiles(string? dir, string extension) => Directory.GetFiles(dir ?? SolnDir, extension, SearchOption.AllDirectories).ToList();
+  public static List<string> GetSolnFiles(string? dir, string extension) => Directory.GetFiles(dir ?? FsUtils.GetSolutionRootDirectory(), extension, SearchOption.AllDirectories).ToList();
 }

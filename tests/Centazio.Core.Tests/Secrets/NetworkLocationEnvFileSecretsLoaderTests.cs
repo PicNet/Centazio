@@ -14,7 +14,7 @@ public class NetworkLocationEnvFileSecretsLoaderTests {
     var file = $"{env}.env";
     try { 
       File.WriteAllText(file, CONTENTS);
-      return (TestSettingsTargetObj) new NetworkLocationEnvFileSecretsLoader(".", env).Load<TestSettingsTargetObjRaw>();
+      return (TestSettingsTargetObj) new NetworkLocationEnvFileSecretsLoader(".").Load<TestSettingsTargetObjRaw>(env);
     }
     finally { File.Delete(file); }
   }

@@ -1,20 +1,24 @@
 ﻿using System.Reflection;
+using Serilog;
 using Exception = System.Exception;
 
 namespace Centazio.Core.Secrets;
 
 public interface ISecretsLoader  {
-  T Load<T>();
+  T Load<T>(string environment);
 }
 
-public class NetworkLocationEnvFileSecretsLoader(string dir, string environment) : ISecretsLoader {
-  private readonly string path = Path.Combine(dir, $"{environment}.env");
-  public T Load<T>() {
-    var secrets = LoadSecretsFileAsDictionary();
+public class NetworkLocationEnvFileSecretsLoader(string dir) : ISecretsLoader {
+  
+  public T Load<T>(string environment) {
+    var path = Path.Combine(dir, $"{environment}.env");
+    Log.Debug($"loading secrets - file [{path}]");
+    
+    var secrets = LoadSecretsFileAsDictionary(path);
     return ValidateAndSetLoadedSecrets<T>(secrets); 
   }
 
-  private Dictionary<string, string> LoadSecretsFileAsDictionary() => File.ReadAllLines(path)
+  private Dictionary<string, string> LoadSecretsFileAsDictionary(string path) => File.ReadAllLines(path)
       .Select(l => l.Split("#")[0].Trim())
       .Where(l => !String.IsNullOrEmpty(l))
       .Select(l => {
@@ -33,7 +37,7 @@ public class NetworkLocationEnvFileSecretsLoader(string dir, string environment)
       p.SetValue(typed, Convert.ChangeType(secrets[p.Name], Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType));
       return false;
     }).ToList();
-    if (missing.Any()) throw new Exception($"secrets file [{path}] has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");
+    if (missing.Any()) throw new Exception($"secrets file has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");
     return dtot is null ? (T) typed : ((IDto<T>)typed).ToBase();
   }
 
