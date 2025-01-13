@@ -1,41 +1,43 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
-- master
+  branches:
+    include:
+    - 'master'
+    - 'devops'
+    - 'dev'
+  paths:
+    exclude:
+    - '*.md'
+    - '*.user'    
+    - '.git'    
 
-pool:
- name: Default
+pool:  
+  name: Default
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  dotnetver: '9.x'
+  buildcfg: 'Debug'    
 
 steps:
-
-
-- task: VSBuild@1
+- task: UseDotNet@2
+  displayName: 'use dotnet 9'
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    version: '$(dotnetver)'
+    includePreviewVersions: true
+    installationPath: '$(Agent.ToolsDirectory)/dotnet'
 
-- task: VisualStudioTestPlatformInstaller@1
-  inputs:
-    packageFeedSelector: 'nugetOrg'
-    versionSelector: 'specificVersion'
-    testPlatformVersion: '17.5.0'
+- script: dotnet --info
+  displayName: 'dotnet info'
+  
+- script: dotnet restore --verbosity normal
+  displayName: 'dotnet restore'
 
-- task: VSTest@3
-  inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\Centazio.*test*.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
-    vsTestVersion: 'toolsInstaller'
+- script: dotnet build --configuration $(buildcfg) --verbosity normal
+  displayName: "dotnet build"
+
+#- task: DotNetCoreCLI@2
+#  inputs:
+#    command: 'test'
+#    projects: '**/**.Tests.csproj'
+
+- script: dotnet test --no-restore --no-build
+  displayName: 'dotnet test'
