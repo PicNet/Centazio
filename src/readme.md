@@ -1,4 +1,5 @@
 # Todo
+- review suggestions in https://youtu.be/QRgtcbxJlo0?si=ZGaW9bWCyacIsjL_
 - all internal methods used only for testing should be extension methods in the test project to remove need
   of poluting core code with testing boilerplate
 - staging should only allow array of entities, not whole payload to do differential checks.  This will need
@@ -6,7 +7,7 @@
 - bootstrapper that allows all configuration and creation of required components in a guided fashion
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - working sample project using sqlite
-- Good case study:
+- Good case study / demo:
   - crm
   - finance
   - smartsheest
@@ -16,6 +17,7 @@
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug
 - set up azure devops testing pipeline (agent is ready)
+- documentation and blogs
 - azure runner
 - aws runner
 
