@@ -1,5 +1,5 @@
 # Todo
-- review suggestions in https://youtu.be/QRgtcbxJlo0?si=ZGaW9bWCyacIsjL_
+- review analyser suggestions in https://youtu.be/QRgtcbxJlo0?si=ZGaW9bWCyacIsjL_ at around 9min
 - all internal methods used only for testing should be extension methods in the test project to remove need
   of poluting core code with testing boilerplate
 - staging should only allow array of entities, not whole payload to do differential checks.  This will need

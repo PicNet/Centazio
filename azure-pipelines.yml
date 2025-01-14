@@ -31,13 +31,8 @@ steps:
 - script: dotnet restore --verbosity normal
   displayName: 'dotnet restore'
 
-- script: dotnet build --configuration $(buildcfg) --verbosity normal
+- script: dotnet build --configuration $(buildcfg) --verbosity normal --no-restore
   displayName: "dotnet build"
-
-#- task: DotNetCoreCLI@2
-#  inputs:
-#    command: 'test'
-#    projects: '**/**.Tests.csproj'
 
 - script: dotnet test --no-restore --no-build
   displayName: 'dotnet test'
