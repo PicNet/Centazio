@@ -12,15 +12,19 @@ public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository 
   private readonly string EVERY_X_SECONDS_NCRON = "*/5 * * * * *";
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new ReadOperationConfig(Constants.CU_TASK, EVERY_X_SECONDS_NCRON, GetTaskUpdates)
+    new ReadOperationConfig(Constants.CU_TASK, EVERY_X_SECONDS_NCRON, GetUpdatedTasks)
   ]);
 
-  private async Task<ReadOperationResult> GetTaskUpdates(OperationStateAndConfig<ReadOperationConfig> config) {
+  private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) {
     var tasks = await api.GetTasksAfter(config.Checkpoint);
-    var update_dts = tasks.Select(task => Int64.Parse(Regex.Match(task, @"""date_updated"":""([^""]+)""").Groups[1].Value)).ToList();
-    if (!update_dts.Any()) return ReadOperationResult.EmptyResult();
-    
-    return ReadOperationResult.Create(tasks, DateTimeOffset.FromUnixTimeMilliseconds(update_dts.Last()).DateTime);
+    var last = GetLastUpdatedDateFromResults();
+    return CreateResult(tasks, last);
+
+    DateTime GetLastUpdatedDateFromResults() => tasks
+        .Select(task => Int64.Parse(Regex.Match(task, @"""date_updated"":""([^""]+)""").Groups[1].Value))
+        .OrderByDescending(millis => millis)
+        .Select(millis => DateTimeOffset.FromUnixTimeMilliseconds(millis).DateTime)
+        .FirstOrDefault();
   }
 
 }
