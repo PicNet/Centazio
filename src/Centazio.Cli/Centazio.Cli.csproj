@@ -1,25 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AWSSDK.Organizations" Version="4.0.0-preview" />
-      <PackageReference Include="Azure.Identity" Version="1.13.1" />
-      <PackageReference Include="Azure.ResourceManager" Version="1.13.0" />
-      <PackageReference Include="Azure.ResourceManager.AppService" Version="1.3.0" />
-      <PackageReference Include="Azure.ResourceManager.Storage" Version="1.3.0" />
-      <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0-preview2.24304.8" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
-      <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-      <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.16" />
-      <PackageReference Include="Spectre.Console.Cli" Version="0.49.2-preview.0.16" />
-      <PackageReference Include="Spectre.Console.ImageSharp" Version="0.49.2-preview.0.16" />
-      <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+      <PackageReference Include="AWSSDK.Organizations" />
+      <PackageReference Include="Azure.Identity" />
+      <PackageReference Include="Azure.ResourceManager" />
+      <PackageReference Include="Azure.ResourceManager.AppService" />
+      <PackageReference Include="Azure.ResourceManager.Storage" />
+      <PackageReference Include="Microsoft.Data.SqlClient" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <PackageReference Include="Serilog" />
+      <PackageReference Include="Serilog.Sinks.File" />
+      <PackageReference Include="Spectre.Console" />
+      <PackageReference Include="Spectre.Console.Cli" />
+      <PackageReference Include="Spectre.Console.ImageSharp" />
+      <PackageReference Include="Microsoft.Data.Sqlite" />
     </ItemGroup>
 
     <ItemGroup>
