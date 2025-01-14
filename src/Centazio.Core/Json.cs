@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Centazio.Core;
@@ -10,8 +11,17 @@ public static class Json {
     RespectNullableAnnotations = true
   };
   
+  public static List<string> SplitList(string json, string path) {
+    if (String.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
+    
+    var node = JsonNode.Parse(json) ?? throw new Exception();
+    return ((JsonArray) NavigateNode(node, path)).Select(n => n?.ToJsonString() ?? String.Empty).ToList();
+  }
+  
   public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);
+  
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
+  
   public static object Deserialize(string json, Type type) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(type);
     if (dtot is null) return JsonSerializer.Deserialize(json, type, DEFAULT_OPTS) ?? throw new Exception();
@@ -67,7 +77,29 @@ public static class Json {
           var dtopi = dtoprops.SingleOrDefault(pi2 => pi2.Name == pi.Name) ?? throw new Exception($"could not find property[{pi.Name}] in Dto[{dtot.FullName}]");
           return new PropPair(pi, dtopi);
         }).ToList();
-  } 
-  
-  record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
+  }
+
+  private static JsonNode NavigateNode(JsonNode node, string path) {
+    if (node is null || string.IsNullOrWhiteSpace(path)) throw new Exception();
+
+    foreach (var step in path.Split('.')) {
+      var arrstart = step.IndexOf('[');
+      var arrend = step.IndexOf(']');
+
+      if (arrstart != -1 && arrend != -1) {
+        var prop = step[..arrstart];
+        if (!Int32.TryParse(step.Substring(arrstart + 1, arrend - arrstart - 1), out var index)) throw new ArgumentException($"invalid array index in path: {step}");
+
+        node = node[prop]?[index] ?? throw new Exception();
+      }
+      else {
+        node = node[step] ?? throw new Exception();
+      }
+    }
+
+    return node;
+  }
+
+  private record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
+
 }

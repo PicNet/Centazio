@@ -34,7 +34,7 @@ public class ReadFunctionTests {
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListRecordsReadOperationResult) (await func.RunFunction()).OpResults.Single();
+    var r2 = (ListReadOperationResult) (await func.RunFunction()).OpResults.Single();
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
@@ -46,7 +46,7 @@ public class ReadFunctionTests {
     // validate results
     var expjson = Json.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListRecordsReadOperationResult([expjson], UtcDate.UtcNow).ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListReadOperationResult([expjson], UtcDate.UtcNow).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -75,7 +75,7 @@ public class ReadFunctionTests {
       LastSuccessCompleted = updated,
       LastCompleted = updated,
       LastRunMessage = $"operation [{sys}/{stg}/{sysent}] completed [Success] message: " + 
-          (len == 0 ? "EmptyReadOperationResult" : $"ListRecordsReadOperationResult[{len}]")
+          (len == 0 ? "EmptyReadOperationResult" : $"ListReadOperationResult[{len}]")
     };
     StagedEntity SE(Guid? id = null) => new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, sysent, onetick, expjson, Helpers.TestingStagedEntityChecksum(expjson)).ToBase();
   }
@@ -92,7 +92,7 @@ public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository
   public async Task<ReadOperationResult> GetUpdatesCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
-        new ListRecordsReadOperationResult(customers, UtcDate.UtcNow)
+        new ListReadOperationResult(customers, UtcDate.UtcNow)
         : new EmptyReadOperationResult();
   }
 }

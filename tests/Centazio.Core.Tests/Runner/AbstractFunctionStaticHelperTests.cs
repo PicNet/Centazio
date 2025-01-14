@@ -224,7 +224,7 @@ public class AbstractFunctionStaticHelperTests {
   private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> config, DateTime? nextcheckpoint) {
     ReadOperationResult res = Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error 
         ? new ErrorReadOperationResult() 
-        : new ListRecordsReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), nextcheckpoint ?? UtcDate.UtcNow);
+        : new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), nextcheckpoint ?? UtcDate.UtcNow);
     return Task.FromResult(res); 
   }
   

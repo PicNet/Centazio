@@ -1,9 +1,4 @@
 # Todo
-- review analyser suggestions in https://youtu.be/QRgtcbxJlo0?si=ZGaW9bWCyacIsjL_ at around 9min
-- all internal methods used only for testing should be extension methods in the test project to remove need
-  of poluting core code with testing boilerplate
-- staging should only allow array of entities, not whole payload to do differential checks.  This will need
-  json helpers to split the payload into elements
 - bootstrapper that allows all configuration and creation of required components in a guided fashion
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - working sample project using sqlite

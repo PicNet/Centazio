@@ -17,7 +17,7 @@ public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository 
 
   private async Task<ReadOperationResult> GetTaskUpdates(OperationStateAndConfig<ReadOperationConfig> config) {
     var tasks = await api.GetTasksAfter(config.Checkpoint);
-    var update_dts = Regex.Matches(tasks, @"""date_updated"":""([^""]+)""").Select(m => Int64.Parse(m.Groups[1].Value)).ToList();
+    var update_dts = tasks.Select(task => Int64.Parse(Regex.Match(task, @"""date_updated"":""([^""]+)""").Groups[1].Value)).ToList();
     if (!update_dts.Any()) return ReadOperationResult.EmptyResult();
     
     return ReadOperationResult.Create(tasks, DateTimeOffset.FromUnixTimeMilliseconds(update_dts.Last()).DateTime);

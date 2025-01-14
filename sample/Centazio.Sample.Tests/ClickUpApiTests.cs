@@ -10,10 +10,10 @@ public class ClickUpApiTests {
     var (settings, secrets) = (TestingFactories.Settings<SampleSettings>(), TestingFactories.Secrets<SampleSecrets>());
     var empty = await new ClickUpApi(settings, secrets).GetTasksAfter(UtcDate.UtcNow);
     var all = await new ClickUpApi(settings, secrets).GetTasksAfter(DateTime.MinValue.ToUniversalTime());
-    var page1_dt_updateds = Regex.Matches(all, @"""date_updated"":""([^""]+)""").Select(m => Int64.Parse(m.Groups[1].Value)).ToList();
+    var page1_dt_updateds = all.Select(task => Int64.Parse(Regex.Match(task, @"""date_updated"":""([^""]+)""").Groups[1].Value)).ToList();
     var sorted = page1_dt_updateds.OrderBy(v => v).ToList();
     
-    Assert.That(empty, Is.EqualTo("""{"tasks":[],"last_page":true}"""));
+    Assert.That(empty, Is.Empty);
     Assert.That(page1_dt_updateds, Has.Count.GreaterThan(0));
     Assert.That(page1_dt_updateds, Is.EqualTo(sorted));
   }
