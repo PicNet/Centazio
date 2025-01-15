@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
+using Serilog;
 
 namespace Centazio.Core.Misc;
 
@@ -47,7 +48,7 @@ public static class ReflectionUtils {
           || ignore.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
           || !done.TryAdd(assname, true)) return [];
 
-      return Assembly.LoadFrom(dll).GetTypes()
+      return Assembly.LoadFrom(dll).GetExportedTypes()
           .Where(type => 
               type.FullName is not null && 
               !type.IsAbstract &&

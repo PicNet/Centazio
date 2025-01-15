@@ -144,6 +144,36 @@ public record CtlRepositorySettings {
   }
 }
 
+public record CoreStorageSettings {
+  public string Provider { get; }
+  public string ConnectionString { get; }
+  public string SchemaName { get; }
+  public string CtlSchemaName { get; }
+  public bool CreateSchema { get; }
+  
+  private CoreStorageSettings(string provider, string connstr, string schemanm, string ctlschema, bool create) {
+    Provider = provider;
+    ConnectionString = connstr;
+    SchemaName = schemanm;
+    CtlSchemaName = ctlschema;
+    CreateSchema = create;
+  } 
+  
+  public record Dto : IDto<CoreStorageSettings> {
+    public string? Provider { get; init; }
+    public string? ConnectionString { get; init; }
+    public string? SchemaName { get; init; }
+    public string? CtlSchemaName { get; init; }
+    public bool? CreateSchema { get; init; }
+    
+    public CoreStorageSettings ToBase() => new (
+        String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+        String.IsNullOrEmpty(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+        SchemaName?.Trim() ?? nameof(Ctl).ToLower(),
+        CtlSchemaName?.Trim() ?? nameof(CtlSchemaName).ToLower(),
+        CreateSchema ?? false);
+  }
+}
 
 public record CentazioSettings {
   public List<string> SecretsFolders { get; }
@@ -162,6 +192,9 @@ public record CentazioSettings {
   private readonly CtlRepositorySettings? _CtlRepository;
   public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new SettingsSectionMissingException(nameof(CtlRepository));
   
+  private readonly CoreStorageSettings? _CoreStorage;
+  public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
+  
   protected CentazioSettings (CentazioSettings other) {
     SecretsFolders = other.SecretsFolders;
     AllowedFunctionAssemblies = other.AllowedFunctionAssemblies;
@@ -171,9 +204,10 @@ public record CentazioSettings {
     _AzureSettings = other._AzureSettings;
     _StagedEntityRepository = other._StagedEntityRepository;
     _CtlRepository = other._CtlRepository;
+    _CoreStorage = other._CoreStorage;
   }
   
-  private CentazioSettings (List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo) {
+  private CentazioSettings (List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
     SecretsFolders = secrets;
     AllowedFunctionAssemblies = funcass;
     AllowedProviderAssemblies = provass;
@@ -182,6 +216,7 @@ public record CentazioSettings {
     _AzureSettings = azure;
     _StagedEntityRepository = staged;
     _CtlRepository = ctlrepo;
+    _CoreStorage = core;
   }
 
   public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
@@ -194,6 +229,7 @@ public record CentazioSettings {
     public AzureSettings.Dto? AzureSettings { get; init; }
     public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
     public CtlRepositorySettings.Dto? CtlRepository { get; init; }
+    public CoreStorageSettings.Dto? CoreStorage { get; init; }
     
     public CentazioSettings ToBase() => new (
         SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
@@ -202,7 +238,8 @@ public record CentazioSettings {
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase(),
         StagedEntityRepository?.ToBase(),
-        CtlRepository?.ToBase());
+        CtlRepository?.ToBase(),
+        CoreStorage?.ToBase());
   }
 
   internal class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");

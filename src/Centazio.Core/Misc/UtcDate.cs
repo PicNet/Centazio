@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Misc;
+﻿using System.Text.RegularExpressions;
+
+namespace Centazio.Core.Misc;
 
 public interface IUtcDate {
 
@@ -24,6 +26,7 @@ public class UtcDate : AbstractUtcDate {
   public static DateTime UtcNow => Utc.Now;
   public static DateTime UtcToday => Utc.Today;
   
+  public static DateTime FromMillis(string millis, string? regex = null) => regex is null ? FromMillis(Int64.Parse(millis)) : FromMillis(Regex.Match(millis, regex).Groups[1].Value);
   public static DateTime FromMillis(long millis) => DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeMilliseconds(millis).DateTime, DateTimeKind.Utc);
 }
 

@@ -5,7 +5,8 @@ namespace Centazio.Sample.ClickUp;
 
 public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets> {
 
-  public override List<Type> GetAllFunctionTypes() => [typeof(ClickUpReadFunction)];
+  // todo: dynamically load functions
+  public override List<Type> GetAllFunctionTypes() => [typeof(ClickUpReadFunction), typeof(ClickUpPromoteFunction)];
 
   protected override void RegisterIntegrationSpecificServices(IServiceCollection svcs) {
     svcs.AddSingleton<ClickUpApi>();

@@ -1,9 +1,6 @@
 ﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-using Centazio.Core;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
 using Centazio.Core.Types;
 
 namespace Centazio.Test.Lib.E2E;
@@ -90,28 +87,6 @@ public record CoreInvoice : CoreEntityBase {
         PaidDate = PaidDate
       };
       return FillBaseProperties(target);
-    }
-  }
-}
-
-public abstract record CoreEntityBase : ICoreEntity {
-  public CoreEntityId CoreId { get; set; }
-  
-  [JsonIgnore] public abstract string DisplayName { get; }
-  public abstract object GetChecksumSubset();
-  
-  protected CoreEntityBase() {}
-  protected CoreEntityBase(CoreEntityId coreid) => CoreId = coreid;
-
-  public abstract record Dto<E> : ICoreEntityDto<E> 
-      where E : CoreEntityBase {
-    public string CoreId { get; init; } = null!;
-    
-    public abstract E ToBase();
-    
-    protected E FillBaseProperties(E e) { 
-      e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
-      return e;
     }
   }
 }

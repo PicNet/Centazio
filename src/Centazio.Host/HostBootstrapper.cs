@@ -1,4 +1,5 @@
 ﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -32,9 +33,14 @@ public class HostBootstrapper(CentazioSettings settings) {
     var svcs = new ServiceCollection();
     svcs.AddSingleton(settings);
     
-    Log.Debug($"HostBootstrapper registering StagedEntityRepository[{settings.StagedEntityRepository.Provider}] and ICtlRepository[{settings.CtlRepository.Provider}]");
+    Log.Debug($"HostBootstrapper registering core services:" +
+        $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
+        $"\n\tCtlRepository [{settings.CtlRepository.Provider}]" +
+        $"\n\tCoreStorage [{settings.CoreStorage.Provider}]");
+    
     AddService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
+    AddService<IServiceFactory<ICoreStorage>, ICoreStorage>(settings.CoreStorage.Provider);
     
     var funcs = integrations.SelectMany(type => {
       var integration = (IIntegrationBase) (Activator.CreateInstance(type) ?? throw new Exception());

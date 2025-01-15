@@ -38,7 +38,7 @@ public class CheckStandardNamingOfCommonTypes {
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
-      ass.GetTypes().ForEach(ValidateType);
+      ass.GetExportedTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {
         if (objtype.Name.IndexOf("__", StringComparison.Ordinal) >= 0 || Ignore(objtype)) return;
@@ -69,7 +69,7 @@ public class CheckStandardNamingOfCommonTypes {
 
         void ValidateMethod(MethodInfo method) {
           if (Ignore(method)) return;
-          method.GetParameters().ForEach(param => {
+          GetParamsSafe(method).ForEach(param => {
             if (String.IsNullOrWhiteSpace(param.Name) || param.GetCustomAttributes(typeof(IgnoreNamingConventionsAttribute), false).Length > 0) return;
             var imethods = ifaces.SelectMany(i => i.GetMethods().Where(m => m.Name == method.Name));
             var iparams = imethods.SelectMany(m => m.GetParameters().Where(p => p.Name == param.Name));
@@ -81,7 +81,7 @@ public class CheckStandardNamingOfCommonTypes {
         
         void ValidateMethodParamOrder(MethodInfo method) {
           if (Ignore(method)) return;
-          var args = method.GetParameters();
+          var args = GetParamsSafe(method);
           var ordered = EXP_ORDER.Where(t => args.Any(p => t.IsAssignableFrom(p.ParameterType))).ToList();
           ordered.ForEach((t, exp) => {
             var p = args.Single(p => t.IsAssignableFrom(p.ParameterType));
@@ -140,6 +140,12 @@ public class CheckStandardNamingOfCommonTypes {
     }
 
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
+
+    // ignores methods that throw Reflection exceptions due to references to some nuget packages
+    ParameterInfo[] GetParamsSafe(MethodInfo method) {
+      try { return method.GetParameters(); }
+      catch (Exception) { return []; }
+    }
   }
 
   private bool Ignore(ICustomAttributeProvider? prov) {

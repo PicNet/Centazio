@@ -23,5 +23,12 @@
     "ObjectStateTableName":  "object_state", 
     "CoreToSysMapTableName": "core_sys_map",
     "CreateSchema": true
+  },
+  "CoreStorage": {
+    "Provider": "Sqlite",
+    "ConnectionString": "Data Source=core.db",
+    "SchemaName": "dbo",
+    "CtlSchemaName": "ctl",
+    "CreateSchema": true
   }
 }
