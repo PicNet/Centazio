@@ -19,10 +19,6 @@ and automated workflow management.  This tutorial show you how to do the followi
 - Add a line in your secrets file with your PAT, example:
   `CLICKUP_TOKEN=pk_12345678_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456`
 - Create a list to track new customers, and get the ID from URL (the trailing number)
-- Create a project for your ClickUp integrations ``
-
-## Set up CRM integration
-- Create Zoho free account: https://www.zoho.com/crm/signup.html?plan=free
 
 ## Set up Google Spreadsheet
 - Create project in the [Google Developers Console](https://console.developers.google.com/project)
