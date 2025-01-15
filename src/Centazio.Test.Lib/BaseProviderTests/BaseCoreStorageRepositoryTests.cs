@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Types;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;

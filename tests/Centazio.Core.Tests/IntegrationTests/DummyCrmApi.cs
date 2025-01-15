@@ -1,4 +1,5 @@
-﻿using Centazio.Test.Lib;
+﻿using Centazio.Core.Misc;
+using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.IntegrationTests;
 

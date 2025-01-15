@@ -1,4 +1,4 @@
-﻿namespace Centazio.Core;
+﻿namespace Centazio.Test.Lib;
 
 public class DevelDebug {
 

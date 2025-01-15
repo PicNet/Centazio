@@ -1,10 +1,11 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Centazio.Core.Types;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Centazio.Core;
+namespace Centazio.Core.Misc;
 
 public interface ILoggable {
   [JsonIgnore] string LoggableValue { get; }

@@ -1,6 +1,7 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
+using Centazio.Core.Types;
 using Centazio.Core.Write;
 
 namespace Centazio.Test.Lib.E2E.Crm;

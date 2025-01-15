@@ -1,4 +1,7 @@
-﻿namespace Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Misc;
+using Centazio.Core.Types;
+
+namespace Centazio.Core.Ctl.Entities;
 
 public record SystemState {
   public static SystemState Create(SystemName system, LifecycleStage stage, bool active = true, ESystemStateStatus status = ESystemStateStatus.Idle) => new(system, stage, active, UtcDate.UtcNow, UtcDate.UtcNow, status);

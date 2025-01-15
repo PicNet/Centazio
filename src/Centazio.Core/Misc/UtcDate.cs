@@ -1,4 +1,4 @@
-﻿namespace Centazio.Core;
+﻿namespace Centazio.Core.Misc;
 
 public interface IUtcDate {
 

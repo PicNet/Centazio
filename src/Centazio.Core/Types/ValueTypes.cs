@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 
-namespace Centazio.Core;
+namespace Centazio.Core.Types;
 
 public record ValidString(string Value) {
   public string Value { get; } = !String.IsNullOrWhiteSpace(Value) 

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using Centazio.Core.Misc;
+using Centazio.Core.Types;
 
-namespace Centazio.Core;
+namespace Centazio.Core.Misc;
 
 public interface IDto<out T> { T ToBase(); }
 public interface ICoreEntityDto<out T> : IDto<T> { string CoreId { get; } }

@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests;
+﻿using Centazio.Test.Lib;
+
+namespace Centazio.Core.Tests;
 
 public class DevelDebugTests {
 

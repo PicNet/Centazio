@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 
-namespace Centazio.Core.Tests;
+namespace Centazio.Core.Tests.Misc;
 
 public class DtoHelpersTests {
 

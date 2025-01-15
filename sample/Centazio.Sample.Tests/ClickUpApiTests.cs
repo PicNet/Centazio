@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Centazio.Core;
+using Centazio.Core.Misc;
 using Centazio.Test.Lib;
 
 namespace Centazio.Sample.Tests;

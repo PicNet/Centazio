@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests;
+﻿using Centazio.Core.Misc;
+
+namespace Centazio.Core.Tests.Misc;
 
 public class JsonTests {
 

@@ -1,15 +1,11 @@
 # Todo
-- bootstrapper that allows all configuration and creation of required components in a guided fashion
-- rearrange all files in root namespace `Centazio.Core` move DevelDebug to TestLib
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
-- working sample project using sqlite
-- Good case study / demo:
+- good case study / demo:
   - crm
   - finance
   - smartsheest
   - email/reporting
   - web scrape
-- separate out the sample project from main repository
 - check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
         OriginalSystem / LastUpdatedSystem bug
 - set up azure devops testing pipeline (agent is ready)

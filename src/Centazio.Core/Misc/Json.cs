@@ -2,8 +2,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Centazio.Core.Types;
 
-namespace Centazio.Core;
+namespace Centazio.Core.Misc;
 
 public static class Json {
   

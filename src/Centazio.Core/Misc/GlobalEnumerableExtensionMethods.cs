@@ -1,4 +1,4 @@
-﻿namespace Centazio.Core;
+﻿namespace Centazio.Core.Misc;
 
 public static class GlobalMiscExtensionMethods {
   public static long ToMillis(this DateTime dt) => new DateTimeOffset(dt).ToUnixTimeMilliseconds();

@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests.Inspect;
+﻿using Centazio.Core.Misc;
+
+namespace Centazio.Core.Tests.Inspect;
 
 public class CheckConsoleUsage {
 

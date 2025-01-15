@@ -9,7 +9,7 @@ public class CheckThatInternalsVisibleToIsOnlyAvailableToTestProjects {
     var errors = new List<string>();
     InspectUtils.GetCentazioDllFiles().ForEach(dll => {
       var filename = dll.Split(Path.DirectorySeparatorChar).Last();
-      var istest = filename.IndexOf("test", StringComparison.OrdinalIgnoreCase) >= 0;
+      var istest = filename.IndexOf("test", StringComparison.OrdinalIgnoreCase) >= 0 && filename.IndexOf("test.lib.dll", StringComparison.OrdinalIgnoreCase) < 0;
       
       var friends = Assembly.LoadFile(dll).CustomAttributes
           .Where(att => att.AttributeType == typeof(InternalsVisibleToAttribute))

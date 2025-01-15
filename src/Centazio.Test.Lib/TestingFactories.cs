@@ -8,6 +8,7 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
+using Centazio.Core.Types;
 using Centazio.Core.Write;
 using Centazio.Test.Lib.InMemRepos;
 

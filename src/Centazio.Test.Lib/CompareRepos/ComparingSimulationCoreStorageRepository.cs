@@ -2,6 +2,8 @@
 using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
+using Centazio.Core.Types;
 using Centazio.Test.Lib.E2E;
 
 namespace Centazio.Test.Lib.CompareRepos;

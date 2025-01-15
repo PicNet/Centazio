@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Tests;
+﻿using Centazio.Core.Misc;
+
+namespace Centazio.Core.Tests.Misc;
 
 public class GlobalEnumerableExtensionMethodsTests {
 
@@ -43,7 +45,7 @@ public class GlobalEnumerableExtensionMethodsTests {
   }
   
   [Test] public void Test_Chunk() {
-    var chunks = Enumerable.Range(0, 100).Chunk(10).ToList();
+    var chunks = GlobalEnumerableExtensionMethods.Chunk(Enumerable.Range(0, 100), 10).ToList();
     Assert.That(chunks, Has.Count.EqualTo(10));
     Assert.That(chunks[0], Is.EquivalentTo(Enumerable.Range(0, 10)));
     Assert.That(chunks[^1], Is.EquivalentTo(Enumerable.Range(90, 10)));

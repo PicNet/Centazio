@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Secrets;
+﻿using Centazio.Core.Misc;
+
+namespace Centazio.Core.Secrets;
 
 public record CentazioSecrets {
   

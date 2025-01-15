@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Checksum;
+using Centazio.Core.Types;
 
-namespace Centazio.Core.Tests;
+namespace Centazio.Core.Tests.Types;
 
 public class TypesTests {
 

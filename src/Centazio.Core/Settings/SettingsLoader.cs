@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Centazio.Core.Misc;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 namespace Centazio.Core.Settings;

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Centazio.Core;
+namespace Centazio.Core.Types;
 
 /// <summary>
 /// A checksum used to check for unnecessary writes to core storage or the target system.

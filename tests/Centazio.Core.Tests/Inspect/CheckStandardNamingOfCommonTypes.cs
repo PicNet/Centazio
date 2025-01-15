@@ -4,6 +4,7 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Types;
 
 namespace Centazio.Core.Tests.Inspect;
 

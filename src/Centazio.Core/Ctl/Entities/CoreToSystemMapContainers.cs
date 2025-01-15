@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.CoreRepo;
+using Centazio.Core.Types;
 
 namespace Centazio.Core.Ctl.Entities;
 
