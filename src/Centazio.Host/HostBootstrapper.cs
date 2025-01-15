@@ -13,32 +13,39 @@ public class HostBootstrapper(CentazioSettings settings) {
 
   public async Task<List<IRunnableFunction>> InitHost(List<string> filters) {
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig().CreateLogger();
-    var types = GetCentazioFunctionTypess(filters);
-    Log.Information($"CentazioHost found functions:\n\t" + String.Join("\n\t", types.Select(type => type.Name)));
-    var prov = InitialiseDi(types);
+    var types = GetCentazioIntegrations(filters);
+    Log.Information($"HostBootstrapper found integrations:\n\t" + String.Join("\n\t", types.Select(type => type.Name)));
+    var (prov, funcs) = InitialiseDi(types, filters);
     await InitialiseCoreServices(prov);
-    return InitialiseFunctions(prov, types);
+    return funcs.Select(functype => (IRunnableFunction) prov.GetRequiredService(functype)).ToList();
   }
 
-  private List<Type> GetCentazioFunctionTypess(List<string> filters) {
-    return ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), settings.AllowedFunctionAssemblies).Where(type => MatchesFilter(type.FullName ?? String.Empty)).ToList();
-    bool MatchesFilter(string name) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
-        || filters.Any(filter => name.Contains(filter, StringComparison.OrdinalIgnoreCase));
+  private List<Type> GetCentazioIntegrations(List<string> filters) {
+    return ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.AllowedFunctionAssemblies).Where(type => DoesTypeMatchFilter(type, filters)).ToList();
   }
 
-  private ServiceProvider InitialiseDi(List<Type> functypes) {
+  private bool DoesTypeMatchFilter(Type type, List<string> filters) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
+        || filters.Any(filter => (type.FullName ?? String.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+  private (ServiceProvider, List<Type> funcs) InitialiseDi(List<Type> integrations, List<string> filters) {
     var svcs = new ServiceCollection();
     svcs.AddSingleton(settings);
     
+    Log.Debug($"HostBootstrapper registering StagedEntityRepository[{settings.StagedEntityRepository.Provider}] and ICtlRepository[{settings.CtlRepository.Provider}]");
     AddService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     
-    functypes.ForEach(type => svcs.AddSingleton(type));
-    ReflectionUtils.GetAllTypesThatImplement(typeof(IFunctionInitialiser), settings.AllowedFunctionAssemblies).ForEach(type => {
-      var initialiser = Activator.CreateInstance(type) as IFunctionInitialiser ?? throw new Exception();
-      initialiser.RegisterServices(svcs);
-    });
-    return svcs.BuildServiceProvider();
+    var funcs = integrations.SelectMany(type => {
+      var integration = (IIntegrationBase) (Activator.CreateInstance(type) ?? throw new Exception());
+      svcs.AddSingleton(type, integration);
+      var functypes = integration.GetAllFunctionTypes()
+          .Where(functype => DoesTypeMatchFilter(functype, filters))
+          .ToList();
+      functypes.ForEach(functype => svcs.AddSingleton(functype));
+      integration.RegisterServices(svcs);
+      return functypes;
+    }).ToList();
+    return (svcs.BuildServiceProvider(), funcs);
     
     void AddService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
       svcs.AddSingleton(typeof(F), GetFactoryType<F>(provider));
@@ -57,7 +64,4 @@ public class HostBootstrapper(CentazioSettings settings) {
     await prov.GetRequiredService<IStagedEntityRepository>().Initialise();
     await prov.GetRequiredService<ICtlRepository>().Initialise();
   }
-  
-  private List<IRunnableFunction> InitialiseFunctions(ServiceProvider svcs, List<Type> types) => 
-      types.Select(svcs.GetRequiredService).Cast<IRunnableFunction>().ToList();
 }

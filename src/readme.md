@@ -1,5 +1,6 @@
 # Todo
 - bootstrapper that allows all configuration and creation of required components in a guided fashion
+- rearrange all files in root namespace `Centazio.Core` move DevelDebug to TestLib
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - working sample project using sqlite
 - Good case study / demo:

@@ -13,7 +13,7 @@ public class CentazioHost(HostSettings settings) {
   public async Task Run() {
     var functions = await new HostBootstrapper(settings.CoreSettings)
         .InitHost(settings.ParseFunctionFilters());
-
+    
     await using var timer = StartHost(functions);
     DisplatInstructions();
   }
@@ -24,7 +24,7 @@ public class CentazioHost(HostSettings settings) {
   }
 
   private void DisplatInstructions() {
-    Console.WriteLine("press 'Enter' to exit");
+    Console.WriteLine("\nPress 'Enter' to exit\n\n");
     Console.ReadLine();
   }
 
