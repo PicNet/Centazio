@@ -1,11 +1,10 @@
-﻿using System.Text.RegularExpressions;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.ClickUp;
 
 public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, ClickUpApi api) : ReadFunction(Constants.CLICK_UP, stager, ctl) {
 

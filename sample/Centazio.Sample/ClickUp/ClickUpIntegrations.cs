@@ -1,7 +1,7 @@
 ﻿using Centazio.Core;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.ClickUp;
 
 public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets> {
 

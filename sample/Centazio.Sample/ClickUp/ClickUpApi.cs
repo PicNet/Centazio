@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Centazio.Core.Misc;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.ClickUp;
 
 public class ClickUpApi(SampleSettings settings, SampleSecrets secrets) {
 

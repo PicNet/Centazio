@@ -24,3 +24,10 @@ and automated workflow management.  This tutorial show you how to do the followi
 ## Set up CRM integration
 - Create Zoho free account: https://www.zoho.com/crm/signup.html?plan=free
 
+## Set up Google Spreadsheet
+- Create project in the [Google Developers Console](https://console.developers.google.com/project)
+- API -> API Library -> Google Sheets API
+- Enable
+- Credentials -> Create Credentials -> Service Account
+- Click created account -> Keys -> Add Key -> Json
+- Create sheet, and share it with the service account email

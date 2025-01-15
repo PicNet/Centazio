@@ -4,6 +4,10 @@
     "BaseUrl": "https://api.clickup.com/api/v2/",
     "ListId": "186791674"
   },
+  "GoogleSheets": {
+    "CredentialsFile": "centazio-sample-project-credentials.json",
+    "SheetId": "1dOQVWfx7qSZsGplIUt0LLqrBn9O800GVEbw5E6hhTxk"
+  },
   "StagedEntityRepository": {
     "Provider": "Sqlite",
     "ConnectionString": "Data Source=staging.db",

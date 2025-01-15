@@ -2,4 +2,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\Centazio.Core\Centazio.Core.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Google.Apis.Sheets.v4" />
+    </ItemGroup>
 </Project>

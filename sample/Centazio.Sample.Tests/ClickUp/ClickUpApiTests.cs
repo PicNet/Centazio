@@ -1,7 +1,8 @@
 ﻿using Centazio.Core.Misc;
+using Centazio.Sample.ClickUp;
 using Centazio.Test.Lib;
 
-namespace Centazio.Sample.Tests;
+namespace Centazio.Sample.Tests.ClickUp;
 
 public class ClickUpApiTests {
 
