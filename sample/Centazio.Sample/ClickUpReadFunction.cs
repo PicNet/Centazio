@@ -16,17 +16,8 @@ public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository 
   ]);
 
   private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) {
-    // todo: move date extraction logic out, and make filtering LastUpdate > Checkpoint logic reuseable
     var tasks = await api.GetTasksAfter(config.Checkpoint);
-    var wupdates = tasks
-        .Select(json => new TaskWithLastUpdate(json, DateTimeOffset.FromUnixTimeMilliseconds(Int64.Parse(Regex.Match(json, @"""date_updated"":""([^""]+)""").Groups[1].Value)).DateTime))
-        // it is possible for the ClickUp API to include some tasks even though we specify date_updated_gt
-        .Where(t => t.LastUpdate > config.Checkpoint)
-        .OrderBy(t => t.LastUpdate)
-        .ToList();
-    var last = wupdates.LastOrDefault()?.LastUpdate;
-    return CreateResult(wupdates.Select(t => t.TaskJson).ToList(), last);
+    var last = tasks.LastOrDefault()?.LastUpdated;
+    return CreateResult(tasks.Select(t => t.Json).ToList(), last);
   }
-
-  private record TaskWithLastUpdate(string TaskJson, DateTime LastUpdate);
 }
