@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Centazio.Core.Misc;
+﻿using Centazio.Core.Misc;
 
 namespace Centazio.Sample.ClickUp;
 

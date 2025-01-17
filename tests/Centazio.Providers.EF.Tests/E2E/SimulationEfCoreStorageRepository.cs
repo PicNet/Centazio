@@ -8,19 +8,45 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorageDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
+public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
+  
+  private static string CoreSchemaName => "dbo";
+  private static string CtlSchemaName { get; } = nameof(Core.Ctl).ToLower();
+  private static string CoreStorageMetaName { get; } = nameof(CoreStorageMeta).ToLower();
+  private static string CoreMembershipTypeName { get; } = nameof(CoreMembershipType).ToLower();
+  private static string CoreCustomerName { get; } = nameof(CoreCustomer).ToLower();
+  private static string CoreInvoiceName { get; } = nameof(CoreInvoice).ToLower();
+  
+  public static void CreateSimulationCoreStorageEfModel(ModelBuilder builder) => builder
+      .HasDefaultSchema(CoreSchemaName)
+      .Entity<CoreStorageMeta.Dto>(e => {
+        e.ToTable(CoreStorageMetaName, CtlSchemaName);
+        e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
+      })
+      .Entity<CoreMembershipType.Dto>(e => {
+        e.ToTable(CoreMembershipTypeName);
+        e.HasKey(e2 => e2.CoreId);
+      })
+      .Entity<CoreCustomer.Dto>(e => {
+        e.ToTable(CoreCustomerName);
+        e.HasKey(e2 => e2.CoreId);
+      })
+      .Entity<CoreInvoice.Dto>(e => {
+        e.ToTable(CoreInvoiceName);
+        e.HasKey(e2 => e2.CoreId);
+      });
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
     await using var db = getdb();
     await DropTablesImpl(db);
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CtlSchemaName, db.CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
-        $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{db.CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.CoreSchemaName, db.CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
-        $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{db.CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CoreSchemaName, CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CoreSchemaName, CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)]),
+        $"FOREIGN KEY ([{nameof(CoreCustomer.MembershipCoreId)}]) REFERENCES [{CoreMembershipTypeName}]([{nameof(ICoreEntity.CoreId)}])");
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CoreSchemaName, CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)]),
+        $"FOREIGN KEY ([{nameof(CoreInvoice.CustomerCoreId)}]) REFERENCES [{CoreCustomerName}]([{nameof(ICoreEntity.CoreId)}])");
     return this;
   }
 
@@ -29,12 +55,12 @@ public class SimulationEfCoreStorageRepository(Func<AbstractSimulationCoreStorag
     await DropTablesImpl(db);
   }
 
-  private async Task DropTablesImpl(AbstractSimulationCoreStorageDbContext db) {
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreInvoiceName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreCustomerName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CoreSchemaName, db.CoreMembershipTypeName));
+  private async Task DropTablesImpl(CentazioDbContext db) {
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CoreSchemaName, CoreInvoiceName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CoreSchemaName, CoreCustomerName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CoreSchemaName, CoreMembershipTypeName));
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.CtlSchemaName, db.CoreStorageMetaName));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
   }
 
   public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {

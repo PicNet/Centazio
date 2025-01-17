@@ -30,7 +30,9 @@ public class SqliteSimulationProvider : ISimulationProvider {
         nameof(ObjectState).ToLower(), 
         nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), dbf).Initialise();
-    CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationCoreStorageDbContext("Data Source=core_storage.db"), ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
+    CoreStore = await new SimulationEfCoreStorageRepository(
+        () => new SqliteDbContext("Data Source=core_storage.db", SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel), 
+        ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

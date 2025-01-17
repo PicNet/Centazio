@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
-using Serilog;
 
 namespace Centazio.Core.Misc;
 
