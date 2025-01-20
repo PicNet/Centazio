@@ -7,7 +7,7 @@ using Serilog;
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
+public class InMemoryCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractSimulationCoreStorageRepository(checksum) {
   private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();
   
   public override Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {

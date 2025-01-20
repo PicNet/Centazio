@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Centazio.Core.Types;
+using Serilog;
 
 namespace Centazio.Core.Misc;
 
@@ -25,13 +26,27 @@ public static class Json {
   
   public static object Deserialize(string json, Type type) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(type);
-    if (dtot is null) return JsonSerializer.Deserialize(json, type, DEFAULT_OPTS) ?? throw new Exception();
     
-    var dtoobj = JsonSerializer.Deserialize(json, dtot, DEFAULT_OPTS);
+    if (dtot is null) return DeserializeImpl(type);
+    var dtoobj = DeserializeImpl(dtot);
+    
     return TryCallIDtoGetBaseObj(out var baseobj) 
         ? baseobj 
         : SetAllBaseObjProps();
 
+    object DeserializeImpl(Type targettype) {
+      try { return JsonSerializer.Deserialize(json, targettype, DEFAULT_OPTS) ?? throw new Exception(); }
+      catch (JsonException e) {
+        Log.Warning($"could not deserialise entity of type [{type.Name}] with error:\n{e}\n\nfrom json:\n{PrettyPrint()}\n\n");
+        throw;
+      }
+      
+      string PrettyPrint() { 
+        using var jDoc = JsonDocument.Parse(json);
+        return JsonSerializer.Serialize(jDoc, new JsonSerializerOptions { WriteIndented = true });
+      }
+    }
+    
     bool TryCallIDtoGetBaseObj(out object result) {
       result = new object();
       var iface = dtot.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDto<>));

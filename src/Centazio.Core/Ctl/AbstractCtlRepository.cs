@@ -43,12 +43,19 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   }
 
   private static void ValidateMapsToUpsert<M>(SystemName system, CoreEntityTypeName coretype, List<M> maps, bool iscreate) where M : Map.CoreToSysMap {
-    if (iscreate && maps.Any(e => e.System != system)) throw new ArgumentException($"All maps should have the same System[{system}]");
-    if (maps.Any(e => e.CoreEntityTypeName != coretype)) throw new ArgumentException($"All maps should have the same CoreEntityTypeName[{system}]");
-    if (iscreate && maps.Any(e => maps.First().DateCreated != e.DateCreated)) throw new ArgumentException($"All maps should have the same DateCreated[{system}]");
-    if (maps.Any(e => maps.First().DateUpdated != e.DateUpdated)) throw new ArgumentException($"All maps should have the same DateUpdated[{system}]");
+    if (iscreate) { ValidateAllMapsHaveSame("System", system, e => e.System); }
+    ValidateAllMapsHaveSame("CoreEntityTypeName", coretype, e => e.CoreEntityTypeName);
+    
     if (maps.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException($"All maps should be for unique system entities (have unique SystemIds)");
     if (maps.GroupBy(e => e.CoreId).Any(g => g.Count() > 1)) throw new ArgumentException($"All maps should be for unique core entities (have unique CoreIds)");
+    
+    void ValidateAllMapsHaveSame<T>(string field, T exp, Func<M, T> actual) {
+      var first = maps.FirstOrDefault(e => {
+        var val = actual(e) ?? throw new Exception();
+        return !val.Equals(exp);
+      });
+      if (first is not null) throw new ArgumentException($"All maps should have the same {field}[{exp}]. Found at lease one mismatch[{actual(first)}]");
+    }
   }
   
   public async Task<(List<CoreAndPendingCreateMap> Created, List<CoreAndPendingUpdateMap> Updated)> GetNewAndExistingMapsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents) {

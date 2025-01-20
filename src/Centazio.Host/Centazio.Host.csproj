@@ -3,6 +3,10 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+      <!-- todo: these Ef packages should not be required, but it is due to dynamic dll loading in Centazio.Host -->
+      <PackageReference Include="Microsoft.EntityFrameworkCore" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
       <PackageReference Include="Serilog" />
     </ItemGroup>
 

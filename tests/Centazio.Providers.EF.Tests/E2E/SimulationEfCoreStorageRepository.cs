@@ -8,7 +8,7 @@ using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractCoreStorageRepository(checksum) {
+public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractSimulationCoreStorageRepository(checksum) {
   
   private static string CoreSchemaName => "dbo";
   private static string CtlSchemaName { get; } = nameof(Core.Ctl).ToLower();

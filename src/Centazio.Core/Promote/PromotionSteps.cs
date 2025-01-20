@@ -146,11 +146,10 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public async Task WriteEntitiesToCoreStorageAndUpdateMaps() {
     if (IsEmpty()) return;
 
-    await Task.WhenAll([
-      core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
-      ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-      ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList())
-    ]);
+    await Task.WhenAll(
+        core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
+        ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
+        ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()));
   }
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) {

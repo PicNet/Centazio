@@ -4,6 +4,7 @@ using Centazio.Core.Types;
 
 namespace Centazio.Core.CoreRepo;
 
+// todo: should core storage meta be part of the Ctl functionality?  I.e. moved out of the CoreRepo namespace, including ICoreStorage interface?
 public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId OriginalSystemId, CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, CoreEntityChecksum CoreEntityChecksum, DateTime DateCreated, DateTime DateUpdated, SystemName? LastUpdateSystem) {
   public record Dto : IDto<CoreStorageMeta> {
     public string CoreId { get; init; } = null!;

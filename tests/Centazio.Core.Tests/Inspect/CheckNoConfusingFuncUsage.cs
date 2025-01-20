@@ -4,9 +4,9 @@ namespace Centazio.Core.Tests.Inspect;
 
 public class CheckNoConfusingFuncUsage {
 
-  [Test] public void Test_no_use_of_comples_Func() {
+  [Test] public void Test_no_use_of_complex_Func() {
     var errors = new List<string>();
-    InspectUtils.CsFiles(null, "GlobalEnumerableExtensionMethods.cs").ForEach(file => {
+    InspectUtils.CsFiles(null, "GlobalEnumerableExtensionMethods.cs", "AbstractCtlRepository.cs").ForEach(file => {
       var contents = File.ReadAllText(file);
       var matches = Regex.Matches(contents, "Func<([^>]+)>", RegexOptions.Singleline)
           .Select(m => m.Groups[1].Value)

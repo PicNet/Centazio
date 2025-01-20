@@ -11,7 +11,7 @@ public interface ISimulationCoreStorageRepository : ICoreStorage {
   Task<List<CoreInvoice>> GetInvoices();
 }
 
-public abstract class AbstractCoreStorageRepository(Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorageRepository {
+public abstract class AbstractSimulationCoreStorageRepository(Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorageRepository {
   
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (coretype.Value == nameof(CoreMembershipType)) return (await GetEntitiesToWrite<CoreMembershipType, CoreMembershipType.Dto>(exclude, after)).ToList();

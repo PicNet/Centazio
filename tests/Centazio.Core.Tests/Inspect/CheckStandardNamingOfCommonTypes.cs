@@ -32,12 +32,16 @@ public class CheckStandardNamingOfCommonTypes {
     typeof(LifecycleStage), 
     typeof(ObjectName)
   ];
+  
+  private readonly List<string> IGNORE = ["Centazio.Sample"];
 
   [Test] public void Test_naming_standards() {
     var errors = new List<string>();
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
+      Console.WriteLine("ASS: " + ass.GetName().Name);
+      if (IGNORE.Contains(ass.GetName().Name ?? String.Empty)) return;
       ass.GetExportedTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {

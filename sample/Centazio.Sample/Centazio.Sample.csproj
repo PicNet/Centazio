@@ -1,8 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
         <ProjectReference Include="..\..\src\Centazio.Core\Centazio.Core.csproj"/>
+        <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.EF\Centazio.Providers.EF.csproj" />
+        <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.Sqlite\Centazio.Providers.Sqlite.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Google.Apis.Sheets.v4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     </ItemGroup>
 </Project>

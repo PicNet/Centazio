@@ -7,7 +7,7 @@ namespace Centazio.Core.Tests.E2E;
 
 public class SimulationCoreStorageRepositoryTests : BaseSimulationCoreStorageRepositoryTests {
 
-  protected override Task<AbstractCoreStorageRepository> GetRepository(InMemoryEpochTracker tracker) => 
-      Task.FromResult<AbstractCoreStorageRepository>(new InMemoryCoreStorageRepository(tracker, Helpers.TestingCoreEntityChecksum));
+  protected override Task<AbstractSimulationCoreStorageRepository> GetRepository(InMemoryEpochTracker tracker) => 
+      Task.FromResult<AbstractSimulationCoreStorageRepository>(new InMemoryCoreStorageRepository(tracker, Helpers.TestingCoreEntityChecksum));
 }
 

@@ -7,7 +7,7 @@ using Centazio.Test.Lib.E2E;
 
 namespace Centazio.Test.Lib.CompareRepos;
 
-public class ComparingSimulationCoreStorageRepository(AbstractCoreStorageRepository repo1, AbstractCoreStorageRepository repo2, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageRepository(checksum) {
+public class ComparingSimulationCoreStorageRepository(AbstractSimulationCoreStorageRepository repo1, AbstractSimulationCoreStorageRepository repo2, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractSimulationCoreStorageRepository(checksum) {
 
   public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
     // var (result1, result2) = (await repo1.Upsert(coretype, entities), await repo2.Upsert(coretype, entities));
