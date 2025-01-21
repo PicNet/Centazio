@@ -12,4 +12,8 @@
         <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
         -->
     </PropertyGroup>
+    
+     <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
 </Project>

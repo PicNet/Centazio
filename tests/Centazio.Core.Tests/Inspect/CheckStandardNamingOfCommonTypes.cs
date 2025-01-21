@@ -33,15 +33,11 @@ public class CheckStandardNamingOfCommonTypes {
     typeof(ObjectName)
   ];
   
-  private readonly List<string> IGNORE = ["Centazio.Sample"];
-
   [Test] public void Test_naming_standards() {
     var errors = new List<string>();
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
-      Console.WriteLine("ASS: " + ass.GetName().Name);
-      if (IGNORE.Contains(ass.GetName().Name ?? String.Empty)) return;
       ass.GetExportedTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {
@@ -63,7 +59,7 @@ public class CheckStandardNamingOfCommonTypes {
 
         void ValidateCtor(ConstructorInfo ctor) {
           if (Ignore(ctor)) return;
-          ctor.GetParameters().ForEach(p => ValidateParam("Ctor", p, true));
+          GetParamsSafe(ctor).ForEach(p => ValidateParam("Ctor", p, true));
         }
 
         void ValidateProp(PropertyInfo prop) {
@@ -146,7 +142,7 @@ public class CheckStandardNamingOfCommonTypes {
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
 
     // ignores methods that throw Reflection exceptions due to references to some nuget packages
-    ParameterInfo[] GetParamsSafe(MethodInfo method) {
+    ParameterInfo[] GetParamsSafe(MethodBase method) {
       try { return method.GetParameters(); }
       catch (Exception) { return []; }
     }

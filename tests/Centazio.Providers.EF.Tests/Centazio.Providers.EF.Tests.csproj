@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <IsPackable>false</IsPackable>
-    </PropertyGroup>
-
     <ItemGroup>
         <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
