@@ -13,18 +13,15 @@ public interface ICoreEntity : IGetChecksumSubset {
 }
 
 
-public abstract record CoreEntityBase : ICoreEntity {
-  public CoreEntityId CoreId { get; set; }
-  
+public abstract record CoreEntityBase(CoreEntityId CoreId) : ICoreEntity {
+
+  public CoreEntityId CoreId { get; set; } = CoreId;
   [JsonIgnore] public abstract string DisplayName { get; }
   public abstract object GetChecksumSubset();
   
-  // todo: clean this up
-  protected CoreEntityBase() { CoreId = null!; }
-  protected CoreEntityBase(CoreEntityId coreid) => CoreId = coreid;
+  protected CoreEntityBase() : this((CoreEntityId) null!) { }
 
-  public abstract record Dto<E> : ICoreEntityDto<E> 
-      where E : CoreEntityBase {
+  public abstract record Dto<E> : ICoreEntityDto<E> where E : CoreEntityBase {
     public string CoreId { get; init; } = null!;
     
     public abstract E ToBase();
