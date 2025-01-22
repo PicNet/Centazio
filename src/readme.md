@@ -1,5 +1,4 @@
 # Todo
-- fixed broken E2E unit tests that fail when running in suite (works individual)
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm

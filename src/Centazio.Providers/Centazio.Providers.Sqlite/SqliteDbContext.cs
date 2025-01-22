@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite;
 
-public class SqliteDbContext(string connstr, Action<ModelBuilder> buildmodel) : CentazioDbContext {
-
-  // todo: if this approach is good, then move CreateCentazioModel to CentazioDbContext
-  protected override void CreateCentazioModel(ModelBuilder builder) => buildmodel(builder);
+public abstract class SqliteDbContext(string connstr) : CentazioDbContext {
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlite(connstr);
 }

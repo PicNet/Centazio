@@ -1,6 +1,7 @@
 ﻿using Centazio.Providers.EF.Tests.CoreRepo;
 using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
+using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 
@@ -9,8 +10,16 @@ public class SqlServerCoreStorageRepositoryTests : BaseCoreStorageRepositoryTest
   protected override async Task<ITestingCoreStorage> GetRepository() {
     var connstr = (await SqlConn.GetInstance(false)).ConnStr;
     return await new TestingEfCoreStorageRepository(
-        () => new SqlServerDbContext(connstr, TestingEfCoreStorageRepository.CreateTestingCoreStorageEfModel), 
+        () => new SqlServerCoreStorageRepositoryTestsDbContect(connstr), 
         new SqlServerDbFieldsHelper()).Initalise();
+  }
+
+}
+
+public class SqlServerCoreStorageRepositoryTestsDbContect(string connstr) : SqlServerDbContext(connstr) {
+
+  protected override void CreateCentazioModel(ModelBuilder builder) {
+    TestingEfCoreStorageRepository.CreateTestingCoreStorageEfModel(builder);
   }
 
 }

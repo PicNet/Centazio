@@ -7,6 +7,7 @@ using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib.E2E;
+using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
@@ -31,7 +32,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
         nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
-        () => new SqliteDbContext("Data Source=sim_core_storage.db", SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel), 
+        () => new SqliteSimulationDbContext(), 
         ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
   }
   
@@ -40,4 +41,12 @@ public class SqliteSimulationProvider : ISimulationProvider {
     await StageRepository.DisposeAsync();
     await CtlRepo.DisposeAsync();
   }
+}
+
+public class SqliteSimulationDbContext() : SqliteDbContext("Data Source=sim_core_storage.db") {
+
+  protected override void CreateCentazioModel(ModelBuilder builder) {
+    SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);
+  }
+
 }

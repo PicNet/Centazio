@@ -19,7 +19,7 @@ public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets
   protected override void RegisterIntegrationSpecificServices(IServiceCollection svcs) {
     svcs.AddSingleton<ClickUpApi>();
     svcs.AddSingleton<ICoreStorage>(new SampleCoreStorage(
-        () => new SqliteDbContext("Data Source=core_storage.db", SampleCoreStorage.CreateEfCoreModel),
+        () => new SampleDbContext(),
         new SqliteDbFieldsHelper(), 
         new Sha256ChecksumAlgorithm().Checksum));
   }
@@ -31,21 +31,23 @@ public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets
 
 }
 
+public class SampleDbContext() : SqliteDbContext("Data Source=sample_core_storage.db") {
+
+  protected override void CreateCentazioModel(ModelBuilder builder) => builder
+      .HasDefaultSchema("dbo")
+      .Entity<CoreStorageMeta.Dto>(e => {
+        e.ToTable(nameof(CoreStorageMeta).ToLower(), nameof(Core.Ctl).ToLower());
+        e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
+      })
+      .Entity<CoreTask.Dto>(e => {
+        e.ToTable(nameof(CoreTask).ToLower());
+        e.HasKey(e2 => e2.CoreId);
+      });
+
+}
+
 // todo: extract all shareable code from here, SimulationEfCoreStorageRepository and AbstractSimulationCoreStorageRepository into a proper Ef base class or reuseable component
 public class SampleCoreStorage(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf, Func<ICoreEntity, CoreEntityChecksum> checksum) : ICoreStorage {
-  
-  public static void CreateEfCoreModel(ModelBuilder builder) {
-    builder
-        .HasDefaultSchema("dbo")
-        .Entity<CoreStorageMeta.Dto>(e => {
-          e.ToTable(nameof(CoreStorageMeta).ToLower(), nameof(Core.Ctl).ToLower());
-          e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
-        })
-        .Entity<CoreTask.Dto>(e => {
-          e.ToTable(nameof(CoreTask).ToLower());
-          e.HasKey(e2 => e2.CoreId);
-        });
-  }
   
   public async Task Initialise() {
     await using var db = getdb();
