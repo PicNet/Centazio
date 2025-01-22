@@ -16,7 +16,7 @@ internal static class InspectUtils {
           // load the assembly from the correct dll file, i.e. from the correct project
           var fn = dll.Split(SEP).Last();
           return fn.IndexOf("Centazio", StringComparison.Ordinal) >= 0 && 
-              dll.IndexOf($"{fn.Replace(".dll", "")}{SEP}bin{SEP}Debug", StringComparison.Ordinal) >= 0;
+              dll.IndexOf($"{fn.Replace(".dll", String.Empty)}{SEP}bin{SEP}Debug", StringComparison.Ordinal) >= 0;
         })
         .ToList();
     var distinct = new Dictionary<string, (DateTime LastWrite, string Full)>();

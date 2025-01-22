@@ -1,28 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Minio" />
-        <PackageReference Include="NUnit" />
-        <PackageReference Include="NUnit.Analyzers">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" />
         <PackageReference Include="Testcontainers.DynamoDb" />
         <PackageReference Include="Testcontainers.Minio" />
     </ItemGroup>
-
-    <ItemGroup>
-        <Using Include="NUnit.Framework" />
-    </ItemGroup>
-
+    
     <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />

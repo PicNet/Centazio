@@ -1,30 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     
     <ItemGroup>
-        <PackageReference Include="coverlet.collector">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="NUnit" />
-        <PackageReference Include="NUnit.Analyzers">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Using Include="NUnit.Framework" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Core\Centazio.Core.csproj" />
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ReferencePathWithRefAssemblies Update="C:\Users\guidot\.nuget\packages\microsoft.entityframeworkcore\9.0.0-rc.2.24474.1\lib\net8.0\Microsoft.EntityFrameworkCore.dll" />
     </ItemGroup>
 
 </Project>

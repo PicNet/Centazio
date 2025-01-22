@@ -85,7 +85,7 @@ public class TestingEfCoreStorageRepository(Func<CentazioDbContext> getdb, IDbFi
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
   }
   
-  public static void CreateCentazioEfCoreModel(ModelBuilder builder) => builder
+  public static void CreateTestingCoreStorageEfModel(ModelBuilder builder) => builder
       .HasDefaultSchema(CoreSchemaName)
       .Entity<CoreStorageMeta.Dto>(e => {
         e.ToTable(CoreStorageMetaName, CtlSchemaName);

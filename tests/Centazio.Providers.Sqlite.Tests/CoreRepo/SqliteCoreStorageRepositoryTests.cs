@@ -8,7 +8,7 @@ public class SqliteCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
   
   protected override async Task<ITestingCoreStorage> GetRepository() => 
       await new TestingEfCoreStorageRepository(
-          () => new SqliteDbContext("Data Source=core_storage.db", TestingEfCoreStorageRepository.CreateCentazioEfCoreModel), 
+          () => new SqliteDbContext("Data Source=core_storage.db", TestingEfCoreStorageRepository.CreateTestingCoreStorageEfModel), 
           new SqliteDbFieldsHelper()).Initalise();
 
 }

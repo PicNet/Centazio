@@ -9,7 +9,7 @@ public class SqlServerCoreStorageRepositoryTests : BaseCoreStorageRepositoryTest
   protected override async Task<ITestingCoreStorage> GetRepository() {
     var connstr = (await SqlConn.GetInstance(false)).ConnStr;
     return await new TestingEfCoreStorageRepository(
-        () => new SqlServerDbContext(connstr, TestingEfCoreStorageRepository.CreateCentazioEfCoreModel), 
+        () => new SqlServerDbContext(connstr, TestingEfCoreStorageRepository.CreateTestingCoreStorageEfModel), 
         new SqlServerDbFieldsHelper()).Initalise();
   }
 
