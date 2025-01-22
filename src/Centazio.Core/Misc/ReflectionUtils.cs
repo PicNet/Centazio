@@ -41,19 +41,27 @@ public static class ReflectionUtils {
     var ignore = new [] { "Centazio.Core", "Centazio.Test", "Centazio.Cli" };
     var root = FsUtils.GetSolutionRootDirectory();
     var done = new Dictionary<string, bool>();
-    return Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories).SelectMany(dll => {
-      var assname = dll.Split('\\').Last();
-      if (!assnames.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
-          || ignore.Any(i => assname.StartsWith(i, StringComparison.OrdinalIgnoreCase))
-          || !done.TryAdd(assname, true)) return [];
+    var dlls = Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories);
 
-      return Assembly.LoadFrom(dll).GetExportedTypes()
+    var first = dlls.SelectMany(path => InspectDll(path, true)).ToList();
+    var second = dlls.SelectMany(path => InspectDll(path, false)).ToList();
+    return first.Concat(second).ToList();
+    
+    List<Type> InspectDll(string path, bool checkproject) {
+      var fn = path.Split('\\').Last();
+      if (!assnames.Any(i => fn.StartsWith(i, StringComparison.OrdinalIgnoreCase))
+          || ignore.Any(i => fn.StartsWith(i, StringComparison.OrdinalIgnoreCase))
+          || done.ContainsKey(fn)) return [];
+      if (checkproject && path.IndexOf($"{fn.Replace(".dll", String.Empty)}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) < 0) return [];
+      done[fn] = true;
+      return Assembly.LoadFrom(path).GetExportedTypes()
           .Where(type => 
               type.FullName is not null && 
               !type.IsAbstract &&
               type.IsAssignableTo(t) ||
-              IsDescendant(type));
-    }).ToList();
+              IsDescendant(type))
+          .ToList();
+    }
     
     bool IsDescendant(Type typ) => 
         (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t
