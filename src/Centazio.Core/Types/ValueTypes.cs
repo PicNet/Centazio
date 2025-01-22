@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
+using Cronos;
 
 namespace Centazio.Core.Types;
 
@@ -51,4 +52,14 @@ public sealed record CoreEntityTypeName(string Value) : ObjectName(Value) {
     public static readonly LifecycleStage Promote = new(nameof(Promote));
     public static readonly LifecycleStage Write = new(nameof(Write));
   }
+}
+
+public record ValidCron {
+  public ValidCron(string expression) {
+    ArgumentException.ThrowIfNullOrWhiteSpace(expression);
+    Value = CronExpression.Parse(Expression = expression.Trim(), CronFormat.IncludeSeconds); 
+  }
+  
+  public string Expression { get; }
+  public CronExpression Value { get; }
 }

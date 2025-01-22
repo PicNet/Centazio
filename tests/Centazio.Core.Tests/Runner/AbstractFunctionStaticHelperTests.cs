@@ -210,14 +210,14 @@ public class AbstractFunctionStaticHelperTests {
         => new (
             await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString()), UtcDate.UtcNow),
             new BaseFunctionConfig(),
-            new (new SystemEntityTypeName(result.ToString()), new (new (TestingDefaults.CRON_EVERY_SECOND)), GetAbortingOrEmptyResult), 
+            new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, GetAbortingOrEmptyResult), 
             DateTime.MinValue);
     
     public static List<ReadOperationConfig> READ_OP_CONFIGS => [
-      new(new SystemEntityTypeName("1"), new(new(TestingDefaults.CRON_EVERY_SECOND)), GetEmptyResults),
-      new(new SystemEntityTypeName("2"), new(new(TestingDefaults.CRON_EVERY_SECOND)), GetEmptyResults),
-      new(new SystemEntityTypeName("3"), new(new(TestingDefaults.CRON_EVERY_SECOND)), GetEmptyResults),
-      new(new SystemEntityTypeName("4"), new(new(TestingDefaults.CRON_EVERY_SECOND)), GetEmptyResults)
+      new(new SystemEntityTypeName("1"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
+      new(new SystemEntityTypeName("2"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
+      new(new SystemEntityTypeName("3"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
+      new(new SystemEntityTypeName("4"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults)
     ];
   }
   
