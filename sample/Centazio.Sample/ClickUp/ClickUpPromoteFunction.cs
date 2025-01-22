@@ -8,10 +8,10 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(Constants.CLICK_UP, stager, corestg, ctl) {
+public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(Constants.Systems.ClickUp, stager, corestg, ctl) {
   
   protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(typeof(ClickUpTask), Constants.CU_TASK, Constants.TASK, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
+    new PromoteOperationConfig(typeof(ClickUpTask), Constants.SystemEntities.ClickUp.Task, Constants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
   ]);
 
   private Task<List<EntityEvaluationResult>> PromoteTasks(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
@@ -19,7 +19,7 @@ public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage
       var cutask = eval.SystemEntity.To<ClickUpTask>();
       var task = eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), cutask.name);
       // todo: users should not need to know about the checksum algorithm here
-      return eval.MarkForPromotion(eval, Constants.CLICK_UP, task, config.FuncConfig.ChecksumAlgorithm.Checksum);
+      return eval.MarkForPromotion(eval, Constants.Systems.ClickUp, task, config.FuncConfig.ChecksumAlgorithm.Checksum);
     }).ToList();
     return Task.FromResult(results);
   }
