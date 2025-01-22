@@ -17,7 +17,7 @@ public class HostBootstrapper(CentazioSettings settings) {
     
     var svcs = new ServiceCollection();
     RegisterCoreServices(svcs);
-    var integrations = GetCentazioIntegrations(filters);
+    var integrations = GetCentazioIntegrations();
     var funcs = RegisterCentazioFunctions(svcs, integrations, filters);
     var prov = svcs.BuildServiceProvider();
     
@@ -48,8 +48,8 @@ public class HostBootstrapper(CentazioSettings settings) {
     }
   }
 
-  private List<IIntegrationBase> GetCentazioIntegrations(List<string> filters) {
-    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.AllowedFunctionAssemblies).Where(type => DoesTypeMatchFilter(type, filters)).ToList();
+  private List<IIntegrationBase> GetCentazioIntegrations() {
+    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.AllowedFunctionAssemblies).ToList();
     if (!integrations.Any()) throw new Exception("Could not find any Centazio Integrations in provided assemblies");
     return integrations.Select(it => (IIntegrationBase) (Activator.CreateInstance(it) ?? throw new Exception())).ToList();
   }
@@ -57,8 +57,8 @@ public class HostBootstrapper(CentazioSettings settings) {
   private List<Type> RegisterCentazioFunctions(ServiceCollection svcs, List<IIntegrationBase> integrations, List<string> filters) {
     var funcs = integrations.SelectMany(integration => {
       integration.RegisterServices(svcs);
-      var functypes = integration.GetAllFunctionTypes()
-          .Where(functype => DoesTypeMatchFilter(functype, filters))
+      var functypes = ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), integration.GetType().Assembly)
+          .Where(DoesTypeMatchFilter)
           .ToList();
       if (!functypes.Any()) throw new Exception($"Could not find any Centazio Functions in integration[{integration.GetType().Name}]");
       return functypes;
@@ -66,10 +66,10 @@ public class HostBootstrapper(CentazioSettings settings) {
     funcs.ForEach(functype => svcs.AddSingleton(functype));
     Log.Information($"HostBootstrapper found {integrations.Count} integrations (and {funcs.Count} functions):\n\t" + String.Join("\n\t", integrations.Select(integration => integration.GetType().Name)));
     return funcs;
-  }
-
-  private bool DoesTypeMatchFilter(Type type, List<string> filters) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
+    
+    bool DoesTypeMatchFilter(Type type) => filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => (type.FullName ?? String.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase));
+  }
 
   private async Task InitialiseCoreServices(ServiceProvider prov) {
     await prov.GetRequiredService<IStagedEntityRepository>().Initialise();

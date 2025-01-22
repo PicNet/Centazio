@@ -54,18 +54,23 @@ public static class ReflectionUtils {
           || done.ContainsKey(fn)) return [];
       if (checkproject && path.IndexOf($"{fn.Replace(".dll", String.Empty)}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) < 0) return [];
       done[fn] = true;
-      return Assembly.LoadFrom(path).GetExportedTypes()
-          .Where(type => 
-              type.FullName is not null && 
-              !type.IsAbstract &&
-              type.IsAssignableTo(t) ||
-              IsDescendant(type))
-          .ToList();
+      
+      return GetAllTypesThatImplement(t, Assembly.LoadFrom(path));
     }
-    
-    bool IsDescendant(Type typ) => 
+  }
+
+  public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {
+    return assembly.GetExportedTypes()
+        .Where(type =>
+            (type.FullName is not null &&
+                !type.IsAbstract &&
+                type.IsAssignableTo(t)) ||
+            IsDescendant(type))
+        .ToList();
+
+    bool IsDescendant(Type typ) =>
         (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t
         || (typ.BaseType is not null && IsDescendant(typ.BaseType));
   }
-  
+
 }

@@ -6,7 +6,6 @@ namespace Centazio.Core;
 
 public interface IIntegrationBase {
   void RegisterServices(IServiceCollection svcs);
-  List<Type> GetAllFunctionTypes();
   Task Initialise(ServiceProvider prov);
 }
 
@@ -29,7 +28,6 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
     RegisterIntegrationSpecificServices(svcs);
   }
 
-  public abstract List<Type> GetAllFunctionTypes();
   public abstract Task Initialise(ServiceProvider prov);
   
   protected abstract void RegisterIntegrationSpecificServices(IServiceCollection svcs);
