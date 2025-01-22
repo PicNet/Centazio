@@ -1,5 +1,6 @@
 # Todo
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
+- printing DisplayName of entities in logs should be retricted to a certain length and displayed in an indented list
 - good case study / demo:
   - crm
   - finance
