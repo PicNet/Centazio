@@ -6,13 +6,25 @@ using Centazio.Core.Types;
 
 namespace Centazio.Core.Promote;
 
-public record EntityForPromotionEvaluation(ISystemEntity SystemEntity, CoreEntityAndMeta? ExistingCoreEntityAndMeta) {
-  public EntityEvaluationResult MarkForPromotion(EntityForPromotionEvaluation eval, SystemName system, ICoreEntity core, Func<ICoreEntity, CoreEntityChecksum> checksum) => 
-      new EntityToPromote(
-          SystemEntity, 
-          eval.ExistingCoreEntityAndMeta?.Update(system, core, checksum) 
-              ?? CoreEntityAndMeta.Create(system, eval.SystemEntity.SystemId, core, checksum));
+public record EntityForPromotionEvaluation {
+
+  public ISystemEntity SystemEntity { get; }
+  public CoreEntityAndMeta? ExistingCoreEntityAndMeta { get; }
   
+  private IChecksumAlgorithm ChecksumAlgo { get; }
+  
+  public EntityForPromotionEvaluation(ISystemEntity sysent, CoreEntityAndMeta? coreent, IChecksumAlgorithm checksum) {
+    SystemEntity = sysent;
+    ExistingCoreEntityAndMeta = coreent;
+    ChecksumAlgo = checksum;
+  }
+  
+  public EntityEvaluationResult MarkForPromotion(SystemName system, ICoreEntity core) {
+    return new EntityToPromote(SystemEntity,
+        ExistingCoreEntityAndMeta?.Update(system, core, ChecksumAlgo.Checksum)
+        ?? CoreEntityAndMeta.Create(system, SystemEntity.SystemId, core, ChecksumAlgo.Checksum));
+  }
+
   public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SystemEntity, reason);
 }
 

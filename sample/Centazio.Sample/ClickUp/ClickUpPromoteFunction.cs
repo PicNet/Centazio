@@ -18,8 +18,7 @@ public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage
     var results  = toeval.Select(eval => {
       var cutask = eval.SystemEntity.To<ClickUpTask>();
       var task = eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), cutask.name);
-      // todo: users should not need to know about the checksum algorithm here
-      return eval.MarkForPromotion(eval, Constants.Systems.ClickUp, task, config.FuncConfig.ChecksumAlgorithm.Checksum);
+      return eval.MarkForPromotion(Constants.Systems.ClickUp, task);
     }).ToList();
     return Task.FromResult(results);
   }

@@ -15,7 +15,7 @@ public class FinPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationC
   
   Task<List<EntityEvaluationResult>> EvaluateCustomers(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => Task.FromResult(toeval.Select(eval => {
     var core = ctx.Converter.FinAccountToCoreCustomer(eval.SystemEntity.To<FinAccount>(), eval.ExistingCoreEntityAndMeta?.As<CoreCustomer>());
-    return eval.MarkForPromotion(eval, config.State.System, core, ctx.ChecksumAlg.Checksum);
+    return eval.MarkForPromotion(config.State.System, core);
   }).ToList());
 
   async Task<List<EntityEvaluationResult>> EvaluateInvoices(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
@@ -24,7 +24,7 @@ public class FinPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationC
     return await toeval.Select(async eval => {
       var fininv = eval.SystemEntity.To<FinInvoice>();
       var core = await ctx.Converter.FinInvoiceToCoreInvoice(fininv, eval.ExistingCoreEntityAndMeta?.As<CoreInvoice>(), maps[fininv.AccountSystemId]);
-      return eval.MarkForPromotion(eval, config.State.System, core, ctx.ChecksumAlg.Checksum);
+      return eval.MarkForPromotion(config.State.System, core);
     }).Synchronous();
   }
 }
