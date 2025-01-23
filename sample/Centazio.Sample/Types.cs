@@ -24,6 +24,21 @@ public record ClickUpTask(string id, string name, ClickUpTask.Status status, str
 }
 
 ////////////////////////////////////
+// Google Sheets Entities
+////////////////////////////////////
+
+[IgnoreNamingConventions] 
+public record GoogleSheetsTaskRow(int Index, string Row) : ISystemEntity {
+  
+  public object GetChecksumSubset() => new { Index, Row };
+  
+  public SystemEntityId SystemId { get; } = new(Index.ToString());
+  public DateTime LastUpdatedDate => UtcDate.UtcNow;
+  public string DisplayName => Row;
+
+}
+
+////////////////////////////////////
 // Core Entities
 ////////////////////////////////////
 

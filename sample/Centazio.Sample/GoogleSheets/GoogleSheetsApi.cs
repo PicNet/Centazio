@@ -9,6 +9,7 @@ public class GoogleSheetsApi(SampleSettings settings) {
 
   public async Task<List<string>> GetSheetData() {
     using var service = GetService();
+    
     var req = service.Spreadsheets.Values.Get(settings.GoogleSheets.SheetId, "Sheet1");
     var res = await req.ExecuteAsync();
     return res.Values.Select(row => row.FirstOrDefault()?.ToString() ?? String.Empty).ToList();

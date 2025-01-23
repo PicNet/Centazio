@@ -12,7 +12,7 @@ namespace Centazio.Core;
 public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
     AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl) {
   
-  protected ReadOperationResult CreateResult(List<string> results, DateTime? nextcheckpointutc) => !results.Any() ? 
+  protected ReadOperationResult CreateResult(List<string> results, DateTime? nextcheckpointutc = null) => !results.Any() ? 
       ReadOperationResult.EmptyResult() : 
       ReadOperationResult.Create(results, nextcheckpointutc ?? FunctionStartTime);
 
