@@ -25,13 +25,14 @@ public static class ReflectionUtils {
         nic.WriteState == NullabilityState.Nullable;
   }
 
-  public static bool IsJsonIgnore(Type t, string prop) => GetPropAttribute<JsonIgnoreAttribute>(t, prop) is not null;
+  public static bool IsJsonIgnore(Type t, string prop) {
+    return GetPropAttribute<JsonIgnoreAttribute>(t, prop) is not null;
+  }
 
   public static A? GetPropAttribute<A>(Type t, string prop) where A : Attribute {
     var p = t.GetProperty(prop);
-    if (p is null) return null;
-    if (p.GetCustomAttribute(typeof(A)) is A att) return att;
-    if (p.PropertyType.GetCustomAttribute(typeof(A)) is A att2) return att2;
+    if (p?.GetCustomAttribute(typeof(A), true) is A att) return att;
+    if (p?.PropertyType.GetCustomAttribute(typeof(A)) is A att2) return att2;
 
     var ifaceatt = t.GetInterfaces().Select(i => GetPropAttribute<A>(i, prop)).FirstOrDefault(a => a is not null);
     if (ifaceatt is not null) return ifaceatt;

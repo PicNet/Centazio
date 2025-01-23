@@ -103,13 +103,13 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       return props;
     }).ToList();
     
-    var msgs = updated.Select(e => $"[{e.ToPromoteEntityAndMeta.CoreEntity.DisplayName}({e.ToPromoteEntityAndMeta.Meta.CoreId})] -> OriginalCoreId[{e.OriginalEntityAndMeta.CoreEntity.CoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
+    var msgs = updated.Select(e => $"[{e.ToPromoteEntityAndMeta.CoreEntity.GetShortDisplayName()}] -> OriginalCoreId[{e.OriginalEntityAndMeta.CoreEntity.CoreId}] Meaningful[{e.OriginalEntityChecksum != e.PostChangeChecksum}]:" +
           $"\n\tOriginal Checksum[{e.OriginalEntityAndMeta.CoreEntity.GetChecksumSubset()}({e.OriginalEntityChecksum})]" +
           $"\n\tNew Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]");
     Log.Information("PromoteOperationRunner: identified bounce-backs({@ChangesCount}) [{@System}/{@CoreEntityTypeName}]" + String.Join("\n", msgs), bouncebacks.Count, system, corename);
     
     var errs = updated.Where(e => e.PreChangeChecksum != e.PostChangeChecksum)
-        .Select(e => $"\n[{e.ToPromoteEntityAndMeta.CoreEntity.DisplayName}({e.ToPromoteEntityAndMeta.Meta.CoreId})]:" +
+        .Select(e => $"\n[{e.ToPromoteEntityAndMeta.CoreEntity.GetShortDisplayName()}]:" +
           $"\n\tPrechange Checksum[{e.PreChangeChecksumSubset}({e.PreChangeChecksum})]" +
           $"\n\tPostchange Checksum[{e.PostChangeChecksumSubset}({e.PostChangeChecksum})]")
         .ToList();

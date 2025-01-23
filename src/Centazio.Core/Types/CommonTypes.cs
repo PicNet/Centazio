@@ -21,13 +21,34 @@ public interface IGetChecksumSubset {
   object GetChecksumSubset();
 }
 
-public interface ISystemEntity : IGetChecksumSubset {
+public interface IHasDisplayName {
+  
+  [JsonIgnore] public string DisplayName { get; }
+  string GetId();
+  
+  public string GetShortDisplayName() {
+    var maxlen = 100;
+    var shortnm = DisplayName.Length > maxlen ? DisplayName[..maxlen] + "..." : DisplayName;
+    return $"{shortnm}({GetId()})";
+  }
+
+}
+
+public interface ICoreEntity : IHasDisplayName, IGetChecksumSubset {
+  
+  public CoreEntityId CoreId { get; set; }
+    
+  string IHasDisplayName.GetId() => CoreId.Value;
+  public E To<E>() where E : ICoreEntity => (E) this;
+}
+
+
+public interface ISystemEntity : IHasDisplayName, IGetChecksumSubset {
 
   public SystemEntityId SystemId { get; }
   public DateTime LastUpdatedDate { get; }
   
-  [JsonIgnore] public string DisplayName { get; }
-  
+  string IHasDisplayName.GetId() => SystemId.Value;
   public E To<E>() where E : ISystemEntity => (E) this;
 }
 

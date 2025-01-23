@@ -4,19 +4,11 @@ using Centazio.Core.Types;
 
 namespace Centazio.Core.CoreRepo;
 
-public interface ICoreEntity : IGetChecksumSubset {
-  
-  public CoreEntityId CoreId { get; set; }
-  [JsonIgnore] public string DisplayName { get; }
-    
-  public E To<E>() where E : ICoreEntity => (E) this;
-}
-
-
 public abstract record CoreEntityBase(CoreEntityId CoreId) : ICoreEntity {
 
-  public CoreEntityId CoreId { get; set; } = CoreId;
   [JsonIgnore] public abstract string DisplayName { get; }
+  
+  public CoreEntityId CoreId { get; set; } = CoreId;
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase() : this((CoreEntityId) null!) { }

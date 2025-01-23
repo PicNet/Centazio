@@ -43,7 +43,7 @@ public class InMemorySimulationCoreStorageRepository(IEpochTracker tracker, Func
       return e;
     }).ToList();
     
-    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")) + $"] Created[{entities.Count - updated}] Updated[{updated}]");
+    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")) + $"] Created[{entities.Count - updated}] Updated[{updated}]");
     return Task.FromResult(upserted);
   }
 

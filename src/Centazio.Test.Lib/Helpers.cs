@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Core.Types;
 
@@ -7,8 +6,6 @@ namespace Centazio.Test.Lib;
 
 public static class Helpers {
   
-  public static string SecsDiff(DateTime? dt = null) => ((int) ((dt ?? UtcDate.UtcNow) - TestingDefaults.DefaultStartDt).TotalSeconds).ToString();
-
   public static StagedEntityChecksum TestingStagedEntityChecksum(string data) => new (data.GetHashCode().ToString());
   public static CoreEntityChecksum TestingCoreEntityChecksum(ICoreEntity obj) => new (ChecksumImpl(obj));
   public static SystemEntityChecksum TestingSystemEntityChecksum(ISystemEntity obj) => new(ChecksumImpl(obj));

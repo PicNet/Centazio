@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Misc;
+using Centazio.Core.Types;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
@@ -59,7 +60,8 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     
     ctx.Debug($"CrmSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => {
       var cust = api.Customers.Single(c => c.SystemId == i.CustomerSystemId);
-      return $"Cust:{cust.DisplayName}({cust.SystemId})/Inv:{i.SystemId}:{i.AmountCents}c";
+      // todo: why is this cast neccessary
+      return $"Cust:{((IHasDisplayName)cust).GetShortDisplayName()}/Inv:{i.SystemId}:{i.AmountCents}c";
     }))}");
     
     api.Invoices.AddRange(toadd);

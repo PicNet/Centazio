@@ -19,7 +19,7 @@ public class PromotionBag(StagedEntity staged) {
   public CoreEntityAndMeta CoreEntityAndMeta => UpdatedCoreEntityAndMeta ?? throw new Exception();
   
   public void MarkIgnore(ValidString reason) {
-    Log.Debug($"PromotionBag.MarkIgnore[{UpdatedCoreEntityAndMeta?.CoreEntity.DisplayName}] - reason[{reason}]");
+    Log.Debug($"PromotionBag.MarkIgnore[{UpdatedCoreEntityAndMeta?.CoreEntity.GetShortDisplayName()}] - reason[{reason}]");
     
     UpdatedCoreEntityAndMeta = null;
     IgnoreReason = reason;
