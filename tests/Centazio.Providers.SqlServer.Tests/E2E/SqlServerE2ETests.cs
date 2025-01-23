@@ -29,7 +29,7 @@ public class SqlServerSimulationProvider : ISimulationProvider {
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(connstr, nameof(Ctl).ToLower(), nameof(StagedEntity).ToLower())), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SimulationSqlServerDbContext(connstr), 
-        ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
+        ctx.Epoch, dbf).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

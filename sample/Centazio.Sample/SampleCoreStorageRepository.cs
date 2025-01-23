@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Core.Types;
 using Centazio.Providers.EF;
@@ -7,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample;
 
-public class SampleCoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf, Func<ICoreEntity, CoreEntityChecksum> checksum) : AbstractCoreStorageEfRepository(getdb, checksum) {
+public class SampleCoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
   
   public async Task Initialise() {
     await using var db = Db();

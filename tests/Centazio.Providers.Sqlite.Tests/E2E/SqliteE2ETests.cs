@@ -33,7 +33,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SqliteSimulationDbContext(), 
-        ctx.Epoch, ctx.ChecksumAlg.Checksum, dbf).Initialise();
+        ctx.Epoch, dbf).Initialise();
   }
   
   public async ValueTask DisposeAsync() {

@@ -1,14 +1,13 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Core.Types;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
 
 namespace Centazio.Providers.EF.Tests.E2E;
 
-public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum, IDbFieldsHelper dbf) : AbstractSimulationCoreStorageRepository(checksum) {
+public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IEpochTracker tracker, IDbFieldsHelper dbf) : 
+    AbstractCoreStorageEfRepository(getdb), ISimulationCoreStorageRepository {
   
   private static string CoreSchemaName => "dbo";
   private static string CtlSchemaName { get; } = nameof(Core.Ctl).ToLower();
@@ -37,7 +36,7 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
       });
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
-    await using var db = getdb();
+    await using var db = Db();
     await DropTablesImpl(db);
     
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
@@ -50,9 +49,29 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
     return this;
   }
 
+  protected override void UpsertEntity(CoreEntityAndMeta entity, EntityState state, CentazioDbContext db) {
+    if (state == EntityState.Added) tracker.Add(entity);
+    else tracker.Update(entity);
+    
+    base.UpsertEntity(entity, state, db);
+  }
+
   public override async ValueTask DisposeAsync() {
-    await using var db = getdb();
+    await using var db = Db();
     await DropTablesImpl(db);
+    await base.DisposeAsync();
+  }
+
+  protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
+    var strids = coreids.Select(id => id.Value).ToList();
+    if (coretype == CoreEntityTypeName.From<CoreMembershipType>()) return  await Impl<CoreMembershipType, CoreMembershipType.Dto>();
+    if (coretype == CoreEntityTypeName.From<CoreCustomer>()) return  await Impl<CoreCustomer, CoreCustomer.Dto>();
+    if (coretype == CoreEntityTypeName.From<CoreInvoice>()) return  await Impl<CoreInvoice, CoreInvoice.Dto>();
+    
+    throw new NotSupportedException(coretype.Value);
+
+    async Task<List<ICoreEntity>> Impl<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> => 
+        (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList();
   }
 
   private async Task DropTablesImpl(CentazioDbContext db) {
@@ -63,45 +82,22 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
   }
 
-  public override async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
-    var existing = (await GetExistingEntities(coretype, entities.Select(e => e.CoreEntity.CoreId).ToList())).ToDictionary(e => e.CoreEntity.CoreId);
-    await using var db = getdb();
-    entities.ForEach(t => {
-      var isexisting = existing.ContainsKey(t.CoreEntity.CoreId);
-      if (isexisting) { tracker.Update(t); } else { tracker.Add(t); }
-      var dtos = t.ToDtos();
-      db.Attach(dtos.CoreEntityDto).State = isexisting ? EntityState.Modified : EntityState.Added;
-      db.Attach(dtos.MetaDto).State = isexisting ? EntityState.Modified : EntityState.Added;
-    });
-    await db.SaveChangesAsync();
-
-    Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.DisplayName}({e.CoreEntity.CoreId})")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}]");
-    return entities;
-  }
-
-  protected override async Task<List<CoreEntityAndMeta>> GetExistingEntities<E, D>(List<CoreEntityId> coreids)  {
-    await using var db = getdb();
-    var strids = coreids.Select(id => id.Value);
-    return (await db.Set<D>()
-        .Join(db.Set<CoreStorageMeta.Dto>(), d => d.CoreId, m => m.CoreId, (e, m) => new { CoreEntity=e, Meta=m })
-        .Where(dtos => strids.Contains(dtos.Meta.CoreId))
-        .ToListAsync())
-        .Select(dto => new CoreEntityAndMeta(dto.CoreEntity.ToBase(), dto.Meta.ToBase()))
-        .ToList();
-  }
-
-  protected override async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite<E, D>(SystemName exclude, DateTime after) {
-    await using var db = getdb();
-    return (await db.Set<D>()
-        .Join(db.Set<CoreStorageMeta.Dto>(), d => d.CoreId, m => m.CoreId, (e, m) => new { CoreEntity=e, Meta=m })
-        .Where(dtos => dtos.Meta.DateUpdated > after && dtos.Meta.LastUpdateSystem != exclude.Value)
-        .ToListAsync())
-        .Select(dto => new CoreEntityAndMeta(dto.CoreEntity.ToBase(), dto.Meta.ToBase()))
-        .ToList();
-  }
-  
-  protected override async Task<E> GetSingle<E, D>(CoreEntityId coreid) where E : class {
-    await using var db = getdb();
+  protected async Task<E> GetSingle<E, D>(CoreEntityId coreid) where E : CoreEntityBase where D : class, ICoreEntityDto<E> {
+    await using var db = Db();
     return (await db.Set<D>().SingleAsync(dto => dto.CoreId == coreid.Value)).ToBase();
   }
+
+  protected async Task<List<E>> GetAll<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> {
+    await using var db = Db();
+    return (await db.Set<D>().ToListAsync()).Select(e => e.ToBase()).ToList();
+  }
+
+  // ISimulationCoreStorageRepository
+  
+  public async Task<List<CoreMembershipType>> GetMembershipTypes() => await GetAll<CoreMembershipType, CoreMembershipType.Dto>();
+  public async Task<List<CoreCustomer>> GetCustomers() => await GetAll<CoreCustomer, CoreCustomer.Dto>();
+  public async Task<List<CoreInvoice>> GetInvoices() => await GetAll<CoreInvoice, CoreInvoice.Dto>();
+  
+  public async Task<CoreMembershipType> GetMembershipType(CoreEntityId coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
+
 }

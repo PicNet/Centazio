@@ -26,17 +26,16 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
   public CoreEntity ToCoreEntity() => new(new(SystemId.Value), FirstName, LastName, DateOfBirth);
 }
 
-public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth) : ICoreEntity {
+public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName, DateOnly DateOfBirth) : CoreEntityBase(CoreId) {
 
-  public CoreEntityId CoreId { get; set; } = CoreId;
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   [MaxLength(64)] public string FirstName { get; init; } = FirstName;
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   [MaxLength(64)] public string LastName { get; init; } = LastName;
   
-  public string DisplayName => $"{FirstName} {LastName}";
+  public override string DisplayName => $"{FirstName} {LastName}";
   
-  public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
+  public override object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
 
   public record Dto : ICoreEntityDto<CoreEntity> {
     public string CoreId { get; init; } = null!;

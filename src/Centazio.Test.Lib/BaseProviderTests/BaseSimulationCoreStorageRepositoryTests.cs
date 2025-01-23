@@ -13,9 +13,9 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
   private static readonly CoreEntityTypeName CORETYPE = CoreEntityTypeName.From<CoreMembershipType>();
   
   private InMemoryEpochTracker tracker = null!;
-  private AbstractSimulationCoreStorageRepository repo = null!;
+  private ISimulationCoreStorageRepository repo = null!;
   
-  protected abstract Task<AbstractSimulationCoreStorageRepository> GetRepository(InMemoryEpochTracker tracker);
+  protected abstract Task<ISimulationCoreStorageRepository> GetRepository(InMemoryEpochTracker tracker);
   
   [SetUp] public async Task SetUp() {
     tracker = new InMemoryEpochTracker();

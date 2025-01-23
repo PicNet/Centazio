@@ -1,5 +1,4 @@
 ﻿using Centazio.Core;
-using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Providers.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +11,7 @@ public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets
     svcs.AddSingleton<ClickUpApi>();
     svcs.AddSingleton<ICoreStorage>(new SampleCoreStorageRepository(
         () => new SampleDbContext(),
-        new SqliteDbFieldsHelper(), 
-        new Sha256ChecksumAlgorithm().Checksum));
+        new SqliteDbFieldsHelper()));
   }
 
   public override async Task Initialise(ServiceProvider prov) {
