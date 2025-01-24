@@ -2,7 +2,7 @@
   "SecretsFolders": ["\\\\aus-syd-dc05.internal.picnet.com.au\\secrets\\centazio3", "/mnt/secrets/centazio3"],
   "ClickUp": {
     "BaseUrl": "https://api.clickup.com/api/v2/",
-    "ListId": "186791674"
+    "ListId": "174776071"
   },
   "GoogleSheets": {
     "CredentialsFile": "centazio-sample-project-credentials.json",

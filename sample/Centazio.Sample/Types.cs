@@ -10,12 +10,9 @@ namespace Centazio.Sample;
 ////////////////////////////////////
 
 [IgnoreNamingConventions] 
-public record ClickUpTask(string id, string name, ClickUpTask.Status status, string markdown_description, string date_created, string date_updated, string? date_closed, string? date_done, ClickUpTask.Creator creator) : ISystemEntity {
-
-  public record Status(string status, string type);
-  public record Creator(int id, string username);
-
-  public object GetChecksumSubset() => new { id, name, status, markdown_description, date_closed, date_done, creator };
+public record ClickUpTask(string id, string name, string date_updated) : ISystemEntity {
+  
+  public object GetChecksumSubset() => new { id, name };
   
   public SystemEntityId SystemId { get; } = new(id);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);

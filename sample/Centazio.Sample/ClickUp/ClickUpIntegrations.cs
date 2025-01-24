@@ -8,15 +8,14 @@ namespace Centazio.Sample.ClickUp;
 public class ClickUpIntegrations : IntegrationBase<SampleSettings, SampleSecrets> {
   
   protected override void RegisterIntegrationSpecificServices(IServiceCollection svcs) {
+    var core = new SampleCoreStorageRepository(() => new SampleDbContext(), new SqliteDbFieldsHelper());
+    svcs.AddSingleton<ICoreStorage>(core);
+    svcs.AddSingleton(core);
     svcs.AddSingleton<ClickUpApi>();
-    svcs.AddSingleton<ICoreStorage>(new SampleCoreStorageRepository(
-        () => new SampleDbContext(),
-        new SqliteDbFieldsHelper()));
   }
 
   public override async Task Initialise(ServiceProvider prov) {
-    var core = (SampleCoreStorageRepository) prov.GetRequiredService<ICoreStorage>();
-    await core.Initialise();
+    await ((SampleCoreStorageRepository) prov.GetRequiredService<ICoreStorage>()).Initialise();
   }
 
 }

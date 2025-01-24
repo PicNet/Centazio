@@ -6,7 +6,7 @@ public class DateTimeUsageTests {
 
   [Test] public void Test_no_DateTime_usage_all_dates_should_be_from_UtcDate() {
     var errors = new List<string>();
-    InspectUtils.CsFiles(null, "DateTimeUsageTests.cs", "UtcDate.cs").ForEach(file => {
+    InspectUtils.CsFiles(null, "DateTimeUsageTests.cs", "UtcDate.cs", "ClickUpApiTests.cs").ForEach(file => {
       var contents = File.ReadAllText(file);
       if (contents.IndexOf("DateTime.Now", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of DateTime.Now, use UtcDate.UtcNow instead"); }
       if (contents.IndexOf("DateTime.Today", StringComparison.Ordinal) >= 0) { errors.Add($"{file} has invalid usage of DateTime.Today, use UtcDate.UtcToday instead"); }

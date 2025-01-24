@@ -35,6 +35,7 @@ public sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString Igno
 
 public delegate Task<List<EntityEvaluationResult>> BuildCoreEntitiesHandler(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
 
+// todo: Add test that SystemEntityType implements the ISystemEntity interface 
 public record PromoteOperationConfig(
     Type SystemEntityType, 
     SystemEntityTypeName SystemEntityTypeName,
