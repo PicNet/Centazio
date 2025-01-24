@@ -17,7 +17,7 @@ public class GoogleSheetsPromoteFunction(IStagedEntityRepository stager, ICoreSt
   private Task<List<EntityEvaluationResult>> PromoteTasks(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results  = toeval.Select(eval => {
       var row = eval.SystemEntity.To<GoogleSheetsTaskRow>();
-      var task = eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), row.Row);
+      var task = eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), row.Value);
       // todo: why do we have to pass `GoogleSheetsTaskRow` here, when the function already knows the system.  The user should not have to use this twice
       return eval.MarkForPromotion(SampleConstants.Systems.GoogleSheets, task);
     }).ToList();

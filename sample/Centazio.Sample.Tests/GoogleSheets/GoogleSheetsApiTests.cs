@@ -1,5 +1,4 @@
 ﻿using Centazio.Sample.GoogleSheets;
-using Centazio.Test.Lib;
 
 namespace Centazio.Sample.Tests.GoogleSheets;
 
@@ -17,6 +16,6 @@ public class GoogleSheetsApiTests {
     Assert.That(rows, Is.EquivalentTo(["Tasks", "test1", "test2"]));
   }
   
-  private GoogleSheetsApi Api() => new(TestingFactories.Settings<SampleSettings>());
+  private GoogleSheetsApi Api() => new(F.Settings<SampleSettings>());
 
 }

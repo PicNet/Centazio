@@ -7,7 +7,7 @@ using Serilog;
 namespace Centazio.Providers.EF;
 
 public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> getdb) : ICoreStorage {
-  protected Func<CentazioDbContext> Db => getdb;
+  public Func<CentazioDbContext> Db => getdb;
   
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     await using var db = Db();
@@ -32,8 +32,11 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   }
   
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
-    var cems = await  GetExistingEntities(coretype, coreids);
-    return cems.ToDictionary(e => e.CoreEntity.CoreId, e => e.Meta.CoreEntityChecksum);
+    await using var db = Db();
+    var strids = coreids.Select(cid => cid.Value).ToList();
+    return await db.Set<CoreStorageMeta.Dto>()
+            .Where(m => m.CoreEntityTypeName == coretype.Value && strids.Contains(m.CoreId))
+            .ToDictionaryAsync(m => new CoreEntityId(m.CoreId), m => new CoreEntityChecksum(m.CoreEntityChecksum ?? throw new Exception()));
   }
   
   public async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
@@ -63,7 +66,6 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
     }).ToList();
   }
   
-
   protected abstract Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db);
 
 }

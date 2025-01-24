@@ -28,13 +28,13 @@ public record ClickUpTask(string id, string name, ClickUpTask.Status status, str
 ////////////////////////////////////
 
 [IgnoreNamingConventions] 
-public record GoogleSheetsTaskRow(int Index, string Row) : ISystemEntity {
+public record GoogleSheetsTaskRow(int Index, string Value) : ISystemEntity {
   
-  public object GetChecksumSubset() => new { Index, Row };
+  public object GetChecksumSubset() => new { Index, Row = Value };
   
   public SystemEntityId SystemId { get; } = new(Index.ToString());
   public DateTime LastUpdatedDate => UtcDate.UtcNow;
-  public string DisplayName => Row;
+  public string DisplayName => Value;
 
 }
 
