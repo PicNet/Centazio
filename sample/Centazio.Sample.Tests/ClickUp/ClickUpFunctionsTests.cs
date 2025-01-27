@@ -30,8 +30,8 @@ public class ClickUpFunctionsTests {
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
     
-    await using var db = core.Db();
-    var coretasks = await core.Tasks(db).ToListAsync();
+    // todo: this double await is ugly
+    var coretasks = await (await core.Tasks()).ToListAsync();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
@@ -39,9 +39,18 @@ public class ClickUpFunctionsTests {
     Assert.That(coretasks.Select(t => t.Name).ToList(), Is.EquivalentTo(stagedtasks));
   }
 
-  private static async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new ClickUpReadFunction(stager, ctl, new ClickUpApi(F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>()));
+  [Test] public async Task Test_Write() {
+    var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
+    var func = new ClickUpWriteFunction(core, ctl, api);
+    // todo: complete this test
+    var results = await func.RunFunction();
+  }
+  
+  private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
+    var func = new ClickUpReadFunction(stager, ctl, api);
     return (await func.RunFunction()).OpResults.Single();
   }
+  
+  private readonly ClickUpApi api = new(F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>());
 
 }

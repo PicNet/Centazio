@@ -8,6 +8,10 @@
     "CredentialsFile": "centazio-sample-project-credentials.json",
     "SheetId": "1dOQVWfx7qSZsGplIUt0LLqrBn9O800GVEbw5E6hhTxk"
   },
+  "AppSheet": {
+    "AppID": "bc20a1f4-782a-4fd8-8b57-a1d4add2e7ae",
+    "Table": "Task"
+  },
   "StagedEntityRepository": {
     "Provider": "Sqlite",
     "ConnectionString": "Data Source=staging.db",

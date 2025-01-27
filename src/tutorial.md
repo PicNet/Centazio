@@ -27,3 +27,10 @@ and automated workflow management.  This tutorial show you how to do the followi
 - Credentials -> Create Credentials -> Service Account
 - Click created account -> Keys -> Add Key -> Json
 - Create sheet, and share it with the service account email
+
+## Set up Google AppSheet
+- https://www.appsheet.com/ -> Get Started
+- Create an app -> Settings -> Integrations -> Enable (and copy App ID) 
+- Create Application Access Key (and copy key)
+- Save App (CTRL S)
+

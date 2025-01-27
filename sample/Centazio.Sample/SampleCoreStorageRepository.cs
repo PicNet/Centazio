@@ -17,7 +17,10 @@ public class SampleCoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFiel
     return this;
   }
   
-  public DbSet<CoreTask.Dto> Tasks(CentazioDbContext db) => db.Set<CoreTask.Dto>(); 
+  public async Task<DbSet<CoreTask.Dto>> Tasks() {
+    await using var db = Db();
+    return db.Set<CoreTask.Dto>();
+  }
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
     var strids = coreids.Select(id => id.Value).ToList();
