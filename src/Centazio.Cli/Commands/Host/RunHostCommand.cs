@@ -6,6 +6,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
 
+// todo: function filter should support something like 'AppName Read'
 public class RunHostCommand(CentazioSettings coresettings) : AbstractCentazioCommand<RunHostCommand.RunHostCommandSettings>{
 
   protected override Task RunInteractiveCommandImpl() => 
@@ -13,10 +14,11 @@ public class RunHostCommand(CentazioSettings coresettings) : AbstractCentazioCom
 
   protected override async Task ExecuteImpl(RunHostCommandSettings cmdsetts) {
     ArgumentException.ThrowIfNullOrWhiteSpace(cmdsetts.FunctionFilter);
-    await new CentazioHost(new HostSettings(cmdsetts.FunctionFilter, coresettings)).Run();
+    await new CentazioHost(new HostSettings(cmdsetts.FunctionFilter, coresettings), cmdsetts.Quiet).Run();
   }
 
   public class RunHostCommandSettings : CommonSettings {
     [CommandArgument(0, "[FUNCTION_FILTER]"), DefaultValue("all")] public string FunctionFilter { get; init; } = "all";
+    [CommandOption("-q|--quiet")] public bool Quiet { get; set; }
   }
 }

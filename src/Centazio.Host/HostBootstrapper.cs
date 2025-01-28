@@ -7,13 +7,15 @@ using Centazio.Core.Stage;
 using Centazio.Core.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Events;
+using Type = System.Type;
 
 namespace Centazio.Host;
 
-public class HostBootstrapper(CentazioSettings settings) {
+public class HostBootstrapper(CentazioSettings settings, bool quiet) {
 
   public async Task<List<IRunnableFunction>> InitHost(List<string> filters) {
-    Log.Logger = LogInitialiser.GetFileAndConsoleConfig().CreateLogger();
+    Log.Logger = LogInitialiser.GetFileAndConsoleConfig(quiet ? LogEventLevel.Warning : LogEventLevel.Debug).CreateLogger();
     
     var svcs = new ServiceCollection();
     RegisterCoreServices(svcs);

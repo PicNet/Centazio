@@ -8,10 +8,10 @@ public record HostSettings(string FunctionFilter, CentazioSettings CoreSettings)
   public List<string> ParseFunctionFilters() => FunctionFilter.Split([',', ';', '|', ' ']).Select(f => f.Trim()).Where(f => !String.IsNullOrEmpty(f)).ToList();
 }
 
-public class CentazioHost(HostSettings settings) {
+public class CentazioHost(HostSettings settings, bool quiet) {
   
   public async Task Run() {
-    var functions = await new HostBootstrapper(settings.CoreSettings)
+    var functions = await new HostBootstrapper(settings.CoreSettings, quiet)
         .InitHost(settings.ParseFunctionFilters());
     
     await using var timer = StartHost(functions);
