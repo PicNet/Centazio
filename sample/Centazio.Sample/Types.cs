@@ -21,11 +21,11 @@ public record ClickUpTask(string id, string name, string date_updated) : ISystem
 }
 
 ////////////////////////////////////
-// Google Sheets Entities
+// AppSheet Entities
 ////////////////////////////////////
 
 [IgnoreNamingConventions] 
-public record GoogleSheetsTaskRow(int Index, string Value) : ISystemEntity {
+public record AppSheetTaskRow(int Index, string Value) : ISystemEntity {
   
   public object GetChecksumSubset() => new { Index, Row = Value };
   

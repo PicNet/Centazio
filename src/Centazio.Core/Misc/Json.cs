@@ -14,10 +14,10 @@ public static class Json {
   };
   
   public static List<string> SplitList(string json, string path) {
-    if (String.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
-    
     var node = JsonNode.Parse(json) ?? throw new Exception();
-    return ((JsonArray) NavigateNode(node, path)).Select(n => n?.ToJsonString() ?? String.Empty).ToList();
+    
+    var arr = String.IsNullOrWhiteSpace(path) ? node.AsArray() : (JsonArray) NavigateNode(node, path);
+    return arr.Select(n => n?.ToJsonString() ?? String.Empty).ToList();
   }
   
   public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);

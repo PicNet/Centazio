@@ -20,15 +20,7 @@ and automated workflow management.  This tutorial show you how to do the followi
   `CLICKUP_TOKEN=pk_12345678_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456`
 - Create a list to track new customers, and get the ID from URL (the trailing number)
 
-## Set up Google Spreadsheet
-- Create project in the [Google Developers Console](https://console.developers.google.com/project)
-- API -> API Library -> Google Sheets API
-- Enable
-- Credentials -> Create Credentials -> Service Account
-- Click created account -> Keys -> Add Key -> Json
-- Create sheet, and share it with the service account email
-
-## Set up Google AppSheet
+## Set up AppSheet
 - https://www.appsheet.com/ -> Get Started
 - Create an app -> Settings -> Integrations -> Enable (and copy App ID) 
 - Create Application Access Key (and copy key)

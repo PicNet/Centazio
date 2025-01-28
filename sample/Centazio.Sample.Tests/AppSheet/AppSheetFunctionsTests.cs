@@ -2,19 +2,19 @@
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Types;
-using Centazio.Sample.GoogleSheets;
+using Centazio.Sample.AppSheet;
 using Centazio.Test.Lib;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Sample.Tests.GoogleSheets;
+namespace Centazio.Sample.Tests.AppSheet;
 
-public class GoogleSheetsFunctionsTests {
+public class AppSheetFunctionsTests {
 
   [Test] public async Task Test_Read() {
     var (stager, ctl) = (F.SeRepo(), F.CtlRepo());
     var results = await CreateAndRunReadFunction(stager, ctl);
-    var ss = await ctl.GetSystemState(SC.Systems.GoogleSheets, LifecycleStage.Defaults.Read) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.SystemEntities.GoogleSheets.TaskRow) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Read) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, SC.SystemEntities.AppSheet.TaskRow) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(stager.Contents, Is.Not.Empty);
@@ -25,11 +25,11 @@ public class GoogleSheetsFunctionsTests {
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
     
-    var func = new GoogleSheetsPromoteFunction(stager, core, ctl);
+    var func = new AppSheetPromoteFunction(stager, core, ctl);
     var results = (await func.RunFunction()).OpResults.Single();
-    var ss = await ctl.GetSystemState(SC.Systems.GoogleSheets, LifecycleStage.Defaults.Promote) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
-    var stagedtasks = stager.Contents.Select(se => se.Deserialise<GoogleSheetsTaskRow>().Value).ToList();
+    var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTaskRow>().Value).ToList();
     var coretasks = await (await core.Tasks()).ToListAsync();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
@@ -39,7 +39,7 @@ public class GoogleSheetsFunctionsTests {
   }
 
   private static async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new GoogleSheetsReadFunction(stager, ctl, new GoogleSheetsApi(F.Settings<SampleSettings>()));
+    var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi(F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>()));
     var results = (await func.RunFunction()).OpResults.Single();
     return results;
   }

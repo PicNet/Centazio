@@ -4,6 +4,12 @@ namespace Centazio.Core.Tests.Misc;
 
 public class JsonTests {
 
+  [Test] public void Test_SplitList_on_no_path() {
+    var json = """[{"item":"1"}, {"item":"2"}]""";
+    var list = Json.SplitList(json, String.Empty);
+    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
+  }
+  
   [Test] public void Test_SplitList_on_shallow_path() {
     var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
     var list = Json.SplitList(json, "path");

@@ -6,7 +6,7 @@ namespace Centazio.Sample;
 [IgnoreNamingConventions] public static class SampleConstants { 
   public static class Systems {
     public static readonly SystemName ClickUp = new (nameof(ClickUp));
-    public static readonly SystemName GoogleSheets = new (nameof(GoogleSheets));
+    public static readonly SystemName AppSheet = new (nameof(AppSheet));
   }
   
   public static class SystemEntities {
@@ -14,7 +14,7 @@ namespace Centazio.Sample;
       public static readonly SystemEntityTypeName Task = new(nameof(ClickUpTask));
     }
     
-    public static class GoogleSheets {
+    public static class AppSheet {
       public static readonly SystemEntityTypeName TaskRow = new(nameof(TaskRow));
     }
   }
