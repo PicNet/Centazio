@@ -8,6 +8,7 @@ using Centazio.Core.Write;
 
 namespace Centazio.Sample.AppSheet;
 
+// todo: sample has to handle completed tasks (remove from AppSheet)
 public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl) {
 
   // todo: we should not need to know about Checksums in this function, should be handled by base class perhaps?

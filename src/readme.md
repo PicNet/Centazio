@@ -1,5 +1,4 @@
 # Todo
-- sample has to handle completed tasks (remove from AppSheet)
 - have a logging mode where only data flows are logged, all else silentenced
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:

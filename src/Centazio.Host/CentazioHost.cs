@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Runner;
+﻿using Centazio.Core.Misc;
+using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Timer = System.Threading.Timer;
 
@@ -20,7 +21,10 @@ public class CentazioHost(HostSettings settings, bool quiet) {
 
   private Timer StartHost(List<IRunnableFunction> functions) {
     return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
-    async void RunFunctions(object? state) => await Task.WhenAll(functions.Select(async f => await f.RunFunction()));
+    // ReSharper disable once AsyncVoidMethod
+    async void RunFunctions(object? state) => await functions
+        .Select(async f => await f.RunFunction())
+        .Synchronous();
   }
 
   private void DisplayInstructions() {

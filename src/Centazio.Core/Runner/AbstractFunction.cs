@@ -8,63 +8,78 @@ using Serilog;
 namespace Centazio.Core.Runner;
 
 public interface IRunnableFunction : IDisposable {
+  SystemName System { get; }
+  LifecycleStage Stage { get; } 
   Task<FunctionRunResults> RunFunction();
 }
 
 public abstract class AbstractFunction<C> : IRunnableFunction where C : OperationConfig {
 
-  private readonly IOperationRunner<C> oprunner;
-  private readonly ICtlRepository ctl;
+  public SystemName System { get; }
+  public LifecycleStage Stage { get; }
   
   protected DateTime FunctionStartTime { get; private set; }
   protected FunctionConfig<C> Config { get; }
-  protected SystemName System { get; }
-  protected LifecycleStage Stage { get; }
+  
+  private bool running;
+  private readonly IOperationRunner<C> oprunner;
+  private readonly ICtlRepository ctl;
 
   protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C> oprunner, ICtlRepository ctl) {
     System = system;
     Stage = stage;
-    this.oprunner = oprunner;
-    this.ctl = ctl;
     
     Config = GetFunctionConfiguration();
+    
+    this.oprunner = oprunner;
+    this.ctl = ctl;
   }
 
   protected abstract FunctionConfig<C> GetFunctionConfiguration();
 
   public async Task<FunctionRunResults> RunFunction() {
-    FunctionStartTime = UtcDate.UtcNow;
-    
-    Log.Information("function started [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
-    
-    var state = await ctl.GetOrCreateSystemState(System, Stage);
-    if (!state.Active) {
-      Log.Information("function is inactive, ignoring run {@SystemState}", state);
-      return new InactiveFunctionRunResults();
-    }
-    if (state.Status != ESystemStateStatus.Idle) {
-      var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
-      if (minutes <= Config.TimeoutMinutes) {
-        Log.Information("function is already running, ignoring run {@SystemState}", state);
-        return new AlreadyRunningFunctionRunResults();
-      }
-      Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, Config.TimeoutMinutes, minutes);
-    }
-    
-    try {
-      // not setting last start here as we need the LastStart to represent the time the function was started before this run
-      state = await ctl.SaveSystemState(state.Running());
-      var results = await RunFunctionOperations(state);
-      await SaveCompletedState();
-      return new SuccessFunctionRunResults(results);
-    } catch (Exception ex) {
-      await SaveCompletedState();
-      Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
-      if (Config.ThrowExceptions) throw;
-      return new ErrorFunctionRunResults(ex);
-    }
+    // prevent race-conditions with slow databases
+    if (running) return new AlreadyRunningFunctionRunResults();
 
-    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(FunctionStartTime));
+    try {
+      running = true;
+      return await RunFunctionImpl();
+    } finally { running = false; }
+
+    async Task<FunctionRunResults> RunFunctionImpl() {
+      FunctionStartTime = UtcDate.UtcNow;
+  
+      Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
+  
+      var state = await ctl.GetOrCreateSystemState(System, Stage);
+      if (!state.Active) {
+        Log.Debug("function is inactive, ignoring run {@SystemState}", state);
+        return new InactiveFunctionRunResults();
+      }
+      if (state.Status != ESystemStateStatus.Idle) {
+        var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
+        if (minutes <= Config.TimeoutMinutes) {
+          Log.Debug("function is already running, ignoring run {@SystemState}", state);
+          return new AlreadyRunningFunctionRunResults();
+        }
+        Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, Config.TimeoutMinutes, minutes);
+      }
+  
+      try {
+        // not setting last start here as we need the LastStart to represent the time the function was started before this run
+        state = await ctl.SaveSystemState(state.Running());
+        var results = await RunFunctionOperations(state);
+        await SaveCompletedState();
+        return new SuccessFunctionRunResults(results);
+      } catch (Exception ex) {
+        await SaveCompletedState();
+        Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
+        if (Config.ThrowExceptions) throw;
+        return new ErrorFunctionRunResults(ex);
+      }
+
+      async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(FunctionStartTime));
+    }
   }
 
   protected virtual async Task<List<OperationResult>> RunFunctionOperations(SystemState sys) {
