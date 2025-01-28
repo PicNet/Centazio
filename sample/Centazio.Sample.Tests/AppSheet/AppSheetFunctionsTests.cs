@@ -29,8 +29,10 @@ public class AppSheetFunctionsTests {
     var results = (await func.RunFunction()).OpResults.Single();
     var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
-    var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTaskRow>().Value).ToList();
-    var coretasks = await (await core.Tasks()).ToListAsync();
+    var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTask>().Task).ToList();
+    
+    await using var db = core.Db();
+    var coretasks = await core.Tasks(db).ToListAsync();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));

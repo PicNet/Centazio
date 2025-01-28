@@ -13,13 +13,17 @@ public static class Json {
     RespectNullableAnnotations = true
   };
   
-  public static List<string> SplitList(string json, string path) {
-    var node = JsonNode.Parse(json) ?? throw new Exception();
-    
-    var arr = String.IsNullOrWhiteSpace(path) ? node.AsArray() : (JsonArray) NavigateNode(node, path);
-    return arr.Select(n => n?.ToJsonString() ?? String.Empty).ToList();
-  }
+  public static List<T> SplitList<T>(string json, string path) => 
+      JsonStrToArray(json, path).Deserialize<List<T>>() ?? throw new Exception();
   
+  public static List<string> SplitList(string json, string path) => 
+      JsonStrToArray(json, path).Select(n => n?.ToJsonString() ?? String.Empty).ToList();
+
+  private static JsonArray JsonStrToArray(string json, string path) {
+    var node = JsonNode.Parse(json) ?? throw new Exception();
+    return String.IsNullOrWhiteSpace(path) ? node.AsArray() : (JsonArray) NavigateNode(node, path);
+  }
+
   public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);
   
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));

@@ -22,4 +22,12 @@ public class JsonTests {
     Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
   }
   
+  [Test] public void Test_strongly_typed_SplitList() {
+    var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
+    var list = Json.SplitList<Row>(json, "path");
+    Assert.That(list, Is.EquivalentTo([new Row("1"), new Row("2")]));
+  } 
+  
+  record Row(string item);
+  
 }

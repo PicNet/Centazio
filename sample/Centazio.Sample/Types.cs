@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
 using Centazio.Core.Types;
@@ -25,14 +26,24 @@ public record ClickUpTask(string id, string name, string date_updated) : ISystem
 ////////////////////////////////////
 
 [IgnoreNamingConventions] 
-public record AppSheetTaskRow(int Index, string Value) : ISystemEntity {
+public record AppSheetTask : ISystemEntity {
   
-  public object GetChecksumSubset() => new { Index, Row = Value };
+  public static AppSheetTask Create(string id, string task) => new AppSheetTask { RowId = id, Task = task };
   
-  public SystemEntityId SystemId { get; } = new(Index.ToString());
-  public DateTime LastUpdatedDate => UtcDate.UtcNow;
-  public string DisplayName => Value;
+  [JsonPropertyName("Row ID")] public string? RowId { get; set; }
+  public string? Task { get; set; }
+  
+  public object GetChecksumSubset() => new { RowId, Task };
+  
+  // todo: it would be great if these properties were not serialised when writing back to APIs.  So we dont need to define JsonIgnore even though its already defined in the interface
+  [JsonIgnore] public SystemEntityId SystemId => new(RowId ?? throw new Exception());
+  [JsonIgnore] public DateTime LastUpdatedDate => UtcDate.UtcNow;
+  [JsonIgnore] public string DisplayName => Task ?? String.Empty;
 
+}
+
+public record AppSheetTaskId {
+  [JsonPropertyName("Row ID")] public string? RowId { get; set; }
 }
 
 ////////////////////////////////////

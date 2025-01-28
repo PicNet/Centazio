@@ -5,7 +5,6 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample.AppSheet;
 
@@ -20,17 +19,26 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
 
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     if (!tocreate.Any() && !toupdate.Any()) throw new Exception("todo: should not be called, remove if confirmed");
-    return Task.FromResult(WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, checksum, (_, e) => new AppSheetTaskRow(0, String.Empty)));
+    return Task.FromResult(WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, checksum, (id, e) => AppSheetTask.Create(id.ToString(), e.Name)));
   }
 
   private async Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (!tocreate.Any() && !toupdate.Any()) throw new Exception("todo: should not be called, remove if confirmed");
-    if (api is null) throw new Exception("just here to allow compile - REMOVE");
-    // if any row changed/updated we have to write the whole sheet, as AppSheet does not easily support incremental updates
-    var tasks = await (await core.Tasks()).ToListAsync();
-    var rows = tasks.Select(t => t.ToBase().Name).OrderBy(n => n).ToList();
-    // await api.WriteSheetData(rows);
-    return new SuccessWriteOperationResult([], []);
+    return new SuccessWriteOperationResult(await AddNewTasks(tocreate), await EditTasks(toupdate));
+  }
+  
+  private async Task<List<Map.Created>> AddNewTasks(List<CoreSystemAndPendingCreateMap> tocreate) {
+   if (!tocreate.Any()) return [];
+   var created = await api.AddTasks(tocreate.Select(t => t.CoreEntity.To<CoreTask>().Name).ToList());
+   return tocreate.Select((e, idx) => e.Map.SuccessCreate(created[idx].SystemId, checksum.Checksum(created[idx]))).ToList();
+  }
+  
+  private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {
+    if (!toupdate.Any()) return [];
+    // todo: this is weird behaviour, and not intuitive/discoverable
+    var aptasks = toupdate.Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.To<CoreTask>().Name)).ToList(); 
+    var edited = await api.EditTasks(aptasks);
+    return toupdate.Select((e, idx) => e.Map.SuccessUpdate(checksum.Checksum(edited[idx]))).ToList();
   }
 
 }

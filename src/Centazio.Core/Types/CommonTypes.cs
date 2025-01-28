@@ -45,8 +45,8 @@ public interface ICoreEntity : IHasDisplayName, IGetChecksumSubset {
 
 public interface ISystemEntity : IHasDisplayName, IGetChecksumSubset {
 
-  public SystemEntityId SystemId { get; }
-  public DateTime LastUpdatedDate { get; }
+  [JsonIgnore] public SystemEntityId SystemId { get; }
+  [JsonIgnore] public DateTime LastUpdatedDate { get; }
   
   string IHasDisplayName.GetId() => SystemId.Value;
   public E To<E>() where E : ISystemEntity => (E) this;
