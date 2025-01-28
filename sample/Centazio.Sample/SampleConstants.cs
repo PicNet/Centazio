@@ -15,7 +15,7 @@ namespace Centazio.Sample;
     }
     
     public static class AppSheet {
-      public static readonly SystemEntityTypeName TaskRow = new(nameof(TaskRow));
+      public static readonly SystemEntityTypeName Task = new(nameof(AppSheetTask));
     }
   }
   

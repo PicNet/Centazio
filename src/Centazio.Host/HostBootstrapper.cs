@@ -29,6 +29,8 @@ public class HostBootstrapper(CentazioSettings settings, bool quiet) {
   }
 
   private void RegisterCoreServices(ServiceCollection svcs) {
+    FunctionConfigDefaults.ThrowExceptions = true;
+    
     svcs.AddSingleton(settings);
     
     Log.Debug($"HostBootstrapper registering core services:" +

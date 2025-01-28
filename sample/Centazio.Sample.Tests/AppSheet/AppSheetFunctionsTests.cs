@@ -14,7 +14,7 @@ public class AppSheetFunctionsTests {
     var (stager, ctl) = (F.SeRepo(), F.CtlRepo());
     var results = await CreateAndRunReadFunction(stager, ctl);
     var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Read) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.SystemEntities.AppSheet.TaskRow) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, SC.SystemEntities.AppSheet.Task) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(stager.Contents, Is.Not.Empty);

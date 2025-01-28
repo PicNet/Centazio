@@ -11,7 +11,7 @@ namespace Centazio.Sample.AppSheet;
 public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(SampleConstants.Systems.AppSheet, stager, corestg, ctl) {
   
   protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(typeof(AppSheetTask), SampleConstants.SystemEntities.AppSheet.TaskRow, SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
+    new PromoteOperationConfig(typeof(AppSheetTask), SampleConstants.SystemEntities.AppSheet.Task, SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
   ]);
 
   private Task<List<EntityEvaluationResult>> PromoteTasks(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
