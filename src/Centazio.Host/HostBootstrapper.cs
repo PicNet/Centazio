@@ -59,15 +59,17 @@ public class HostBootstrapper(CentazioSettings settings, bool quiet) {
   }
 
   private List<Type> RegisterCentazioFunctions(ServiceCollection svcs, List<IIntegrationBase> integrations, List<string> filters) {
-    var funcs = integrations.SelectMany(integration => {
-      integration.RegisterServices(svcs);
-      var functypes = ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), integration.GetType().Assembly)
+    // todo: this could potentially register duplicate services
+    integrations.ForEach(i => i.RegisterServices(svcs));
+    
+    var funcs = integrations.Select(i => i.GetType().Assembly).Distinct().SelectMany(ass => {
+      var functypes = ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), ass)
           .Where(DoesTypeMatchFilter)
           .ToList();
-      if (!functypes.Any()) throw new Exception($"Could not find any Centazio Functions in integration[{integration.GetType().Name}]");
+      functypes.ForEach(functype => svcs.AddSingleton(functype));
+      if (!functypes.Any()) throw new Exception($"Could not find any Centazio Functions in assembly[{ass.GetName().Name}]");
       return functypes;
     }).ToList();
-    funcs.ForEach(functype => svcs.AddSingleton(functype));
     Log.Information($"HostBootstrapper found {integrations.Count} integrations (and {funcs.Count} functions):\n\t" + String.Join("\n\t", integrations.Select(integration => integration.GetType().Name)));
     return funcs;
     
