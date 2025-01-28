@@ -35,17 +35,19 @@ public sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString Igno
 
 public delegate Task<List<EntityEvaluationResult>> BuildCoreEntitiesHandler(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
 
-// todo: Add test that SystemEntityType implements the ISystemEntity interface 
 public record PromoteOperationConfig(
     Type SystemEntityType, 
     SystemEntityTypeName SystemEntityTypeName,
     CoreEntityTypeName CoreEntityTypeName,
     ValidCron Cron, 
     BuildCoreEntitiesHandler BuildCoreEntities) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
-
+  
+  
+  public Type SystemEntityType { get; } = ValidateSystemEntityTypeImplementsISystemEntity(SystemEntityType);
   public SystemEntityTypeName SystemEntityTypeName { get; } = SystemEntityTypeName;
   public CoreEntityTypeName CoreEntityTypeName { get; } = CoreEntityTypeName;
   
+
   /// <summary>
   /// Biderectional objects do not check for bounce-backs.  This means that there is a risk
   /// that a change in system 1 will propegate to system 2 and then back to system 1 (and so on).
@@ -56,6 +58,9 @@ public record PromoteOperationConfig(
   public bool IsBidirectional { get; init; }
   
   public string LoggableValue => $"{SystemEntityTypeName.Value} -> {CoreEntityTypeName.Value}";
+
+  private static Type ValidateSystemEntityTypeImplementsISystemEntity(Type type) => 
+      type.GetInterfaces().FirstOrDefault(i => i == typeof(ISystemEntity)) is not null ? type : throw new Exception($"PromoteOperationConfig.SystemEntityType must be a `Type` that implements the ISystemEntity interface");
 
 }
 

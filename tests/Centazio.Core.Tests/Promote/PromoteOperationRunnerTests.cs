@@ -28,6 +28,16 @@ public class PromoteOperationRunnerTests {
     await core.DisposeAsync();
   } 
   
+  [Test] public void Test_PromoteOperationConfig_validates_SystemEntityType_as_expected() {
+    Assert.Throws<Exception>(() => { _ = new PromoteOperationConfig(GetType(), new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!); });
+    
+    var validtype = typeof(System1Entity);
+    var validconf = new PromoteOperationConfig(validtype, new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!);
+    Assert.That(validconf.SystemEntityType, Is.EqualTo(validtype));
+    
+    
+  }
+  
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
