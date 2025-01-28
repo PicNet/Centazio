@@ -84,9 +84,10 @@ public class FunctionRunnerTests {
     
     protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<OperationResult>> RunFunctionOperations() {
-      var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
-      Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
+    protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
+      var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
+      Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
+      Assert.That(state1, Is.EqualTo(state2));
       return [];
     }
 
@@ -98,9 +99,10 @@ public class FunctionRunnerTests {
     
     protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<OperationResult>> RunFunctionOperations() {
-      var state = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
-      Assert.That(state.Status, Is.EqualTo(ESystemStateStatus.Running));
+    protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
+      var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
+      Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
+      Assert.That(state1, Is.EqualTo(state2));
       return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult()).Cast<OperationResult>().ToList();
     }
 

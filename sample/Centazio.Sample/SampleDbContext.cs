@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample;
 
-public class SampleDbContext(string? connstr = null) : SqliteDbContext(connstr ?? "Data Source=sample_core_storage.db") {
+public class SampleDbContext(string connstr) : SqliteDbContext(connstr) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema("dbo")

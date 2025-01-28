@@ -15,7 +15,7 @@ public class CentazioHost(HostSettings settings, bool quiet) {
         .InitHost(settings.ParseFunctionFilters());
     
     await using var timer = StartHost(functions);
-    DisplatInstructions();
+    DisplayInstructions();
   }
 
   private Timer StartHost(List<IRunnableFunction> functions) {
@@ -23,7 +23,7 @@ public class CentazioHost(HostSettings settings, bool quiet) {
     async void RunFunctions(object? state) => await Task.WhenAll(functions.Select(async f => await f.RunFunction()));
   }
 
-  private void DisplatInstructions() {
+  private void DisplayInstructions() {
     Console.WriteLine("\nPress 'Enter' to exit\n\n");
     Console.ReadLine();
   }

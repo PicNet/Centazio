@@ -54,7 +54,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     try {
       // not setting last start here as we need the LastStart to represent the time the function was started before this run
       state = await ctl.SaveSystemState(state.Running());
-      var results = await RunFunctionOperations();
+      var results = await RunFunctionOperations(state);
       await SaveCompletedState();
       return new SuccessFunctionRunResults(results);
     } catch (Exception ex) {
@@ -67,12 +67,10 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(FunctionStartTime));
   }
 
-  protected virtual async Task<List<OperationResult>> RunFunctionOperations() {
-    var sys = await ctl.GetOrCreateSystemState(System, Stage);
-    var states = await LoadOperationsStates(Config, sys, ctl);
-    var ready = GetReadyOperations(states);
-    var results = await RunOperationsTillAbort(ready, oprunner, ctl, Config.ThrowExceptions);
-    return results;
+  protected virtual async Task<List<OperationResult>> RunFunctionOperations(SystemState sys) {
+    var opstates = await LoadOperationsStates(Config, sys, ctl);
+    var readyops = GetReadyOperations(opstates);
+    return await RunOperationsTillAbort(readyops, oprunner, ctl, Config.ThrowExceptions);
   }
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
