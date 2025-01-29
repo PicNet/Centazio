@@ -159,6 +159,8 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
 
   public void LogPromotionSteps() {
     Log.Information($"PromotionSteps completed[{system}/{corename}] Bidi[{op.OpConfig.IsBidirectional}] IsEmpty[{IsEmpty()}] Total[{bags.Count}] ToIgnore[{ToIgnore().Count}] ToPromote[{ToPromote().Count}] ToUpdate[{ToUpdate().Count}] ToCreate[{ToCreate().Count}]");
+    var flows = ToCreate().Select(e => "\n\tAdd: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName()).Concat(ToUpdate().Select(e => "\n\tEdit: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName())).ToList();
+    if (flows.Any()) DataFlowLogger.Log(system,  op.OpConfig.SystemEntityTypeName, $"Core Storage[{corename}]", String.Join("", flows));
   }
   
   public PromoteOperationResult GetResults() {
@@ -166,6 +168,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     
     var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, Entity: bag.CoreEntityAndMeta.CoreEntity)).ToList();
     var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason!)).ToList();
+    
     return new SuccessPromoteOperationResult(topromote, toignore);
   }
   

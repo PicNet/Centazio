@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Ctl;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Serilog;
 
@@ -19,9 +20,11 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IO
     
     var meaningful = RemoveNonMeaninfulChanges(op, sysupdates); 
     Log.Information($"WriteOperationRunner [{op.State.System}/{op.State.Object}] Checkpoint[{op.Checkpoint:o}] Pending[{pending.Count}] ToCreate[{syscreates.Count}] ToUpdate[{sysupdates.Count}] Meaningful[{meaningful.Count}]");
-    if (!meaningful.Any() && !syscreates.Any()) return new SuccessWriteOperationResult([], []);
+    if (!syscreates.Any() && !meaningful.Any()) return new SuccessWriteOperationResult([], []);
     
     Log.Debug($"WriteOperationRunner calling WriteEntitiesToTargetSystem[{op.State.System}/{op.State.Object}] Created[{syscreates.Count}] Updated[{sysupdates.Count}]");
+    var flows = syscreates.Select(e => "\n\tAdd: " + e.CoreEntity.GetShortDisplayName()).Concat(meaningful.Select(e => "\n\tEdit: " + e.CoreEntity.GetShortDisplayName())).ToList();
+    DataFlowLogger.Log("Core Storage", op.State.Object, op.State.System, String.Join("", flows));
     var results = await op.OpConfig.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {

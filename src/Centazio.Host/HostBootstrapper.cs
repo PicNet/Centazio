@@ -2,20 +2,19 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Core.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Events;
 using Type = System.Type;
 
 namespace Centazio.Host;
 
-public class HostBootstrapper(CentazioSettings settings, bool quiet) {
+public class HostBootstrapper(HostSettings settings) {
 
   public async Task<List<IRunnableFunction>> InitHost(List<string> filters) {
-    Log.Logger = LogInitialiser.GetFileAndConsoleConfig(quiet ? LogEventLevel.Warning : LogEventLevel.Debug).CreateLogger();
+    FunctionConfigDefaults.ThrowExceptions = true;
+    Log.Logger = LogInitialiser.GetFileAndConsoleConfig(settings.HostConfig.GetLogLevel(), settings.HostConfig.GetLogFilters()).CreateLogger();
     
     var svcs = new ServiceCollection();
     RegisterCoreServices(svcs);
@@ -29,16 +28,15 @@ public class HostBootstrapper(CentazioSettings settings, bool quiet) {
   }
 
   private void RegisterCoreServices(ServiceCollection svcs) {
-    FunctionConfigDefaults.ThrowExceptions = true;
-    
-    svcs.AddSingleton(settings);
+    var coreconf = settings.CoreSettings;
+    svcs.AddSingleton(coreconf);
     
     Log.Debug($"HostBootstrapper registering core services:" +
-        $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
-        $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
+        $"\n\tStagedEntityRepository [{coreconf.StagedEntityRepository.Provider}]" +
+        $"\n\tCtlRepository [{coreconf.CtlRepository.Provider}]");
     
-    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
-    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
+    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(coreconf.StagedEntityRepository.Provider);
+    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(coreconf.CtlRepository.Provider);
     
     void AddCoreService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
       svcs.AddSingleton(typeof(F), GetCoreServiceFactoryType<F>(provider));
@@ -46,14 +44,14 @@ public class HostBootstrapper(CentazioSettings settings, bool quiet) {
     }
     
     Type GetCoreServiceFactoryType<F>(string provider) {
-      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), settings.AllowedFunctionAssemblies); 
+      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), coreconf.AllowedFunctionAssemblies); 
       return potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
-          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}] from assemblies [{String.Join(",", settings.AllowedFunctionAssemblies)}]");
+          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}] from assemblies [{String.Join(",", coreconf.AllowedFunctionAssemblies)}]");
     }
   }
 
   private List<IIntegrationBase> GetCentazioIntegrations() {
-    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.AllowedFunctionAssemblies).ToList();
+    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.CoreSettings.AllowedFunctionAssemblies).ToList();
     if (!integrations.Any()) throw new Exception("Could not find any Centazio Integrations in provided assemblies");
     return integrations.Select(it => (IIntegrationBase) (Activator.CreateInstance(it) ?? throw new Exception())).ToList();
   }

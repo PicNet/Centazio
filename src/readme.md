@@ -1,5 +1,5 @@
 # Todo
-- have a logging mode where only data flows are logged, all else silentenced
+- DataFlowLogger showing AppSheet staging 1 entity always
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm
