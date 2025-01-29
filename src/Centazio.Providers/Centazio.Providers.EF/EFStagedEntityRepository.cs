@@ -16,11 +16,12 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
   
   protected readonly EFStagedEntityRepositoryOptions opts = opts;
-  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
+  protected override async Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) {
     await using var db = opts.Db();
+    var checksumstrs = newchecksums.Select(cs => cs.Value).ToList();
     return await Query(system, systype, db)
-        .Where(s => newchecksums.Contains(s.StagedEntityChecksum ?? String.Empty))
-        .Select(s => s.StagedEntityChecksum!)
+        .Where(s => checksumstrs.Contains(s.StagedEntityChecksum ?? String.Empty))
+        .Select(s => new StagedEntityChecksum(s.StagedEntityChecksum ?? String.Empty))
         .ToListAsync();
   }
 

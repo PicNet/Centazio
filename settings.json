@@ -11,14 +11,14 @@
   },
   "StagedEntityRepository": {
     "Provider": "Sqlite",
-    "ConnectionString": "Data Source=sample.db",
+    "ConnectionString": "Data Source=sample.db;Pooling=false",
     "SchemaName": "ctl",
     "TableName": "staging",
     "CreateSchema": true
   },
   "CtlRepository": {
     "Provider": "Sqlite",
-    "ConnectionString": "Data Source=sample.db",
+    "ConnectionString": "Data Source=sample.db;Pooling=false",
     "SchemaName": "ctl",
     "SystemStateTableName":  "system_state",
     "ObjectStateTableName":  "object_state", 
@@ -27,7 +27,7 @@
   },
   "CoreStorage": {
     "Provider": "Sqlite",
-    "ConnectionString": "Data Source=sample.db",
+    "ConnectionString": "Data Source=sample.db;Pooling=false",
     "SchemaName": "dbo",
     "CtlSchemaName": "ctl",
     "CreateSchema": true

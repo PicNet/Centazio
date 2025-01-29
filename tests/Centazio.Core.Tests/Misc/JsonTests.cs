@@ -28,6 +28,7 @@ public class JsonTests {
     Assert.That(list, Is.EquivalentTo([new Row("1"), new Row("2")]));
   } 
   
+  // ReSharper disable once NotAccessedPositionalProperty.Local
   record Row(string item);
   
 }

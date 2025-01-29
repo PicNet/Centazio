@@ -21,6 +21,8 @@ public class ClickUpApi(SampleSettings settings, SampleSecrets secrets) {
   }
   
   public async Task<string> CreateTask(string name) {
+    ArgumentException.ThrowIfNullOrWhiteSpace(name);
+    
     var resp = await Client.PostAsync($"list/{settings.ClickUp.ListId}/task", JsonContent.Create(new { name }));
     var json = await resp.Content.ReadAsStringAsync();
     var node = JsonNode.Parse(json) ?? throw new Exception();

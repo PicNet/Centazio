@@ -33,9 +33,9 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
   }
   
   // todo: convert to SystemEntityChecksum
-  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
+  protected override async Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) {
     return (await ListAll(system, systype))
-        .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum.Value)
+        .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
         .ToList();
   }
 

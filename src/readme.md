@@ -1,5 +1,4 @@
 # Todo
-- DataFlowLogger showing AppSheet staging 1 entity always
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm

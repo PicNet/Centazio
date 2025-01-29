@@ -10,7 +10,7 @@ namespace Centazio.Sample.AppSheet;
 public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, AppSheetApi api) : ReadFunction(SampleConstants.Systems.AppSheet, stager, ctl) {
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new ReadOperationConfig(SampleConstants.SystemEntities.AppSheet.Task, CronExpressionsHelper.EveryXSeconds(15), GetSheetTasks)
+    new ReadOperationConfig(SampleConstants.SystemEntities.AppSheet.Task, CronExpressionsHelper.EveryXSeconds(10), GetSheetTasks)
   ]);
 
   // AppSheet API does not have a 'last updated' so we just rely on Checksum to update records when required

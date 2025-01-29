@@ -54,7 +54,8 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
     return this;
   }
 
-  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
+  protected override async Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) {
+    var checksumstrs = newchecksums.Select(cs => cs.Value).ToList();
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       KeyExpression = new() {
@@ -75,19 +76,19 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
           ? new() {
             ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} IN (:checksums)",
             ExpressionAttributeValues = new() {
-              { ":checksums", newchecksums }
+              { ":checksums", checksumstrs }
             } 
           } 
           : new() {
             ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} = :checksum",
             ExpressionAttributeValues = new() {
-              { ":checksum", newchecksums.Single() }
+              { ":checksum", checksumstrs.Single() }
             }
           }
     };
     var search = Table.LoadTable(client, table).Query(queryconf);
     var results = await search.GetNextSetAsync();
-    return results.Select(d => d[nameof(StagedEntity.StagedEntityChecksum)].AsString()).ToList();
+    return results.Select(d => new StagedEntityChecksum(d[nameof(StagedEntity.StagedEntityChecksum)].AsString())).ToList();
   }
 
   protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage) {

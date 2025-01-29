@@ -7,7 +7,7 @@ namespace Centazio.Test.Lib.InMemRepos;
 
 public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
 
-  private readonly Dictionary<string, bool> checksums = new();
+  private readonly Dictionary<StagedEntityChecksum, bool> checksums = new();
   protected readonly List<StagedEntity> saved = [];
 
   public override Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
@@ -19,7 +19,7 @@ public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntity
     return Task.CompletedTask;
   }
 
-  protected override Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) => 
+  protected override Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) => 
       Task.FromResult(newchecksums.Where(cs => checksums.ContainsKey(cs)).ToList());
 
   protected override Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage) {

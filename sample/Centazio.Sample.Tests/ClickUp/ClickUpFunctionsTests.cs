@@ -44,6 +44,7 @@ public class ClickUpFunctionsTests {
     var func = new ClickUpWriteFunction(core, ctl, api);
     // todo: complete this test
     var results = await func.RunFunction();
+    if (results is null) throw new Exception();
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {

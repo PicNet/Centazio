@@ -66,7 +66,7 @@ public record CoreTask : CoreEntityBase {
     
     public override CoreTask ToBase() {
       var target = new CoreTask { 
-        Name = new(Name ?? throw new ArgumentNullException(nameof(Name)))
+        Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim()
       };
       return FillBaseProperties(target);
     }
