@@ -54,8 +54,7 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
     return this;
   }
 
-  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
-    var template = staged.First();
+  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
     var queryconf = new QueryOperationConfig {
       Limit = Limit,
       KeyExpression = new() {
@@ -64,7 +63,7 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
           { "#haskey", AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY }
         },
         ExpressionAttributeValues = new() {
-          { ":hashval", AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(template.System, template.SystemEntityTypeName) }
+          { ":hashval", AwsStagedEntityRepositoryHelpers.ToDynamoHashKey(system, systype) }
         }
       },
       // this is not efficient, but there is no way to use the 'IN'
@@ -72,25 +71,26 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
       //    either main or in a GSI does not work.
       // Also, IN expression does not work for single item, so change single
       //    item to `=` expression :(
-      FilterExpression = staged.Count > 1 
+      FilterExpression = newchecksums.Count > 1 
           ? new() {
             ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} IN (:checksums)",
             ExpressionAttributeValues = new() {
-              { ":checksums", staged.Select(u => u.StagedEntityChecksum.Value).ToList() }
+              { ":checksums", newchecksums }
             } 
           } 
           : new() {
             ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} = :checksum",
             ExpressionAttributeValues = new() {
-              { ":checksum", staged.Single().StagedEntityChecksum.Value }
+              { ":checksum", newchecksums.Single() }
             }
           }
     };
     var search = Table.LoadTable(client, table).Query(queryconf);
     var results = await search.GetNextSetAsync();
-    
-    var existing  = results.ToDictionary(d => d[nameof(StagedEntity.StagedEntityChecksum)].AsString());
-    var tostage = staged.Where(e => !existing.ContainsKey(e.StagedEntityChecksum)).ToList();
+    return results.Select(d => d[nameof(StagedEntity.StagedEntityChecksum)].AsString()).ToList();
+  }
+
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage) {
     await tostage
         .Select(e => new WriteRequest(new PutRequest(e.ToDynamoDict())))
         .Chunk()

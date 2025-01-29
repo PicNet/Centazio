@@ -32,15 +32,15 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
     return this;
   }
   
-  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
-    var se = staged.First();
-    var existing = (await ListAll(se.System, se.SystemEntityTypeName))
-        .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum)
-        .ToDictionary(cs => cs);
-    
-    var tostage = staged.Where(s => !existing.ContainsKey(s.StagedEntityChecksum)).ToList();
+  // todo: convert to SystemEntityChecksum
+  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
+    return (await ListAll(system, systype))
+        .Select(o => AwsStagedEntityRepositoryHelpers.ParseS3Key(o.Key).StagedEntityChecksum.Value)
+        .ToList();
+  }
+
+  protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage) {
     await tostage.Select(s => Client.PutObjectAsync(ToPutObjectRequest(s))).ChunkedSynchronousCall(5);
-    
     return tostage;
   }
   

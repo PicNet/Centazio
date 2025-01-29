@@ -43,12 +43,17 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
     var tostage = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data), checksum(data))).ToList();
     if (!tostage.Any()) return tostage;
     if (tostage.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
+    var checksums = tostage.Select(s => s.StagedEntityChecksum.Value).ToList();
+    var duplicates = await GetDuplicateChecksums(system, systype, checksums);
+    var nonduplicates = tostage.Where(s => !duplicates.Contains(s.StagedEntityChecksum.Value)).ToList();
+    if (!nonduplicates.Any()) return nonduplicates;
     
-    DataFlowLogger.Log(system, systype, "Staging", $"{tostage.Count} entities");
-    return await StageImpl(system, systype, tostage);
+    DataFlowLogger.Log(system, systype, "Staging", $"{nonduplicates.Count} entities");
+    return await StageImpl(system, systype, nonduplicates);
   }
 
-  protected abstract Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
+  protected abstract Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums);
+  protected abstract Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage);
   
   public Task Update(StagedEntity staged) => Update(staged.System, staged.SystemEntityTypeName, [staged]);
   public Task Update(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {

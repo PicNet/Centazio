@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Centazio.Core.Types;
 
@@ -19,16 +18,15 @@ public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntity
     });
     return Task.CompletedTask;
   }
-  
 
-  protected override Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
-    var newchecksums = new Dictionary<string, bool>();
-    var lst = staged.Where(e => !checksums.ContainsKey(e.StagedEntityChecksum) && newchecksums.TryAdd(e.StagedEntityChecksum, true)).ToList();
+  protected override Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) => 
+      Task.FromResult(newchecksums.Where(cs => checksums.ContainsKey(cs)).ToList());
+
+  protected override Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> tostage) {
+    saved.AddRange(tostage);
+    tostage.ForEach(e => checksums.Add(e.StagedEntityChecksum, true));
     
-    saved.AddRange(lst);
-    newchecksums.Keys.ForEach(cs => checksums.Add(cs, true));
-    
-    return Task.FromResult(lst);
+    return Task.FromResult(tostage);
   }
 
   protected override Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) => 

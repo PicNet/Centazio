@@ -16,20 +16,21 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
   
   protected readonly EFStagedEntityRepositoryOptions opts = opts;
-  
+  protected override async Task<List<string>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<string> newchecksums) {
+    await using var db = opts.Db();
+    return await Query(system, systype, db)
+        .Where(s => newchecksums.Contains(s.StagedEntityChecksum ?? String.Empty))
+        .Select(s => s.StagedEntityChecksum!)
+        .ToListAsync();
+  }
+
   protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var db = opts.Db();
-    var newsums = staged.Select(s => s.StagedEntityChecksum.Value);
-    var duplicates = Query(system, systype, db)
-        .Where(s => newsums.Contains(s.StagedEntityChecksum ?? String.Empty))
-        .ToDictionary(s => s.StagedEntityChecksum!);
-    
-    var toinsert = staged.Where(s => !duplicates.ContainsKey(s.StagedEntityChecksum.Value)).ToList();
-    var dtos = toinsert.Select(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>);
+    var dtos = staged.Select(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>);
     db.Staged.AddRange(dtos);
     await db.SaveChangesAsync();
     
-    return toinsert;
+    return staged;
   }
   
   public override async Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
