@@ -28,14 +28,15 @@ public record ClickUpTask(string id, string name, string date_updated) : ISystem
 [IgnoreNamingConventions] 
 public record AppSheetTask : ISystemEntity {
   
-  public static AppSheetTask Create(string id, string task) => new AppSheetTask { RowId = id, Task = task };
+  public static AppSheetTask Create(string id, string task) => new() { RowId = id, Task = task };
   
   [JsonPropertyName("Row ID")] public string? RowId { get; set; }
   public string? Task { get; set; }
   
   public object GetChecksumSubset() => new { RowId, Task };
   
-  // todo: it would be great if these properties were not serialised when writing back to APIs.  So we dont need to define JsonIgnore even though its already defined in the interface
+  // note: implementors still need to mark these properties as [JsonIgnore]
+  //    as the JsonSerialiser ignores these attributes on interfaces
   [JsonIgnore] public SystemEntityId SystemId => new(RowId ?? throw new Exception());
   [JsonIgnore] public DateTime LastUpdatedDate => UtcDate.UtcNow;
   [JsonIgnore] public string DisplayName => Task ?? String.Empty;

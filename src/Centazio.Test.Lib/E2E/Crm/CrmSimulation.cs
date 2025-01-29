@@ -59,9 +59,8 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
         toadd.Add(new CrmInvoice(Rng.NewGuid(), UtcDate.UtcNow, Rng.RandomItem(api.Customers).CrmCustId, Rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(Rng.Next(-10, 60))))));
     
     ctx.Debug($"CrmSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => {
-      var cust = api.Customers.Single(c => c.SystemId == i.CustomerSystemId);
-      // todo: why is this cast neccessary
-      return $"Cust:{((IHasDisplayName)cust).GetShortDisplayName()}/Inv:{i.SystemId}:{i.AmountCents}c";
+      var cust = api.Customers.Single(c => c.SystemId == i.CustomerSystemId) as IHasDisplayName;
+      return $"Cust:{cust.GetShortDisplayName()}/Inv:{i.SystemId}:{i.AmountCents}c";
     }))}");
     
     api.Invoices.AddRange(toadd);

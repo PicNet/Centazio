@@ -83,6 +83,16 @@ public class JsonSerialisationTests {
     Assert.That(c2s2, Is.EqualTo(c2s));
   }
   
+  // todo: it would be great if these properties were not serialised when writing back to APIs.
+  //    So we dont need to define JsonIgnore even though its already defined in the interface
+  [Test, Ignore("This could not be fixed easily, for now just mark subclasses with [JsonIgnore]")] public void Test_serialisation_of_subclasses_respect_JsonIgnore() {
+    var json = Json.Serialize(new SystemEntityType("Only this field should be serialised"));
+    Assert.That(json, Does.Contain("\"Prop\":"));
+    Assert.That(json, Does.Not.Contain("\"DisplayName\":"));
+    Assert.That(json, Does.Not.Contain("\"SystemId\":"));
+    Assert.That(json, Does.Not.Contain("\"LastUpdatedDate\":"));
+  }
+  
   [Test, Ignore("RespectNullableAnnotations does not work with empty object '{}'")] public void Test_RespectNullableAnnotations() {
     Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NullStr"": ""NullStr"", ""NonNullStr"": null}"));
     var result = Json.Deserialize<ObjWithNullables>("{}");
@@ -157,5 +167,16 @@ public class JsonSerialisationTests {
         };
       }
     }
+  }
+  
+  public record SystemEntityType(string Prop) : ISystemEntity {
+
+    public string DisplayName => Prop;
+    public object GetChecksumSubset() => throw new NotImplementedException();
+    
+    // these two fields should be ignored during serialisation
+    public SystemEntityId SystemId { get; } = new(Guid.NewGuid().ToString());
+    public DateTime LastUpdatedDate { get; } = UtcDate.UtcNow;
+
   }
 }
