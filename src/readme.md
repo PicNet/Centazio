@@ -1,6 +1,5 @@
 # Todo
 - flows printer should handle sinlge entity better and not have a new indented line for a single item
-- Json.Serialise(new { CoreEntity.CoreId}) is not extracting the CoreId.Value, but serialising the whole CoreEntityId record
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm

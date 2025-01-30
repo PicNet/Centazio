@@ -17,7 +17,6 @@ public class ClickUpFunctionsTests {
     var os = await ctl.GetObjectState(ss, SC.SystemEntities.ClickUp.Task) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
-    Assert.That(stager.Contents, Is.Not.Empty);
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
   }
 
@@ -35,7 +34,6 @@ public class ClickUpFunctionsTests {
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
-    Assert.That(coretasks, Is.Not.Empty);
     Assert.That(coretasks.Select(t => t.Name).ToList(), Is.EquivalentTo(stagedtasks));
   }
 

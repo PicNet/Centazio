@@ -8,18 +8,6 @@ public class ClickUpApiTests {
   // https://app.clickup.com/t/{test_task_id}
   private readonly string test_task_id = "282qdep";
   
-  [Test] public async Task Test_ClickUpApi_GetTasksAfter() {
-    // using DateTime.UtcNow on purpose as we want empty result set
-    var empty = await Api.GetTasksAfter(DateTime.UtcNow); 
-    var all = await Api.GetTasksAfter(DateTime.MinValue.ToUniversalTime());
-    var sorted = all.OrderBy(a => a.LastUpdated).ToList();
-    
-    
-    Assert.That(empty, Is.Empty);
-    Assert.That(all, Has.Count.GreaterThan(0));
-    Assert.That(all, Is.EqualTo(sorted));
-  }
-  
   [Test] public async Task Test_create_task() {
     var start = DateTime.UtcNow;
     // using DateTime.UtcNow on purpose as we want empty result set

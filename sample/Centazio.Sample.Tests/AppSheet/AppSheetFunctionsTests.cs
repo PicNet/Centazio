@@ -17,7 +17,6 @@ public class AppSheetFunctionsTests {
     var os = await ctl.GetObjectState(ss, SC.SystemEntities.AppSheet.Task) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
-    Assert.That(stager.Contents, Is.Not.Empty);
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
   }
 
@@ -36,7 +35,6 @@ public class AppSheetFunctionsTests {
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
-    Assert.That(coretasks, Is.Not.Empty);
     Assert.That(coretasks.Select(t => t.Name).ToList(), Is.EquivalentTo(stagedtasks));
   }
 

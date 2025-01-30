@@ -31,6 +31,7 @@ public static class Json {
   }
 
   public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);
+  
   public static HttpContent SerializeToHttpContent(object o) {
     var json = JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, HTTP_CONTENT_WRITE_OPTS);
     return new StringContent(json, Encoding.UTF8, "application/json");
