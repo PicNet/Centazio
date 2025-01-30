@@ -151,7 +151,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepo
   
   protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
     new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, BuildCoreEntities) { IsBidirectional = bidi }
-  ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
+  ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results = toeval.Select(eval => {

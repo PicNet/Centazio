@@ -89,7 +89,7 @@ public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, GetUpdatesCustomers)
-  ]) { ChecksumAlgorithm = new Helpers.ChecksumAlgo() };
+  ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
   
   public async Task<ReadOperationResult> GetUpdatesCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);

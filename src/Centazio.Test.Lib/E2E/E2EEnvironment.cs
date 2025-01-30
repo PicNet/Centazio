@@ -77,7 +77,7 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     await ctx.Epoch.ValidateAdded<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, ctx.Epoch.Epoch == 0 ? crm.MembershipTypes : []));
     await ctx.Epoch.ValidateUpdated<CoreMembershipType>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedMemberships));
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_types, crm.MembershipTypes);
+    CompareByChecksumWithoutSysId(SimulationConstants.CRM_SYSTEM, core_types, crm.MembershipTypes);
   }
   
   private async Task CompareCustomers() {
@@ -86,8 +86,8 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     await ctx.Epoch.ValidateAdded<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.AddedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.AddedAccounts));
     await ctx.Epoch.ValidateUpdated<CoreCustomer>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedCustomers), (SimulationConstants.FIN_SYSTEM, fin.Simulation.EditedAccounts));
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm.Customers);
-    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin.Accounts);
+    CompareByChecksumWithoutSysId(SimulationConstants.CRM_SYSTEM, core_customers_for_crm, crm.Customers);
+    CompareByChecksumWithoutSysId(SimulationConstants.FIN_SYSTEM, core_customers_for_fin, fin.Accounts);
   }
   
   private async Task CompareInvoices() {
@@ -99,12 +99,16 @@ public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
     
     await ctx.Epoch.ValidateAdded<CoreInvoice>((SimulationConstants.CRM_SYSTEM, crm.Simulation.AddedInvoices), (SimulationConstants.FIN_SYSTEM, fin.Simulation.AddedInvoices));
     await ctx.Epoch.ValidateUpdated<CoreInvoice>((SimulationConstants.CRM_SYSTEM, crm.Simulation.EditedInvoices), (SimulationConstants.FIN_SYSTEM, fin.Simulation.EditedInvoices));
-    CompareByChecksum(SimulationConstants.CRM_SYSTEM, core_invoices_for_crm, crm.Invoices);
-    CompareByChecksum(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
+    CompareByChecksumWithoutSysId(SimulationConstants.CRM_SYSTEM, core_invoices_for_crm, crm.Invoices);
+    CompareByChecksumWithoutSysId(SimulationConstants.FIN_SYSTEM, core_invoices_for_fin, fin.Invoices);
   }
   
-  [IgnoreNamingConventions] private void CompareByChecksum(SystemName system, IEnumerable<ISystemEntity> cores, IEnumerable<ISystemEntity> targets) {
-    var (corecs, targetscs) = (cores.Select(c => Json.Serialize(c.GetChecksumSubset())).OrderBy(str => str).ToList(), targets.Select(t => Json.Serialize(t.GetChecksumSubset())).OrderBy(str => str).ToList());
+  [IgnoreNamingConventions] private void CompareByChecksumWithoutSysId(SystemName system, IEnumerable<ISystemEntity> fromcores, IEnumerable<ISystemEntity> targets) {
+    var (corecs, targetscs) = (fromcores.Select(Describe).OrderBy(str => str).ToList(), targets.Select(Describe).OrderBy(str => str).ToList());
     if (!corecs.SequenceEqual(targetscs)) throw new E2ETestFailedException($"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");
+    
+    // remove the SystemId from the checksum subset to make this validation simpler.  Otherwise above would need much more complex code to set the correct IDs
+    //    from Map objects on every validation
+    object Describe(ISystemEntity e) => Json.Serialize(e.CreatedWithId(new (system == SimulationConstants.CRM_SYSTEM ? Guid.Empty.ToString() : "0")).GetChecksumSubset());
   }
 }

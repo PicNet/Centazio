@@ -19,7 +19,11 @@ public record ValidString(string Value) {
 }
 
 [MaxLength2(64)] public abstract record EntityId(string Value) : ValidString(Value);
-public sealed record CoreEntityId(string Value) : EntityId(Value);
+
+public sealed record CoreEntityId(string Value) : EntityId(Value) {
+  public static readonly CoreEntityId DEFAULT_VALUE = new("0");
+}
+
 public sealed record SystemEntityId(string Value) : EntityId(Value) {
   public static readonly SystemEntityId DEFAULT_VALUE = new("*");
 }
