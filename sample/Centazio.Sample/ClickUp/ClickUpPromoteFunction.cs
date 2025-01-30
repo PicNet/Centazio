@@ -19,7 +19,7 @@ public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage
       var cutask = eval.SystemEntity.To<ClickUpTask>();
       // todo: this create / update pattern could be reused?
       var task = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty)) with { Name = cutask.name };
-      return eval.MarkForPromotion(SampleConstants.Systems.ClickUp, task);
+      return eval.MarkForPromotion(task);
     }).ToList();
     return Task.FromResult(results);
   }

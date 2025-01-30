@@ -16,12 +16,12 @@ public class CrmPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationC
 
   private Task<List<EntityEvaluationResult>> BuildMembershipTypes(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => Task.FromResult(toeval.Select(eval => {
     var core = ctx.Converter.CrmMembershipTypeToCoreMembershipType(eval.SystemEntity.To<CrmMembershipType>(), eval.ExistingCoreEntityAndMeta?.As<CoreMembershipType>());
-    return eval.MarkForPromotion(SimulationConstants.CRM_SYSTEM, core);
+    return eval.MarkForPromotion(core);
   }).ToList());
 
   private Task<List<EntityEvaluationResult>> BuildCustomers(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => Task.FromResult(toeval.Select(eval => {
     var core = ctx.Converter.CrmCustomerToCoreCustomer(eval.SystemEntity.To<CrmCustomer>(), eval.ExistingCoreEntityAndMeta?.As<CoreCustomer>());
-    return eval.MarkForPromotion(SimulationConstants.CRM_SYSTEM, core);
+    return eval.MarkForPromotion(core);
   }).ToList());
 
   private async Task<List<EntityEvaluationResult>> BuildInvoices(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
@@ -30,7 +30,7 @@ public class CrmPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationC
     return await toeval.Select(async eval => {
       var crminv = eval.SystemEntity.To<CrmInvoice>();
       var core = await ctx.Converter.CrmInvoiceToCoreInvoice(crminv, eval.ExistingCoreEntityAndMeta?.As<CoreInvoice>(), maps[crminv.CustomerSystemId]);
-      return eval.MarkForPromotion(SimulationConstants.CRM_SYSTEM, core);
+      return eval.MarkForPromotion(core);
     }).Synchronous();
   }
 }

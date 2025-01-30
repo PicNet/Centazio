@@ -83,7 +83,7 @@ public class PromoteOperationRunnerTests {
     var results = toeval.Select((eval, idx) => {
       if (idx % 2 == 1) return eval.MarkForIgnore(new($"Ignore: {idx}"));
       var ce = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-      return eval.MarkForPromotion(config.State.System, ce);
+      return eval.MarkForPromotion(ce);
     }).ToList();
     return Task.FromResult(results);
   }

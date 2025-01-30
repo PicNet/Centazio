@@ -8,21 +8,23 @@ namespace Centazio.Core.Promote;
 
 public record EntityForPromotionEvaluation {
 
+  public SystemName System { get; }
   public ISystemEntity SystemEntity { get; }
   public CoreEntityAndMeta? ExistingCoreEntityAndMeta { get; }
   
   private IChecksumAlgorithm ChecksumAlgo { get; }
   
-  public EntityForPromotionEvaluation(ISystemEntity sysent, CoreEntityAndMeta? coreent, IChecksumAlgorithm checksum) {
+  public EntityForPromotionEvaluation(SystemName system, ISystemEntity sysent, CoreEntityAndMeta? coreent, IChecksumAlgorithm checksum) {
+    System = system;
     SystemEntity = sysent;
     ExistingCoreEntityAndMeta = coreent;
     ChecksumAlgo = checksum;
   }
   
-  public EntityEvaluationResult MarkForPromotion(SystemName system, ICoreEntity core) {
+  public EntityEvaluationResult MarkForPromotion(ICoreEntity core) {
     return new EntityToPromote(SystemEntity,
-        ExistingCoreEntityAndMeta?.Update(system, core, ChecksumAlgo.Checksum)
-        ?? CoreEntityAndMeta.Create(system, SystemEntity.SystemId, core, ChecksumAlgo.Checksum));
+        ExistingCoreEntityAndMeta?.Update(System, core, ChecksumAlgo.Checksum)
+        ?? CoreEntityAndMeta.Create(System, SystemEntity.SystemId, core, ChecksumAlgo.Checksum));
   }
 
   public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SystemEntity, reason);

@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using Centazio.Core.Misc;
-using Centazio.Core.Settings;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Centazio.Core.Settings;
 
 namespace Centazio.Core.Tests.Settings;
 

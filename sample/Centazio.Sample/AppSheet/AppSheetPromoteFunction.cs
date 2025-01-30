@@ -20,8 +20,7 @@ public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorag
       if (String.IsNullOrWhiteSpace(astask.Task)) { return eval.MarkForIgnore(new($"AppSheet Task[{astask.RowId}] has a null or empty task name and will not be promoted")); }
       
       var task = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty)) with { Name = astask.Task ?? throw new Exception() };
-      // todo: why do we have to pass `SampleConstants.Systems.AppSheet` here, when the function already knows the system.  The user should not have to use this twice
-      return eval.MarkForPromotion(SampleConstants.Systems.AppSheet, task);
+      return eval.MarkForPromotion(task);
     }).ToList();
     return Task.FromResult(results);
   }
