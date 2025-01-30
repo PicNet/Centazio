@@ -14,13 +14,13 @@ public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(Sim
   ]);
   
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreCustomerToCrm(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    return Task.FromResult(WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e)));
+    return Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e)));
   }
   
   private async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreInvoiceToCrm(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
     var maps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
-    return  WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreInvoiceToCrmInvoice(Id(id), e, maps));
+    return  CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToCrmInvoice(Id(id), e, maps));
   }
   
   private Guid Id(SystemEntityId systemid) => systemid == SystemEntityId.DEFAULT_VALUE ? Guid.Empty : Guid.Parse(systemid);

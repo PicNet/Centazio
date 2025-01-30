@@ -14,13 +14,13 @@ public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(Sim
   ]);
 
   private Task<CovertCoreEntitiesToSystemEntitiesResult> ConvertCoreCustomers(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    return Task.FromResult(WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreCustomerToFinAccount(Id(id), e)));
+    return Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToFinAccount(Id(id), e)));
   }
   
   private async Task<CovertCoreEntitiesToSystemEntitiesResult> ConvertCoreInvoices(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
     var maps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
-    return WriteHelpers.CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, ctx.ChecksumAlg, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
+    return CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(Id(id), e, maps));
   }
   
   private int Id(SystemEntityId systemid) => systemid == SystemEntityId.DEFAULT_VALUE ? 0 : Int32.Parse(systemid);

@@ -13,7 +13,8 @@ public class SqlServerStagedEntityRepositoryFactory(CentazioSettings settings) :
   public IStagedEntityRepository GetService() {
     var sesetts = settings.StagedEntityRepository;
     var opts = new EFStagedEntityRepositoryOptions(
-        sesetts.Limit, 
+        sesetts.Limit,
+        // todo: checksum algo should come from FuncConfig
         new Sha256ChecksumAlgorithm().Checksum, 
         () => new SqlServerStagedEntityContext(sesetts.ConnectionString, sesetts.SchemaName, sesetts.TableName));
     return new SqlServerStagedEntityRepository(opts, new SqlServerDbFieldsHelper(), sesetts.CreateSchema);

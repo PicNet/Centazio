@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -22,4 +23,12 @@ public abstract class PromoteFunction(SystemName system, IStagedEntityRepository
     AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl);
 
 public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl);
+    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl) {
+  
+  protected CovertCoreEntitiesToSystemEntitiesResult CovertCoreEntitiesToSystemEntitties<E>(
+      List<CoreAndPendingCreateMap> tocreate, 
+      List<CoreAndPendingUpdateMap> toupdate,
+      ConvertCoreToSystemEntityForWritingHandler<E> ConvertCoreToSystemEntityForWriting) where E : ICoreEntity {
+    return WriteHelpers.CovertCoreEntitiesToSystemEntitties(tocreate, toupdate, Config.ChecksumAlgorithm, ConvertCoreToSystemEntityForWriting); 
+    }
+}
