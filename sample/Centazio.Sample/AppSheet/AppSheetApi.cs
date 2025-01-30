@@ -1,10 +1,9 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using Centazio.Core.Misc;
+﻿using Centazio.Core.Misc;
 
 namespace Centazio.Sample.AppSheet;
 
 // todo: would be good to just accept AppSheetSettings and not whole settings object
+// also, I dont like how the CentazioHost registers CentazioSettings, SampleSettings, etc, etc.
 public class AppSheetApi(SampleSettings settings, SampleSecrets secrets) {
 
   private static HttpClient? http;
@@ -14,24 +13,23 @@ public class AppSheetApi(SampleSettings settings, SampleSecrets secrets) {
     DefaultRequestHeaders = { { "ApplicationAccessKey", secrets.APPSHEET_KEY } }
   };
 
-  public async Task<List<string>> GetAllTasks() => Json.SplitList(await Post(new { Action = "Find" }), String.Empty);
+  public async Task<List<string>> GetAllTasks() => Json.SplitList(await DoPost(new { Action = "Find" }), String.Empty);
 
   public async Task<List<AppSheetTask>> AddTasks(List<string> toadd) {
-    var res = await Post(new { Action = "Add", Rows = toadd.Select(t => new { Task = t } ) });
+    var res = await DoPost(new { Action = "Add", Rows = toadd.Select(t => new { Task = t } ) });
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }
 
   public async Task<List<AppSheetTask>> EditTasks(List<AppSheetTask> toedit) {
-    var res = await Post(new { Action = "Edit", Rows = toedit });
+    var res = await DoPost(new { Action = "Edit", Rows = toedit });
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }
   
-  public async Task DeleteTasks(List<AppSheetTask> tasks) => await Post(new { Action = "Delete", Rows = tasks.Select(t => new AppSheetTaskId {  RowId = t.RowId }) });
+  public async Task DeleteTasks(List<AppSheetTask> tasks) => await DoPost(new { Action = "Delete", Rows = tasks.Select(t => new AppSheetTaskId {  RowId = t.RowId }) });
 
-  private async Task<string> Post(object payload) {
+  private async Task<string> DoPost(object payload) {
     var uri = $"{settings.AppSheet.BaseUrl}/{settings.AppSheet.AppId}/tables/{settings.AppSheet.TableName}/Action";
-    var reqjson = JsonContent.Create(payload, options: new JsonSerializerOptions { PropertyNamingPolicy = null });
-    var resp = await Client.PostAsync(uri, reqjson);
+    var resp = await Client.PostAsync(uri, Json.SerializeToHttpContent(payload));
     return await resp.Content.ReadAsStringAsync();
   }
 }

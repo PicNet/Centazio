@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Types;
@@ -83,11 +84,12 @@ public class JsonSerialisationTests {
     Assert.That(c2s2, Is.EqualTo(c2s));
   }
   
-  // todo: it would be great if these properties were not serialised when writing back to APIs.
-  //    So we dont need to define JsonIgnore even though its already defined in the interface
-  [Test, Ignore("This could not be fixed easily, for now just mark subclasses with [JsonIgnore]")] public void Test_serialisation_of_subclasses_respect_JsonIgnore() {
-    var json = Json.Serialize(new SystemEntityType("Only this field should be serialised"));
+  [Test] public async Task Test_serialisation_to_HttpContent_respects_interface_JsonIgnore() {
+    var body = Json.SerializeToHttpContent(new SystemEntityType("Only this field should be serialised"));
+    var json = await body.ReadAsStringAsync();
     Assert.That(json, Does.Contain("\"Prop\":"));
+    Assert.That(json, Does.Contain("\"New Name\":"));
+    Assert.That(json, Does.Not.Contain("\"JsonPropNameTest\":"));
     Assert.That(json, Does.Not.Contain("\"DisplayName\":"));
     Assert.That(json, Does.Not.Contain("\"SystemId\":"));
     Assert.That(json, Does.Not.Contain("\"LastUpdatedDate\":"));
@@ -171,8 +173,10 @@ public class JsonSerialisationTests {
   
   public record SystemEntityType(string Prop) : ISystemEntity {
 
+    [JsonPropertyName("New Name")] public string JsonPropNameTest => nameof(JsonPropNameTest);
+    
     public string DisplayName => Prop;
-    public object GetChecksumSubset() => throw new NotImplementedException();
+    public object GetChecksumSubset() => throw new Exception();
     
     // these two fields should be ignored during serialisation
     public SystemEntityId SystemId { get; } = new(Guid.NewGuid().ToString());

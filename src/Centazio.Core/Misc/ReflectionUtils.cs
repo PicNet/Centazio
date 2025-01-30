@@ -15,6 +15,33 @@ public static class ReflectionUtils {
     return rprop.GetValue(o)?.ToString() ?? throw new Exception();
   }
 
+  public static List<PropertyInfo> GetAllProperties<T>() {
+    var flags = BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Instance;
+    if (!typeof(T).IsInterface) return [.. typeof(T).GetProperties(flags)];
+
+    var props = new List<PropertyInfo>();
+
+    var considered = new List<Type>();
+    var queue = new Queue<Type>();
+    considered.Add(typeof(T));
+    queue.Enqueue(typeof(T));
+    
+    while (queue.Count > 0) {
+      var subtype = queue.Dequeue();
+      foreach (var iface in subtype.GetInterfaces()) {
+        if (considered.Contains(iface)) continue;
+        considered.Add(iface);
+        queue.Enqueue(iface);
+      }
+      var typeprops = subtype.GetProperties(flags);
+      var newpis = typeprops.Where(x => !props.Contains(x));
+      props.InsertRange(0, newpis);
+    }
+
+    return props;
+  }
+
+
   public static bool IsDefault(object val) => val.GetType().IsValueType && val.Equals(Activator.CreateInstance(val.GetType()));
   public static bool IsRecord(Type t) => t.GetMethods().Any(m => m.Name == "<Clone>$");
 

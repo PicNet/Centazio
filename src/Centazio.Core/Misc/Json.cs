@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -10,7 +11,12 @@ namespace Centazio.Core.Misc;
 public static class Json {
   
   internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
-    RespectNullableAnnotations = true
+    RespectNullableAnnotations = true,
+    PropertyNamingPolicy = null
+  };
+  
+  internal static readonly JsonSerializerOptions HTTP_CONTENT_WRITE_OPTS = new(DEFAULT_OPTS) {
+    Converters = { new SystemEntityAwareConverter() }
   };
   
   public static List<T> SplitList<T>(string json, string path) => 
@@ -25,6 +31,10 @@ public static class Json {
   }
 
   public static string Serialize(object o) => JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, DEFAULT_OPTS);
+  public static HttpContent SerializeToHttpContent(object o) {
+    var json = JsonSerializer.Serialize(DtoHelpers.HasDto(o) ? DtoHelpers.ToDto(o) : o, HTTP_CONTENT_WRITE_OPTS);
+    return new StringContent(json, Encoding.UTF8, "application/json");
+  }
   
   public static T Deserialize<T>(string json) => (T) Deserialize(json, typeof(T));
   
@@ -122,4 +132,39 @@ public static class Json {
 
   private record PropPair(PropertyInfo BasePi, PropertyInfo DtoPi);
 
+}
+
+public class SystemEntityAwareConverter : JsonConverter<object> {
+
+  private readonly Dictionary<string, PropertyInfo> IGNORE = ReflectionUtils.GetAllProperties<ISystemEntity>().ToDictionary(pi => pi.Name);
+  
+  public override bool CanConvert(Type type) => typeof(ISystemEntity).IsAssignableFrom(type);
+
+  public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options) {
+    if (value is null) { writer.WriteNullValue(); return; }
+
+    writer.WriteStartObject();
+    var vtype = value.GetType();
+    var properties = GetSerializableProperties(vtype);
+
+    foreach (var prop in properties) {
+      var pval = prop.GetValue(value);
+      if (pval is null) continue;
+
+      
+      writer.WritePropertyName(GetJsonPropertyName(prop));
+      JsonSerializer.Serialize(writer, pval, options);
+    }
+
+    writer.WriteEndObject();
+
+    IEnumerable<PropertyInfo> GetSerializableProperties(Type type) => type.GetProperties().Where(p => !IGNORE.ContainsKey(p.Name));
+    
+    string GetJsonPropertyName(PropertyInfo pi) => 
+        pi.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name 
+        ?? options.PropertyNamingPolicy?.ConvertName(pi.Name) 
+        ?? pi.Name;
+  }
+  
+  public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => JsonSerializer.Deserialize(ref reader, typeToConvert, options);
 }

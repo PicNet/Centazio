@@ -31,8 +31,8 @@ public class PromoteFunctionTests {
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     
-    var sysent = (ISystemEntity) Json.Deserialize(staged1.Data, typeof(System1Entity));
-    Assert.That(sysent, Is.EqualTo(cust1));
+    var deserialised = (ISystemEntity) Json.Deserialize(staged1.Data, typeof(System1Entity));
+    Assert.That(deserialised, Is.EqualTo(cust1));
   }
   
   [Test] public async Task Test_standalone_Promote_function() {

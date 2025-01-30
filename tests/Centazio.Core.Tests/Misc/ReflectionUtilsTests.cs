@@ -55,4 +55,9 @@ public class ReflectionUtilsTests {
     Assert.That(U.GetPropAttribute<MaxLength2Attribute>(typeof(StagedEntity), nameof(StagedEntity.StagedEntityChecksum))?.Length, Is.EqualTo(64));
   }
   
+  [Test] public void Test_GetAllProperties() {
+    var props = ReflectionUtils.GetAllProperties<ISystemEntity>().Select(pi => pi.Name);
+    Assert.That(props, Is.EquivalentTo(["DisplayName", "SystemId", "LastUpdatedDate"]));
+  }
+  
 }

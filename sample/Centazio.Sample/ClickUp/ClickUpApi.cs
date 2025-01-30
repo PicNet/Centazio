@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using Centazio.Core.Misc;
 
 namespace Centazio.Sample.ClickUp;
@@ -23,7 +22,7 @@ public class ClickUpApi(SampleSettings settings, SampleSecrets secrets) {
   public async Task<string> CreateTask(string name) {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
     
-    var resp = await Client.PostAsync($"list/{settings.ClickUp.ListId}/task", JsonContent.Create(new { name }));
+    var resp = await Client.PostAsync($"list/{settings.ClickUp.ListId}/task", Json.SerializeToHttpContent(new { name }));
     var json = await resp.Content.ReadAsStringAsync();
     var node = JsonNode.Parse(json) ?? throw new Exception();
     return node["id"]?.ToString() ?? throw new Exception();
@@ -35,7 +34,7 @@ public class ClickUpApi(SampleSettings settings, SampleSecrets secrets) {
   public async Task DeleteTask(string id) => await Client.DeleteAsync($"task/{id}");
 
   // https://developer.clickup.com/reference/updatetask
-  private async Task UpdateImpl(string id, object content) => await Client.PutAsync($"task/{id}", JsonContent.Create(content));
+  private async Task UpdateImpl(string id, object content) => await Client.PutAsync($"task/{id}", Json.SerializeToHttpContent(content));
   
 
   private async Task<string> Query(string path) {
