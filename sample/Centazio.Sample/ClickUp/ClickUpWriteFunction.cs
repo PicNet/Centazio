@@ -25,10 +25,9 @@ public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUp
       return task;
     }));
     
-    // todo: it was simpler to create this result object than use the WriteHelper, consider removing `WriteHelpers.GetSuccessWriteOperationResult`
     return new SuccessWriteOperationResult(
-          createdids.Select((id, idx) => tocreate[idx].Map.SuccessCreate(new(id), Config.ChecksumAlgorithm.Checksum(tocreate[idx].SystemEntity))).ToList(), 
-          updated.Select((sysent, idx) => toupdate[idx].Map.SuccessUpdate(Config.ChecksumAlgorithm.Checksum(sysent))).ToList());
+          createdids.Select((_, idx) => tocreate[idx].SuccessCreate(tocreate[idx].SystemEntity)).ToList(), 
+          updated.Select((_, idx) => toupdate[idx].SuccessUpdate()).ToList());
   }
 
 }

@@ -24,15 +24,14 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
   private async Task<List<Map.Created>> AddNewTasks(List<CoreSystemAndPendingCreateMap> tocreate) {
    if (!tocreate.Any()) return [];
    var created = await api.AddTasks(tocreate.Select(t => t.CoreEntity.To<CoreTask>().Name).ToList());
-   return tocreate.Select((e, idx) => e.Map.SuccessCreate(created[idx].SystemId, Config.ChecksumAlgorithm.Checksum(created[idx]))).ToList();
+   return tocreate.Select((e, idx) => e.SuccessCreate(created[idx])).ToList();
   }
   
   private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (!toupdate.Any()) return [];
-    // todo: this is weird behaviour, and not intuitive/discoverable
     var aptasks = toupdate.Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.To<CoreTask>().Name)).ToList(); 
-    var edited = await api.EditTasks(aptasks);
-    return toupdate.Select((e, idx) => e.Map.SuccessUpdate(Config.ChecksumAlgorithm.Checksum(edited[idx]))).ToList();
+    await api.EditTasks(aptasks);
+    return toupdate.Select(e => e.SuccessUpdate()).ToList();
   }
 
 }

@@ -18,7 +18,7 @@ public static class WriteHelpers {
       tocreate.Select(m => {
         var core = m.CoreEntity.To<E>();
         var sysent = converter(SystemEntityId.DEFAULT_VALUE, core);
-        return m.AddSystemEntity(sysent);
+        return m.AddSystemEntity(sysent, checksum);
       }).ToList(),
       toupdate.Select(m => {
         var core = m.CoreEntity.To<E>();
@@ -30,17 +30,7 @@ public static class WriteHelpers {
           $"\n\tChecksum Subset[{sysent.GetChecksumSubset()}]" +
           $"\n\tChecksum[{checksum.Checksum(sysent)}]");
         
-        return m.AddSystemEntity(sysent);
+        return m.AddSystemEntity(sysent, checksum);
       }).ToList());
-  }
-  
-  public static SuccessWriteOperationResult GetSuccessWriteOperationResult(
-      List<CoreSystemAndPendingCreateMap> tocreate, IEnumerable<ISystemEntity> created, 
-      List<CoreSystemAndPendingUpdateMap> toupdate, IEnumerable<ISystemEntity> updated,
-      IChecksumAlgorithm chksm) {
-    // todo-low: this is a bit dodgy, its expecting the created/updated entities to come back in the same order as pre change entities
-    return new SuccessWriteOperationResult(
-          created.Select((sysent, idx) => tocreate[idx].Map.SuccessCreate(sysent.SystemId, chksm.Checksum(sysent))).ToList(), 
-          updated.Select((sysent, idx) => toupdate[idx].Map.SuccessUpdate(chksm.Checksum(sysent))).ToList());
   }
 }

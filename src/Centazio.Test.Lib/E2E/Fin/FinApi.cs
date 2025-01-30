@@ -62,6 +62,7 @@ public record FinAccount(int FinAccId, string Name, DateTime Updated) : ISystemE
   public SystemEntityId SystemId => new(FinAccId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
+  // todo: checksum subset should always include SystemId.  This will cause issues with SuccessCreate and we will need to add the id on new entities
   public object GetChecksumSubset() => new { Name };
 
 }

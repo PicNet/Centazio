@@ -27,13 +27,18 @@ public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(Sim
 
   private async Task<WriteOperationResult> WriteCustomers(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     var created = await api.CreateCustomers(tocreate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
-    var updated = await api.UpdateCustomers(toupdate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
-    return WriteHelpers.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated, ctx.ChecksumAlg);
+    await api.UpdateCustomers(toupdate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
+    
+    return new SuccessWriteOperationResult(
+          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent)).ToList(), 
+          toupdate.Select(e => e.SuccessUpdate()).ToList());
   }
   
   private async Task<WriteOperationResult> WriteInvoices(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     var created = await api.CreateInvoices(tocreate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
-    var updated = await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
-    return WriteHelpers.GetSuccessWriteOperationResult(tocreate, created, toupdate, updated, ctx.ChecksumAlg);
+    await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
+    return new SuccessWriteOperationResult(
+          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent)).ToList(), 
+          toupdate.Select(e => e.SuccessUpdate()).ToList());
   }
 }
