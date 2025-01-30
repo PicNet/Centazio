@@ -39,7 +39,7 @@ public class HostBootstrapper(HostSettings settings) {
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(coreconf.CtlRepository.Provider);
     
     void AddCoreService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
-      svcs.Register(typeof(F), GetCoreServiceFactoryType<F>(provider));
+      svcs.RegisterServiceTypeFactory(typeof(F), GetCoreServiceFactoryType<F>(provider));
       svcs.Register<I>(prov => prov.GetRequiredService<F>().GetService());
     }
     

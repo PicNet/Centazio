@@ -25,7 +25,7 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
   
   public void RegisterServices(CentazioHostServiceRegistrar registrar) {
     SettingsLoader.RegisterSettingsAndRecordPropertiesAsSingletons(Settings, registrar);
-    registrar.Register(ServiceDescriptor.Singleton(Secrets));
+    registrar.Register(Secrets);
     
     RegisterIntegrationSpecificServices(registrar);
   }

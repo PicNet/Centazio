@@ -28,7 +28,7 @@ public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRe
   protected CovertCoreEntitiesToSystemEntitiesResult CovertCoreEntitiesToSystemEntitties<E>(
       List<CoreAndPendingCreateMap> tocreate, 
       List<CoreAndPendingUpdateMap> toupdate,
-      ConvertCoreToSystemEntityForWritingHandler<E> ConvertCoreToSystemEntityForWriting) where E : ICoreEntity {
-    return WriteHelpers.CovertCoreEntitiesToSystemEntitties(tocreate, toupdate, Config.ChecksumAlgorithm, ConvertCoreToSystemEntityForWriting); 
+      ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
+    return WriteHelpers.CovertCoreEntitiesToSystemEntitties(tocreate, toupdate, Config.ChecksumAlgorithm, converter); 
     }
 }

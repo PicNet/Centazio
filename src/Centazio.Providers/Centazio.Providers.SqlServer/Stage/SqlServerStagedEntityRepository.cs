@@ -9,13 +9,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Stage;
 
-public class SqlServerStagedEntityRepositoryFactory(CentazioSettings settings) : IServiceFactory<IStagedEntityRepository> {
+public class SqlServerStagedEntityRepositoryFactory(CentazioSettings settings, IChecksumAlgorithm checksum) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
     var sesetts = settings.StagedEntityRepository;
     var opts = new EFStagedEntityRepositoryOptions(
         sesetts.Limit,
-        // todo: checksum algo should come from FuncConfig
-        new Sha256ChecksumAlgorithm().Checksum, 
+        checksum.Checksum, 
         () => new SqlServerStagedEntityContext(sesetts.ConnectionString, sesetts.SchemaName, sesetts.TableName));
     return new SqlServerStagedEntityRepository(opts, new SqlServerDbFieldsHelper(), sesetts.CreateSchema);
   }
