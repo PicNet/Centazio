@@ -14,7 +14,6 @@ public abstract class AbstractChecksumAlgorith : IChecksumAlgorithm {
 
   public SystemEntityChecksum Checksum(ISystemEntity sysent) {
     var subset = sysent.GetChecksumSubset();
-    // todo: have to make sure we use this SystemEntityId.DEFAULT_VALUE in the code 
     if (sysent.SystemId == SystemEntityId.DEFAULT_VALUE) throw new ArgumentException($"Checksum should not be calculated on a SystemEntity if its SystemId has not been set");
     
     return new(GetChecksumImpl(GetSubsetBytes(subset)));

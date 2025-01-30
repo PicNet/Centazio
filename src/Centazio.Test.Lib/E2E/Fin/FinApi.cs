@@ -16,8 +16,8 @@ public class FinApi {
   public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(Accounts.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   public Task<List<string>> GetInvoices(DateTime after) => Task.FromResult(Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   
-  public Task<List<FinAccount>> CreateAccounts(List<FinAccount> news) { 
-    var created = news.Select(c => c with { FinAccId = Rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+  public Task<List<FinAccount>> CreateAccounts(SimulationCtx ctx, List<FinAccount> news) { 
+    var created = news.Select(c => c with { SystemId = ctx.NewIntSeid(), Updated = UtcDate.UtcNow }).ToList();
     Accounts.AddRange(created);
     return Task.FromResult(created);
   }
@@ -31,8 +31,8 @@ public class FinApi {
     }).ToList());
   }
 
-  public Task<List<FinInvoice>> CreateInvoices(List<FinInvoice> news) {
-    var created = news.Select(i => i with { FinInvId = Rng.Next(Int32.MaxValue), Updated = UtcDate.UtcNow }).ToList();
+  public Task<List<FinInvoice>> CreateInvoices(SimulationCtx ctx, List<FinInvoice> news) {
+    var created = news.Select(i => i with { SystemId = ctx.NewIntSeid(), Updated = UtcDate.UtcNow }).ToList();
     Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -47,25 +47,23 @@ public class FinApi {
   }
 }
 
-public record FinInvoice(int FinInvId, int AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
+public record FinInvoice(SystemEntityId SystemId, SystemEntityId AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
 
-  public SystemEntityId SystemId => new(FinInvId.ToString());
   public SystemEntityId AccountSystemId => new(AccountId.ToString());
   public DateTime LastUpdatedDate => Updated;
-  public string DisplayName => $"Acct:{AccountId}({FinInvId}) {Amount}c";
+  public string DisplayName => $"Acct:{AccountId.Value}({SystemId.Value}) {Amount}c";
   
-  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { FinInvId = Int32.Parse(newid.Value) };
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { SystemId = newid };
   public object GetChecksumSubset() => new { SystemId, AccountId, Amount, DueDate, PaidDate };
 
 }
 
-public record FinAccount(int FinAccId, string Name, DateTime Updated) : ISystemEntity {
+public record FinAccount(SystemEntityId SystemId, string Name, DateTime Updated) : ISystemEntity {
 
-  public SystemEntityId SystemId => new(FinAccId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
   
-  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { FinAccId = Int32.Parse(newid.Value) };
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { SystemId = newid };
   public object GetChecksumSubset() => new { SystemId, Name };
 
 }

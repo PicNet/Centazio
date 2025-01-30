@@ -14,19 +14,17 @@ public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(Sim
   ]);
   
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreCustomerToCrm(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    return Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(Id(id), e)));
+    return Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToCrmCustomer(id, e)));
   }
   
   private async Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreInvoiceToCrm(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
     var maps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
-    return  CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToCrmInvoice(Id(id), e, maps));
+    return  CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToCrmInvoice(id, e, maps));
   }
   
-  private Guid Id(SystemEntityId systemid) => systemid == SystemEntityId.DEFAULT_VALUE ? Guid.Empty : Guid.Parse(systemid);
-
   private async Task<WriteOperationResult> WriteCustomers(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
-    var created = await api.CreateCustomers(tocreate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
+    var created = await api.CreateCustomers(ctx, tocreate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
     await api.UpdateCustomers(toupdate.Select(e => e.SystemEntity.To<CrmCustomer>()).ToList());
     
     return new SuccessWriteOperationResult(
@@ -35,7 +33,7 @@ public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(Sim
   }
   
   private async Task<WriteOperationResult> WriteInvoices(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
-    var created = await api.CreateInvoices(tocreate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
+    var created = await api.CreateInvoices(ctx, tocreate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
     await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<CrmInvoice>()).ToList());
     return new SuccessWriteOperationResult(
           created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(), 

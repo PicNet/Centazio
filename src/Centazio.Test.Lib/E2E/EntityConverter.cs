@@ -50,15 +50,15 @@ public class EntityConverter(ICtlRepository ctl) {
           ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.Name)
           : existing with { Name = m.Name };
 
-  public CrmMembershipType CoreMembershipTypeToCrmMembershipType(Guid id, CoreMembershipType m) => new(id, UtcDate.UtcNow, m.Name);
-  public CrmCustomer CoreCustomerToCrmCustomer(Guid id, CoreCustomer c) => new(id, UtcDate.UtcNow, Guid.Parse(coretosysids[c.MembershipCoreId].Value), c.Name);
+  public CrmMembershipType CoreMembershipTypeToCrmMembershipType(SystemEntityId systemid, CoreMembershipType m) => new(systemid, UtcDate.UtcNow, m.Name);
+  public CrmCustomer CoreCustomerToCrmCustomer(SystemEntityId systemid, CoreCustomer c) => new(systemid, UtcDate.UtcNow, coretosysids[c.MembershipCoreId], c.Name);
 
-  public CrmInvoice CoreInvoiceToCrmInvoice(Guid id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
-      new(id, UtcDate.UtcNow, Guid.Parse(custmaps[i.CustomerCoreId].Value), i.Cents, i.DueDate, i.PaidDate);
+  public CrmInvoice CoreInvoiceToCrmInvoice(SystemEntityId systemid, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
+      new(systemid, UtcDate.UtcNow, custmaps[i.CustomerCoreId], i.Cents, i.DueDate, i.PaidDate);
   
-  public FinAccount CoreCustomerToFinAccount(int id, CoreCustomer c) => new(id, c.Name, UtcDate.UtcNow);
+  public FinAccount CoreCustomerToFinAccount(SystemEntityId systemid, CoreCustomer c) => new(systemid, c.Name, UtcDate.UtcNow);
   
-  public FinInvoice CoreInvoiceToFinInvoice(int id, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> accmaps) => 
-      new(id, Int32.Parse(accmaps[i.CustomerCoreId]), i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), i.PaidDate);
+  public FinInvoice CoreInvoiceToFinInvoice(SystemEntityId systemid, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> accmaps) => 
+      new(systemid, accmaps[i.CustomerCoreId], i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), i.PaidDate);
   
 }

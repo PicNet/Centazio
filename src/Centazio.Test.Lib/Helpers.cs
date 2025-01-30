@@ -14,6 +14,6 @@ public static class Helpers {
   public class TestingHashcodeBasedChecksumAlgo : AbstractChecksumAlgorith {
     public override void Dispose() {}
     
-    protected override string GetChecksumImpl(byte[] bytes) => bytes.GetHashCode().ToString();
+    protected override string GetChecksumImpl(byte[] bytes) => String.Join('.',bytes).GetHashCode().ToString();
   }
 }

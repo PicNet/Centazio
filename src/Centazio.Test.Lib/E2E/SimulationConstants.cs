@@ -17,7 +17,7 @@ public static class SimulationConstants {
   
   public static readonly int TOTAL_EPOCHS = 100;
   
-  public static readonly Guid PENDING_MEMBERSHIP_TYPE_ID = Rng.NewGuid();
+  public static readonly SystemEntityId PENDING_MEMBERSHIP_TYPE_ID = new(Rng.NewGuid().ToString());
   public static readonly int CRM_MAX_EDIT_MEMBERSHIPS = 2;
   public static readonly int CRM_MAX_NEW_CUSTOMERS = 4;
   public static readonly int CRM_MAX_EDIT_CUSTOMERS = 4;

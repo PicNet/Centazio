@@ -2,6 +2,7 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Stage;
+using Centazio.Core.Types;
 using Serilog;
 using Serilog.Events;
 using C = Centazio.Test.Lib.E2E.SimulationConstants;
@@ -44,6 +45,8 @@ public class SimulationCtx : IAsyncDisposable {
     else DevelDebug.WriteLine(message);
   }
   
+  public SystemEntityId NewGuiSeid() => new (Rng.NewGuid().ToString());
+  public SystemEntityId NewIntSeid() => new (Rng.Next(Int32.MaxValue).ToString());
   
   public string NewName<T>(string prefix, List<T> target, int idx) => $"{prefix}_{target.Count + idx}:0";
   

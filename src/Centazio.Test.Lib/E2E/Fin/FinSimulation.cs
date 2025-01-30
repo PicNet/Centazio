@@ -20,7 +20,7 @@ public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<Fi
     var count = Rng.Next(SimulationConstants.FIN_MAX_NEW_ACCOUNTS);
     if (count == 0) return [];
     
-    var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(Rng.Next(Int32.MaxValue), ctx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
+    var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(ctx.NewIntSeid(), ctx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
     ctx.Debug($"FinSimulation - AddAccounts[{count}]:\n\t{String.Join("\n\t", toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
     accounts.AddRange(toadd);
     return toadd.ToList();
@@ -50,7 +50,7 @@ public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<Fi
     if (!accounts.Any() || count == 0) return [];
     
     var toadd = new List<FinInvoice>();
-    Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(Rng.Next(Int32.MaxValue), Rng.RandomItem(accounts).FinAccId, Rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)), null)));
+    Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.NewIntSeid(), Rng.RandomItem(accounts).SystemId, Rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)), null)));
     ctx.Debug($"FinSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"))}");
     invoices.AddRange(toadd);
     return toadd;

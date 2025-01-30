@@ -52,7 +52,7 @@ public interface ISystemEntity : IHasDisplayName, IGetChecksumSubset {
   string IHasDisplayName.GetId() => SystemId.Value;
   public E To<E>() where E : ISystemEntity => (E) this;
   
-  ISystemEntity CreatedWithId(SystemEntityId newid);
+  ISystemEntity CreatedWithId(SystemEntityId systemid);
 
 }
 

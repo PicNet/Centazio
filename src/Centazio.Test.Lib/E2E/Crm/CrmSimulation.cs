@@ -24,7 +24,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     if (count == 0) return [];
     
     var toadd = Enumerable.Range(0, count)
-        .Select(idx => new CrmCustomer(Rng.NewGuid(), UtcDate.UtcNow, Rng.RandomItem(api.MembershipTypes).CrmTypeId, ctx.NewName(nameof(CrmCustomer), api.Customers, idx)))
+        .Select(idx => new CrmCustomer(ctx.NewGuiSeid(), UtcDate.UtcNow, Rng.RandomItem(api.MembershipTypes).SystemId, ctx.NewName(nameof(CrmCustomer), api.Customers, idx)))
         .ToList();
     ctx.Debug($"CrmSimulation - AddCustomers[{count}]:\n\t{String.Join("\n\t", toadd.Select(a => $"{a.Name}({a.SystemId})"))}");
     api.Customers.AddRange(toadd);
@@ -39,7 +39,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     var edited = new List<CrmCustomer>();
     idxs.ForEach(idx => {
       var cust = api.Customers[idx];
-      var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, Rng.RandomItem(api.MembershipTypes).CrmTypeId);
+      var (name, newname, oldmt, newmt) = (cust.Name, ctx.UpdateName(cust.Name), cust.MembershipTypeId, Rng.RandomItem(api.MembershipTypes).SystemId);
       var newcust = cust with { MembershipTypeId = newmt, Name = newname, Updated = UtcDate.UtcNow };
       var oldcs = ctx.ChecksumAlg.Checksum(cust);
       var newcs = ctx.ChecksumAlg.Checksum(newcust);
@@ -56,7 +56,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     
     var toadd = new List<CrmInvoice>();
     Enumerable.Range(0, count).ForEach(_ => 
-        toadd.Add(new CrmInvoice(Rng.NewGuid(), UtcDate.UtcNow, Rng.RandomItem(api.Customers).CrmCustId, Rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(Rng.Next(-10, 60))))));
+        toadd.Add(new CrmInvoice(ctx.NewGuiSeid(), UtcDate.UtcNow, Rng.RandomItem(api.Customers).SystemId, Rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(Rng.Next(-10, 60))))));
     
     ctx.Debug($"CrmSimulation - AddInvoices[{count}]:\n\t{String.Join("\n\t", toadd.Select(i => {
       var cust = api.Customers.Single(c => c.SystemId == i.CustomerSystemId) as IHasDisplayName;

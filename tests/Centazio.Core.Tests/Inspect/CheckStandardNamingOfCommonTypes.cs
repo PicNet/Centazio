@@ -49,7 +49,7 @@ public class CheckStandardNamingOfCommonTypes {
         var isrec = ReflectionUtils.IsRecord(objtype);
         
         objtype.GetConstructors().ForEach(ValidateCtor);
-        objtype.GetProperties().ForEach(ValidateProp);
+        GetDistinctByPropertyType(objtype.GetProperties()).ForEach(ValidateProp);
         objtype.GetFields().ForEach(ValidateField);
         
         var methods = isrec ? [] : objtype
@@ -144,9 +144,18 @@ public class CheckStandardNamingOfCommonTypes {
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
 
     // ignores methods that throw Reflection exceptions due to references to some nuget packages
-    ParameterInfo[] GetParamsSafe(MethodBase method) {
-      try { return method.GetParameters(); }
-      catch (Exception) { return []; }
+    // also returns only a single (first) parameter of a given type, as subsequent parameters cannot have the 'expected' name
+    List<ParameterInfo> GetParamsSafe(MethodBase method) {
+      try { 
+        var args = method.GetParameters();
+        var done = new Dictionary<Type, bool>();
+        return args.Where(a => !EXPECTED.ContainsKey(a.ParameterType) || done.TryAdd(a.ParameterType, true)).ToList();
+      } catch (Exception) { return []; }
+    }
+    
+    List<PropertyInfo> GetDistinctByPropertyType(PropertyInfo[] props) {
+      var done = new Dictionary<Type, bool>();
+      return props.Where(a => !EXPECTED.ContainsKey(a.PropertyType) || done.TryAdd(a.PropertyType, true)).ToList();
     }
   }
 
