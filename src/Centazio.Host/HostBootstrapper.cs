@@ -2,6 +2,7 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Core.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,16 +11,16 @@ using Type = System.Type;
 
 namespace Centazio.Host;
 
-public class HostBootstrapper(HostSettings settings) {
+public class HostBootstrapper(CentazioSettings settings) {
 
-  public async Task<List<IRunnableFunction>> InitHost(List<string> filters) {
+  public async Task<List<IRunnableFunction>> InitHost(IHostConfiguration cmdsetts) {
     FunctionConfigDefaults.ThrowExceptions = true;
-    Log.Logger = LogInitialiser.GetFileAndConsoleConfig(settings.HostConfig.GetLogLevel(), settings.HostConfig.GetLogFilters()).CreateLogger();
+    Log.Logger = LogInitialiser.GetFileAndConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     
     var registrar = new CentazioHostServiceRegistrar(new ServiceCollection());
     RegisterCoreServices(registrar);
     var integrations = GetCentazioIntegrations();
-    var funcs = RegisterCentazioFunctions(registrar, integrations, filters);
+    var funcs = RegisterCentazioFunctions(registrar, integrations, cmdsetts.ParseFunctionFilters());
     var prov = registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
@@ -28,15 +29,14 @@ public class HostBootstrapper(HostSettings settings) {
   }
 
   private void RegisterCoreServices(CentazioHostServiceRegistrar svcs) {
-    var coreconf = settings.CoreSettings;
-    svcs.Register(coreconf);
+    svcs.Register(settings);
     
     Log.Debug($"HostBootstrapper registering core services:" +
-        $"\n\tStagedEntityRepository [{coreconf.StagedEntityRepository.Provider}]" +
-        $"\n\tCtlRepository [{coreconf.CtlRepository.Provider}]");
+        $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
+        $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
     
-    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(coreconf.StagedEntityRepository.Provider);
-    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(coreconf.CtlRepository.Provider);
+    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
+    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     
     void AddCoreService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
       svcs.RegisterServiceTypeFactory(typeof(F), GetCoreServiceFactoryType<F>(provider));
@@ -44,14 +44,14 @@ public class HostBootstrapper(HostSettings settings) {
     }
     
     Type GetCoreServiceFactoryType<F>(string provider) {
-      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), coreconf.AllowedFunctionAssemblies); 
+      var potentials = ReflectionUtils.GetAllTypesThatImplement(typeof(F), settings.AllowedFunctionAssemblies); 
       return potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
-          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}] from assemblies [{String.Join(",", coreconf.AllowedFunctionAssemblies)}]");
+          ?? throw new Exception($"Could not find {typeof(F).Name} of provider type [{provider}].  Found provider types [{String.Join(",", potentials.Select(t => t.Name))}] from assemblies [{String.Join(",", settings.AllowedFunctionAssemblies)}]");
     }
   }
 
   private List<IIntegrationBase> GetCentazioIntegrations() {
-    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.CoreSettings.AllowedFunctionAssemblies).ToList();
+    var integrations = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), settings.AllowedFunctionAssemblies).ToList();
     if (!integrations.Any()) throw new Exception("Could not find any Centazio Integrations in provided assemblies");
     return integrations.Select(it => (IIntegrationBase) (Activator.CreateInstance(it) ?? throw new Exception())).ToList();
   }

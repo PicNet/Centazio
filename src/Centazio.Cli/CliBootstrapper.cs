@@ -6,6 +6,7 @@ using Centazio.Cli.Infra.Az;
 using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Centazio.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Spectre.Console.Cli;
@@ -49,6 +50,8 @@ internal class CliBootstrapper {
         .AddSingleton<IAwsAccounts, AwsAccounts>()
         .AddSingleton<IAzSubscriptions, AzSubscriptions>()
         .AddSingleton<IAzResourceGroups, AzResourceGroups>()
+        .AddSingleton<CentazioHost>()
+        .AddSingleton<HostBootstrapper>()
         .BuildServiceProvider();
   }
 

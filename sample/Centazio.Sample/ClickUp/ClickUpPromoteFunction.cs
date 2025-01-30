@@ -16,10 +16,9 @@ public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage
 
   private Task<List<EntityEvaluationResult>> PromoteTasks(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results  = toeval.Select(eval => {
-      var cutask = eval.SystemEntity.To<ClickUpTask>();
-      // todo: this create / update pattern could be reused?
-      var task = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty)) with { Name = cutask.name };
-      return eval.MarkForPromotion(task);
+      var source = eval.SystemEntity.To<ClickUpTask>();
+      var target = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty)) with { Name = source.name };
+      return eval.MarkForPromotion(target);
     }).ToList();
     return Task.FromResult(results);
   }

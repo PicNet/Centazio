@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Centazio.Core.Settings;
 using Serilog.Events;
 using Timer = System.Threading.Timer;
 
@@ -22,14 +21,10 @@ public interface IHostConfiguration {
 
 }
 
-// todo: clean up the handling of CentazioSettings, being registered as singleton, passed in methods, etc.
-public record HostSettings(IHostConfiguration HostConfig, CentazioSettings CoreSettings);
-
-public class CentazioHost(HostSettings settings) {
+public class CentazioHost(HostBootstrapper bootstrapper) {
   
-  public async Task Run() {
-    var functions = await new HostBootstrapper(settings)
-        .InitHost(settings.HostConfig.ParseFunctionFilters());
+  public async Task Run(IHostConfiguration cmdsetts) {
+    var functions = await bootstrapper.InitHost(cmdsetts);
     
     await using var timer = StartHost(functions);
     DisplayInstructions();
