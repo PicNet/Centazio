@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Centazio.Core;
 
@@ -23,7 +24,7 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
   
   public void RegisterServices(IServiceCollection svcs) {
     SettingsLoader.RegisterSettingsAndRecordPropertiesAsSingletons(Settings, svcs);
-    svcs.AddSingleton(Secrets);
+    svcs.TryAdd(ServiceDescriptor.Singleton(Secrets));
     
     RegisterIntegrationSpecificServices(svcs);
   }
