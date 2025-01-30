@@ -41,9 +41,6 @@ public class ClickUpApiTests {
   [Test] public async Task Test_close_task() { await Api.CloseTask(test_task_id); }
   [Test] public async Task Test_open_task() { await Api.OpenTask(test_task_id); }
   
-  private readonly SampleSettings settings = F.Settings<SampleSettings>();
-  private readonly SampleSecrets secrets = F.Secrets<SampleSecrets>();
-  
-  private ClickUpApi Api => new(settings, secrets);
+  private ClickUpApi Api => new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());
 
 }

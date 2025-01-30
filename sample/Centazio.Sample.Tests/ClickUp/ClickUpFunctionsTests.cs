@@ -52,6 +52,6 @@ public class ClickUpFunctionsTests {
     return (await func.RunFunction()).OpResults.Single();
   }
   
-  private readonly ClickUpApi api = new(F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>());
+  private readonly ClickUpApi api = new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());
 
 }

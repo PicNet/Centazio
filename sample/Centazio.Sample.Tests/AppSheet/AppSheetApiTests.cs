@@ -37,6 +37,6 @@ public class AppSheetApiTests {
     Assert.That(cleanup.Count, Is.EqualTo(start.Count)); 
   }
   
-  private AppSheetApi Api() => new(F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>());
+  private AppSheetApi Api() => new(F.Settings<SampleSettings>().AppSheet, F.Secrets<SampleSecrets>());
 
 }

@@ -22,7 +22,7 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
   }
   
   public void RegisterServices(IServiceCollection svcs) {
-    svcs.AddSingleton(Settings);
+    SettingsLoader.RegisterSettingsAndRecordPropertiesAsSingletons(Settings, svcs);
     svcs.AddSingleton(Secrets);
     
     RegisterIntegrationSpecificServices(svcs);

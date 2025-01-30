@@ -1,5 +1,7 @@
-﻿using Centazio.Core.Misc;
+﻿using System.Reflection;
+using Centazio.Core.Misc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Centazio.Core.Settings;
@@ -39,6 +41,15 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
       return parent is null ? null : Impl(parent);
     }
     return Impl(Environment.CurrentDirectory);
+  }
+
+  public static void RegisterSettingsAndRecordPropertiesAsSingletons<TSettings>(TSettings settings, IServiceCollection svcs) where TSettings : CentazioSettings {
+    svcs.AddSingleton(settings);
+    typeof(TSettings).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
+        .Where(pi => ReflectionUtils.IsRecord(pi.PropertyType))
+        .Select(pi => { try { return pi.GetValue(settings); } catch { return null; } })
+        .Where(v => v is not null)
+        .ForEach(v => svcs.AddSingleton(v!.GetType(), v));
   }
 
 }

@@ -2,14 +2,12 @@
 
 namespace Centazio.Sample.AppSheet;
 
-// todo: would be good to just accept AppSheetSettings and not whole settings object
-// also, I dont like how the CentazioHost registers CentazioSettings, SampleSettings, etc, etc.
-public class AppSheetApi(SampleSettings settings, SampleSecrets secrets) {
+public class AppSheetApi(AppSheetSettings settings, SampleSecrets secrets) {
 
   private static HttpClient? http;
 
   private HttpClient Client => http ??= new HttpClient {
-    BaseAddress = new Uri(settings.AppSheet.BaseUrl),
+    BaseAddress = new Uri(settings.BaseUrl),
     DefaultRequestHeaders = { { "ApplicationAccessKey", secrets.APPSHEET_KEY } }
   };
 
@@ -28,7 +26,7 @@ public class AppSheetApi(SampleSettings settings, SampleSecrets secrets) {
   public async Task DeleteTasks(List<AppSheetTask> tasks) => await DoPost(new { Action = "Delete", Rows = tasks.Select(t => new AppSheetTaskId {  RowId = t.RowId }) });
 
   private async Task<string> DoPost(object payload) {
-    var uri = $"{settings.AppSheet.BaseUrl}/{settings.AppSheet.AppId}/tables/{settings.AppSheet.TableName}/Action";
+    var uri = $"{settings.BaseUrl}/{settings.AppId}/tables/{settings.TableName}/Action";
     var resp = await Client.PostAsync(uri, Json.SerializeToHttpContent(payload));
     return await resp.Content.ReadAsStringAsync();
   }

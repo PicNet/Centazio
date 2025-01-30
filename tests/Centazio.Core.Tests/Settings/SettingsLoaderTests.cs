@@ -1,4 +1,7 @@
-﻿using Centazio.Core.Settings;
+﻿using System.Collections;
+using Centazio.Core.Misc;
+using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Tests.Settings;
 
@@ -30,6 +33,7 @@ public class SettingsLoaderTests {
     Assert.Throws<CentazioSettings.SettingsSectionMissingException>(() => { _ = settings.AwsSettings; });
   }
   
+  
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
       File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);
@@ -41,6 +45,7 @@ public class SettingsLoaderTests {
     }
   }
 }
+
 
 internal record TestSettingsObjRaw {
   public string? FileForTestingSettingsLoader { get; init; }

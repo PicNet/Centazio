@@ -22,6 +22,7 @@ public interface IHostConfiguration {
 
 }
 
+// todo: clean up the handling of CentazioSettings, being registered as singleton, passed in methods, etc.
 public record HostSettings(IHostConfiguration HostConfig, CentazioSettings CoreSettings);
 
 public class CentazioHost(HostSettings settings) {
