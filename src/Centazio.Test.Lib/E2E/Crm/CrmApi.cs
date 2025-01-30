@@ -67,7 +67,9 @@ public record CrmMembershipType(Guid CrmTypeId, DateTime Updated, string Name) :
   public SystemEntityId SystemId => new(CrmTypeId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
-  public object GetChecksumSubset() => new { Name };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { CrmTypeId = Guid.Parse(newid.Value) };
+  public object GetChecksumSubset() => new { SystemId, Name };
 
 }
 
@@ -77,7 +79,9 @@ public record CrmInvoice(Guid CrmInvId, DateTime Updated, Guid CustomerId, int A
   public SystemEntityId CustomerSystemId => new(CustomerId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => $"Cust:{CustomerId}({CrmInvId}) {AmountCents}c";
-  public object GetChecksumSubset() => new { CustomerId, AmountCents, DueDate, PaidDate };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { CrmInvId = Guid.Parse(newid.Value) };
+  public object GetChecksumSubset() => new { SystemId, CustomerId, AmountCents, DueDate, PaidDate };
 
 }
 
@@ -87,6 +91,8 @@ public record CrmCustomer(Guid CrmCustId, DateTime Updated, Guid MembershipTypeI
   public SystemEntityId MembershipTypeSystemId => new(MembershipTypeId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
-  public object GetChecksumSubset() => new { MembershipTypeId, Name };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { CrmCustId = Guid.Parse(newid.Value) };
+  public object GetChecksumSubset() => new { SystemId, MembershipTypeId, Name };
 
 }

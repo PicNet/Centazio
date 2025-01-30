@@ -24,7 +24,7 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
   private async Task<List<Map.Created>> AddNewTasks(List<CoreSystemAndPendingCreateMap> tocreate) {
    if (!tocreate.Any()) return [];
    var created = await api.AddTasks(tocreate.Select(t => t.CoreEntity.To<CoreTask>().Name).ToList());
-   return tocreate.Select((e, idx) => e.SuccessCreate(created[idx])).ToList();
+   return tocreate.Select((e, idx) => e.SuccessCreate(created[idx].SystemId)).ToList();
   }
   
   private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {

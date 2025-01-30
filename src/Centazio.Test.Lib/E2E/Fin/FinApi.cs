@@ -53,7 +53,9 @@ public record FinInvoice(int FinInvId, int AccountId, decimal Amount, DateTime U
   public SystemEntityId AccountSystemId => new(AccountId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => $"Acct:{AccountId}({FinInvId}) {Amount}c";
-  public object GetChecksumSubset() => new { AccountId, Amount, DueDate, PaidDate };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { FinInvId = Int32.Parse(newid.Value) };
+  public object GetChecksumSubset() => new { SystemId, AccountId, Amount, DueDate, PaidDate };
 
 }
 
@@ -62,7 +64,8 @@ public record FinAccount(int FinAccId, string Name, DateTime Updated) : ISystemE
   public SystemEntityId SystemId => new(FinAccId.ToString());
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
-  // todo: checksum subset should always include SystemId.  This will cause issues with SuccessCreate and we will need to add the id on new entities
-  public object GetChecksumSubset() => new { Name };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { FinAccId = Int32.Parse(newid.Value) };
+  public object GetChecksumSubset() => new { SystemId, Name };
 
 }

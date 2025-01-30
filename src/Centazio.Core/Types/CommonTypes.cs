@@ -10,11 +10,12 @@ namespace Centazio.Core.Types;
 /// Implementing methods should return a subset of the entity fields that
 /// signify meaningful changes.
 ///
-/// This means ignoring redundant Ids, children collections, date updated, etc.
+/// This means ignoring redundant Ids, children collections, date updated, etc.  However,
+/// this object should always include the main primary id of the object.
 ///
 /// Example:
 /// ```
-/// public object GetChecksumSubset() => new { Name, Address };
+/// public object GetChecksumSubset() => new { Id, Name, Address };
 /// ```
 /// </summary>
 public interface IGetChecksumSubset {
@@ -50,6 +51,9 @@ public interface ISystemEntity : IHasDisplayName, IGetChecksumSubset {
   
   string IHasDisplayName.GetId() => SystemId.Value;
   public E To<E>() where E : ISystemEntity => (E) this;
+  
+  ISystemEntity CreatedWithId(SystemEntityId newid);
+
 }
 
 public interface IServiceFactory<out S> {

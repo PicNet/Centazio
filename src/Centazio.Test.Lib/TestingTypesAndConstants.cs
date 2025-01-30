@@ -22,7 +22,9 @@ public record System1Entity(Guid Sys1EntityId, string FirstName, string LastName
 
   public SystemEntityId SystemId => new(Sys1EntityId.ToString());
   public string DisplayName => $"{FirstName} {LastName}({Sys1EntityId})";
-  public object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
+  public object GetChecksumSubset() => new { SystemId, FirstName, LastName, DateOfBirth };
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { Sys1EntityId = Guid.Parse(newid.Value) };
   public CoreEntity ToCoreEntity() => new(new(SystemId.Value), FirstName, LastName, DateOfBirth);
 }
 
@@ -35,7 +37,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   
   public override string DisplayName => $"{FirstName} {LastName}";
   
-  public override object GetChecksumSubset() => new { FirstName, LastName, DateOfBirth };
+  public override object GetChecksumSubset() => new { CoreId, FirstName, LastName, DateOfBirth };
 
   public record Dto : ICoreEntityDto<CoreEntity> {
     public string CoreId { get; init; } = null!;
@@ -56,7 +58,7 @@ public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEnti
   
   public string DisplayName { get; } = CoreId;
   
-  public object GetChecksumSubset() => new { Id = CoreId };
+  public object GetChecksumSubset() => new { CoreId, Id = CoreId };
 }
 
 public record TestSettingsRaw {

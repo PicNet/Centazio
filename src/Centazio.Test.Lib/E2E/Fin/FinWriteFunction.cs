@@ -29,7 +29,7 @@ public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(Sim
     var created = await api.CreateAccounts(tocreate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
     await api.UpdateAccounts(toupdate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
     return new SuccessWriteOperationResult(
-          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent)).ToList(), 
+          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(), 
           toupdate.Select(e => e.SuccessUpdate()).ToList());
   }
   
@@ -37,7 +37,7 @@ public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(Sim
     var created = await api.CreateInvoices(tocreate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
     await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
     return new SuccessWriteOperationResult(
-          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent)).ToList(), 
+          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(), 
           toupdate.Select(e => e.SuccessUpdate()).ToList());
   }
 }

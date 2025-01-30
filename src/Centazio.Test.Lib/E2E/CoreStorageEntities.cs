@@ -17,7 +17,7 @@ public record CoreCustomer : CoreEntityBase {
     MembershipCoreId = membershipid;
   }
 
-  public override object GetChecksumSubset() => new { Name, MembershipId = MembershipCoreId };
+  public override object GetChecksumSubset() => new { CoreId, Name, MembershipId = MembershipCoreId };
   
   public record Dto : Dto<CoreCustomer> {
     public string? Name { get; init; }
@@ -43,7 +43,7 @@ public record CoreMembershipType : CoreEntityBase {
     Name = name;
   }
   
-  public override object GetChecksumSubset() => new { Name };
+  public override object GetChecksumSubset() => new { CoreId, Name };
   
   public record Dto : Dto<CoreMembershipType> {
     public string? Name { get; init; }
@@ -71,7 +71,7 @@ public record CoreInvoice : CoreEntityBase {
     PaidDate = paid;
   }
   
-  public override object GetChecksumSubset() => new { CustomerId = CustomerCoreId, Cents, DueDate, PaidDate };
+  public override object GetChecksumSubset() => new { CoreId, CustomerId = CustomerCoreId, Cents, DueDate, PaidDate };
   
   public record Dto : Dto<CoreInvoice> {
     public string? CustomerCoreId { get; init; }

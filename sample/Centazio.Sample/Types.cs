@@ -13,11 +13,12 @@ namespace Centazio.Sample;
 [IgnoreNamingConventions] 
 public record ClickUpTask(string id, string name, string date_updated) : ISystemEntity {
   
-  public object GetChecksumSubset() => new { id, name };
-  
   public SystemEntityId SystemId { get; } = new(id);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);
   public string DisplayName => name;
+  
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { id = newid.Value };
+  public object GetChecksumSubset() => new { id, name };
 
 }
 
@@ -33,14 +34,13 @@ public record AppSheetTask : ISystemEntity {
   [JsonPropertyName("Row ID")] public string? RowId { get; set; }
   public string? Task { get; set; }
   
+  public SystemEntityId SystemId => new(RowId ?? throw new Exception());
+  public DateTime LastUpdatedDate => UtcDate.UtcNow;
+  public string DisplayName => Task ?? String.Empty;
+
+  public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { RowId = newid.Value };
   public object GetChecksumSubset() => new { RowId, Task };
   
-  // note: implementors still need to mark these properties as [JsonIgnore]
-  //    as the JsonSerialiser ignores these attributes on interfaces
-  [JsonIgnore] public SystemEntityId SystemId => new(RowId ?? throw new Exception());
-  [JsonIgnore] public DateTime LastUpdatedDate => UtcDate.UtcNow;
-  [JsonIgnore] public string DisplayName => Task ?? String.Empty;
-
 }
 
 public record AppSheetTaskId {
@@ -60,7 +60,7 @@ public record CoreTask : CoreEntityBase {
     Name = name;
   }
 
-  public override object GetChecksumSubset() => new { Name };
+  public override object GetChecksumSubset() => new { CoreId, Name };
   
   public record Dto : Dto<CoreTask> {
     public string? Name { get; init; }

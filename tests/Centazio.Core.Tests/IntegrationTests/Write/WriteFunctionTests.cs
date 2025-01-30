@@ -25,8 +25,8 @@ public class WriteFunctionTests {
     
     var res1 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
     var expresults1 = new [] { 
-      Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, WftHelpers.ToSeCs(customer1.CoreEntity)), 
-      Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, WftHelpers.ToSeCs(customer2.CoreEntity)) };
+      Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, func.Created[0].SystemEntityChecksum), 
+      Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, func.Created[1].SystemEntityChecksum) };
     var (created1, updated1) = (func.Created.ToList(), func.Updated.ToList());
     func.Reset();
     
@@ -35,7 +35,7 @@ public class WriteFunctionTests {
     var customer22 = customer2.Update(C.System2Name, (CoreEntity) customer2.CoreEntity with { FirstName = "22" }, Helpers.TestingCoreEntityChecksum);
     var upsert2 = await core.Upsert(C.CoreEntityName, [customer22]);
     var res2 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
-    var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(WftHelpers.ToSeCs(customer22.CoreEntity)) };
+    var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(func.Updated.Single().SystemEntityChecksum) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
     Assert.That(upsert1, Is.EquivalentTo([customer1, customer2]));
@@ -110,7 +110,7 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
 
   private Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = tocreate.Select(m => m.SuccessCreate(m.SystemEntity)).ToList();
+    var news = tocreate.Select(m => m.SuccessCreate(m.SystemEntity.SystemId)).ToList();
     var updates = toupdate.Select(m => m.SuccessUpdate()).ToList();
     Created.AddRange(news);
     Updated.AddRange(updates);

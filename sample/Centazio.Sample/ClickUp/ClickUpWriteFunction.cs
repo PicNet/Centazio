@@ -26,7 +26,7 @@ public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUp
     }));
     
     return new SuccessWriteOperationResult(
-          createdids.Select((_, idx) => tocreate[idx].SuccessCreate(tocreate[idx].SystemEntity)).ToList(), 
+          createdids.Select((id, idx) => tocreate[idx].SuccessCreate(new (id))).ToList(), 
           updated.Select((_, idx) => toupdate[idx].SuccessUpdate()).ToList());
   }
 

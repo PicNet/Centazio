@@ -14,7 +14,8 @@ public record CoreAndPendingUpdateMap(ICoreEntity CoreEntity,  Map.PendingUpdate
 public record CoreSystemAndPendingCreateMap(ICoreEntity CoreEntity, ISystemEntity SystemEntity, Map.PendingCreate Map, IChecksumAlgorithm checksum) {
   private IChecksumAlgorithm checksum { get; } = checksum;
   
-  public Map.Created SuccessCreate(ISystemEntity sysent) => Map.SuccessCreate(sysent.SystemId, checksum.Checksum(sysent));
+  public Map.Created SuccessCreate(SystemEntityId newid) => Map.SuccessCreate(newid, checksum.Checksum(SystemEntity.CreatedWithId(newid)));
+
 }
 
 public record CoreSystemAndPendingUpdateMap(ICoreEntity CoreEntity, ISystemEntity SystemEntity,  Map.PendingUpdate Map, IChecksumAlgorithm checksum) {

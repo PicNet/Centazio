@@ -85,7 +85,7 @@ public class JsonSerialisationTests {
   }
   
   [Test] public async Task Test_serialisation_to_HttpContent_respects_interface_JsonIgnore() {
-    var body = Json.SerializeToHttpContent(new SystemEntityType("Only this field should be serialised"));
+    var body = Json.SerializeToHttpContent(new SystemEntityType(Guid.NewGuid(), "Only this field should be serialised"));
     var json = await body.ReadAsStringAsync();
     Assert.That(json, Does.Contain("\"Prop\":"));
     Assert.That(json, Does.Contain("\"New Name\":"));
@@ -171,16 +171,17 @@ public class JsonSerialisationTests {
     }
   }
   
-  public record SystemEntityType(string Prop) : ISystemEntity {
+  public record SystemEntityType(Guid Id, string Prop) : ISystemEntity {
 
     [JsonPropertyName("New Name")] public string JsonPropNameTest => nameof(JsonPropNameTest);
     
+    // these three fields should be ignored during serialisation
     public string DisplayName => Prop;
-    public object GetChecksumSubset() => throw new Exception();
-    
-    // these two fields should be ignored during serialisation
-    public SystemEntityId SystemId { get; } = new(Guid.NewGuid().ToString());
+    public SystemEntityId SystemId { get; } = new(Id.ToString());
     public DateTime LastUpdatedDate { get; } = UtcDate.UtcNow;
+    
+    public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { Id = Guid.Parse(newid.Value) };
+    public object GetChecksumSubset() => throw new Exception();
 
   }
 }

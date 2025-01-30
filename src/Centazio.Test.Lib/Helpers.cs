@@ -6,18 +6,17 @@ namespace Centazio.Test.Lib;
 
 public static class Helpers {
   
-  public static StagedEntityChecksum TestingStagedEntityChecksum(string data) => new (data.GetHashCode().ToString());
-  public static CoreEntityChecksum TestingCoreEntityChecksum(ICoreEntity obj) => new (ChecksumImpl(obj));
-  public static SystemEntityChecksum TestingSystemEntityChecksum(ISystemEntity obj) => new(ChecksumImpl(obj));
-  public static IChecksumAlgorithm TestingChecksumAlgorithm = new ChecksumAlgo();
+  public static readonly IChecksumAlgorithm TestingChecksumAlgorithm = new ChecksumAlgo();
   
-  private static string ChecksumImpl(IGetChecksumSubset obj) => Json.Serialize(obj.GetChecksumSubset()).GetHashCode().ToString();
+  public static StagedEntityChecksum TestingStagedEntityChecksum(string data) => TestingChecksumAlgorithm.Checksum(data);
+  public static CoreEntityChecksum TestingCoreEntityChecksum(ICoreEntity coreent) => TestingChecksumAlgorithm.Checksum(coreent);
+  public static SystemEntityChecksum TestingSystemEntityChecksum(ISystemEntity sysent) => TestingChecksumAlgorithm.Checksum(sysent);
   
   public class ChecksumAlgo : IChecksumAlgorithm {
     
-    public SystemEntityChecksum Checksum(ISystemEntity sysent) => TestingSystemEntityChecksum(sysent);
-    public CoreEntityChecksum Checksum(ICoreEntity coreent) => TestingCoreEntityChecksum(coreent);
-    public StagedEntityChecksum Checksum(string str) => TestingStagedEntityChecksum(str);
+    public SystemEntityChecksum Checksum(ISystemEntity sysent) => new(Json.Serialize(sysent.GetChecksumSubset()).GetHashCode().ToString());
+    public CoreEntityChecksum Checksum(ICoreEntity coreent) => new(Json.Serialize(coreent.GetChecksumSubset()).GetHashCode().ToString());
+    public StagedEntityChecksum Checksum(string str) => new (str.GetHashCode().ToString());
 
     public void Dispose() {}
   }
