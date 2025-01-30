@@ -16,20 +16,20 @@ public class HostBootstrapper(HostSettings settings) {
     FunctionConfigDefaults.ThrowExceptions = true;
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig(settings.HostConfig.GetLogLevel(), settings.HostConfig.GetLogFilters()).CreateLogger();
     
-    var svcs = new ServiceCollection();
-    RegisterCoreServices(svcs);
+    var registrar = new CentazioHostServiceRegistrar(new ServiceCollection());
+    RegisterCoreServices(registrar);
     var integrations = GetCentazioIntegrations();
-    var funcs = RegisterCentazioFunctions(svcs, integrations, filters);
-    var prov = svcs.BuildServiceProvider();
+    var funcs = RegisterCentazioFunctions(registrar, integrations, filters);
+    var prov = registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
     await InitialiseIntegrations(integrations, prov);
     return InitialiseFunctions(funcs, prov);
   }
 
-  private void RegisterCoreServices(ServiceCollection svcs) {
+  private void RegisterCoreServices(CentazioHostServiceRegistrar svcs) {
     var coreconf = settings.CoreSettings;
-    svcs.AddSingleton(coreconf);
+    svcs.Register(coreconf);
     
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{coreconf.StagedEntityRepository.Provider}]" +
@@ -39,8 +39,8 @@ public class HostBootstrapper(HostSettings settings) {
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(coreconf.CtlRepository.Provider);
     
     void AddCoreService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
-      svcs.AddSingleton(typeof(F), GetCoreServiceFactoryType<F>(provider));
-      svcs.AddSingleton<I>(prov => prov.GetRequiredService<F>().GetService());
+      svcs.Register(typeof(F), GetCoreServiceFactoryType<F>(provider));
+      svcs.Register<I>(prov => prov.GetRequiredService<F>().GetService());
     }
     
     Type GetCoreServiceFactoryType<F>(string provider) {
@@ -56,15 +56,14 @@ public class HostBootstrapper(HostSettings settings) {
     return integrations.Select(it => (IIntegrationBase) (Activator.CreateInstance(it) ?? throw new Exception())).ToList();
   }
 
-  private List<Type> RegisterCentazioFunctions(ServiceCollection svcs, List<IIntegrationBase> integrations, List<string> filters) {
-    // todo: this could potentially register duplicate services
-    integrations.ForEach(i => i.RegisterServices(svcs));
+  private List<Type> RegisterCentazioFunctions(CentazioHostServiceRegistrar registrar, List<IIntegrationBase> integrations, List<string> filters) {
+    integrations.ForEach(i => i.RegisterServices(registrar));
     
     var funcs = integrations.Select(i => i.GetType().Assembly).Distinct().SelectMany(ass => {
       var functypes = ReflectionUtils.GetAllTypesThatImplement(typeof(AbstractFunction<>), ass)
           .Where(DoesTypeMatchFilter)
           .ToList();
-      functypes.ForEach(functype => svcs.AddSingleton(functype));
+      functypes.ForEach(registrar.Register);
       if (!functypes.Any()) throw new Exception($"Could not find any Centazio Functions in assembly[{ass.GetName().Name}]");
       return functypes;
     }).ToList();

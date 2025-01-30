@@ -44,12 +44,12 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
     return Impl(Environment.CurrentDirectory);
   }
 
-  public static void RegisterSettingsAndRecordPropertiesAsSingletons<TSettings>(TSettings settings, IServiceCollection svcs) where TSettings : CentazioSettings {
-    svcs.TryAdd(ServiceDescriptor.Singleton(settings));
+  public static void RegisterSettingsAndRecordPropertiesAsSingletons<TSettings>(TSettings settings, CentazioHostServiceRegistrar svcs) where TSettings : CentazioSettings {
+    svcs.Register(settings);
     typeof(TSettings).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
-        .Where(pi => ReflectionUtils.IsRecord(pi.PropertyType))
+        .Where(pi => ReflectionUtils.IsRecord(pi.PropertyType) && pi.PropertyType != typeof(ServiceDescriptor))
         .Select(pi => { try { return pi.GetValue(settings); } catch { return null; } })
-        .ForEach(v => { if (v is not null) svcs.TryAdd(ServiceDescriptor.Singleton(v.GetType(), v)); });
+        .ForEach(v => { if (v is not null) svcs.Register(v.GetType(), v); });
   }
 
 }
