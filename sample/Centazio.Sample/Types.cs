@@ -33,17 +33,18 @@ public record ClickUpTaskStatus(string status);
 [IgnoreNamingConventions] 
 public record AppSheetTask : ISystemEntity {
   
-  public static AppSheetTask Create(string id, string task) => new() { RowId = id, Task = task };
+  public static AppSheetTask Create(string id, string task, bool completed) => new() { RowId = id, Task = task, Completed = completed };
   
   [JsonPropertyName("Row ID")] public string? RowId { get; set; }
   public string? Task { get; set; }
+  public bool Completed { get; set; }
   
   public SystemEntityId SystemId => new(RowId ?? throw new Exception());
   public DateTime LastUpdatedDate => UtcDate.UtcNow;
   public string DisplayName => Task ?? String.Empty;
 
   public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { RowId = newid.Value };
-  public object GetChecksumSubset() => new { RowId, Task };
+  public object GetChecksumSubset() => new { RowId, Task, Completed };
   
 }
 
@@ -66,7 +67,7 @@ public record CoreTask : CoreEntityBase {
     Completed = completed;
   }
 
-  public override object GetChecksumSubset() => new { CoreId, Name };
+  public override object GetChecksumSubset() => new { CoreId, Name, Completed };
   
   public record Dto : Dto<CoreTask> {
     public string? Name { get; init; }

@@ -14,11 +14,13 @@ public class AppSheetApi(AppSheetSettings settings, SampleSecrets secrets) {
   public async Task<List<string>> GetAllTasks() => Json.SplitList(await DoPost(new { Action = "Find" }), String.Empty);
 
   public async Task<List<AppSheetTask>> AddTasks(List<string> toadd) {
+    if (!toadd.Any()) return [];
     var res = await DoPost(new { Action = "Add", Rows = toadd.Select(t => new { Task = t } ) });
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }
 
   public async Task<List<AppSheetTask>> EditTasks(List<AppSheetTask> toedit) {
+    if (!toedit.Any()) return [];
     var res = await DoPost(new { Action = "Edit", Rows = toedit });
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }

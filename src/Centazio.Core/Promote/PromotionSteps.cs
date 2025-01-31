@@ -140,7 +140,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       if (bag.PreExistingCoreEntityChecksum is null) return false;
       return !String.IsNullOrWhiteSpace(bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum ?? throw new Exception()) && bag.UpdatedCoreEntityAndMeta?.Meta.CoreEntityChecksum == bag.PreExistingCoreEntityChecksum;
     }).ToList();
-    toignore.ForEach(bag => bag.MarkIgnore(new("no meaningful change detected on entity")));
+    toignore.ForEach(bag => bag.MarkIgnore(new("no me aningful change detected on entity")));
   } 
   
   public async Task WriteEntitiesToCoreStorageAndUpdateMaps() {

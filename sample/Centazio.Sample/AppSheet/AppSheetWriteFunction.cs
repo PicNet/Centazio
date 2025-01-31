@@ -7,16 +7,14 @@ using Centazio.Core.Write;
 
 namespace Centazio.Sample.AppSheet;
 
-// todo: sample has to handle completed tasks (remove from AppSheet)
 public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl) {
-  
   
   protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
-      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name)));
+      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name, e.Completed)));
   
   private async Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       new SuccessWriteOperationResult(await AddNewTasks(tocreate), await EditTasks(toupdate));
@@ -29,12 +27,16 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
   
   private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (!toupdate.Any()) return [];
-    var (toedit, todelete) = (GetWithCompletedStatus(false), GetWithCompletedStatus(true));
+    // todo: having to call `CoreEntity.To<CoreTask>()` everywhere is a pain, need a more "generics" way of doing this 
+    var sysents = toupdate.Select(t => {
+      var task = t.CoreEntity.To<CoreTask>();
+      return AppSheetTask.Create(t.SystemEntity.SystemId, task.Name, task.Completed);
+    }).ToList();
+    var (toedit, todelete) = (sysents.Where(t => !t.Completed).ToList(), sysents.Where(t => t.Completed).ToList());
+
     await Task.WhenAll(api.EditTasks(toedit), api.DeleteTasks(todelete));
     
     return toupdate.Select(e => e.SuccessUpdate()).ToList();
-    
-    List<AppSheetTask> GetWithCompletedStatus(bool completed) => toupdate.Where(t => t.CoreEntity.To<CoreTask>().Completed == completed).Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.To<CoreTask>().Name)).ToList();
   }
 
 }
