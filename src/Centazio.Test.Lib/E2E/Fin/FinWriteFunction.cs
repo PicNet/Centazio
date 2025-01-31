@@ -23,19 +23,29 @@ public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(Sim
     return CovertCoreEntitiesToSystemEntitties<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(id, e, maps));
   }
   
-  private async Task<WriteOperationResult> WriteCustomers(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
-    var created = await api.CreateAccounts(ctx, tocreate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
-    await api.UpdateAccounts(toupdate.Select(e => e.SystemEntity.To<FinAccount>()).ToList());
-    return new SuccessWriteOperationResult(
-          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(), 
-          toupdate.Select(e => e.SuccessUpdate()).ToList());
+  private Task<WriteOperationResult> WriteCustomers(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) =>
+    WriteOperationResult.Create<CoreCustomer, FinAccount>(tocreate, toupdate, CreateAccounts, UpdateAccounts);
+
+  private async Task<List<Map.Created>> CreateAccounts(List<CoreSystemAndPendingCreateMap<CoreCustomer, FinAccount>> tocreate) {
+    var created = await api.CreateAccounts(ctx, tocreate.Select(e => e.SystemEntity).ToList());
+    return created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(); 
   }
-  
-  private async Task<WriteOperationResult> WriteInvoices(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
-    var created = await api.CreateInvoices(ctx, tocreate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
-    await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity.To<FinInvoice>()).ToList());
-    return new SuccessWriteOperationResult(
-          created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList(), 
-          toupdate.Select(e => e.SuccessUpdate()).ToList());
+
+  private async Task<List<Map.Updated>> UpdateAccounts(List<CoreSystemAndPendingUpdateMap<CoreCustomer, FinAccount>> toupdate) {
+    await api.UpdateAccounts(toupdate.Select(e => e.SystemEntity).ToList());
+    return toupdate.Select(e => e.SuccessUpdate()).ToList();
+  }
+
+  private Task<WriteOperationResult> WriteInvoices(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) =>
+      WriteOperationResult.Create<CoreInvoice, FinInvoice>(tocreate, toupdate, CreateInvoices, UpdateInvoices);
+
+  private async Task<List<Map.Created>> CreateInvoices(List<CoreSystemAndPendingCreateMap<CoreInvoice, FinInvoice>> tocreate) {
+    var created = await api.CreateInvoices(ctx, tocreate.Select(e => e.SystemEntity).ToList());
+    return created.Select((sysent, idx) => tocreate[idx].SuccessCreate(sysent.SystemId)).ToList();
+  }
+
+  private async Task<List<Map.Updated>> UpdateInvoices(List<CoreSystemAndPendingUpdateMap<CoreInvoice, FinInvoice>> toupdate) {
+    await api.UpdateInvoices(toupdate.Select(e => e.SystemEntity).ToList());
+    return toupdate.Select(e => e.SuccessUpdate()).ToList();
   }
 }

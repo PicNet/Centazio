@@ -30,5 +30,5 @@ public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRe
       List<CoreAndPendingUpdateMap> toupdate,
       ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
     return WriteHelpers.CovertCoreEntitiesToSystemEntitties(tocreate, toupdate, Config.ChecksumAlgorithm, converter); 
-    }
+  }
 }

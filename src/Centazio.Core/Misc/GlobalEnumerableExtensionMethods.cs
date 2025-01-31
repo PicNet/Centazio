@@ -10,6 +10,11 @@ public static class GlobalEnumerableExtensionMethods {
     lst.Add(item);
     return item;
   }
+  
+  public static List<T> AddRangeAndReturn<T>(this List<T> lst, List<T> items) {
+    lst.AddRange(items);
+    return items;
+  }
 
   public static void ForEach<T>(this IEnumerable<T> e, Action<T> action) {
     foreach (var t in e) action(t);

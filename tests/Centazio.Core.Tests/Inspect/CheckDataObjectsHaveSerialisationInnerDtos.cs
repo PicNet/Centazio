@@ -25,15 +25,16 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
   };
   
   private void ValidateDataObject(Type baset, List<Type> types) {
-    if (baset.Name.EndsWith("Map") && (baset.Name.StartsWith("CoreAnd") || baset.Name.StartsWith("CoreSystemAnd"))) return;
+    var name = baset.Name.Split('`').First();
+    if (name.EndsWith("Map") && (name.StartsWith("CoreAnd") || name.StartsWith("CoreSystemAnd"))) return;
     var baseprops = baset.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var basenames = baseprops.Select(p => p.Name).ToList();
     var dtot = types.Find(t => t.FullName == baset.FullName + "+Dto") ?? throw new Exception($"{baset.FullName}+Dto not found");
     var dtoprops = dtot.GetProperties().Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>(true) is null).ToList();
     var dtonames = dtoprops.Select(p => p.Name).ToList();
-    var dtoignore = IGNORE_NON_NULLS.TryGetValue(baset.Name, out var value) ? value : [];
+    var dtoignore = IGNORE_NON_NULLS.TryGetValue(name, out var value) ? value : [];
     var nonnulls = dtoprops.Where(p => !ReflectionUtils.IsNullable(p) && !dtoignore.Contains(p.Name)).ToList();
-    var setterstoignore = IGNORE_SETTERS.TryGetValue(baset.Name, out var value2) ? value2 : [];
+    var setterstoignore = IGNORE_SETTERS.TryGetValue(name, out var value2) ? value2 : [];
     var setters = baseprops.Where(p => !setterstoignore.Contains(p.Name) && p.SetMethod is not null && p.SetMethod.IsPublic).ToList();
     var extra = dtonames.Where(n => !basenames.Contains(n)).ToList();
     var missing = basenames.Where(n => !dtonames.Contains(n)).ToList();

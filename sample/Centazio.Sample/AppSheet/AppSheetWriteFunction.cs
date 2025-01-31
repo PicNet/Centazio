@@ -13,25 +13,20 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 
+  // todo: move all herlpers for all functions from base and helper classes to Factory methods in the result type like `CovertCoreEntitiesToSystemEntitiesResult`
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
       Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name, e.Completed)));
   
-  private async Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
-      new SuccessWriteOperationResult(await AddNewTasks(tocreate), await EditTasks(toupdate));
+  private Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
+      WriteOperationResult.Create<CoreTask, AppSheetTask>(tocreate, toupdate, AddNewTasks, EditTasks);
 
-  private async Task<List<Map.Created>> AddNewTasks(List<CoreSystemAndPendingCreateMap> tocreate) {
-   if (!tocreate.Any()) return [];
-   var created = await api.AddTasks(tocreate.Select(t => t.CoreEntity.To<CoreTask>().Name).ToList());
+  private async Task<List<Map.Created>> AddNewTasks(List<CoreSystemAndPendingCreateMap<CoreTask, AppSheetTask>> tocreate) {
+   var created = await api.AddTasks(tocreate.Select(t => t.CoreEntity.Name).ToList());
    return tocreate.Select((e, idx) => e.SuccessCreate(created[idx].SystemId)).ToList();
   }
   
-  private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {
-    if (!toupdate.Any()) return [];
-    // todo: having to call `CoreEntity.To<CoreTask>()` everywhere is a pain, need a more "generics" way of doing this 
-    var sysents = toupdate.Select(t => {
-      var task = t.CoreEntity.To<CoreTask>();
-      return AppSheetTask.Create(t.SystemEntity.SystemId, task.Name, task.Completed);
-    }).ToList();
+  private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap<CoreTask, AppSheetTask>> toupdate) {
+    var sysents = toupdate.Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.Name, t.CoreEntity.Completed)).ToList();
     var (toedit, todelete) = (sysents.Where(t => !t.Completed).ToList(), sysents.Where(t => t.Completed).ToList());
 
     await Task.WhenAll(api.EditTasks(toedit), api.DeleteTasks(todelete));

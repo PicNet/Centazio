@@ -110,13 +110,14 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
 
   private Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (Throws) throw Thrown = new Exception("mock function error");
-    var news = tocreate.Select(m => m.SuccessCreate(m.SystemEntity.SystemId)).ToList();
-    var updates = toupdate.Select(m => m.SuccessUpdate()).ToList();
-    Created.AddRange(news);
-    Updated.AddRange(updates);
-    return Task.FromResult<WriteOperationResult>(new SuccessWriteOperationResult(news, updates));
+    return WriteOperationResult.Create<CoreEntity, System1Entity>(tocreate, toupdate, CreateEntities, UpdateEntities);
+    
+    Task<List<Map.Created>> CreateEntities(List<CoreSystemAndPendingCreateMap<CoreEntity, System1Entity>> _) => 
+        Task.FromResult(Created.AddRangeAndReturn(tocreate.Select(m => m.SuccessCreate(m.SystemEntity.SystemId)).ToList()));
+
+    Task<List<Map.Updated>> UpdateEntities(List<CoreSystemAndPendingUpdateMap<CoreEntity, System1Entity>> _) => 
+        Task.FromResult(Updated.AddRangeAndReturn(toupdate.Select(m => m.SuccessUpdate()).ToList()));
   }
- 
 }
 
 internal static class WftHelpers {
