@@ -11,16 +11,20 @@ namespace Centazio.Sample;
 ////////////////////////////////////
 
 [IgnoreNamingConventions] 
-public record ClickUpTask(string id, string name, string date_updated) : ISystemEntity {
+public record ClickUpTask(string id, string name, ClickUpTaskStatus status, string date_updated) : ISystemEntity {
   
   public SystemEntityId SystemId { get; } = new(id);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);
   public string DisplayName => name;
   
+  [JsonIgnore] public bool IsCompleted => status.status == SampleConstants.Misc.CLICK_UP_COMPLETE_STATUS;
+  
   public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { id = newid.Value };
-  public object GetChecksumSubset() => new { id, name };
+  public object GetChecksumSubset() => new { id, name, status };
 
 }
+
+public record ClickUpTaskStatus(string status);
 
 ////////////////////////////////////
 // AppSheet Entities
@@ -53,21 +57,25 @@ public record AppSheetTaskId {
 
 public record CoreTask : CoreEntityBase {
   [MaxLength(128)] public string Name { get; init; }
+  public bool Completed { get; set; }
   public override string DisplayName => Name;
   
   private CoreTask() { Name = null!; }
-  internal CoreTask(CoreEntityId coreid, string name) : base(coreid) {
+  internal CoreTask(CoreEntityId coreid, string name, bool completed) : base(coreid) {
     Name = name;
+    Completed = completed;
   }
 
   public override object GetChecksumSubset() => new { CoreId, Name };
   
   public record Dto : Dto<CoreTask> {
     public string? Name { get; init; }
+    public bool Completed { get; init; }
     
     public override CoreTask ToBase() {
       var target = new CoreTask { 
-        Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim()
+        Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim(),
+        Completed = Completed
       };
       return FillBaseProperties(target);
     }

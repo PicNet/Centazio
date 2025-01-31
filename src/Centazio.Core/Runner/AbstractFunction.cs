@@ -49,7 +49,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     async Task<FunctionRunResults> RunFunctionImpl() {
       FunctionStartTime = UtcDate.UtcNow;
   
-      Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
+      // Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
   
       var state = await ctl.GetOrCreateSystemState(System, Stage);
       if (!state.Active) {

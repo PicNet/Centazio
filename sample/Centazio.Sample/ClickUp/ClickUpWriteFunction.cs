@@ -15,7 +15,7 @@ public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUp
   ]);
 
   private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToClickUpTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
-      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, UtcDate.ToMillis().ToString())));
+      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, new(SampleConstants.Misc.CLICK_UP_OPEN_STATUS), UtcDate.ToMillis().ToString())));
 
   private async Task<WriteOperationResult> WriteClickUpTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {
     var createdids = await Task.WhenAll(tocreate.Select(async sysent => await api.CreateTask(sysent.SystemEntity.To<ClickUpTask>().name)));

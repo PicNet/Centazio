@@ -22,4 +22,9 @@ namespace Centazio.Sample;
   public static class CoreEntities {
     public static readonly CoreEntityTypeName Task = new(nameof(CoreTask));
   }
+  
+  public static class Misc {
+    public static readonly string CLICK_UP_OPEN_STATUS = "to do";
+    public static readonly string CLICK_UP_COMPLETE_STATUS = "complete";
+  }
 }

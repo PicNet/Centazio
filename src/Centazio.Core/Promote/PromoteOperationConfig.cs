@@ -11,6 +11,7 @@ public record EntityForPromotionEvaluation {
   public SystemName System { get; }
   public ISystemEntity SystemEntity { get; }
   public CoreEntityAndMeta? ExistingCoreEntityAndMeta { get; }
+  public bool IsNewEntity => ExistingCoreEntityAndMeta is null;
   
   private IChecksumAlgorithm ChecksumAlgo { get; }
   

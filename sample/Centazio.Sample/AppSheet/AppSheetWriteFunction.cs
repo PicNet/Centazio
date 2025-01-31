@@ -29,9 +29,12 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
   
   private async Task<List<Map.Updated>> EditTasks(List<CoreSystemAndPendingUpdateMap> toupdate) {
     if (!toupdate.Any()) return [];
-    var aptasks = toupdate.Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.To<CoreTask>().Name)).ToList(); 
-    await api.EditTasks(aptasks);
+    var (toedit, todelete) = (GetWithCompletedStatus(false), GetWithCompletedStatus(true));
+    await Task.WhenAll(api.EditTasks(toedit), api.DeleteTasks(todelete));
+    
     return toupdate.Select(e => e.SuccessUpdate()).ToList();
+    
+    List<AppSheetTask> GetWithCompletedStatus(bool completed) => toupdate.Where(t => t.CoreEntity.To<CoreTask>().Completed == completed).Select(t => AppSheetTask.Create(t.SystemEntity.SystemId, t.CoreEntity.To<CoreTask>().Name)).ToList();
   }
 
 }

@@ -28,8 +28,8 @@ public class ClickUpApi(ClickUpSettings settings, SampleSecrets secrets) {
   }
 
   public async Task UpdateTask(string id, string name) => await UpdateImpl(id, new { name });
-  public async Task OpenTask(string id) => await UpdateImpl(id, new { status = "to do" });
-  public async Task CloseTask(string id) => await UpdateImpl(id, new { status = "complete" });
+  public async Task OpenTask(string id) => await UpdateImpl(id, new { status = SampleConstants.Misc.CLICK_UP_OPEN_STATUS });
+  public async Task CloseTask(string id) => await UpdateImpl(id, new { status = SampleConstants.Misc.CLICK_UP_COMPLETE_STATUS });
   public async Task DeleteTask(string id) => await Client.DeleteAsync($"task/{id}");
 
   // https://developer.clickup.com/reference/updatetask

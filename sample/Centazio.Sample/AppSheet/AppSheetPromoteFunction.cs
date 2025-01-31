@@ -19,7 +19,7 @@ public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorag
       var astask = eval.SystemEntity.To<AppSheetTask>();
       if (String.IsNullOrWhiteSpace(astask.Task)) { return eval.MarkForIgnore(new($"AppSheet Task[{astask.RowId}] has a null or empty task name and will not be promoted")); }
       
-      var task = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty)) with { Name = astask.Task ?? throw new Exception() };
+      var task = (eval.ExistingCoreEntityAndMeta?.As<CoreTask>() ?? new CoreTask(new(Guid.CreateVersion7().ToString()), String.Empty, false)) with { Name = astask.Task ?? throw new Exception(), Completed = false };
       return eval.MarkForPromotion(task);
     }).ToList();
     return Task.FromResult(results);

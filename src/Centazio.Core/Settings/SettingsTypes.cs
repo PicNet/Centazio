@@ -181,6 +181,7 @@ public record CentazioSettings {
   public List<string> AllowedProviderAssemblies { get; }
   
   private readonly AwsSettings? _AwsSettings;
+  // todo: ensure we are using SettingsSectionMissingException everywhere appropriate
   public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
   
   private readonly AzureSettings? _AzureSettings;
