@@ -160,8 +160,8 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public void LogPromotionSteps() {
     Log.Information($"PromotionSteps completed[{system}/{corename}] Bidi[{op.OpConfig.IsBidirectional}] IsEmpty[{IsEmpty()}] Total[{bags.Count}] ToIgnore[{ToIgnore().Count}] ToPromote[{ToPromote().Count}] ToUpdate[{ToUpdate().Count}] ToCreate[{ToCreate().Count}]");
     if (error is not null) return;
-    var flows = ToCreate().Select(e => "\n\tAdd: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName()).Concat(ToUpdate().Select(e => "\n\tEdit: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName())).ToList();
-    if (flows.Any()) DataFlowLogger.Log(system,  op.OpConfig.SystemEntityTypeName, $"Core Storage[{corename}]", String.Join(String.Empty, flows));
+    var flows = ToCreate().Select(e => "Add: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName()).Concat(ToUpdate().Select(e => "Edit: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName())).ToList();
+    DataFlowLogger.Log(system,  op.OpConfig.SystemEntityTypeName, $"Core Storage[{corename}]", flows);
   }
   
   public PromoteOperationResult GetResults() {

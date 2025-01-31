@@ -7,7 +7,7 @@ namespace Centazio.Sample.Tests.ClickUp;
 public class ClickUpApiTests {
 
   // https://app.clickup.com/t/{test_task_id}
-  private readonly string test_task_id = "86cxvdxet";
+  internal static readonly string TEST_TASK_ID = "86cxvdxet";
   
   [Test] public async Task Test_print_task_list() {
     var tasks = await Api.GetTasksAfter(UtcDate.UtcNow.AddYears(-10));
@@ -33,19 +33,19 @@ public class ClickUpApiTests {
   
   [Test] public async Task Test_update_task() {
     var name = "Centazio Unit Test Task (do not delete): " + Guid.NewGuid();
-    await Api.UpdateTask(test_task_id, name); 
+    await Api.UpdateTask(TEST_TASK_ID, name); 
   }
   
   [Test] public async Task Test_close_task() { 
-    await Api.CloseTask(test_task_id); 
+    await Api.CloseTask(TEST_TASK_ID); 
   }
   
   [Test] public async Task Test_open_task() { 
-    await Api.OpenTask(test_task_id); 
+    await Api.OpenTask(TEST_TASK_ID); 
   }
   
   [Test, Ignore("Do not delete, as there is no way to get task back")] public async Task Test_delete_task() { 
-    await Api.DeleteTask(test_task_id); 
+    await Api.DeleteTask(TEST_TASK_ID); 
   }
   
   private ClickUpApi Api => new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());

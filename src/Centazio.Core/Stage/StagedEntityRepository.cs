@@ -48,7 +48,7 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
     var nonduplicates = tostage.Where(s => !duplicates.Contains(s.StagedEntityChecksum)).ToList();
     if (!nonduplicates.Any()) return nonduplicates;
     
-    DataFlowLogger.Log(system, systype, "Staging", $"{nonduplicates.Count} entities");
+    DataFlowLogger.Log(system, systype, "Staging", [$"{nonduplicates.Count} Entity(s)"]);
     return await StageImpl(system, systype, nonduplicates);
   }
 

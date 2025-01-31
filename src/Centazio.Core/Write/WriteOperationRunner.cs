@@ -23,8 +23,8 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IO
     if (!syscreates.Any() && !meaningful.Any()) return new SuccessWriteOperationResult([], []);
     
     Log.Debug($"WriteOperationRunner calling WriteEntitiesToTargetSystem[{op.State.System}/{op.State.Object}] Created[{syscreates.Count}] Updated[{sysupdates.Count}]");
-    var flows = syscreates.Select(e => "\n\tAdd: " + e.CoreEntity.GetShortDisplayName()).Concat(meaningful.Select(e => "\n\tEdit: " + e.CoreEntity.GetShortDisplayName())).ToList();
-    DataFlowLogger.Log("Core Storage", op.State.Object, op.State.System, String.Join(String.Empty, flows));
+    var flows = syscreates.Select(e => "Add: " + e.CoreEntity.GetShortDisplayName()).Concat(meaningful.Select(e => "Edit: " + e.CoreEntity.GetShortDisplayName())).ToList();
+    DataFlowLogger.Log("Core Storage", op.State.Object, op.State.System, flows);
     var results = await op.OpConfig.WriteEntitiesToTargetSystem(op.OpConfig, syscreates, sysupdates);
     
     if (results.Result == EOperationResult.Error) {
