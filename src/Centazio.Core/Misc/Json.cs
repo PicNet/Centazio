@@ -145,21 +145,18 @@ public class SystemEntityAwareConverter : JsonConverter<object> {
     if (value is null) { writer.WriteNullValue(); return; }
 
     writer.WriteStartObject();
-    var vtype = value.GetType();
-    var properties = GetSerializableProperties(vtype);
-
-    foreach (var prop in properties) {
-      var pval = prop.GetValue(value);
-      if (pval is null) continue;
-
-      
-      writer.WritePropertyName(GetJsonPropertyName(prop));
-      JsonSerializer.Serialize(writer, pval, options);
-    }
+    GetSerializableProperties(value.GetType()).ForEach(pv => {
+      writer.WritePropertyName(GetJsonPropertyName(pv.Prop));
+      JsonSerializer.Serialize(writer, pv.Value, options);
+    });
 
     writer.WriteEndObject();
 
-    IEnumerable<PropertyInfo> GetSerializableProperties(Type type) => type.GetProperties().Where(p => !IGNORE.ContainsKey(p.Name));
+    List<(PropertyInfo Prop, object Value)> GetSerializableProperties(Type type) => type.GetProperties()
+        .Where(p => !IGNORE.ContainsKey(p.Name) && p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+        .Select(p => (p, p.GetValue(value)))
+        .OfType<(PropertyInfo, object)>()
+        .ToList();
     
     string GetJsonPropertyName(PropertyInfo pi) => 
         pi.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name 

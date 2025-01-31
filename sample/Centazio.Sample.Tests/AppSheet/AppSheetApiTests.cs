@@ -5,7 +5,7 @@ namespace Centazio.Sample.Tests.AppSheet;
 
 public class AppSheetApiTests {
 
-  [Test] public async Task Test_AddRows() {
+  [Test] public async Task Test_AddTasks() {
     var start = await Api().GetAllTasks();
     var added = await Api().AddTasks([Guid.NewGuid().ToString()]);
     var end = await Api().GetAllTasks();
@@ -19,7 +19,7 @@ public class AppSheetApiTests {
     Assert.That(cleanup.Count, Is.EqualTo(start.Count));
   }
   
-  [Test] public async Task Test_EditRows() {
+  [Test] public async Task Test_EditTasks() {
     var start = await Api().GetAllTasks();
     var (val1, val2) = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
     var added = await Api().AddTasks([val1]);

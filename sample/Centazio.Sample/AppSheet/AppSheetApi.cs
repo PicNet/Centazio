@@ -17,12 +17,14 @@ public class AppSheetApi(AppSheetSettings settings, SampleSecrets secrets) {
   public async Task<List<AppSheetTask>> AddTasks(List<string> toadd) {
     if (!toadd.Any()) return [];
     var res = await DoPost(new { Action = "Add", Rows = toadd.Select(t => new { Task = t } ) });
+    if (String.IsNullOrWhiteSpace(res)) throw new Exception("AddTasks returned and empty result set");
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }
 
   public async Task<List<AppSheetTask>> EditTasks(List<AppSheetTask> toedit) {
     if (!toedit.Any()) return [];
     var res = await DoPost(new { Action = "Edit", Rows = toedit });
+    if (String.IsNullOrWhiteSpace(res)) throw new Exception("EditTasks returned and empty result set");
     return Json.SplitList<AppSheetTask>(res, "Rows");
   }
   

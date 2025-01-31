@@ -37,7 +37,11 @@ public record AppSheetTask : ISystemEntity {
   
   [JsonPropertyName("Row ID")] public string? RowId { get; set; }
   public string? Task { get; set; }
-  public bool Completed { get; set; }
+  // this property is marked as `[JsonIgnore]` because it does not exist in AppSheet.  It is only here
+  //    to provide a different checksum when doing meaningful change comparison before writing to AppSheet.
+  //    If ommitted then, `AppSheetWriteFunction` will assume there are no meaningful changes to update
+  //    and ignore the write.
+  [JsonIgnore] public bool Completed { get; set; }
   
   public SystemEntityId SystemId => new(RowId ?? throw new Exception());
   public DateTime LastUpdatedDate => UtcDate.UtcNow;

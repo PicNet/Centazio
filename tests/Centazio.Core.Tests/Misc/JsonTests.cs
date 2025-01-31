@@ -94,10 +94,12 @@ public class JsonTests {
     var json = await body.ReadAsStringAsync();
     Assert.That(json, Does.Contain("\"Prop\":"));
     Assert.That(json, Does.Contain("\"New Name\":"));
+    Assert.That(json, Does.Contain("\"StandardProp\":"));
     Assert.That(json, Does.Not.Contain("\"JsonPropNameTest\":"));
     Assert.That(json, Does.Not.Contain("\"DisplayName\":"));
     Assert.That(json, Does.Not.Contain("\"SystemId\":"));
     Assert.That(json, Does.Not.Contain("\"LastUpdatedDate\":"));
+    Assert.That(json, Does.Not.Contain("\"IgnoredProp\":"));
   }
   
   [Test, Ignore("RespectNullableAnnotations does not work with empty object '{}'")] public void Test_RespectNullableAnnotations() {
@@ -179,6 +181,8 @@ public class JsonTests {
   public record SystemEntityType(Guid Id, string Prop) : ISystemEntity {
 
     [JsonPropertyName("New Name")] public string JsonPropNameTest => nameof(JsonPropNameTest);
+    public string StandardProp => nameof(JsonPropNameTest);
+    [JsonIgnore] public bool IgnoredProp => true;
     
     // these three fields should be ignored during serialisation
     public string DisplayName => Prop;

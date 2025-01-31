@@ -1,4 +1,5 @@
 # Todo
+- use Line OfType to remove nulls and remove '!' operators 
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm
