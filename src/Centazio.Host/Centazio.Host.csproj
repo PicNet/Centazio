@@ -5,7 +5,7 @@
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
       <PackageReference Include="Serilog" />
         
-       <!-- todo: we should not need these references, just done to support dynamic assembly loading -->
+       <!-- todo: this reference us in only included to support dynamic assembly loading -->
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     </ItemGroup>
 

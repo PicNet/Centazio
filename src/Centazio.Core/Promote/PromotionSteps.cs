@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Checksum;
+﻿using System.Diagnostics;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
@@ -154,7 +155,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) {
     if (error is not null) return;
-    await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason!) : bag.StagedEntity.Promote(start)).ToList());
+    await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason) : bag.StagedEntity.Promote(start)).ToList());
   }
 
   public void LogPromotionSteps() {
@@ -168,7 +169,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
     
     var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, Entity: bag.CoreEntityAndMeta.CoreEntity)).ToList();
-    var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason!)).ToList();
+    var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason ?? throw new UnreachableException())).ToList();
     
     return new SuccessPromoteOperationResult(topromote, toignore);
   }

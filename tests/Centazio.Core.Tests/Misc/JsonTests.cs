@@ -11,43 +11,43 @@ public class JsonTests {
 
   [Test] public void Test_serialisation_of_valid_strings() {
     var str = new ValidString(nameof(JsonTests));
-    var serialised = JsonSerializer.Serialize(str);
-    var deserialised = JsonSerializer.Deserialize<ValidString>(serialised);
+    var serialised = Json.Serialize(str);
+    var deserialised = Json.Deserialize<ValidString>(serialised);
     Assert.That(str, Is.EqualTo(deserialised));
   }
   
   [Test] public void Test_serialisation_of_valid_string_subclasses() {
     var str = new CoreEntityId(nameof(JsonTests));
-    var serialised = JsonSerializer.Serialize(str);
-    var deserialised = JsonSerializer.Deserialize<CoreEntityId>(serialised);
+    var serialised = Json.Serialize(str);
+    var deserialised = Json.Deserialize<CoreEntityId>(serialised);
     Assert.That(str, Is.EqualTo(deserialised));
   }
 
   [Test] public void Test_serialisation_of_objects_with_child_valid_strings() {
     var obj = new TestValidStrings { Str1 = new(nameof(TestValidStrings.Str1)), Str2 = new(nameof(TestValidStrings.Str2)) };
-    var serialised = JsonSerializer.Serialize(obj);
-    var deserialised = JsonSerializer.Deserialize<TestValidStrings>(serialised);
+    var serialised = Json.Serialize(obj);
+    var deserialised = Json.Deserialize<TestValidStrings>(serialised);
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
   [Test] public void Test_serialisation_of_objects_with_child_valid_string_subclasses() {
     var obj = new TestValidStringSubclasses { CoreId = new(nameof(TestValidStrings.Str1)), SystemId = new(nameof(TestValidStrings.Str2)) };
-    var serialised = JsonSerializer.Serialize(obj);
-    var deserialised = JsonSerializer.Deserialize<TestValidStringSubclasses>(serialised);
+    var serialised = Json.Serialize(obj);
+    var deserialised = Json.Deserialize<TestValidStringSubclasses>(serialised);
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
   [Test] public void Test_serialisation_of_object_dtos_with_child_valid_strings() {
     var obj = new TestValidStrings { Str1 = new(nameof(TestValidStrings.Str1)), Str2 = new(nameof(TestValidStrings.Str2)) };
     var serialised = Json.Serialize(obj);
-    var deserialised = JsonSerializer.Deserialize<TestValidStrings.Dto>(serialised)!.FromDto();
+    var deserialised = Json.Deserialize<TestValidStrings.Dto>(serialised).ToBase();
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
   [Test] public void Test_serialisation_of_object_dtos_with_child_valid_string_subclasses() {
     var obj = new TestValidStringSubclasses { CoreId = new(nameof(TestValidStrings.Str1)), SystemId = new(nameof(TestValidStrings.Str2)) };
     var serialised = Json.Serialize(obj);
-    var deserialised = JsonSerializer.Deserialize<TestValidStringSubclasses.Dto>(serialised)!.FromDto();
+    var deserialised = Json.Deserialize<TestValidStringSubclasses.Dto>(serialised).ToBase();
     Assert.That(obj, Is.EqualTo(deserialised));
   }
   
@@ -137,7 +137,7 @@ public class JsonTests {
       public string? Str1 { get; init; }
       public string? Str2 { get; init; }
       
-      public TestValidStrings FromDto() {
+      public TestValidStrings ToBase() {
         return new TestValidStrings { 
           Str1 = new(Str1 ?? throw new Exception()), 
           Str2 = new(Str2 ?? throw new Exception()) };
@@ -153,7 +153,7 @@ public class JsonTests {
       public string? CoreId { get; init; }
       public string? SystemId { get; init; }
       
-      public TestValidStringSubclasses FromDto() {
+      public TestValidStringSubclasses ToBase() {
         return new TestValidStringSubclasses { 
           CoreId = new(CoreId ?? throw new Exception()), 
           SystemId = new(SystemId ?? throw new Exception()) };

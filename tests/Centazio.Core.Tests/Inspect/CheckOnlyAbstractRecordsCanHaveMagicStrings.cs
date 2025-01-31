@@ -19,7 +19,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
   
   [Test] public void Test_string_description_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
-        .Where(t => ReflectionUtils.IsRecord(t) && !t.IsAbstract && t.Namespace != "Centazio.Core.Settings" && t.Namespace != "Centazio.Core.Secrets" && !t.FullName!.EndsWith("+Dto"))
+        .Where(t => ReflectionUtils.IsRecord(t) && !t.IsAbstract && t.Namespace != "Centazio.Core.Settings" && t.Namespace != "Centazio.Core.Secrets" && t.FullName is not null && !t.FullName.EndsWith("+Dto"))
         .ToList();
     var errors = new List<string>();
     types.ForEach(type => {

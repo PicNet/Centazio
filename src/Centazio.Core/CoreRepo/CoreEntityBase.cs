@@ -11,7 +11,7 @@ public abstract record CoreEntityBase(CoreEntityId CoreId) : ICoreEntity {
   public CoreEntityId CoreId { get; set; } = CoreId;
   public abstract object GetChecksumSubset();
   
-  protected CoreEntityBase() : this((CoreEntityId) null!) { }
+  protected CoreEntityBase() : this(CoreEntityId.DEFAULT_VALUE) { }
 
   public abstract record Dto<E> : ICoreEntityDto<E> where E : CoreEntityBase {
     public string CoreId { get; init; } = null!;

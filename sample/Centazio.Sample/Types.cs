@@ -65,7 +65,8 @@ public record CoreTask : CoreEntityBase {
   public bool Completed { get; set; }
   public override string DisplayName => Name;
   
-  private CoreTask() { Name = null!; }
+  private CoreTask() { Name = String.Empty; }
+  
   internal CoreTask(CoreEntityId coreid, string name, bool completed) : base(coreid) {
     Name = name;
     Completed = completed;

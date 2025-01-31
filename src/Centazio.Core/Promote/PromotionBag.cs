@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Checksum;
+﻿using System.Diagnostics.CodeAnalysis;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
@@ -54,6 +55,7 @@ public class PromotionBag(StagedEntity staged) {
   public Map.Updated MarkUpdated(IChecksumAlgorithm checksum) => (Map ?? throw new Exception()).Update().SuccessUpdate(checksum.Checksum(SystemEntity));
   
   public bool IsCreating => PreExistingCoreEntityAndMeta is null;
-  public bool IsIgnore => IgnoreReason is not null;
+  
+  [MemberNotNullWhen(true, nameof(IgnoreReason))] public bool IsIgnore => IgnoreReason is not null;
 
 }

@@ -9,11 +9,10 @@ public class CheckDataObjectsHaveSerialisationInnerDtos {
 
   [Test] public void Test_all_data_objects_follow_Dto_pattern() {
     var types = typeof(StagedEntity).Assembly.GetTypes()
-        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false, IsInterface: false } 
-            && !(t is { IsAbstract: true, IsSealed: true })) // ignores static classes like StagedEntityListExtensions
+        .Where(t => t is { Namespace: "Centazio.Core.Ctl.Entities", IsEnum: false, IsInterface: false } and not { IsAbstract: true, IsSealed: true }) // ignores static classes like StagedEntityListExtensions
         .Where(t => t.BaseType != typeof(Map.CoreToSysMap)) // ignore these
         .ToList();
-    var bases = types.Where(t => t.FullName!.IndexOf('+') < 0).ToList();
+    var bases = types.Where(t => (t.FullName ?? throw new Exception()).IndexOf('+') < 0).ToList();
     bases.ForEach(t => ValidateDataObject(t, types));
   }
 
