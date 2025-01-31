@@ -19,13 +19,13 @@ public abstract record ReadOperationResult(
 
 }
 
-internal record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
+internal sealed record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
         : ReadOperationResult(EOperationResult.Error, $"ErrorReadOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 0, AbortVote, null, Exception);
 
-internal record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal sealed record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(EOperationResult.Success, "EmptyReadOperationResult", 0, AbortVote);
 
-internal record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal sealed record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(
         EOperationResult.Success,
         $"ListReadOperationResult[{PayloadList.Count}]", 

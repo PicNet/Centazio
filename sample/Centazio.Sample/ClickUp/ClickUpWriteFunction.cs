@@ -15,8 +15,8 @@ public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUp
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToClickUpTasks, WriteClickUpTasks)
   ]);
 
-  private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToClickUpTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
-      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, new(SampleConstants.Misc.CLICK_UP_OPEN_STATUS), UtcDate.ToMillis().ToString())));
+  private Task<CovertCoresToSystemsResult> CovertCoreTasksToClickUpTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
+      Task.FromResult(CovertCoresToSystems<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, new(SampleConstants.Misc.CLICK_UP_OPEN_STATUS), UtcDate.ToMillis().ToString())));
 
   private Task<WriteOperationResult> WriteClickUpTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       WriteOperationResult.Create<CoreTask, ClickUpTask>(tocreate, toupdate, CreateTasks, UpdateTasks);

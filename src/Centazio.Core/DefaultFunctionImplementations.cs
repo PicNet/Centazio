@@ -28,7 +28,7 @@ public delegate ISystemEntity ConvertCoreToSystemEntityForWritingHandler<E>(Syst
 public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
     AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl) {
   
-  protected CovertCoreEntitiesToSystemEntitiesResult CovertCoreEntitiesToSystemEntitties<E>(List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate, ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
+  protected CovertCoresToSystemsResult CovertCoresToSystems<E>(List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate, ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
     var tocreate2 = tocreate.Select(m => {
       var core = m.CoreEntity.To<E>();
       var sysent = converter(SystemEntityId.DEFAULT_VALUE, core);

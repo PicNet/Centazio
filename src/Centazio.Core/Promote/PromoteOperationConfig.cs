@@ -32,8 +32,8 @@ public record EntityForPromotionEvaluation {
 }
 
 public abstract record EntityEvaluationResult(ISystemEntity SystemEntity);
-public sealed record EntityToPromote(ISystemEntity SystemEntity, CoreEntityAndMeta CoreEntityAndMeta) : EntityEvaluationResult(SystemEntity);
-public sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
+internal sealed record EntityToPromote(ISystemEntity SystemEntity, CoreEntityAndMeta CoreEntityAndMeta) : EntityEvaluationResult(SystemEntity);
+internal sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
 
 
 public delegate Task<List<EntityEvaluationResult>> BuildCoreEntitiesHandler(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);

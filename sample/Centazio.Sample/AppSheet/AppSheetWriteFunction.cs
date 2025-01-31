@@ -13,9 +13,8 @@ public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlReposit
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 
-  // todo: move all herlpers for all functions from base and helper classes to Factory methods in the result type like `CovertCoreEntitiesToSystemEntitiesResult`
-  private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
-      Task.FromResult(CovertCoreEntitiesToSystemEntitties<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name, e.Completed)));
+  private Task<CovertCoresToSystemsResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
+      Task.FromResult(CovertCoresToSystems<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name, e.Completed)));
   
   private Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       WriteOperationResult.Create<CoreTask, AppSheetTask>(tocreate, toupdate, AddNewTasks, EditTasks);

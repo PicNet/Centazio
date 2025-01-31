@@ -149,7 +149,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 }
 
 public abstract record FunctionRunResults(List<OperationResult> OpResults, string Message); 
-public record SuccessFunctionRunResults(List<OperationResult> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
-public record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
-public record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
-public record ErrorFunctionRunResults(Exception Exception) : FunctionRunResults([], Exception.ToString());
+internal sealed record SuccessFunctionRunResults(List<OperationResult> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
+internal sealed record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
+internal sealed record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
+internal sealed record ErrorFunctionRunResults(Exception Exception) : FunctionRunResults([], Exception.ToString());

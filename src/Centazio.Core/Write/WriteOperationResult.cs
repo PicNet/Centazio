@@ -34,8 +34,7 @@ public abstract record WriteOperationResult(
   }
 }
 
-// todo: use this pattern of `internal` concrete types to force consumers to use the factory methods in base class
-internal record SuccessWriteOperationResult(
+internal sealed record SuccessWriteOperationResult(
     List<Map.Created> EntitiesCreated,
     List<Map.Updated> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
@@ -45,7 +44,7 @@ internal record SuccessWriteOperationResult(
         $"SuccessWriteOperationResult Created[{EntitiesCreated.Count}] Updated[{EntitiesUpdated.Count}]",
         AbortVote);
 
-internal record ErrorWriteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : WriteOperationResult(
+internal sealed record ErrorWriteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : WriteOperationResult(
     [],
     [],
     EOperationResult.Error,

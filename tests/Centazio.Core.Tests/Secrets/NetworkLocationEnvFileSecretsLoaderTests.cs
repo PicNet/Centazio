@@ -19,6 +19,7 @@ public class NetworkLocationEnvFileSecretsLoaderTests {
     finally { File.Delete(file); }
   }
 
+  // ReSharper disable once ClassNeverInstantiated.Local
   private record TestSettingsTargetObjRaw {
     public string? SETTING1 { get; init; }
     public string? SETTING2 { get; init; } 

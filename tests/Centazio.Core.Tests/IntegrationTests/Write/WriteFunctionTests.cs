@@ -102,10 +102,10 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
     Updated.Clear();
   }
   
-  private Task<CovertCoreEntitiesToSystemEntitiesResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  private Task<CovertCoresToSystemsResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map, Helpers.TestingChecksumAlgorithm)).ToList();
     var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)), Helpers.TestingChecksumAlgorithm)).ToList();
-    return Task.FromResult(new CovertCoreEntitiesToSystemEntitiesResult(ccreate, cupdate));
+    return Task.FromResult(new CovertCoresToSystemsResult(ccreate, cupdate));
   }
 
   private Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {

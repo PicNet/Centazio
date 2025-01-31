@@ -17,7 +17,7 @@ public abstract record PromoteOperationResult(
     public string LoggableValue => $"ToPromote[{ToPromote.Count}] ToIgnore[{ToIgnore.Count}] Result[{Result}] Message[{Message}]";
 }
 
-public record SuccessPromoteOperationResult(
+internal sealed record SuccessPromoteOperationResult(
     List<(StagedEntity StagedEntity, ISystemEntity SystemEntity, ICoreEntity CoreEntity)> ToPromote,
     List<(StagedEntity StagedEntity, ValidString IgnoreReason)> ToIgnore,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)
@@ -27,7 +27,7 @@ public record SuccessPromoteOperationResult(
         $"SuccessPromoteOperationResult Promote[{ToPromote.Count}] Ignore[{ToIgnore.Count}]",
         AbortVote);
 
-public record ErrorPromoteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null)
+internal sealed record ErrorPromoteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null)
     : PromoteOperationResult([],
         [],
         EOperationResult.Error,
