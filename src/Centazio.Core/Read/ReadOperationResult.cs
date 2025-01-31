@@ -19,14 +19,13 @@ public abstract record ReadOperationResult(
 
 }
 
-public record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
+internal record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
         : ReadOperationResult(EOperationResult.Error, $"ErrorReadOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 0, AbortVote, null, Exception);
 
-public record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(EOperationResult.Success, "EmptyReadOperationResult", 0, AbortVote);
 
-// ReSharper disable once NotAccessedPositionalProperty.Global
-public record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(
         EOperationResult.Success,
         $"ListReadOperationResult[{PayloadList.Count}]", 

@@ -212,9 +212,10 @@ public class JsonTests {
     var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
     var list = Json.SplitList<Row>(json, "path");
     Assert.That(list, Is.EquivalentTo([new Row("1"), new Row("2")]));
+    Assert.That(list[0].item, Is.EqualTo("1"));
+    Assert.That(list[1].item, Is.EqualTo("2"));
   } 
   
-  // ReSharper disable once NotAccessedPositionalProperty.Local
   record Row(string item);
   
 }

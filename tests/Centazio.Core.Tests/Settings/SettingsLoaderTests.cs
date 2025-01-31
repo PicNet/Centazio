@@ -57,5 +57,4 @@ internal record TestSettingsObjRaw {
       raw.MissingSetting);
 }
 
-// ReSharper disable NotAccessedPositionalProperty.Global
 internal record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string? MissingSetting);

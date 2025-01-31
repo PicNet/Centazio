@@ -35,6 +35,5 @@ public class NetworkLocationEnvFileSecretsLoaderTests {
         raw.SETTING5 ?? throw new ArgumentNullException(nameof(SETTING5)), 
         raw.SETTING6 ?? throw new ArgumentNullException(nameof(SETTING6)));
   }
-  // ReSharper disable NotAccessedPositionalProperty.Local
   private record TestSettingsTargetObj(string SETTING1, string SETTING2, int SETTING3_NUMBER, string SETTING4, string SETTING5, string SETTING6);
 }

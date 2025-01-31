@@ -152,5 +152,4 @@ public abstract record FunctionRunResults(List<OperationResult> OpResults, strin
 public record SuccessFunctionRunResults(List<OperationResult> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
 public record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
 public record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
-// ReSharper disable once NotAccessedPositionalProperty.Global
 public record ErrorFunctionRunResults(Exception Exception) : FunctionRunResults([], Exception.ToString());

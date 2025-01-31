@@ -34,7 +34,7 @@ public abstract record WriteOperationResult(
   }
 }
 
-// todo: use this pattern of `private` conctrete types to force consumers to use the factory methods in base class
+// todo: use this pattern of `internal` concrete types to force consumers to use the factory methods in base class
 internal record SuccessWriteOperationResult(
     List<Map.Created> EntitiesCreated,
     List<Map.Updated> EntitiesUpdated,
