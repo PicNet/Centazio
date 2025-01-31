@@ -181,7 +181,6 @@ public record CentazioSettings {
   public List<string> AllowedProviderAssemblies { get; }
   
   private readonly AwsSettings? _AwsSettings;
-  // todo: ensure we are using SettingsSectionMissingException everywhere appropriate
   public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
   
   private readonly AzureSettings? _AzureSettings;
@@ -243,5 +242,5 @@ public record CentazioSettings {
         CoreStorage?.ToBase());
   }
 
-  internal class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
+  public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 }

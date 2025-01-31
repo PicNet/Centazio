@@ -1,5 +1,4 @@
 # Todo
-- flows printer should handle sinlge entity better and not have a new indented line for a single item
 - a code generated (runtime) wrapper to deploy to lambda/azure/gcp
 - good case study / demo:
   - crm

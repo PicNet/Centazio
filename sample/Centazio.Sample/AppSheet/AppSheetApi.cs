@@ -2,6 +2,7 @@
 
 namespace Centazio.Sample.AppSheet;
 
+// https://support.google.com/appsheet/topic/10105767
 public class AppSheetApi(AppSheetSettings settings, SampleSecrets secrets) {
 
   private static HttpClient? http;

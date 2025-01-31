@@ -6,10 +6,12 @@ namespace Centazio.Sample;
 public record SampleSettings : CentazioSettings {
 
   private readonly ClickUpSettings? _ClickUp;
-  public ClickUpSettings ClickUp => _ClickUp ?? throw new Exception($"ClickUp section missing from SampleSettings");
+  public ClickUpSettings ClickUp => _ClickUp ?? throw new SettingsSectionMissingException(nameof(ClickUp));
   
   private readonly AppSheetSettings? _AppSheet;
-  public AppSheetSettings AppSheet => _AppSheet ?? throw new Exception($"AppSheet section missing from SampleSettings");
+  public AppSheetSettings AppSheet => _AppSheet ?? throw new SettingsSectionMissingException(nameof(AppSheet));
+  
+  
   
   protected SampleSettings(CentazioSettings centazio, ClickUpSettings? clickup, AppSheetSettings? appsheet) : base(centazio) {
     _ClickUp = clickup;
