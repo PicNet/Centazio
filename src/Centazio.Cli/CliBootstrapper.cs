@@ -46,7 +46,7 @@ internal class CliBootstrapper {
         
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()
-        .AddSingleton<CommandTree>()
+        .AddSingleton<CommandsTree>()
         .AddSingleton<IAwsAccounts, AwsAccounts>()
         .AddSingleton<IAzSubscriptions, AzSubscriptions>()
         .AddSingleton<IAzResourceGroups, AzResourceGroups>()

@@ -12,7 +12,7 @@ public abstract class Node(string id, Node? parent = null) {
   public string Id => id;
 }
 
-public class BranchNode(string id, string backlbl, List<Node> children) : Node(id) {
+public class BranchNode(string id, List<Node> children, string backlbl="back") : Node(id) {
   public string BackLabel => backlbl;
   public List<Node> Children => children;
 }
@@ -26,37 +26,50 @@ public class CommandNode<T>(string id, ICentazioCommand cmd) : AbstractCommandNo
   public override void AddTo(IConfigurator<CommandSettings> branch) => branch.AddCommand<T>(Id);
 }
 
-public class CommandTree {
+public class CommandsTree {
 
   internal BranchNode RootNode { get; }
   private IServiceProvider Provider { get; }
   
-  public CommandTree(IServiceProvider prov) {
+  public CommandsTree(IServiceProvider prov) {
     Provider = prov;
     
-    RootNode = new("centazio", "exit", [
-      new BranchNode("aws", "back", [
-        new BranchNode("account", "back", [
+    RootNode = new("centazio", [
+      ///////////////////////////////////////////////
+      // AWS
+      ///////////////////////////////////////////////
+      new BranchNode("aws", [
+        new BranchNode("account", [
           CreateCommandNode<ListAccountsCommand>("list"),
           CreateCommandNode<AddAccountCommand>("add")
         ])
       ]),
-      new BranchNode("az", "back", [
-        new BranchNode("sub", "back", [
+      ///////////////////////////////////////////////
+      // Azure
+      ///////////////////////////////////////////////
+      new BranchNode("az", [
+        new BranchNode("sub", [
           CreateCommandNode<ListSubscriptionsCommand>("list")
         ]),
-        new BranchNode("rg", "back", [
+        new BranchNode("rg", [
           CreateCommandNode<ListResourceGroupsCommand>("list"),
           CreateCommandNode<AddResourceGroupCommand>("add"),
         ]),
-        new BranchNode("func", "back", [
+        new BranchNode("func", [
           CreateCommandNode<DeployFunctionAppCommand>("deploy"),
         ])
       ]),
-      new BranchNode("host", "back", [
+      ///////////////////////////////////////////////
+      // Local Host
+      ///////////////////////////////////////////////
+      new BranchNode("host", [
         CreateCommandNode<RunHostCommand>("run"),
       ]),
-    ]);
+      ///////////////////////////////////////////////
+      // Misc Commands
+      ///////////////////////////////////////////////
+    ],
+    "exit");
   }
 
   public void Initialise(IConfigurator cfg) {

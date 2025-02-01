@@ -6,7 +6,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli;
 
-public class Cli(CommandTree commands, InteractiveMenu menu, ITypeRegistrar services) {
+public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar services) {
 
   public int Start(string[] args) {
     ShowSplash();

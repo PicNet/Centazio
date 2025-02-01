@@ -5,7 +5,7 @@ using Centazio.Sample.Tests.ClickUp;
 
 namespace Centazio.Sample.Tests;
 
-[Ignore("only run manually")] 
+// [Ignore("only run manually")] 
 public class ResetSampleDbsAndApis {
   
   [Test] public async Task Reset() {

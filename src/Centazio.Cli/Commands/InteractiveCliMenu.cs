@@ -12,7 +12,7 @@ public class InteractiveCliMeneCommand : AsyncCommand {
   }
 }
 
-public class InteractiveMenu(CommandTree tree) {
+public class InteractiveMenu(CommandsTree tree) {
 
   public async Task Show() {
     while (await DisplayNode(tree.RootNode)) { }
