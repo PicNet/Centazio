@@ -9,11 +9,11 @@ namespace Centazio.Cli.Commands.Gen;
 public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractCentazioCommand<GenerateFunctionsCommand.Settings> {
 
   protected override Task RunInteractiveCommandImpl() => ExecuteImpl(new() { 
-    AssemblyName = UiHelpers.Ask("Assembly Name") 
+    AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
   protected override async Task ExecuteImpl(Settings settings) {
-    var ass = ReflectionUtils.LoadAssemblyWithName(settings.AssemblyName);
+    var ass = ReflectionUtils.LoadAssembly(settings.AssemblyName);
     await new ProjectGenerator(coresettings.GeneratedCodeFolder, ECloudEnv.Azure, ass).GenerateSolution();
   }
 

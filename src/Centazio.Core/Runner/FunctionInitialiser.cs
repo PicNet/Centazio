@@ -9,6 +9,7 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
+// todo: lots of duplicate code here, merge `HostBootstrapper.cs`
 public class FunctionInitialiser<F> where F : IRunnableFunction {
   private Type FuncType { get; }
   private Assembly FuncAss { get; }
@@ -34,7 +35,6 @@ public class FunctionInitialiser<F> where F : IRunnableFunction {
   }
 
   private CentazioSettings LoadSettings() {
-    // todo: implement
     return new SettingsLoader().Load<CentazioSettings>("dev");
   }
 

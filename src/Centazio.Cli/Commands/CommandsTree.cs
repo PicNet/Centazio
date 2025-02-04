@@ -70,7 +70,7 @@ public class CommandsTree {
       // Misc Commands
       ///////////////////////////////////////////////
       new BranchNode("gen", [
-        CreateCommandNode<GenerateFunctionsCommand>("funcs")
+        CreateCommandNode<GenerateFunctionsCommand>("func")
       ]),
     ],
     "exit");

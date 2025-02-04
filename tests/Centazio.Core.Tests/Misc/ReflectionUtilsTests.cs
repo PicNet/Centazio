@@ -60,14 +60,14 @@ public class ReflectionUtilsTests {
     Assert.That(props, Is.EquivalentTo(["DisplayName", "SystemId", "LastUpdatedDate"]));
   }
   
-  [Test] public void Test_GetMostAppropriateAssemblyPath() {
-    Assert.That(ReflectionUtils.GetMostAppropriateAssemblyPath("Centazio.Core").Contains("\\Centazio.Core\\bin\\"));
-    Assert.That(ReflectionUtils.GetMostAppropriateAssemblyPath("Centazio.Core.Tests").Contains("\\Centazio.Core.Tests\\bin\\"));
-    Assert.That(ReflectionUtils.GetMostAppropriateAssemblyPath("Centazio.Sample").Contains("\\Centazio.Sample\\bin\\"));
+  [Test] public void Test_GetAssemblyPath() {
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core").Contains("\\Centazio.Core\\bin\\"));
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core.Tests").Contains("\\Centazio.Core.Tests\\bin\\"));
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Sample").Contains("\\Centazio.Sample\\bin\\"));
   }
   
-  [Test] public void Test_LoadMostAppropriateAssembly() {
-    var ass = ReflectionUtils.LoadMostAppropriateAssembly("Centazio.Sample");
+  [Test] public void Test_LoadAssembly() {
+    var ass = ReflectionUtils.LoadAssembly("Centazio.Sample");
     Assert.That(ass.Location.Contains("\\Centazio.Sample\\bin\\"));
   }
   

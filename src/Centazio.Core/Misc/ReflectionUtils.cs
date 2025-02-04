@@ -69,14 +69,14 @@ public static class ReflectionUtils {
   
   public static List<Type> GetAllTypesThatImplement(Type t, List<string> allowed) {
     return allowed.SelectMany(assname => {
-      var ass = LoadMostAppropriateAssembly(assname);
+      var ass = LoadAssembly(assname);
       return GetAllTypesThatImplement(t, ass); 
     }).ToList(); 
   }
   
-  public static Assembly LoadMostAppropriateAssembly(string assembly) => Assembly.LoadFrom(GetMostAppropriateAssemblyPath(assembly));
+  public static Assembly LoadAssembly(string assembly) => Assembly.LoadFrom(GetAssemblyPath(assembly));
 
-  public static string GetMostAppropriateAssemblyPath(string assembly) {
+  public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";
     var dlls = Directory.GetFiles(FsUtils.GetSolutionRootDirectory(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
     var assfile = 
@@ -94,9 +94,4 @@ public static class ReflectionUtils {
     bool IsDescendant(Type typ) =>
         (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t || (typ.BaseType is not null && IsDescendant(typ.BaseType));
   }
-
-  public static Assembly LoadAssemblyWithName(string settingsAssemblyName) {
-    throw new NotImplementedException();
-  }
-
 }
