@@ -5,24 +5,23 @@ namespace Centazio.Sample;
 
 public record SampleSettings : CentazioSettings {
 
-  private readonly ClickUpSettings? _ClickUp;
-  public ClickUpSettings ClickUp => _ClickUp ?? throw new SettingsSectionMissingException(nameof(ClickUp));
-  
-  private readonly AppSheetSettings? _AppSheet;
-  public AppSheetSettings AppSheet => _AppSheet ?? throw new SettingsSectionMissingException(nameof(AppSheet));
+  public ClickUpSettings ClickUp { get; }
+  public AppSheetSettings AppSheet { get; }
   
   
-  
-  protected SampleSettings(CentazioSettings centazio, ClickUpSettings? clickup, AppSheetSettings? appsheet) : base(centazio) {
-    _ClickUp = clickup;
-    _AppSheet = appsheet;
+  protected SampleSettings(CentazioSettings centazio, ClickUpSettings clickup, AppSheetSettings appsheet) : base(centazio) {
+    ClickUp = clickup;
+    AppSheet = appsheet;
   }
   
   public new record Dto : CentazioSettings.Dto, IDto<SampleSettings> {
     public ClickUpSettings.Dto? ClickUp { get; init; }
     public AppSheetSettings.Dto? AppSheet { get; init; }
     
-    public new SampleSettings ToBase() => new(base.ToBase(), ClickUp?.ToBase(), AppSheet?.ToBase());
+    public new SampleSettings ToBase() => new(
+        base.ToBase(), 
+        ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)), 
+        AppSheet?.ToBase() ?? throw new SettingsSectionMissingException(nameof(AppSheet)));
   }
 }
 

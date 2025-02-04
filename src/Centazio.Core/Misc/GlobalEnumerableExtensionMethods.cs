@@ -24,6 +24,18 @@ public static class GlobalEnumerableExtensionMethods {
     var lst = e.ToList();
     for (var i = 0; i < lst.Count; i++) action(lst[i], i);
   }
+  
+  public static List<T> ForEachAndReturn<T>(this IEnumerable<T> e, Action<T> action) {
+    var lst = e.ToList();
+    lst.ForEach(action);
+    return lst;
+  }
+  
+  public static List<T> ForEachAndReturn<T>(this IEnumerable<T> e, Action<T, int> action) {
+    var lst = e.ToList();
+    lst.ForEach(action);
+    return lst;
+  }
 
   public static void Deconstruct<T>(this IList<T> list, out T first, out IList<T> rest) {
     if (!list.Any()) throw new ArgumentException("list is empty");

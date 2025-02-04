@@ -1,4 +1,5 @@
 {
+  "GeneratedCodeFolder": "generated",
   "SecretsFolders": ["\\\\aus-syd-dc05.internal.picnet.com.au\\secrets\\centazio3", "/mnt/secrets/centazio3"],
   "ClickUp": {
     "BaseUrl": "https://api.clickup.com/api/v2/",

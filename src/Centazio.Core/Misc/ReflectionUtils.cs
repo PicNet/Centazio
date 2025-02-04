@@ -66,40 +66,37 @@ public static class ReflectionUtils {
 
     return t.BaseType is not null ? GetPropAttribute<A>(t.BaseType, prop) : null;
   }
+  
+  public static List<Type> GetAllTypesThatImplement(Type t, List<string> allowed) {
+    return allowed.SelectMany(assname => {
+      var ass = LoadMostAppropriateAssembly(assname);
+      return GetAllTypesThatImplement(t, ass); 
+    }).ToList(); 
+  }
+  
+  public static Assembly LoadMostAppropriateAssembly(string assembly) => Assembly.LoadFrom(GetMostAppropriateAssemblyPath(assembly));
 
-  public static List<Type> GetAllTypesThatImplement(Type t, List<string> assnames) {
-    var ignore = new[] { "Centazio.Core", "Centazio.Test", "Centazio.Cli", ".Tests" };
-    var root = FsUtils.GetSolutionRootDirectory();
-    var done = new Dictionary<string, bool>();
-    var dlls = Directory.GetFiles(root, "*.dll", SearchOption.AllDirectories);
-
-    var first = dlls.SelectMany(path => InspectDll(path, true)).ToList();
-    var second = dlls.SelectMany(path => InspectDll(path, false)).ToList();
-    return first.Concat(second).ToList();
-
-    List<Type> InspectDll(string path, bool checkproject) {
-      var fn = path.Split('\\').Last();
-      if (!assnames.Any(i => fn.StartsWith(i, StringComparison.OrdinalIgnoreCase))
-          || ignore.Any(i => fn.Contains(i, StringComparison.OrdinalIgnoreCase))
-          || done.ContainsKey(fn)) return [];
-      if (checkproject && path.IndexOf($"{fn.Replace(".dll", string.Empty)}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) < 0) return [];
-      done[fn] = true;
-
-      return GetAllTypesThatImplement(t, Assembly.LoadFrom(path));
-    }
+  public static string GetMostAppropriateAssemblyPath(string assembly) {
+    var fname = $"{assembly}.dll";
+    var dlls = Directory.GetFiles(FsUtils.GetSolutionRootDirectory(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
+    var assfile = 
+        dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+        ?? dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0)
+        ?? throw new FileNotFoundException($"File for assembly [{assembly}] could not be found in directory (recursively) [{FsUtils.GetSolutionRootDirectory()}]");
+    return assfile;
   }
 
   public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {
     return assembly.GetExportedTypes()
-        .Where(type =>
-            (type.FullName is not null &&
-                !type.IsAbstract &&
-                type.IsAssignableTo(t)) ||
-            IsDescendant(type))
+        .Where(type => (type.FullName is not null && !type.IsAbstract && type.IsAssignableTo(t)) || IsDescendant(type))
         .ToList();
 
     bool IsDescendant(Type typ) =>
-        (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t
-        || (typ.BaseType is not null && IsDescendant(typ.BaseType));
+        (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t || (typ.BaseType is not null && IsDescendant(typ.BaseType));
   }
+
+  public static Assembly LoadAssemblyWithName(string settingsAssemblyName) {
+    throw new NotImplementedException();
+  }
+
 }

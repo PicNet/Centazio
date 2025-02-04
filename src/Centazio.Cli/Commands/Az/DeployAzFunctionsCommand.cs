@@ -8,14 +8,14 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazioCommand<DeployFunctionAppCommand.DeployFunctionAppCommandSettings> {
+public class DeployAzFunctionsCommand(CentazioSecrets secrets) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
   
   protected override Task RunInteractiveCommandImpl() => 
-      ExecuteImpl(new DeployFunctionAppCommandSettings { 
+      ExecuteImpl(new Settings { 
         // ResourceGroupName = UiHelpers.Ask("Function Name", clisetts.AzureSettings?.Functions) 
       });
 
-  protected override async Task ExecuteImpl(DeployFunctionAppCommandSettings settings) {
+  protected override async Task ExecuteImpl(Settings settings) {
     // ArgumentException.ThrowIfNullOrWhiteSpace(settings.ResourceGroupName);
     // await UiHelpers.ProgressWithErrorMessage("Loading resource group list", async () => await impl.AddResourceGroup(settings.ResourceGroupName));
     
@@ -30,7 +30,7 @@ public class DeployFunctionAppCommand(CentazioSecrets secrets) : AbstractCentazi
 
   }
 
-  public class DeployFunctionAppCommandSettings : CommonSettings {
+  public class Settings : CommonSettings {
     [CommandArgument(0, "<RESOURCE_GROUP_NAME>")] public string ResourceGroupName { get; init; } = null!;
   }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Centazio.Cli.Commands.Aws;
 using Centazio.Cli.Commands.Az;
+using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Commands.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
@@ -56,7 +57,7 @@ public class CommandsTree {
           CreateCommandNode<AddResourceGroupCommand>("add"),
         ]),
         new BranchNode("func", [
-          CreateCommandNode<DeployFunctionAppCommand>("deploy"),
+          CreateCommandNode<DeployAzFunctionsCommand>("deploy"),
         ])
       ]),
       ///////////////////////////////////////////////
@@ -68,6 +69,9 @@ public class CommandsTree {
       ///////////////////////////////////////////////
       // Misc Commands
       ///////////////////////////////////////////////
+      new BranchNode("gen", [
+        CreateCommandNode<GenerateFunctionsCommand>("funcs")
+      ]),
     ],
     "exit");
   }

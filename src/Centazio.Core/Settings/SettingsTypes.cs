@@ -176,6 +176,7 @@ public record CoreStorageSettings {
 }
 
 public record CentazioSettings {
+  public string GeneratedCodeFolder { get; }
   public List<string> SecretsFolders { get; }
   public List<string> AllowedFunctionAssemblies { get; }
   public List<string> AllowedProviderAssemblies { get; }
@@ -196,6 +197,7 @@ public record CentazioSettings {
   public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
   
   protected CentazioSettings (CentazioSettings other) {
+    GeneratedCodeFolder = other.GeneratedCodeFolder;
     SecretsFolders = other.SecretsFolders;
     AllowedFunctionAssemblies = other.AllowedFunctionAssemblies;
     AllowedProviderAssemblies = other.AllowedProviderAssemblies;
@@ -207,7 +209,8 @@ public record CentazioSettings {
     _CoreStorage = other._CoreStorage;
   }
   
-  private CentazioSettings (List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
+  private CentazioSettings (string gencode, List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
+    GeneratedCodeFolder = gencode;
     SecretsFolders = secrets;
     AllowedFunctionAssemblies = funcass;
     AllowedProviderAssemblies = provass;
@@ -222,6 +225,7 @@ public record CentazioSettings {
   public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
 
   public record Dto : IDto<CentazioSettings> {
+    public string? GeneratedCodeFolder { get; init; }
     public List<string>? SecretsFolders { get; init; }
     public List<string>? AllowedFunctionAssemblies { get; init; }
     public List<string>? AllowedProviderAssemblies { get; init; }
@@ -232,6 +236,7 @@ public record CentazioSettings {
     public CoreStorageSettings.Dto? CoreStorage { get; init; }
     
     public CentazioSettings ToBase() => new (
+        GeneratedCodeFolder ?? throw new ArgumentNullException(nameof(GeneratedCodeFolder)),
         SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
         AllowedFunctionAssemblies ?? [nameof(Centazio)],
         AllowedProviderAssemblies ?? [nameof(Centazio)],
