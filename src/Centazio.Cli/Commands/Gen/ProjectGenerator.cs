@@ -2,12 +2,11 @@
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Microsoft.Build.Locator;
-
 using net.r_eg.MvsSln;
 using net.r_eg.MvsSln.Core;
 
 // todo: move to the Cli project
-namespace Centazio.Cli.Infra.CodeGen.Csproj;
+namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 

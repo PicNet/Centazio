@@ -1,5 +1,4 @@
-﻿using Centazio.Cli.Infra.CodeGen.Csproj;
-using Centazio.Cli.Infra.Ui;
+﻿using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;

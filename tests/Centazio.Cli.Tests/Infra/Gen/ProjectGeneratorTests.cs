@@ -1,4 +1,4 @@
-﻿using Centazio.Cli.Infra.CodeGen.Csproj;
+﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Read;
@@ -7,7 +7,7 @@ using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
-namespace Centazio.Cli.Tests.Infra.CodeGen.Csproj;
+namespace Centazio.Cli.Tests.Infra.Gen;
 
 public class ProjectGeneratorTests {
 
