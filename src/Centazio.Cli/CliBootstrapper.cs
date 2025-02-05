@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
+using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;
@@ -35,14 +36,11 @@ internal class CliBootstrapper {
           svcs.AddSingleton(t);
         });
     
+    var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>("dev"), svcs);
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMeneCommand>()
-        .AddSingleton<CentazioSettings>(_ => new SettingsLoader().Load<CentazioSettings>("dev"))
-        .AddSingleton<CentazioSecrets>(provider => {
-          var settings = provider.GetRequiredService<CentazioSettings>();
-          return new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev");
-        })
+        .AddSingleton(new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev"))
         
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()
@@ -50,6 +48,7 @@ internal class CliBootstrapper {
         .AddSingleton<IAwsAccounts, AwsAccounts>()
         .AddSingleton<IAzSubscriptions, AzSubscriptions>()
         .AddSingleton<IAzResourceGroups, AzResourceGroups>()
+        .AddSingleton<IAzFunctionDeployer, AzFunctionDeployer>()
         .AddSingleton<CentazioHost>()
         .AddSingleton<HostBootstrapper>()
         .BuildServiceProvider();

@@ -8,13 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Ctl;
 
-public class SqliteCtlRepositoryFactory(CentazioSettings settings) : IServiceFactory<ICtlRepository> {
-  public ICtlRepository GetService() {
-    var ctlsetts = settings.CtlRepository;
-    return new SqliteCtlRepository(Getdb, new SqliteDbFieldsHelper(), ctlsetts.CreateSchema);
-    
-    AbstractCtlRepositoryDbContext Getdb() => new SqliteCtlRepositoryDbContext(ctlsetts.ConnectionString, ctlsetts.SchemaName, ctlsetts.SystemStateTableName, ctlsetts.ObjectStateTableName, ctlsetts.CoreToSysMapTableName);
-  }
+public class SqliteCtlRepositoryFactory(CtlRepositorySettings settings) : IServiceFactory<ICtlRepository> {
+  public ICtlRepository GetService() => new SqliteCtlRepository(Getdb, new SqliteDbFieldsHelper(), settings.CreateSchema);
+
+  private AbstractCtlRepositoryDbContext Getdb() => 
+      new SqliteCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName);
 }
 
 public class SqliteCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : EFCtlRepository(getdb) {

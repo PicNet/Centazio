@@ -9,14 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Stage;
 
-public class SqliteStagedEntityRepositoryFactory(CentazioSettings settings) : IServiceFactory<IStagedEntityRepository> {
+public class SqliteStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
-    var sesetts = settings.StagedEntityRepository;
     var opts = new EFStagedEntityRepositoryOptions(
-        sesetts.Limit, 
+        settings.Limit, 
         new Sha256ChecksumAlgorithm().Checksum, 
-        () => new SqliteStagedEntityContext(sesetts.ConnectionString));
-    return new SqliteStagedEntityRepository(opts, new SqliteDbFieldsHelper(), sesetts.CreateSchema);
+        () => new SqliteStagedEntityContext(settings.ConnectionString));
+    return new SqliteStagedEntityRepository(opts, new SqliteDbFieldsHelper(), settings.CreateSchema);
   }
 }
 

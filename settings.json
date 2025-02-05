@@ -32,5 +32,12 @@
     "SchemaName": "dbo",
     "CtlSchemaName": "ctl",
     "CreateSchema": true
+  },
+  "AzureSettings": {
+    "Region": "Australia East",
+    "ResourceGroup": "Centazio_3_Testing",
+    "FunctionStorageAccId": "**", // todo: remove
+    "AppServicePlanId": "**",
+    "Functions": []
   }
 }

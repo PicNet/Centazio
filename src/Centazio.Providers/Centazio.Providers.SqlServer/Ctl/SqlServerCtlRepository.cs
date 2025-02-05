@@ -8,13 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Ctl;
 
-public class SqlServerCtlRepositoryFactory(CentazioSettings settings) : IServiceFactory<ICtlRepository> {
-  public ICtlRepository GetService() {
-    var ctlsetts = settings.CtlRepository;
-    return new SqlServerCtlRepository(Getdb, new SqlServerDbFieldsHelper(), ctlsetts.CreateSchema);
-    
-    AbstractCtlRepositoryDbContext Getdb() => new SqlServerCtlRepositoryDbContext(ctlsetts.ConnectionString, ctlsetts.SchemaName, ctlsetts.SystemStateTableName, ctlsetts.ObjectStateTableName, ctlsetts.CoreToSysMapTableName);
-  }
+public class SqlServerCtlRepositoryFactory(CtlRepositorySettings settings) : IServiceFactory<ICtlRepository> {
+  public ICtlRepository GetService() => 
+      new SqlServerCtlRepository(Getdb, new SqlServerDbFieldsHelper(), settings.CreateSchema);
+  
+  private AbstractCtlRepositoryDbContext Getdb() 
+    => new SqlServerCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName);
 }
 
 public class SqlServerCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : EFCtlRepository(getdb) {

@@ -29,7 +29,7 @@ public class DeployAzFunctionsCommand(IAzFunctionDeployer impl) : AbstractCentaz
 
   public class Settings : CommonSettings {
     [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
-    [CommandArgument(0, "<FUNCTION-NAME>")] public string? FunctionName { get; init; } = null!;
+    [CommandArgument(0, "<FUNCTION-NAME>")] public string? FunctionName { get; init; }
   }
 }
 
@@ -37,17 +37,16 @@ public interface IAzFunctionDeployer {
   Task Deploy(string appname, string projpath);
 }
 
-// todo: replace all use of `CentazioSettings` in Cli project with more appropriate `AzureSettings` or `AwsSettings`, etc.
-public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
+public class AzFunctionDeployer(AzureSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
 
   public async Task Deploy(string appname, string projpath) {
-    var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
+    var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.ResourceGroup));
 
     var appres = await GetFunctionAppIfExists(rg, appname);
 
     if (appres is null) {
       Console.WriteLine($"Function App {appname} does not exist. Creating new app...");
-      await CreateNewFunctionApp(rg, appname, settings.AzureSettings.Region);
+      await CreateNewFunctionApp(rg, appname, settings.Region);
       // todo: can this be done without making additional calls?
       appres = await GetFunctionAppIfExists(rg, appname);
       if (appres is null) throw new Exception();

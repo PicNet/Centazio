@@ -2,6 +2,7 @@
 using Centazio.Core.Misc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 namespace Centazio.Core.Settings;
@@ -42,13 +43,19 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
     }
     return Impl(Environment.CurrentDirectory);
   }
+  
+  public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 
+      RegisterSettingsHierarchyImpl(settings, registrar.Register);
 
-  public static void RegisterSettingsAndRecordPropertiesAsSingletons<TSettings>(TSettings settings, CentazioHostServiceRegistrar svcs) where TSettings : CentazioSettings {
-    svcs.Register(settings);
+  public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, IServiceCollection svcs) where TSettings : CentazioSettings => 
+      RegisterSettingsHierarchyImpl(settings, (type, instance) => svcs.TryAdd(ServiceDescriptor.Singleton(type, instance)));
+
+  private static TSettings RegisterSettingsHierarchyImpl<TSettings>(TSettings settings, Action<Type, object> adder) where TSettings : CentazioSettings {
+    adder(typeof(TSettings), settings);
     typeof(TSettings).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
         .Where(pi => ReflectionUtils.IsRecord(pi.PropertyType) && pi.PropertyType != typeof(ServiceDescriptor))
         .Select(pi => { try { return pi.GetValue(settings); } catch { return null; } })
-        .ForEach(v => { if (v is not null) svcs.Register(v.GetType(), v); });
+        .ForEach(v => { if (v is not null) adder(v.GetType(), v); });
+    return settings;
   }
-
 }

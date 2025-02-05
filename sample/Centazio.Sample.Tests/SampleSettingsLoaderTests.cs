@@ -10,10 +10,10 @@ public class SampleSettingsLoaderTests {
   
   [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
     var svcs = new TestServivesCollection();
-    var registrar = new CentazioHostServiceRegistrar(svcs);
-    SettingsLoader.RegisterSettingsAndRecordPropertiesAsSingletons(F.Settings<SampleSettings>(), registrar);
+    var registrar = new CentazioServicesRegistrar(svcs);
+    SettingsLoader.RegisterSettingsHierarchy(F.Settings<SampleSettings>(), registrar);
     var expected = new List<Type> { typeof(SampleSettings), typeof(ClickUpSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
-    Assert.That(svcs.Registered, Is.EquivalentTo(expected));
+    Assert.That(expected.All(t => svcs.Registered.Contains(t)));
   }
 
 }

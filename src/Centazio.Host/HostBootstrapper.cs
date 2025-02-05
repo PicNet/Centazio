@@ -19,7 +19,7 @@ public class HostBootstrapper(CentazioSettings settings) {
     FunctionConfigDefaults.ThrowExceptions = true;
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     
-    var registrar = new CentazioHostServiceRegistrar(new ServiceCollection());
+    var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     RegisterCoreServices(registrar);
     var integration = inspector.GetCentazioIntegration();
     integration.RegisterServices(registrar);
@@ -31,7 +31,7 @@ public class HostBootstrapper(CentazioSettings settings) {
     return InitialiseFunctions(funcs, prov);
   }
 
-  private void RegisterCoreServices(CentazioHostServiceRegistrar svcs) {
+  private void RegisterCoreServices(CentazioServicesRegistrar svcs) {
     svcs.Register(settings);
     
     Log.Debug($"HostBootstrapper registering core services:" +
@@ -47,7 +47,7 @@ public class HostBootstrapper(CentazioSettings settings) {
     }
   }
 
-  private List<Type> RegisterCentazioFunctions(CentazioHostServiceRegistrar registrar, IIntegrationBase integration, List<string> filters) {
+  private List<Type> RegisterCentazioFunctions(CentazioServicesRegistrar registrar, IIntegrationBase integration, List<string> filters) {
     var funcs = IntegrationsAssemblyInspector.GetCentazioFunctions(integration.GetType().Assembly, filters).ForEachAndReturn(t => registrar.Register(t));
     Log.Information($"HostBootstrapper found {funcs.Count} functions in integration[{integration.GetType().Name}]:\n\t" + String.Join("\n\t", funcs.Select(func => func.Name)));
     return funcs;

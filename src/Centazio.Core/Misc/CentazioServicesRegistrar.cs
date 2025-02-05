@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Centazio.Core.Misc;
 
-public class CentazioHostServiceRegistrar(IServiceCollection svcs) {
+public class CentazioServicesRegistrar(IServiceCollection svcs) {
   public void Register<T>() where T : class => svcs.TryAddSingleton<T>();
   public void Register(Type t) => svcs.TryAddSingleton(t);
   public void Register<T>(T instance) where T : class => svcs.TryAddSingleton(instance);

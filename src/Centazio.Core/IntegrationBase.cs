@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centazio.Core;
 
 public interface IIntegrationBase {
-  void RegisterServices(CentazioHostServiceRegistrar registrar);
+  void RegisterServices(CentazioServicesRegistrar registrar);
   Task Initialise(ServiceProvider prov);
 }
 
@@ -23,8 +23,8 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
     Secrets = new NetworkLocationEnvFileSecretsLoader(Settings.GetSecretsFolder()).Load<TSecrets>(env);
   }
   
-  public void RegisterServices(CentazioHostServiceRegistrar registrar) {
-    SettingsLoader.RegisterSettingsAndRecordPropertiesAsSingletons(Settings, registrar);
+  public void RegisterServices(CentazioServicesRegistrar registrar) {
+    SettingsLoader.RegisterSettingsHierarchy(Settings, registrar);
     registrar.Register(Secrets);
     
     RegisterIntegrationSpecificServices(registrar);
@@ -32,5 +32,5 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
 
   public abstract Task Initialise(ServiceProvider prov);
   
-  protected abstract void RegisterIntegrationSpecificServices(CentazioHostServiceRegistrar registrar);
+  protected abstract void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar);
 }

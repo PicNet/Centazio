@@ -10,7 +10,7 @@ namespace Centazio.Sample;
 
 public class SampleIntegration : IntegrationBase<SampleSettings, SampleSecrets> {
   
-  protected override void RegisterIntegrationSpecificServices(CentazioHostServiceRegistrar registrar) {
+  protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) {
     var core = new SampleCoreStorageRepository(() => new SampleDbContext(Settings.CoreStorage.ConnectionString), new SqliteDbFieldsHelper());
     registrar.Register<ICoreStorage>(core);
     registrar.Register(core);

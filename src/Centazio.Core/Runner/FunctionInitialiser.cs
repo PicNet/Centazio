@@ -14,12 +14,12 @@ public class FunctionInitialiser<F> where F : IRunnableFunction {
   private Type FuncType { get; }
   private Assembly FuncAss { get; }
   private CentazioSettings Settings { get; }
-  private CentazioHostServiceRegistrar Registrar { get; }
+  private CentazioServicesRegistrar Registrar { get; }
 
   public FunctionInitialiser() {
     InitialiseLogger();
     (FuncType, FuncAss, Settings) = (typeof(F), typeof(F).Assembly, LoadSettings());
-    Registrar = new CentazioHostServiceRegistrar(new ServiceCollection());
+    Registrar = new CentazioServicesRegistrar(new ServiceCollection());
   }
 
   public async Task<IRunnableFunction> Init() {
