@@ -8,12 +8,12 @@ namespace Centazio.Cli.Commands.Host;
 public class RunHostCommand(CentazioHost host) : AbstractCentazioCommand<RunHostCommand.Settings>{
 
   protected override Task RunInteractiveCommandImpl() => 
-      ExecuteImpl(new Settings { FunctionFilter = UiHelpers.Ask("Function Filter", "all") });
+      ExecuteImpl(new Settings { FunctionFilter = UiHelpers.Ask("Function Filter", "All") });
 
   protected override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(cmdsetts);
 
   public class Settings : CommonSettings, IHostConfiguration {
-    [CommandArgument(0, "[FUNCTION_FILTER]"), DefaultValue("all")] public string FunctionFilter { get; init; } = "all";
+    [CommandArgument(0, "[FUNCTION_FILTER]"), DefaultValue("All")] public string FunctionFilter { get; init; } = "All";
     [CommandOption("-q|--quiet")] public bool Quiet { get; set; }
     [CommandOption("-f|--show-flows-only")] public bool FlowsOnly { get; set; }
   }

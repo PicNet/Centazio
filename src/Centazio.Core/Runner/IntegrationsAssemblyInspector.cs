@@ -33,7 +33,7 @@ public class IntegrationsAssemblyInspector(List<string> assemblies) {
     if (!functions.Any()) throw new Exception($"Could not find any Centazio Functions in assembly[{assembly.GetName().Name}] matching filters[{String.Join(',', filters)}]");
     return functions;
     
-    bool DoesTypeMatchFilter(Type type) => !filters.Any() || filters.Contains("all", StringComparer.OrdinalIgnoreCase) 
+    bool DoesTypeMatchFilter(Type type) => !filters.Any() || filters.Contains("All", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => (type.FullName ?? String.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase));
   }
 

@@ -15,7 +15,8 @@ namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
   
-  public static CentazioSettings Settings() => Settings<CentazioSettings>();
+  private static CentazioSettings? settings;
+  public static CentazioSettings Settings() => settings ??= Settings<CentazioSettings>();
   public static E Settings<E>() => new SettingsLoader().Load<E>("dev");
   
   public static CentazioSecrets Secrets() => Secrets<CentazioSecrets>();
