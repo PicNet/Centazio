@@ -13,7 +13,6 @@ public class FunctionsInitialiser {
   private CentazioServicesRegistrar Registrar { get; }
 
   public FunctionsInitialiser() {
-    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
     (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
   }
 

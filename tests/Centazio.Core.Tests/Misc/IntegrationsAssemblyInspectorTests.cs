@@ -19,6 +19,6 @@ public class IntegrationsAssemblyInspectorTests {
 
 public class IntegrationsAssemblyInspectorTests_ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl) {
 
-  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new NotImplementedException();
+  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
 
 }

@@ -70,7 +70,7 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
 
   private Task AddAzureReferencesToProject(IXProject proj) =>
       // System.ClientModel is needed to avoid warning in generated project: 'Found conflicts between different versions of "System.ClientModel" that could not be resolved.'
-      AddLatestReferencesToProject(proj, ["System.ClientModel", "Microsoft.Azure.Functions.Worker", "Microsoft.Azure.Functions.Worker.Sdk", "Microsoft.Azure.Functions.Worker.Extensions.Timer"]);
+      AddLatestReferencesToProject(proj, ["Microsoft.Azure.Functions.Worker", "Microsoft.Azure.Functions.Worker.Sdk", "Microsoft.Azure.Functions.Worker.Extensions.Timer", "System.ClientModel", "Serilog"]);
   
   // todo: add aws Lambda support
   // private Task AddAwsReferencesToProject(IXProject proj) => AddLatestReferencesToProject(proj, ["Amazon.Lambda.Core", "Amazon.Lambda.APIGatewayEvents", "Amazon.Lambda.Serialization.SystemTextJson"]);
@@ -85,9 +85,11 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
     
     IntegrationsAssemblyInspector.GetCentazioFunctions(assembly, []).ForEach(func => {
       var clcontent = @"
-using Microsoft.Azure.Functions.Worker;
 using Centazio.Core.Runner;
+using Centazio.Core.Misc;
 using {{FunctionNamespace}};
+using Microsoft.Azure.Functions.Worker;
+using Serilog;
 
 namespace {{NewAssemblyName}};
 
@@ -96,6 +98,7 @@ public class {{ClassName}}Azure {
   private static readonly Lazy<Task<IRunnableFunction>> impl = new(async () => await new FunctionsInitialiser().Init<{{ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
 
   [Function(""{{ClassName}}"")] public async Task Run([TimerTrigger(""* * * * * *"")] TimerInfo _) {
+    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
     await (await impl.Value).RunFunction(); 
   }
 }"
