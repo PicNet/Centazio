@@ -26,15 +26,11 @@ public record AzureFunctionSettings {
 public record AzureSettings {
   public string Region { get; }
   public string ResourceGroup { get; }
-  public string FunctionStorageAccId { get; } // todo: why do we have this?
-  public string AppServicePlanId { get; } // todo: why do we have this?
   public List<AzureFunctionSettings>? Functions { get; }
   
-  private AzureSettings(string region, string resourcegroup, string storageacc, string svcplanid, List<AzureFunctionSettings>? functions) {
+  private AzureSettings(string region, string resourcegroup, List<AzureFunctionSettings>? functions) {
     Region = region;  
     ResourceGroup = resourcegroup;
-    FunctionStorageAccId = storageacc;
-    AppServicePlanId = svcplanid;
     Functions = functions;
   }
   
@@ -42,16 +38,12 @@ public record AzureSettings {
   public record Dto : IDto<AzureSettings> {
     public string? Region { get; init; }
     public string? ResourceGroup { get; init; }
-    public string? FunctionStorageAccId { get; init; }
-    public string? AppServicePlanId { get; init; }
     // ReSharper disable once CollectionNeverUpdated.Global
     public List<AzureFunctionSettings.Dto>? Functions { get; init; }
     
     public AzureSettings ToBase() => new (
         String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
         String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
-        String.IsNullOrWhiteSpace(FunctionStorageAccId) ? throw new ArgumentNullException(nameof(FunctionStorageAccId)) : FunctionStorageAccId.Trim(),
-        String.IsNullOrWhiteSpace(AppServicePlanId) ? throw new ArgumentNullException(nameof(AppServicePlanId)) : AppServicePlanId.Trim(),
         Functions is null ? [] : Functions.Select(f => f.ToBase()).ToList());
   }
 }
