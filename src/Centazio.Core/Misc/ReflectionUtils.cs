@@ -58,8 +58,8 @@ public static class ReflectionUtils {
 
   public static A? GetPropAttribute<A>(Type t, string prop) where A : Attribute {
     var p = t.GetProperty(prop);
-    if (p?.GetCustomAttribute(typeof(A), true) is A att) return att;
-    if (p?.PropertyType.GetCustomAttribute(typeof(A)) is A att2) return att2;
+    if (p?.GetCustomAttribute<A>(true) is { } att) return att;
+    if (p?.PropertyType.GetCustomAttribute<A>(true) is { } att2) return att2;
 
     var ifaceatt = t.GetInterfaces().Select(i => GetPropAttribute<A>(i, prop)).FirstOrDefault(a => a is not null);
     if (ifaceatt is not null) return ifaceatt;

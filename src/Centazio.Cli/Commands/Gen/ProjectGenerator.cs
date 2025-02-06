@@ -1,18 +1,16 @@
 ﻿using System.Reflection;
+using Centazio.Cli.Infra;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Microsoft.Build.Locator;
 using net.r_eg.MvsSln;
 using net.r_eg.MvsSln.Core;
 
-// todo: move to the Cli project
 namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
 
-// todo: this generator should use the latest version of neccessery nuget packages. Or we should have a 
-//    test that hardcoded versions here are always the latest
 // todo: how do we handle multiple functions in one project?
 // todo: generated .Net package results in warning 'Found conflicts between different versions of "System.ClientModel" that could not be resolved.'
 public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
@@ -24,7 +22,7 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
     
     var fullpath = GetSlnPath();
     var slnpath = await GenerateSolutionSkeleton(fullpath);
-    EnhanceProjects(slnpath);
+    await EnhanceProjects(slnpath);
   }
 
   private string GetSlnPath() {
@@ -51,10 +49,10 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
     return slnpath;
   }
 
-  private void EnhanceProjects(string slnpath) {
+  private async Task EnhanceProjects(string slnpath) {
     MSBuildLocator.RegisterDefaults();
     using Sln sln = new(slnpath, SlnItems.Env | SlnItems.LoadMinimalDefaultData);
-    sln.Result.Env.Projects.ForEach(proj => {
+    foreach (var proj in sln.Result.Env.Projects) {
       proj.SetProperties(new Dictionary<string, string> {
         { "TargetFramework", "net9.0" },
         { "LangVersion", "preview" },
@@ -64,27 +62,24 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
         { "EnforceCodeStyleInBuild", "true" }
       });
       if (cloud == ECloudEnv.Azure) { 
-        AddAzureReferencesToProject(proj);
+        await AddAzureReferencesToProject(proj);
         AddAzureFunctionsToProject(proj);
       }
       else throw new NotImplementedException(cloud.ToString());
       
       proj.Save();
-    });
+    };
   }
 
-  private void AddAzureReferencesToProject(IXProject proj) {
-    proj.AddPackageReference("Microsoft.Azure.Functions.Worker", "2.0.0");
-    proj.AddPackageReference("Microsoft.Azure.Functions.Worker.Extensions.Timer", "4.3.1");
-    proj.AddPackageReference("Microsoft.Azure.Functions.Worker.Sdk", "2.0.0");
-    
-    /*
-     todo: add aws support:
-      <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-      <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.6.0" />
-      <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
-     */
-  }
+  private Task AddAzureReferencesToProject(IXProject proj) => 
+      AddLatestReferencesToProject(proj, ["Microsoft.Azure.Functions.Worker", "Microsoft.Azure.Functions.Worker.Sdk", "Microsoft.Azure.Functions.Worker.Extensions.Timer"]);
+  
+  // todo: add aws support
+  // private Task AddAwsReferencesToProject(IXProject proj) => AddLatestReferencesToProject(proj, ["Amazon.Lambda.Core", "Amazon.Lambda.APIGatewayEvents", "Amazon.Lambda.Serialization.SystemTextJson"]);
+
+  private async Task AddLatestReferencesToProject(IXProject proj, List<string> packages) => 
+      (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
+          p => proj.AddPackageReference(p.name, p.version));
 
   private void AddAzureFunctionsToProject(IXProject proj) {
     proj.AddReference(assembly);
