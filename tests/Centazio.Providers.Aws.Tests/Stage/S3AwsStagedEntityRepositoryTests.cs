@@ -39,12 +39,12 @@ public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests 
 
     public override async ValueTask DisposeAsync() {
       var objs = await Client.ListObjectsAsync(new ListObjectsRequest { BucketName = BUCKET_NAME });
-      if (objs.S3Objects.Any()) {
+      if (objs.S3Objects is not null && objs.S3Objects.Any()) {
         var response = await Client.DeleteObjectsAsync(new DeleteObjectsRequest { 
           BucketName = BUCKET_NAME, 
           Objects = objs.S3Objects.Select(s => new KeyVersion { Key = s.Key }).ToList() 
         });
-        if (response.DeleteErrors.Any()) throw new Exception($"Deletion Errors:\n\t" + String.Join("\n\t", response.DeleteErrors));
+        if (response.DeleteErrors is not null && response.DeleteErrors.Any()) throw new Exception($"Deletion Errors:\n\t" + String.Join("\n\t", response.DeleteErrors));
       }
       await Client.DeleteBucketAsync(BUCKET_NAME);
       await base.DisposeAsync(); 

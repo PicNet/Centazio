@@ -1,5 +1,5 @@
 # Todo
-- a code generated (runtime) wrapper to deploy to lambda/azure/gcp
+- a code generated (runtime) wrapper to deploy to lambda/azure
 - cli code generator to add functions, integrations, projects, etc
 - good case study / demo:
   - crm

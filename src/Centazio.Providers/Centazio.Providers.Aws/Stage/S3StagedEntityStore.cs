@@ -24,8 +24,8 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
   }
 
   public async Task<S3AwsStagedEntityRepository> Initalise() {
-    var tables = (await Client.ListBucketsAsync()).Buckets.Select(b => b.BucketName);
-    if (tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
+    var tables = (await Client.ListBucketsAsync()).Buckets?.Select(b => b.BucketName);
+    if (tables is not null && tables.Contains(bucket, StringComparer.OrdinalIgnoreCase)) return this;
 
     Log.Debug("creating bucket {Bucket}", bucket);
     await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
@@ -88,7 +88,7 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
   private async Task<List<S3Object>> ListAll(SystemName system, SystemEntityTypeName systype) =>
       (await Client.ListObjectsV2Async(new ListObjectsV2Request { 
         BucketName = bucket, 
-        Prefix = $"{system.Value}/{systype.Value}" })).S3Objects;
+        Prefix = $"{system.Value}/{systype.Value}" })).S3Objects ?? [];
   
   public PutObjectRequest ToPutObjectRequest(StagedEntity se) {
     var req = new PutObjectRequest { 

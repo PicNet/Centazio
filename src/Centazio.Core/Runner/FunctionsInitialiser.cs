@@ -17,6 +17,8 @@ public class FunctionsInitialiser {
     (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
   }
 
+  public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
+  
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
     RegisterCoreServices();
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
