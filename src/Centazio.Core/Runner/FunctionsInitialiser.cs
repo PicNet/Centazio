@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Centazio.Core.Ctl;
+﻿using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
@@ -9,28 +8,27 @@ using Serilog;
 
 namespace Centazio.Core.Runner;
 
-// todo: lots of duplicate code here, merge `HostBootstrapper.cs`
-public class FunctionInitialiser<F> where F : IRunnableFunction {
-  private Type FunctionType { get; }
-  private Assembly Assembly { get; }
+public class FunctionsInitialiser {
   private CentazioSettings Settings { get; }
   private CentazioServicesRegistrar Registrar { get; }
 
-  public FunctionInitialiser() {
+  public FunctionsInitialiser() {
     Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
-    (FunctionType, Assembly, Settings, Registrar) = (typeof(F), typeof(F).Assembly, LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
+    (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
   }
 
-  public async Task<IRunnableFunction> Init() {
+  public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
     RegisterCoreServices();
-    var integration = IntegrationsAssemblyInspector.GetCentazioIntegration(Assembly);
-    integration.RegisterServices(Registrar);
-    Registrar.Register(FunctionType);
+    var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
+    var integrations = assemblies.Select(IntegrationsAssemblyInspector.GetCentazioIntegration).ToList();
+    integrations.ForEach(integration => integration.RegisterServices(Registrar));
+    functions.ForEach(func => Registrar.Register(func));
     var prov = Registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
-    await integration.Initialise(prov);
-    return (IRunnableFunction) prov.GetRequiredService(FunctionType);
+    await Task.WhenAll(integrations.Select(integration => integration.Initialise(prov)));
+    
+    return functions.Select(func => (IRunnableFunction) prov.GetRequiredService(func)).ToList();
   }
 
   private CentazioSettings LoadSettings() {

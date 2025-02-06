@@ -22,10 +22,13 @@ public interface IHostConfiguration {
 
 }
 
-public class CentazioHost(HostBootstrapper bootstrapper) {
+public class CentazioHost {
   
   public async Task Run(IHostConfiguration cmdsetts) {
-    var functions = await bootstrapper.InitHost(cmdsetts);
+    FunctionConfigDefaults.ThrowExceptions = true;
+    var assembly = ReflectionUtils.LoadAssembly(cmdsetts.AssemblyName);
+    var functypes = IntegrationsAssemblyInspector.GetCentazioFunctions(assembly, cmdsetts.ParseFunctionFilters());
+    var functions = await new FunctionsInitialiser().Init(functypes);
     
     await using var timer = StartHost(functions);
     DisplayInstructions();
