@@ -3,11 +3,7 @@ using U = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Core.Runner;
 
-// todo: this list of assemblies mixed with static methods is ugly, pick one or another, or have another wrapper class perhaps
-public class IntegrationsAssemblyInspector(List<string> assemblies) {
-
-  public IIntegrationBase GetCentazioIntegration() => 
-      ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assemblies));
+public static class IntegrationsAssemblyInspector {
 
   public static IIntegrationBase GetCentazioIntegration(Assembly assembly) => 
       ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
@@ -18,11 +14,11 @@ public class IntegrationsAssemblyInspector(List<string> assemblies) {
     return (IIntegrationBase) (Activator.CreateInstance(integrations.Single()) ?? throw new Exception());
   }
 
-  public Type GetCoreServiceFactoryType<F>(string provider) => 
-      ValidateCoreServiceFound<F>(provider, U.GetAllTypesThatImplement(typeof(F), assemblies));
-
-  public static Type GetCoreServiceFactoryType<F>(string provider, Assembly assembly) => 
-      ValidateCoreServiceFound<F>(provider, U.GetAllTypesThatImplement(typeof(F), assembly));
+  public static Type GetCoreServiceFactoryType<F>(string provider) {
+    var asses = U.GetProviderAssemblies();
+    var potentials = asses.SelectMany(ass => U.GetAllTypesThatImplement(typeof(F), ass)).ToList();
+    return ValidateCoreServiceFound<F>(provider, potentials);
+  }
 
   private static Type ValidateCoreServiceFound<F>(string provider, List<Type> potentials) => 
       potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 

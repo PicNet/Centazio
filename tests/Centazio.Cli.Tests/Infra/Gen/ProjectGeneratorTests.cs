@@ -20,6 +20,6 @@ public class ProjectGeneratorTests {
 
 public class TestReadFunction(IEntityStager stager, ICtlRepository ctl) : ReadFunction(new(nameof(ProjectGeneratorTests)), stager, ctl) {
 
-  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new NotImplementedException();
+  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
 
 }

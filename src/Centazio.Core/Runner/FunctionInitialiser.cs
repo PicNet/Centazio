@@ -11,37 +11,35 @@ namespace Centazio.Core.Runner;
 
 // todo: lots of duplicate code here, merge `HostBootstrapper.cs`
 public class FunctionInitialiser<F> where F : IRunnableFunction {
-  private Type FuncType { get; }
-  private Assembly FuncAss { get; }
+  private Type FunctionType { get; }
+  private Assembly Assembly { get; }
   private CentazioSettings Settings { get; }
   private CentazioServicesRegistrar Registrar { get; }
 
   public FunctionInitialiser() {
-    InitialiseLogger();
-    (FuncType, FuncAss, Settings) = (typeof(F), typeof(F).Assembly, LoadSettings());
-    Registrar = new CentazioServicesRegistrar(new ServiceCollection());
+    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
+    (FunctionType, Assembly, Settings, Registrar) = (typeof(F), typeof(F).Assembly, LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
   }
 
   public async Task<IRunnableFunction> Init() {
     RegisterCoreServices();
-    var integration = IntegrationsAssemblyInspector.GetCentazioIntegration(FuncAss);
+    var integration = IntegrationsAssemblyInspector.GetCentazioIntegration(Assembly);
     integration.RegisterServices(Registrar);
-    Registrar.Register(FuncType);
+    Registrar.Register(FunctionType);
     var prov = Registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
     await integration.Initialise(prov);
-    return (IRunnableFunction) prov.GetRequiredService(FuncType);
+    return (IRunnableFunction) prov.GetRequiredService(FunctionType);
   }
 
   private CentazioSettings LoadSettings() {
     return new SettingsLoader().Load<CentazioSettings>("dev");
   }
-
-  private void InitialiseLogger() => Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
+  
 
   private void RegisterCoreServices() {
-    Registrar.Register(Settings);
+    SettingsLoader.RegisterSettingsHierarchy(Settings, Registrar);
     
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{Settings.StagedEntityRepository.Provider}]" +
@@ -51,7 +49,7 @@ public class FunctionInitialiser<F> where F : IRunnableFunction {
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(Settings.CtlRepository.Provider);
     
     void AddCoreService<SF, I>(string provider) where SF : IServiceFactory<I> where I : class {
-      Registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider, FuncAss));
+      Registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));
       Registrar.Register<I>(prov => prov.GetRequiredService<SF>().GetService());
     }
   }

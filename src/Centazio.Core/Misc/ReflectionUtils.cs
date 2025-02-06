@@ -75,6 +75,14 @@ public static class ReflectionUtils {
   }
   
   public static Assembly LoadAssembly(string assembly) => Assembly.LoadFrom(GetAssemblyPath(assembly));
+  
+  public static List<Assembly> GetProviderAssemblies() => 
+      new DirectoryInfo(FsUtils.GetSolutionRootDirectory()).GetFiles("*.dll", SearchOption.AllDirectories)
+          .Select(dll => dll.Name.Replace(".dll", String.Empty))
+          .Where(name => name.StartsWith("Centazio.Providers.") && !name.Contains("Tests"))
+          .Distinct()
+          .Select(LoadAssembly)
+          .ToList();
 
   public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";

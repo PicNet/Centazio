@@ -178,8 +178,6 @@ public record CoreStorageSettings {
 public record CentazioSettings {
   public string GeneratedCodeFolder { get; }
   public List<string> SecretsFolders { get; }
-  public List<string> AllowedFunctionAssemblies { get; }
-  public List<string> AllowedProviderAssemblies { get; }
   
   private readonly AwsSettings? _AwsSettings;
   public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
@@ -196,11 +194,9 @@ public record CentazioSettings {
   private readonly CoreStorageSettings? _CoreStorage;
   public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
   
-  protected CentazioSettings (CentazioSettings other) {
+  protected CentazioSettings(CentazioSettings other) {
     GeneratedCodeFolder = other.GeneratedCodeFolder;
     SecretsFolders = other.SecretsFolders;
-    AllowedFunctionAssemblies = other.AllowedFunctionAssemblies;
-    AllowedProviderAssemblies = other.AllowedProviderAssemblies;
     
     _AwsSettings = other._AwsSettings;
     _AzureSettings = other._AzureSettings;
@@ -209,11 +205,9 @@ public record CentazioSettings {
     _CoreStorage = other._CoreStorage;
   }
   
-  private CentazioSettings (string gencode, List<string> secrets, List<string> funcass, List<string> provass, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
+  private CentazioSettings (string gencode, List<string> secrets, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
     GeneratedCodeFolder = gencode;
     SecretsFolders = secrets;
-    AllowedFunctionAssemblies = funcass;
-    AllowedProviderAssemblies = provass;
     
     _AwsSettings = aws;
     _AzureSettings = azure;
@@ -227,8 +221,6 @@ public record CentazioSettings {
   public record Dto : IDto<CentazioSettings> {
     public string? GeneratedCodeFolder { get; init; }
     public List<string>? SecretsFolders { get; init; }
-    public List<string>? AllowedFunctionAssemblies { get; init; }
-    public List<string>? AllowedProviderAssemblies { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
     public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
@@ -238,8 +230,6 @@ public record CentazioSettings {
     public CentazioSettings ToBase() => new (
         GeneratedCodeFolder ?? throw new ArgumentNullException(nameof(GeneratedCodeFolder)),
         SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
-        AllowedFunctionAssemblies ?? [nameof(Centazio)],
-        AllowedProviderAssemblies ?? [nameof(Centazio)],
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase(),
         StagedEntityRepository?.ToBase(),

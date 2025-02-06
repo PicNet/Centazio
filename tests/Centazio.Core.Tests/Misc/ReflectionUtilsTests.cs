@@ -76,5 +76,8 @@ public class ReflectionUtilsTests {
     Assert.That(integration.FullName, Is.EqualTo("Centazio.Sample.SampleIntegration"));
     Assert.That(integration.Assembly.Location.Contains("\\Centazio.Sample\\bin\\"));
   }
-  
+ 
+  [Test] public void Test_GetProviderAssemblies() {
+    Assert.That(ReflectionUtils.GetProviderAssemblies(), Has.Count.GreaterThanOrEqualTo(3));
+  }
 }

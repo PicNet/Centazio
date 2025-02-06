@@ -6,6 +6,7 @@ using Timer = System.Threading.Timer;
 namespace Centazio.Host;
 
 public interface IHostConfiguration {
+  public string AssemblyName { get; }
   public string FunctionFilter { get; }
   public bool Quiet { get; }
   public bool FlowsOnly { get; }

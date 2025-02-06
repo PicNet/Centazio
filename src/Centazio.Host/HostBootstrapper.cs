@@ -13,15 +13,13 @@ namespace Centazio.Host;
 
 public class HostBootstrapper(CentazioSettings settings) {
 
-  private readonly IntegrationsAssemblyInspector inspector = new(settings.AllowedFunctionAssemblies);
-  
   public async Task<List<IRunnableFunction>> InitHost(IHostConfiguration cmdsetts) {
     FunctionConfigDefaults.ThrowExceptions = true;
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
-    
+    var assembly = ReflectionUtils.LoadAssembly(cmdsetts.AssemblyName);
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     RegisterCoreServices(registrar);
-    var integration = inspector.GetCentazioIntegration();
+    var integration = IntegrationsAssemblyInspector.GetCentazioIntegration(assembly);
     integration.RegisterServices(registrar);
     var funcs = RegisterCentazioFunctions(registrar, integration, cmdsetts.ParseFunctionFilters());
     var prov = registrar.BuildServiceProvider();
@@ -42,7 +40,7 @@ public class HostBootstrapper(CentazioSettings settings) {
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     
     void AddCoreService<F, I>(string provider) where F : IServiceFactory<I> where I : class {
-      svcs.RegisterServiceTypeFactory(typeof(F), inspector.GetCoreServiceFactoryType<F>(provider));
+      svcs.RegisterServiceTypeFactory(typeof(F), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<F>(provider));
       svcs.Register<I>(prov => prov.GetRequiredService<F>().GetService());
     }
   }
