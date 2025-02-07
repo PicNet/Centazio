@@ -94,7 +94,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   private async Task PublishFunctionApp(WebSiteResource appres, string project) {
     try {
       var projpath = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project);
-      var path = await ProjectBuilder.BuildProject(projpath);
+      var path = await new MicrosoftBuildProjectBuilder().BuildProject(projpath);
       var zippath = CreateFunctionAppZip(path);
 
       var cred = await GetPublishCredentials(appres);

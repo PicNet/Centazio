@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Core;
 using Centazio.Core.Ctl;
+using Centazio.Core.Misc;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
@@ -13,7 +14,12 @@ public class ProjectGeneratorTests {
 
   [Test] public async Task Test_GenerateSolution() {
     var settings = TestingFactories.Settings<CentazioSettings>();
-    await new ProjectGenerator(settings.GeneratedCodeFolder, ECloudEnv.Azure, typeof(TestReadFunction).Assembly).GenerateSolution();
+    var proj = $"{GetType().Assembly.GetName().Name}.{ECloudEnv.Azure}";
+    var expdir = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, proj);
+    // Directory.Delete(expdir, true); // does not work as generated directory is locked?
+    
+    await new ProjectGenerator(settings.GeneratedCodeFolder, ECloudEnv.Azure, GetType().Assembly).GenerateSolution();
+    Assert.That(Directory.Exists(expdir));
   }
 
 }

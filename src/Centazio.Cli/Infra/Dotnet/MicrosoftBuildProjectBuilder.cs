@@ -6,14 +6,15 @@ using Microsoft.Build.Logging;
 
 namespace Centazio.Cli.Infra.Dotnet;
 
-public class ProjectBuilder {
+// current version of Microsft.Build: 17.12.6, SDK: 9.0.102 results in error: Could not load file or assembly 'NuGet.Frameworks, Version=6.12.2.1'
+public class MicrosoftBuildProjectBuilder : IProjectBuilder {
 
-  public static void Init() {
+  public MicrosoftBuildProjectBuilder() {
     var instances = MSBuildLocator.QueryVisualStudioInstances().ToList();
-    MSBuildLocator.RegisterInstance(instances.OrderByDescending(instance => instance.Version).ElementAt(1));
+    MSBuildLocator.RegisterInstance(instances.OrderByDescending(instance => instance.Version).ElementAt(0));
   }
   
-  public static async Task<string> BuildProject(string projpath) {
+  public async Task<string> BuildProject(string projpath) {
     var project = projpath.Split('/', '\\').Last();
     var publishpath = Path.Combine(projpath, "bin", "Release", "net9.0", "publish");
     
@@ -29,7 +30,8 @@ public class ProjectBuilder {
       { "SelfContained", "false" }
     };
     
-    var proj = collection.LoadProject(Path.Combine(projpath, project, project + ".csproj"));
+    var csproj = Path.Combine(projpath, project, project + ".csproj");
+    var proj = collection.LoadProject(csproj);
     var data = new BuildRequestData(proj.CreateProjectInstance(), ["Restore", "Publish"]);
 
     var parameters = new BuildParameters(collection) { Loggers = [logger], DetailedSummary = true, GlobalProperties = props};
@@ -38,5 +40,4 @@ public class ProjectBuilder {
 
     return publishpath;
   }
-
 }

@@ -29,16 +29,16 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
   }
 
   private async Task<string> GenerateSolutionSkeleton(string fullpath) {
-    var slnconf = new ConfigSln("Debug", "Any CPU");
+    var slnconfs = new ConfigSln[] { new("Debug", "Any CPU"), new("Release", "Any CPU") };
     var project = new ProjectItem(ProjectType.CsSdk, $"{NewAssemblyName}\\{NewAssemblyName}.csproj", slnDir: fullpath);
     if (File.Exists(project.fullPath)) File.Delete(project.fullPath);
-    var projconf = new ConfigPrj("Debug", "Any CPU", project.pGuid, build: true, slnconf);
+    var projconfs = new ConfigPrj[] { new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[0]), new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[1]) };
     
     var hdata = new LhDataHelper();
     hdata.SetHeader(SlnHeader.MakeDefault())
         .SetProjects([project])
-        .SetProjectConfigs([projconf])
-        .SetSolutionConfigs([slnconf]);
+        .SetProjectConfigs(projconfs)
+        .SetSolutionConfigs(slnconfs);
     var slnpath = Path.Combine(fullpath, NewAssemblyName + ".sln");
     using var w = new SlnWriter(slnpath, hdata);
     w.Options |= SlnWriterOptions.CreateProjectsIfNotExist;
