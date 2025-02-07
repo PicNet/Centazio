@@ -56,7 +56,8 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
         { "ImplicitUsings", "enable" },
         { "Nullable", "enable" },
         { "TreatWarningsAsErrors", "true" },
-        { "EnforceCodeStyleInBuild", "true" }
+        { "EnforceCodeStyleInBuild", "true" },
+        { "ManagePackageVersionsCentrally", "false" }
       });
       if (cloud == ECloudEnv.Azure) { 
         await AddAzureReferencesToProject(proj);
@@ -68,10 +69,17 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
     }
   }
 
-  private Task AddAzureReferencesToProject(IXProject proj) =>
-      // System.ClientModel is needed to avoid warning in generated project: 'Found conflicts between different versions of "System.ClientModel" that could not be resolved.'
-      AddLatestReferencesToProject(proj, ["Microsoft.Azure.Functions.Worker", "Microsoft.Azure.Functions.Worker.Sdk", "Microsoft.Azure.Functions.Worker.Extensions.Timer", "System.ClientModel", "Serilog"]);
-  
+  private Task AddAzureReferencesToProject(IXProject proj) {
+    return AddLatestReferencesToProject(proj,
+    [
+      "Microsoft.Azure.Functions.Worker",
+      "Microsoft.Azure.Functions.Worker.Sdk",
+      "Microsoft.Azure.Functions.Worker.Extensions.Timer",
+      "System.ClientModel", // needed to avoid `Found conflicts between different versions of "System.ClientModel" that could not be resolved`
+      "Serilog"
+    ]);
+  }
+
   // todo: add aws Lambda support
   // private Task AddAwsReferencesToProject(IXProject proj) => AddLatestReferencesToProject(proj, ["Amazon.Lambda.Core", "Amazon.Lambda.APIGatewayEvents", "Amazon.Lambda.Serialization.SystemTextJson"]);
 

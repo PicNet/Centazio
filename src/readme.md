@@ -1,6 +1,7 @@
 # Todo
 - a code generated (runtime) wrapper to deploy to lambda/azure
 - cli code generator to add functions, integrations, projects, etc
+- basic cli exceptions, like incorrect arguments needs to show message, not whole exception
 - good case study / demo:
   - crm
   - finance

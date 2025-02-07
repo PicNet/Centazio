@@ -1,6 +1,5 @@
 ﻿using Centazio.Cli;
 using Centazio.Cli.Commands;
-using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;

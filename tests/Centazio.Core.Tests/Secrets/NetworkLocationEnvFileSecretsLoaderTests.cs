@@ -4,18 +4,23 @@ namespace Centazio.Core.Tests.Secrets;
 
 public class NetworkLocationEnvFileSecretsLoaderTests {
 
-  private const string CONTENTS = "SETTING1=VALUE1;\nSETTING2=VALUE 2 with spaces \n\nSETTING3_NUMBER=123\nSETTING4=trailing space with semmi ;\nSETTING5=val;with;semmis;\nSETTING6=val=with=equals";
+  
 
   [Test] public void Test_loading_from_local() {
-    Assert.That(Load("testing"), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
+    var contents = @"SETTING1=VALUE1;
+SETTING2=VALUE 2 with spaces 
+# line with comments ignored
+SETTING3_NUMBER=123#anything after comments ignored
+SETTING4=trailing space with semmi ;
+SETTING5=val;with;semmis;
+SETTING6=val=with=equals";
+    Assert.That(Load("testing", contents), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
   }
   
-  private TestSettingsTargetObj Load(string env) {
+  private TestSettingsTargetObj Load(string env, string contents) {
     var file = $"{env}.env";
-    try { 
-      File.WriteAllText(file, CONTENTS);
-      return (TestSettingsTargetObj) new NetworkLocationEnvFileSecretsLoader(".").Load<TestSettingsTargetObjRaw>(env);
-    }
+    File.WriteAllText(file, contents);
+    try { return (TestSettingsTargetObj) new NetworkLocationEnvFileSecretsLoader(".").Load<TestSettingsTargetObjRaw>(env); }
     finally { File.Delete(file); }
   }
 

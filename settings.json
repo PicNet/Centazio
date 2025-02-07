@@ -37,8 +37,6 @@
   "AzureSettings": {
     "Region": "Australia East",
     "ResourceGroup": "Centazio_3_Testing",
-    "FunctionStorageAccId": "**", // todo: remove
-    "AppServicePlanId": "**",
-    "Functions": []
+    "Functions": [] // todo: do we need this? remove if not
   }
 }
