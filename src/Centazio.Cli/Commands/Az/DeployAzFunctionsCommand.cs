@@ -1,10 +1,14 @@
-﻿using Centazio.Cli.Infra.Az;
+﻿using Centazio.Cli.Commands.Gen;
+using Centazio.Cli.Infra;
+using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Ui;
+using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class DeployAzFunctionsCommand(IAzFunctionDeployer impl) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
+public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctionDeployer impl) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
   
   protected override Task RunInteractiveCommandImpl() => 
       ExecuteImpl(new Settings { 
@@ -12,7 +16,9 @@ public class DeployAzFunctionsCommand(IAzFunctionDeployer impl) : AbstractCentaz
         FunctionName = UiHelpers.Ask("Function Class Name", "All"),
       });
 
-  protected override async Task ExecuteImpl(Settings settings) { await impl.Deploy("todo: project path"); }
+  protected override async Task ExecuteImpl(Settings settings) { 
+    await impl.Deploy(new GenProject(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder)); 
+  }
 
   public class Settings : CommonSettings {
     [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;

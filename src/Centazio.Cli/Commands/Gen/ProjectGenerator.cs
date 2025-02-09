@@ -17,9 +17,9 @@ public class ProjectGenerator(GenProject meta) {
   
 
   private async Task GenerateSolutionSkeleton() {
-    Directory.CreateDirectory(meta.SolutionFolderPath);
+    Directory.CreateDirectory(meta.SolutionPath);
     var slnconfs = new ConfigSln[] { new("Debug", "Any CPU"), new("Release", "Any CPU") };
-    var project = new ProjectItem(ProjectType.CsSdk, meta.CsprojFile, slnDir: meta.SolutionFolderPath);
+    var project = new ProjectItem(ProjectType.CsSdk, meta.CsprojFile, slnDir: meta.SolutionPath);
     if (File.Exists(project.fullPath)) File.Delete(project.fullPath);
     var projconfs = new ConfigPrj[] { new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[0]), new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[1]) };
     

@@ -7,7 +7,6 @@ using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Serilog;
@@ -15,28 +14,25 @@ using Serilog;
 namespace Centazio.Cli.Infra.Az;
 
 public interface IAzFunctionDeployer {
-  Task Deploy(string project);
+  Task Deploy(GenProject project);
 }
 
-// todo: add unit test to test both 'new' and 'update' cases
 public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
 
   
-  public async Task Deploy(string project) {
-    if (!Directory.Exists(FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project))) throw new Exception($"project [{project}] could not be found in the [{settings.GeneratedCodeFolder}] folder");
-    if (!File.Exists(FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project, project + ".sln"))) throw new Exception($"project [{project}] does not appear to be a valid project directory as no sln file was found");
+  public async Task Deploy(GenProject project) {
+    if (!Directory.Exists(project.SolutionPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.GeneratedCodeFolder}] folder");
+    if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project}] does not appear to be a valid as no sln file was found");
+    
+    await new DotNetCliProjectPublisher().BuildProject(project);
     
     var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
     var appres = await GetOrCreateFunctionApp(rg, project);
 
-    // todo: do we need this update?  Not just deploy?
-    // Log.Information($"updating already existing function app [{project}]");
-    // await UpdateExistingFunctionApp(appres, settings.AzureSettings.Region);
-
     await PublishFunctionApp(appres, project);
   }
 
-  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, string project) {
+  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, GenProject project) {
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
@@ -44,58 +40,31 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
-  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, string project) {
-    try { return (await rg.GetWebSiteAsync(project)).Value; }
+  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, GenProject project) {
+    try { return (await rg.GetWebSiteAsync(project.DashedProjectName)).Value; }
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
-  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, string project, string location) {
+  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, GenProject project, string location) {
     var plandata = new AppServicePlanData(location) { Sku = new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" }, Kind = "functionapp" };
-    var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project}-plan", plandata)).Value;
+    var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project.DashedProjectName}-Plan", plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
-    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project, appconf);
+    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.DashedProjectName, appconf);
     Log.Information($"successfully created function app [{project}]");
     return op.Value;
   }
 
-  private async Task UpdateExistingFunctionApp(WebSiteResource funcapp, string location) {
-    var appsettings = await GetExistingAppSettings(funcapp);
-
-    // Update Function App configuration
-    var updatedConfig = new SiteConfigProperties {
-      // FunctionRuntime = "dotnet-isolated",
-      // UseNestedWebConfig = false,
-      AppSettings = appsettings,
-      NetFrameworkVersion = "v8.0",
-      MinTlsVersion = "1.2"
-      // Http20Enabled = true
-    };
-
-    // await funcapp.UpdateAsync(WaitUntil.Completed, updateData);
-    await funcapp.UpdateAsync(new SitePatchInfo { SiteConfig = updatedConfig });
-    Log.Information($"updated function app [{funcapp.Data.Name}]");
-  }
-
-  private async Task<List<AppServiceNameValuePair>> GetExistingAppSettings(WebSiteResource funcapp) => 
-      (await funcapp.GetApplicationSettingsAsync()).Value.Properties.Select(kvp => new AppServiceNameValuePair { Name = kvp.Key, Value = kvp.Value }).ToList();
-
   private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid) => new(location) {
     Kind = "functionapp",
     SiteConfig = new SiteConfigProperties {
-      // FunctionRuntime = "dotnet-isolated",
-      // UseNestedWebConfig = false,
-      NetFrameworkVersion = "v8.0",
-      MinTlsVersion = "1.2",
-      // Http20Enabled = true
+      NetFrameworkVersion = "v9.0",
+      MinTlsVersion = "1.2"
     },
-    AppServicePlanId = farmid, // is this correct instead of `ServerFarmId = farmid`
-    // HttpsOnly = true
+    AppServicePlanId = farmid
   };
 
-  private async Task PublishFunctionApp(WebSiteResource appres, string project) {
-    var projpath = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project);
-    var path = await new MicrosoftBuildProjectBuilder().BuildProject(projpath);
-    var zippath = CreateFunctionAppZip(path);
+  private async Task PublishFunctionApp(WebSiteResource appres, GenProject project) {
+    var zippath = CreateFunctionAppZip(project);
     var cred = await GetPublishCredentials(appres);
     
     try { 
@@ -131,9 +100,9 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       (await appres.GetPublishingCredentialsAsync(WaitUntil.Completed)).Value.Data;
   
 
-  private string CreateFunctionAppZip(string publishpath) {
+  private string CreateFunctionAppZip(GenProject project) {
     var zippath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
-    ZipFile.CreateFromDirectory(Path.Combine(FsUtils.GetSolutionFilePath(publishpath)), zippath);
+    ZipFile.CreateFromDirectory(project.PublishPath, zippath);
     return zippath;
   }
 
