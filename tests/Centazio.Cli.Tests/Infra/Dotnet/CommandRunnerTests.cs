@@ -1,7 +1,7 @@
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Misc;
 
-namespace centazio.test.Misc; 
+namespace Centazio.Cli.Tests.Infra.Dotnet; 
 
 public class CommandRunnerTests {
   

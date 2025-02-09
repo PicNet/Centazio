@@ -1,4 +1,5 @@
-﻿using Centazio.Cli.Infra.Ui;
+﻿using Centazio.Cli.Infra;
+using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
@@ -12,8 +13,8 @@ public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractC
   });
 
   protected override async Task ExecuteImpl(Settings settings) {
-    var ass = ReflectionUtils.LoadAssembly(settings.AssemblyName);
-    await new ProjectGenerator(coresettings.GeneratedCodeFolder, ECloudEnv.Azure, ass).GenerateSolution();
+    var meta = new GenProject(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
+    await new ProjectGenerator(meta).GenerateSolution();
   }
 
   public class Settings : CommonSettings {

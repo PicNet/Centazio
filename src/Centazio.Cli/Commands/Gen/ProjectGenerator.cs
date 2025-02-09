@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Centazio.Cli.Infra;
-using Centazio.Core.Misc;
+﻿using Centazio.Cli.Infra;
 using Centazio.Core.Runner;
 using Microsoft.Build.Locator;
 using net.r_eg.MvsSln;
@@ -10,27 +8,18 @@ namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
-  
-  private readonly string NewAssemblyName = $"{assembly.GetName().Name}.{cloud}";
+public class ProjectGenerator(GenProject meta) {
   
   public async Task GenerateSolution() {
-    if (cloud != ECloudEnv.Azure) throw new NotImplementedException($"could environment[{cloud}] is not supported");
-    
-    var fullpath = GetSlnPath();
-    var slnpath = await GenerateSolutionSkeleton(fullpath);
-    await EnhanceProjects(slnpath);
+    await GenerateSolutionSkeleton();
+    await EnhanceProjects(meta.SlnFilePath);
   }
+  
 
-  private string GetSlnPath() {
-    var slnpath = Path.IsPathFullyQualified(path) ? path : Path.Combine(FsUtils.GetSolutionFilePath(), path, NewAssemblyName);
-    Directory.CreateDirectory(slnpath);
-    return slnpath;
-  }
-
-  private async Task<string> GenerateSolutionSkeleton(string fullpath) {
+  private async Task GenerateSolutionSkeleton() {
+    Directory.CreateDirectory(meta.SolutionFolderPath);
     var slnconfs = new ConfigSln[] { new("Debug", "Any CPU"), new("Release", "Any CPU") };
-    var project = new ProjectItem(ProjectType.CsSdk, $"{NewAssemblyName}\\{NewAssemblyName}.csproj", slnDir: fullpath);
+    var project = new ProjectItem(ProjectType.CsSdk, meta.CsprojFile, slnDir: meta.SolutionFolderPath);
     if (File.Exists(project.fullPath)) File.Delete(project.fullPath);
     var projconfs = new ConfigPrj[] { new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[0]), new("Debug", "Any CPU", project.pGuid, build: true, slnconfs[1]) };
     
@@ -39,11 +28,9 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
         .SetProjects([project])
         .SetProjectConfigs(projconfs)
         .SetSolutionConfigs(slnconfs);
-    var slnpath = Path.Combine(fullpath, NewAssemblyName + ".sln");
-    using var w = new SlnWriter(slnpath, hdata);
+    using var w = new SlnWriter(meta.SlnFilePath, hdata);
     w.Options |= SlnWriterOptions.CreateProjectsIfNotExist;
     await w.WriteAsync();
-    return slnpath;
   }
 
   private async Task EnhanceProjects(string slnpath) {
@@ -59,11 +46,11 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
         { "EnforceCodeStyleInBuild", "true" },
         { "ManagePackageVersionsCentrally", "false" }
       });
-      if (cloud == ECloudEnv.Azure) { 
+      if (meta.Cloud == ECloudEnv.Azure) { 
         await AddAzureReferencesToProject(proj);
         AddAzureFunctionsToProject(proj);
       }
-      else throw new NotSupportedException(cloud.ToString());
+      else throw new NotSupportedException(meta.Cloud.ToString());
       
       proj.Save();
     }
@@ -88,10 +75,10 @@ public class ProjectGenerator(string path, ECloudEnv cloud, Assembly assembly) {
           p => proj.AddPackageReference(p.name, p.version));
 
   private void AddAzureFunctionsToProject(IXProject proj) {
-    proj.AddReference(assembly);
+    proj.AddReference(meta.Assembly);
     proj.AddReference(typeof(AbstractFunction<>).Assembly);
     
-    IntegrationsAssemblyInspector.GetCentazioFunctions(assembly, []).ForEach(func => {
+    IntegrationsAssemblyInspector.GetCentazioFunctions(meta.Assembly, []).ForEach(func => {
       var clcontent = @"
 using Centazio.Core.Runner;
 using Centazio.Core.Misc;
@@ -112,7 +99,7 @@ public class {{ClassName}}Azure {
 }"
           .Replace("{{ClassName}}", func.Name)
           .Replace("{{FunctionNamespace}}", func.Namespace)
-          .Replace("{{NewAssemblyName}}", NewAssemblyName);
+          .Replace("{{NewAssemblyName}}", proj.ProjectName);
       
       File.WriteAllText(Path.Combine(proj.ProjectPath, $"{func.Name}.cs"), clcontent);
     });

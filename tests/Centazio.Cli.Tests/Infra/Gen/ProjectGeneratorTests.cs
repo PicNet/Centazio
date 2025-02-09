@@ -1,4 +1,5 @@
 ﻿using Centazio.Cli.Commands.Gen;
+using Centazio.Cli.Infra;
 using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
@@ -18,7 +19,8 @@ public class ProjectGeneratorTests {
     var expdir = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, proj);
     // Directory.Delete(expdir, true); // does not work as generated directory is locked?
     
-    await new ProjectGenerator(settings.GeneratedCodeFolder, ECloudEnv.Azure, GetType().Assembly).GenerateSolution();
+    var meta = new GenProject(GetType().Assembly, ECloudEnv.Azure, settings.GeneratedCodeFolder);
+    await new ProjectGenerator(meta).GenerateSolution();
     Assert.That(Directory.Exists(expdir));
   }
 

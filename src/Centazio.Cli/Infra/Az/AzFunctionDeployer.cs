@@ -10,6 +10,7 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Serilog;
 
 namespace Centazio.Cli.Infra.Az;
 
@@ -29,7 +30,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appres = await GetOrCreateFunctionApp(rg, project);
 
     // todo: do we need this update?  Not just deploy?
-    // Console.WriteLine($"Function App {project} exists. Updating existing app...");
+    // Log.Information($"updating already existing function app [{project}]");
     // await UpdateExistingFunctionApp(appres, settings.AzureSettings.Region);
 
     await PublishFunctionApp(appres, project);
@@ -39,7 +40,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
-    Console.WriteLine($"Function App [{project}] does not exist. Creating new app...");
+    Log.Information($"function app [{project}] does not exist, creating...");
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
@@ -53,7 +54,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project}-plan", plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
     var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project, appconf);
-    Console.WriteLine($"Successfully created new Function App: {project}");
+    Log.Information($"successfully created function app [{project}]");
     return op.Value;
   }
 
@@ -71,8 +72,8 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     };
 
     // await funcapp.UpdateAsync(WaitUntil.Completed, updateData);
-    await funcapp.UpdateAsync(new SitePatchInfo() { SiteConfig = updatedConfig });
-    Console.WriteLine($"Successfully updated Function App: {funcapp.Data.Name}");
+    await funcapp.UpdateAsync(new SitePatchInfo { SiteConfig = updatedConfig });
+    Log.Information($"updated function app [{funcapp.Data.Name}]");
   }
 
   private async Task<List<AppServiceNameValuePair>> GetExistingAppSettings(WebSiteResource funcapp) => 
@@ -92,45 +93,37 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   };
 
   private async Task PublishFunctionApp(WebSiteResource appres, string project) {
-    try {
-      var projpath = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project);
-      var path = await new MicrosoftBuildProjectBuilder().BuildProject(projpath);
-      var zippath = CreateFunctionAppZip(path);
+    var projpath = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, project);
+    var path = await new MicrosoftBuildProjectBuilder().BuildProject(projpath);
+    var zippath = CreateFunctionAppZip(path);
+    var cred = await GetPublishCredentials(appres);
+    
+    try { 
+      var endpoint = $"https://{appres.Data.DefaultHostName.Replace("azurewebsites.net", "scm.azurewebsites.net")}/api/zipdeploy";
 
-      var cred = await GetPublishCredentials(appres);
-      try { // todo: embeded try clause?
-        var endpoint = $"https://{appres.Data.DefaultHostName.Replace("azurewebsites.net", "scm.azurewebsites.net")}/api/zipdeploy";
+      var http = new HttpClient();
+      var base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{cred.PublishingUserName}:{cred.PublishingPassword}"));
+      http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Auth);
 
-        // Set up authentication
-        var http = new HttpClient();
-        var base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{cred.PublishingUserName}:{cred.PublishingPassword}"));
-        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Auth);
+      var zipbytes = await File.ReadAllBytesAsync(zippath);
+      using var content = new ByteArrayContent(zipbytes);
+      content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
 
-        var zipbytes = await File.ReadAllBytesAsync(zippath);
-        using var content = new ByteArrayContent(zipbytes);
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+      Log.Information("starting zip deployment");
+      var response = await http.PostAsync(endpoint, content);
 
-        Console.WriteLine("Starting ZIP deployment...");
-        var response = await http.PostAsync(endpoint, content);
-
-        if (!response.IsSuccessStatusCode) {
-          var err = await response.Content.ReadAsStringAsync();
-          throw new Exception($"Deployment failed. Status: {response.StatusCode}, Error: {err}");
-        }
-
-        // Stop and start the Function App to ensure changes are applied
-        Console.WriteLine("Restarting Function App...");
-        await appres.RestartAsync();
-
-        Console.WriteLine("Deployment completed successfully");
+      if (!response.IsSuccessStatusCode) {
+        var err = await response.Content.ReadAsStringAsync();
+        throw new Exception($"deployment failed with status [{response.StatusCode}], error [{err}]");
       }
-      finally {
-        // Cleanup temporary zip file
-        if (File.Exists(zippath)) File.Delete(zippath);
-      }
+
+      Log.Information("restarting function app");
+      await appres.RestartAsync();
+
+      Log.Information("deployment completed");
     }
-    catch (Exception ex) {
-      throw new Exception($"Failed to publish Function App: {ex.Message}", ex);
+    finally {
+      if (File.Exists(zippath)) File.Delete(zippath);
     }
   }
 

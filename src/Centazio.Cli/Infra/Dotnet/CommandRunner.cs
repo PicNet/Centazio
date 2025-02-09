@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using Centazio.Core.Misc;
+using Serilog;
 
 namespace Centazio.Cli.Infra.Dotnet;
 
@@ -36,7 +37,7 @@ public class CommandRunner : ICommandRunner {
   public CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("func", args, cwd, quiet, newwindow);
   public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false) {
     var cmdname = new FileInfo(command).Name.Split('.').First();
-    if (!quiet) Console.WriteLine($"running [{cmdname}] args[{args}] cwd[{cwd}]");
+    if (!quiet) Log.Information($"running[{cmdname}] args[{args}] cwd[{cwd}]");
     cwd ??= FsUtils.GetSolutionFilePath();
     
     var output = new StringBuilder();
@@ -51,8 +52,8 @@ public class CommandRunner : ICommandRunner {
         WorkingDirectory = cwd,
       }
     };
-    p.OutputDataReceived += (_, o) => OnString(o.Data, output, quiet);
-    p.ErrorDataReceived += (_, o) => OnString(o.Data, error, quiet);
+    p.OutputDataReceived += (_, o) => OnString(o.Data ?? String.Empty, output, quiet, false);
+    p.ErrorDataReceived += (_, o) => OnString(o.Data ?? String.Empty, error, quiet, true);
     
     if (newwindow) RunProcessNewWindow(p);
     else RunProcess(p);
@@ -77,8 +78,9 @@ public class CommandRunner : ICommandRunner {
     // does not read output/error streams
   }
   
-  private void OnString(string? msg, StringBuilder str, bool quiet) {
-    if (!quiet) Console.WriteLine(msg);
+  private void OnString(string msg, StringBuilder str, bool quiet, bool error) {
+    if (error) Log.Error(msg);
+    else if (!quiet) Log.Information(msg);
     str.AppendLine(msg);
   }
 }
