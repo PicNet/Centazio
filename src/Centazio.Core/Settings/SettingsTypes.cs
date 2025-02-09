@@ -1,5 +1,7 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Stage;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Centazio.Core.Settings;

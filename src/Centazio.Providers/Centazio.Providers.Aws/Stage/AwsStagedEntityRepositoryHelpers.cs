@@ -2,6 +2,7 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Stage;
 
 namespace Centazio.Providers.Aws.Stage;
 

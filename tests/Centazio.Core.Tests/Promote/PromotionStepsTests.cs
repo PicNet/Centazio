@@ -3,6 +3,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Promote;
 using Centazio.Core.Runner;
+using Centazio.Core.Stage;
 using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Promote;

@@ -2,7 +2,7 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.Misc;
 
-namespace Centazio.Core.Ctl.Entities;
+namespace Centazio.Core.Stage;
 
 public sealed record StagedEntity {
   

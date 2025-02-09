@@ -1,6 +1,8 @@
 # Todo
 - a code generated (runtime) wrapper to deploy to lambda/azure
 - cli code generator to add functions, integrations, projects, etc
+- create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
+  - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
 - basic cli exceptions, like incorrect arguments needs to show message, not whole exception
 - good case study / demo:
   - crm

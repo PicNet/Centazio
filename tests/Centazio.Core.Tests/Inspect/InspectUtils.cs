@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Centazio.Core.Misc;
+using NetArchTest.Rules;
 
 namespace Centazio.Core.Tests.Inspect;
 
@@ -33,4 +34,6 @@ internal static class InspectUtils {
       Directory.GetFiles(dir ?? FsUtils.GetSolutionRootDirectory(), extension, SearchOption.AllDirectories)
           .Where(f => !f.Contains("\\generated\\"))
           .ToList();
+  
+  public static Types CentazioTypes = Types.InAssembly(typeof(IntegrationBase<,>).Assembly);
 }

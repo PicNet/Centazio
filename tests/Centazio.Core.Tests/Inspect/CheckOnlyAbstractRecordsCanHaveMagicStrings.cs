@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Stage;
 
 namespace Centazio.Core.Tests.Inspect;
 
