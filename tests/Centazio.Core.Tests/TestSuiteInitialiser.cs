@@ -3,6 +3,8 @@
 
 using Centazio.Test.Lib;
 
+namespace Centazio.Core.Tests;
+
 [SetUpFixture] public class Global {
   [OneTimeSetUp] public void GlobalSetUp() => GlobalTestSuiteInitialiser.Init();
 }

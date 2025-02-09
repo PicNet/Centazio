@@ -1,5 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Types;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 
 namespace Centazio.Test.Lib.E2E;
 

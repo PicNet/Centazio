@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
-using Centazio.Core.Types;
 using Serilog;
 using Serilog.Events;
 

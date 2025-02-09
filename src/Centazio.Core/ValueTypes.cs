@@ -1,7 +1,7 @@
 ﻿using Centazio.Core.Misc;
 using Cronos;
 
-namespace Centazio.Core.Types;
+namespace Centazio.Core;
 
 public record ValidString(string Value) {
   public string Value { get; } = !String.IsNullOrWhiteSpace(Value) 

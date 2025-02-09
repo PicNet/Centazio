@@ -1,6 +1,6 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.Core.Types;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 

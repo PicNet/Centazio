@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using Centazio.Core.Misc;
-using Centazio.Core.Types;
 
 namespace Centazio.Core.CoreRepo;
 

@@ -1,5 +1,5 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.Types;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 
 namespace Centazio.Test.Lib;
 

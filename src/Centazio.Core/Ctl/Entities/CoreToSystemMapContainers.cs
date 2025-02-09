@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.Types;
 
 namespace Centazio.Core.Ctl.Entities;
 

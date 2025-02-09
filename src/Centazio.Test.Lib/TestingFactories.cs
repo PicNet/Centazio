@@ -1,4 +1,5 @@
-﻿using Centazio.Core.CoreRepo;
+﻿using Centazio.Core;
+using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Promote;
@@ -7,7 +8,6 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
-using Centazio.Core.Types;
 using Centazio.Core.Write;
 using Centazio.Test.Lib.InMemRepos;
 

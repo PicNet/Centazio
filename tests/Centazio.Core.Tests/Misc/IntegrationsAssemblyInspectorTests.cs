@@ -2,7 +2,6 @@
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
-using Centazio.Core.Types;
 
 namespace Centazio.Core.Tests.Misc;
 

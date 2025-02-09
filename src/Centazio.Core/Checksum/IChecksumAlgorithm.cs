@@ -1,6 +1,5 @@
 using System.Text;
 using Centazio.Core.Misc;
-using Centazio.Core.Types;
 
 namespace Centazio.Core.Checksum;
 

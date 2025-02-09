@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Centazio.Core;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Misc;
-using Centazio.Core.Types;
 
 namespace Centazio.Test.Lib;
 

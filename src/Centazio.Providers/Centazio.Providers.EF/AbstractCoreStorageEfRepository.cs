@@ -1,6 +1,6 @@
-﻿using Centazio.Core.Checksum;
+﻿using Centazio.Core;
+using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
-using Centazio.Core.Types;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
