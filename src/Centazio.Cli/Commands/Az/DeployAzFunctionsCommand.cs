@@ -17,7 +17,7 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
       });
 
   protected override async Task ExecuteImpl(Settings settings) { 
-    await impl.Deploy(new GenProject(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder)); 
+    await impl.Deploy(new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder)); 
   }
 
   public class Settings : CommonSettings {

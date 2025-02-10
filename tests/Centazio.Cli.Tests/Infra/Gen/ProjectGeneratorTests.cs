@@ -1,33 +1,19 @@
 ﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
-using Centazio.Core;
-using Centazio.Core.Ctl;
-using Centazio.Core.Misc;
-using Centazio.Core.Read;
-using Centazio.Core.Runner;
-using Centazio.Core.Settings;
-using Centazio.Core.Stage;
-using Centazio.Test.Lib;
+using Centazio.Cli.Infra.Dotnet;
 
 namespace Centazio.Cli.Tests.Infra.Gen;
 
 public class ProjectGeneratorTests {
 
   [Test] public async Task Test_GenerateSolution() {
-    var settings = TestingFactories.Settings<CentazioSettings>();
-    var proj = $"{GetType().Assembly.GetName().Name}.{ECloudEnv.Azure}";
-    var expdir = FsUtils.GetSolutionFilePath(settings.GeneratedCodeFolder, proj);
-    // Directory.Delete(expdir, true); // does not work as generated directory is locked?
+    var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
+    if (Directory.Exists(project.SolutionPath)) Directory.Delete(project.SolutionPath, true);
     
-    var meta = new GenProject(GetType().Assembly, ECloudEnv.Azure, settings.GeneratedCodeFolder);
-    await new ProjectGenerator(meta).GenerateSolution();
-    Assert.That(Directory.Exists(expdir));
+    await new ProjectGenerator(project).GenerateSolution();
+    Assert.That(Directory.Exists(project.SolutionPath));
+
+    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectPath);
+    Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
-
-}
-
-public class TestReadFunction(IEntityStager stager, ICtlRepository ctl) : ReadFunction(new(nameof(ProjectGeneratorTests)), stager, ctl) {
-
-  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
 
 }

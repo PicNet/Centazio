@@ -15,9 +15,9 @@ public class ProjectPublisherTests {
     await Impl(new DotNetCliProjectPublisher().BuildProject);
   }
   
-  private async Task Impl(Func<GenProject, Task> builder) {
+  private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
     var settings = TestingFactories.Settings();
-    var project =  new GenProject(GetType().Assembly, ECloudEnv.Azure, settings.GeneratedCodeFolder);
+    var project =  new FunctionProjectMeta(GetType().Assembly, ECloudEnv.Azure, settings.GeneratedCodeFolder);
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     
     await builder(project);

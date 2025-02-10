@@ -1,12 +1,13 @@
 ﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using Centazio.Cli.Commands.Gen;
 using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Infra;
 
-public class GenProject(Assembly assembly, ECloudEnv cloud, string generatedfolder) {
+public class FunctionProjectMeta(Assembly assembly, ECloudEnv cloud, string generatedfolder) {
   
-  public Assembly Assembly => assembly;
+  [JsonIgnore] public Assembly Assembly => assembly;
   public ECloudEnv Cloud => cloud;
   
   public string ProjectName => $"{assembly.GetName().Name}.{cloud}";

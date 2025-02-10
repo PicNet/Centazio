@@ -15,10 +15,8 @@ public static class FsUtils {
     return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
   }
   
-  public static string GetSolutionFilePath(params string[] steps) {
-    var path = Path.Combine(new[] { GetSolutionRootDirectory() }.Concat(steps).ToArray());
-    return !Path.Exists(path) ? throw new FileNotFoundException(path) : path;
-  }
+  public static string GetSolutionFilePath(params string[] steps) => 
+      Path.Combine(steps.Prepend(GetSolutionRootDirectory()).ToArray());
 
   public static string FindFirstValidDirectory(List<string> directories) => directories.FirstOrDefault(dir => {
       try { return Directory.Exists(dir); }

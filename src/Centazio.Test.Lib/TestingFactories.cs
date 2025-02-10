@@ -41,7 +41,6 @@ public static class TestingFactories {
 
   public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryBaseCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
       => new(ctl ?? CtlRepo(), core ?? CoreRepo());
-
 }
 
 public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }

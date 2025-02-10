@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Test.Lib", "src\Centazio.Test.Lib\Centazio.Test.Lib.csproj", "{2B592DCA-AD65-487B-8683-0442411D2AFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}"
-	ProjectSection(SolutionItems) = preProject
-		tests\settings.json = tests\settings.json
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Core", "src\Centazio.Core\Centazio.Core.csproj", "{47D183A9-4165-471B-9F69-99F4CEB05005}"
 EndProject
@@ -57,6 +54,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5
 		.gitignore = .gitignore
 		\\aus-syd-dc05.internal.picnet.com.au\Secrets\centazio3\dev.env = \\aus-syd-dc05.internal.picnet.com.au\Secrets\centazio3\dev.env
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.TestFunctions", "tests\Centazio.TestFunctions\Centazio.TestFunctions.csproj", "{16243103-CE9F-46A1-94D6-2ECA60FCA696}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -128,6 +127,10 @@ Global
 		{CFE28708-102C-4880-98F9-18138C102B8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFE28708-102C-4880-98F9-18138C102B8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFE28708-102C-4880-98F9-18138C102B8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16243103-CE9F-46A1-94D6-2ECA60FCA696}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16243103-CE9F-46A1-94D6-2ECA60FCA696}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16243103-CE9F-46A1-94D6-2ECA60FCA696}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16243103-CE9F-46A1-94D6-2ECA60FCA696}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1653C645-36BD-429C-A737-1F73144E6D58} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
@@ -148,5 +151,6 @@ Global
 		{00E9AA93-78A0-46FA-AEB3-16F0689C2FA1} = {85E0FAEE-523F-43E6-9FA8-53EFA08E2F35}
 		{F9228BE1-ACA5-443C-9A37-3628C9C57B02} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
 		{CFE28708-102C-4880-98F9-18138C102B8A} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
+		{16243103-CE9F-46A1-94D6-2ECA60FCA696} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
 	EndGlobalSection
 EndGlobal

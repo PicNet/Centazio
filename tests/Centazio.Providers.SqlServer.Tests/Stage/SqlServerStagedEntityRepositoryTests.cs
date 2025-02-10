@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;

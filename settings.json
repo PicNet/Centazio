@@ -37,6 +37,8 @@
   "AzureSettings": {
     "Region": "Australia East",
     "ResourceGroup": "Centazio_3_Testing",
+    // todo: add support for this setting, if specified then we will use this for all functions, if not, we will create one for each function
+    "AppServicePlan": "Centazio-Cli-Tests-Azure-Plan",
     "Functions": [] // todo: do we need this? remove if not
   }
 }

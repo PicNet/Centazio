@@ -9,21 +9,24 @@ using Azure.ResourceManager.Resources;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using net.r_eg.MvsSln.Extensions;
 using Serilog;
 
 namespace Centazio.Cli.Infra.Az;
 
 public interface IAzFunctionDeployer {
-  Task Deploy(GenProject project);
+  Task Deploy(FunctionProjectMeta project);
 }
 
+// try to replicate command: az functionapp deployment source config-zip -g <resource group name> -n <function app name> --src <zip file path>
 public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
 
   
-  public async Task Deploy(GenProject project) {
+  public async Task Deploy(FunctionProjectMeta project) {
     if (!Directory.Exists(project.SolutionPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project}] does not appear to be a valid as no sln file was found");
     
+    // todo: building should not be the responsibility of the deployer
     await new DotNetCliProjectPublisher().BuildProject(project);
     
     var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
@@ -32,7 +35,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     await PublishFunctionApp(appres, project);
   }
 
-  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, GenProject project) {
+  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, FunctionProjectMeta project) {
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
@@ -40,12 +43,12 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
-  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, GenProject project) {
+  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, FunctionProjectMeta project) {
     try { return (await rg.GetWebSiteAsync(project.DashedProjectName)).Value; }
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
-  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, GenProject project, string location) {
+  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, FunctionProjectMeta project, string location) {
     var plandata = new AppServicePlanData(location) { Sku = new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" }, Kind = "functionapp" };
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project.DashedProjectName}-Plan", plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
@@ -58,12 +61,21 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     Kind = "functionapp",
     SiteConfig = new SiteConfigProperties {
       NetFrameworkVersion = "v9.0",
-      MinTlsVersion = "1.2"
+      Use32BitWorkerProcess = false,
+      AppSettings = [
+        new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
+        new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
+        new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
+        // todo: remove this sb endpoint
+        new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = "Endpoint=sb://svcbusibyffnmkkoaf4.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=P7ukiUpfoai7rxWuRWckmEyTC49Rgn0GLdK3ULRIQuk=" },
+        new AppServiceNameValuePair { Name = "SiteConfigProperties", Value = "1" },
+        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" },
+      ]
     },
     AppServicePlanId = farmid
   };
 
-  private async Task PublishFunctionApp(WebSiteResource appres, GenProject project) {
+  private async Task PublishFunctionApp(WebSiteResource appres, FunctionProjectMeta project) {
     var zippath = CreateFunctionAppZip(project);
     var cred = await GetPublishCredentials(appres);
     
@@ -78,7 +90,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       using var content = new ByteArrayContent(zipbytes);
       content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
 
-      Log.Information("starting zip deployment");
+      Log.Information($"starting zip deployment: {zippath}");
       var response = await http.PostAsync(endpoint, content);
 
       if (!response.IsSuccessStatusCode) {
@@ -92,18 +104,34 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       Log.Information("deployment completed");
     }
     finally {
-      if (File.Exists(zippath)) File.Delete(zippath);
+      // if (File.Exists(zippath)) File.Delete(zippath);
     }
   }
 
   private async Task<PublishingUserData> GetPublishCredentials(WebSiteResource appres) => 
       (await appres.GetPublishingCredentialsAsync(WaitUntil.Completed)).Value.Data;
   
-
-  private string CreateFunctionAppZip(GenProject project) {
+  internal static string CreateFunctionAppZip(FunctionProjectMeta project) {
+    var subdirs = new List<string> { ".azurefunctions" };
+    var extensions = new List<string> { ".exe", ".dll", ".json", "*.metadata", ".pdb" };
     var zippath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
-    ZipFile.CreateFromDirectory(project.PublishPath, zippath);
+    
+    using var zip = new FileStream(zippath, FileMode.Create);
+    using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
+    
+    // root directory, add files that match extension
+    Directory.EnumerateFiles(project.PublishPath, "*.*", SearchOption.TopDirectoryOnly)
+        .Where(file => extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
+        .ForEach(file => archive.CreateEntryFromFile(file, Path.GetFileName(file)));
+    
+    // for each sub-directory add all files
+    subdirs.ForEach(subdir => {
+      var path = Path.Combine(project.PublishPath, subdir);
+      if (!Directory.Exists(path)) return;
+      Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
+          .ForEach(file => archive.CreateEntryFromFile(file, Path.GetRelativePath(project.PublishPath, file)));
+    });
     return zippath;
   }
-
 }
+
