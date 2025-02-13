@@ -89,7 +89,7 @@ public abstract class ProjectGenerator(FunctionProjectMeta project, string envir
     if (providers.Any(prov => prov.StartsWith("sql", StringComparison.OrdinalIgnoreCase))) {
       Console.WriteLine("Adding EF Core");
       proj.AddReference(ReflectionUtils.LoadAssembly("Centazio.Providers.EF"), opts);
-      // todo: add entify framework
+      // todo: add entify framework and other needed assemblies (like Sqlite nugets)
     }
   }
 

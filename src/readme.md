@@ -1,9 +1,12 @@
 # Todo
-- a code generated (runtime) wrapper to deploy to lambda/azure:
-  - complete azure working
-  - aws
+- lambda/azure wrappers:
   - deploy subset of functions in assembly
-  - application insights
+  - Azure:
+    - get working
+    - application insights
+    - Serilog Logs not working
+  - Aws:
+    - implement 
 - create a `defaults` directory with default settings, templates, cli commands, etc.
 - cli commands:
   - disable/stop functions

@@ -2,7 +2,6 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
-using Serilog;
 
 namespace Centazio.Core.Runner;
 

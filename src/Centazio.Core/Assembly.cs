@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿global using Serilog;
+
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Centazio.Core.Tests")]
 [assembly: InternalsVisibleTo("Centazio.Test.Lib")]

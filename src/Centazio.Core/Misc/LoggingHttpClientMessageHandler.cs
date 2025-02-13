@@ -1,6 +1,4 @@
-﻿using Serilog;
-
-namespace Centazio.Core.Misc;
+﻿namespace Centazio.Core.Misc;
 
 /// <summary>
 /// When logging is required for HttpClients, then simply create the client as follows:

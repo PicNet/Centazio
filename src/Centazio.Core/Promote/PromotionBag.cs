@@ -4,7 +4,6 @@ using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Stage;
-using Serilog;
 
 namespace Centazio.Core.Promote;
 

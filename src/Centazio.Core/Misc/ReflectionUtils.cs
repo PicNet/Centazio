@@ -76,22 +76,25 @@ public static class ReflectionUtils {
   
   public static Assembly LoadAssembly(string assembly) => Assembly.LoadFrom(GetAssemblyPath(assembly));
   
-  public static List<Assembly> GetProviderAssemblies() => 
-      new DirectoryInfo(FsUtils.GetSolutionRootDirectory()).GetFiles("*.dll", SearchOption.AllDirectories)
-          .Select(dll => dll.Name.Replace(".dll", String.Empty))
-          .Where(name => name.StartsWith("Centazio.Providers.") && !name.Contains("Tests"))
-          .Distinct()
-          .Select(LoadAssembly)
-          .ToList();
+  public static List<Assembly> GetProviderAssemblies() {
+    return new DirectoryInfo(FsUtils.GetSolutionRootDirectory()).GetFiles("*.dll", SearchOption.AllDirectories)
+        .Select(dll => dll.Name.Replace(".dll", String.Empty))
+        .Where(ProviderAssemblyFilter)
+        .Distinct()
+        .Select(LoadAssembly)
+        .ToList();
+    
+    bool ProviderAssemblyFilter(string? name) => name is not null && name.StartsWith("Centazio.Providers.") && !name.EndsWith("Tests");
+  }
 
   public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";
     var dlls = Directory.GetFiles(FsUtils.GetSolutionRootDirectory(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
-    var assfile = 
-        dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
-        ?? dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0)
-        ?? throw new FileNotFoundException($"File for assembly [{assembly}] could not be found in directory (recursively) [{FsUtils.GetSolutionRootDirectory()}]");
-    return assfile;
+    var assfile = CloudUtils.IsCloudEnviornment() ? 
+        dlls.FirstOrDefault(path => path.EndsWith(assembly + ".dll")) 
+        : dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+            ?? dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0);
+    return assfile ?? throw new FileNotFoundException($"File for assembly [{assembly}] could not be found in directory (recursively) [{FsUtils.GetSolutionRootDirectory()}]");
   }
 
   public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {

@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Centazio.Core.Misc;
-using Serilog;
 using Exception = System.Exception;
 
 namespace Centazio.Core.Secrets;

@@ -3,7 +3,6 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Serilog;
 
 namespace Centazio.Core.Write;
 public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IOperationRunner<C> where C : WriteOperationConfig {

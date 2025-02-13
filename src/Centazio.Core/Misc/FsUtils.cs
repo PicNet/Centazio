@@ -6,6 +6,9 @@ public static class FsUtils {
   
   public static string GetSolutionRootDirectory() {
     if (rootdir is not null) return rootdir;
+    if (CloudUtils.IsCloudEnviornment()) return rootdir = Environment.CurrentDirectory;
+    
+    // todo: change to settings.json or other more generic file (that exists in cloud) and test
     var file = "centazio3.sln";
 
     string? Impl(string dir) {
@@ -17,8 +20,7 @@ public static class FsUtils {
     }
     return rootdir 
         ??= Impl(Environment.CurrentDirectory)
-        // if the solution file is not found, then we are in a cloud environment and should return the CWD
-        ?? Environment.CurrentDirectory;
+        ?? throw new Exception($"failed to find the root directory by searching for [{file}]");
   }
   
   public static string GetSolutionFilePath(params string[] steps) => 
