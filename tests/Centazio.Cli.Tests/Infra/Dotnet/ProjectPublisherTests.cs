@@ -16,7 +16,7 @@ public class ProjectPublisherTests {
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    await new ProjectGenerator(project, "dev").GenerateSolution();
+    await ProjectGenerator.Create(project, "dev").GenerateSolution();
     
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     await builder(project);

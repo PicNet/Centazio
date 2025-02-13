@@ -21,7 +21,7 @@ public class AzFunctionDeployerTests {
     AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await new ProjectGenerator(project, "dev").GenerateSolution();
+    await ProjectGenerator.Create(project, "dev").GenerateSolution();
     await new DotNetCliProjectPublisher().PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     

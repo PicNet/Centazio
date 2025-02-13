@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli.Infra;
 using Centazio.Core;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
@@ -11,8 +12,16 @@ namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-// todo: separate out into a hierarchy for Azure and Aws
-public class ProjectGenerator(FunctionProjectMeta project, string environment) {
+public abstract class ProjectGenerator(FunctionProjectMeta project, string environment) {
+  
+  public static ProjectGenerator Create(FunctionProjectMeta project, string environment) {
+    switch (project.Cloud) {
+      case ECloudEnv.Aws: return new AwsProjectGenerator(project, environment);
+      case ECloudEnv.Azure: return new AzureProjectGenerator(project, environment);
+      default: throw new NotSupportedException(project.Cloud.ToString());
+      
+    }
+  }
   
   public async Task GenerateSolution() {
     await GenerateSolutionSkeleton();
@@ -43,7 +52,6 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
     foreach (var proj in sln.Result.Env.Projects) {
       proj.SetProperties(new Dictionary<string, string> {
         { "TargetFramework", "net9.0" },
-        { "AzureFunctionsVersion", "v4" },
         { "OutputType", "Exe" },
         { "ImplicitUsings", "enable" },
         { "Nullable", "enable" },
@@ -51,19 +59,64 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
         { "EnforceCodeStyleInBuild", "true" },
         { "ManagePackageVersionsCentrally", "false" }
       });
-      if (project.Cloud == ECloudEnv.Azure) { 
-        await AddAzureReferencesToProject(proj);
-        await AddAzHostJsonFileToProject(proj);
-        await AddAzureFunctionsToProject(proj);
-        AddCentazioReferencesToProject(proj);
-        AddSettingsFilesToProject(proj);
-      }
-      else throw new NotSupportedException(project.Cloud.ToString());
+      AddCentazioReferencesToProject(proj);
+      AddSettingsFilesToProject(proj);
+      
+      var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, []);
+      await AddCloudSpecificContentToProject(proj, functions);
       
       proj.Save();
     }
   }
+  
+  private void AddCentazioReferencesToProject(IXProject proj) {
+    var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
+    
+    // Add Centazio.Core
+    proj.AddReference(typeof(AbstractFunction<>).Assembly, opts);
+    
+    // Add this function's assemply
+    proj.AddReference(project.Assembly, opts);
+    
+    // Add assemblies for required providers
+    var settings = new SettingsLoader().Load<CentazioSettings>(environment);
+    var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
+    var assemblies = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
+    
+    Console.WriteLine("ADDING PROVIDER ASSEMBLIES: " + String.Join(", ", assemblies.Select(a => a.GetName().Name)) );
+    assemblies.ForEach(provass => proj.AddReference(provass, opts));
+    
+    if (providers.Any(prov => prov.StartsWith("sql", StringComparison.OrdinalIgnoreCase))) {
+      Console.WriteLine("Adding EF Core");
+      proj.AddReference(ReflectionUtils.LoadAssembly("Centazio.Providers.EF"), opts);
+      // todo: add entify framework
+    }
+  }
 
+  private void AddSettingsFilesToProject(IXProject proj) {
+    var files = new SettingsLoader().GetSettingsFilePathList(environment);
+    files.ForEach(path => {
+      var fname = Path.GetFileName(path);
+      proj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
+      File.Copy(path, Path.Combine(proj.ProjectPath, fname), true);
+    });
+  }
+
+  protected async Task AddLatestReferencesToProject(IXProject proj, List<string> packages) => 
+      (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
+          p => proj.AddPackageReference(p.name, p.version));
+  
+  protected abstract Task AddCloudSpecificContentToProject(IXProject proj, List<Type> functions);
+}
+
+internal class AzureProjectGenerator(FunctionProjectMeta project, string environment) : ProjectGenerator(project, environment) {
+
+  protected override async Task AddCloudSpecificContentToProject(IXProject proj, List<Type> functions) {
+    await AddAzureReferencesToProject(proj);
+    await AddAzHostJsonFileToProject(proj);
+    await AddAzureFunctionsToProject(proj, functions);
+  }
+  
   private Task AddAzureReferencesToProject(IXProject proj) {
     return AddLatestReferencesToProject(proj,
     [
@@ -80,16 +133,7 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
     
   }
 
-  // todo: add aws Lambda support
-
-  // private Task AddAwsReferencesToProject(IXProject proj) => AddLatestReferencesToProject(proj, ["Amazon.Lambda.Core", "Amazon.Lambda.APIGatewayEvents", "Amazon.Lambda.Serialization.SystemTextJson"]);
-
-  private async Task AddLatestReferencesToProject(IXProject proj, List<string> packages) => 
-      (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
-          p => proj.AddPackageReference(p.name, p.version));
-
   // todo: read from external template file
-
   private async Task AddAzHostJsonFileToProject(IXProject proj) {
     proj.AddItem("None", "host.json", [new("CopyToOutputDirectory", "PreserveNewest")]);
     var contents = @"{
@@ -107,9 +151,9 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
     await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"host.json"), contents);
   }
   
-  private async Task AddAzureFunctionsToProject(IXProject proj) {
+  private async Task AddAzureFunctionsToProject(IXProject proj, List<Type> functions) {
     // todo: these templates should be in other files to allow users to change the template if required
-    foreach (var func in IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [])) {
+    foreach (var func in functions) {
       var clcontent = @"
 using Microsoft.Azure.Functions.Worker;
 using Centazio.Core.Runner;
@@ -145,25 +189,10 @@ new HostBuilder()
 ");
     }
   }
-  
-  private void AddCentazioReferencesToProject(IXProject proj) {
-    var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
-    proj.AddReference(project.Assembly, opts);
-    proj.AddReference(typeof(AbstractFunction<>).Assembly, opts);
-    
-    var settings = new SettingsLoader().Load<CentazioSettings>(environment);
-    var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
-    var assemblies = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
-    assemblies.ForEach(provass => proj.AddReference(provass, opts));
-  }
-
-  private void AddSettingsFilesToProject(IXProject proj) {
-    var files = new SettingsLoader().GetSettingsFilePathList(environment);
-    files.ForEach(path => {
-      var fname = Path.GetFileName(path);
-      proj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
-      File.Copy(path, Path.Combine(proj.ProjectPath, fname), true);
-    });
-  }
 }
 
+internal class AwsProjectGenerator(FunctionProjectMeta project, string environment) : ProjectGenerator(project, environment) {
+  
+  protected override Task AddCloudSpecificContentToProject(IXProject proj, List<Type> functions) => throw new NotImplementedException();
+
+}
