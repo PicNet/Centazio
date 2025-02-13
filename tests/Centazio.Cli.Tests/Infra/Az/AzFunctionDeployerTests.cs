@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Az;
+using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
@@ -21,6 +22,7 @@ public class AzFunctionDeployerTests {
     var before = AzCmd.ListFunctionApps();
     
     await new ProjectGenerator(project, "dev").GenerateSolution();
+    await new DotNetCliProjectPublisher().PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
     var after = AzCmd.ListFunctionApps();

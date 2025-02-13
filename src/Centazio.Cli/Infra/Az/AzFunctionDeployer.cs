@@ -26,9 +26,6 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     if (!Directory.Exists(project.SolutionPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project}] does not appear to be a valid as no sln file was found");
     
-    // todo: building should not be the responsibility of the deployer
-    await new DotNetCliProjectPublisher().BuildProject(project);
-    
     var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
     var appres = await GetOrCreateFunctionApp(rg, project);
 

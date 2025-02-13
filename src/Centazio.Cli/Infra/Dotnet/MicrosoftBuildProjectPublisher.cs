@@ -14,7 +14,7 @@ public class MicrosoftBuildProjectPublisher : IProjectPublisher {
     MSBuildLocator.RegisterInstance(instances.OrderByDescending(instance => instance.Version).ElementAt(0));
   }
   
-  public async Task BuildProject(FunctionProjectMeta project) {
+  public async Task PublishProject(FunctionProjectMeta project) {
     var logger = new ConsoleLogger(LoggerVerbosity.Normal);
 
     var collection = new ProjectCollection();

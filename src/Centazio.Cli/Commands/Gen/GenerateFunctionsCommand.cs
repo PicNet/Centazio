@@ -1,4 +1,5 @@
 ﻿using Centazio.Cli.Infra;
+using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
@@ -13,8 +14,10 @@ public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractC
   });
 
   protected override async Task ExecuteImpl(Settings settings) {
-    var meta = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
-    await new ProjectGenerator(meta, "dev").GenerateSolution();
+    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
+    
+    await new ProjectGenerator(project, "dev").GenerateSolution();
+    await new DotNetCliProjectPublisher().PublishProject(project);
   }
 
   public class Settings : CommonSettings {

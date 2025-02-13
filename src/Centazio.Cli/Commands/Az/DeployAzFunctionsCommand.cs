@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Az;
+using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
@@ -16,8 +17,12 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
         FunctionName = UiHelpers.Ask("Function Class Name", "All"),
       });
 
-  protected override async Task ExecuteImpl(Settings settings) { 
-    await impl.Deploy(new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder)); 
+  protected override async Task ExecuteImpl(Settings settings) {
+    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
+    
+    await UiHelpers.Progress("Generating Azure FunctionApp project", async () => await new ProjectGenerator(project, "dev").GenerateSolution());
+    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher().PublishProject(project));
+    await UiHelpers.Progress("Deploying the FunctionApp to Azure", async () => await impl.Deploy(project)); 
   }
 
   public class Settings : CommonSettings {

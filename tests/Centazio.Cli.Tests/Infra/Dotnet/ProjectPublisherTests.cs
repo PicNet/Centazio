@@ -7,11 +7,11 @@ namespace Centazio.Cli.Tests.Infra.Dotnet;
 public class ProjectPublisherTests {
   
   [Test, Ignore("does not work with current sdk")] public async Task Test_MsBuildProjectBuilder_BuildProject() {
-    await Impl(new MicrosoftBuildProjectPublisher().BuildProject);
+    await Impl(new MicrosoftBuildProjectPublisher().PublishProject);
   }
 
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
-    await Impl(new DotNetCliProjectPublisher().BuildProject);
+    await Impl(new DotNetCliProjectPublisher().PublishProject);
   }
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
