@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
-using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using net.r_eg.MvsSln.Extensions;
@@ -63,10 +62,9 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
-        // todo: remove this hardcoded sb endpoint
-        new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = "Endpoint=sb://svcbusibyffnmkkoaf4.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=P7ukiUpfoai7rxWuRWckmEyTC49Rgn0GLdK3ULRIQuk=" },
+        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" },
         new AppServiceNameValuePair { Name = "SiteConfigProperties", Value = "1" },
-        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" }
+        new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = Secrets.AZ_BLOB_STORAGE_ENDPOINT },
       ]
     },
     AppServicePlanId = farmid
