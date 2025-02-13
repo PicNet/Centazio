@@ -122,7 +122,7 @@ public class {{ClassName}}Azure {
     impl = new(async () => await new FunctionsInitialiser().Init<{{ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
-  [Function(""{{ClassName}}"")] public async Task Run([TimerTrigger(""* * * * * *"")] TimerInfo _) {    
+  [Function(""{{ClassName}}"")] public async Task Run([TimerTrigger(""0 * * * * *"")] TimerInfo timer) {    
     await (await impl.Value).RunFunction(); 
   }
 }"
