@@ -1,5 +1,6 @@
 # Todo
 - a code generated (runtime) wrapper to deploy to lambda/azure:
+  - complete azure working
   - aws
   - deploy subset of functions in assembly
   - application insights

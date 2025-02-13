@@ -1,6 +1,8 @@
 ﻿using Centazio.Cli.Infra;
+using Centazio.Core;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
+using Centazio.Core.Stage;
 using Microsoft.Build.Locator;
 using net.r_eg.MvsSln;
 using net.r_eg.MvsSln.Core;
@@ -17,12 +19,11 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
     await AddProjectsToSolution(project.SlnFilePath);
   }
   
-  // todo: do we need to create a solution at all, can we just create csproj?
   private async Task GenerateSolutionSkeleton() {
-    Directory.CreateDirectory(project.SolutionPath);
+    Directory.CreateDirectory(project.SolutionDirPath);
     var (arch, configs) = ("Any CPU", new[] { "Debug", "Release" });
     var slnconfs = configs.Select(c => new ConfigSln(c, arch)).ToArray();
-    var projitem = new ProjectItem(ProjectType.CsSdk, project.CsprojFile, slnDir: project.SolutionPath);
+    var projitem = new ProjectItem(ProjectType.CsSdk, project.CsprojFile, slnDir: project.SolutionDirPath);
     if (File.Exists(projitem.fullPath)) File.Delete(projitem.fullPath);
     var projconfs = configs.Select((c, idx) => new ConfigPrj(c, arch, projitem.pGuid, build: true, slnconfs[idx])).ToArray();
     
@@ -54,6 +55,7 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
         await AddAzureReferencesToProject(proj);
         await AddAzHostJsonFileToProject(proj);
         await AddAzureFunctionsToProject(proj);
+        AddCentazioReferencesToProject(proj);
         AddSettingsFilesToProject(proj);
       }
       else throw new NotSupportedException(project.Cloud.ToString());
@@ -79,6 +81,7 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
   }
 
   // todo: add aws Lambda support
+
   // private Task AddAwsReferencesToProject(IXProject proj) => AddLatestReferencesToProject(proj, ["Amazon.Lambda.Core", "Amazon.Lambda.APIGatewayEvents", "Amazon.Lambda.Serialization.SystemTextJson"]);
 
   private async Task AddLatestReferencesToProject(IXProject proj, List<string> packages) => 
@@ -86,6 +89,7 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
           p => proj.AddPackageReference(p.name, p.version));
 
   // todo: read from external template file
+
   private async Task AddAzHostJsonFileToProject(IXProject proj) {
     proj.AddItem("None", "host.json", [new("CopyToOutputDirectory", "PreserveNewest")]);
     var contents = @"{
@@ -103,20 +107,7 @@ public class ProjectGenerator(FunctionProjectMeta project, string environment) {
     await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"host.json"), contents);
   }
   
-  private void AddSettingsFilesToProject(IXProject proj) {
-    var files = new SettingsLoader().GetSettingsFilePathList(environment);
-    files.ForEach(path => {
-      var fname = Path.GetFileName(path);
-      proj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
-      File.Copy(path, Path.Combine(proj.ProjectPath, fname), true);
-    });
-  }
-  
   private async Task AddAzureFunctionsToProject(IXProject proj) {
-    var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
-    proj.AddReference(project.Assembly, opts);
-    proj.AddReference(typeof(AbstractFunction<>).Assembly, opts);
-
     // todo: these templates should be in other files to allow users to change the template if required
     foreach (var func in IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [])) {
       var clcontent = @"
@@ -153,6 +144,26 @@ new HostBuilder()
   .Build().Run();
 ");
     }
+  }
+  
+  private void AddCentazioReferencesToProject(IXProject proj) {
+    var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
+    proj.AddReference(project.Assembly, opts);
+    proj.AddReference(typeof(AbstractFunction<>).Assembly, opts);
+    
+    var settings = new SettingsLoader().Load<CentazioSettings>(environment);
+    var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
+    var assemblies = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
+    assemblies.ForEach(provass => proj.AddReference(provass, opts));
+  }
+
+  private void AddSettingsFilesToProject(IXProject proj) {
+    var files = new SettingsLoader().GetSettingsFilePathList(environment);
+    files.ForEach(path => {
+      var fname = Path.GetFileName(path);
+      proj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
+      File.Copy(path, Path.Combine(proj.ProjectPath, fname), true);
+    });
   }
 }
 

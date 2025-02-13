@@ -7,12 +7,12 @@ public class ProjectGeneratorTests {
 
   [Test] public async Task Test_GenerateSolution() {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    if (Directory.Exists(project.SolutionPath)) Directory.Delete(project.SolutionPath, true);
+    if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
     await new ProjectGenerator(project, "dev").GenerateSolution();
-    Assert.That(Directory.Exists(project.SolutionPath));
+    Assert.That(Directory.Exists(project.SolutionDirPath));
 
-    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectPath);
+    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
 

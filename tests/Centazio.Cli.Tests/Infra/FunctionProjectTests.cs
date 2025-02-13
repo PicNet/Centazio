@@ -12,8 +12,8 @@ public class FunctionProjectTests {
     var proj = new FunctionProjectMeta(GetType().Assembly, ECloudEnv.Azure, genfolder);
     
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));
-    Assert.That(proj.SolutionPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
-    Assert.That(proj.ProjectPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure")));
+    Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
+    Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure")));
     // CsprojFile is relative to the solution folder
     Assert.That(proj.CsprojFile, Is.EqualTo(Path.Combine("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.csproj")));
     Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.sln")));

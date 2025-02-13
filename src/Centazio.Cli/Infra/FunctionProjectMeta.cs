@@ -11,11 +11,11 @@ public class FunctionProjectMeta(Assembly assembly, ECloudEnv cloud, string gene
   public ECloudEnv Cloud => cloud;
   
   public string ProjectName => $"{assembly.GetName().Name}.{cloud}";
-  public string SolutionPath => Path.Combine(FsUtils.GetSolutionFilePath(), generatedfolder, ProjectName);
-  public string ProjectPath => Path.Combine(SolutionPath, ProjectName);
-  public string CsprojFile => Path.Combine(ProjectName, $"{ProjectName}.csproj");
-  public string CsprojPath => Path.Combine(ProjectPath, $"{ProjectName}.csproj");
-  public string SlnFilePath => Path.Combine(SolutionPath, $"{ProjectName}.sln");
-  public string PublishPath => Path.Combine(ProjectPath, "bin", "Release", "net9.0", "publish");
+  public string SolutionDirPath => Path.Combine(FsUtils.GetSolutionFilePath(), generatedfolder, ProjectName);
+  public string ProjectDirPath => SolutionDirPath;
+  public string CsprojFile => $"{ProjectName}.csproj";
+  public string CsprojPath => Path.Combine(ProjectDirPath, $"{ProjectName}.csproj");
+  public string SlnFilePath => Path.Combine(SolutionDirPath, $"{ProjectName}.sln");
+  public string PublishPath => Path.Combine(ProjectDirPath, "bin", "Release", "net9.0", "publish");
   public string DashedProjectName => ProjectName.Replace('.', '-');
 }
