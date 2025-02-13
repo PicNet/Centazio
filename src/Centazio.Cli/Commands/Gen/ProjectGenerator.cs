@@ -64,7 +64,6 @@ public class ProjectGenerator(FunctionProjectMeta project) {
     return AddLatestReferencesToProject(proj,
     [
       "Microsoft.Azure.Functions.Worker",
-      "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore", // todo: required for `FunctionsApplicationBuilder.ConfigureFunctionsWebApplication`, can we remove all of this?
       "Microsoft.Azure.Functions.Worker.Extensions.Timer",
       "Microsoft.Azure.Functions.Worker.Sdk",
       "System.ClientModel", // needed to avoid `Found conflicts between different versions of "System.ClientModel" that could not be resolved`
@@ -131,11 +130,10 @@ public class {{ClassName}}Azure {
           .Replace("{{NewAssemblyName}}", proj.ProjectName);
       
       await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"{func.Name}.cs"), clcontent);
-      await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"Program.cs"), @"using Microsoft.Azure.Functions.Worker.Builder;
+      await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"Program.cs"), @"
 using Microsoft.Extensions.Hosting;
 
-var builder = FunctionsApplication.CreateBuilder(args);
-builder.ConfigureFunctionsWebApplication();
+var builder = new HostBuilder().ConfigureFunctionsWorkerDefaults();
 builder.Build().Run();");
     }
   }
