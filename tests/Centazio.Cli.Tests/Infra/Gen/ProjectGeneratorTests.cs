@@ -7,9 +7,9 @@ public class ProjectGeneratorTests {
 
   [Test] public async Task Test_GenerateSolution() {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    // if (Directory.Exists(project.SolutionPath)) Directory.Delete(project.SolutionPath, true);
+    if (Directory.Exists(project.SolutionPath)) Directory.Delete(project.SolutionPath, true);
     
-    await new ProjectGenerator(project).GenerateSolution();
+    await new ProjectGenerator(project, "dev").GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionPath));
 
     var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectPath);

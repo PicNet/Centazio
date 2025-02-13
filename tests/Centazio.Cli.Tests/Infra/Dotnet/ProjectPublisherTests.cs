@@ -1,12 +1,11 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Dotnet;
 
 public class ProjectPublisherTests {
-
+  
   [Test, Ignore("does not work with current sdk")] public async Task Test_MsBuildProjectBuilder_BuildProject() {
     await Impl(new MicrosoftBuildProjectPublisher().BuildProject);
   }
@@ -16,12 +15,11 @@ public class ProjectPublisherTests {
   }
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
-    var settings = TestingFactories.Settings();
-    var project =  new FunctionProjectMeta(GetType().Assembly, ECloudEnv.Azure, settings.GeneratedCodeFolder);
+    var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
+    await new ProjectGenerator(project, "dev").GenerateSolution();
+    
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
-    
     await builder(project);
-    
     Assert.That(Directory.Exists(project.PublishPath));
   }
 }

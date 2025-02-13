@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli.Infra;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Microsoft.Build.Locator;
 using net.r_eg.MvsSln;
 using net.r_eg.MvsSln.Core;
@@ -9,14 +10,14 @@ namespace Centazio.Cli.Commands.Gen;
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
 // todo: separate out into a hierarchy for Azure and Aws
-public class ProjectGenerator(FunctionProjectMeta project) {
+public class ProjectGenerator(FunctionProjectMeta project, string environment) {
   
   public async Task GenerateSolution() {
     await GenerateSolutionSkeleton();
     await AddProjectsToSolution(project.SlnFilePath);
   }
   
-
+  // todo: do we need to create a solution at all, can we just create csproj?
   private async Task GenerateSolutionSkeleton() {
     Directory.CreateDirectory(project.SolutionPath);
     var (arch, configs) = ("Any CPU", new[] { "Debug", "Release" });
@@ -53,6 +54,7 @@ public class ProjectGenerator(FunctionProjectMeta project) {
         await AddAzureReferencesToProject(proj);
         await AddAzHostJsonFileToProject(proj);
         await AddAzureFunctionsToProject(proj);
+        AddSettingsFilesToProject(proj);
       }
       else throw new NotSupportedException(project.Cloud.ToString());
       
@@ -66,8 +68,12 @@ public class ProjectGenerator(FunctionProjectMeta project) {
       "Microsoft.Azure.Functions.Worker",
       "Microsoft.Azure.Functions.Worker.Extensions.Timer",
       "Microsoft.Azure.Functions.Worker.Sdk",
-      "System.ClientModel", // needed to avoid `Found conflicts between different versions of "System.ClientModel" that could not be resolved`
-      "Serilog"
+      
+      "Serilog",
+      "Serilog.Sinks.Console",
+      
+      // avoids `Found conflicts between different versions of "System.ClientModel" that could not be resolved`
+      "System.ClientModel",
     ]);
     
   }
@@ -97,6 +103,15 @@ public class ProjectGenerator(FunctionProjectMeta project) {
     await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"host.json"), contents);
   }
   
+  private void AddSettingsFilesToProject(IXProject proj) {
+    var files = new SettingsLoader().GetSettingsFilePathList(environment);
+    files.ForEach(path => {
+      var fname = Path.GetFileName(path);
+      proj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
+      File.Copy(path, Path.Combine(proj.ProjectPath, fname), true);
+    });
+  }
+  
   private async Task AddAzureFunctionsToProject(IXProject proj) {
     var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
     proj.AddReference(project.Assembly, opts);
@@ -105,23 +120,19 @@ public class ProjectGenerator(FunctionProjectMeta project) {
     // todo: these templates should be in other files to allow users to change the template if required
     foreach (var func in IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [])) {
       var clcontent = @"
-using Centazio.Core.Runner;
-using Centazio.Core.Misc;
-using {{FunctionNamespace}};
 using Microsoft.Azure.Functions.Worker;
-using Serilog;
+using Centazio.Core.Runner;
 
 namespace {{NewAssemblyName}};
 
 public class {{ClassName}}Azure {  
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
-  static {{ClassName}}Azure() {
-    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
+  static {{ClassName}}Azure() {    
     impl = new(async () => await new FunctionsInitialiser().Init<{{ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
-  [Function(""{{ClassName}}"")] public async Task Run([TimerTrigger(""0 * * * * *"")] TimerInfo timer) {    
+  [Function(nameof({{ClassName}}))] public async Task Run([TimerTrigger(""*/10 * * * * *"")] TimerInfo timer) {    
     await (await impl.Value).RunFunction(); 
   }
 }"
@@ -131,10 +142,16 @@ public class {{ClassName}}Azure {
       
       await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"{func.Name}.cs"), clcontent);
       await File.WriteAllTextAsync(Path.Combine(proj.ProjectPath, $"Program.cs"), @"
+using Centazio.Core.Misc;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
-var builder = new HostBuilder().ConfigureFunctionsWorkerDefaults();
-builder.Build().Run();");
+Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
+
+new HostBuilder()
+  .ConfigureFunctionsWorkerDefaults()  
+  .Build().Run();
+");
     }
   }
 }

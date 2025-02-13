@@ -15,17 +15,23 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
 
   private const string DEFAULT_FILE_NAME = "settings.json";
   
-  public T Load<T>(string environment) {
-    if (!filename.EndsWith(".json")) throw new Exception("settings file should have a json extension");
-    
+  private readonly string filename =  filename.EndsWith(".json") && !String.IsNullOrWhiteSpace(filename) ? filename : throw new Exception("settings filename should be a valid json file");
+  
+  public List<string> GetSettingsFilePathList(string environment) {
+    var defaults = SearchForSettingsFile(filename.Replace(".json", $".defaults.json"));
     var basefile = SearchForSettingsFile(filename) ?? throw new Exception($"could not find settings file [{filename}] in the current directory hierarchy");
-    Log.Debug($"loading settings - file[{basefile}] environment[{environment}]");
+    var envfile = String.IsNullOrWhiteSpace(environment) ? null : SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
     
-    var builder = new ConfigurationBuilder().AddJsonFile(basefile, false);
-    var envfile = String.IsNullOrEmpty(environment) ? 
-        null : 
-        SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
-    if (envfile is not null) { builder.AddJsonFile(envfile, false); }
+    return new [] {defaults, basefile, envfile}.OfType<string>().ToList();
+  }
+  
+  public T Load<T>(string environment) {
+    var files = GetSettingsFilePathList(environment);
+    Console.WriteLine($"loading setting files[{String.Join(',', files)}] environment[{environment}]");
+    Log.Debug($"loading setting files[{String.Join(',', files)}] environment[{environment}]");
+    
+    var builder = new ConfigurationBuilder();
+    files.ForEach(file => builder.AddJsonFile(file));
     
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");

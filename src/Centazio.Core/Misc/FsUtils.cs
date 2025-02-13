@@ -2,7 +2,10 @@ namespace Centazio.Core.Misc;
 
 public static class FsUtils {
   
+  private static string? rootdir;
+  
   public static string GetSolutionRootDirectory() {
+    if (rootdir is not null) return rootdir;
     var file = "centazio3.sln";
 
     string? Impl(string dir) {
@@ -12,7 +15,10 @@ public static class FsUtils {
       var parent = Directory.GetParent(dir)?.FullName;
       return parent is null ? null : Impl(parent);
     }
-    return Impl(Environment.CurrentDirectory) ?? throw new Exception("could not find the solution directory");
+    return rootdir 
+        ??= Impl(Environment.CurrentDirectory)
+        // if the solution file is not found, then we are in a cloud environment and should return the CWD
+        ?? Environment.CurrentDirectory;
   }
   
   public static string GetSolutionFilePath(params string[] steps) => 

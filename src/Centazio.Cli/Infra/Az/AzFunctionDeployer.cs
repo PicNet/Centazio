@@ -66,10 +66,10 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
-        // todo: remove this sb endpoint
+        // todo: remove this hardcoded sb endpoint
         new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = "Endpoint=sb://svcbusibyffnmkkoaf4.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=P7ukiUpfoai7rxWuRWckmEyTC49Rgn0GLdK3ULRIQuk=" },
         new AppServiceNameValuePair { Name = "SiteConfigProperties", Value = "1" },
-        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" },
+        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" }
       ]
     },
     AppServicePlanId = farmid
@@ -104,7 +104,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       Log.Information("deployment completed");
     }
     finally {
-      // if (File.Exists(zippath)) File.Delete(zippath);
+      if (File.Exists(zippath)) File.Delete(zippath);
     }
   }
 
