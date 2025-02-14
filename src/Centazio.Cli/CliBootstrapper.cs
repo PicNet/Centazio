@@ -8,7 +8,6 @@ using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Host;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 using Spectre.Console.Cli;
 
 return new CliBootstrapper().Initialise().Start(args);

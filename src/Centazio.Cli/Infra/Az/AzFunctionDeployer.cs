@@ -9,7 +9,6 @@ using Azure.ResourceManager.Resources;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using net.r_eg.MvsSln.Extensions;
-using Serilog;
 
 namespace Centazio.Cli.Infra.Az;
 

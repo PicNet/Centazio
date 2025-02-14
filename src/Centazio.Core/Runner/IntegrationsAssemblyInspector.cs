@@ -5,13 +5,14 @@ namespace Centazio.Core.Runner;
 
 public static class IntegrationsAssemblyInspector {
 
-  public static IIntegrationBase GetCentazioIntegration(Assembly assembly) => 
-      ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
-
-  private static IIntegrationBase ValidateIntegrationFound(List<Type> integrations) {
-    if (!integrations.Any()) throw new Exception("Could not find the Centazio Integration in provided assemblies");
-    if (integrations.Count > 1) throw new Exception($"Found {integrations.Count} Centazio Integrations in the provided assemblies.  There should only ever be one Integration per deployment unit");
-    return (IIntegrationBase) (Activator.CreateInstance(integrations.Single()) ?? throw new Exception());
+  public static IIntegrationBase GetCentazioIntegration(Assembly assembly) {
+    return ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
+    
+    IIntegrationBase ValidateIntegrationFound(List<Type> integrations) {
+      if (!integrations.Any()) throw new Exception($"Could not find the Centazio Integration in provided assembly[{assembly.GetName().FullName}]");
+      if (integrations.Count > 1) throw new Exception($"Found {integrations.Count} Centazio Integrations in assembly[{assembly.GetName().FullName}].  There should only ever be one Integration per deployment unit");
+      return (IIntegrationBase) (Activator.CreateInstance(integrations.Single()) ?? throw new Exception());
+    }
   }
 
   public static Type GetCoreServiceFactoryType<F>(string provider) {

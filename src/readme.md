@@ -5,6 +5,7 @@
     - get working
     - application insights
     - Serilog Logs not working
+    - local function simulator (wrapper for: `func start -g Centazio_3_Testing (dotnet-isolated)`)
   - Aws:
     - implement 
 - create a `defaults` directory with default settings, templates, cli commands, etc.

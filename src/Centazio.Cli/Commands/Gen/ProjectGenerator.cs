@@ -1,20 +1,23 @@
-﻿using Centazio.Cli.Infra;
+﻿using System.Reflection;
+using Centazio.Cli.Infra;
 using Centazio.Core;
-using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Build.Locator;
 using net.r_eg.MvsSln;
 using net.r_eg.MvsSln.Core;
+using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
+// todo: once IXProject is created, create a new class to avoid having `proj` in every method
 public abstract class ProjectGenerator(FunctionProjectMeta project, string environment) {
   
   public static ProjectGenerator Create(FunctionProjectMeta project, string environment) {
+    ValidateProjectAssemblyBeforeCodeGen(project.Assembly);
     switch (project.Cloud) {
       case ECloudEnv.Aws: return new AwsProjectGenerator(project, environment);
       case ECloudEnv.Azure: return new AzureProjectGenerator(project, environment);
@@ -22,7 +25,12 @@ public abstract class ProjectGenerator(FunctionProjectMeta project, string envir
       
     }
   }
-  
+
+  private static void ValidateProjectAssemblyBeforeCodeGen(Assembly ass) {
+    IntegrationsAssemblyInspector.GetCentazioIntegration(ass); // throws own error
+    if (!IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any()) throw new Exception($"no valid Centazio Functions found in assembly[{ass.GetName().FullName}]");
+  }
+
   public async Task GenerateSolution() {
     await GenerateSolutionSkeleton();
     await AddProjectsToSolution(project.SlnFilePath);
@@ -59,38 +67,57 @@ public abstract class ProjectGenerator(FunctionProjectMeta project, string envir
         { "EnforceCodeStyleInBuild", "true" },
         { "ManagePackageVersionsCentrally", "false" }
       });
-      AddCentazioReferencesToProject(proj);
       AddSettingsFilesToProject(proj);
+      var added = new Dictionary<string, bool>();
+      AddCentazioProjectReferencesToProject(proj, added);
+      await AddCentazioProvidersAndRelatedNugetsToProject(proj, added);
+      await AddCentazioNuGetReferencesToProject(proj);
       
       var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, []);
-      await AddCloudSpecificContentToProject(proj, functions);
       
+      await AddCloudSpecificContentToProject(proj, functions);
       proj.Save();
     }
   }
+
+  private void AddCentazioProjectReferencesToProject(IXProject proj, IDictionary<string, bool> added) {
+    AddReferenceIfRequired(typeof(AbstractFunction<>).Assembly, proj, added); // Add Centazio.Core
+    AddReferenceIfRequired(project.Assembly, proj, added); // Add this function's assemply
+  }
   
-  private void AddCentazioReferencesToProject(IXProject proj) {
-    var opts = AddReferenceOptions.Default | AddReferenceOptions.HidePrivate;
-    
-    // Add Centazio.Core
-    proj.AddReference(typeof(AbstractFunction<>).Assembly, opts);
-    
-    // Add this function's assemply
-    proj.AddReference(project.Assembly, opts);
-    
-    // Add assemblies for required providers
+  private async Task AddCentazioProvidersAndRelatedNugetsToProject(IXProject proj, IDictionary<string, bool> added) {
     var settings = new SettingsLoader().Load<CentazioSettings>(environment);
     var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
-    var assemblies = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
+    var provasses = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
     
-    Console.WriteLine("ADDING PROVIDER ASSEMBLIES: " + String.Join(", ", assemblies.Select(a => a.GetName().Name)) );
-    assemblies.ForEach(provass => proj.AddReference(provass, opts));
+    provasses.ForEach(ass => AddReferenceIfRequired(ass, proj, added));
     
-    if (providers.Any(prov => prov.StartsWith("sql", StringComparison.OrdinalIgnoreCase))) {
-      Console.WriteLine("Adding EF Core");
-      proj.AddReference(ReflectionUtils.LoadAssembly("Centazio.Providers.EF"), opts);
-      // todo: add entify framework and other needed assemblies (like Sqlite nugets)
-    }
+    var references = provasses.SelectMany(provass => 
+        provass.GetReferencedAssemblies()
+            .Select(a => a.Name ?? throw new Exception())
+            .Where(name => !name.StartsWith("System") && !added.ContainsKey(name))).ToList();
+    
+    var centazios = references.Where(name => name.StartsWith($"{nameof(Centazio)}.")).ToList();
+    var nugets = references.Where(name => !name.StartsWith($"{nameof(Centazio)}.")).ToList();
+
+    centazios.ForEach(name => AddReferenceIfRequired(ReflectionUtils.LoadAssembly(name), proj, added));
+    await AddLatestNuGetReferencesToProject(proj, nugets);
+  }
+
+  void AddReferenceIfRequired(Assembly ass, IXProject proj, IDictionary<string, bool> added) {
+    var name = ass.GetName().Name ?? throw new Exception();
+    if (!added.TryAdd(name, true)) return;
+
+    proj.AddReference(ass, AddReferenceOptions.Default | AddReferenceOptions.HidePrivate);
+  }
+  
+  private Task AddCentazioNuGetReferencesToProject(IXProject proj) {
+    return AddLatestNuGetReferencesToProject(proj,
+    [
+      "Serilog",
+      "Serilog.Sinks.Console",
+      "System.ClientModel" // not required but avoids versioning warnings
+    ]);
   }
 
   private void AddSettingsFilesToProject(IXProject proj) {
@@ -102,7 +129,7 @@ public abstract class ProjectGenerator(FunctionProjectMeta project, string envir
     });
   }
 
-  protected async Task AddLatestReferencesToProject(IXProject proj, List<string> packages) => 
+  protected async Task AddLatestNuGetReferencesToProject(IXProject proj, List<string> packages) => 
       (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
           p => proj.AddPackageReference(p.name, p.version));
   
@@ -112,26 +139,17 @@ public abstract class ProjectGenerator(FunctionProjectMeta project, string envir
 internal class AzureProjectGenerator(FunctionProjectMeta project, string environment) : ProjectGenerator(project, environment) {
 
   protected override async Task AddCloudSpecificContentToProject(IXProject proj, List<Type> functions) {
-    await AddAzureReferencesToProject(proj);
+    await AddAzureNuGetReferencesToProject(proj);
     await AddAzHostJsonFileToProject(proj);
     await AddAzureFunctionsToProject(proj, functions);
   }
   
-  private Task AddAzureReferencesToProject(IXProject proj) {
-    return AddLatestReferencesToProject(proj,
-    [
-      "Microsoft.Azure.Functions.Worker",
-      "Microsoft.Azure.Functions.Worker.Extensions.Timer",
-      "Microsoft.Azure.Functions.Worker.Sdk",
-      
-      "Serilog",
-      "Serilog.Sinks.Console",
-      
-      // avoids `Found conflicts between different versions of "System.ClientModel" that could not be resolved`
-      "System.ClientModel",
-    ]);
-    
-  }
+  private Task AddAzureNuGetReferencesToProject(IXProject proj) => 
+      AddLatestNuGetReferencesToProject(proj, [
+        "Microsoft.Azure.Functions.Worker",
+        "Microsoft.Azure.Functions.Worker.Extensions.Timer",
+        "Microsoft.Azure.Functions.Worker.Sdk"
+      ]);
 
   // todo: read from external template file
   private async Task AddAzHostJsonFileToProject(IXProject proj) {

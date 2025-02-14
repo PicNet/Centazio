@@ -3,9 +3,19 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
+using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Centazio.TestFunctions;
+
+public class TestFunctionIntegration : IntegrationBase<CentazioSettings, CentazioSecrets> {
+
+  public override Task Initialise(ServiceProvider prov) => Task.CompletedTask;
+  protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) { }
+
+}
 
 public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl) {
 

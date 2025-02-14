@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using Centazio.Core.Misc;
-using Serilog;
 
 namespace Centazio.Cli.Infra.Dotnet;
 
