@@ -11,6 +11,7 @@
 - create a `defaults` directory with default settings, templates, cli commands, etc.
 - cli commands:
   - disable/stop functions
+  - run function(s) locally
 - cli code generator to add functions, integrations, projects, etc
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
