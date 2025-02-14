@@ -8,8 +8,7 @@ public static class FsUtils {
     if (rootdir is not null) return rootdir;
     if (CloudUtils.IsCloudEnviornment()) return rootdir = Environment.CurrentDirectory;
     
-    // todo: change to settings.json or other more generic file (that exists in cloud) and test
-    var file = "centazio3.sln";
+    var file = "settings.json";
 
     string? Impl(string dir) {
       var path = Path.Combine(dir, file);

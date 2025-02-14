@@ -50,9 +50,9 @@ public interface IEpochTracker {
   private async Task<List<ICoreEntity>> SysEntsToCore(CoreEntityTypeName coretype, params (SystemName, IEnumerable<ISystemEntity>)[] expected) {
     var cores = new List<ICoreEntity>();
     var allsums = new Dictionary<string, bool>();
-    foreach (var sysents in expected) {
+    await expected.ForEachSequentialAsync(async sysents => {
       var (system, sysentlst) = (sysents.Item1, sysents.Item2.ToList());
-      if (!sysentlst.Any()) continue;
+      if (!sysentlst.Any()) return;
       var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
       var existings = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
       var syscores = await sysentlst.Select(e => ToCore(e, existings.Single(e2 => e2.CoreEntity.CoreId == idmap[e.SystemId]).CoreEntity)).Synchronous();
@@ -64,7 +64,7 @@ public interface IEpochTracker {
         allsums.Add(sums[idx], true);
         cores.Add(c);
       });
-    }
+    });
     return cores;
 
     async Task<ICoreEntity> ToCore(ISystemEntity e, ICoreEntity existing) {

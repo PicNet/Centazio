@@ -21,7 +21,7 @@ public class AzFunctionDeployerTests {
     AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await ProjectGenerator.Create(project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
     await new DotNetCliProjectPublisher().PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
@@ -33,7 +33,10 @@ public class AzFunctionDeployerTests {
     Assert.That(funcs, Does.Contain($"{appname}/EmptyFunction"));
   } 
 
-  [Test] public void Test_CreateFunctionAppZip() {
+  [Test] public async Task Test_CreateFunctionAppZip() {
+    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
+    await new DotNetCliProjectPublisher().PublishProject(project);
+    
     var path = AzFunctionDeployer.CreateFunctionAppZip(project);
     
     Assert.That(File.Exists(path));

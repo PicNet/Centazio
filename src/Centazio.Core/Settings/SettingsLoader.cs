@@ -26,7 +26,6 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
   
   public T Load<T>(string environment) {
     var files = GetSettingsFilePathList(environment);
-    Console.WriteLine($"loading setting files[{String.Join(',', files)}] environment[{environment}]");
     Log.Debug($"loading setting files[{String.Join(',', files)}] environment[{environment}]");
     
     var builder = new ConfigurationBuilder();

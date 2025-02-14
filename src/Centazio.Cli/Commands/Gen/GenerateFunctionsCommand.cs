@@ -16,7 +16,7 @@ public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractC
   protected override async Task ExecuteImpl(Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
     
-    await ProjectGenerator.Create(project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
     await new DotNetCliProjectPublisher().PublishProject(project);
   }
 

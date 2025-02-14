@@ -13,11 +13,10 @@ public class FunctionProjectTests {
     
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));
     Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
-    Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure")));
-    // CsprojFile is relative to the solution folder
-    Assert.That(proj.CsprojFile, Is.EqualTo(Path.Combine("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.csproj")));
+    Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
+    Assert.That(proj.CsprojFile, Is.EqualTo("Centazio.Cli.Tests.Azure.csproj"));
     Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.sln")));
-    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure", "bin", "Release", "net9.0", "publish")));
+    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "bin", "Release", "net9.0", "publish")));
     
 
     string GenRel(params string[] steps) => FsUtils.GetSolutionFilePath(steps.Prepend(genfolder).ToArray()); 

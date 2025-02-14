@@ -25,6 +25,15 @@ public static class GlobalEnumerableExtensionMethods {
     for (var i = 0; i < lst.Count; i++) action(lst[i], i);
   }
   
+  public static async Task ForEachSequentialAsync<T>(this IEnumerable<T> e, Func<T, Task> action) {
+    foreach (var t in e) { await action(t); }
+  }
+  
+  public static async Task ForEachSequentialAsync<T>(this IEnumerable<T> e, Func<T, int, Task> action) {
+    var lst = e.ToList();
+    for (var i = 0; i < lst.Count; i++) { await action(lst[i], i); }
+  }
+  
   public static List<T> ForEachAndReturn<T>(this IEnumerable<T> e, Action<T> action) {
     var lst = e.ToList();
     lst.ForEach(action);
