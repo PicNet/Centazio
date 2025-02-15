@@ -1,0 +1,11 @@
+{
+  "StagedEntityRepository": {
+    "ConnectionString": "Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"
+  },
+  "CtlRepository": {
+    "ConnectionString": "Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"
+  },
+  "CoreStorage": {
+    "ConnectionString": "Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"
+  }
+}

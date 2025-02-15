@@ -21,7 +21,7 @@ public class AzFunctionDeployerTests {
     AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "azure").GenerateSolution();
     await new DotNetCliProjectPublisher(settings).PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
@@ -32,9 +32,9 @@ public class AzFunctionDeployerTests {
     Assert.That(after, Does.Contain(appname));
     Assert.That(funcs, Does.Contain($"{appname}/EmptyFunction"));
   } 
-
+  
   [Test] public async Task Test_CreateFunctionAppZip() {
-    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "azure").GenerateSolution();
     await new DotNetCliProjectPublisher(settings).PublishProject(project);
     
     var path = AzFunctionDeployer.CreateFunctionAppZip(project);

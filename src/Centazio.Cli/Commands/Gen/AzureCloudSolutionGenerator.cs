@@ -9,11 +9,11 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
 
   protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj) => new AzureCloudProjectGenerator(settings, project, proj, environment);
 
-  internal class AzureCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(projmeta, slnproj, environment) {
+  internal class AzureCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
 
     protected override async Task AddCloudSpecificContentToProject(List<Type> functions) {
       await AddAzureNuGetReferencesToProject();
-      await AddAzHostJsonFileToProject();
+      await AddAzConfigJsonFilesToProject();
       await AddAzureFunctionsToProject(functions);
     }
   
@@ -24,9 +24,14 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
           "Microsoft.Azure.Functions.Worker.Sdk"
         ]);
     
-    private async Task AddAzHostJsonFileToProject() {
-      slnproj.AddItem("None", "host.json", [new("CopyToOutputDirectory", "PreserveNewest")]);
-      await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"host.json"), settings.Template("azure/host.json"));
+    private async Task AddAzConfigJsonFilesToProject() {
+      await AddTemplateFileToProject("host.json");
+      await AddTemplateFileToProject("local.settings.json");
+      
+      async Task AddTemplateFileToProject(string fname) {
+        slnproj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, fname), settings.Template($"azure/{fname}"));
+      }
     }
   
     private async Task AddAzureFunctionsToProject(List<Type> functions) {

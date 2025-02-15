@@ -106,8 +106,8 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       (await appres.GetPublishingCredentialsAsync(WaitUntil.Completed)).Value.Data;
   
   internal static string CreateFunctionAppZip(FunctionProjectMeta project) {
-    var subdirs = new List<string> { ".azurefunctions" };
-    var extensions = new List<string> { ".exe", ".dll", ".json", "*.metadata", ".pdb" };
+    var subdirs = new List<string> { ".azurefunctions", "runtimes" };
+    var extensions = new List<string> { ".exe", ".dll", ".json", ".env", "*.metadata", ".pdb" };
     var zippath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
     
     using var zip = new FileStream(zippath, FileMode.Create);

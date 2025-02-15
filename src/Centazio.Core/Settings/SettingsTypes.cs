@@ -262,7 +262,10 @@ public record CentazioSettings {
     _CoreStorage = core;
   }
 
-  public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
+  public string GetSecretsFolder() => 
+      CloudUtils.IsCloudEnviornment() 
+          ? Environment.CurrentDirectory 
+          : FsUtils.FindFirstValidDirectory(SecretsFolders);
 
   public record Dto : IDto<CentazioSettings> {
     public List<string>? SecretsFolders { get; init; }
@@ -287,7 +290,7 @@ public record CentazioSettings {
   public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 
   public string Parse(string command, object? args=null, CentazioSecrets? secrets=null) {
-    var macros = Regex.Matches(command, @"(\[[\w.]*\])");
+    var macros = Regex.Matches(command, @"(\[[\w.]+\])");
     macros.ForEach(m => command = command.Replace(m.Groups[0].Value, ParseMacroValue(m.Groups[0].Value[1..^1])));
     return command;
     

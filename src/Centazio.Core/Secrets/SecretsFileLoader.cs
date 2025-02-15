@@ -5,13 +5,20 @@ using Exception = System.Exception;
 namespace Centazio.Core.Secrets;
 
 public interface ISecretsLoader  {
+  string GetSecretsFilePath(string environment);
   T Load<T>(string environment);
 }
 
-public class NetworkLocationEnvFileSecretsLoader(string dir) : ISecretsLoader {
+public class SecretsFileLoader(string dir) : ISecretsLoader {
+  
+  public string GetSecretsFilePath(string environment) {
+    var path = Path.Combine(dir, $"{environment}.env");
+    if (!File.Exists(path)) throw new FileNotFoundException(path);
+    return path;
+  }
   
   public T Load<T>(string environment) {
-    var path = Path.Combine(dir, $"{environment}.env");
+    var path = GetSecretsFilePath(environment);
     Log.Debug($"loading secrets - file [{path}]");
     
     var secrets = LoadSecretsFileAsDictionary(path);
@@ -40,5 +47,4 @@ public class NetworkLocationEnvFileSecretsLoader(string dir) : ISecretsLoader {
     if (missing.Any()) throw new Exception($"secrets file has missing properties:\n\t{String.Join("\n\t", missing.Select(p => p.Name))}");
     return dtot is null ? (T) typed : ((IDto<T>)typed).ToBase();
   }
-
 }

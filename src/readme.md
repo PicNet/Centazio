@@ -4,12 +4,13 @@
   - Azure:
     - get working
     - application insights
+    - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
     - Serilog Logs not working
     - local function simulator (wrapper for: `func start -g Centazio_3_Testing (dotnet-isolated)`)
   - Aws:
     - implement 
-- create a `defaults` directory with default settings, templates, cli commands, etc.
 - cli commands:
+  - change builder to use `dotnet` command rather than the troublesome `Microsoft.Build` namespace 
   - disable/stop functions
   - run function(s) locally
 - cli code generator to add functions, integrations, projects, etc
@@ -191,6 +192,8 @@ The `RunFunction` method is the method that the host will call to execute this f
 #### AbstractFunction<C, R>:
 
 todo: expand 
+
+## Common Commands
 
 ## Call outs
 - https://github.com/3F/MvsSln: Used for sln and csproj file generation

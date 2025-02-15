@@ -38,7 +38,7 @@ internal class CliBootstrapper {
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMeneCommand>()
-        .AddSingleton(new NetworkLocationEnvFileSecretsLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev"))
+        .AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev"))
         
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()

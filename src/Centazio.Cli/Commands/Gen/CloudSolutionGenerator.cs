@@ -3,6 +3,7 @@ using Centazio.Cli.Infra;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Build.Locator;
@@ -22,7 +23,7 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
   public static CloudSolutionGenerator Create(CentazioSettings settings, FunctionProjectMeta project, string environment) {
     ValidateProjectAssemblyBeforeCodeGen(project.Assembly);
     switch (project.Cloud) {
-      case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(project, environment);
+      case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(settings, project, environment);
       case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(settings, project, environment);
       default: throw new NotSupportedException(project.Cloud.ToString());
       
@@ -69,7 +70,9 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
 
 }
 
-public abstract class AbstractCloudProjectGenerator(FunctionProjectMeta projmeta, IXProject slnproj, string environment) {
+public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) {
+  
+  protected readonly CentazioSettings settings = settings;
   protected readonly IXProject slnproj = slnproj;
 
   public async Task Generate() {
@@ -83,6 +86,7 @@ public abstract class AbstractCloudProjectGenerator(FunctionProjectMeta projmeta
         { "ManagePackageVersionsCentrally", "false" }
       });
       AddSettingsFilesToProject();
+      AddSecretsFilesToProject();
       var added = new Dictionary<string, bool>();
       AddCentazioProjectReferencesToProject(added);
       await AddCentazioProvidersAndRelatedNugetsToProject(added);
@@ -100,7 +104,6 @@ public abstract class AbstractCloudProjectGenerator(FunctionProjectMeta projmeta
   }
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {
-    var settings = new SettingsLoader().Load<CentazioSettings>(environment);
     var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
     var provasses = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
     
@@ -135,13 +138,22 @@ public abstract class AbstractCloudProjectGenerator(FunctionProjectMeta projmeta
 
   private void AddSettingsFilesToProject() {
     var files = new SettingsLoader().GetSettingsFilePathList(environment);
+    AddCopyFilesToProject(files);
+  }
+
+  private void AddSecretsFilesToProject() {
+    var path = new SecretsFileLoader(settings.GetSecretsFolder()).GetSecretsFilePath(environment);
+    AddCopyFilesToProject([path]);
+  }
+  
+  private void AddCopyFilesToProject(List<string> files) {
     files.ForEach(path => {
       var fname = Path.GetFileName(path);
       slnproj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
       File.Copy(path, Path.Combine(slnproj.ProjectPath, fname), true);
     });
   }
-
+  
   protected async Task AddLatestNuGetReferencesToProject(List<string> packages) => 
       (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
           p => slnproj.AddPackageReference(p.name, p.version));

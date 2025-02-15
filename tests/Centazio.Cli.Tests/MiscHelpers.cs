@@ -17,12 +17,12 @@ public static class MiscHelpers {
   public static class Az {
     public static List<string> ListFunctionApps() {
       var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionAppsCmd)).Out;
-      return Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
+      return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static List<string> ListFunctionsInApp(string appname) {
       var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionsCmd, new { AppName = appname })).Out;
-      return Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
+      return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static void DeleteFunctionApp(string appname) {

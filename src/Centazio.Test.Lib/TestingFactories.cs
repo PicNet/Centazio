@@ -21,7 +21,7 @@ public static class TestingFactories {
   public static E Settings<E>() => new SettingsLoader().Load<E>("dev");
   
   public static CentazioSecrets Secrets() => Secrets<CentazioSecrets>();
-  public static E Secrets<E>() => new NetworkLocationEnvFileSecretsLoader(Settings().GetSecretsFolder()).Load<E>("dev");
+  public static E Secrets<E>() => new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>("dev");
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

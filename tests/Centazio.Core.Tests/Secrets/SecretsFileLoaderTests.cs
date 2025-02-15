@@ -2,9 +2,7 @@
 
 namespace Centazio.Core.Tests.Secrets;
 
-public class NetworkLocationEnvFileSecretsLoaderTests {
-
-  
+public class SecretsFileLoaderTests {
 
   [Test] public void Test_loading_from_local() {
     var contents = @"SETTING1=VALUE1;
@@ -20,7 +18,7 @@ SETTING6=val=with=equals";
   private TestSettingsTargetObj Load(string env, string contents) {
     var file = $"{env}.env";
     File.WriteAllText(file, contents);
-    try { return (TestSettingsTargetObj) new NetworkLocationEnvFileSecretsLoader(".").Load<TestSettingsTargetObjRaw>(env); }
+    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(env); }
     finally { File.Delete(file); }
   }
 

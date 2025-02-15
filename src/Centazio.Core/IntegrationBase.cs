@@ -20,7 +20,7 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
   
   protected IntegrationBase(string env = "dev") {
     Settings = new SettingsLoader().Load<TSettings>(env);
-    Secrets = new NetworkLocationEnvFileSecretsLoader(Settings.GetSecretsFolder()).Load<TSecrets>(env);
+    Secrets = new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(env);
   }
   
   public void RegisterServices(CentazioServicesRegistrar registrar) {
