@@ -58,6 +58,4 @@ public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IO
       return meaningful;
     }
   }
-
-  public OperationResult BuildErrorResult(OperationStateAndConfig<C> op, Exception ex) => new ErrorWriteOperationResult(EOperationAbortVote.Abort, ex);
 }

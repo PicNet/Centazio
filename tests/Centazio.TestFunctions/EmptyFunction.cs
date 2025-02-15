@@ -30,8 +30,6 @@ public class EmptyFunctionOperationRunner : IOperationRunner<EmptyFunctionOperat
     Log.Information($"EmptyFunctionOperationRunner#RunOperation[{op.OpConfig.Name}]");
     return Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
   }
-  
-  public OperationResult BuildErrorResult(OperationStateAndConfig<EmptyFunctionOperationConfig> op, Exception ex) => throw new Exception();
 }
 
 public record EmptyFunctionOperationConfig(string Name) : OperationConfig(Constants.Object, CronExpressionsHelper.EveryXSeconds(20));

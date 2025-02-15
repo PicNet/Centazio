@@ -19,10 +19,6 @@ public abstract record ReadOperationResult(
 
 }
 
-// todo: consider having a generic Error Result that can be used by all functions, may even allow us to remove the `IOperationRunner.BuildErrorResult` requirement
-internal sealed record ErrorReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) 
-        : ReadOperationResult(EOperationResult.Error, $"ErrorReadOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]", 0, AbortVote, null, Exception);
-
 internal sealed record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(EOperationResult.Success, "EmptyReadOperationResult", 0, AbortVote);
 

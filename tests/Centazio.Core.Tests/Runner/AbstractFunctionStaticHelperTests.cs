@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
+﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
@@ -80,39 +79,41 @@ public class AbstractFunctionStaticHelperTests {
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
     var runner = F.ReadRunner();
     
-    var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo) };
-    var results1 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states1, runner, repo);
+    var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await F.CreateReadOpStateAndConf(repo) };
+    var results1 = await RunOps(states1, runner);
     
-    var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo) };
-    var results2 = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states2, runner, repo);
+    var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await F.CreateErroringOpStateAndConf(repo) };
+    var results2 = await RunOps(states2, runner);
+    var res2ex = results2.Single().Exception;
     
     var newstates = repo.Objects.Values.ToList();
 
     Assert.That(results1, Is.EquivalentTo([new EmptyReadOperationResult()]));
-    Assert.That(results2, Is.EquivalentTo([new ErrorReadOperationResult(EOperationAbortVote.Abort)]));
+    Assert.That(results2, Is.EquivalentTo([new ErrorOperationResult(EOperationAbortVote.Abort, res2ex)]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue, 0, UtcDate.UtcNow)));
-    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow)));
+    Assert.That(newstates[1], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow, res2ex)));
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
     var runner = F.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
+      await F.CreateErroringOpStateAndConf(repo),
+      await F.CreateReadOpStateAndConf(repo)
     };
     
-    var results = await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo);
+    var results = await RunOps(states, runner);
+    var resex = results.Single().Exception;
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo([
-      new ErrorReadOperationResult(EOperationAbortVote.Abort)
+      new ErrorOperationResult(EOperationAbortVote.Abort, resex)
     ]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow)));
+    Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow, resex)));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
@@ -120,20 +121,20 @@ public class AbstractFunctionStaticHelperTests {
     var runner = F.ReadRunner();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Error, repo),
-      await Factories.CreateReadOpStateAndConf(EOperationResult.Success, repo)
+      await F.CreateErroringOpStateAndConf(repo),
+      await F.CreateReadOpStateAndConf(repo)
     };
     states[0] = states[0] with { OpConfig = states[0].OpConfig with { GetUpdatesAfterCheckpoint = ThrowsError } }; 
-    var results = (await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(states, runner, repo, false)).ToList();
+    var results = (await RunOps(states, runner)).ToList();
     var newstates = repo.Objects.Values.ToList();
     var ex = results[0].Exception ?? throw new Exception();
 
     Assert.That(results, Has.Count.EqualTo(1));
-    Assert.That(results[0], Is.EqualTo(new ErrorReadOperationResult(EOperationAbortVote.Abort, ex)));
+    Assert.That(results[0], Is.EqualTo(new ErrorOperationResult(EOperationAbortVote.Abort, ex)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
-    var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow, ex.Message);
-    Assert.That(newstates[0], Is.EqualTo(exp2 with { LastRunException = ex.ToString() }));
+    var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow, ex);
+    Assert.That(newstates[0], Is.EqualTo(exp2));
     Assert.That(newstates[1], Is.EqualTo(states[1].State)); // remained unchanged
   }
   
@@ -141,13 +142,13 @@ public class AbstractFunctionStaticHelperTests {
     var (name, startingcp, runner) = (nameof(AbstractFunctionStaticHelperTests), UtcDate.UtcNow.AddMinutes(1), F.ReadRunner());
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
-    var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, GetAbortingOrEmptyResult);
+    var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
       new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     
     TestingUtcDate.DoTick();
-    await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(opconfigs, runner, repo, false);
+    await RunOps(opconfigs, runner);
     TestingUtcDate.DoTick();
     
     var loaded = await repo.GetObjectState(sysstate, new(name)) ?? throw new Exception();
@@ -158,13 +159,13 @@ public class AbstractFunctionStaticHelperTests {
     var (name, startingcp, runner) = (nameof(AbstractFunctionStaticHelperTests), UtcDate.UtcNow.AddMinutes(1), F.ReadRunner());
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
-    var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, GetAbortingOrEmptyResult);
+    var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
       new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     
     var opstart = TestingUtcDate.DoTick();
-    await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(opconfigs, runner, repo, false);
+    await RunOps(opconfigs, runner);
     TestingUtcDate.DoTick();
     
     var loaded = await repo.GetObjectState(sysstate, new(name)) ?? throw new Exception();
@@ -180,14 +181,17 @@ public class AbstractFunctionStaticHelperTests {
       new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     TestingUtcDate.DoTick();
-    await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(opconfigs, runner, repo, false);
+    await RunOps(opconfigs, runner);
     TestingUtcDate.DoTick();
     
     var loaded = await repo.GetObjectState(sysstate, new(name)) ?? throw new Exception();
     Assert.That(loaded.NextCheckpoint, Is.EqualTo(successcp));
   }
   
-  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, string exmessage="na") {
+  private async Task<List<OperationResult>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, IOperationRunner<ReadOperationConfig> runner) => 
+      await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(ops, runner, repo, false);
+
+  private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, Exception? ex = null) {
     return new ObjectState(new(res.ToString()), new(res.ToString()), new SystemEntityTypeName(res.ToString()), nextcheckpoint, true) {
       DateCreated = UtcDate.UtcNow,
       LastResult = res, 
@@ -197,51 +201,31 @@ public class AbstractFunctionStaticHelperTests {
       LastSuccessStart = res == EOperationResult.Success ? UtcDate.UtcNow : null, 
       LastCompleted = UtcDate.UtcNow,
       LastSuccessCompleted = res == EOperationResult.Success ? UtcDate.UtcNow : null,
+      LastRunException = ex?.ToString(),
       LastRunMessage = $"operation [{res}/{res}/{res}] completed [{res}] message: " +
           (len == 0 
-              ? res == EOperationResult.Error ? $"ErrorReadOperationResult[{exmessage}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
+              ? res == EOperationResult.Error ?
+                  ex is null ? throw new Exception()
+                  : $"ErrorOperationResult[{ex.Message}] - AbortVote[Abort]" : "EmptyReadOperationResult" 
               : String.Empty)
     };
   }
 
   static class Factories {
-    public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, ICtlRepository repo) 
-        => new (
-            await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString()), UtcDate.UtcNow),
-            new BaseFunctionConfig(),
-            new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, GetAbortingOrEmptyResult), 
-            DateTime.MinValue);
+    
     
     public static List<ReadOperationConfig> READ_OP_CONFIGS => [
-      new(new SystemEntityTypeName("1"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
-      new(new SystemEntityTypeName("2"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
-      new(new SystemEntityTypeName("3"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults),
-      new(new SystemEntityTypeName("4"), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResults)
+      new(new SystemEntityTypeName("1"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new(new SystemEntityTypeName("2"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new(new SystemEntityTypeName("3"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new(new SystemEntityTypeName("4"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult)
     ];
   }
   
   private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> config) => GetListResult(config, null);
   
-  private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> config, DateTime? nextcheckpoint) {
-    ReadOperationResult res = Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error 
-        ? new ErrorReadOperationResult() 
-        : new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), nextcheckpoint ?? UtcDate.UtcNow);
-    return Task.FromResult(res); 
-  }
-  
-  private static Task<ReadOperationResult> GetAbortingOrEmptyResult(OperationStateAndConfig<ReadOperationConfig> config) {
-    ReadOperationResult res = Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error 
-        ? new ErrorReadOperationResult(EOperationAbortVote.Abort) 
-        : new EmptyReadOperationResult(); 
-    return Task.FromResult(res);
-  }
-  
-  private static Task<ReadOperationResult> GetEmptyResults(OperationStateAndConfig<ReadOperationConfig> config) {
-    ReadOperationResult res = Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error 
-        ? new ErrorReadOperationResult() 
-        : new EmptyReadOperationResult();
-    return Task.FromResult(res);
-  }
+  private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> _, DateTime? nextcheckpoint) => 
+      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), nextcheckpoint ?? UtcDate.UtcNow));
   
   
   private Task<ReadOperationResult> ThrowsError(OperationStateAndConfig<ReadOperationConfig> _) => throw new Exception();

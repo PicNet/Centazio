@@ -108,9 +108,6 @@ public class FunctionRunnerTests {
   }
   
   class DoNothingOpRunner : IOperationRunner<ReadOperationConfig> {
-
     public Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
-    public OperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => throw new Exception();
-
   }
 }

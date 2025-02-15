@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Runner;
+﻿using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 
 namespace Centazio.Core.Read;
@@ -11,8 +10,4 @@ public class ReadOperationRunner(IEntityStager stager) : IOperationRunner<ReadOp
     if (res is ListReadOperationResult lr) await stager.Stage(op.State.System, op.OpConfig.SystemEntityTypeName, lr.PayloadList);
     return res;
   }
-
-  public OperationResult BuildErrorResult(OperationStateAndConfig<ReadOperationConfig> op, Exception ex) => 
-      new ErrorReadOperationResult(EOperationAbortVote.Abort, ex);
-
 }

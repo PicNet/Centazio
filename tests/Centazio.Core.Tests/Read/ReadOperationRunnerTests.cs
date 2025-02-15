@@ -24,15 +24,17 @@ public class ReadOperationRunnerTests {
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
     var runner = F.ReadRunner(repository);
-    var actual = await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Error, GetListOrErrorResults));
-    
-    Assert.That(repository.Contents, Is.Empty);
-    ValidateResult(new SystemState.Dto(EOperationResult.Error.ToString(), EOperationResult.Error.ToString(), true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()), new ErrorReadOperationResult(), actual);
+    try { 
+      await runner.RunOperation(await F.CreateErroringOpStateAndConf(repo));
+      Assert.Fail();
+    } catch {
+      Assert.That(repository.Contents, Is.Empty);
+    } 
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
     var runner = F.ReadRunner(repository);
-    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, GetEmptyOrErrorResults);
+    var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()));
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(repository.Contents, Is.Empty);
@@ -41,7 +43,7 @@ public class ReadOperationRunnerTests {
 
   [Test] public async Task Test_valid_List_results_are_staged() {
     var runner = F.ReadRunner(repository);
-    var actual = (ListReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetListOrErrorResults));
+    var actual = (ListReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetListResults));
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
@@ -66,10 +68,8 @@ public class ReadOperationRunnerTests {
         new BaseFunctionConfig(),
         new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, impl), DateTime.MinValue);
   
-  private async Task<ReadOperationResult> GetEmptyOrErrorResults(OperationStateAndConfig<ReadOperationConfig> config) => await GetResultsImpl(config) ?? new EmptyReadOperationResult();
-  private async Task<ReadOperationResult> GetListOrErrorResults(OperationStateAndConfig<ReadOperationConfig> config) => await GetResultsImpl(config) ?? new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), UtcDate.UtcNow);
-  private Task<ReadOperationResult?> GetResultsImpl(OperationStateAndConfig<ReadOperationConfig> config) => Task.FromResult<ReadOperationResult?>(
-      Enum.Parse<EOperationResult>(config.OpConfig.Object) == EOperationResult.Error ? 
-          new ErrorReadOperationResult() : null);
+
+  private Task<ReadOperationResult> GetListResults(OperationStateAndConfig<ReadOperationConfig> config) => 
+      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), UtcDate.UtcNow));
 
 }

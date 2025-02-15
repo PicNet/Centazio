@@ -26,11 +26,3 @@ internal sealed record SuccessPromoteOperationResult(
         EOperationResult.Success,
         $"SuccessPromoteOperationResult Promote[{ToPromote.Count}] Ignore[{ToIgnore.Count}]",
         AbortVote);
-
-internal sealed record ErrorPromoteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null)
-    : PromoteOperationResult([],
-        [],
-        EOperationResult.Error,
-        $"ErrorPromoteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]",
-        AbortVote,
-        Exception);

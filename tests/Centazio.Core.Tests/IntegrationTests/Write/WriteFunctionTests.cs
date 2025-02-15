@@ -60,16 +60,13 @@ public class WriteFunctionTests {
     var ceam = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     await core.Upsert(C.CoreEntityName, [ceam]);
     
-    var result = (ErrorWriteOperationResult) (await func.RunFunction()).OpResults.Single();
+    var result = (ErrorOperationResult) (await func.RunFunction()).OpResults.Single();
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
     var allcusts = await core.GetAllCoreEntities();
     var maps = await ctl.GetAllMaps();
 
-    Assert.That(result.EntitiesUpdated, Is.Empty);
-    Assert.That(result.EntitiesCreated, Is.Empty);
     Assert.That(result.Exception, Is.EqualTo(func.Thrown));
-    Assert.That(result.TotalChanges, Is.EqualTo(0));
     Assert.That(result.AbortVote, Is.EqualTo(EOperationAbortVote.Abort));
     Assert.That(result.Result, Is.EqualTo(EOperationResult.Error));
     

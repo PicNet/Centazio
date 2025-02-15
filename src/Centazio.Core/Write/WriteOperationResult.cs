@@ -42,11 +42,4 @@ internal sealed record SuccessWriteOperationResult(
         EOperationResult.Success,
         $"SuccessWriteOperationResult Created[{EntitiesCreated.Count}] Updated[{EntitiesUpdated.Count}]",
         AbortVote);
-
-internal sealed record ErrorWriteOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue, Exception? Exception = null) : WriteOperationResult(
-    [],
-    [],
-    EOperationResult.Error,
-    $"ErrorWriteOperationResult[{Exception?.Message ?? "na"}] - AbortVote[{AbortVote}]",
-    AbortVote,
-    Exception);
+        

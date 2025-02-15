@@ -54,6 +54,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       try { return await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(system, bag.SystemEntity, bag.PreExistingCoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm)).ToList()); }
       catch (Exception e) {
         if (op.FuncConfig.ThrowExceptions) throw;
+        // todo: remove `error` and just throw the exception, the caller should then create the ErrorResult
         error = e;
         return [];
       }
@@ -163,8 +164,8 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     DataFlowLogger.Log(system,  op.OpConfig.SystemEntityTypeName, $"Core Storage[{corename}]", flows);
   }
   
-  public PromoteOperationResult GetResults() {
-    if (error is not null) return new ErrorPromoteOperationResult(EOperationAbortVote.Abort, error);
+  public OperationResult GetResults() {
+    if (error is not null) return new ErrorOperationResult(EOperationAbortVote.Abort, error);
     
     var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, Entity: bag.CoreEntityAndMeta.CoreEntity)).ToList();
     var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason ?? throw new UnreachableException())).ToList();

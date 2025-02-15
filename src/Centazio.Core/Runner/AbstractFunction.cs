@@ -125,11 +125,9 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     async Task<OperationResult> RunOp(OperationStateAndConfig<C> op) {
       try { return await runner.RunOperation(op); } 
       catch (Exception ex) {
-        var res = runner.BuildErrorResult(op, ex);
-        if (res.Result == EOperationResult.Success) throw new Exception("BuildErrorResult should never return a 'Success' result");
-        Log.Error(ex, "unhandled RunOperation exception, {@ErrorResults}", res);
+        Log.Error(ex, "unhandled RunOperation exception {@ErrorMessage}", ex.Message);
         if (throws) throw;
-        return res;
+        return new ErrorOperationResult(EOperationAbortVote.Abort, ex);
       }
     }
 

@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.CoreRepo;
-using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Ctl;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
@@ -30,9 +29,4 @@ public class PromoteOperationRunner(
     return steps.GetResults();
 
   }
-  
-
-  public OperationResult BuildErrorResult(OperationStateAndConfig<PromoteOperationConfig> op, Exception ex) => new ErrorPromoteOperationResult(EOperationAbortVote.Abort, ex);
-  
-  
 }
