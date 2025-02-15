@@ -298,4 +298,9 @@ public record CentazioSettings {
     }
   }
 
+  public string Template(string path, object? args=null) {
+    var contents = File.ReadAllText(FsUtils.GetSolutionFilePath("defaults", "templates", path));
+    return Parse(contents, args);
+  }
+
 }

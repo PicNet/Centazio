@@ -14,7 +14,7 @@ public class CloudSolutionGeneratorTests {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
-    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
     var results = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
@@ -24,8 +24,8 @@ public class CloudSolutionGeneratorTests {
   [Test] public async Task Test_that_generating_solution_twice_works() {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
     
-    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
-    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
     
     var results = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));

@@ -19,11 +19,11 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
   protected readonly FunctionProjectMeta project = project;
   protected readonly string environment = environment;
   
-  public static CloudSolutionGenerator Create(FunctionProjectMeta project, string environment) {
+  public static CloudSolutionGenerator Create(CentazioSettings settings, FunctionProjectMeta project, string environment) {
     ValidateProjectAssemblyBeforeCodeGen(project.Assembly);
     switch (project.Cloud) {
       case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(project, environment);
-      case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(project, environment);
+      case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(settings, project, environment);
       default: throw new NotSupportedException(project.Cloud.ToString());
       
     }
@@ -61,7 +61,7 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
 
   private async Task AddProjectsToSolution() {
     if (MSBuildLocator.CanRegister) MSBuildLocator.RegisterDefaults();
-    using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.AllNoLoad);
+    using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.LoadMinimalDefaultData);
     await sln.Result.Env.Projects.ForEachSequentialAsync(async proj => await GetCloudProjectGenerator(proj).Generate());
   }
 
