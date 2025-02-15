@@ -15,4 +15,14 @@ public class CloudSolutionGeneratorTests {
     var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
+  
+  [Test] public async Task Test_that_generating_solution_twice_works() {
+    var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
+    
+    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
+    
+    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectDirPath);
+    Assert.That(String.IsNullOrWhiteSpace(results.Err));
+  }
 }

@@ -2,7 +2,6 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
@@ -14,7 +13,6 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   private readonly SystemName system = op.State.System;
   private readonly CoreEntityTypeName corename = op.State.Object.ToCoreEntityTypeName;
   private readonly DateTime start = UtcDate.UtcNow;
-  private Exception? error;
   internal List<PromotionBag> bags = [];
   
   public async Task LoadPendingStagedEntities(IStagedEntityRepository stagestore) {
@@ -50,15 +48,8 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
       else throw new NotSupportedException(result.GetType().Name);
     });
 
-    async Task<List<EntityEvaluationResult>> CallEvaluator() {
-      try { return await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(system, bag.SystemEntity, bag.PreExistingCoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm)).ToList()); }
-      catch (Exception e) {
-        if (op.FuncConfig.ThrowExceptions) throw;
-        // todo: remove `error` and just throw the exception, the caller should then create the ErrorResult
-        error = e;
-        return [];
-      }
-    }
+    async Task<List<EntityEvaluationResult>> CallEvaluator() => 
+        await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(system, bag.SystemEntity, bag.PreExistingCoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm)).ToList());
   }
   
   public void IgnoreUpdatesToSameEntityInBatch() {
@@ -152,28 +143,23 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
         ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()));
   }
   
-  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) {
-    if (error is not null) return;
-    await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason) : bag.StagedEntity.Promote(start)).ToList());
-  }
+  public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) => 
+      await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason) : bag.StagedEntity.Promote(start)).ToList());
 
   public void LogPromotionSteps() {
     Log.Information($"PromotionSteps completed[{system}/{corename}] Bidi[{op.OpConfig.IsBidirectional}] IsEmpty[{IsEmpty()}] Total[{bags.Count}] ToIgnore[{ToIgnore().Count}] ToPromote[{ToPromote().Count}] ToUpdate[{ToUpdate().Count}] ToCreate[{ToCreate().Count}]");
-    if (error is not null) return;
     var flows = ToCreate().Select(e => "Add: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName()).Concat(ToUpdate().Select(e => "Edit: " + e.CoreEntityAndMeta.CoreEntity.GetShortDisplayName())).ToList();
     DataFlowLogger.Log(system,  op.OpConfig.SystemEntityTypeName, $"Core Storage[{corename}]", flows);
   }
   
   public OperationResult GetResults() {
-    if (error is not null) return new ErrorOperationResult(EOperationAbortVote.Abort, error);
-    
     var topromote = ToPromote().Select(bag => (bag.StagedEntity, Sys: bag.SystemEntity, Entity: bag.CoreEntityAndMeta.CoreEntity)).ToList();
     var toignore = ToIgnore().Select(bag => (bag.StagedEntity, bag.IgnoreReason ?? throw new UnreachableException())).ToList();
     
     return new SuccessPromoteOperationResult(topromote, toignore);
   }
   
-  public bool IsEmpty() => error is not null || bags.All(bag => bag.IsIgnore);
+  public bool IsEmpty() => bags.All(bag => bag.IsIgnore);
   public List<PromotionBag> ToPromote() => bags.Where(bag => !bag.IsIgnore).ToList();
   public List<PromotionBag> ToCreate() => ToPromote().Where(bag => bag.Map is null).ToList();
   public List<PromotionBag> ToUpdate() => ToPromote().Where(bag => bag.Map is not null).ToList();

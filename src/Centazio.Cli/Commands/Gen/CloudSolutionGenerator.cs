@@ -35,12 +35,14 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
   }
 
   public async Task GenerateSolution() {
+    if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
+    Directory.CreateDirectory(project.SolutionDirPath);
+    
     await GenerateSolutionSkeleton();
     await AddProjectsToSolution();
   }
   
   private async Task GenerateSolutionSkeleton() {
-    Directory.CreateDirectory(project.SolutionDirPath);
     var (arch, configs) = ("Any CPU", new[] { "Debug", "Release" });
     var slnconfs = configs.Select(c => new ConfigSln(c, arch)).ToArray();
     var projitem = new ProjectItem(ProjectType.CsSdk, project.CsprojFile, slnDir: project.SolutionDirPath);
@@ -59,7 +61,7 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
 
   private async Task AddProjectsToSolution() {
     if (MSBuildLocator.CanRegister) MSBuildLocator.RegisterDefaults();
-    using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.LoadMinimalDefaultData);
+    using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.AllNoLoad);
     await sln.Result.Env.Projects.ForEachSequentialAsync(async proj => await GetCloudProjectGenerator(proj).Generate());
   }
 

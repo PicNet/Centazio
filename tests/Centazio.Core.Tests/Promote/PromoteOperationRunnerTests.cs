@@ -63,18 +63,21 @@ public class PromoteOperationRunnerTests {
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
-    await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
-        new BaseFunctionConfig { ThrowExceptions = false },
-        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
-    
-    var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.CoreId);
-    Assert.That(saved, Is.Empty);
-    Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
-    stager.Contents.ForEach(se => {
-      Assert.That(se.IgnoreReason, Is.Null);
-      Assert.That(se.DatePromoted, Is.Null);
-    });
+    try {
+      await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
+          ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
+          new BaseFunctionConfig { ThrowExceptions = false },
+          new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
+      Assert.Fail();
+    } catch {
+      var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.CoreId);
+      Assert.That(saved, Is.Empty);
+      Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
+      stager.Contents.ForEach(se => {
+        Assert.That(se.IgnoreReason, Is.Null);
+        Assert.That(se.DatePromoted, Is.Null);
+      });
+    }
     
   }
   
