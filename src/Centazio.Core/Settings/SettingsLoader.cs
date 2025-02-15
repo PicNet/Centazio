@@ -17,11 +17,12 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
   private readonly string filename =  filename.EndsWith(".json") && !String.IsNullOrWhiteSpace(filename) ? filename : throw new Exception("settings filename should be a valid json file");
   
   public List<string> GetSettingsFilePathList(string environment) {
-    var defaults = SearchForSettingsFile(filename.Replace(".json", $".defaults.json"));
+    var defaults = FsUtils.GetSolutionFilePath("defaults", filename.Replace(".json", $".defaults.json"));
+    if (!File.Exists(defaults)) defaults = null;
     var basefile = SearchForSettingsFile(filename) ?? throw new Exception($"could not find settings file [{filename}] in the current directory hierarchy");
     var envfile = String.IsNullOrWhiteSpace(environment) ? null : SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
     
-    return new [] {defaults, basefile, envfile}.OfType<string>().ToList();
+    return new [] { defaults, basefile, envfile }.OfType<string>().ToList();
   }
   
   public T Load<T>(string environment) {
@@ -38,14 +39,17 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
   }
 
   private string? SearchForSettingsFile(string file) {
+    var limit = Path.GetFullPath(FsUtils.GetSolutionRootDirectory());
+    return Impl(Environment.CurrentDirectory);
+    
     string? Impl(string dir) {
-      var path = Path.Combine(dir, file);
+      var path = Path.GetFullPath(Path.Combine(dir, file));
       if (File.Exists(path)) return path;
+      if (limit == dir) return null;
       
       var parent = Directory.GetParent(dir)?.FullName;
       return parent is null ? null : Impl(parent);
     }
-    return Impl(Environment.CurrentDirectory);
   }
   
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 

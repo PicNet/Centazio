@@ -12,24 +12,21 @@ public static class MiscHelpers {
   private static readonly CentazioSettings settings = TestingFactories.Settings();
   
   public static FunctionProjectMeta EmptyFunctionProject(ECloudEnv cloud) => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), cloud, TestingFactories.Settings().GeneratedCodeFolder);
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), cloud, TestingFactories.Settings().Defaults.GeneratedCodeFolder);
 
   public static class Az {
-    private static AzureSettings azcfg = settings.AzureSettings;
-    private static string rg = azcfg.ResourceGroup;
-    
     public static List<string> ListFunctionApps() {
-      var outstr = cmd.Az($"functionapp list -g {rg} --query \"[].{{Name:name}}\"").Out;
+      var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionAppsCmd)).Out;
       return Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static List<string> ListFunctionsInApp(string appname) {
-      var outstr = cmd.Az($"functionapp function list -g {rg} -n {appname} --query \"[].{{Name:name}}\"").Out;
+      var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionsCmd, new { AppName = appname })).Out;
       return Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static void DeleteFunctionApp(string appname) {
-      cmd.Az($"functionapp delete -g {rg} -n {appname}");
+      cmd.Az(settings.Parse(settings.Defaults.AzDeleteFunctionAppCmd, new { AppName = appname }));
     }
     
     // ReSharper disable once ClassNeverInstantiated.Local

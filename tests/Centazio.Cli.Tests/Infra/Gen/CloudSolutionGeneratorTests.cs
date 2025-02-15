@@ -1,10 +1,15 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra.Dotnet;
+using Centazio.Core.Settings;
+using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Gen;
 
 public class CloudSolutionGeneratorTests {
 
+  private readonly CentazioSettings settings = TestingFactories.Settings();
+  private readonly CommandRunner cmd = new();
+  
   [Test] public async Task Test_GenerateSolution() {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
@@ -12,7 +17,7 @@ public class CloudSolutionGeneratorTests {
     await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
-    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectDirPath);
+    var results = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
   
@@ -22,7 +27,7 @@ public class CloudSolutionGeneratorTests {
     await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
     await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
     
-    var results = new CommandRunner().DotNet("build --configuration Release /property:GenerateFullPaths=true", project.ProjectDirPath);
+    var results = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
 }

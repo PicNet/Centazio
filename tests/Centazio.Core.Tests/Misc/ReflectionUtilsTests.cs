@@ -80,4 +80,9 @@ public class ReflectionUtilsTests {
   [Test] public void Test_GetProviderAssemblies() {
     Assert.That(ReflectionUtils.GetProviderAssemblies(), Has.Count.GreaterThanOrEqualTo(3));
   }
+  
+  [Test] public void Test_ParseValue() {
+    Assert.That(ReflectionUtils.ParseValue(new { Key1="Value1" }, "Key1"), Is.EqualTo("Value1"));
+    Assert.That(ReflectionUtils.ParseValue(new { Key1= new { Step2 = "Value2" } }, "Key1.Step2"), Is.EqualTo("Value2"));
+  }
 }

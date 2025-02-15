@@ -105,4 +105,22 @@ public static class ReflectionUtils {
     bool IsDescendant(Type typ) =>
         (typ.IsGenericType ? typ.GetGenericTypeDefinition() : typ) == t || (typ.BaseType is not null && IsDescendant(typ.BaseType));
   }
+
+  public static object ParseValue(object target, string path) {
+    ArgumentNullException.ThrowIfNull(target);
+    ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+    var curr = target;
+    var segments = path.Split('.');
+
+    foreach (var segment in segments) {
+      var property = curr.GetType().GetProperty(segment) ?? throw new ArgumentException($"property {segment} not found");
+      curr = property.GetValue(curr) ?? throw new ArgumentException($"property {segment} has null value");
+    }
+
+    return curr;
+  }
+  
+  public static string ParseStrValue(object target, string path) => (string) ParseValue(target, path);
+
 }

@@ -18,10 +18,10 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
       });
 
   protected override async Task ExecuteImpl(Settings settings) {
-    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.GeneratedCodeFolder);
+    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
     await UiHelpers.Progress("Generating Azure FunctionApp project", async () => await CloudSolutionGenerator.Create(project, "dev").GenerateSolution());
-    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher().PublishProject(project));
+    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
     await UiHelpers.Progress("Deploying the FunctionApp to Azure", async () => await impl.Deploy(project)); 
   }
 

@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Dotnet;
+using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Dotnet;
 
@@ -11,7 +12,7 @@ public class ProjectPublisherTests {
   }
 
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
-    await Impl(new DotNetCliProjectPublisher().PublishProject);
+    await Impl(new DotNetCliProjectPublisher(TestingFactories.Settings()).PublishProject);
   }
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {

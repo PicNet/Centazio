@@ -22,7 +22,7 @@ public class AzFunctionDeployerTests {
     var before = AzCmd.ListFunctionApps();
     
     await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
-    await new DotNetCliProjectPublisher().PublishProject(project);
+    await new DotNetCliProjectPublisher(settings).PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
     var after = AzCmd.ListFunctionApps();
@@ -35,7 +35,7 @@ public class AzFunctionDeployerTests {
 
   [Test] public async Task Test_CreateFunctionAppZip() {
     await CloudSolutionGenerator.Create(project, "dev").GenerateSolution();
-    await new DotNetCliProjectPublisher().PublishProject(project);
+    await new DotNetCliProjectPublisher(settings).PublishProject(project);
     
     var path = AzFunctionDeployer.CreateFunctionAppZip(project);
     

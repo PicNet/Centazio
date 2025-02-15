@@ -8,7 +8,7 @@ namespace Centazio.Cli.Tests.Infra;
 public class FunctionProjectTests {
 
   [Test] public void Test_propery_values_are_as_expected() {
-    var genfolder = TestingFactories.Settings().GeneratedCodeFolder;
+    var genfolder = TestingFactories.Settings().Defaults.GeneratedCodeFolder;
     var proj = new FunctionProjectMeta(GetType().Assembly, ECloudEnv.Azure, genfolder);
     
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));

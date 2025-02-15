@@ -1,5 +1,7 @@
-﻿using Centazio.Core.Ctl.Entities;
+﻿using System.Text.RegularExpressions;
+using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Secrets;
 using Centazio.Core.Stage;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -47,6 +49,54 @@ public record AzureSettings {
         String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
         String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
         Functions is null ? [] : Functions.Select(f => f.ToBase()).ToList());
+  }
+}
+
+public record DefaultsSettings {
+  
+  public string GeneratedCodeFolder { get; }
+  
+  public string DotNetCleanProject { get; }
+  public string DotNetBuildProject { get; }
+  public string DotNetPublishProject { get; }
+  
+  public string AzListFunctionAppsCmd { get; }
+  public string AzListFunctionsCmd { get; }
+  public string AzDeleteFunctionAppCmd { get; }
+  
+  private DefaultsSettings(string gencode, string dotnetclean, string dotnetbuild, string dotnetpublish, string azlstfuncapps, string azlstfuncs, string azdelfuncapp) { 
+    GeneratedCodeFolder = gencode; 
+    
+    DotNetCleanProject = dotnetclean;
+    DotNetBuildProject = dotnetbuild;
+    DotNetPublishProject=dotnetpublish;
+    
+    AzListFunctionAppsCmd = azlstfuncapps;
+    AzListFunctionsCmd = azlstfuncs;
+    AzDeleteFunctionAppCmd = azdelfuncapp;
+  }
+  
+  public record Dto : IDto<DefaultsSettings> {
+    public string? GeneratedCodeFolder { get; init; }
+    
+    public string? DotNetCleanProject { get; init; }
+    public string? DotNetBuildProject { get; init; }
+    public string? DotNetPublishProject { get; init; }
+  
+    public string? AzListFunctionAppsCmd { get; init; }
+    public string? AzListFunctionsCmd { get; init;  }
+    public string? AzDeleteFunctionAppCmd { get; init; }
+    
+    public DefaultsSettings ToBase() => new (
+        String.IsNullOrEmpty(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
+        
+        String.IsNullOrEmpty(DotNetCleanProject) ? throw new ArgumentNullException(nameof(DotNetCleanProject)) : DotNetCleanProject.Trim(),
+        String.IsNullOrEmpty(DotNetBuildProject) ? throw new ArgumentNullException(nameof(DotNetBuildProject)) : DotNetBuildProject.Trim(),
+        String.IsNullOrEmpty(DotNetPublishProject) ? throw new ArgumentNullException(nameof(DotNetPublishProject)) : DotNetPublishProject.Trim(),
+        
+        String.IsNullOrEmpty(AzListFunctionAppsCmd) ? throw new ArgumentNullException(nameof(AzListFunctionAppsCmd)) : AzListFunctionAppsCmd.Trim(),
+        String.IsNullOrEmpty(AzListFunctionsCmd) ? throw new ArgumentNullException(nameof(AzListFunctionsCmd)) : AzListFunctionsCmd.Trim(),
+        String.IsNullOrEmpty(AzDeleteFunctionAppCmd) ? throw new ArgumentNullException(nameof(AzDeleteFunctionAppCmd)) : AzDeleteFunctionAppCmd.Trim());
   }
 }
 
@@ -170,8 +220,10 @@ public record CoreStorageSettings {
 }
 
 public record CentazioSettings {
-  public string GeneratedCodeFolder { get; }
   public List<string> SecretsFolders { get; }
+  
+  private readonly DefaultsSettings? _Defaults;
+  public DefaultsSettings Defaults => _Defaults ?? throw new SettingsSectionMissingException(nameof(Defaults));
   
   private readonly AwsSettings? _AwsSettings;
   public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
@@ -189,9 +241,9 @@ public record CentazioSettings {
   public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
   
   protected CentazioSettings(CentazioSettings other) {
-    GeneratedCodeFolder = other.GeneratedCodeFolder;
     SecretsFolders = other.SecretsFolders;
     
+    _Defaults = other._Defaults;
     _AwsSettings = other._AwsSettings;
     _AzureSettings = other._AzureSettings;
     _StagedEntityRepository = other._StagedEntityRepository;
@@ -199,10 +251,10 @@ public record CentazioSettings {
     _CoreStorage = other._CoreStorage;
   }
   
-  private CentazioSettings (string gencode, List<string> secrets, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
-    GeneratedCodeFolder = gencode;
+  private CentazioSettings (List<string> secrets, DefaultsSettings? defaults, AwsSettings? aws, AzureSettings? azure, StagedEntityRepositorySettings? staged, CtlRepositorySettings? ctlrepo, CoreStorageSettings? core) {
     SecretsFolders = secrets;
     
+    _Defaults = defaults;
     _AwsSettings = aws;
     _AzureSettings = azure;
     _StagedEntityRepository = staged;
@@ -213,8 +265,9 @@ public record CentazioSettings {
   public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
 
   public record Dto : IDto<CentazioSettings> {
-    public string? GeneratedCodeFolder { get; init; }
     public List<string>? SecretsFolders { get; init; }
+    
+    public DefaultsSettings.Dto? Defaults { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
     public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
@@ -222,8 +275,8 @@ public record CentazioSettings {
     public CoreStorageSettings.Dto? CoreStorage { get; init; }
     
     public CentazioSettings ToBase() => new (
-        GeneratedCodeFolder ?? throw new ArgumentNullException(nameof(GeneratedCodeFolder)),
         SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
+        Defaults?.ToBase(),
         AwsSettings?.ToBase(),
         AzureSettings?.ToBase(),
         StagedEntityRepository?.ToBase(),
@@ -232,4 +285,17 @@ public record CentazioSettings {
   }
 
   public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
+
+  public string Parse(string command, object? args=null, CentazioSecrets? secrets=null) {
+    var macros = Regex.Matches(command, @"(\[[\w.]*\])");
+    macros.ForEach(m => command = command.Replace(m.Groups[0].Value, ParseMacroValue(m.Groups[0].Value[1..^1])));
+    return command;
+    
+    string ParseMacroValue(string val) {
+      if (val.StartsWith("settings.")) return ReflectionUtils.ParseStrValue(this, val.Replace("settings.", String.Empty));
+      if (val.StartsWith("secrets.")) return ReflectionUtils.ParseStrValue(secrets ?? throw new ArgumentNullException(nameof(secrets)), val.Replace("secrets.", String.Empty));
+      return ReflectionUtils.ParseStrValue(args ?? throw new ArgumentNullException(nameof(args)), val);
+    }
+  }
+
 }
