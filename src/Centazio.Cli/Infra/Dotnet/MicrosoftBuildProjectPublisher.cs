@@ -10,6 +10,7 @@ namespace Centazio.Cli.Infra.Dotnet;
 public class MicrosoftBuildProjectPublisher : IProjectPublisher {
 
   public MicrosoftBuildProjectPublisher() {
+    if (MSBuildLocator.IsRegistered) return; 
     var instances = MSBuildLocator.QueryVisualStudioInstances().ToList();
     MSBuildLocator.RegisterInstance(instances.OrderByDescending(instance => instance.Version).ElementAt(0));
   }

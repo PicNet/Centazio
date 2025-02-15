@@ -58,7 +58,7 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
   }
 
   private async Task AddProjectsToSolution() {
-    MSBuildLocator.RegisterDefaults();
+    if (MSBuildLocator.CanRegister) MSBuildLocator.RegisterDefaults();
     using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.LoadMinimalDefaultData);
     await sln.Result.Env.Projects.ForEachSequentialAsync(async proj => await GetCloudProjectGenerator(proj).Generate());
   }
