@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 namespace Centazio.Core.Misc;
 
 public static class ReflectionUtils {
+  
+  public static Assembly CENTAZIO_ASSEMBLY = typeof(ReflectionUtils).Assembly;
 
   public static T GetPropVal<T>(object o, string prop) {
     var rprop = o.GetType().GetProperty(prop) ?? throw new Exception($"could not find property[{prop}] in type[{o.GetType().Name}]");

@@ -35,5 +35,5 @@ internal static class InspectUtils {
           .Where(f => !f.Contains("\\generated\\"))
           .ToList();
   
-  public static Types CentazioTypes = Types.InAssembly(typeof(IntegrationBase<,>).Assembly);
+  public static readonly Types CentazioTypes = Types.InAssembly(ReflectionUtils.CENTAZIO_ASSEMBLY);
 }

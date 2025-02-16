@@ -1,5 +1,6 @@
 # Todo
 - lambda/azure wrappers:
+  - deploy using different env 
   - deploy subset of functions in assembly
   - Azure:
     - get working
@@ -14,6 +15,7 @@
   - disable/stop functions
   - run function(s) locally
 - cli code generator to add functions, integrations, projects, etc
+- remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
 - basic cli exceptions, like incorrect arguments needs to show message, not whole exception
