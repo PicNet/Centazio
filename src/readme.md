@@ -1,6 +1,5 @@
 # Todo
 - lambda/azure wrappers:
-  - deploy using different env 
   - deploy subset of functions in assembly
   - Azure:
     - get working

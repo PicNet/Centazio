@@ -34,7 +34,7 @@ public class AzFunctionDeployerTests {
   } 
   
   [Test] public async Task Test_CreateFunctionAppZip() {
-    await CloudSolutionGenerator.Create(settings, project, "azure").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, "azure_sample").GenerateSolution();
     await new DotNetCliProjectPublisher(settings).PublishProject(project);
     
     var path = AzFunctionDeployer.CreateFunctionAppZip(project);

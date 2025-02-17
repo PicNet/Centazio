@@ -7,7 +7,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen;
 
-public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractCentazioCommand<GenerateFunctionsCommand.Settings> {
+public class GenerateAzFunctionsCommand(CentazioSettings coresettings) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
 
   protected override Task RunInteractiveCommandImpl() => ExecuteImpl(new() { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
@@ -16,8 +16,8 @@ public class GenerateFunctionsCommand(CentazioSettings coresettings) : AbstractC
   protected override async Task ExecuteImpl(Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
-    await CloudSolutionGenerator.Create(coresettings, project, "dev").GenerateSolution();
-    await new DotNetCliProjectPublisher(coresettings).PublishProject(project);
+    await UiHelpers.Progress("Generating Azure Function project", async () => await CloudSolutionGenerator.Create(coresettings, project, settings.Env).GenerateSolution());
+    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
   }
 
   public class Settings : CommonSettings {

@@ -7,19 +7,20 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centazio.Core.Runner;
 
 public class FunctionsInitialiser {
+  
+  private readonly string environment;
   private CentazioSettings Settings { get; }
   private CentazioServicesRegistrar Registrar { get; }
 
-  public FunctionsInitialiser() {
-    (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
-  }
-
+  public FunctionsInitialiser(string environment) => 
+      (this.environment, Settings, Registrar) = (environment, LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
+  
   public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
   
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
     RegisterCoreServices();
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
-    var integrations = assemblies.Select(IntegrationsAssemblyInspector.GetCentazioIntegration).ToList();
+    var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environment)).ToList();
     integrations.ForEach(integration => integration.RegisterServices(Registrar));
     functions.ForEach(func => Registrar.Register(func));
     var prov = Registrar.BuildServiceProvider();
@@ -30,10 +31,8 @@ public class FunctionsInitialiser {
     return functions.Select(func => (IRunnableFunction) prov.GetRequiredService(func)).ToList();
   }
 
-  private CentazioSettings LoadSettings() {
-    return new SettingsLoader().Load<CentazioSettings>("dev");
-  }
-  
+  private CentazioSettings LoadSettings() => 
+      new SettingsLoader().Load<CentazioSettings>(environment);
 
   private void RegisterCoreServices() {
     SettingsLoader.RegisterSettingsHierarchy(Settings, Registrar);

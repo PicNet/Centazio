@@ -3,6 +3,7 @@ using Centazio.Cli.Commands;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;
+using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -34,11 +35,11 @@ internal class CliBootstrapper {
           svcs.AddSingleton(t);
         });
     
-    var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>("dev"), svcs);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs);
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMeneCommand>()
-        .AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>("dev"))
+        .AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT))
         
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()

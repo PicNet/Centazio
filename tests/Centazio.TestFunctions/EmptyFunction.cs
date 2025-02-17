@@ -10,7 +10,7 @@ using Serilog;
 
 namespace Centazio.TestFunctions;
 
-public class TestFunctionIntegration : IntegrationBase<CentazioSettings, CentazioSecrets> {
+public class TestFunctionIntegration(string environment) : IntegrationBase<CentazioSettings, CentazioSecrets>(environment) {
 
   public override Task Initialise(ServiceProvider prov) => Task.CompletedTask;
   protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) { }

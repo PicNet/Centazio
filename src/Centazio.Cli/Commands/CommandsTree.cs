@@ -57,6 +57,7 @@ public class CommandsTree {
           CreateCommandNode<AddResourceGroupCommand>("add"),
         ]),
         new BranchNode("func", [
+          CreateCommandNode<GenerateAzFunctionsCommand>("gen"),
           CreateCommandNode<DeployAzFunctionsCommand>("deploy"),
         ])
       ]),
@@ -65,12 +66,6 @@ public class CommandsTree {
       ///////////////////////////////////////////////
       new BranchNode("host", [
         CreateCommandNode<RunHostCommand>("run"),
-      ]),
-      ///////////////////////////////////////////////
-      // Misc Commands
-      ///////////////////////////////////////////////
-      new BranchNode("gen", [
-        CreateCommandNode<GenerateFunctionsCommand>("func")
       ]),
     ],
     "exit");

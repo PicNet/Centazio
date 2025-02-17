@@ -28,11 +28,11 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
       default: throw new NotSupportedException(project.Cloud.ToString());
       
     }
-  }
-
-  private static void ValidateProjectAssemblyBeforeCodeGen(Assembly ass) {
-    IntegrationsAssemblyInspector.GetCentazioIntegration(ass); // throws own error
-    if (!IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any()) throw new Exception($"no valid Centazio Functions found in assembly[{ass.GetName().FullName}]");
+    
+    void ValidateProjectAssemblyBeforeCodeGen(Assembly ass) {
+      IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environment); // throws own error
+      if (!IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any()) throw new Exception($"no valid Centazio Functions found in assembly[{ass.GetName().FullName}]");
+    }
   }
 
   public async Task GenerateSolution() {
@@ -74,6 +74,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
   
   protected readonly CentazioSettings settings = settings;
   protected readonly IXProject slnproj = slnproj;
+  protected readonly string environment = environment;
 
   public async Task Generate() {
     slnproj.SetProperties(new Dictionary<string, string> {

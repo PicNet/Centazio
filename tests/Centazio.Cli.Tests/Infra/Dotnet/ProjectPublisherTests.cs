@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Dotnet;
+using Centazio.Core;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 
@@ -16,7 +17,7 @@ public class ProjectPublisherTests {
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    await CloudSolutionGenerator.Create(settings, project, "dev").GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
     
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     await builder(project);

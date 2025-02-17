@@ -18,10 +18,10 @@ public static class TestingFactories {
   
   private static CentazioSettings? settings;
   public static CentazioSettings Settings() => settings ??= Settings<CentazioSettings>();
-  public static E Settings<E>() => new SettingsLoader().Load<E>("dev");
+  public static E Settings<E>() => new SettingsLoader().Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static CentazioSecrets Secrets() => Secrets<CentazioSecrets>();
-  public static E Secrets<E>() => new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>("dev");
+  public static E Secrets<E>() => new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

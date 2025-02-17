@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Ctl;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -23,7 +24,7 @@ public class SqlServerSimulationProvider : ISimulationProvider {
   
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqlServerDbFieldsHelper();
-    var connstr = (await SqlConn.GetInstance(false)).ConnStr;
+    var connstr = (await SqlConn.GetInstance(false, CentazioConstants.DEFAULT_ENVIRONMENT)).ConnStr;
     CtlRepo = await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(connstr), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(connstr, nameof(Ctl).ToLower(), nameof(StagedEntity).ToLower())), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(

@@ -11,23 +11,23 @@ public class SqlConn {
   
   private static SqlConn? instance;
   
-  public static async Task<SqlConn> GetInstance(bool real) {
+  public static async Task<SqlConn> GetInstance(bool real, string environment) {
     if (instance is not null) return instance.Real == real ? instance : throw new Exception($"cannot change Real/Container between tests");
-    instance = new SqlConn(real);
+    instance = new SqlConn(real, environment);
     return await instance.Init();
   }
   
   public bool Real { get; }
   
+  private readonly string environment;
   private MsSqlContainer? container;
   private string? connstr;
   
   public string ConnStr => connstr ?? throw new Exception("not initialised");
 
-  private SqlConn(bool real) {
+  private SqlConn(bool real, string environment) {
     if (instance is not null) throw new NotSupportedException();
-    Real = real;
-    instance = this;
+    (this.environment, Real, instance) = (environment, real, this);
   }
   
   private async Task<SqlConn> Init() {
@@ -38,8 +38,8 @@ public class SqlConn {
     return this;
     
     string RealInit() {
-      var settings = (TestSettings) new SettingsLoader().Load<TestSettingsRaw>("dev");
-      var secrets = (TestSecrets) new SecretsFileLoader(settings.GetSecretsFolder()).Load<TestSecretsRaw>("dev");
+      var settings = (TestSettings) new SettingsLoader().Load<TestSettingsRaw>(environment);
+      var secrets = (TestSecrets) new SecretsFileLoader(settings.GetSecretsFolder()).Load<TestSecretsRaw>(environment);
       return secrets.SQL_CONN_STR;
     }
 
