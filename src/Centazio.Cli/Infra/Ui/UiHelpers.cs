@@ -8,6 +8,9 @@ public static class UiHelpers {
       string.IsNullOrWhiteSpace(defaultval) 
           ? AnsiConsole.Ask<string>(prompt + ":").Trim() 
           : AnsiConsole.Ask(prompt, defaultval.Trim()).Trim();
+  
+  public static bool Confirm(string prompt, bool defaultval = false) =>
+      AnsiConsole.Confirm(prompt + ":", defaultval);
 
   public static string PromptCommandOptions(List<string> options) => 
       AnsiConsole.Prompt(new SelectionPrompt<string>()

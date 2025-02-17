@@ -48,6 +48,7 @@ internal class CliBootstrapper {
         .AddSingleton<IAzSubscriptions, AzSubscriptions>()
         .AddSingleton<IAzResourceGroups, AzResourceGroups>()
         .AddSingleton<IAzFunctionDeployer, AzFunctionDeployer>()
+        .AddSingleton<IAzFunctionDeleter, AzFunctionDeleter>()
         .AddSingleton<CentazioHost>()
         .BuildServiceProvider();
   }

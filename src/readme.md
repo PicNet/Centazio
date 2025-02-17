@@ -10,6 +10,7 @@
   - Aws:
     - implement 
 - cli commands:
+  - for common errors do not show exception, just message 
   - disable/stop functions
   - run function(s) locally
 - cli code generator to add functions, integrations, projects, etc

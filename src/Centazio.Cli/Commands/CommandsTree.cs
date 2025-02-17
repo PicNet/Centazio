@@ -59,6 +59,7 @@ public class CommandsTree {
         new BranchNode("func", [
           CreateCommandNode<GenerateAzFunctionsCommand>("gen"),
           CreateCommandNode<DeployAzFunctionsCommand>("deploy"),
+          CreateCommandNode<DeleteAzFunctionsCommand>("delete")
         ])
       ]),
       ///////////////////////////////////////////////
