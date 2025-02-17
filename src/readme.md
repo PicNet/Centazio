@@ -11,7 +11,6 @@
   - Aws:
     - implement 
 - cli commands:
-  - change builder to use `dotnet` command rather than the troublesome `Microsoft.Build` namespace 
   - disable/stop functions
   - run function(s) locally
 - cli code generator to add functions, integrations, projects, etc

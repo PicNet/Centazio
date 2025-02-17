@@ -10,10 +10,6 @@ public class ProjectPublisherTests {
   
   private readonly CentazioSettings settings = TestingFactories.Settings();
   
-  [Test, Ignore("does not work with current sdk")] public async Task Test_MsBuildProjectBuilder_BuildProject() {
-    await Impl(new MicrosoftBuildProjectPublisher().PublishProject);
-  }
-
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
     await Impl(new DotNetCliProjectPublisher(settings).PublishProject);
   }
