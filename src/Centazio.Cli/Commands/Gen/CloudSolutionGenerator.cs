@@ -47,7 +47,6 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
     var (arch, configs) = ("Any CPU", new[] { "Debug", "Release" });
     var slnconfs = configs.Select(c => new ConfigSln(c, arch)).ToArray();
     var projitem = new ProjectItem(ProjectType.CsSdk, project.CsprojFile, slnDir: project.SolutionDirPath);
-    if (File.Exists(projitem.fullPath)) File.Delete(projitem.fullPath);
     var projconfs = configs.Select((c, idx) => new ConfigPrj(c, arch, projitem.pGuid, build: true, slnconfs[idx])).ToArray();
     
     var hdata = new LhDataHelper();

@@ -10,6 +10,8 @@
     
     "AzListFunctionAppsCmd": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",
     "AzListFunctionsCmd": "functionapp function list -g [settings.AzureSettings.ResourceGroup] -n [AppName] --query \"[].{Name:name}\"",
-    "AzDeleteFunctionAppCmd": "functionapp delete -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
+    "AzDeleteFunctionAppCmd": "functionapp delete -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
+    "AzStartFunctionAppCmd": "functionapp start -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
+    "AzStopFunctionAppCmd": "functionapp stop -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
   }
 }

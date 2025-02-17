@@ -11,9 +11,14 @@ public class SampleSettingsLoaderTests {
   [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
     var svcs = new TestServivesCollection();
     var registrar = new CentazioServicesRegistrar(svcs);
-    SettingsLoader.RegisterSettingsHierarchy(F.Settings<SampleSettings>(), registrar);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<SampleSettings>(), registrar);
     var expected = new List<Type> { typeof(SampleSettings), typeof(ClickUpSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
+    
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));
+    Assert.That(settings.SecretsFolders, Has.Count.GreaterThan(0));
+    Assert.That(settings.Defaults, Is.Not.Null);
+    Assert.That(settings.ClickUp, Is.Not.Null);
+    Assert.That(settings.AppSheet, Is.Not.Null);
   }
 
 }
