@@ -13,20 +13,18 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   
   protected override Task RunInteractiveCommandImpl() => 
       ExecuteImpl(new Settings { 
-        AssemblyName = UiHelpers.Ask("Assembly Name"),
-        FunctionName = UiHelpers.Ask("Function Class Name", "All"),
+        AssemblyName = UiHelpers.Ask("Assembly Name")
       });
 
   protected override async Task ExecuteImpl(Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
-    await UiHelpers.Progress("Generating Azure FunctionApp project", async () => await CloudSolutionGenerator.Create(coresettings, project, "dev").GenerateSolution());
+    await UiHelpers.Progress("Generating Azure Function project", async () => await CloudSolutionGenerator.Create(coresettings, project, "dev").GenerateSolution());
     await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
-    await UiHelpers.Progress("Deploying the FunctionApp to Azure", async () => await impl.Deploy(project)); 
+    await UiHelpers.Progress("Deploying the Function to Azure", async () => await impl.Deploy(project)); 
   }
 
   public class Settings : CommonSettings {
     [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
-    [CommandArgument(0, "<FUNCTION-NAME>")] public string? FunctionName { get; init; }
   }
 }
