@@ -9,30 +9,21 @@
     - local function simulator (wrapper for: `func start -g Centazio_3_Testing (dotnet-isolated)`)
   - Aws:
     - implement 
-- cli commands:
+- cli:
+  - in `settings.default.json` have sections for cli commands under 'az', 'dotnet', 'aws', etc.  Specifying the tool used   
+  - have ageneric command line argument job, and use config file to set up these jobs
+  - cli commands should check if the tool is installed
+  - hide logs of cli commands perhaps store and show if there are errors
   - for common errors do not show exception, just message 
   - disable/stop functions
-  - run function(s) locally
-- cli code generator to add functions, integrations, projects, etc
-- remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only
+  - run function(s) locally 
+  - basic cli exceptions, like incorrect arguments needs to show message, not whole exception
+- remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
-- basic cli exceptions, like incorrect arguments needs to show message, not whole exception
-- good case study / demo:
-  - crm
-  - finance
-  - smartsheest
-  - email/reporting
-  - web scrape
-- check that all provider tests in Centazio.Core have Provier counterparts, would have helped with the 
-        OriginalSystem / LastUpdatedSystem bug
+- check that all provider tests in Centazio.Core have Provier counterparts
 - set up azure devops testing pipeline (agent is ready)
 - documentation and blogs
-- azure runner
-- aws runner
-
-## Low
-- review all code comments
 
 # Developer Guidelines:
 

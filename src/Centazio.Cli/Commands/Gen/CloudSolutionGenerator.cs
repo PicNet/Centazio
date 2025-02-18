@@ -148,6 +148,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     return AddLatestNuGetReferencesToProject([
       "Serilog",
       "Serilog.Sinks.Console",
+      "Serilog.Extensions.Logging",
       "System.ClientModel" // not required but avoids versioning warnings
     ], added);
   }

@@ -1,9 +1,10 @@
-using Microsoft.Azure.Functions.Worker;
 using Centazio.Core.Runner;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
 
 namespace [NewAssemblyName];
 
-public class [ClassName]Azure {  
+public class [ClassName]Azure(ILogger<EmptyFunctionAzure> log) {  
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static [ClassName]Azure() {    
@@ -11,6 +12,9 @@ public class [ClassName]Azure {
   }
 
   [Function(nameof([ClassName]))] public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo timer) {    
-    await (await impl.Value).RunFunction(); 
+    var start = DateTime.Now;
+    log.LogInformation("[ClassName] running");
+    try { await (await impl.Value).RunFunction(); } 
+    finally { log.LogInformation($"[ClassName] completed, took {(DateTime.Now - start).TotalSeconds:N0}s"); }
   }
 }
