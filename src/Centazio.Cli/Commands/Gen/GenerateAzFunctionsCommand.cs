@@ -9,7 +9,7 @@ namespace Centazio.Cli.Commands.Gen;
 
 public class GenerateAzFunctionsCommand(CentazioSettings coresettings) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
 
-  protected override Task RunInteractiveCommandImpl() => ExecuteImpl(new() { 
+  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 

@@ -102,14 +102,15 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     });
     AddSettingsFilesToProject();
     AddSecretsFilesToProject();
+    
     var added = new Dictionary<string, bool>();
     AddCentazioProjectReferencesToProject(added);
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
-    await AddCentazioNuGetReferencesToProject();
+    await AddCentazioNuGetReferencesToProject(added);
     
     var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(projmeta.Assembly, []);
+    await AddCloudSpecificContentToProject(functions, added);
     
-    await AddCloudSpecificContentToProject(functions);
     slnproj.Save();
   }
 
@@ -133,7 +134,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     var nugets = references.Where(name => !name.StartsWith($"{nameof(Centazio)}.")).ToList();
 
     centazios.ForEach(name => AddReferenceIfRequired(ReflectionUtils.LoadAssembly(name), added));
-    await AddLatestNuGetReferencesToProject(nugets);
+    await AddLatestNuGetReferencesToProject(nugets, added);
   }
 
   void AddReferenceIfRequired(Assembly ass, Dictionary<string, bool> added) {
@@ -143,12 +144,12 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     slnproj.AddReference(ass, AddReferenceOptions.Default | AddReferenceOptions.HidePrivate);
   }
   
-  private Task AddCentazioNuGetReferencesToProject() {
+  private Task AddCentazioNuGetReferencesToProject(Dictionary<string, bool> added) {
     return AddLatestNuGetReferencesToProject([
       "Serilog",
       "Serilog.Sinks.Console",
       "System.ClientModel" // not required but avoids versioning warnings
-    ]);
+    ], added);
   }
 
   private void AddSettingsFilesToProject() {
@@ -169,9 +170,11 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     });
   }
   
-  protected async Task AddLatestNuGetReferencesToProject(List<string> packages) => 
-      (await NugetHelpers.GetLatestStableVersions(packages)).ForEach(
-          p => slnproj.AddPackageReference(p.name, p.version));
+  protected async Task AddLatestNuGetReferencesToProject(List<string> packages, Dictionary<string, bool> added) => (await NugetHelpers.GetLatestStableVersions(packages))
+      .ForEach(p => {
+        if (!added.TryAdd(p.name, true)) return;
+        slnproj.AddPackageReference(p.name, p.version);
+      });
   
-  protected abstract Task AddCloudSpecificContentToProject(List<Type> functions);
+  protected abstract Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added);
 }

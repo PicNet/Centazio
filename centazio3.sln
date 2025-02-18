@@ -56,6 +56,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5
 		defaults\settings.defaults.json = defaults\settings.defaults.json
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
+		settings.azure_sample.json = settings.azure_sample.json
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.TestFunctions", "tests\Centazio.TestFunctions\Centazio.TestFunctions.csproj", "{16243103-CE9F-46A1-94D6-2ECA60FCA696}"

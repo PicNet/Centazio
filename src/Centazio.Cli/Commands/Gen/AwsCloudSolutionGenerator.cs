@@ -10,7 +10,7 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, FunctionProj
 
   internal class AwsCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
 
-    protected override Task AddCloudSpecificContentToProject(List<Type> functions) => throw new NotImplementedException();
+    protected override Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) => throw new NotImplementedException();
 
   }
 }

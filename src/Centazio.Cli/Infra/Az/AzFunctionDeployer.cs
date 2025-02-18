@@ -22,7 +22,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   
   public async Task Deploy(FunctionProjectMeta project) {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
-    if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project}] does not appear to be a valid as no sln file was found");
+    if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
     
     var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
     var appres = await GetOrCreateFunctionApp(rg, project);
@@ -34,7 +34,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
-    Log.Information($"function app [{project}] does not exist, creating...");
+    Log.Information($"function app [{project.DashedProjectName}] does not exist, creating...");
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
@@ -48,7 +48,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project.DashedProjectName}-Plan", plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
     var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.DashedProjectName, appconf);
-    Log.Information($"successfully created function app [{project}]");
+    Log.Information($"successfully created function app [{project.DashedProjectName}]");
     return op.Value;
   }
 

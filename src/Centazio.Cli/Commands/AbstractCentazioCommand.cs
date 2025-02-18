@@ -6,7 +6,7 @@ public interface ICentazioCommand {
   Task RunInteractiveCommand();
 }
 
-public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCommand where S : CommandSettings {
+public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCommand where S : CommonSettings {
 
   protected bool Interactive { get; private set; }
 
@@ -18,9 +18,11 @@ public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCom
   
   public async Task RunInteractiveCommand() {
     Interactive = true;
-    await RunInteractiveCommandImpl();
+    var settings = await GetInteractiveSettings();
+    await settings.SetInteractiveCommonOpts();
+    await ExecuteImpl(settings);
   }
 
-  protected abstract Task RunInteractiveCommandImpl();
+  protected abstract Task<S> GetInteractiveSettings();
   protected abstract Task ExecuteImpl(S settings);
 }

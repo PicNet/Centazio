@@ -11,18 +11,18 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
 
   internal class AzureCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
 
-    protected override async Task AddCloudSpecificContentToProject(List<Type> functions) {
-      await AddAzureNuGetReferencesToProject();
+    protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
+      await AddAzureNuGetReferencesToProject(added);
       await AddAzConfigJsonFilesToProject();
       await AddAzureFunctionsToProject(functions);
     }
   
-    private Task AddAzureNuGetReferencesToProject() => 
+    private Task AddAzureNuGetReferencesToProject(Dictionary<string, bool> added) => 
         AddLatestNuGetReferencesToProject([
           "Microsoft.Azure.Functions.Worker",
           "Microsoft.Azure.Functions.Worker.Extensions.Timer",
           "Microsoft.Azure.Functions.Worker.Sdk"
-        ]);
+        ], added);
     
     private async Task AddAzConfigJsonFilesToProject() {
       await AddTemplateFileToProject("host.json");

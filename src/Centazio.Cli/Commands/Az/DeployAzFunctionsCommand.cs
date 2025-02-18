@@ -11,10 +11,9 @@ namespace Centazio.Cli.Commands.Az;
 
 public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctionDeployer impl) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
   
-  protected override Task RunInteractiveCommandImpl() => 
-      ExecuteImpl(new Settings { 
-        AssemblyName = UiHelpers.Ask("Assembly Name")
-      });
+  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+    AssemblyName = UiHelpers.Ask("Assembly Name")
+  });
 
   protected override async Task ExecuteImpl(Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
