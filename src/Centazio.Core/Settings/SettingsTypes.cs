@@ -211,8 +211,8 @@ public record CtlRepositorySettings {
       Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
       ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
       SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-      SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? "system_state" : SystemStateTableName.Trim(),
-      ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? "object_state" : ObjectStateTableName.Trim(),
+      SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? throw new ArgumentNullException(nameof(SystemStateTableName)) : SystemStateTableName.Trim(),
+      ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? throw new ArgumentNullException(nameof(ObjectStateTableName)) : ObjectStateTableName.Trim(),
       CoreToSysMapTableName = String.IsNullOrWhiteSpace(CoreToSysMapTableName) ? throw new ArgumentNullException(nameof(CoreToSysMapTableName)) : CoreToSysMapTableName.Trim(),
       CreateSchema = CreateSchema ?? false,
     };

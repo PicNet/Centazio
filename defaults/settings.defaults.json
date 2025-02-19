@@ -1,7 +1,6 @@
 {
   "Defaults": {
     "GeneratedCodeFolder": "generated",
-    
     "ConsoleCommands": {
       "Az": {
         "ListFunctionAppsCmd": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",
@@ -16,5 +15,9 @@
         "PublishProject": "publish --configuration Release /property:GenerateFullPaths=true"
       }
     }
+  },
+  "CtlRepository": {
+    "SystemStateTableName": "system_state",
+    "ObjectStateTableName": "object_state"
   }
 }

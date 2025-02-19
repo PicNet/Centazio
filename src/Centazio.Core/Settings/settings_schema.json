@@ -39,8 +39,8 @@
     "Provider": { "type": "string", "required": true },
     "ConnectionString": { "type": "string", "required": true },
     "SchemaName": { "type": "string", "required": true },
-    "SystemStateTableName":  { "type": "string", "required": true, "default": "system_state" },
-    "ObjectStateTableName":  { "type": "string", "required": true, "default": "object_state" },
+    "SystemStateTableName":  { "type": "string", "required": true },
+    "ObjectStateTableName":  { "type": "string", "required": true },
     "CoreToSysMapTableName": { "type": "string", "required": true },
     "CreateSchema": { "type": "bool", "required": true }
   },
