@@ -10,8 +10,6 @@
   - Aws:
     - implement 
 - cli:
-  - hide logs of cli commands perhaps store and show if there are errors
-  - for common errors do not show exception, just message 
   - disable/stop functions
   - run function(s) locally 
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)

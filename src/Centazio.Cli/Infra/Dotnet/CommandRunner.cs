@@ -5,12 +5,12 @@ using Centazio.Core.Misc;
 namespace Centazio.Cli.Infra.Dotnet;
 
 public class CommandResults(string command, string args, string dir, string @out, string err, bool newwindow) {
-  public string Command { get; init; } = command.Trim();
-  public string Args { get; init; } = args.Trim();
-  public string Dir { get; init; } = dir.Trim();
-  public string Out { get; init; } = @out.Trim();
-  public string Err { get; init; } = err.Trim();
-  public bool NewWindow { get; init; } = newwindow;
+  public string Command { get; } = command.Trim();
+  public string Args { get; } = args.Trim();
+  public string Dir { get; } = dir.Trim();
+  public string Out { get; } = @out.Trim();
+  public string Err { get; } = err.Trim();
+  public bool NewWindow { get; } = newwindow;
 
   public bool Success => String.IsNullOrWhiteSpace(Err);
   
@@ -93,6 +93,8 @@ public class CommandRunner : ICommandRunner {
   }
   
   private void OnString(string msg, StringBuilder str, bool quiet, bool error) {
+    if (String.IsNullOrWhiteSpace(msg)) return;
+    
     if (error) Log.Error(msg);
     else if (!quiet) Log.Information(msg);
     str.AppendLine(msg);

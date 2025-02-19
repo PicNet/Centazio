@@ -74,9 +74,12 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
       proj.GetPackageReferences().ToList().ForEach(r => proj.RemovePackageReference(r.evaluated));
       proj.GetProjectReferences().ToList().ForEach(r => proj.RemoveProjectReference(r.evaluated));
       proj.GetReferences().ToList().ForEach(r => proj.RemoveReference(r.evaluated));
-      proj.GetProperties().ToList().ForEach(p => proj.RemoveProperty(p));
       proj.GetImports().ToList().ForEach(i => proj.RemoveImport(i));
-      proj.GetItems().ToList().ForEach(i => { try { proj.RemoveItem(i); } catch (InvalidOperationException) {} });
+      // very slow in debugger
+      if (!System.Diagnostics.Debugger.IsAttached) {
+        proj.GetProperties().ToList().ForEach(p => proj.RemoveProperty(p));
+        proj.GetItems().ToList().ForEach(i => { try { proj.RemoveItem(i); } catch (InvalidOperationException) {} });
+      }
     }
   }
 
