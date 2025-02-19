@@ -1,0 +1,63 @@
+﻿{
+  "Defaults": {
+    "GeneratedCodeFolder": { "type": "string", "required": true },
+
+    "ConsoleCommands": {
+      "Az": {
+        "ListFunctionAppsCmd": { "type": "string", "required": true },
+        "ListFunctionsCmd": { "type": "string", "required": true },
+        "DeleteFunctionAppCmd": { "type": "string", "required": true },
+        "StartFunctionAppCmd": { "type": "string", "required": true },
+        "StopFunctionAppCmd": { "type": "string", "required": true }
+      },
+      "DotNet": {
+        "CleanProject": { "type": "string", "required": true },
+        "BuildProject": { "type": "string", "required": true },
+        "PublishProject": { "type": "string", "required": true }
+      }
+    }
+  },
+  "SecretsFolders": [{ "type": "string", "required": true }],
+  "ClickUp": {
+    "BaseUrl": { "type": "string", "required": true },
+    "ListId": { "type": "string", "required": true }
+  },
+  "AppSheet": {
+    "BaseUrl": { "type": "string", "required": true },
+    "AppId": { "type": "string", "required": true },
+    "TableName": { "type": "string", "required": true }
+  },
+  "StagedEntityRepository": {
+    "Provider": { "type": "string", "required": true },
+    "ConnectionString": { "type": "string", "required": true },
+    "SchemaName": { "type": "string", "required": true },
+    "TableName": { "type": "string", "required": true },
+    "CreateSchema": { "type": "bool", "required": true },
+    "Limit": { "type": "int", "required": true }
+  },
+  "CtlRepository": {
+    "Provider": { "type": "string", "required": true },
+    "ConnectionString": { "type": "string", "required": true },
+    "SchemaName": { "type": "string", "required": true },
+    "SystemStateTableName":  { "type": "string", "required": true, "default": "system_state" },
+    "ObjectStateTableName":  { "type": "string", "required": true, "default": "object_state" },
+    "CoreToSysMapTableName": { "type": "string", "required": true },
+    "CreateSchema": { "type": "bool", "required": true }
+  },
+  "CoreStorage": {
+    "Provider": { "type": "string", "required": true },
+    "ConnectionString": { "type": "string", "required": true },
+    "SchemaName": { "type": "string", "required": true },
+    "CtlSchemaName": { "type": "string", "required": true },
+    "CreateSchema": { "type": "bool", "required": true }
+  },
+  "Azure": {
+    "Region": { "type": "string", "required": true },
+    "ResourceGroup": { "type": "string", "required": true },
+    "AppServicePlan": { "type": "string", "required": true }
+  },
+  "Aws": {
+    "Region": { "type": "string", "required": true },
+    "AccountName": { "type": "string", "required": true }
+  }
+}

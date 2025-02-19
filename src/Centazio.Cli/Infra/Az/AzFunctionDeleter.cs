@@ -13,7 +13,7 @@ public class AzFunctionDeleter(CentazioSettings settings, CentazioSecrets secret
 
   
   public async Task Delete(FunctionProjectMeta project) {
-    await Task.Run(() => new CommandRunner().Az(settings.Parse(settings.Defaults.AzDeleteFunctionAppCmd, new { AppName = project.DashedProjectName })));
+    await Task.Run(() => new CommandRunner().Az(settings.Parse(settings.Defaults.ConsoleCommands.Az.DeleteFunctionAppCmd, new { AppName = project.DashedProjectName })));
   }
 }
 

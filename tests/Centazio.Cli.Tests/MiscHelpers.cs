@@ -16,17 +16,17 @@ public static class MiscHelpers {
 
   public static class Az {
     public static List<string> ListFunctionApps() {
-      var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionAppsCmd)).Out;
+      var outstr = cmd.Az(settings.Parse(settings.Defaults.ConsoleCommands.Az.ListFunctionAppsCmd)).Out;
       return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static List<string> ListFunctionsInApp(string appname) {
-      var outstr = cmd.Az(settings.Parse(settings.Defaults.AzListFunctionsCmd, new { AppName = appname })).Out;
+      var outstr = cmd.Az(settings.Parse(settings.Defaults.ConsoleCommands.Az.ListFunctionsCmd, new { AppName = appname })).Out;
       return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
     public static void DeleteFunctionApp(string appname) {
-      cmd.Az(settings.Parse(settings.Defaults.AzDeleteFunctionAppCmd, new { AppName = appname }));
+      cmd.Az(settings.Parse(settings.Defaults.ConsoleCommands.Az.DeleteFunctionAppCmd, new { AppName = appname }));
     }
     
     // ReSharper disable once ClassNeverInstantiated.Local

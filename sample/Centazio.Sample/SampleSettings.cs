@@ -9,8 +9,8 @@ public record SampleSettings : CentazioSettings {
   public required AppSheetSettings AppSheet { get; init; }
   
   protected SampleSettings(CentazioSettings centazio) : base (centazio) {}
-  
-  public override Dto ToDto() {
+
+  protected override Dto ToDto() {
     return new(base.ToDto()) {
       ClickUp = ClickUp.ToDto(),
       AppSheet = AppSheet.ToDto(),

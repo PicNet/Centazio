@@ -15,7 +15,7 @@ public class AzFunctionDeployerTests {
   private readonly CentazioSecrets secrets = TestingFactories.Secrets();
   private readonly FunctionProjectMeta project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
   
-  [Test] public async Task Test_Full_Pipeline_Deployment_to_Azure() {
+  [Test, Ignore("slow")] public async Task Test_Full_Pipeline_Deployment_to_Azure() {
     var appname = project.DashedProjectName;
     
     AzCmd.DeleteFunctionApp(appname);

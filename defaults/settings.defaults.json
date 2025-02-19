@@ -2,16 +2,19 @@
   "Defaults": {
     "GeneratedCodeFolder": "generated",
     
-    // commands
-    
-    "DotNetCleanProject": "clean --configuration Release /property:GenerateFullPaths=true",
-    "DotNetBuildProject": "build --configuration Release /property:GenerateFullPaths=true",
-    "DotNetPublishProject": "publish --configuration Release /property:GenerateFullPaths=true",
-    
-    "AzListFunctionAppsCmd": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",
-    "AzListFunctionsCmd": "functionapp function list -g [settings.AzureSettings.ResourceGroup] -n [AppName] --query \"[].{Name:name}\"",
-    "AzDeleteFunctionAppCmd": "functionapp delete -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
-    "AzStartFunctionAppCmd": "functionapp start -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
-    "AzStopFunctionAppCmd": "functionapp stop -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
+    "ConsoleCommands": {
+      "Az": {
+        "ListFunctionAppsCmd": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",
+        "ListFunctionsCmd": "functionapp function list -g [settings.AzureSettings.ResourceGroup] -n [AppName] --query \"[].{Name:name}\"",
+        "DeleteFunctionAppCmd": "functionapp delete -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
+        "StartFunctionAppCmd": "functionapp start -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
+        "StopFunctionAppCmd": "functionapp stop -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
+      },
+      "DotNet": {
+        "CleanProject": "clean --configuration Release /property:GenerateFullPaths=true",
+        "BuildProject": "build --configuration Release /property:GenerateFullPaths=true",
+        "PublishProject": "publish --configuration Release /property:GenerateFullPaths=true"
+      }
+    }
   }
 }

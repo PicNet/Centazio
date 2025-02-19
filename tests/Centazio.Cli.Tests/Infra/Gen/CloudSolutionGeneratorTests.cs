@@ -18,7 +18,7 @@ public class CloudSolutionGeneratorTests {
     await CloudSolutionGenerator.Create(settings, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
-    var results = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
+    var results = cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
   
@@ -28,7 +28,7 @@ public class CloudSolutionGeneratorTests {
     
     await generator.GenerateSolution();
     await generator.GenerateSolution();
-    var results2 = cmd.DotNet(settings.Parse(settings.Defaults.DotNetBuildProject), project.ProjectDirPath);
+    var results2 = cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results2.Err));
   }
 }

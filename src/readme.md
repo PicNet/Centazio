@@ -7,6 +7,7 @@
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
     - Serilog Logs not working
     - local function simulator (wrapper for: `func start -g Centazio_3_Testing (dotnet-isolated)`)
+    - support overriding function settings like service plan, etc
   - Aws:
     - implement 
 - cli:
