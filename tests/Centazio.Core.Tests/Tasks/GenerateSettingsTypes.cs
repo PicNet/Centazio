@@ -46,87 +46,79 @@ namespace Centazio.Core.Settings;
       };
     }
 
-    private static void GenerateClassAndNestedTypes(string classnm, JsonObject? properties, StringBuilder sb, HashSet<string> generated) {
-      if (properties is null || !generated.Add(classnm)) return;
+    private static void GenerateClassAndNestedTypes(string classnm, JsonObject? props, StringBuilder sb, HashSet<string> generated) {
+      if (props is null || !generated.Add(classnm)) return;
 
       // First generate any nested types
-      foreach (var prop in properties) {
+      foreach (var prop in props) {
         if (prop.Value!.GetValueKind() != JsonValueKind.Object || IsFieldSpecObject(prop.Value.AsObject())) continue;
 
-        var nestedClassName = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
-        GenerateClassAndNestedTypes(nestedClassName, prop.Value.AsObject(), sb, generated);
+        var child = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
+        GenerateClassAndNestedTypes(child, prop.Value.AsObject(), sb, generated);
       }
       
       // Generate main record
       sb.AppendLine($"public record {classnm} {{");
 
       // Properties
-      foreach (var prop in properties) {
+      foreach (var prop in props) {
+        var spec = ParseFieldSpec(prop.Value);
+        var requiredmod = spec.Required ? "required " : string.Empty;
+        var opt = spec.Required ? String.Empty : "?";
         if (prop.Value!.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(prop.Value.AsObject())) {
-          var nestedClassName = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
-          var fieldSpec = ParseFieldSpec(prop.Value);
-          var requiredModifier = fieldSpec.Required ? "required " : string.Empty;
-          sb.AppendLine($"  public {requiredModifier}{nestedClassName} {prop.Key} {{ get; init; }}");
+          var child = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
+          sb.AppendLine($"  public {requiredmod}{child}{opt} {prop.Key} {{ get; init; }}");
         }
-        else {
-          var fieldSpec = ParseFieldSpec(prop.Value);
-          var type = GetCSharpType(fieldSpec.Type);
-          var requiredModifier = fieldSpec.Required ? "required " : string.Empty;
-          sb.AppendLine($"  public {requiredModifier}{type} {prop.Key} {{ get; init; }}");
-        }
+        else { sb.AppendLine($"  public {requiredmod}{spec.Type}{opt} {prop.Key} {{ get; init; }}"); }
       }
       sb.AppendLine();
 
       // ToDto method
       sb.AppendLine("  public Dto ToDto() => new() {");
-      foreach (var prop in properties)
-        if (prop.Value!.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(prop.Value.AsObject()))
-          sb.AppendLine($"    {prop.Key} = {prop.Key}.ToDto(),");
-        else
-          sb.AppendLine($"    {prop.Key} = {prop.Key},");
+      foreach (var prop in props)
+        if (prop.Value!.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(prop.Value.AsObject())) sb.AppendLine($"    {prop.Key} = {prop.Key}.ToDto(),");
+        else sb.AppendLine($"    {prop.Key} = {prop.Key},");
 
       sb.AppendLine("  };");
-
       sb.AppendLine();
 
       // Generate Dto record
       sb.AppendLine($"  public record Dto : IDto<{classnm}> {{");
 
       // Dto properties
-      foreach (var prop in properties)
+      foreach (var prop in props)
         if (prop.Value!.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(prop.Value.AsObject())) {
-          var nestedClassName = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
-          sb.AppendLine($"    public {nestedClassName}.Dto? {prop.Key} {{ get; init; }}");
+          var child = char.ToUpper(prop.Key[0]) + prop.Key[1..] + "Settings";
+          sb.AppendLine($"    public {child}.Dto? {prop.Key} {{ get; init; }}");
         }
         else {
-          var fieldSpec = ParseFieldSpec(prop.Value);
-          var type = GetCSharpType(fieldSpec.Type);
-          sb.AppendLine($"    public {type}? {prop.Key} {{ get; init; }}");
+          var spec = ParseFieldSpec(prop.Value);
+          sb.AppendLine($"    public {spec.Type}? {prop.Key} {{ get; init; }}");
         }
 
       sb.AppendLine();
 
       // ToBase method
       sb.AppendLine($"    public {classnm} ToBase() => new() {{");
-      foreach (var prop in properties)
+      foreach (var prop in props)
         if (prop.Value!.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(prop.Value.AsObject())) {
-          var fieldSpec = ParseFieldSpec(prop.Value);
-          if (fieldSpec.Required)
+          var spec = ParseFieldSpec(prop.Value);
+          if (spec.Required)
             sb.AppendLine($"      {prop.Key} = {prop.Key}?.ToBase() ?? throw new ArgumentNullException(nameof({prop.Key})),");
           else
             sb.AppendLine($"      {prop.Key} = {prop.Key}?.ToBase() ?? new(),");
         }
         else {
-          var fieldSpec = ParseFieldSpec(prop.Value);
+          var spec = ParseFieldSpec(prop.Value);
 
-          if (fieldSpec.Type == "string") {
-            if (fieldSpec.Required)
+          if (spec.Type == "string") {
+            if (spec.Required)
               sb.AppendLine($"      {prop.Key} = String.IsNullOrWhiteSpace({prop.Key}) ? throw new ArgumentNullException(nameof({prop.Key})) : {prop.Key}.Trim(),");
             else
               sb.AppendLine($"      {prop.Key} = {prop.Key}?.Trim(),");
           }
           else {
-            sb.AppendLine($"      {prop.Key} = {prop.Key} ?? {GetDefaultValue(prop.Key, classnm, fieldSpec)},");
+            sb.AppendLine($"      {prop.Key} = {prop.Key} ?? {GetDefaultValue(prop.Key, classnm, spec)},");
           }
         }
 
@@ -141,11 +133,7 @@ namespace Centazio.Core.Settings;
     }
 
     private static bool IsFieldSpecObject(JsonObject obj) => obj.ContainsKey("type") || obj.ContainsKey("required") || obj.ContainsKey("default");
-
-    private static string GetCSharpType(string jsonType) {
-      return jsonType.ToLower() switch { "string" => "string", "bool" => "bool", "int" => "int", _ => "string" };
-    }
-
+    
     private static string GetDefaultValue(string propName, string className, FieldSpec fieldSpec) => fieldSpec.Type.ToLower() switch {
       "bool" => "false",
       "int" => "0",

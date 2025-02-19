@@ -274,7 +274,7 @@ public record CoreStorageSettings {
 public record AzureSettings {
   public required string Region { get; init; }
   public required string ResourceGroup { get; init; }
-  public required string AppServicePlan { get; init; }
+  public string? AppServicePlan { get; init; }
 
   public Dto ToDto() => new() {
     Region = Region,
@@ -290,7 +290,7 @@ public record AzureSettings {
     public AzureSettings ToBase() => new() {
       Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
       ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
-      AppServicePlan = String.IsNullOrWhiteSpace(AppServicePlan) ? throw new ArgumentNullException(nameof(AppServicePlan)) : AppServicePlan.Trim(),
+      AppServicePlan = AppServicePlan?.Trim(),
     };
   }
 }

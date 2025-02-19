@@ -44,7 +44,8 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
 
   private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, FunctionProjectMeta project, string location) {
     var plandata = new AppServicePlanData(location) { Sku = new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" }, Kind = "functionapp" };
-    var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project.DashedProjectName}-Plan", plandata)).Value;
+    var name = settings.AzureSettings.AppServicePlan ?? $"{project.DashedProjectName}-Plan";
+    var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, name, plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
     var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.DashedProjectName, appconf);
     return op.Value;

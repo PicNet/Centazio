@@ -57,7 +57,7 @@
   "Azure": {
     "Region": { "type": "string", "required": true },
     "ResourceGroup": { "type": "string", "required": true },
-    "AppServicePlan": { "type": "string", "required": true }
+    "AppServicePlan": { "type": "string", "required": false }
   },
   "Aws": {
     "Region": { "type": "string", "required": true },
