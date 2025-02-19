@@ -10,13 +10,13 @@ public record SampleSettings : CentazioSettings {
   
   protected SampleSettings(CentazioSettings centazio) : base (centazio) {}
 
-  protected override Dto ToDto() {
+  public override Dto ToDto() {
     return new(base.ToDto()) {
       ClickUp = ClickUp.ToDto(),
       AppSheet = AppSheet.ToDto(),
     };
   }
-  
+
   public new record Dto : CentazioSettings.Dto, IDto<SampleSettings> {
     public ClickUpSettings.Dto? ClickUp { get; init; }
     public AppSheetSettings.Dto? AppSheet { get; init; }

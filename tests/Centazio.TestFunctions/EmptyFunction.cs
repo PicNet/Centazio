@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Text.Json;
+using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
@@ -6,18 +7,46 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Centazio.TestFunctions;
 
-public class TestFunctionIntegration(string environment) : IntegrationBase<CentazioSettings, CentazioSecrets>(environment) {
+public record TestSettings : CentazioSettings {
+  public string? NewProperty { get; set; }
+  
+  protected TestSettings(CentazioSettings centazio) : base (centazio) {}
+  
+  public override Dto ToDto() {
+    return new(base.ToDto()) { NewProperty = NewProperty };
+  }
+
+  public new record Dto : CentazioSettings.Dto, IDto<TestSettings> {
+    public string? NewProperty { get; init; }
+    
+    public Dto() {} // required for initialisation in `SettingsLoader.cs`
+    internal Dto(CentazioSettings.Dto centazio) : base(centazio) {}
+    
+    public new TestSettings ToBase() {
+      var centazio = base.ToBase();
+      return new TestSettings(centazio) {
+        // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
+        SecretsFolders = centazio.SecretsFolders,
+        NewProperty = NewProperty 
+      };
+    }
+
+  }
+}
+
+public class TestFunctionIntegration(string environment) : IntegrationBase<TestSettings, CentazioSecrets>(environment) {
 
   public override Task Initialise(ServiceProvider prov) => Task.CompletedTask;
   protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) { }
 
 }
 
-public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl) {
+public class EmptyFunction(ICtlRepository ctl, TestSettings settings, ILogger<EmptyFunction> log) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(settings, log), ctl) {
 
   protected override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
@@ -25,9 +54,27 @@ public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionO
 
 }
 
-public class EmptyFunctionOperationRunner : IOperationRunner<EmptyFunctionOperationConfig> {
+public class EmptyFunctionOperationRunner(TestSettings settings, ILogger<EmptyFunction> log) : IOperationRunner<EmptyFunctionOperationConfig> {
   public Task<OperationResult> RunOperation(OperationStateAndConfig<EmptyFunctionOperationConfig> op) {
-    Log.Information($"EmptyFunctionOperationRunner#RunOperation[{op.OpConfig.Name}]");
+    // todo: remove
+    log.LogInformation($"EmptyFunctionOperationRunner#RunOperation[{op.OpConfig.Name}]");
+    log.LogInformation("Settings: " + JsonSerializer.Serialize(settings.CtlRepository.ToDto(), new JsonSerializerOptions { WriteIndented = true }));
+    
+    // testin logging
+    log.LogTrace("log.LogTrace");
+    log.LogDebug("log.LogDebug");
+    log.LogInformation("log.LogInformation");
+    log.LogCritical("log.LogCritical");
+    log.LogWarning("log.LogWarning");
+    log.LogError("log.LogError");
+    
+    Log.Verbose("Log.Verbose");
+    Log.Debug("Log.Debug");
+    Log.Information("Log.Information");
+    Log.Fatal("Log.Fatal");
+    Log.Warning("Log.Warning");
+    Log.Error("Log.Error");
+    
     return Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
   }
 }

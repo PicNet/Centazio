@@ -37,7 +37,8 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
     private async Task AddAzureFunctionsToProject(List<Type> functions) {
       await functions.ForEachSequentialAsync(async func => {
         var clcontent = settings.Template("azure/function.cs", new {
-          ClassName=func.Name, 
+          ClassName=func.Name,
+          ClassFullName=func.FullName,
           FunctionNamespace=func.Namespace, 
           NewAssemblyName=slnproj.ProjectName,
           Environment=environment

@@ -43,7 +43,7 @@ public record CentazioSettings {
           ? Environment.CurrentDirectory 
           : FsUtils.FindFirstValidDirectory(SecretsFolders);
 
-  protected virtual Dto ToDto() => new() {
+  public virtual Dto ToDto() => new() {
       SecretsFolders = SecretsFolders,
       Defaults = _Defaults?.ToDto(),
       AwsSettings = _AwsSettings?.ToDto(),

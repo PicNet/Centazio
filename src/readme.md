@@ -1,11 +1,12 @@
 # Todo
 - lambda/azure wrappers:
-  - deploy subset of functions in assembly
   - Azure:
-    - get working
+    - fix Log.Logger, currently only injected ILogger<> works 
+    - get working (cannot open db file even though should be using memory)
+    - add logstream command: `func azure functionapp logstream Centazio-TestFunctions-Azure` to cli
     - application insights
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
-    - support overriding function settings like service plan, etc
+    - support overriding function settings like service plan, etc 
   - Aws:
     - implement 
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
