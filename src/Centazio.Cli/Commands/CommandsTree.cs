@@ -59,7 +59,9 @@ public class CommandsTree {
         new BranchNode("func", [
           CreateCommandNode<GenerateAzFunctionsCommand>("gen"),
           CreateCommandNode<DeployAzFunctionsCommand>("deploy"),
-          CreateCommandNode<DeleteAzFunctionsCommand>("delete")
+          CreateCommandNode<DeleteAzFunctionsCommand>("delete"),
+          CreateCommandNode<StartStopAzFunctionAppCommand>("start"),
+          CreateCommandNode<StartStopAzFunctionAppCommand>("stop")
         ])
       ]),
       ///////////////////////////////////////////////
@@ -104,7 +106,7 @@ public class CommandsTree {
     return String.Join(' ', ancestry.Select(n2 => n2.Id));
   }
 
-  private CommandNode<T> CreateCommandNode<T>(string id) where T : class, ICentazioCommand, ICommandLimiter<CommandSettings> {
-    return new CommandNode<T>(id, Provider.GetRequiredService<T>());
-  }
+  private CommandNode<T> CreateCommandNode<T>(string id) where T : class, ICentazioCommand, ICommandLimiter<CommandSettings> => 
+      new(id, Provider.GetRequiredService<T>());
+
 }

@@ -34,7 +34,6 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
-    Log.Information($"function app [{project.DashedProjectName}] does not exist, creating...");
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
@@ -48,7 +47,6 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, $"{project.DashedProjectName}-Plan", plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
     var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.DashedProjectName, appconf);
-    Log.Information($"successfully created function app [{project.DashedProjectName}]");
     return op.Value;
   }
 
@@ -84,7 +82,6 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
       using var content = new ByteArrayContent(zipbytes);
       content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
 
-      Log.Information($"starting zip deployment: {zippath}");
       var response = await http.PostAsync(endpoint, content);
 
       if (!response.IsSuccessStatusCode) {
@@ -92,10 +89,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
         throw new Exception($"deployment failed with status [{response.StatusCode}], error [{err}]");
       }
 
-      Log.Information("restarting function app");
       await appres.RestartAsync();
-
-      Log.Information("deployment completed");
     }
     finally {
       if (File.Exists(zippath)) File.Delete(zippath);

@@ -9,7 +9,7 @@ public class ListSubscriptionsCommand(IAzSubscriptions impl) : AbstractCentazioC
   
   protected override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
-  protected override async Task ExecuteImpl(CommonSettings settings) => 
+  protected override async Task ExecuteImpl(string name, CommonSettings settings) => 
       await UiHelpers.Progress("Loading Subscriptions list", async () => 
           AnsiConsole.Write(new Table()
               .AddColumns(["Name", "Id", "State"])

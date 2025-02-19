@@ -15,7 +15,7 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
     if (!UiHelpers.Confirm($"Are you sure you want to delete Azure Function '{project.DashedProjectName}'")) {

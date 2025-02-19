@@ -10,7 +10,6 @@
   - Aws:
     - implement 
 - cli:
-  - disable/stop functions
   - run function(s) locally 
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest

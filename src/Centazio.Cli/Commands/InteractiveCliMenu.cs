@@ -39,7 +39,7 @@ public class InteractiveMenu(CommandsTree tree) {
   }
   
   private async Task<bool> DisplayCommandNode(AbstractCommandNode n) {
-    await n.Command.RunInteractiveCommand();
+    await n.Command.RunInteractiveCommand(n.Id);
     
     AnsiConsole.WriteLine();
     AnsiConsole.WriteLine($"Command completed: {tree.GetNodeCommandShortcut(n)} [opts]");

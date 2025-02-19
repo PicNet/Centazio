@@ -15,7 +15,7 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
     await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, project, settings.Env).GenerateSolution());
