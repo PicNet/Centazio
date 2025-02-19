@@ -12,9 +12,10 @@ public class CommandResults(string command, string args, string dir, string @out
   public string Err { get; init; } = err.Trim();
   public bool NewWindow { get; init; } = newwindow;
 
-  public override string ToString() { 
-    return $"{Command} {Args}"; 
-  }
+  public bool Success => String.IsNullOrWhiteSpace(Err);
+  
+  public override string ToString() => $"{Command} {Args}";
+
 }
 
 public interface ICommandRunner {

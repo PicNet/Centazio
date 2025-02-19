@@ -8,8 +8,13 @@ public class DotNetCliProjectPublisher(CentazioSettings settings) : IProjectPubl
   
   public Task PublishProject(FunctionProjectMeta project) {
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
-    cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.CleanProject), project.ProjectDirPath);
-    cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.PublishProject), project.ProjectDirPath);
+    
+    var results1 = cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.CleanProject), project.ProjectDirPath, quiet: true);
+    if (!results1.Success) { throw new Exception(results1.Err); }
+    
+    var results2 = cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.PublishProject), project.ProjectDirPath, quiet: true);
+    if (!results2.Success) { throw new Exception(results2.Err); }
+    
     if (!Directory.Exists(project.PublishPath)) throw new Exception("publish failed");
     return Task.CompletedTask;
   }
