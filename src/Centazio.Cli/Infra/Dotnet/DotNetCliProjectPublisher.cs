@@ -4,7 +4,7 @@ namespace Centazio.Cli.Infra.Dotnet;
 
 public class DotNetCliProjectPublisher(CentazioSettings settings) : IProjectPublisher {
 
-  private readonly CommandRunner cmd = new();
+  private readonly ICommandRunner cmd = new CommandRunner();
   
   public Task PublishProject(FunctionProjectMeta project) {
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);

@@ -8,7 +8,7 @@ using Centazio.Test.Lib;
 namespace Centazio.Cli.Tests;
 
 public static class MiscHelpers {
-  private static readonly CommandRunner cmd = new();
+  private static readonly ICommandRunner cmd = new CommandRunner();
   private static readonly CentazioSettings settings = TestingFactories.Settings();
   
   public static FunctionProjectMeta EmptyFunctionProject(ECloudEnv cloud) => 

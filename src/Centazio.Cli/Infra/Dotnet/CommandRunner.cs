@@ -18,23 +18,25 @@ public class CommandResults(string command, string args, string dir, string @out
 }
 
 public interface ICommandRunner {
-  CommandResults MsTest(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
   CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
   CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
   CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
-  CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false);
 }
 
 public class CommandRunner : ICommandRunner {
   private string AzCommand => File.Exists(@"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd") 
       ? @"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd" 
       : @"C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin\az.cmd";
+
+  private readonly Dictionary<string, bool> installed = new();
   
-  public CommandResults MsTest(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet", "test " + args, cwd, quiet, newwindow); 
   public CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet", args, cwd, quiet, newwindow);
   public CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run(AzCommand, args, cwd, quiet, newwindow);
   public CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("func", args, cwd, quiet, newwindow);
-  public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false) {
+  
+  private CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true) {
+    if (checktool && !CheckInstalled(command)) return new CommandResults(command, args, cwd ?? String.Empty, String.Empty, String.Empty, newwindow);
+    
     var cmdname = new FileInfo(command).Name.Split('.').First();
     if (!quiet) Log.Information($"running[{cmdname}] args[{args}] cwd[{cwd}]");
     cwd ??= FsUtils.GetSolutionFilePath();
@@ -62,6 +64,18 @@ public class CommandRunner : ICommandRunner {
     var outp = output.ToString().Trim();
     if (code != 0 || err.Length > 0) throw new Exception($"cmd[{cmdname}] args[{args}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
     return new CommandResults(cmdname, args, cwd, outp, err, newwindow);
+  }
+
+  private bool CheckInstalled(string command) {
+    var tool = command.Split('\\').Last();
+    if (installed.TryGetValue(tool, out var isinstalled)) { return isinstalled; }
+    
+    var results = Run(command, "--version", quiet: true, checktool: false);
+    isinstalled = String.IsNullOrWhiteSpace(results.Err);
+    if (!isinstalled) {
+      Console.WriteLine($"tool '{tool}' is not installed.");
+    }
+    return (installed[tool] = isinstalled);
   }
 
   private void RunProcess(Process p) {

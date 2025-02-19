@@ -3,6 +3,7 @@ using Centazio.Cli.Commands;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;
+using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
@@ -44,6 +45,7 @@ internal class CliBootstrapper {
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()
         .AddSingleton<CommandsTree>()
+        .AddSingleton<ICommandRunner, CommandRunner>()
         .AddSingleton<IAwsAccounts, AwsAccounts>()
         .AddSingleton<IAzSubscriptions, AzSubscriptions>()
         .AddSingleton<IAzResourceGroups, AzResourceGroups>()

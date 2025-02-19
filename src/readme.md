@@ -10,8 +10,6 @@
   - Aws:
     - implement 
 - cli:
-  - have ageneric command line argument job, and use config file to set up these jobs
-  - cli commands should check if the tool is installed
   - hide logs of cli commands perhaps store and show if there are errors
   - for common errors do not show exception, just message 
   - disable/stop functions
