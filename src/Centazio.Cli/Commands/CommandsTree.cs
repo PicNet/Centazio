@@ -57,11 +57,12 @@ public class CommandsTree {
           CreateCommandNode<AddResourceGroupCommand>("add"),
         ]),
         new BranchNode("func", [
-          CreateCommandNode<GenerateAzFunctionsCommand>("gen"),
+          CreateCommandNode<GenerateAzFunctionsCommand>("generate"),
           CreateCommandNode<DeployAzFunctionsCommand>("deploy"),
           CreateCommandNode<DeleteAzFunctionsCommand>("delete"),
           CreateCommandNode<StartStopAzFunctionAppCommand>("start"),
-          CreateCommandNode<StartStopAzFunctionAppCommand>("stop")
+          CreateCommandNode<StartStopAzFunctionAppCommand>("stop"),
+          CreateCommandNode<AzFunctionLocalSimulateCommand>("simulate")
         ])
       ]),
       ///////////////////////////////////////////////

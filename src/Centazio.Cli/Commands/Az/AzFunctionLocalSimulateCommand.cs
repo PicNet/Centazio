@@ -1,0 +1,27 @@
+﻿using Centazio.Cli.Commands.Gen;
+using Centazio.Cli.Infra;
+using Centazio.Cli.Infra.Dotnet;
+using Centazio.Cli.Infra.Ui;
+using Centazio.Core.Misc;
+using Centazio.Core.Settings;
+using Spectre.Console.Cli;
+
+namespace Centazio.Cli.Commands.Az;
+
+public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, ICommandRunner cmd) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
+  
+  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+    AssemblyName = UiHelpers.Ask("Assembly Name")
+  });
+
+  protected override Task ExecuteImpl(string name, Settings settings) {
+    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
+    Environment.CurrentDirectory = project.ProjectDirPath;
+    cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunctionCmd), cwd: project.ProjectDirPath, newwindow:true);
+    return Task.CompletedTask;
+  }
+
+  public class Settings : CommonSettings {
+    [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
+  }
+}

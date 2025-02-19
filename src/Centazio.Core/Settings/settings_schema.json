@@ -10,6 +10,9 @@
         "StartFunctionAppCmd": { "type": "string", "required": true },
         "StopFunctionAppCmd": { "type": "string", "required": true }
       },
+      "Func": {
+        "LocalSimulateFunctionCmd": { "type": "string", "required": true }
+      },
       "DotNet": {
         "CleanProject": { "type": "string", "required": true },
         "BuildProject": { "type": "string", "required": true },

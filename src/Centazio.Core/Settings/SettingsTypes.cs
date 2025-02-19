@@ -35,6 +35,22 @@ public record AzSettings {
   }
 }
 
+public record FuncSettings {
+  public required string LocalSimulateFunctionCmd { get; init; }
+
+  public Dto ToDto() => new() {
+    LocalSimulateFunctionCmd = LocalSimulateFunctionCmd,
+  };
+
+  public record Dto : IDto<FuncSettings> {
+    public string? LocalSimulateFunctionCmd { get; init; }
+
+    public FuncSettings ToBase() => new() {
+      LocalSimulateFunctionCmd = String.IsNullOrWhiteSpace(LocalSimulateFunctionCmd) ? throw new ArgumentNullException(nameof(LocalSimulateFunctionCmd)) : LocalSimulateFunctionCmd.Trim(),
+    };
+  }
+}
+
 public record DotNetSettings {
   public required string CleanProject { get; init; }
   public required string BuildProject { get; init; }
@@ -61,19 +77,23 @@ public record DotNetSettings {
 
 public record ConsoleCommandsSettings {
   public required AzSettings Az { get; init; }
+  public required FuncSettings Func { get; init; }
   public required DotNetSettings DotNet { get; init; }
 
   public Dto ToDto() => new() {
     Az = Az.ToDto(),
+    Func = Func.ToDto(),
     DotNet = DotNet.ToDto(),
   };
 
   public record Dto : IDto<ConsoleCommandsSettings> {
     public AzSettings.Dto? Az { get; init; }
+    public FuncSettings.Dto? Func { get; init; }
     public DotNetSettings.Dto? DotNet { get; init; }
 
     public ConsoleCommandsSettings ToBase() => new() {
       Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
+      Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
       DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
     };
   }

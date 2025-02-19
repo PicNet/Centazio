@@ -9,6 +9,9 @@
         "StartFunctionAppCmd": "functionapp start -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
         "StopFunctionAppCmd": "functionapp stop -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
       },
+      "Func": {
+        "LocalSimulateFunctionCmd": "start -g [settings.AzureSettings.ResourceGroup]"
+      },
       "DotNet": {
         "CleanProject": "clean --configuration Release /property:GenerateFullPaths=true",
         "BuildProject": "build --configuration Release /property:GenerateFullPaths=true",
