@@ -34,7 +34,7 @@ public static class UiHelpers {
           ctx.AddTask($"[green]{description}[/]");
           return await action();
         });
-    if (!string.IsNullOrWhiteSpace(error)) AnsiConsole.WriteLine($"[red]{error}[/]");
+    if (!string.IsNullOrWhiteSpace(error)) AnsiConsole.Markup($"[red]{error}[/]");
   }
 
 }

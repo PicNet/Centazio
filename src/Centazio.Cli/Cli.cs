@@ -19,9 +19,13 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
 #endif
       commands.Initialise(cfg);
     });
-    app.Run(args);
+    try { return app.Run(args); }
+    catch (Exception e) { 
+      if (e is CommandParseException or CommandRuntimeException) { AnsiConsole.Markup($"[red]{e.Message}[/]"); }
+      else throw;
+    }
     
-    return 0;
+    return -1;
   }
   
   private void ShowSplash() {
