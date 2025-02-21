@@ -17,6 +17,7 @@ public abstract record CoreEntityBase(CoreEntityId CoreId) : ICoreEntity {
     
     public abstract E ToBase();
     
+    // todo: this method is ugly, should be a better way to do this
     protected E FillBaseProperties(E e) { 
       e.CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId)));
       return e;

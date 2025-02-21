@@ -20,8 +20,13 @@ public static class DtoHelpers {
     if (dtot is null) throw new Exception($"baseobj does not have a associated Dto.  Call `DtoHelpers.HasDto` before calling `ToDto`."); 
     var dto = Activator.CreateInstance(dtot) ?? throw new Exception();
     var pairs = GetPropPairs(baseobj.GetType(), dtot);
-    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(baseobj, p)));
+    pairs.ForEach(p => p.DtoPi.SetValue(dto, GetDtoVal(GetValueSafe(p.BasePi, baseobj))));
     return dto;
+    
+    object? GetValueSafe(PropertyInfo pi, object obj) {
+      try { return pi.GetValue(obj); } 
+      catch (TargetInvocationException) { return null; }
+    }
   }
   
   public static bool HasDto(object baseobj) => GetDtoTypeFromTypeHierarchy(baseobj.GetType()) is not null;
@@ -36,12 +41,12 @@ public static class DtoHelpers {
         }).ToList();
   } 
   
-  private static object? GetDtoVal(object baseobj, PropPair p) {
-    var origval = p.BasePi.GetValue(baseobj);
+  private static object? GetDtoVal(object? origval) {
     if (origval is null) return origval;
-    if (p.BasePi.PropertyType.IsEnum) return p.BasePi.GetValue(baseobj)?.ToString();
-    if (p.BasePi.PropertyType.IsAssignableTo(typeof(ValidString))) return ((ValidString)origval).Value;   
-    return Convert.ChangeType(origval, Nullable.GetUnderlyingType(p.DtoPi.PropertyType) ?? p.DtoPi.PropertyType) ?? throw new Exception();
+    if (origval.GetType().IsEnum) return origval.ToString();
+    if (origval is ValidString vs) return vs.Value;
+    if (HasDto(origval)) return ToDto(origval);
+    return origval;
   }
 
   private static readonly Dictionary<Type, Type?> dto_cache = new();

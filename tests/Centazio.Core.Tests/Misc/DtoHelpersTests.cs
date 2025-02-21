@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 
 namespace Centazio.Core.Tests.Misc;
@@ -38,6 +39,11 @@ public class DtoHelpersTests {
       IgnoreReason = e.IgnoreReason
     };   
   }
-
   
+  [Test] public void Test_Complex_ToDto() {
+    var settings = F.Settings();
+    var manualdto = settings.ToDto();
+    var autodto = DtoHelpers.ToDto<CentazioSettings, CentazioSettings.Dto>(settings);
+    Assert.That(autodto, Is.EqualTo(manualdto));
+  }
 }
