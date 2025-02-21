@@ -14,11 +14,14 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override Task ExecuteImpl(string name, Settings settings) {
+  protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
+
+    await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, project, settings.Env).GenerateSolution());
+    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
+    
     Environment.CurrentDirectory = project.ProjectDirPath;
     cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunctionCmd), cwd: project.ProjectDirPath, newwindow:true);
-    return Task.CompletedTask;
   }
 
   public class Settings : CommonSettings {

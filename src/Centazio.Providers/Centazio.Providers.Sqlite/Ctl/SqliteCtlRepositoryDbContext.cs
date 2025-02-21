@@ -6,6 +6,6 @@ namespace Centazio.Providers.Sqlite.Ctl;
 public class SqliteCtlRepositoryDbContext(string connstr, string schemanm, string systemstatenm, string objectstatenm, string coretosysmapnm) : 
     AbstractCtlRepositoryDbContext(schemanm, systemstatenm, objectstatenm, coretosysmapnm) {
   
-  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlite(connstr);
+  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => SqliteEfContextInitialiser.SetSqliteOnDbContextOpts(options, connstr);
 
 }

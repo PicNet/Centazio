@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
@@ -7,13 +6,12 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Centazio.TestFunctions;
 
 public record TestSettings : CentazioSettings {
-  public string? NewProperty { get; set; }
+  public string? NewProperty { get; init; }
   
   protected TestSettings(CentazioSettings centazio) : base (centazio) {}
   
@@ -46,7 +44,7 @@ public class TestFunctionIntegration(string environment) : IntegrationBase<TestS
 
 }
 
-public class EmptyFunction(ICtlRepository ctl, TestSettings settings, ILogger<EmptyFunction> log) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(settings, log), ctl) {
+public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl) {
 
   protected override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
@@ -54,20 +52,8 @@ public class EmptyFunction(ICtlRepository ctl, TestSettings settings, ILogger<Em
 
 }
 
-public class EmptyFunctionOperationRunner(TestSettings settings, ILogger<EmptyFunction> log) : IOperationRunner<EmptyFunctionOperationConfig> {
+public class EmptyFunctionOperationRunner : IOperationRunner<EmptyFunctionOperationConfig> {
   public Task<OperationResult> RunOperation(OperationStateAndConfig<EmptyFunctionOperationConfig> op) {
-    // todo: remove
-    log.LogInformation($"EmptyFunctionOperationRunner#RunOperation[{op.OpConfig.Name}]");
-    log.LogInformation("Settings: " + JsonSerializer.Serialize(settings.CtlRepository.ToDto(), new JsonSerializerOptions { WriteIndented = true }));
-    
-    // testin logging
-    log.LogTrace("log.LogTrace");
-    log.LogDebug("log.LogDebug");
-    log.LogInformation("log.LogInformation");
-    log.LogCritical("log.LogCritical");
-    log.LogWarning("log.LogWarning");
-    log.LogError("log.LogError");
-    
     Log.Verbose("Log.Verbose");
     Log.Debug("Log.Debug");
     Log.Information("Log.Information");

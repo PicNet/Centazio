@@ -4,5 +4,5 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.Sqlite;
 
 public abstract class SqliteDbContext(string connstr) : CentazioDbContext {
-  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => options.UseSqlite(connstr);
+  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => SqliteEfContextInitialiser.SetSqliteOnDbContextOpts(options, connstr);
 }

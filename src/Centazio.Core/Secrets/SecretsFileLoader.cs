@@ -19,7 +19,7 @@ public class SecretsFileLoader(string dir) : ISecretsLoader {
   
   public T Load<T>(string environment) {
     var path = GetSecretsFilePath(environment);
-    Log.Debug($"loading secrets - file [{path}]");
+    Log.Information($"loading secrets - file [{path.Split(Path.DirectorySeparatorChar).Last()}]");
     
     var secrets = LoadSecretsFileAsDictionary(path);
     return ValidateAndSetLoadedSecrets<T>(secrets); 
