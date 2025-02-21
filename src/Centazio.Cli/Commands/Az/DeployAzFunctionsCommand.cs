@@ -1,4 +1,5 @@
-﻿using Centazio.Cli.Commands.Gen;
+﻿using System.ComponentModel;
+using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
@@ -18,12 +19,14 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
-    await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, project, settings.Env).GenerateSolution());
-    await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
+    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, project, settings.Env).GenerateSolution());
+    if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
     await UiHelpers.Progress($"Deploying the Azure Function '{project.DashedProjectName}'", async () => await impl.Deploy(project)); 
   }
 
   public class Settings : CommonSettings {
     [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
+    [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
+    [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
   }
 }

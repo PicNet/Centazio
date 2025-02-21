@@ -1,7 +1,9 @@
 # Todo
 - lambda/azure wrappers:
   - Azure:
-    - fix Log.Logger, currently only injected ILogger<> works 
+    - fix Log.Logger, currently only injected ILogger<> works
+      - this will somewhat resolve the issue: var config = LogInitialiser.GetFileConfig(dir: @"C:\home\LogFiles\Application\Functions\Function\EmptyFunction");
+      - however, we now get duplicate logs and they are a delayed
     - add logstream command: `func azure functionapp logstream Centazio-TestFunctions-Azure` to cli
       - add this as an option to func deploy
     - application insights

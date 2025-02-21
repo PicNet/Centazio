@@ -22,8 +22,8 @@ public static class LogInitialiser {
     return conf;
   }
 
-  public static LoggerConfiguration GetFileConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null) => GetBaseConfig(level, filters).WriteTo.File("log/log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7);
+  public static LoggerConfiguration GetFileConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null, string dir = "log") => GetBaseConfig(level, filters).WriteTo.File(Path.Combine(dir, "log.txt"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7);
   public static LoggerConfiguration GetConsoleConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null) => GetBaseConfig(level, filters).WriteTo.Console();
-  public static LoggerConfiguration GetFileAndConsoleConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null) => GetFileConfig(level, filters).WriteTo.Console();
+  public static LoggerConfiguration GetFileAndConsoleConfig(LogEventLevel level = LogEventLevel.Debug, List<string>? filters = null, string dir = "log") => GetFileConfig(level, filters).WriteTo.Console();
   
 }
