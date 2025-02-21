@@ -4,15 +4,15 @@
     - fix Log.Logger, currently only injected ILogger<> works
       - this will somewhat resolve the issue: var config = LogInitialiser.GetFileConfig(dir: @"C:\home\LogFiles\Application\Functions\Function\EmptyFunction");
       - however, we now get duplicate logs and they are a delayed
-    - add logstream command: `func azure functionapp logstream Centazio-TestFunctions-Azure` to cli
-      - add this as an option to func deploy
     - application insights
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
-    - support overriding function settings like service plan, etc
-    - simulate should not open a new window when running just one function
-    - simulate should not show exception on CTL+C
+    - support overriding function settings like service plan, etc 
   - Aws:
     - implement 
+- cli:
+  - commands should end with a success message, like 'Azure Function XXX successfully stopped/started/deleted`, etc.
+  - simulate should not open a new window when running just one function
+  - simulate should not show exception on CTL+C
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest

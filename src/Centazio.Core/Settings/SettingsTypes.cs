@@ -4,49 +4,53 @@ using Centazio.Core.Misc;
 namespace Centazio.Core.Settings;
 
 public record AzSettings {
-  public required string ListFunctionAppsCmd { get; init; }
-  public required string ListFunctionsCmd { get; init; }
-  public required string DeleteFunctionAppCmd { get; init; }
-  public required string StartFunctionAppCmd { get; init; }
-  public required string StopFunctionAppCmd { get; init; }
+  public required string ListFunctionApps { get; init; }
+  public required string ListFunctions { get; init; }
+  public required string DeleteFunctionApp { get; init; }
+  public required string StartFunctionApp { get; init; }
+  public required string StopFunctionApp { get; init; }
 
   public Dto ToDto() => new() {
-    ListFunctionAppsCmd = ListFunctionAppsCmd,
-    ListFunctionsCmd = ListFunctionsCmd,
-    DeleteFunctionAppCmd = DeleteFunctionAppCmd,
-    StartFunctionAppCmd = StartFunctionAppCmd,
-    StopFunctionAppCmd = StopFunctionAppCmd,
+    ListFunctionApps = ListFunctionApps,
+    ListFunctions = ListFunctions,
+    DeleteFunctionApp = DeleteFunctionApp,
+    StartFunctionApp = StartFunctionApp,
+    StopFunctionApp = StopFunctionApp,
   };
 
   public record Dto : IDto<AzSettings> {
-    public string? ListFunctionAppsCmd { get; init; }
-    public string? ListFunctionsCmd { get; init; }
-    public string? DeleteFunctionAppCmd { get; init; }
-    public string? StartFunctionAppCmd { get; init; }
-    public string? StopFunctionAppCmd { get; init; }
+    public string? ListFunctionApps { get; init; }
+    public string? ListFunctions { get; init; }
+    public string? DeleteFunctionApp { get; init; }
+    public string? StartFunctionApp { get; init; }
+    public string? StopFunctionApp { get; init; }
 
     public AzSettings ToBase() => new() {
-      ListFunctionAppsCmd = String.IsNullOrWhiteSpace(ListFunctionAppsCmd) ? throw new ArgumentNullException(nameof(ListFunctionAppsCmd)) : ListFunctionAppsCmd.Trim(),
-      ListFunctionsCmd = String.IsNullOrWhiteSpace(ListFunctionsCmd) ? throw new ArgumentNullException(nameof(ListFunctionsCmd)) : ListFunctionsCmd.Trim(),
-      DeleteFunctionAppCmd = String.IsNullOrWhiteSpace(DeleteFunctionAppCmd) ? throw new ArgumentNullException(nameof(DeleteFunctionAppCmd)) : DeleteFunctionAppCmd.Trim(),
-      StartFunctionAppCmd = String.IsNullOrWhiteSpace(StartFunctionAppCmd) ? throw new ArgumentNullException(nameof(StartFunctionAppCmd)) : StartFunctionAppCmd.Trim(),
-      StopFunctionAppCmd = String.IsNullOrWhiteSpace(StopFunctionAppCmd) ? throw new ArgumentNullException(nameof(StopFunctionAppCmd)) : StopFunctionAppCmd.Trim(),
+      ListFunctionApps = String.IsNullOrWhiteSpace(ListFunctionApps) ? throw new ArgumentNullException(nameof(ListFunctionApps)) : ListFunctionApps.Trim(),
+      ListFunctions = String.IsNullOrWhiteSpace(ListFunctions) ? throw new ArgumentNullException(nameof(ListFunctions)) : ListFunctions.Trim(),
+      DeleteFunctionApp = String.IsNullOrWhiteSpace(DeleteFunctionApp) ? throw new ArgumentNullException(nameof(DeleteFunctionApp)) : DeleteFunctionApp.Trim(),
+      StartFunctionApp = String.IsNullOrWhiteSpace(StartFunctionApp) ? throw new ArgumentNullException(nameof(StartFunctionApp)) : StartFunctionApp.Trim(),
+      StopFunctionApp = String.IsNullOrWhiteSpace(StopFunctionApp) ? throw new ArgumentNullException(nameof(StopFunctionApp)) : StopFunctionApp.Trim(),
     };
   }
 }
 
 public record FuncSettings {
-  public required string LocalSimulateFunctionCmd { get; init; }
+  public required string LocalSimulateFunction { get; init; }
+  public required string ShowLogStream { get; init; }
 
   public Dto ToDto() => new() {
-    LocalSimulateFunctionCmd = LocalSimulateFunctionCmd,
+    LocalSimulateFunction = LocalSimulateFunction,
+    ShowLogStream = ShowLogStream,
   };
 
   public record Dto : IDto<FuncSettings> {
-    public string? LocalSimulateFunctionCmd { get; init; }
+    public string? LocalSimulateFunction { get; init; }
+    public string? ShowLogStream { get; init; }
 
     public FuncSettings ToBase() => new() {
-      LocalSimulateFunctionCmd = String.IsNullOrWhiteSpace(LocalSimulateFunctionCmd) ? throw new ArgumentNullException(nameof(LocalSimulateFunctionCmd)) : LocalSimulateFunctionCmd.Trim(),
+      LocalSimulateFunction = String.IsNullOrWhiteSpace(LocalSimulateFunction) ? throw new ArgumentNullException(nameof(LocalSimulateFunction)) : LocalSimulateFunction.Trim(),
+      ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
     };
   }
 }

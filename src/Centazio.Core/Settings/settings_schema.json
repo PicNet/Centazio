@@ -4,14 +4,15 @@
 
     "ConsoleCommands": {
       "Az": {
-        "ListFunctionAppsCmd": { "type": "string", "required": true },
-        "ListFunctionsCmd": { "type": "string", "required": true },
-        "DeleteFunctionAppCmd": { "type": "string", "required": true },
-        "StartFunctionAppCmd": { "type": "string", "required": true },
-        "StopFunctionAppCmd": { "type": "string", "required": true }
+        "ListFunctionApps": { "type": "string", "required": true },
+        "ListFunctions": { "type": "string", "required": true },
+        "DeleteFunctionApp": { "type": "string", "required": true },
+        "StartFunctionApp": { "type": "string", "required": true },
+        "StopFunctionApp": { "type": "string", "required": true }
       },
       "Func": {
-        "LocalSimulateFunctionCmd": { "type": "string", "required": true }
+        "LocalSimulateFunction": { "type": "string", "required": true },
+        "ShowLogStream": { "type": "string", "required": true }
       },
       "DotNet": {
         "CleanProject": { "type": "string", "required": true },

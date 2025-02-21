@@ -62,7 +62,8 @@ public class CommandsTree {
           CreateCommandNode<DeleteAzFunctionsCommand>("delete"),
           CreateCommandNode<StartStopAzFunctionAppCommand>("start"),
           CreateCommandNode<StartStopAzFunctionAppCommand>("stop"),
-          CreateCommandNode<AzFunctionLocalSimulateCommand>("simulate")
+          CreateCommandNode<AzFunctionLocalSimulateCommand>("simulate"),
+          CreateCommandNode<ShowAzFunctionLogStreamCommand>("logs")
         ])
       ]),
       ///////////////////////////////////////////////

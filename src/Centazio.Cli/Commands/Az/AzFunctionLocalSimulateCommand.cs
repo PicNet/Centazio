@@ -22,7 +22,7 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
     
     Environment.CurrentDirectory = project.ProjectDirPath;
-    cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunctionCmd), cwd: project.ProjectDirPath, newwindow:true);
+    cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), cwd: project.ProjectDirPath, newwindow:true);
   }
 
   public class Settings : CommonSettings {
