@@ -12,9 +12,11 @@ public class FunctionsInitialiser {
   private CentazioSettings Settings { get; }
   private CentazioServicesRegistrar Registrar { get; }
 
-  public FunctionsInitialiser(string environment) => 
-      (this.environment, Settings, Registrar) = (environment, LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
-  
+  public FunctionsInitialiser(string environment) {
+    this.environment = environment;
+    (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
+  }
+
   public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
   
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {

@@ -64,6 +64,11 @@ public class SettingsLoaderTests {
     Assert.That(settings.Parse(cmd, secrets: secrets), Is.EqualTo(exp));
   }
   
+  [Test] public void Test_loading_azure_sample_settings() {
+    var settings = F.Settings("azure_sample");
+    Assert.That(settings.StagedEntityRepository.ConnectionString, Is.EqualTo("Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"));
+  }
+  
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
       File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);

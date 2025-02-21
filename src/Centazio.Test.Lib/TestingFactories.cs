@@ -17,8 +17,8 @@ namespace Centazio.Test.Lib;
 public static class TestingFactories {
   
   private static CentazioSettings? settings;
-  public static CentazioSettings Settings() => settings ??= Settings<CentazioSettings>();
-  public static E Settings<E>() => new SettingsLoader().Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
+  public static CentazioSettings Settings(string? environment=null) => settings ??= Settings<CentazioSettings>(environment);
+  public static E Settings<E>(string? environment=null) => new SettingsLoader().Load<E>(environment ?? CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static CentazioSecrets Secrets() => Secrets<CentazioSecrets>();
   public static E Secrets<E>() => new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);

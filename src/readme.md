@@ -4,6 +4,7 @@
     - fix Log.Logger, currently only injected ILogger<> works 
     - get working (cannot open db file even though should be using memory)
     - add logstream command: `func azure functionapp logstream Centazio-TestFunctions-Azure` to cli
+      - add this as an option to func deploy
     - application insights
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
     - support overriding function settings like service plan, etc 
