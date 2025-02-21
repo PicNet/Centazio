@@ -22,6 +22,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
     if (name == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {
         await Task.Run(() => cmd.Az(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
+        AnsiConsole.WriteLine($"Azure Function App '{project.DashedProjectName}' successfully started.");
       });
     } else if (name == "stop") {
       if (!UiHelpers.Confirm($"Are you sure you want to stop Azure Function App '{project.DashedProjectName}'")) {
@@ -30,6 +31,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
       }
       await UiHelpers.Progress($"Stopping Azure Function App '{project.DashedProjectName}'", async () => {
         await Task.Run(() => cmd.Az(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Az.StopFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
+        AnsiConsole.WriteLine($"Azure Function App '{project.DashedProjectName}' successfully stopped.");
       });
     }
   }

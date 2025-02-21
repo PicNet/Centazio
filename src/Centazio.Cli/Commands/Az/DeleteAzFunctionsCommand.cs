@@ -24,6 +24,7 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
     }
     
     await UiHelpers.Progress($"Deleting Azure Function '{project.DashedProjectName}'", async () => await impl.Delete(project));
+    AnsiConsole.WriteLine($"Azure Function App '{project.DashedProjectName}' successfully deleted.");
   }
 
   public class Settings : CommonSettings {

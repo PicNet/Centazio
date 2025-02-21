@@ -10,9 +10,7 @@
   - Aws:
     - implement 
 - cli:
-  - commands should end with a success message, like 'Azure Function XXX successfully stopped/started/deleted`, etc.
   - simulate should not open a new window when running just one function
-  - simulate should not show exception on CTL+C
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest

@@ -51,7 +51,7 @@ public class CommandRunner : ICommandRunner {
         RedirectStandardOutput = !newwindow, 
         RedirectStandardError = !newwindow,
         UseShellExecute = newwindow,
-        WorkingDirectory = cwd,
+        WorkingDirectory = cwd
       }
     };
     p.OutputDataReceived += (_, o) => OnString(o.Data ?? String.Empty, output, quiet, false);
@@ -63,7 +63,9 @@ public class CommandRunner : ICommandRunner {
     var code = p.ExitCode;
     var err = error.ToString().Trim();
     var outp = output.ToString().Trim();
-    if (code != 0 || err.Length > 0) throw new Exception($"cmd[{cmdname}] args[{args}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
+    // -1073741510 is CTRL+C so can be ignored
+    if (code != -1073741510 && (code != 0 || err.Length > 0)) 
+      throw new Exception($"cmd[{cmdname}] args[{args}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
     return new CommandResults(cmdname, args, cwd, outp, err, newwindow);
   }
 
