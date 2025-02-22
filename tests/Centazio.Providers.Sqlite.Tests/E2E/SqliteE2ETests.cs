@@ -6,6 +6,7 @@ using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
+using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ namespace Centazio.Providers.Sqlite.Tests.E2E;
 
 public class SqliteE2ETests {
   [Test] public async Task Run_e2e_simulation_and_tests() {
-    await new E2EEnvironment(new SqliteSimulationProvider()).RunSimulation();
+    await new E2EEnvironment(new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
   }
 }
 

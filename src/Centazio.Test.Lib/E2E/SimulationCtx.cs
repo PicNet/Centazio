@@ -2,6 +2,7 @@
 using Centazio.Core.Checksum;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Serilog;
 using Serilog.Events;
@@ -16,14 +17,16 @@ public class SimulationCtx : IAsyncDisposable {
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; set; } = null!;
+  public CentazioSettings Settings { get; set; } = null!;
   
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }
   public EntityConverter Converter { get; set; } = null!;
 
-  public SimulationCtx(ISimulationProvider provider) {
+  public SimulationCtx(ISimulationProvider provider, CentazioSettings settings) {
     this.provider = provider;
     
+    Settings = settings;
     ChecksumAlg = new Sha256ChecksumAlgorithm();
     Epoch = new(this);
   }

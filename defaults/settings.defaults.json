@@ -1,6 +1,7 @@
 {
   "Defaults": {
     "GeneratedCodeFolder": "generated",
+    "FunctionMaxAllowedRunningMinutes": 15,
     "ConsoleCommands": {
       "Az": {
         "ListFunctionApps": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",

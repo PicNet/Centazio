@@ -5,7 +5,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinReadFunction(SimulationCtx ctx, FinApi api) : ReadFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
+public class FinReadFunction(SimulationCtx ctx, FinApi api) : ReadFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CtlRepo, ctx.Settings) {
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, GetFinAccountUpdates),

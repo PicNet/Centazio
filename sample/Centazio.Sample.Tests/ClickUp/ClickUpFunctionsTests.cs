@@ -23,7 +23,7 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Promote() {
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
-    var func = new ClickUpPromoteFunction(stager, core, ctl);
+    var func = new ClickUpPromoteFunction(stager, core, ctl, F.Settings());
     var results = (await func.RunFunction()).OpResults.Single();
     var ss = await ctl.GetSystemState(SC.Systems.ClickUp, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
@@ -39,13 +39,13 @@ public class ClickUpFunctionsTests {
 
   [Test] public async Task Test_Write() {
     var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
-    var func = new ClickUpWriteFunction(core, ctl, api);
+    var func = new ClickUpWriteFunction(core, ctl, api, F.Settings());
     var results = await func.RunFunction();
     Assert.That(results, Is.Not.Null);
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new ClickUpReadFunction(stager, ctl, api);
+    var func = new ClickUpReadFunction(stager, ctl, api, F.Settings());
     return (await func.RunFunction()).OpResults.Single();
   }
   

@@ -2,6 +2,7 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 
 namespace Centazio.Core.Runner;
 
@@ -22,15 +23,17 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   private bool running;
   private readonly IOperationRunner<C> oprunner;
   private readonly ICtlRepository ctl;
+  private readonly CentazioSettings settings;
 
-  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C> oprunner, ICtlRepository ctl) {
+  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C> oprunner, ICtlRepository ctl, CentazioSettings settings) {
     System = system;
     Stage = stage;
     
-    Config = GetFunctionConfiguration();
-    
     this.oprunner = oprunner;
     this.ctl = ctl;
+    this.settings = settings;
+    
+    Config = GetFunctionConfiguration();
   }
 
   protected abstract FunctionConfig<C> GetFunctionConfiguration();
@@ -56,7 +59,8 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       }
       if (state.Status != ESystemStateStatus.Idle) {
         var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
-        if (minutes <= Config.TimeoutMinutes) {
+        var maxallowed = Config.TimeoutMinutes > 0 ? Config.TimeoutMinutes : settings.Defaults.FunctionMaxAllowedRunningMinutes; 
+        if (minutes <= maxallowed) {
           Log.Debug("function is already running, ignoring run {@SystemState}", state);
           return new AlreadyRunningFunctionRunResults();
         }

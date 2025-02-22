@@ -80,7 +80,7 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : WriteFunction(C.System2Name, core, ctl) {
+public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : WriteFunction(C.System2Name, core, ctl, F.Settings()) {
 
   public List<Map.Created> Created { get; } = [];
   public List<Map.Updated> Updated { get; } = [];

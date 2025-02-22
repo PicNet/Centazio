@@ -77,7 +77,7 @@ public class FunctionRunnerTests {
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
   ]);
   
-  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
+  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl, F.Settings()) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
@@ -92,7 +92,7 @@ public class FunctionRunnerTests {
 
   }
   
-  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl) {
+  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl, F.Settings()) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     

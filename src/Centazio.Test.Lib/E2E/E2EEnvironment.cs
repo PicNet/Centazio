@@ -1,5 +1,6 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 using Centazio.Test.Lib.E2E.Crm;
 using Centazio.Test.Lib.E2E.Fin;
 using Serilog;
@@ -7,9 +8,9 @@ using Serilog.Events;
 
 namespace Centazio.Test.Lib.E2E;
 
-public class E2EEnvironment(ISimulationProvider provider) : IAsyncDisposable {
+public class E2EEnvironment(ISimulationProvider provider, CentazioSettings settings) : IAsyncDisposable {
 
-  private readonly SimulationCtx ctx = new(provider);
+  private readonly SimulationCtx ctx = new(provider, settings);
   
   private CrmApi crm = null!;
   private FinApi fin = null!;

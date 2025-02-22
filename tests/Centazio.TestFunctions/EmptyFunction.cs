@@ -44,7 +44,7 @@ public class TestFunctionIntegration(string environment) : IntegrationBase<TestS
 
 }
 
-public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl) {
+public class EmptyFunction(ICtlRepository ctl, CentazioSettings settings) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl, settings) {
 
   protected override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
@@ -54,12 +54,12 @@ public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionO
 
 public class EmptyFunctionOperationRunner : IOperationRunner<EmptyFunctionOperationConfig> {
   public Task<OperationResult> RunOperation(OperationStateAndConfig<EmptyFunctionOperationConfig> op) {
-    Log.Verbose("Log.Verbose");
-    Log.Debug("Log.Debug");
-    Log.Information("Log.Information");
-    Log.Fatal("Log.Fatal");
-    Log.Warning("Log.Warning");
-    Log.Error("Log.Error");
+    Log.Verbose("Log.Verbose - EmptyFunctionOperationRunner#RunOperation");
+    Log.Debug("Log.Debug - EmptyFunctionOperationRunner#RunOperation");
+    Log.Information("Log.Information - EmptyFunctionOperationRunner#RunOperation");
+    Log.Fatal("Log.Fatal - EmptyFunctionOperationRunner#RunOperation");
+    Log.Warning("Log.Warning - EmptyFunctionOperationRunner#RunOperation");
+    Log.Error("Log.Error - EmptyFunctionOperationRunner#RunOperation");
     
     return Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
   }

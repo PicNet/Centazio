@@ -3,11 +3,12 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Core.Write;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl) {
+public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api, CentazioSettings settings) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl, settings) {
   
   protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)

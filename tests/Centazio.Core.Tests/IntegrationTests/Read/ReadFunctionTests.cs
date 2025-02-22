@@ -82,7 +82,7 @@ public class ReadFunctionTests {
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl) {
+public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl, F.Settings()) {
 
   private readonly DummyCrmApi crmApi = new();
 

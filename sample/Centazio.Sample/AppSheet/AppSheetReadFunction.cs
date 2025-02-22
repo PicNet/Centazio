@@ -3,11 +3,12 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, AppSheetApi api) : ReadFunction(SampleConstants.Systems.AppSheet, stager, ctl) {
+public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, AppSheetApi api, CentazioSettings settings) : ReadFunction(SampleConstants.Systems.AppSheet, stager, ctl, settings) {
 
   protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new ReadOperationConfig(SampleConstants.SystemEntities.AppSheet.Task, CronExpressionsHelper.EveryXSeconds(10), GetSheetTasks)

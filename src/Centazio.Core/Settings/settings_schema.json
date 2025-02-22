@@ -1,6 +1,7 @@
 ﻿{
   "Defaults": {
     "GeneratedCodeFolder": { "type": "string", "required": true },
+    "FunctionMaxAllowedRunningMinutes": { "type": "int", "required":  true },
 
     "ConsoleCommands": {
       "Az": {

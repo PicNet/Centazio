@@ -5,7 +5,6 @@ namespace Centazio.Core.Runner;
 
 public record FunctionConfigDefaults {
   public static bool ThrowExceptions { get; set; }
-  public static int TimeoutMinutes { get; set; } = 15;
   public static DateTime DefaultFirstTimeCheckpoint { get; set; } = UtcDate.UtcNow.AddMonths(-1);
 }
 
@@ -30,10 +29,8 @@ public interface IFunctionConfig : IDisposable {
 }
 
 public record BaseFunctionConfig : IFunctionConfig {
-  public int TimeoutMinutes { get; init; } = FunctionConfigDefaults.TimeoutMinutes;
-
+  public int TimeoutMinutes { get; init; }
   public DateTime DefaultFirstTimeCheckpoint { get; init; } = FunctionConfigDefaults.DefaultFirstTimeCheckpoint;
-
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
 
   private IChecksumAlgorithm? checksum;

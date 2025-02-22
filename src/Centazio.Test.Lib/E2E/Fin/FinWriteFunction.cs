@@ -5,7 +5,7 @@ using Centazio.Core.Write;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(SimulationConstants.FIN_SYSTEM, ctx.CoreStore, ctx.CtlRepo) {
+public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(SimulationConstants.FIN_SYSTEM, ctx.CoreStore, ctx.CtlRepo, ctx.Settings) {
 
   protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, ConvertCoreCustomers, WriteCustomers),

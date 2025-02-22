@@ -15,7 +15,9 @@
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
 - check that all provider tests in Centazio.Core have Provier counterparts
-- set up azure devops testing pipeline (agent is ready)
+- support cloud based config timer triggers, have a separate mode?
+- new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
+- set up azure devops testing pipeline
 - documentation and blogs
 
 # Developer Guidelines:

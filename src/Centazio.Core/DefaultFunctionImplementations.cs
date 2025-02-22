@@ -5,13 +5,14 @@ using Centazio.Core.Misc;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
 
 namespace Centazio.Core;
 
-public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
-    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl) {
+public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, CentazioSettings settings) : 
+    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, new ReadOperationRunner(stager), ctl, settings) {
   
   protected ReadOperationResult CreateResult(List<string> results, DateTime? nextcheckpointutc = null) => !results.Any() ? 
       ReadOperationResult.EmptyResult() : 
@@ -19,13 +20,13 @@ public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtl
 
 }
 
-public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl);
+public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : 
+    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, new PromoteOperationRunner(stage, core, ctl), ctl, settings);
 
 public delegate ISystemEntity ConvertCoreToSystemEntityForWritingHandler<E>(SystemEntityId systemid, E coreent) where E : ICoreEntity;
 
-public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl) {
+public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : 
+    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, new WriteOperationRunner<WriteOperationConfig>(ctl, core), ctl, settings) {
   
   protected CovertCoresToSystemsResult CovertCoresToSystems<E>(List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate, ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
     var tocreate2 = tocreate.Select(m => {

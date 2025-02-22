@@ -5,7 +5,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
+public class CrmPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo, ctx.Settings) {
 
   protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
     new(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityTypeName.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, BuildMembershipTypes),

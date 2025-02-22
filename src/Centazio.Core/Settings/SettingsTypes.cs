@@ -105,19 +105,23 @@ public record ConsoleCommandsSettings {
 
 public record DefaultsSettings {
   public required string GeneratedCodeFolder { get; init; }
+  public required int FunctionMaxAllowedRunningMinutes { get; init; }
   public required ConsoleCommandsSettings ConsoleCommands { get; init; }
 
   public Dto ToDto() => new() {
     GeneratedCodeFolder = GeneratedCodeFolder,
+    FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes,
     ConsoleCommands = ConsoleCommands.ToDto(),
   };
 
   public record Dto : IDto<DefaultsSettings> {
     public string? GeneratedCodeFolder { get; init; }
+    public int? FunctionMaxAllowedRunningMinutes { get; init; }
     public ConsoleCommandsSettings.Dto? ConsoleCommands { get; init; }
 
     public DefaultsSettings ToBase() => new() {
       GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
+      FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
       ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
     };
   }
