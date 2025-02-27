@@ -19,6 +19,9 @@
         "CleanProject": { "type": "string", "required": true },
         "BuildProject": { "type": "string", "required": true },
         "PublishProject": { "type": "string", "required": true }
+      },
+      "Lambda": {
+        "ShowLogStream": { "type": "string", "required": true }
       }
     }
   },

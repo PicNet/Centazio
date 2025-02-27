@@ -79,26 +79,46 @@ public record DotNetSettings {
   }
 }
 
+public record LambdaSettings {
+  public required string ShowLogStream { get; init; }
+
+  public Dto ToDto() => new() {
+    ShowLogStream = ShowLogStream,
+  };
+
+  public record Dto : IDto<LambdaSettings> {
+    public string? ShowLogStream { get; init; }
+
+    public LambdaSettings ToBase() => new() {
+      ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
+    };
+  }
+}
+
 public record ConsoleCommandsSettings {
   public required AzSettings Az { get; init; }
   public required FuncSettings Func { get; init; }
   public required DotNetSettings DotNet { get; init; }
+  public required LambdaSettings Lambda { get; init; }
 
   public Dto ToDto() => new() {
     Az = Az.ToDto(),
     Func = Func.ToDto(),
     DotNet = DotNet.ToDto(),
+    Lambda = Lambda.ToDto(),
   };
 
   public record Dto : IDto<ConsoleCommandsSettings> {
     public AzSettings.Dto? Az { get; init; }
     public FuncSettings.Dto? Func { get; init; }
     public DotNetSettings.Dto? DotNet { get; init; }
+    public LambdaSettings.Dto? Lambda { get; init; }
 
     public ConsoleCommandsSettings ToBase() => new() {
       Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
       Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
       DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
+      Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
     };
   }
 }

@@ -11,8 +11,19 @@ public class CloudSolutionGeneratorTests {
   private readonly CentazioSettings settings = TestingFactories.Settings();
   private readonly ICommandRunner cmd = new CommandRunner();
   
-  [Test] public async Task Test_GenerateSolution() {
+  [Test] public async Task Test_Azure_GenerateSolution() {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
+    if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
+    
+    await CloudSolutionGenerator.Create(settings, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
+    Assert.That(Directory.Exists(project.SolutionDirPath));
+
+    var results = cmd.DotNet(settings.Parse(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
+    Assert.That(String.IsNullOrWhiteSpace(results.Err));
+  }
+  
+  [Test, Ignore("not implemented")] public async Task Test_Aws_GenerateSolution() {
+    var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Aws);
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
     await CloudSolutionGenerator.Create(settings, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();

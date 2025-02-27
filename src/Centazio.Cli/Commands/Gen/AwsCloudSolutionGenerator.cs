@@ -1,4 +1,5 @@
 ﻿using Centazio.Cli.Infra;
+using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using net.r_eg.MvsSln.Core;
 
@@ -10,7 +11,47 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, FunctionProj
 
   internal class AwsCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
 
-    protected override Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) => throw new NotImplementedException();
+    protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
+      await AddAwsNuGetReferencesToProject(added);
+      await AddAwsConfigFilesToProject(functions);
+      await AddAwsFunctionsToProject(functions);
+    }
 
+    private Task AddAwsNuGetReferencesToProject(Dictionary<string, bool> added) => 
+      AddLatestNuGetReferencesToProject([
+        "Amazon.Lambda.Core",
+        "Amazon.Lambda.Serialization.SystemTextJson",
+        "Amazon.Lambda.RuntimeSupport"
+      ], added);
+    
+    private async Task AddAwsConfigFilesToProject(List<Type> functions) {
+      await functions.ForEachSequentialAsync(async func => {
+        slnproj.AddItem("None", $"aws-lambda-tools-defaults-{func.Name}.json", [new("CopyToOutputDirectory", "PreserveNewest")]);
+      
+        // todo: this will have to be renamed during deploy time to deploy correct lambda
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"aws-lambda-tools-defaults-{func.Name}.json"), settings.Template("aws/aws-lambda-tools-defaults.json", new {
+          ClassName = func.Name,
+          AssemblyName = slnproj.ProjectName, 
+          Environment = environment 
+        }));
+      });
+    }
+  
+    private async Task AddAwsFunctionsToProject(List<Type> functions) {
+      await functions.ForEachSequentialAsync(async func => {
+        var handlerContent = settings.Template("aws/function.cs", new {
+          ClassName = func.Name,
+          ClassFullName = func.FullName,
+          FunctionNamespace = func.Namespace,
+          NewAssemblyName = slnproj.ProjectName,
+          Environment = environment
+        });
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"{func.Name}Handler.cs"), handlerContent);
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, "Program.cs"), settings.Template("aws/lambda_program.cs", new { 
+          ClassName = func.Name, 
+          NewAssemblyName = slnproj.ProjectName 
+        }));
+      });
+    }
   }
 }

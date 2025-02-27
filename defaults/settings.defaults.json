@@ -18,11 +18,13 @@
         "CleanProject": "clean --configuration Release /property:GenerateFullPaths=true",
         "BuildProject": "build --configuration Release /property:GenerateFullPaths=true",
         "PublishProject": "publish --configuration Release /property:GenerateFullPaths=true"
+      },
+      "Lambda": {
+        "ShowLogStream": "azure functionapp logstream [AppName]" 
       }
     }
   },
   "CtlRepository": {
     "SystemStateTableName": "system_state",
-    "ObjectStateTableName": "object_state"
-  }
+    "ObjectStateTableName": "object_state"}
 }

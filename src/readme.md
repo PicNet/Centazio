@@ -6,11 +6,16 @@
       - however, we now get duplicate logs and they are a delayed
     - application insights
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
-    - support overriding function settings like service plan, etc 
+    - currently settings are done using the `settings.json` files, these are hard to change in Azure, so perhaps find 
+        a way of converting to standard .Net settings so they can be set using the Azure UI
+    - support overriding function specific settings like service plan, etc 
   - Aws:
     - implement 
 - cli:
   - simulate should not open a new window when running just one function
+  - code generators for new solution/project/integration/function
+  - add UiHelpers.Log(LogLevel) to add colorisation to outputs
+- install as `dotnet tool`
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest

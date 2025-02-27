@@ -12,10 +12,10 @@ public static class UiHelpers {
   public static bool Confirm(string prompt, bool defaultval = false) =>
       AnsiConsole.Confirm(prompt + ":", defaultval);
 
-  public static string PromptCommandOptions(List<string> options) => 
+  public static string PromptOptions(string selectlbl, List<string> options) => 
       AnsiConsole.Prompt(new SelectionPrompt<string>()
-          .Title("Select Operation:")
-          .AddChoices(options.Concat(["back"])));
+          .Title(selectlbl)
+          .AddChoices(options));
 
   public static async Task Progress(string description, Func<Task> action) => 
       await AnsiConsole.Progress()

@@ -22,6 +22,7 @@ public interface ICommandRunner {
   CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
   CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
   CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
+  CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
 }
 
 public class CommandRunner : ICommandRunner {
@@ -34,6 +35,7 @@ public class CommandRunner : ICommandRunner {
   public CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet", args, cwd, quiet, newwindow);
   public CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run(AzCommand, args, cwd, quiet, newwindow);
   public CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("func", args, cwd, quiet, newwindow);
+  public CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet-lambda", args, cwd, quiet, newwindow);
   
   private CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true) {
     if (checktool && !CheckInstalled(command)) return new CommandResults(command, args, cwd ?? String.Empty, String.Empty, String.Empty, newwindow);
