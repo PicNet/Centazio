@@ -72,6 +72,9 @@ public class CommandsTree {
       new BranchNode("host", [
         CreateCommandNode<RunHostCommand>("run"),
       ]),
+      new BranchNode("dev", [
+        CreateCommandNode<UiTestsCommand>("ui-test"),
+      ]),
     ],
     "exit");
   }

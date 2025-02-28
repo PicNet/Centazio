@@ -15,9 +15,9 @@ public static class UiHelpers {
       LogEventLevel.Fatal => "underline red",
       LogEventLevel.Error => "red",
       LogEventLevel.Warning => "orange3",
-      LogEventLevel.Information => "yellow",
-      LogEventLevel.Debug => "white",
-      LogEventLevel.Verbose => "gray",
+      LogEventLevel.Information => AnsiConsole.Foreground.ToString(),
+      LogEventLevel.Debug => "silver",
+      LogEventLevel.Verbose => "grey",
       _ => throw new NotSupportedException(level.ToString())
     };
   }

@@ -86,4 +86,7 @@ public static class GlobalEnumerableExtensionMethods {
   
   public static async Task<List<T>> ChunkedSynchronousCall<T>(this IEnumerable<Task<T>> ops, int chunksz = 25) => 
       (await ops.Chunk(chunksz).Select(Task.WhenAll).Synchronous()).SelectMany(lst => lst).ToList();
+  
+  private static Random rng { get; } = new();
+  public static T Random<T>(this ICollection<T> values) => values.ElementAt(rng.Next(values.Count));
 }
