@@ -6,7 +6,6 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
-using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
@@ -24,10 +23,10 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
     
     await UiHelpers.Progress($"Deploying the Azure Function '{project.DashedProjectName}'", async () => await impl.Deploy(project));
-    AnsiConsole.WriteLine($"Azure Function '{project.DashedProjectName}' deployed.");
+    UiHelpers.Log($"Azure Function '{project.DashedProjectName}' deployed.");
     
     if (settings.ShowLogs) {
-      AnsiConsole.WriteLine($"Attempting to connect to function log stream.");
+      UiHelpers.Log($"Attempting to connect to function log stream.");
       cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
     }
   }

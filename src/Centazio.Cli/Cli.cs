@@ -1,5 +1,7 @@
 ﻿using Centazio.Cli.Commands;
+using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
+using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -21,7 +23,7 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
     });
     try { return app.Run(args); }
     catch (Exception e) { 
-      if (e is CommandParseException or CommandRuntimeException) { AnsiConsole.Markup($"[red]{e.Message}[/]"); }
+      if (e is CommandParseException or CommandRuntimeException) { UiHelpers.Log(e.Message, LogEventLevel.Error); }
       else throw;
     }
     
@@ -29,20 +31,15 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
   }
   
   private void ShowSplash() {
-    AnsiConsole.WriteLine();
-    AnsiConsole.WriteLine();
+    UiHelpers.Log("\n\n");
     AnsiConsole.Write(new CanvasImage(FsUtils.GetSolutionFilePath("src", "Centazio.Cli", "swirl.png")).MaxWidth(32));
     AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
-    AnsiConsole.MarkupLine("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
+    UiHelpers.Log("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
   public void ReportException(Exception ex, bool terminate) {
     Log.Error(ex, $"unhandled exception");
-    AnsiConsole.WriteException(ex,
-        ExceptionFormats.ShortenPaths
-        | ExceptionFormats.ShortenTypes
-        | ExceptionFormats.ShortenMethods
-        | ExceptionFormats.ShowLinks);
+    AnsiConsole.WriteException(ex, ExceptionFormats.ShortenPaths | ExceptionFormats.ShowLinks);
     if (terminate) Environment.Exit(-1);
   }
 

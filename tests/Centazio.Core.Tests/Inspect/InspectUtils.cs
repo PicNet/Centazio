@@ -30,6 +30,7 @@ internal static class InspectUtils {
   }
   
   public static List<Assembly> LoadCentazioAssemblies() => GetCentazioDllFiles().Select(Assembly.LoadFrom).ToList();
+  
   public static List<string> GetSolnFiles(string? dir, string extension) => 
       Directory.GetFiles(dir ?? FsUtils.GetSolutionRootDirectory(), extension, SearchOption.AllDirectories)
           .Where(f => !f.Contains("\\generated\\"))

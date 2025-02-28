@@ -17,7 +17,7 @@ public class SimulationCtx : IAsyncDisposable {
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; set; } = null!;
-  public CentazioSettings Settings { get; set; } = null!;
+  public CentazioSettings Settings { get; set; }
   
   public IChecksumAlgorithm ChecksumAlg { get; }
   public EpochTracker Epoch { get; set; }

@@ -7,7 +7,6 @@ using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
-using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
@@ -25,7 +24,7 @@ public class DeployLambdaFunctionCommand(CentazioSettings coresettings,  ILambda
       var options = IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Select(f => f.Name).ToList();
       if (!options.Any()) throw new Exception($"Assembly '{assnm}' does not contain any Centazio Functions");
       if (options.Count == 1) return options.Single();
-      return UiHelpers.PromptOptions("Select Function:", options);
+      return UiHelpers.Select("Select Function:", options);
     }
   }
 
@@ -36,10 +35,10 @@ public class DeployLambdaFunctionCommand(CentazioSettings coresettings,  ILambda
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings).PublishProject(project));
     
     await UiHelpers.Progress($"Deploying the Lambda Function '{project.DashedProjectName}'", async () => await impl.Deploy(project, settings.FunctionName));
-    AnsiConsole.WriteLine($"Lambda Function '{project.DashedProjectName}' deployed.");
+    UiHelpers.Log($"Lambda Function '{project.DashedProjectName}' deployed.");
     
     if (settings.ShowLogs) {
-      AnsiConsole.WriteLine($"Attempting to connect to function log stream.");
+      UiHelpers.Log($"Attempting to connect to function log stream.");
       cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Lambda.ShowLogStream, new { AppName = project.DashedProjectName }));
     }
   }

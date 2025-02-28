@@ -4,7 +4,7 @@ using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
-using Spectre.Console;
+using Serilog.Events;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
@@ -19,12 +19,12 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
     
     if (!UiHelpers.Confirm($"Are you sure you want to delete Azure Function '{project.DashedProjectName}'")) {
-      AnsiConsole.WriteLine("Aborting, no function deleted");
+      UiHelpers.Log("Aborting, no function deleted", LogEventLevel.Warning);
       return;
     }
     
     await UiHelpers.Progress($"Deleting Azure Function '{project.DashedProjectName}'", async () => await impl.Delete(project));
-    AnsiConsole.WriteLine($"Azure Function App '{project.DashedProjectName}' successfully deleted.");
+    UiHelpers.Log($"Azure Function App '{project.DashedProjectName}' successfully deleted.");
   }
 
   public class Settings : CommonSettings {

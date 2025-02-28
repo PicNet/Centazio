@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Spectre.Console;
+using Centazio.Cli.Infra.Ui;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
@@ -16,7 +16,7 @@ public class InteractiveMenu(CommandsTree tree) {
 
   public async Task Show() {
     while (await DisplayNode(tree.RootNode)) { }
-    AnsiConsole.MarkupLine("Thank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
+    UiHelpers.Log("Thank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
   public async Task<bool> DisplayNode(Node n) {
@@ -28,9 +28,7 @@ public class InteractiveMenu(CommandsTree tree) {
   }
 
   private async Task<bool> DisplayBranchNode(BranchNode n) {
-    var branch = AnsiConsole.Prompt(new SelectionPrompt<string>()
-        .Title("Please select one of the following supported options:")
-        .AddChoices(n.Children.Select(c => c.Id).Concat([n.BackLabel])));
+    var branch = UiHelpers.Select("Please select one of the following supported options:", n.Children.Select(c => c.Id).Concat([n.BackLabel]).ToList());
     var selected = n.Children.Find(c => c.Id == branch);
     if (selected is null) return false;
 
@@ -41,9 +39,7 @@ public class InteractiveMenu(CommandsTree tree) {
   private async Task<bool> DisplayCommandNode(AbstractCommandNode n) {
     await n.Command.RunInteractiveCommand(n.Id);
     
-    AnsiConsole.WriteLine();
-    AnsiConsole.WriteLine($"Command completed: {tree.GetNodeCommandShortcut(n)} [opts]");
-    AnsiConsole.WriteLine();
+    UiHelpers.Log($"\nCommand completed: {tree.GetNodeCommandShortcut(n)} <options>\n");
     return false;
   }
 }
