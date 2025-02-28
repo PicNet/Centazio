@@ -5,11 +5,11 @@ using net.r_eg.MvsSln.Core;
 
 namespace Centazio.Cli.Commands.Gen;
 
-internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(project, environment) {
+internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(project, environment) {
 
-  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj) => new AzureCloudProjectGenerator(settings, project, proj, environment);
+  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj) => new AzureCloudProjectGenerator(settings, templater, project, proj, environment);
 
-  internal class AzureCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
+  internal class AzureCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
 
     protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
       await AddAzureNuGetReferencesToProject(added);
@@ -30,13 +30,13 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
       
       async Task AddTemplateFileToProject(string fname) {
         slnproj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, fname), settings.Template($"azure/{fname}"));
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, fname), templater.ParseFromPath($"azure/{fname}"));
       }
     }
   
     private async Task AddAzureFunctionsToProject(List<Type> functions) {
       await functions.ForEachSequentialAsync(async func => {
-        var clcontent = settings.Template("azure/function.cs", new {
+        var clcontent = templater.ParseFromPath("azure/function.cs", new {
           ClassName=func.Name,
           ClassFullName=func.FullName,
           FunctionNamespace=func.Namespace, 
@@ -44,7 +44,7 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, FunctionPr
           Environment=environment
         });
         await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"{func.Name}.cs"), clcontent);
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"Program.cs"), settings.Template("azure/function_app_program.cs"));
+        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
       });
     }
 

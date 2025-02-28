@@ -8,7 +8,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICommandRunner cmd) : AbstractCentazioCommand<ShowAzFunctionLogStreamCommand.Settings> {
+public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<ShowAzFunctionLogStreamCommand.Settings> {
   
   protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
@@ -16,7 +16,7 @@ public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICom
 
   protected override Task ExecuteImpl(string name, Settings settings) {
     var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
-    cmd.Func(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
+    cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
     return Task.CompletedTask;
   }
 

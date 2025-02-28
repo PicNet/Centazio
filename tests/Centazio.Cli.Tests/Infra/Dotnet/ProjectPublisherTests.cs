@@ -10,14 +10,15 @@ namespace Centazio.Cli.Tests.Infra.Dotnet;
 public class ProjectPublisherTests {
   
   private readonly CentazioSettings settings = TestingFactories.Settings();
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
   
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
-    await Impl(new DotNetCliProjectPublisher(settings).PublishProject);
+    await Impl(new DotNetCliProjectPublisher(settings, templater).PublishProject);
   }
   
   private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
     var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    await CloudSolutionGenerator.Create(settings, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
+    await CloudSolutionGenerator.Create(settings, templater, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
     
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     await builder(project);

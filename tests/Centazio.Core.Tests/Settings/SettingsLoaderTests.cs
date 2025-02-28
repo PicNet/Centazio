@@ -30,40 +30,6 @@ public class SettingsLoaderTests {
     Assert.Throws<SettingsSectionMissingException>(() => { _ = settings.AwsSettings; });
   }
   
-  [Test] public void Test_parsing_commands_with_no_macros() {
-    var settings = F.Settings();
-    var cmd = nameof(Test_parsing_commands_with_no_macros).Replace('_', ' ');
-    
-    Assert.That(settings.Parse(cmd), Is.EqualTo(cmd));
-  }
-  
-  [Test] public void Test_parsing_commands_with_settings_macros() {
-    var settings = F.Settings();
-    var cmd = "command with settings [settings.AzureSettings.Region] twice [settings.AzureSettings.Region]";
-    var exp = cmd.Replace("[settings.AzureSettings.Region]", settings.AzureSettings.Region);
-    
-    Assert.That(exp, Does.Not.Contain('['));
-    Assert.That(settings.Parse(cmd), Is.EqualTo(exp));
-  }
-  
-  [Test] public void Test_parsing_commands_with_args_macros() {
-    var settings = F.Settings();
-    var cmd = "command with settings [Key1] twice [Key1] [Key2]";
-    var exp = cmd.Replace("[Key1]", "Value1").Replace("[Key2]", "Value2");
-    
-    Assert.That(exp, Does.Not.Contain('['));
-    Assert.That(settings.Parse(cmd, new { Key1="Value1", Key2="Value2"}), Is.EqualTo(exp));
-  }
-  
-  [Test] public void Test_parsing_commands_with_secrets_macros() {
-    var (settings, secrets) = (F.Settings(), F.Secrets());
-    var cmd = "command with secret [secrets.AWS_REGION]";
-    var exp = cmd.Replace("[secrets.AWS_REGION]", secrets.AWS_REGION);
-    
-    Assert.That(exp, Does.Not.Contain('['));
-    Assert.That(settings.Parse(cmd, secrets: secrets), Is.EqualTo(exp));
-  }
-  
   [Test] public void Test_loading_azure_sample_settings() {
     var settings = F.Settings("azure_sample");
     Assert.That(settings.StagedEntityRepository.ConnectionString, Is.EqualTo("Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"));

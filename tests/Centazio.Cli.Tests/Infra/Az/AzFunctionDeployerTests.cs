@@ -13,6 +13,7 @@ public class AzFunctionDeployerTests {
 
   private readonly CentazioSettings settings = TestingFactories.Settings();
   private readonly CentazioSecrets secrets = TestingFactories.Secrets();
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
   private readonly FunctionProjectMeta project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
   
   [Test, Ignore("slow")] public async Task Test_Full_Pipeline_Deployment_to_Azure() {
@@ -21,8 +22,8 @@ public class AzFunctionDeployerTests {
     AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await CloudSolutionGenerator.Create(settings, project, "azure").GenerateSolution();
-    await new DotNetCliProjectPublisher(settings).PublishProject(project);
+    await CloudSolutionGenerator.Create(settings, templater, project, "azure").GenerateSolution();
+    await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
     var after = AzCmd.ListFunctionApps();
@@ -34,8 +35,8 @@ public class AzFunctionDeployerTests {
   } 
   
   [Test] public async Task Test_CreateFunctionAppZip() {
-    await CloudSolutionGenerator.Create(settings, project, "azure_sample").GenerateSolution();
-    await new DotNetCliProjectPublisher(settings).PublishProject(project);
+    await CloudSolutionGenerator.Create(settings, templater, project, "azure_sample").GenerateSolution();
+    await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     
     var path = AzFunctionDeployer.CreateFunctionAppZip(project);
     

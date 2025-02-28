@@ -20,11 +20,11 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
   protected readonly FunctionProjectMeta project = project;
   protected readonly string environment = environment;
   
-  public static CloudSolutionGenerator Create(CentazioSettings settings, FunctionProjectMeta project, string environment) {
+  public static CloudSolutionGenerator Create(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) {
     ValidateProjectAssemblyBeforeCodeGen(project.Assembly);
     switch (project.Cloud) {
-      case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(settings, project, environment);
-      case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(settings, project, environment);
+      case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(settings, templater, project, environment);
+      case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(settings, templater, project, environment);
       default: throw new NotSupportedException(project.Cloud.ToString());
       
     }

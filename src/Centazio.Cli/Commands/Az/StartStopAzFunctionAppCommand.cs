@@ -9,7 +9,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, ICommandRunner cmd) : AbstractCentazioCommand<StartStopAzFunctionAppCommand.Settings> {
+public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<StartStopAzFunctionAppCommand.Settings> {
   
   protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
@@ -21,7 +21,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
     
     if (name == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {
-        await Task.Run(() => cmd.Az(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
+        await Task.Run(() => cmd.Az(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
         UiHelpers.Log($"Azure Function App '{project.DashedProjectName}' successfully started.");
       });
     } else if (name == "stop") {
@@ -30,7 +30,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
         return;
       }
       await UiHelpers.Progress($"Stopping Azure Function App '{project.DashedProjectName}'", async () => {
-        await Task.Run(() => cmd.Az(coresettings.Parse(coresettings.Defaults.ConsoleCommands.Az.StopFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
+        await Task.Run(() => cmd.Az(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Az.StopFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
         UiHelpers.Log($"Azure Function App '{project.DashedProjectName}' successfully stopped.");
       });
     }

@@ -4,15 +4,15 @@
     "FunctionMaxAllowedRunningMinutes": 15,
     "ConsoleCommands": {
       "Az": {
-        "ListFunctionApps": "functionapp list -g [settings.AzureSettings.ResourceGroup] --query \"[].{Name:name}\"",
-        "ListFunctions": "functionapp function list -g [settings.AzureSettings.ResourceGroup] -n [AppName] --query \"[].{Name:name}\"",
-        "DeleteFunctionApp": "functionapp delete -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
-        "StartFunctionApp": "functionapp start -g [settings.AzureSettings.ResourceGroup] -n [AppName]",
-        "StopFunctionApp": "functionapp stop -g [settings.AzureSettings.ResourceGroup] -n [AppName]"
+        "ListFunctionApps": "functionapp list -g {{settings.AzureSettings.ResourceGroup}} --query \"{{}}.{Name:name}\"",
+        "ListFunctions": "functionapp function list -g {{settings.AzureSettings.ResourceGroup}} -n {{AppName}} --query \"{{}}.{Name:name}\"",
+        "DeleteFunctionApp": "functionapp delete -g {{settings.AzureSettings.ResourceGroup}} -n {{AppName}}",
+        "StartFunctionApp": "functionapp start -g {{settings.AzureSettings.ResourceGroup}} -n {{AppName}}",
+        "StopFunctionApp": "functionapp stop -g {{settings.AzureSettings.ResourceGroup}} -n {{AppName}}"
       },
       "Func": {
-        "LocalSimulateFunction": "start -g [settings.AzureSettings.ResourceGroup]",
-        "ShowLogStream": "azure functionapp logstream [AppName]"
+        "LocalSimulateFunction": "start -g {{settings.AzureSettings.ResourceGroup}}",
+        "ShowLogStream": "azure functionapp logstream {{AppName}}"
       },
       "DotNet": {
         "CleanProject": "clean --configuration Release /property:GenerateFullPaths=true",
@@ -20,7 +20,7 @@
         "PublishProject": "publish --configuration Release /property:GenerateFullPaths=true"
       },
       "Lambda": {
-        "ShowLogStream": "azure functionapp logstream [AppName]" 
+        "ShowLogStream": "azure functionapp logstream {{AppName}}" 
       }
     }
   },

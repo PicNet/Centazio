@@ -5,7 +5,7 @@ using Serilog;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 
-namespace [NewAssemblyName];
+namespace {{NewAssemblyName}};
 
 public class Program
 {
@@ -23,7 +23,7 @@ public class Program
         var serviceProvider = services.BuildServiceProvider();
         
         // Build Lambda bootstrap
-        using var handlerWrapper = new [ClassName]Handler();
+        using var handlerWrapper = new {{ClassName}}Handler();
         using var bootstrap = new LambdaBootstrap(handlerWrapper.HandleAsync, new DefaultLambdaJsonSerializer());
         
         await bootstrap.RunAsync();

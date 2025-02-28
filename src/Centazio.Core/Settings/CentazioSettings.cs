@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Centazio.Core.Misc;
-using Centazio.Core.Secrets;
+﻿using Centazio.Core.Misc;
 
 namespace Centazio.Core.Settings;
 
@@ -72,22 +70,5 @@ public record CentazioSettings {
       _CtlRepository = CtlRepository?.ToBase(),
       _CoreStorage = CoreStorage?.ToBase()
     };
-  }
-
-  public string Parse(string command, object? args=null, CentazioSecrets? secrets=null) {
-    var macros = Regex.Matches(command, @"(\[[\w.]+\])");
-    macros.ForEach(m => command = command.Replace(m.Groups[0].Value, ParseMacroValue(m.Groups[0].Value[1..^1])));
-    return command;
-    
-    string ParseMacroValue(string val) {
-      if (val.StartsWith("settings.")) return ReflectionUtils.ParseStrValue(this, val.Replace("settings.", String.Empty));
-      if (val.StartsWith("secrets.")) return ReflectionUtils.ParseStrValue(secrets ?? throw new ArgumentNullException(nameof(secrets)), val.Replace("secrets.", String.Empty));
-      return ReflectionUtils.ParseStrValue(args ?? throw new ArgumentNullException(nameof(args)), val);
-    }
-  }
-
-  public string Template(string path, object? args=null) {
-    var contents = File.ReadAllText(FsUtils.GetSolutionFilePath("defaults", "templates", path));
-    return Parse(contents, args);
   }
 }
