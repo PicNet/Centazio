@@ -1,22 +1,19 @@
 ﻿using System.Reflection;
 using Centazio.Cli.Infra;
 using Centazio.Core;
-using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
-using Microsoft.Build.Locator;
-using net.r_eg.MvsSln;
-using net.r_eg.MvsSln.Core;
 using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string environment) {
+public abstract class CloudSolutionGenerator(ITemplater templater, FunctionProjectMeta project, string environment) {
   
+  protected readonly ITemplater templater = templater;
   protected readonly FunctionProjectMeta project = project;
   protected readonly string environment = environment;
   
@@ -39,70 +36,39 @@ public abstract class CloudSolutionGenerator(FunctionProjectMeta project, string
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     Directory.CreateDirectory(project.SolutionDirPath);
     
-    await GenerateSolutionSkeleton();
-    await AddProjectsToSolution();
-  }
-  
-  private async Task GenerateSolutionSkeleton() {
-    var (arch, configs) = ("Any CPU", new[] { "Debug", "Release" });
-    var slnconfs = configs.Select(c => new ConfigSln(c, arch)).ToArray();
-    var projitem = new ProjectItem(ProjectType.CsSdk, project.CsprojFile, slnDir: project.SolutionDirPath);
-    var projconfs = configs.Select((c, idx) => new ConfigPrj(c, arch, projitem.pGuid, build: true, slnconfs[idx])).ToArray();
-    
-    var hdata = new LhDataHelper();
-    hdata.SetHeader(SlnHeader.MakeDefault())
-        .SetProjects([projitem])
-        .SetProjectConfigs(projconfs)
-        .SetSolutionConfigs(slnconfs);
-    using var w = new SlnWriter(project.SlnFilePath, hdata);
-    w.Options |= SlnWriterOptions.CreateProjectsIfNotExist;
-    await w.WriteAsync();
+    await GenerateSlnFile();
+    await GenerateProjects();
   }
 
-  private async Task AddProjectsToSolution() {
-    if (MSBuildLocator.CanRegister)
-      MSBuildLocator.RegisterInstance(
-          MSBuildLocator.QueryVisualStudioInstances().OrderBy(i => i.Version).Last());
-    
-    using var sln = new Sln(project.SlnFilePath, SlnItems.Env | SlnItems.LoadMinimalDefaultData);
-    await sln.Result.Env.Projects.ForEachSequentialAsync(async proj => {
-      ClearProjectToAvoidDupsBug(proj);
-      await GetCloudProjectGenerator(proj).Generate();
-    });
-
-    void ClearProjectToAvoidDupsBug(IXProject proj) {
-      proj.GetPackageReferences().ToList().ForEach(r => proj.RemovePackageReference(r.evaluated));
-      proj.GetProjectReferences().ToList().ForEach(r => proj.RemoveProjectReference(r.evaluated));
-      proj.GetReferences().ToList().ForEach(r => proj.RemoveReference(r.evaluated));
-      proj.GetImports().ToList().ForEach(i => proj.RemoveImport(i));
-      // very slow in debugger
-      if (!System.Diagnostics.Debugger.IsAttached) {
-        proj.GetProperties().ToList().ForEach(p => proj.RemoveProperty(p));
-        proj.GetItems().ToList().ForEach(i => { try { proj.RemoveItem(i); } catch (InvalidOperationException) {} });
-      }
-    }
+  private async Task GenerateSlnFile() {
+    var contents = templater.ParseFromPath("Solution.sln", new { Projects = new [] { project } });
+    await File.WriteAllTextAsync(project.SlnFilePath, contents);
   }
 
-  protected abstract AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj);
+  private async Task GenerateProjects() {
+    await GetCloudProjectGenerator(project).Generate();
+  }
+
+  protected abstract AbstractCloudProjectGenerator GetCloudProjectGenerator(FunctionProjectMeta proj);
 
 }
 
-public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, FunctionProjectMeta projmeta, IXProject slnproj, string environment) {
+public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) {
   
   protected readonly CentazioSettings settings = settings;
-  protected readonly IXProject slnproj = slnproj;
+  protected readonly ITemplater templater = templater;
+  protected readonly FunctionProjectMeta project = project;
   protected readonly string environment = environment;
 
   public async Task Generate() {
-    slnproj.SetProperties(new Dictionary<string, string> {
-      { "TargetFramework", "net9.0" },
-      { "OutputType", "Exe" },
-      { "ImplicitUsings", "enable" },
-      { "Nullable", "enable" },
-      { "TreatWarningsAsErrors", "true" },
-      { "EnforceCodeStyleInBuild", "true" },
-      { "ManagePackageVersionsCentrally", "false" }
-    });
+    project.GlobalProperties.AddRange([
+      new("TargetFramework", "net9.0"),
+      new("OutputType", "Exe"),
+      new("ImplicitUsings", "enable"),
+      new("Nullable", "enable"),
+      new("TreatWarningsAsErrors", "true"),
+      new("EnforceCodeStyleInBuild", "true"),
+      new("ManagePackageVersionsCentrally", "false")]);
     AddSettingsFilesToProject();
     AddSecretsFilesToProject();
     
@@ -110,16 +76,17 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     AddCentazioProjectReferencesToProject(added);
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
     await AddCentazioNuGetReferencesToProject(added);
-    
-    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(projmeta.Assembly, []);
+      
+    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, []);
     await AddCloudSpecificContentToProject(functions, added);
     
-    slnproj.Save();
+    var contents = templater.ParseFromPath("Project.csproj", project);
+    await File.WriteAllTextAsync(project.CsprojPath, contents);
   }
 
   private void AddCentazioProjectReferencesToProject(Dictionary<string, bool> added) {
     AddReferenceIfRequired(typeof(AbstractFunction<>).Assembly, added); // Add Centazio.Core
-    AddReferenceIfRequired(projmeta.Assembly, added); // Add this function's assemply
+    AddReferenceIfRequired(project.Assembly, added); // Add this function's assemply
   }
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {
@@ -144,7 +111,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
     var name = ass.GetName().Name ?? throw new Exception();
     if (!added.TryAdd(name, true)) return;
 
-    slnproj.AddReference(ass, AddReferenceOptions.Default | AddReferenceOptions.HidePrivate);
+    project.AssemblyReferences.Add(new (ass.FullName ?? throw new Exception(), ass.Location));
   }
   
   private Task AddCentazioNuGetReferencesToProject(Dictionary<string, bool> added) {
@@ -169,15 +136,16 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, F
   private void AddCopyFilesToProject(List<string> files) {
     files.ForEach(path => {
       var fname = Path.GetFileName(path);
-      slnproj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
-      File.Copy(path, Path.Combine(slnproj.ProjectPath, fname), true);
+      project.Files.Add(fname);
+      File.Copy(path, Path.Combine(project.ProjectDirPath, fname), true);
     });
   }
   
-  protected async Task AddLatestNuGetReferencesToProject(List<string> packages, Dictionary<string, bool> added) => (await NugetHelpers.GetLatestStableVersions(packages))
+  protected async Task AddLatestNuGetReferencesToProject(List<string> packages, Dictionary<string, bool> added) =>
+      (await NugetHelpers.GetLatestStableVersions(packages))
       .ForEach(p => {
         if (!added.TryAdd(p.name, true)) return;
-        slnproj.AddPackageReference(p.name, p.version);
+        project.NuGetReferences.Add(new(p.name, p.version));
       });
   
   protected abstract Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added);

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Centazio.Cli.Commands.Aws;
 using Centazio.Cli.Commands.Az;
+using Centazio.Cli.Commands.Dev;
 using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Commands.Host;
 using Microsoft.Extensions.DependencyInjection;

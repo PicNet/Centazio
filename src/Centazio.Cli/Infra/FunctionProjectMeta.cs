@@ -9,7 +9,9 @@ public class FunctionProjectMeta(Assembly assembly, ECloudEnv cloud, string gene
   
   [JsonIgnore] public Assembly Assembly => assembly;
   public ECloudEnv Cloud => cloud;
-  
+
+  public Guid ProjSolutionGuid { get; } = Guid.NewGuid();
+  public Guid ProjGuid { get; } = Guid.NewGuid();
   public string ProjectName => $"{assembly.GetName().Name}.{cloud}";
   public string SolutionDirPath => Path.Combine(FsUtils.GetSolutionFilePath(), generatedfolder, ProjectName);
   public string ProjectDirPath => SolutionDirPath;
@@ -18,4 +20,12 @@ public class FunctionProjectMeta(Assembly assembly, ECloudEnv cloud, string gene
   public string SlnFilePath => Path.Combine(SolutionDirPath, $"{ProjectName}.sln");
   public string PublishPath => Path.Combine(ProjectDirPath, "bin", "Release", "net9.0", "publish");
   public string DashedProjectName => ProjectName.Replace('.', '-');
+  
+  public List<KeyValuePair<string, string>> GlobalProperties { get; } = new();
+  public List<string> Files { get; } = new();
+  public List<AssemblyRef> AssemblyReferences { get; } = new();
+  public List<NuGetRef> NuGetReferences { get; } = new();
 }
+
+public record AssemblyRef(string FullName, string Path);
+public record NuGetRef(string Name, string Version);

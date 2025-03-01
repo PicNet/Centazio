@@ -186,6 +186,3 @@ The `RunFunction` method is the method that the host will call to execute this f
 todo: expand 
 
 ## Common Commands
-
-## Call outs
-- https://github.com/3F/MvsSln: Used for sln and csproj file generation

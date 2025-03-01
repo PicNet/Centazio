@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    {{ for prop in it.GlobalProperties }}
+    <{{ prop.Key }}>{{ prop.Value }}</{{ prop.Key }}>
+    {{ end }}    
+  </PropertyGroup>
+  <ItemGroup>
+    {{ for file in it.Files }}
+    <None Include="{{ file }}">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    {{ end }}
+  </ItemGroup>
+  <ItemGroup>
+    {{ for ref in it.AssemblyReferences }}
+    <Reference Include="{{ ref.FullName }}">
+      <HintPath>{{ ref.Path }}</HintPath>
+    </Reference>
+    {{ end }}    
+  </ItemGroup>
+  <ItemGroup>
+    {{ for ref in it.NuGetReferences }}
+    <PackageReference Include="{{ ref.Name }}">
+      <Version>{{ ref.Version }}</Version>
+    </PackageReference>    
+    {{ end }}
+  </ItemGroup>
+</Project>

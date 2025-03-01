@@ -1,15 +1,14 @@
 ﻿using Centazio.Cli.Infra;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
-using net.r_eg.MvsSln.Core;
 
 namespace Centazio.Cli.Commands.Gen;
 
-internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(project, environment) {
+internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(templater, project, environment) {
 
-  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj) => new AzureCloudProjectGenerator(settings, templater, project, proj, environment);
+  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(FunctionProjectMeta proj) => new AzureCloudProjectGenerator(settings, templater, proj, environment);
 
-  internal class AzureCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
+  internal class AzureCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : AbstractCloudProjectGenerator(settings, templater, project, environment) {
 
     protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
       await AddAzureNuGetReferencesToProject(added);
@@ -29,8 +28,8 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
       await AddTemplateFileToProject("local.settings.json");
       
       async Task AddTemplateFileToProject(string fname) {
-        slnproj.AddItem("None", fname, [new("CopyToOutputDirectory", "PreserveNewest")]);
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, fname), templater.ParseFromPath($"azure/{fname}"));
+        project.Files.Add(fname);
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), templater.ParseFromPath($"azure/{fname}"));
       }
     }
   
@@ -40,11 +39,11 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
           ClassName=func.Name,
           ClassFullName=func.FullName,
           FunctionNamespace=func.Namespace, 
-          NewAssemblyName=slnproj.ProjectName,
+          NewAssemblyName=project.ProjectName,
           Environment=environment
         });
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"{func.Name}.cs"), clcontent);
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}.cs"), clcontent);
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
       });
     }
 

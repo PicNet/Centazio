@@ -1,15 +1,14 @@
 ﻿using Centazio.Cli.Infra;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
-using net.r_eg.MvsSln.Core;
 
 namespace Centazio.Cli.Commands.Gen;
 
-internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(project, environment) {
+internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : CloudSolutionGenerator(templater, project, environment) {
   
-  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(IXProject proj) => new AwsCloudProjectGenerator(settings, templater, project, proj, environment);
+  protected override AbstractCloudProjectGenerator GetCloudProjectGenerator(FunctionProjectMeta proj) => new AwsCloudProjectGenerator(settings, templater, project, environment);
 
-  internal class AwsCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta projmeta, IXProject slnproj, string environment) : AbstractCloudProjectGenerator(settings, projmeta, slnproj, environment) {
+  internal class AwsCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) : AbstractCloudProjectGenerator(settings, templater, project, environment) {
 
     protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
       await AddAwsNuGetReferencesToProject(added);
@@ -26,12 +25,12 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
     
     private async Task AddAwsConfigFilesToProject(List<Type> functions) {
       await functions.ForEachSequentialAsync(async func => {
-        slnproj.AddItem("None", $"aws-lambda-tools-defaults-{func.Name}.json", [new("CopyToOutputDirectory", "PreserveNewest")]);
+        project.Files.Add($"aws-lambda-tools-defaults-{func.Name}.json");
       
         // todo: this will have to be renamed during deploy time to deploy correct lambda
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"aws-lambda-tools-defaults-{func.Name}.json"), templater.ParseFromPath("aws/aws-lambda-tools-defaults.json", new {
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"aws-lambda-tools-defaults-{func.Name}.json"), templater.ParseFromPath("aws/aws-lambda-tools-defaults.json", new {
           ClassName = func.Name,
-          AssemblyName = slnproj.ProjectName, 
+          AssemblyName = project.ProjectDirPath, 
           Environment = environment 
         }));
       });
@@ -43,13 +42,13 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
           ClassName = func.Name,
           ClassFullName = func.FullName,
           FunctionNamespace = func.Namespace,
-          NewAssemblyName = slnproj.ProjectName,
+          NewAssemblyName = project.ProjectName,
           Environment = environment
         });
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, $"{func.Name}Handler.cs"), handlerContent);
-        await File.WriteAllTextAsync(Path.Combine(slnproj.ProjectPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new { 
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Handler.cs"), handlerContent);
+        await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new { 
           ClassName = func.Name, 
-          NewAssemblyName = slnproj.ProjectName 
+          NewAssemblyName = project.ProjectName 
         }));
       });
     }

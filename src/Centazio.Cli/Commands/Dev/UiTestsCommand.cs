@@ -3,7 +3,7 @@ using Centazio.Cli.Infra.Ui;
 using Serilog.Events;
 using Spectre.Console;
 
-namespace Centazio.Cli.Commands.Host;
+namespace Centazio.Cli.Commands.Dev;
 
 public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
 
