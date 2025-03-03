@@ -2,7 +2,8 @@
 log/
 bin/
 obj/
-Generated/
+generated/
 *.user
 *.db
 *.db-journal
+

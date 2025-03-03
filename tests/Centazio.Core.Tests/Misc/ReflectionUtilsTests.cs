@@ -61,20 +61,20 @@ public class ReflectionUtilsTests {
   }
   
   [Test] public void Test_GetAssemblyPath() {
-    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core").Contains("\\Centazio.Core\\bin\\"));
-    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core.Tests").Contains("\\Centazio.Core.Tests\\bin\\"));
-    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Sample").Contains("\\Centazio.Sample\\bin\\"));
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core").Contains(Path.Combine("Centazio.Core", "bin")));
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Core.Tests").Contains(Path.Combine("Centazio.Core.Tests", "bin")));
+    Assert.That(ReflectionUtils.GetAssemblyPath("Centazio.Sample").Contains(Path.Combine("Centazio.Sample", "bin")));
   }
   
   [Test] public void Test_LoadAssembly() {
     var ass = ReflectionUtils.LoadAssembly("Centazio.Sample");
-    Assert.That(ass.Location.Contains("\\Centazio.Sample\\bin\\"));
+    Assert.That(ass.Location.Contains(Path.Combine("Centazio.Sample", "bin")));
   }
   
   [Test] public void Test_GetAllTypesThatImplement() {
     var integration = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), ["Centazio.Sample"]).Single();
     Assert.That(integration.FullName, Is.EqualTo("Centazio.Sample.SampleIntegration"));
-    Assert.That(integration.Assembly.Location.Contains("\\Centazio.Sample\\bin\\"));
+    Assert.That(integration.Assembly.Location.Contains(Path.Combine("Centazio.Sample", "bin")));
   }
  
   [Test] public void Test_GetProviderAssemblies() {

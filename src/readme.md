@@ -14,12 +14,11 @@
 - cli:
   - simulate should not open a new window when running just one function
   - code generators for new solution/project/integration/function
-  - add UiHelpers.Log(LogLevel) to add colorisation to outputs
 - install as `dotnet tool`
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
-- check that all provider tests in Centazio.Core have Provier counterparts
+- check that all provider tests in Centazio.Core have Provider counterparts
 - support cloud based config timer triggers, have a separate mode?
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - set up azure devops testing pipeline
@@ -30,7 +29,7 @@
 ## Code Style 
 - 2 tab spaces
 - Braces on same line
-- Avoid long cammel-case names.  Methods should be short, so having ugly variableNamesThatAddNoValueInAShortContext 
+- Avoid long camel-case names.  Methods should be short, so having ugly variableNamesThatAddNoValueInAShortContext 
     should be avoided. 
 - Class names and method names can be descriptive, allowing for the above short/concise variables
 - Use implicitly typed variables where possible
@@ -112,7 +111,7 @@ public sealed record StagedEntity {
   ...
 ```
 
-- Deserialise and serialisation shoud be done via an inner `Dto` class
+- Deserialise and serialisation should be done via an inner `Dto` class
 - This class must be an inner class to access the private init only setters
 - This class needs a parameterless constructor and all fields must be nullable
 ```

@@ -1,3 +1,4 @@
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -12,9 +13,9 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
   }
 
   [Function(nameof({{it.ClassFullName}}))] public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo timer) {    
-    var start = DateTime.Now;
+    var start = UtcDate.UtcNow;
     log.LogInformation("{{it.ClassName}} running");
     try { await (await impl.Value).RunFunction(); } 
-    finally { log.LogInformation($"{{it.ClassName}} completed, took {(DateTime.Now - start).TotalSeconds:N0}s"); }
+    finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }
 }

@@ -7,9 +7,9 @@ public class CheckNamespacesAreCorrect {
 
   [Test] public void Test_all_namespace_declarations_are_correct() {
     var ignore = new [] { "defaults" };
-    var roots = new [] { "Centazio.Providers", "src", "tests", "sample"};
+    var roots = new [] { "Centazio.Providers", "src", "tests", "sample", "generated" };
     var errors = new List<string>();
-    InspectUtils.CsFiles(null, "CliBootstrapper.cs", "Assembly.cs", "TestSuiteInitialiser.cs", "Properties.cs", "GlobalUsings.cs").ForEach(file => {
+    InspectUtils.CsFiles(null, "CliBootstrapper.cs", "Assembly.cs", "TestSuiteInitialiser.cs", "Properties.cs", "GlobalUsings.cs", "Program.cs").ForEach(file => {
       if (ignore.Any(dir => file.StartsWith(FsUtils.GetSolutionFilePath(dir)))) { return; }
       var root = roots.FirstOrDefault(r => file.Contains($"{Path.DirectorySeparatorChar}{r}{Path.DirectorySeparatorChar}"));
       if (root is null) { throw new Exception($"file[{file}] contains not available roots"); }

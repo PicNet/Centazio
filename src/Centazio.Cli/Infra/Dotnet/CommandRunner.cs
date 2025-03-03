@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Centazio.Core.Misc;
 
@@ -26,9 +27,10 @@ public interface ICommandRunner {
 }
 
 public class CommandRunner : ICommandRunner {
-  private string AzCommand => File.Exists(@"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd") 
-      ? @"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd" 
-      : @"C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin\az.cmd";
+  private string AzCommand => RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "az" :
+      File.Exists(@"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd") 
+          ? @"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd" 
+          : @"C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin\az.cmd";
 
   private readonly Dictionary<string, bool> installed = new();
   
