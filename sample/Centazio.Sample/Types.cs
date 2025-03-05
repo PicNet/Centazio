@@ -78,12 +78,10 @@ public record CoreTask : CoreEntityBase {
     public string? Name { get; init; }
     public bool Completed { get; init; }
     
-    public override CoreTask ToBase() {
-      var target = new CoreTask { 
-        Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim(),
-        Completed = Completed
-      };
-      return FillBaseProperties(target);
-    }
+    public override CoreTask ToBase() => new() {
+      CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim(),
+      Completed = Completed
+    };
   }
 }

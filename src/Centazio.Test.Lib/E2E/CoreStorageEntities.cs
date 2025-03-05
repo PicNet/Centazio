@@ -23,13 +23,12 @@ public record CoreCustomer : CoreEntityBase {
     public string? Name { get; init; }
     public string? MembershipCoreId { get; init; }
     
-    public override CoreCustomer ToBase() {
-      var target = new CoreCustomer { 
-        Name = new(Name ?? throw new ArgumentNullException(nameof(Name))),
-        MembershipCoreId = new(MembershipCoreId ?? throw new ArgumentNullException(nameof(MembershipCoreId)))
-      };
-      return FillBaseProperties(target);
-    }
+    public override CoreCustomer ToBase() => new() {
+      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      Name = new(Name ?? throw new ArgumentNullException(nameof(Name))),
+      MembershipCoreId = new(MembershipCoreId ?? throw new ArgumentNullException(nameof(MembershipCoreId)))
+    };
+
   }
 }
 
@@ -48,10 +47,11 @@ public record CoreMembershipType : CoreEntityBase {
   public record Dto : Dto<CoreMembershipType> {
     public string? Name { get; init; }
     
-    public override CoreMembershipType ToBase() {
-      var target = new CoreMembershipType { Name = new(Name ?? throw new ArgumentNullException(nameof(Name))) };
-      return FillBaseProperties(target);
-    }
+    public override CoreMembershipType ToBase() => new() {
+      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      Name = new(Name ?? throw new ArgumentNullException(nameof(Name))) 
+    };
+
   }
 }
 
@@ -79,14 +79,13 @@ public record CoreInvoice : CoreEntityBase {
     public DateOnly? DueDate { get; init; }
     public DateTime? PaidDate { get; init; }
     
-    public override CoreInvoice ToBase() {
-      var target = new CoreInvoice {
-        CustomerCoreId = new(CustomerCoreId ?? throw new ArgumentNullException(nameof(CustomerCoreId))),
-        Cents = Cents ?? throw new ArgumentNullException(nameof(Cents)),
-        DueDate = DueDate ?? throw new ArgumentNullException(nameof(DueDate)),
-        PaidDate = PaidDate
-      };
-      return FillBaseProperties(target);
-    }
+    public override CoreInvoice ToBase() => new() {
+      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      CustomerCoreId = new(CustomerCoreId ?? throw new ArgumentNullException(nameof(CustomerCoreId))),
+      Cents = Cents ?? throw new ArgumentNullException(nameof(Cents)),
+      DueDate = DueDate ?? throw new ArgumentNullException(nameof(DueDate)),
+      PaidDate = PaidDate
+    };
+
   }
 }
