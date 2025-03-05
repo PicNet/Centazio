@@ -11,7 +11,6 @@ using Testcontainers.Minio;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
-// todo: failing with `The provided 'x-amz-content-sha256' header does not match what was computed`
 public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
 
   private MinioContainer container;
@@ -19,7 +18,11 @@ public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests 
   [OneTimeSetUp] public async Task Init() {
     var network = new NetworkBuilder().WithName(Guid.NewGuid().ToString("D")).Build();
     await network.CreateAsync();
-    container = new MinioBuilder().WithNetwork(network).WithNetworkAliases("minio").Build();
+    container = new MinioBuilder()
+        .WithNetwork(network)
+        .WithNetworkAliases("minio")
+        .WithImage("quay.io/minio/minio")
+        .Build();
     await container.StartAsync();
   }
 

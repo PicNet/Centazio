@@ -85,7 +85,7 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
             }
           }
     };
-    var search = Table.LoadTable(client, table).Query(queryconf);
+    var search = LoadTable().Query(queryconf);
     var results = await search.GetNextSetAsync();
     return results.Select(d => new StagedEntityChecksum(d[nameof(StagedEntity.StagedEntityChecksum)].AsString())).ToList();
   }
@@ -133,7 +133,7 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
         }
       }
     };
-    var search = Table.LoadTable(client, table).Query(queryconf);
+    var search = LoadTable().Query(queryconf);
     var results = await search.GetNextSetAsync();
     
     return results.AwsDocumentsToDynamoStagedEntities()
@@ -151,7 +151,7 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
       Select = SelectValues.SpecificAttributes,
       AttributesToGet = [AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY]
     };
-    var tbl = Table.LoadTable(client, table);
+    var tbl = LoadTable();
     var search = tbl.Query(queryconf);
     var results = await search.GetRemainingAsync();
     
@@ -162,5 +162,10 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
     await batch.ExecuteAsync();
   }
 
+  private Table LoadTable() => new TableBuilder(client, table)
+      .AddHashKey(AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, DynamoDBEntryType.String)
+      .AddRangeKey(AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, DynamoDBEntryType.String)
+      .Build();
+  
 }
 
