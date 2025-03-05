@@ -58,10 +58,10 @@ public record CoreMembershipType : CoreEntityBase {
 public record CoreInvoice : CoreEntityBase {
   
   public override string DisplayName => CoreId;
-  public CoreEntityId CustomerCoreId { get; private set; }
-  public int Cents { get; set; }
-  public DateOnly DueDate { get; set; }
-  public DateTime? PaidDate { get; set; }
+  public CoreEntityId CustomerCoreId { get; private init; }
+  public int Cents { get; init; }
+  public DateOnly DueDate { get; init; }
+  public DateTime? PaidDate { get; init; }
   
   private CoreInvoice() {}
   internal CoreInvoice(CoreEntityId coreid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid) {

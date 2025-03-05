@@ -28,6 +28,6 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   }
 
   public class Settings : CommonSettings {
-    [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
+    [CommandArgument(0, "<ASSEMBLY_NAME>")] public required string AssemblyName { get; init; }
   }
 }

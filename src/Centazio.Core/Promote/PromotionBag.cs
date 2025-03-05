@@ -7,9 +7,9 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-public class PromotionBag(StagedEntity staged) {
-  public StagedEntity StagedEntity { get; init; } = staged;
-  public ISystemEntity SystemEntity { get; set; } = null!;
+public class PromotionBag(StagedEntity staged, Type setype) {
+  public StagedEntity StagedEntity { get; } = staged;
+  public ISystemEntity SystemEntity { get; internal set; } = (ISystemEntity) Json.Deserialize(staged.Data, setype);
   public Map.CoreToSysMap? Map { get; set; }
   public CoreEntityAndMeta? PreExistingCoreEntityAndMeta { get; set; }
   public CoreEntityChecksum? PreExistingCoreEntityChecksum { get; set; }

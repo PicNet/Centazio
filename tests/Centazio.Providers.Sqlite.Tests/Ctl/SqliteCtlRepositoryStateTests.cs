@@ -9,7 +9,7 @@ namespace Centazio.Providers.Sqlite.Tests.Ctl;
 public class SqliteCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
   protected override async Task<ICtlRepository> GetRepository() => 
       await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
-          "Data Source=centazio_ctl.db",
+          SqliteTestConstants.DEFAULT_CONNSTR,
           nameof(Core.Ctl).ToLower(), 
           nameof(SystemState).ToLower(), 
           nameof(ObjectState).ToLower(), 

@@ -119,19 +119,19 @@ public class JsonTests {
   }
   
   public record ObjWithNullables {
-    public string NonNullStr { get; init; } = null!;
+    public required string NonNullStr { get; init; }
     public string? NullStr { get; init; }
     
     public DateTime NonNullDt { get; init; } = DateTime.MinValue;
     public DateTime? NullDt { get; init; }
     
-    public TestValidStrings NonNullObj { get; init; } = null!;
+    public required TestValidStrings NonNullObj { get; init; }
     public TestValidStrings? NullObj { get; init; }
   }
   
   public record TestValidStrings {
-    public ValidString Str1 { get; init; } = null!;
-    public ValidString Str2 { get; init; } = null!;
+    public required ValidString Str1 { get; init; }
+    public required ValidString Str2 { get; init; }
     
     public record Dto {
       public string? Str1 { get; init; }
@@ -146,8 +146,8 @@ public class JsonTests {
   }
   
   public record TestValidStringSubclasses {
-    public CoreEntityId CoreId { get; init; } = null!;
-    public SystemEntityId SystemId { get; init; } = null!;
+    public required CoreEntityId CoreId { get; init; }
+    public required SystemEntityId SystemId { get; init; }
     
     public record Dto {
       public string? CoreId { get; init; }
@@ -162,8 +162,9 @@ public class JsonTests {
   }
   
   public record BaseT {
+    // todo: can we clean up these unused values
     public ESystemStateStatus Status { get; set; }
-    public ValidString Str1 { get; set; } = null!;
+    public required ValidString Str1 { get; set; }
     
     public record Dto {
       public string? Status { get; set; }

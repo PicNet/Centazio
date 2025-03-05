@@ -5,7 +5,7 @@ namespace Centazio.Core.CoreRepo;
 
 public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId OriginalSystemId, CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, CoreEntityChecksum CoreEntityChecksum, DateTime DateCreated, DateTime DateUpdated, SystemName? LastUpdateSystem) {
   public record Dto : IDto<CoreStorageMeta> {
-    public string CoreId { get; init; } = null!;
+    public required string CoreId { get; init; }
     
     public string? OriginalSystem { get; init; }
     public string? OriginalSystemId { get; init; }

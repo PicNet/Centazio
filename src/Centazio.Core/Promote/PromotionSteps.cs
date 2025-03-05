@@ -17,14 +17,9 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   
   public async Task LoadPendingStagedEntities(IStagedEntityRepository stagestore) {
     var staged = await stagestore.GetUnpromoted(system, op.OpConfig.SystemEntityTypeName, op.Checkpoint);
-    bags = staged.Select(se => new PromotionBag(se)).ToList();
+    bags = staged.Select(se => new PromotionBag(se, op.OpConfig.SystemEntityType)).ToList();
   }
-  
-  public void DeserialisePendingStagedEntities() {
-    if (IsEmpty()) return;
-    bags.ForEach(bag => bag.SystemEntity = (ISystemEntity) Json.Deserialize(bag.StagedEntity.Data, op.OpConfig.SystemEntityType));
-  }
-  
+
   public async Task LoadExistingCoreEntities() {
     if (IsEmpty()) return;
     var sysids = bags.Select(bag => bag.SystemEntity.SystemId).ToList();

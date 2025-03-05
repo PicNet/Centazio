@@ -26,12 +26,12 @@ public class SqliteSimulationProvider : ISimulationProvider {
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqliteDbFieldsHelper();
     CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
-        "Data Source=centazio_ctl.db",
+        SqliteTestConstants.DEFAULT_CONNSTR,
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 
         nameof(ObjectState).ToLower(), 
         nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), dbf).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(SqliteTestConstants.DEFAULT_CONNSTR)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SqliteSimulationDbContext(), 
         ctx.Epoch, dbf).Initialise();
@@ -44,7 +44,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
   }
 }
 
-public class SqliteSimulationDbContext() : SqliteDbContext("Data Source=sim_core_storage.db") {
+public class SqliteSimulationDbContext() : SqliteDbContext(SqliteTestConstants.DEFAULT_CONNSTR) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) {
     SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);

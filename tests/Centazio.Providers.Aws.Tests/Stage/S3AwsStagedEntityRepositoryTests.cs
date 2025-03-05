@@ -11,6 +11,7 @@ using Testcontainers.Minio;
 
 namespace Centazio.Providers.Aws.Tests.Stage;
 
+// todo: failing with `The provided 'x-amz-content-sha256' header does not match what was computed`
 public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
 
   private MinioContainer container;

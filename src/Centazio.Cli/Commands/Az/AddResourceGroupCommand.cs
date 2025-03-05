@@ -17,6 +17,6 @@ public class AddResourceGroupCommand(CentazioSettings clisetts, IAzResourceGroup
   }
 
   public class Settings : CommonSettings {
-    [CommandArgument(0, "<RESOURCE_GROUP_NAME>")] public string ResourceGroupName { get; init; } = null!;
+    [CommandArgument(0, "<RESOURCE_GROUP_NAME>")] public required string ResourceGroupName { get; init; }
   }
 }

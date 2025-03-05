@@ -25,7 +25,7 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
   }
 
   public class Settings : CommonSettings {
-    [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
+    [CommandArgument(0, "<ASSEMBLY_NAME>")] public required string AssemblyName { get; init; }
     [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
     [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
   }

@@ -8,7 +8,7 @@ namespace Centazio.Providers.Sqlite.Tests.Stage;
 
 public class SqliteStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) => 
-      await new TestingEfStagedEntityRepository(new(limit, checksum, () => new SqliteStagedEntityContext("Data Source=staged_entity.db")), new SqliteDbFieldsHelper()).Initialise();
+      await new TestingEfStagedEntityRepository(new(limit, checksum, () => new SqliteStagedEntityContext(SqliteTestConstants.DEFAULT_CONNSTR)), new SqliteDbFieldsHelper()).Initialise();
 
 }
 

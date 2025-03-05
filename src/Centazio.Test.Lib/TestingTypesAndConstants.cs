@@ -40,7 +40,7 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   public override object GetChecksumSubset() => new { CoreId, FirstName, LastName, DateOfBirth };
 
   public record Dto : ICoreEntityDto<CoreEntity> {
-    public string CoreId { get; init; } = null!;
+    public required string CoreId { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public DateOnly? DateOfBirth { get; init; }

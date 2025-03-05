@@ -14,7 +14,7 @@ public class SqliteCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
 
 }
 
-public class SqliteCoreStorageRepositoryTestsDbContext() : SqliteDbContext("Data Source=test_core_storage.db") {
+public class SqliteCoreStorageRepositoryTestsDbContext() : SqliteDbContext(SqliteTestConstants.DEFAULT_CONNSTR) {
   protected override void CreateCentazioModel(ModelBuilder builder) {
     TestingEfCoreStorageRepository.CreateTestingCoreStorageEfModel(builder);
   }

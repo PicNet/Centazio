@@ -13,7 +13,6 @@ public class PromoteOperationRunner(
   public async Task<OperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var steps = new PromotionSteps(core, ctl, op);
     await steps.LoadPendingStagedEntities(stagestore);
-    steps.DeserialisePendingStagedEntities();
     await steps.LoadExistingCoreEntities();
     await steps.ApplyChangesToCoreEntities();
     steps.IgnoreUpdatesToSameEntityInBatch();

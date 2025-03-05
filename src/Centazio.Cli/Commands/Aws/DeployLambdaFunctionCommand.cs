@@ -44,8 +44,8 @@ public class DeployLambdaFunctionCommand(CentazioSettings coresettings,  ILambda
   }
 
   public class Settings : CommonSettings {
-    [CommandArgument(0, "<ASSEMBLY_NAME>")] public string AssemblyName { get; init; } = null!;
-    [CommandArgument(1, "<FUNCTION_NAME>")] public string FunctionName { get; init; } = null!;
+    [CommandArgument(0, "<ASSEMBLY_NAME>")] public required string AssemblyName { get; init; }
+    [CommandArgument(1, "<FUNCTION_NAME>")] public required string FunctionName { get; init; }
     [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
     [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
     [CommandOption("-l|--show-logs")] [DefaultValue(false)] public bool ShowLogs { get; set; }
