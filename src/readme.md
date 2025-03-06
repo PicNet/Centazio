@@ -1,5 +1,5 @@
 # Todo
-- lambda/azure wrappers:
+- aws/azure wrappers:
   - Azure:
     - fix Log.Logger, currently only injected ILogger<> works
       - this will somewhat resolve the issue: var config = LogInitialiser.GetFileConfig(dir: @"C:\home\LogFiles\Application\Functions\Function\EmptyFunction");
@@ -11,10 +11,14 @@
     - support overriding function specific settings like service plan, etc 
   - Aws:
     - implement 
+- use picnet github to host publicly
+- nuget all code
 - cli:
+  - install as `dotnet tool`
+    - have a `cetazio dev-mode` command to switch between nuget and development mode (with git cloned centazio libs)
   - simulate should not open a new window when running just one function
   - code generators for new solution/project/integration/function
-- install as `dotnet tool`
+  
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - create a good set of architectural policies that can be validated using NetArchTest, see: https://dateo-software.de/blog/netarchtest
   - many tests in `Centazio.Core.Tests.Inspect` namespace can be improved using NetArchTest
