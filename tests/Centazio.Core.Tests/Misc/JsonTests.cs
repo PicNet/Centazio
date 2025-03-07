@@ -162,7 +162,6 @@ public class JsonTests {
   }
   
   public record BaseT {
-    // todo: can we clean up these unused values
     public ESystemStateStatus Status { get; set; }
     public required ValidString Str1 { get; set; }
     
