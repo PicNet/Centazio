@@ -75,6 +75,7 @@ public class CommandsTree {
       ]),
       new BranchNode("dev", [
         CreateCommandNode<UiTestsCommand>("ui-test"),
+        CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")
       ]),
     ],
     "exit");
