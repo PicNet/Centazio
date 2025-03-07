@@ -80,8 +80,8 @@ public record {{ it.ClassName }} {
     public bool Required { get; }
     public string Type { get; }
     
-    public FieldSpec(KeyValuePair<string, JsonNode?> prop, string ClassName) {
-      (this.ClassName, Name, Value) = (ClassName, prop.Key, prop.Value ?? throw new Exception());
+    public FieldSpec(KeyValuePair<string, JsonNode?> prop, string classnm) {
+      (ClassName, Name, Value) = (classnm, prop.Key, prop.Value ?? throw new Exception());
       
       var obj = Value.GetValueKind() == JsonValueKind.Object ? Value.AsObject() : null;
       Type = obj?["type"]?.GetValue<string>() ?? "string";

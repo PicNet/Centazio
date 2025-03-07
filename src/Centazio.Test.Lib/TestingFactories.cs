@@ -79,12 +79,22 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
 
 public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, CentazioSettings settings) : ReadFunction(system, stager, ctl, settings) {
 
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
+  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+    new(Constants.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
+  ]);
+
+  private Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) => 
+      Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
 
 }
 
 public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : PromoteFunction(system, stage, core, ctl, settings) {
 
-  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => throw new Exception();
+  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
+    new (typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
+  ]);
+
+  public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 
+      Task.FromResult(new List<EntityEvaluationResult>());
 
 }
