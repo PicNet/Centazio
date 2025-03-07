@@ -8,7 +8,7 @@ namespace Centazio.Core.Promote;
 public class PromoteOperationRunner(
     IStagedEntityRepository stagestore,
     ICoreStorage core,
-    ICtlRepository ctl) : IOperationRunner<PromoteOperationConfig> {
+    ICtlRepository ctl) {
   
   public async Task<OperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var steps = new PromotionSteps(core, ctl, op);

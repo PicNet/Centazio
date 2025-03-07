@@ -25,12 +25,15 @@ public static class TestingFactories {
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static IOperationRunner<ReadOperationConfig> ReadRunner(IStagedEntityRepository? serepo = null) => new ReadOperationRunner(serepo ?? SeRepo());
-  public static IOperationRunner<PromoteOperationConfig> PromoteRunner(
+  public static ReadFunction ReadFunc(
+      IEntityStager? stager = null, 
+      ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo(), Settings());
+      
+  public static PromoteFunction PromoteFunc(
       IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new PromoteOperationRunner(serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
+      new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo(), Settings());
 
   public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
@@ -72,4 +75,16 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
   
   public Task<List<Map.CoreToSysMap>> GetAllMaps() => 
       Task.FromResult(maps.Values.Select(Deserialize).Cast<Map.CoreToSysMap>().ToList());
+}
+
+public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, CentazioSettings settings) : ReadFunction(system, stager, ctl, settings) {
+
+  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
+
+}
+
+public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : PromoteFunction(system, stage, core, ctl, settings) {
+
+  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => throw new Exception();
+
 }

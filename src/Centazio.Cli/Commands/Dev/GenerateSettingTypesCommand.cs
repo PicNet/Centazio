@@ -57,15 +57,15 @@ public record {{ it.ClassName }} {
       sb.Append(HEADER);
       schema.Select(p => new FieldSpec(p, String.Empty))
           .Where(n => n.Value.GetValueKind() == JsonValueKind.Object)
-          .ForEach(prop => GenerateClassAndNestedTypes(prop.SettingsName, prop.Value.AsObject(), new HashSet<string>()));
+          .ForEach(prop => GenerateClassAndNestedTypes(prop.SettingsName, prop.Value.AsObject().ToList(), new HashSet<string>()));
     }
 
-    private void GenerateClassAndNestedTypes(string classnm, IList<KeyValuePair<string, JsonNode?>> props, HashSet<string> generated) {
+    private void GenerateClassAndNestedTypes(string classnm, List<KeyValuePair<string, JsonNode?>> props, HashSet<string> generated) {
       if (!generated.Add(classnm)) return;
 
       var fields = props.Select(prop => new FieldSpec(prop, classnm)).ToList();
       
-      fields.Where(f => f.IsObj).ForEach(nestedtype => GenerateClassAndNestedTypes(nestedtype.SettingsName, nestedtype.Value.AsObject(), generated));
+      fields.Where(f => f.IsObj).ForEach(nestedtype => GenerateClassAndNestedTypes(nestedtype.SettingsName, nestedtype.Value.AsObject().ToList(), generated));
       
       sb.AppendLine(templater.ParseFromContent(RECORD_TEMPLATE, new { ClassName = classnm, Fields = fields }));
     }
@@ -113,9 +113,9 @@ public record {{ it.ClassName }} {
       return $"{Name} = {Name} ?? {GetDefaultValue()},";
     } }
 
-    public bool IsObj => Value.GetValueKind() == JsonValueKind.Object && !IsFieldSpecObject(Value.AsObject());
+    public bool IsObj => Value.GetValueKind() == JsonValueKind.Object && !IsFieldSpec(Value.AsObject());
     
-    public bool IsFieldSpecObject(JsonObject obj) => obj.ContainsKey("type") || obj.ContainsKey("required") || obj.ContainsKey("default");
+    private bool IsFieldSpec(JsonObject obj) => obj.ContainsKey("type") || obj.ContainsKey("required") || obj.ContainsKey("default");
 
     private string GetDefaultValue() => Type.ToLower() switch {
       "bool" => "false",

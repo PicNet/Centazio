@@ -23,7 +23,7 @@ public class ReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = F.ReadRunner(repository);
+    var runner = F.ReadFunc(repository);
     try { 
       await runner.RunOperation(await F.CreateErroringOpStateAndConf(repo));
       Assert.Fail();
@@ -33,7 +33,7 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = F.ReadRunner(repository);
+    var runner = F.ReadFunc(repository);
     var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()));
     var actual = await runner.RunOperation(opcfg);
     
@@ -42,7 +42,7 @@ public class ReadOperationRunnerTests {
   }
 
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = F.ReadRunner(repository);
+    var runner = F.ReadFunc(repository);
     var actual = (ListReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetListResults));
     
     var staged = repository.Contents;

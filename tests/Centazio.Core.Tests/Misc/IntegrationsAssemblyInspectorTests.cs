@@ -18,6 +18,6 @@ public class IntegrationsAssemblyInspectorTests {
 
 public class IntegrationsAssemblyInspectorTests_ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl, F.Settings()) {
 
-  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
+  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
 
 }

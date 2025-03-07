@@ -19,24 +19,23 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   
   protected DateTime FunctionStartTime { get; private set; }
   protected FunctionConfig<C> Config { get; }
+  protected readonly ICtlRepository ctl;
   
   private bool running;
-  private readonly IOperationRunner<C> oprunner;
-  private readonly ICtlRepository ctl;
   private readonly CentazioSettings settings;
 
-  protected AbstractFunction(SystemName system, LifecycleStage stage, IOperationRunner<C> oprunner, ICtlRepository ctl, CentazioSettings settings) {
+  protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl, CentazioSettings settings) {
     System = system;
     Stage = stage;
     
-    this.oprunner = oprunner;
     this.ctl = ctl;
     this.settings = settings;
     
     Config = GetFunctionConfiguration();
   }
 
-  protected abstract FunctionConfig<C> GetFunctionConfiguration();
+  public abstract FunctionConfig<C> GetFunctionConfiguration();
+  public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
   public async Task<FunctionRunResults> RunFunction() {
     // prevent race-conditions with slow databases
@@ -87,7 +86,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected virtual async Task<List<OperationResult>> RunFunctionOperations(SystemState sys) {
     var opstates = await LoadOperationsStates(Config, sys, ctl);
     var readyops = GetReadyOperations(opstates);
-    return await RunOperationsTillAbort(readyops, oprunner, ctl, Config.ThrowExceptions);
+    return await RunOperationsTillAbort(readyops, ctl, Config.ThrowExceptions);
   }
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
@@ -108,7 +107,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     return states.Where(IsOperationReady).ToList();
   }
   
-  internal static async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, IOperationRunner<C> runner, ICtlRepository ctl, bool throws = true) {
+  internal async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, ICtlRepository ctl, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
@@ -127,7 +126,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     }
     
     async Task<OperationResult> RunOp(OperationStateAndConfig<C> op) {
-      try { return await runner.RunOperation(op); } 
+      try { return await RunOperation(op); } 
       catch (Exception ex) {
         Log.Error(ex, "unhandled RunOperation exception {@ErrorMessage}", ex.Message);
         if (throws) throw;
@@ -145,7 +144,6 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   }
 
   public void Dispose() { Config.Dispose(); }
-
 }
 
 public abstract record FunctionRunResults(List<OperationResult> OpResults, string Message); 

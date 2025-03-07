@@ -14,14 +14,15 @@ public class PromoteOperationRunnerTests {
   private TestingStagedEntityRepository stager;
   private TestingInMemoryBaseCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
-  private IOperationRunner<PromoteOperationConfig> promoter;
+  private PromoteFunction promoter;
 
   [SetUp] public void SetUp() {
     (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());
-    promoter = F.PromoteRunner(stager, ctl, core);
+    promoter = F.PromoteFunc(stager, ctl, core);
   }
   
   [TearDown] public async Task TearDown() {
+    promoter.Dispose();
     await stager.DisposeAsync();
     await ctl.DisposeAsync();
     await core.DisposeAsync();

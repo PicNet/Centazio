@@ -77,11 +77,11 @@ public class FunctionRunnerTests {
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
   ]);
   
-  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl, F.Settings()) {
+  class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, ctl, F.Settings()) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
-    protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
+    public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
     protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
@@ -90,13 +90,15 @@ public class FunctionRunnerTests {
       return [];
     }
 
+    public override Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
+
   }
   
-  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, new DoNothingOpRunner(), ctl, F.Settings()) {
+  class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, ctl, F.Settings()) {
 
     private readonly ICtlRepository ctlrepo = ctl;
     
-    protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
+    public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
     protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
@@ -105,9 +107,7 @@ public class FunctionRunnerTests {
       return Enumerable.Range(0, results).Select(_ => new EmptyReadOperationResult()).Cast<OperationResult>().ToList();
     }
 
-  }
-  
-  class DoNothingOpRunner : IOperationRunner<ReadOperationConfig> {
-    public Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
+    public override Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
+
   }
 }

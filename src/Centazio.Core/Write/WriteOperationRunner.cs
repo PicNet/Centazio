@@ -5,7 +5,7 @@ using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 
 namespace Centazio.Core.Write;
-public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) : IOperationRunner<C> where C : WriteOperationConfig {
+public class WriteOperationRunner<C>(ICtlRepository ctl, ICoreStorage core) where C : WriteOperationConfig {
   
   public async Task<OperationResult> RunOperation(OperationStateAndConfig<C> op) {
     var coretype = op.State.Object.ToCoreEntityTypeName;

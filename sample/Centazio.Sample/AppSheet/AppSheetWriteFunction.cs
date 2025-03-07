@@ -10,7 +10,7 @@ namespace Centazio.Sample.AppSheet;
 
 public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api, CentazioSettings settings) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl, settings) {
   
-  protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
+  public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 

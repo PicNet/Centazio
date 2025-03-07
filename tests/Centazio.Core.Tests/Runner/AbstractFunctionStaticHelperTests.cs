@@ -7,7 +7,8 @@ using Centazio.Test.Lib;
 namespace Centazio.Core.Tests.Runner;
 
 public class AbstractFunctionStaticHelperTests {
-  
+
+  private readonly string name = nameof(AbstractFunctionStaticHelperTests);
   private TestingInMemoryBaseCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = F.CtlRepo();
@@ -28,12 +29,12 @@ public class AbstractFunctionStaticHelperTests {
     await Enumerable.Range(0, 4).Select(TestAtIndex).Synchronous();
     
     async Task TestAtIndex(int idx) {
-      var name = (idx + 1).ToString();
-      var exp = template with { Object = new SystemEntityTypeName(name) };
+      var idxname = (idx + 1).ToString();
+      var exp = template with { Object = new SystemEntityTypeName(idxname) };
       var actual = states[idx].State;
       
       Assert.That(actual, Is.EqualTo(exp));
-      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new SystemEntityTypeName(name))));
+      Assert.That(actual, Is.EqualTo(await repo.GetObjectState(ss, new SystemEntityTypeName(idxname))));
     }
   }
   
@@ -49,14 +50,14 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public void Test_GetReadyOperations_correctly_filters_out_operations_not_meeting_cron_criteria() {
-    OperationStateAndConfig<ReadOperationConfig> Op(string name, string cron, DateTime last) => new(
-        new ObjectState(new(name), new(name), new SystemEntityTypeName(name), UtcDate.UtcNow, true) { 
+    OperationStateAndConfig<ReadOperationConfig> Op(string opname, string cron, DateTime last) => new(
+        new ObjectState(new(opname), new(opname), new SystemEntityTypeName(opname), UtcDate.UtcNow, true) { 
           LastCompleted = last,
           LastResult = EOperationResult.Success,
           LastAbortVote = EOperationAbortVote.Continue
         }, 
         new BaseFunctionConfig(), 
-        new(new SystemEntityTypeName(name), new (new (cron)), GetListResult), 
+        new(new SystemEntityTypeName(opname), new (new (cron)), GetListResult), 
         DateTime.MinValue);
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
 
@@ -77,7 +78,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
-    var runner = F.ReadRunner();
+    var runner = F.ReadFunc();
     
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await F.CreateReadOpStateAndConf(repo) };
     var results1 = await RunOps(states1, runner);
@@ -97,7 +98,7 @@ public class AbstractFunctionStaticHelperTests {
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
-    var runner = F.ReadRunner();
+    var runner = F.ReadFunc();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await F.CreateErroringOpStateAndConf(repo),
@@ -118,7 +119,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
-    var runner = F.ReadRunner();
+    var runner = F.ReadFunc();
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await F.CreateErroringOpStateAndConf(repo),
@@ -139,7 +140,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_does_not_update_NextCheckpoint_on_error() {
-    var (name, startingcp, runner) = (nameof(AbstractFunctionStaticHelperTests), UtcDate.UtcNow.AddMinutes(1), F.ReadRunner());
+    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc());
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
@@ -156,7 +157,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_sets_NextCheckpoint_to_op_start_when_empty() {
-    var (name, startingcp, runner) = (nameof(AbstractFunctionStaticHelperTests), UtcDate.UtcNow.AddMinutes(1), F.ReadRunner());
+    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc());
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
@@ -173,7 +174,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_sets_NextCheckpoint_to_result_when_non_empty_success() {
-    var (name, startingcp, successcp, runner) = (nameof(AbstractFunctionStaticHelperTests), UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), F.ReadRunner());
+    var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), TestingFactories.SeRepo(), repo, TestingFactories.Settings()));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
@@ -188,8 +189,8 @@ public class AbstractFunctionStaticHelperTests {
     Assert.That(loaded.NextCheckpoint, Is.EqualTo(successcp));
   }
   
-  private async Task<List<OperationResult>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, IOperationRunner<ReadOperationConfig> runner) => 
-      await AbstractFunction<ReadOperationConfig>.RunOperationsTillAbort(ops, runner, repo, false);
+  private async Task<List<OperationResult>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
+      await func.RunOperationsTillAbort(ops, repo, false);
 
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, Exception? ex = null) {
     return new ObjectState(new(res.ToString()), new(res.ToString()), new SystemEntityTypeName(res.ToString()), nextcheckpoint, true) {

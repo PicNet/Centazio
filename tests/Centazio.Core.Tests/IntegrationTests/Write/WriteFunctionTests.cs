@@ -89,7 +89,7 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   
   public FunctionConfig<WriteOperationConfig> ExposeConfig => Config;
   
-  protected override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
+  public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
   ]) { ThrowExceptions = false, ChecksumAlgorithm = Helpers.TestingChecksumAlgorithm };
 

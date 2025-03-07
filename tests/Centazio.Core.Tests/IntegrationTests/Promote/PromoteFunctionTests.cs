@@ -148,7 +148,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepo
   
   public bool IgnoreNext { get; set; }
   
-  protected override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
+  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
     new(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, BuildCoreEntities) { IsBidirectional = bidi }
   ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
 

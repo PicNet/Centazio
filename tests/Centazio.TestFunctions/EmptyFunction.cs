@@ -6,7 +6,6 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 
 namespace Centazio.TestFunctions;
 
@@ -44,25 +43,14 @@ public class TestFunctionIntegration(string environment) : IntegrationBase<TestS
 
 }
 
-public class EmptyFunction(ICtlRepository ctl, CentazioSettings settings) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, new EmptyFunctionOperationRunner(), ctl, settings) {
+public class EmptyFunction(ICtlRepository ctl, CentazioSettings settings) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl, settings) {
 
-  protected override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
+  public override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
   ]);
 
-}
+  public override Task<OperationResult> RunOperation(OperationStateAndConfig<EmptyFunctionOperationConfig> op) => Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
 
-public class EmptyFunctionOperationRunner : IOperationRunner<EmptyFunctionOperationConfig> {
-  public Task<OperationResult> RunOperation(OperationStateAndConfig<EmptyFunctionOperationConfig> op) {
-    Log.Verbose("Log.Verbose - EmptyFunctionOperationRunner#RunOperation");
-    Log.Debug("Log.Debug - EmptyFunctionOperationRunner#RunOperation");
-    Log.Information("Log.Information - EmptyFunctionOperationRunner#RunOperation");
-    Log.Fatal("Log.Fatal - EmptyFunctionOperationRunner#RunOperation");
-    Log.Warning("Log.Warning - EmptyFunctionOperationRunner#RunOperation");
-    Log.Error("Log.Error - EmptyFunctionOperationRunner#RunOperation");
-    
-    return Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
-  }
 }
 
 public record EmptyFunctionOperationConfig(string Name) : OperationConfig(Constants.Object, CronExpressionsHelper.EveryXSeconds(20));

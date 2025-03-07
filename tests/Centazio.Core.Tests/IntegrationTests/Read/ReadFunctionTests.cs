@@ -86,7 +86,7 @@ public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository
 
   private readonly DummyCrmApi crmApi = new();
 
-  protected override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, GetUpdatesCustomers)
   ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
   
