@@ -11,6 +11,8 @@
     - support overriding function specific settings like service plan, etc 
   - Aws:
     - implement 
+- bring back function-to-function triggers, considering 1 minute limit in AWS
+- function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
 - use picnet github to host publicly
 - nuget all code
 - cli:
