@@ -1,8 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Centazio.Core;
-using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
 
 namespace Centazio.Sample;
 

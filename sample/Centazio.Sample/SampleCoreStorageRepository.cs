@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
-using Centazio.Providers.EF;
+﻿using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample;

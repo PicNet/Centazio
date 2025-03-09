@@ -1,8 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
-
-namespace Centazio.Test.Lib.InMemRepos;
+﻿namespace Centazio.Test.Lib.InMemRepos;
 
 public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Centazio.Core.Checksum;
-using Centazio.Core.Misc;
 
 namespace Centazio.Core.Stage;
 

@@ -1,4 +1,3 @@
-using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 
 namespace Centazio.Sample;

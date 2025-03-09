@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Misc;
-
-namespace Centazio.Test.Lib.E2E.Fin;
+﻿namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<FinInvoice> invoices) {
 

@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Settings;
 using Centazio.Test.Lib.E2E.Crm;
 using Centazio.Test.Lib.E2E.Fin;
 using Serilog;

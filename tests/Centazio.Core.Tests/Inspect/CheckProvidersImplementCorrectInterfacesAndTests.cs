@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Misc;
-using Centazio.Test.Lib.BaseProviderTests;
+﻿using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Core.Tests.Inspect;
 

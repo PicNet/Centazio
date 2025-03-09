@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 
 namespace Centazio.Core.Runner;
@@ -86,7 +84,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected virtual async Task<List<OperationResult>> RunFunctionOperations(SystemState sys) {
     var opstates = await LoadOperationsStates(Config, sys, ctl);
     var readyops = GetReadyOperations(opstates);
-    return await RunOperationsTillAbort(readyops, ctl, Config.ThrowExceptions);
+    return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
   }
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
@@ -107,7 +105,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     return states.Where(IsOperationReady).ToList();
   }
   
-  internal async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, ICtlRepository ctl, bool throws = true) {
+  internal async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
         .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);

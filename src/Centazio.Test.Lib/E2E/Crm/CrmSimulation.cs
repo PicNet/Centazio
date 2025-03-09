@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-
-namespace Centazio.Test.Lib.E2E.Crm;
+﻿namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     

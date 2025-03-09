@@ -1,23 +1,15 @@
-﻿using Centazio.Core.Ctl;
-using Centazio.Core.Read;
-using Centazio.Core.Runner;
-using Centazio.Core.Stage;
+﻿using Centazio.Core.Runner;
+using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Misc;
 
 public class IntegrationsAssemblyInspectorTests {
 
   [Test] public void Test_GetCentazioFunctions() {
-    var funcs = IntegrationsAssemblyInspector.GetCentazioFunctions(GetType().Assembly, []);
+    var funcs = IntegrationsAssemblyInspector.GetCentazioFunctions(typeof(EmptyReadFunction).Assembly, []);
     
-    Assert.That(funcs, Does.Contain(typeof(IntegrationsAssemblyInspectorTests_ReadFunction)));
+    Assert.That(funcs, Does.Contain(typeof(EmptyReadFunction)));
+    Assert.That(funcs, Does.Contain(typeof(EmptyPromoteFunction)));
     Assert.That(funcs.Distinct().Count(), Is.EqualTo(funcs.Count));
   }
-
-}
-
-public class IntegrationsAssemblyInspectorTests_ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl, F.Settings()) {
-
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => throw new Exception();
-
 }

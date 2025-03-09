@@ -1,5 +1,4 @@
-﻿using Centazio.Core.CoreRepo;
-using Centazio.Providers.Sqlite;
+﻿using Centazio.Providers.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample;

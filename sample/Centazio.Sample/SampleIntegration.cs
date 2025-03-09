@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
-using Centazio.Providers.Sqlite;
+﻿using Centazio.Providers.Sqlite;
 using Centazio.Sample.AppSheet;
 using Centazio.Sample.ClickUp;
 using Microsoft.Extensions.DependencyInjection;

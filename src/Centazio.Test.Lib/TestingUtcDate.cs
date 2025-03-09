@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Misc;
-
-namespace Centazio.Test.Lib;
+﻿namespace Centazio.Test.Lib;
 
 public class TestingUtcDate(DateTime? start = null) : AbstractUtcDate {
   private DateTime now = start ?? TestingDefaults.DefaultStartDt;

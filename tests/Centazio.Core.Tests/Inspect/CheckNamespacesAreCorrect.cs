@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using FsUtils = Centazio.Core.Misc.FsUtils;
+﻿using FsUtils = Centazio.Core.Misc.FsUtils;
 
 namespace Centazio.Core.Tests.Inspect;
 

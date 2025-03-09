@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-using Centazio.Test.Lib.E2E.Crm;
+﻿using Centazio.Test.Lib.E2E.Crm;
 using Centazio.Test.Lib.E2E.Fin;
 
 namespace Centazio.Test.Lib.E2E;

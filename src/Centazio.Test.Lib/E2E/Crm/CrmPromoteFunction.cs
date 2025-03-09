@@ -1,6 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-using Centazio.Core.Promote;
+﻿using Centazio.Core.Promote;
 using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;

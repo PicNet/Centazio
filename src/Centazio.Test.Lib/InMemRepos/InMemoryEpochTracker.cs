@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.CoreRepo;
-using Centazio.Core.Misc;
-using Centazio.Test.Lib.E2E;
+﻿using Centazio.Test.Lib.E2E;
 
 namespace Centazio.Test.Lib.InMemRepos;
 

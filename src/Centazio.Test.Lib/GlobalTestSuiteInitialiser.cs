@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Misc;
-using Centazio.Core.Runner;
+﻿using Centazio.Core.Runner;
 using NUnit.Framework;
 using Serilog;
 

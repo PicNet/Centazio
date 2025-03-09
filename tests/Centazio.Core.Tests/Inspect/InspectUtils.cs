@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Centazio.Core.Misc;
-using NetArchTest.Rules;
+﻿using NetArchTest.Rules;
 
 namespace Centazio.Core.Tests.Inspect;
 

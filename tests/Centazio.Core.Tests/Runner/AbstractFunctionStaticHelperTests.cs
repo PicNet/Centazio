@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
-using Centazio.Core.Read;
+﻿using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Test.Lib;
 
@@ -78,7 +76,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_on_single_valid_op() {
-    var runner = F.ReadFunc();
+    var runner = F.ReadFunc(ctl: repo);
     
     var states1 = new List<OperationStateAndConfig<ReadOperationConfig>> { await F.CreateReadOpStateAndConf(repo) };
     var results1 = await RunOps(states1, runner);
@@ -98,7 +96,7 @@ public class AbstractFunctionStaticHelperTests {
   }
 
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_abort() {
-    var runner = F.ReadFunc();
+    var runner = F.ReadFunc(ctl: repo);
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await F.CreateErroringOpStateAndConf(repo),
@@ -119,7 +117,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperationsTillAbort_stops_on_first_exception() {
-    var runner = F.ReadFunc();
+    var runner = F.ReadFunc(ctl: repo);
     
     var states = new List<OperationStateAndConfig<ReadOperationConfig>> {
       await F.CreateErroringOpStateAndConf(repo),
@@ -140,7 +138,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_does_not_update_NextCheckpoint_on_error() {
-    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc());
+    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc(ctl: repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
@@ -157,7 +155,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_sets_NextCheckpoint_to_op_start_when_empty() {
-    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc());
+    var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc(ctl: repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
@@ -190,7 +188,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   private async Task<List<OperationResult>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
-      await func.RunOperationsTillAbort(ops, repo, false);
+      await func.RunOperationsTillAbort(ops, false);
 
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, Exception? ex = null) {
     return new ObjectState(new(res.ToString()), new(res.ToString()), new SystemEntityTypeName(res.ToString()), nextcheckpoint, true) {

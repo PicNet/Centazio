@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-
-namespace Centazio.Sample;
+﻿namespace Centazio.Sample;
 
 [IgnoreNamingConventions] public static class SampleConstants { 
   public static class Systems {

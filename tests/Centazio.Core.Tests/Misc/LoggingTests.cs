@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
-using Serilog;
+﻿using Serilog;
 using Serilog.Events;
 
 namespace Centazio.Core.Tests.Misc;

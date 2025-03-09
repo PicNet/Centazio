@@ -1,5 +1,3 @@
-using Centazio.Core.Ctl.Entities;
-
 namespace Centazio.Core.Runner;
 
 public abstract record OperationConfig(

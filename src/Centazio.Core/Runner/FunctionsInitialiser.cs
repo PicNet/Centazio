@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl;
-using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Centazio.Core.Checksum;
-using Centazio.Core.Misc;
 
 namespace Centazio.Core.Ctl.Entities;
 

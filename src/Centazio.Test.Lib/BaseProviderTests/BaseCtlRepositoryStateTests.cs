@@ -1,8 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
 

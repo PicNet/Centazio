@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Misc;
-
-namespace Centazio.Core.Settings;
+﻿namespace Centazio.Core.Settings;
 
 public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 

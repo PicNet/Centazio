@@ -1,8 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
-using Centazio.Core.Runner;
-
-namespace Centazio.Core.Write;
+﻿namespace Centazio.Core.Write;
 
 public delegate Task<List<Map.Created>> CreateEntitiesInExternalSystem<C, S>(List<CoreSystemAndPendingCreateMap<C, S>> tocreate) where C : ICoreEntity where S : ISystemEntity;
 public delegate Task<List<Map.Updated>> UpdateEntitiesInExternalSystem<C, S>(List<CoreSystemAndPendingUpdateMap<C, S>> toupdate) where C : ICoreEntity where S : ISystemEntity;

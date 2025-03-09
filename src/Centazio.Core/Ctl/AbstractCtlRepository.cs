@@ -1,7 +1,4 @@
-﻿using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
-
-namespace Centazio.Core.Ctl;
+﻿namespace Centazio.Core.Ctl;
 
 public abstract class AbstractCtlRepository : ICtlRepository {
 

@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace Centazio.Core.Tests.Inspect;
+﻿namespace Centazio.Core.Tests.Inspect;
 
 public class CheckForEmptyStringUsage {
 

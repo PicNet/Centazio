@@ -1,7 +1,4 @@
-﻿using Centazio.Core.Misc;
-using Centazio.Core.Runner;
-
-namespace Centazio.Core.Read;
+﻿namespace Centazio.Core.Read;
 
 public delegate Task<ReadOperationResult> GetUpdatesAfterCheckpointHandler(OperationStateAndConfig<ReadOperationConfig> config);
 

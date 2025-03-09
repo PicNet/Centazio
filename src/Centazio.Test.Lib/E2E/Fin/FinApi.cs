@@ -1,7 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Misc;
-
-namespace Centazio.Test.Lib.E2E.Fin;
+﻿namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinApi {
 

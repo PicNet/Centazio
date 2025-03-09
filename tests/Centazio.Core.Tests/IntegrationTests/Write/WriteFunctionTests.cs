@@ -1,8 +1,5 @@
-﻿using Centazio.Core.Checksum;
-using Centazio.Core.CoreRepo;
+﻿using Centazio.Core.CoreRepo;
 using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
@@ -99,8 +96,8 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   }
   
   private Task<CovertCoresToSystemsResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
-    var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, WftHelpers.ToSe(e.CoreEntity), e.Map, Helpers.TestingChecksumAlgorithm)).ToList();
-    var cupdate = toupdate.Select(e => e.AddSystemEntity(WftHelpers.ToSe(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)), Helpers.TestingChecksumAlgorithm)).ToList();
+    var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, ToSysEnt(e.CoreEntity), e.Map, Helpers.TestingChecksumAlgorithm)).ToList();
+    var cupdate = toupdate.Select(e => e.AddSystemEntity(ToSysEnt(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)), Helpers.TestingChecksumAlgorithm)).ToList();
     return Task.FromResult(new CovertCoresToSystemsResult(ccreate, cupdate));
   }
 
@@ -114,13 +111,9 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
     Task<List<Map.Updated>> UpdateEntities(List<CoreSystemAndPendingUpdateMap<CoreEntity, System1Entity>> _) => 
         Task.FromResult(Updated.AddRangeAndReturn(toupdate.Select(m => m.SuccessUpdate()).ToList()));
   }
-}
-
-internal static class WftHelpers {
-  public static SystemEntityChecksum ToSeCs(ICoreEntity coreent) => Helpers.TestingSystemEntityChecksum(ToSe(coreent));
-  public static System1Entity ToSe(ICoreEntity coreent, Guid? sysid = null) {
+  
+  private static System1Entity ToSysEnt(ICoreEntity coreent, Guid? sysid = null) {
     var c = coreent.To<CoreEntity>();
     return new System1Entity(sysid ?? Guid.NewGuid(), c.FirstName, c.LastName, c.DateOfBirth, UtcDate.UtcNow);
   }
-
 }

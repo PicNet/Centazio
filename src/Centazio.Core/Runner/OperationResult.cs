@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Centazio.Core.Ctl.Entities;
 
 namespace Centazio.Core.Runner;
 
