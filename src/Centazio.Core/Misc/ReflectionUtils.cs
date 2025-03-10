@@ -75,8 +75,9 @@ public static class ReflectionUtils {
     }).ToList(); 
   }
   
-  public static Assembly LoadAssembly(string assembly) => Assembly.LoadFrom(GetAssemblyPath(assembly));
-  
+  public static Assembly LoadAssembly(string assembly) => 
+      Assembly.LoadFrom(GetAssemblyPath(assembly));
+
   public static List<Assembly> GetProviderAssemblies() {
     return new DirectoryInfo(FsUtils.GetSolutionRootDirectory()).GetFiles("*.dll", SearchOption.AllDirectories)
         .Select(dll => dll.Name.Replace(".dll", String.Empty))

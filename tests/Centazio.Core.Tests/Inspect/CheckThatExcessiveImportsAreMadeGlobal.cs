@@ -1,4 +1,7 @@
-﻿namespace Centazio.Core.Tests.Inspect;
+﻿using System.Text.RegularExpressions;
+using Centazio.Core.Misc;
+
+namespace Centazio.Core.Tests.Inspect;
 
 public class CheckThatExcessiveImportsAreMadeGlobal {
 

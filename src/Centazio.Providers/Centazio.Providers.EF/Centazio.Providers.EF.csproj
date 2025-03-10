@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+    <PropertyGroup>
+        <!-- since this Centazio functions project has NuGet references then `EnableDynamicLoading` is required
+        to ensure that all required references are copied into the bin directory on `dotnet build` --> 
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+    </PropertyGroup>
+    
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />

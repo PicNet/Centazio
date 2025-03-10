@@ -2,12 +2,9 @@
 
 public class CheckCorrectUseageOfRecordHierarchies {
   
-  private readonly List<string> IGNORE = ["Centazio.Sample"];
-  
   [Test] public void Test_record_hierarchies() {
     var errors = new List<string>();
     var records = InspectUtils.LoadCentazioAssemblies()
-        .Where(ass => !IGNORE.Contains(ass.GetName().Name ?? throw new Exception()))
         .SelectMany(ass => ass.GetExportedTypes().Where(ReflectionUtils.IsRecord))
         .ToList();
     var resultbases = records.Where(r => r.IsAbstract && r.Name != "OperationResult" && r.Name.Contains("Result", StringComparison.Ordinal)).ToList();

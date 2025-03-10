@@ -5,9 +5,8 @@
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
     </ItemGroup>
     
+    
     <ItemGroup>
-      <!-- todo: this reference us in only included to support dynamic assembly loading -->
-      <PackageReference Include="Microsoft.EntityFrameworkCore" />
       <PackageReference Include="NetArchTest.Rules" />
     </ItemGroup>
 

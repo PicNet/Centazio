@@ -191,3 +191,5 @@ The `RunFunction` method is the method that the host will call to execute this f
 todo: expand 
 
 ## Common Commands
+
+- `centazio host run Centazio.Sample` - This will run the AppSheet / ClickUp integration sample project
