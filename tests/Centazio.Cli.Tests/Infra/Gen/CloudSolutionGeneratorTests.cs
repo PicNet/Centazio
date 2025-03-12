@@ -1,6 +1,4 @@
-﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
-using Centazio.Cli.Infra.Dotnet;
+﻿using Centazio.Cli.Infra.Misc;
 using Centazio.Core;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;

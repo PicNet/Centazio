@@ -1,5 +1,4 @@
-﻿using Centazio.Cli.Infra;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra;

@@ -25,13 +25,8 @@ public class SettingsLoaderTests {
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "Overriden", "No longer empty", "No longer missing")));
   }
   
-  [Test] public void Test_settings_loader_nullable_but_innacessible_properties() {
-    var settings = F.Settings();
-    Assert.Throws<SettingsSectionMissingException>(() => { _ = settings.AwsSettings; });
-  }
-  
-  [Test] public void Test_loading_azure_sample_settings() {
-    var settings = F.Settings("azure_sample");
+  [Test] public void Test_loading_in_mem_sample_settings() {
+    var settings = F.Settings("in-mem");
     Assert.That(settings.StagedEntityRepository.ConnectionString, Is.EqualTo("Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"));
   }
   

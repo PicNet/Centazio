@@ -1,11 +1,12 @@
-﻿using Centazio.Cli.Infra;
+﻿using Centazio.Cli.Commands.Gen;
+using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 
-namespace Centazio.Cli.Commands.Gen;
+namespace Centazio.Cli.Commands.Az;
 
 public class GenerateAzFunctionsCommand(CentazioSettings coresettings, ITemplater templater) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
 

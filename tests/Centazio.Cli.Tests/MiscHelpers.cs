@@ -1,6 +1,4 @@
-﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
-using Centazio.Cli.Infra.Dotnet;
+﻿using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
@@ -12,8 +10,8 @@ public static class MiscHelpers {
   private static readonly CentazioSettings settings = TestingFactories.Settings();
   private static readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
   
-  public static FunctionProjectMeta EmptyFunctionProject(ECloudEnv cloud) => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), cloud, TestingFactories.Settings().Defaults.GeneratedCodeFolder);
+  public static FunctionProjectMeta EmptyFunctionProject(ECloudEnv cloud, string? function = null) => 
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), cloud, TestingFactories.Settings().Defaults.GeneratedCodeFolder, function);
 
   public static class Az {
     public static List<string> ListFunctionApps() {

@@ -3,6 +3,7 @@ using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Dotnet;
+using Centazio.Cli.Infra.Misc;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -12,7 +13,7 @@ using Spectre.Console.Cli;
 namespace Centazio.Cli.Commands.Aws;
 
 // todo: implement
-public class DeployLambdaFunctionCommand(CentazioSettings coresettings,  ILambdaFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployLambdaFunctionCommand.Settings> {
+public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAwsFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAwsLambdaFunctionCommand.Settings> {
   
   protected override Task<Settings> GetInteractiveSettings() {
     var assnm = UiHelpers.Ask("Assembly Name");
@@ -34,7 +35,7 @@ public class DeployLambdaFunctionCommand(CentazioSettings coresettings,  ILambda
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, templater, project, settings.Env).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
-    await UiHelpers.Progress($"Deploying the Lambda Function '{project.DashedProjectName}'", async () => await impl.Deploy(project, settings.FunctionName));
+    await UiHelpers.Progress($"Deploying the Lambda Function '{project.DashedProjectName}'", async () => await impl.Deploy(project));
     UiHelpers.Log($"Lambda Function '{project.DashedProjectName}' deployed.");
     
     if (settings.ShowLogs) {

@@ -37,5 +37,9 @@
     "ResourceGroup": "Centazio_3_Testing",
     "AppServicePlan": "Centazio-TestFunctions-Azure-Plan",
     "Functions": [] 
+  },
+  "AwsSettings": {
+    "Region": "ap-southeast-2",
+    "AccountName": "PicNet"
   }
 }

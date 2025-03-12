@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Centazio.Core.Misc;
 
-namespace Centazio.Cli.Infra.Dotnet;
+namespace Centazio.Cli.Infra.Misc;
 
 public class CommandResults(string command, string args, string dir, string @out, string err, bool newwindow) {
   public string Command { get; } = command.Trim();

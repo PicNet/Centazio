@@ -1,31 +1,22 @@
-using Centazio.Core.Misc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog;
 using Amazon.Lambda.RuntimeSupport;
-using Amazon.Lambda.Serialization.SystemTextJson;
+using Serilog;
+
+using Centazio.Core.Misc;
 
 namespace {{it.NewAssemblyName}};
 
-public class Program
-{
-    /// <summary>
-    /// The main entry point for the Lambda function.
-    /// </summary>
-    public static async Task Main()
-    {
-        // Configure logging
-        Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
-        
-        // Register Serilog
-        var services = new ServiceCollection();
-        services.AddLogging(builder => builder.AddSerilog(Log.Logger));
-        var serviceProvider = services.BuildServiceProvider();
-        
-        // Build Lambda bootstrap
-        using var handlerWrapper = new {{it.ClassName}}Handler();
-        using var bootstrap = new LambdaBootstrap(handlerWrapper.HandleAsync, new DefaultLambdaJsonSerializer());
-        
-        await bootstrap.RunAsync();
-    }
+public class Program {
+  public static async Task Main() {
+    Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
+    
+    var svcs = new ServiceCollection();
+    svcs.AddLogging(builder => builder.AddSerilog(Log.Logger));
+    var prov = svcs.BuildServiceProvider();
+    
+    var handler = new {{it.ClassName}}Handler();
+    using var wrapper = HandlerWrapper.GetHandlerWrapper(ctx => handler.Handle(ctx));
+    using var bootstrap = new LambdaBootstrap(wrapper);
+    await bootstrap.RunAsync();
+  }
 }

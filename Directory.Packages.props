@@ -4,9 +4,11 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.0-preview.9" />
-    <PackageVersion Include="AWSSDK.Organizations" Version="4.0.0-preview.9" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.0-preview.9" />
+    <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.0-preview.10" />
+    <PackageVersion Include="AWSSDK.IdentityManagement" Version="4.0.0-preview.10" />
+    <PackageVersion Include="AWSSDK.Lambda" Version="4.0.0-preview.10" />
+    <PackageVersion Include="AWSSDK.Organizations" Version="4.0.0-preview.10" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.0-preview.10" />
     <PackageVersion Include="Azure.Identity" Version="1.13.2" />
     <PackageVersion Include="Azure.ResourceManager" Version="1.13.0" />
     <PackageVersion Include="Azure.ResourceManager.AppService" Version="1.3.0" />
@@ -37,7 +39,7 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageVersion Include="Spectre.Console" Version="0.49.2-preview.0.76" />
     <PackageVersion Include="Spectre.Console.Cli" Version="0.49.2-preview.0.76" />
-     <PackageVersion Include="Spectre.Console.ImageSharp" Version="0.49.2-preview.0.76" /> 
+    <PackageVersion Include="Spectre.Console.ImageSharp" Version="0.49.2-preview.0.76" />
     <PackageVersion Include="Testcontainers.DynamoDb" Version="4.3.0" />
     <PackageVersion Include="Testcontainers.Minio" Version="4.3.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.3.0" />

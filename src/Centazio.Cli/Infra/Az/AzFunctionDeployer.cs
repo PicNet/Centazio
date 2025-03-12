@@ -1,12 +1,11 @@
-﻿using System.IO.Compression;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using Azure;
 using Azure.Core;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
-using Centazio.Core.Misc;
+using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 
@@ -69,58 +68,33 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   };
 
   private async Task PublishFunctionApp(WebSiteResource appres, FunctionProjectMeta project) {
-    var zippath = CreateFunctionAppZip(project);
+    var zipbytes = await CreateFunctionAppZip(project);
     var cred = await GetPublishCredentials(appres);
     
-    try { 
-      var endpoint = $"https://{appres.Data.DefaultHostName.Replace("azurewebsites.net", "scm.azurewebsites.net")}/api/zipdeploy";
+    var endpoint = $"https://{appres.Data.DefaultHostName.Replace("azurewebsites.net", "scm.azurewebsites.net")}/api/zipdeploy";
 
-      var http = new HttpClient();
-      var base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{cred.PublishingUserName}:{cred.PublishingPassword}"));
-      http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Auth);
+    var http = new HttpClient();
+    var base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{cred.PublishingUserName}:{cred.PublishingPassword}"));
+    http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Auth);
+    
+    using var content = new ByteArrayContent(zipbytes);
+    content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
 
-      var zipbytes = await File.ReadAllBytesAsync(zippath);
-      using var content = new ByteArrayContent(zipbytes);
-      content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+    var response = await http.PostAsync(endpoint, content);
 
-      var response = await http.PostAsync(endpoint, content);
-
-      if (!response.IsSuccessStatusCode) {
-        var err = await response.Content.ReadAsStringAsync();
-        throw new Exception($"deployment failed with status [{response.StatusCode}], error [{err}]");
-      }
-
-      await appres.RestartAsync();
+    if (!response.IsSuccessStatusCode) {
+      var err = await response.Content.ReadAsStringAsync();
+      throw new Exception($"deployment failed with status [{response.StatusCode}], error [{err}]");
     }
-    finally {
-      if (File.Exists(zippath)) File.Delete(zippath);
-    }
+
+    await appres.RestartAsync();
   }
 
   private async Task<PublishingUserData> GetPublishCredentials(WebSiteResource appres) => 
       (await appres.GetPublishingCredentialsAsync(WaitUntil.Completed)).Value.Data;
   
-  internal static string CreateFunctionAppZip(FunctionProjectMeta project) {
-    var subdirs = new List<string> { ".azurefunctions", "runtimes" };
-    var extensions = new List<string> { ".exe", ".dll", ".json", ".env", "*.metadata", ".pdb" };
-    var zippath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
-    
-    using var zip = new FileStream(zippath, FileMode.Create);
-    using var archive = new ZipArchive(zip, ZipArchiveMode.Create);
-    
-    // root directory, add files that match extension
-    Directory.EnumerateFiles(project.PublishPath, "*.*", SearchOption.TopDirectoryOnly)
-        .Where(file => extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
-        .ForEach(file => archive.CreateEntryFromFile(file, Path.GetFileName(file)));
-    
-    // for each sub-directory add all files
-    subdirs.ForEach(subdir => {
-      var path = Path.Combine(project.PublishPath, subdir);
-      if (!Directory.Exists(path)) return;
-      Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
-          .ForEach(file => archive.CreateEntryFromFile(file, Path.GetRelativePath(project.PublishPath, file)));
-    });
-    return zippath;
-  }
+  private async Task<byte[]> CreateFunctionAppZip(FunctionProjectMeta project) => 
+      await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], [".azurefunctions", "runtimes"]);
+
 }
 

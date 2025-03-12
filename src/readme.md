@@ -11,7 +11,9 @@
     - support overriding function specific settings like service plan, etc 
   - Aws:
     - implement 
-- bring back function-to-function triggers, considering 1 minute limit in AWS
+- bring back function-to-function triggers, considering 1 minute limit in AWS.  This should be automatic and driven
+    by results of a function, eg.  function `read-x` returns `10 x read` should auto trigger `promote-x` by having
+    `promote-x` register to listen to read xs
 - function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
 - use picnet github to host publicly
 - nuget all code
@@ -193,3 +195,7 @@ todo: expand
 ## Common Commands
 
 - `centazio host run Centazio.Sample` - This will run the AppSheet / ClickUp integration sample project
+- `centazio az func generate Centazio.TestFunctions` - Generate dummy functions (can be many) Azure wrapper 
+- `centazio az func generate Centazio.TestFunctions EmptyFunction` - Generate dummy function (single) AWS wrapper
+- `centazio aws func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
+- `centazio azure func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
