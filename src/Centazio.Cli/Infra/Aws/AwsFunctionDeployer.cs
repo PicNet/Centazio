@@ -44,8 +44,6 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
   private async Task CreateFunctionAsync(IAmazonLambda client, AwsFunctionProjectMeta project, byte[] zipbytes) {
     var req = new CreateFunctionRequest {
       FunctionName = project.AwsFunctionName,
-
-      // todo: `dotnet8` should be in 'defaults' settings
       Runtime = "dotnet8",
       Role = await GetOrCreateRole(project.RoleName),
       Handler = project.HandlerName,

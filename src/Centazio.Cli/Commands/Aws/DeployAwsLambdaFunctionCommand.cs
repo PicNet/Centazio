@@ -6,7 +6,6 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
-using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 
@@ -15,21 +14,12 @@ namespace Centazio.Cli.Commands.Aws;
 public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAwsFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAwsLambdaFunctionCommand.Settings> {
   
   protected override Task<Settings> GetInteractiveSettings() {
-    var assnm = UiHelpers.Ask("Assembly Name");
+    var assembly = UiHelpers.Ask("Assembly Name");
     var settings = new Settings { 
-      AssemblyName = assnm,
-      // todo: GenerateAwsFunction should also use this - move to a helper
-      FunctionName = GetTargetFunction() 
+      AssemblyName = assembly,
+      FunctionName = AwsCommandsHelpers.GetTargetFunction(assembly) 
     }; 
     return Task.FromResult(settings);
-  
-    string GetTargetFunction() {
-      var ass = ReflectionUtils.LoadAssembly(assnm);
-      var options = IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Select(f => f.Name).ToList();
-      if (!options.Any()) throw new Exception($"Assembly '{assnm}' does not contain any Centazio Functions");
-      if (options.Count == 1) return options.Single();
-      return UiHelpers.Select("Select Function:", options);
-    }
   }
 
   protected override async Task ExecuteImpl(string name, Settings settings) {

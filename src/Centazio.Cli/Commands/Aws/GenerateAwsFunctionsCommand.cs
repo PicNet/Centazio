@@ -10,10 +10,14 @@ namespace Centazio.Cli.Commands.Aws;
 
 public class GenerateAwsFunctionsCommand(CentazioSettings coresettings, ITemplater templater) : AbstractCentazioCommand<GenerateAwsFunctionsCommand.Settings> {
 
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
-    AssemblyName = UiHelpers.Ask("Assembly Name"),
-    FunctionName = UiHelpers.Ask("Function Name"),
-  });
+  protected override Task<Settings> GetInteractiveSettings() {
+    var assembly = UiHelpers.Ask("Assembly Name");
+    var settings = new Settings { 
+      AssemblyName = assembly,
+      FunctionName = AwsCommandsHelpers.GetTargetFunction(assembly) 
+    }; 
+    return Task.FromResult(settings);
+  }
 
   protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder, settings.FunctionName);
