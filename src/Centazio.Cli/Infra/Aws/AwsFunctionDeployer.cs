@@ -11,12 +11,12 @@ using Centazio.Core.Settings;
 namespace Centazio.Cli.Infra.Aws;
 
 public interface IAwsFunctionDeployer {
-  Task Deploy(FunctionProjectMeta project);
+  Task Deploy(AwsFunctionProjectMeta project);
 }
 
 public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : IAwsFunctionDeployer {
 
-  public async Task Deploy(FunctionProjectMeta project) {
+  public async Task Deploy(AwsFunctionProjectMeta project) {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
 
@@ -41,14 +41,14 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
     catch (ResourceNotFoundException) { return false; }
   }
 
-  private async Task CreateFunctionAsync(IAmazonLambda client, FunctionProjectMeta project, byte[] zipbytes) {
+  private async Task CreateFunctionAsync(IAmazonLambda client, AwsFunctionProjectMeta project, byte[] zipbytes) {
     var req = new CreateFunctionRequest {
       FunctionName = project.AwsFunctionName,
 
       // todo: `dotnet8` should be in 'defaults' settings
       Runtime = "dotnet8",
-      Role = await GetOrCreateRole(project.AwsRoleName),
-      Handler = project.AwsHandlerName,
+      Role = await GetOrCreateRole(project.RoleName),
+      Handler = project.HandlerName,
       Code = new FunctionCode { ZipFile = new MemoryStream(zipbytes) },
       Timeout = 30, // 30 seconds timeout
       MemorySize = 256 // 256 MB memory allocation

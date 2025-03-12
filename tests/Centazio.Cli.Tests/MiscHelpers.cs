@@ -10,8 +10,11 @@ public static class MiscHelpers {
   private static readonly CentazioSettings settings = TestingFactories.Settings();
   private static readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
   
-  public static FunctionProjectMeta EmptyFunctionProject(ECloudEnv cloud, string? function = null) => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), cloud, TestingFactories.Settings().Defaults.GeneratedCodeFolder, function);
+  public static AzureFunctionProjectMeta AzureEmptyFunctionProject() => 
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings().Defaults.GeneratedCodeFolder);
+  
+  public static AwsFunctionProjectMeta AwsEmptyFunctionProject(string function) => 
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings().Defaults.GeneratedCodeFolder, function);
 
   public static class Az {
     public static List<string> ListFunctionApps() {

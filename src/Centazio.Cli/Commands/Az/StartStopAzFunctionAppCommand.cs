@@ -1,5 +1,4 @@
-﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
+﻿using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
@@ -17,7 +16,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
 
   protected override async Task ExecuteImpl(string name, Settings settings) {
     if (name != "start" && name != "stop") throw new ArgumentException($"only start/stop command is supported");
-    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
+    var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
     if (name == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {

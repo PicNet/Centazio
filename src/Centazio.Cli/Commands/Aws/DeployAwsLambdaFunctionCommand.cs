@@ -12,12 +12,15 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-// todo: implement
 public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAwsFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAwsLambdaFunctionCommand.Settings> {
   
   protected override Task<Settings> GetInteractiveSettings() {
     var assnm = UiHelpers.Ask("Assembly Name");
-    var settings = new Settings { AssemblyName = assnm, FunctionName = GetTargetFunction() }; 
+    var settings = new Settings { 
+      AssemblyName = assnm,
+      // todo: GenerateAwsFunction should also use this - move to a helper
+      FunctionName = GetTargetFunction() 
+    }; 
     return Task.FromResult(settings);
   
     string GetTargetFunction() {
@@ -30,9 +33,9 @@ public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAws
   }
 
   protected override async Task ExecuteImpl(string name, Settings settings) {
-    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Aws, coresettings.Defaults.GeneratedCodeFolder);
+    var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder, settings.FunctionName);
     
-    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await CloudSolutionGenerator.Create(coresettings, templater, project, settings.Env).GenerateSolution());
+    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.Env).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
     await UiHelpers.Progress($"Deploying the Lambda Function '{project.DashedProjectName}'", async () => await impl.Deploy(project));

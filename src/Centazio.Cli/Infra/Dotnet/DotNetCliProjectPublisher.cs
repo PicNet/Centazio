@@ -7,7 +7,7 @@ public class DotNetCliProjectPublisher(CentazioSettings settings, ITemplater tem
 
   private readonly ICommandRunner cmd = new CommandRunner();
   
-  public Task PublishProject(FunctionProjectMeta project) {
+  public Task PublishProject(AbstractFunctionProjectMeta project) {
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     
     var results1 = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.CleanProject), project.ProjectDirPath, quiet: true);

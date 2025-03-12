@@ -4,7 +4,7 @@ using Serilog;
 
 using Centazio.Core.Misc;
 
-namespace {{it.NewAssemblyName}};
+namespace {{it.FunctionNamespace}}.Aws;
 
 public class Program {
   public static async Task Main() {

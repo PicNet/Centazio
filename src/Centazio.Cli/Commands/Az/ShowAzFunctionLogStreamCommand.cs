@@ -1,5 +1,4 @@
-﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
+﻿using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
@@ -15,7 +14,7 @@ public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICom
   });
 
   protected override Task ExecuteImpl(string name, Settings settings) {
-    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
+    var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
     return Task.CompletedTask;
   }

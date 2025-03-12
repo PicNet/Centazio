@@ -1,5 +1,4 @@
-﻿using Centazio.Cli.Commands.Gen;
-using Centazio.Cli.Infra;
+﻿using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
@@ -16,7 +15,7 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   });
 
   protected override async Task ExecuteImpl(string name, Settings settings) {
-    var project = new FunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), ECloudEnv.Azure, coresettings.Defaults.GeneratedCodeFolder);
+    var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
     if (!UiHelpers.Confirm($"Are you sure you want to delete Azure Function '{project.DashedProjectName}'")) {
       UiHelpers.Log("Aborting, no function deleted", LogEventLevel.Warning);

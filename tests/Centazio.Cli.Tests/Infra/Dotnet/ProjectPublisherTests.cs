@@ -14,9 +14,9 @@ public class ProjectPublisherTests {
     await Impl(new DotNetCliProjectPublisher(settings, templater).PublishProject);
   }
   
-  private async Task Impl(Func<FunctionProjectMeta, Task> builder) {
-    var project = MiscHelpers.EmptyFunctionProject(ECloudEnv.Azure);
-    await CloudSolutionGenerator.Create(settings, templater, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
+  private async Task Impl(Func<AzureFunctionProjectMeta, Task> builder) {
+    var project = MiscHelpers.AzureEmptyFunctionProject();
+    await new AzureCloudSolutionGenerator(settings, templater, project, CentazioConstants.DEFAULT_ENVIRONMENT).GenerateSolution();
     
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     await builder(project);

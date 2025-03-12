@@ -6,7 +6,7 @@ using Serilog;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace {{it.NewAssemblyName}};
+namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler {
   private static readonly Lazy<Task<IRunnableFunction>> impl;

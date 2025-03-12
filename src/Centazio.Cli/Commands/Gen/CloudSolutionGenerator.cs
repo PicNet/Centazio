@@ -11,57 +11,28 @@ namespace Centazio.Cli.Commands.Gen;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-public abstract class CloudSolutionGenerator(ITemplater templater, FunctionProjectMeta project, string environment) {
-  
+public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, string environment) {
+
+  protected CsProjModel model = null!;
   protected readonly ITemplater templater = templater;
-  protected readonly FunctionProjectMeta project = project;
   protected readonly string environment = environment;
   
-  public static CloudSolutionGenerator Create(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) {
-    ValidateProjectAssemblyBeforeCodeGen(project.Assembly);
-    switch (project.Cloud) {
-      case ECloudEnv.Aws: return new AwsCloudSolutionGenerator(settings, templater, project, environment);
-      case ECloudEnv.Azure: return new AzureCloudSolutionGenerator(settings, templater, project, environment);
-      default: throw new NotSupportedException(project.Cloud.ToString());
-      
-    }
-    
-    void ValidateProjectAssemblyBeforeCodeGen(Assembly ass) {
-      IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environment); // throws own error
-      if (!IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any()) throw new Exception($"no valid Centazio Functions found in assembly[{ass.GetName().FullName}]");
-    }
-  }
-
   public async Task GenerateSolution() {
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     Directory.CreateDirectory(project.SolutionDirPath);
     
+    model = new CsProjModel(project.ProjectName);
     await GenerateSlnFile();
     await GenerateProjects();
   }
 
   private async Task GenerateSlnFile() {
-    var contents = templater.ParseFromPath("Solution.sln", new { Projects = new [] { project } });
+    var contents = templater.ParseFromPath("Solution.sln", new { Projects = new [] { model } });
     await File.WriteAllTextAsync(project.SlnFilePath, contents);
   }
 
-  private async Task GenerateProjects() {
-    await GetCloudProjectGenerator(project).Generate();
-  }
-
-  protected abstract AbstractCloudProjectGenerator GetCloudProjectGenerator(FunctionProjectMeta proj);
-
-}
-
-public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, ITemplater templater, FunctionProjectMeta project, string environment) {
-  
-  protected readonly CentazioSettings settings = settings;
-  protected readonly ITemplater templater = templater;
-  protected readonly FunctionProjectMeta project = project;
-  protected readonly string environment = environment;
-
-  public async Task Generate() {
-    project.GlobalProperties.AddRange([
+  public async Task GenerateProjects() {
+    model.GlobalProperties.AddRange([
       new("TargetFramework", "net9.0"),
       new("OutputType", "Exe"),
       new("ImplicitUsings", "enable"),
@@ -80,7 +51,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, I
     var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, []);
     await AddCloudSpecificContentToProject(functions, added);
     
-    var contents = templater.ParseFromPath("Project.csproj", project);
+    var contents = templater.ParseFromPath("Project.csproj", model);
     await File.WriteAllTextAsync(project.CsprojPath, contents);
   }
 
@@ -111,7 +82,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, I
     var name = ass.GetName().Name ?? throw new Exception();
     if (!added.TryAdd(name, true)) return;
 
-    project.AssemblyReferences.Add(new (ass.FullName ?? throw new Exception(), ass.Location));
+    model.AssemblyReferences.Add(new (ass.FullName ?? throw new Exception(), ass.Location));
   }
   
   private Task AddCentazioNuGetReferencesToProject(Dictionary<string, bool> added) {
@@ -136,7 +107,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, I
   private void AddCopyFilesToProject(List<string> files) {
     files.ForEach(path => {
       var fname = Path.GetFileName(path);
-      project.Files.Add(fname);
+      model.Files.Add(fname);
       File.Copy(path, Path.Combine(project.ProjectDirPath, fname), true);
     });
   }
@@ -145,7 +116,7 @@ public abstract class AbstractCloudProjectGenerator(CentazioSettings settings, I
       (await NugetHelpers.GetLatestStableVersions(packages))
       .ForEach(p => {
         if (!added.TryAdd(p.name, true)) return;
-        project.NuGetReferences.Add(new(p.name, p.version));
+        model.NuGetReferences.Add(new(p.name, p.version));
       });
   
   protected abstract Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added);
