@@ -12,18 +12,15 @@ public class {{it.ClassName}}Handler {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {    
-    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}").Init<{{it.ClassName}}>(), 
-        LazyThreadSafetyMode.ExecutionAndPublication);
+    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}").Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
   public async Task<string> Handle(ILambdaContext context) {
     var start = UtcDate.UtcNow;
     Log.Information("{{it.ClassName}} running");
     try { 
-        await (await impl.Value).RunFunction();
-        return $"{{it.ClassName}} executed successfully";
-    } finally { 
-        Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s");
-    }
+      await (await impl.Value).RunFunction();
+      return $"{{it.ClassName}} executed successfully";
+    } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }
 }

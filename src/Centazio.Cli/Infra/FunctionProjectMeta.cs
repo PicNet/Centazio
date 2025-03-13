@@ -13,7 +13,7 @@ public class AwsFunctionProjectMeta(Assembly assembly, string generatedfolder, s
   
   public readonly string AwsFunctionName = function;
   public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{ECloudEnv.Aws}";
-  public string HandlerName => $"{ProjectName}::{ProjectName}::Handler";
+  public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
   public string RoleName => $"{DashedProjectName}-{AwsFunctionName}-role".ToLower();
 
 }
@@ -32,14 +32,17 @@ public abstract class AbstractFunctionProjectMeta(Assembly assembly, string gene
   public string DashedProjectName => ProjectName.Replace('.', '-');
 }
 
+// disable warnings as these properties are only used by the template engine, so not detected
+// ReSharper disable CollectionNeverQueried.Global
+// ReSharper disable UnusedMember.Global
 public record CsProjModel(string ProjectName) {
   public Guid ProjSolutionGuid { get; } = Guid.NewGuid();
   public Guid ProjGuid { get; } = Guid.NewGuid();
   
-  public List<KeyValuePair<string, string>> GlobalProperties { get; } = new();
-  public List<string> Files { get; } = new();
-  public List<AssemblyRef> AssemblyReferences { get; } = new();
-  public List<NuGetRef> NuGetReferences { get; } = new();
+  public List<KeyValuePair<string, string>> GlobalProperties { get; } = [];
+  public List<string> Files { get; } = [];
+  public List<AssemblyRef> AssemblyReferences { get; } = [];
+  public List<NuGetRef> NuGetReferences { get; } = [];
 }
 
 public record AssemblyRef(string FullName, string Path);
