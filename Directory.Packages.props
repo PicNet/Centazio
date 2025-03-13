@@ -4,7 +4,9 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="AWSSDK.CloudWatchLogs" Version="4.0.0-preview.10" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.0-preview.10" />
+    <PackageVersion Include="AWSSDK.EventBridge" Version="4.0.0-preview.10" />
     <PackageVersion Include="AWSSDK.IdentityManagement" Version="4.0.0-preview.10" />
     <PackageVersion Include="AWSSDK.Lambda" Version="4.0.0-preview.10" />
     <PackageVersion Include="AWSSDK.Organizations" Version="4.0.0-preview.10" />

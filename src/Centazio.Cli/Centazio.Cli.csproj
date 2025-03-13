@@ -5,6 +5,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="AWSSDK.CloudWatchLogs" />
+      <PackageReference Include="AWSSDK.EventBridge" />
       <PackageReference Include="AWSSDK.IdentityManagement" />
       <PackageReference Include="AWSSDK.Lambda" />
       <PackageReference Include="AWSSDK.Organizations" />
