@@ -5,9 +5,9 @@ namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinReadFunction(SimulationCtx ctx, FinApi api) : ReadFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
 
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, GetFinAccountUpdates),
-    new(SystemEntityTypeName.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, GetFinInvoiceUpdates)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new ReadOperationConfig(SystemEntityTypeName.From<FinAccount>(), TestingDefaults.CRON_EVERY_SECOND, GetFinAccountUpdates),
+    new ReadOperationConfig(SystemEntityTypeName.From<FinInvoice>(), TestingDefaults.CRON_EVERY_SECOND, GetFinInvoiceUpdates)
   ]);
   
   public async Task<ReadOperationResult> GetFinAccountUpdates(OperationStateAndConfig<ReadOperationConfig> config) => GetUpdatesImpl(config, await api.GetAccounts(config.Checkpoint));

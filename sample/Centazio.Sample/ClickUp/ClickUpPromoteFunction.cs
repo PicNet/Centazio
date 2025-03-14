@@ -5,8 +5,8 @@ using Centazio.Core.Stage;
 namespace Centazio.Sample.ClickUp;
 
 public class ClickUpPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(SampleConstants.Systems.ClickUp, stager, corestg, ctl) {
-  
-  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
+
+  protected override FunctionConfig GetFunctionConfiguration() => new([
     new PromoteOperationConfig(typeof(ClickUpTask), SampleConstants.SystemEntities.ClickUp.Task, SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
   ]);
 

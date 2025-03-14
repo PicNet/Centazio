@@ -6,7 +6,7 @@ namespace Centazio.Sample.AppSheet;
 
 public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, AppSheetApi api) : ReadFunction(SampleConstants.Systems.AppSheet, stager, ctl) {
 
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
+  protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(SampleConstants.SystemEntities.AppSheet.Task, CronExpressionsHelper.EveryXSeconds(10), GetSheetTasks)
   ]);
 

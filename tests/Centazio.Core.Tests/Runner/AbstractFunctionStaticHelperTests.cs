@@ -13,12 +13,12 @@ public class AbstractFunctionStaticHelperTests {
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public void Test_ReadFunctionConfig_Validate_fails_with_empty_operations() {
-    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig<ReadOperationConfig>([]));
+    Assert.Throws<ArgumentNullException>(() => _ = new FunctionConfig([]));
   }
   
   [Test] public async Task Test_LoadOperationsStates_creates_missing_operations() {
     var ss = await repo.CreateSystemState(C.System1Name, LifecycleStage.Defaults.Read);
-    var cfg = new FunctionConfig<ReadOperationConfig>(Factories.READ_OP_CONFIGS);
+    var cfg = new FunctionConfig(Factories.READ_OP_CONFIGS);
     var template = await repo.CreateObjectState(ss, new SystemEntityTypeName("2"), cfg.DefaultFirstTimeCheckpoint); 
     
     var states = await AbstractFunction<ReadOperationConfig>.LoadOperationsStates(cfg, ss, repo);
@@ -41,7 +41,7 @@ public class AbstractFunctionStaticHelperTests {
     var updated = (await repo.CreateObjectState(ss, new SystemEntityTypeName("2"), UtcDate.UtcNow)).SetActive(false);
     await repo.SaveObjectState(updated);
     
-    var config = new FunctionConfig<ReadOperationConfig>(Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
+    var config = new FunctionConfig(Factories.READ_OP_CONFIGS) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
     var states = await AbstractFunction<ReadOperationConfig>.LoadOperationsStates(config, ss, repo);
     var names = states.Select(s => s.OpConfig.Object.Value).ToList();
     Assert.That(names, Is.EquivalentTo(["1", "3", "4"]));
@@ -54,7 +54,7 @@ public class AbstractFunctionStaticHelperTests {
           LastResult = EOperationResult.Success,
           LastAbortVote = EOperationAbortVote.Continue
         }, 
-        new BaseFunctionConfig(), 
+        new FunctionConfig([]), 
         new(new SystemEntityTypeName(opname), new (new (cron)), GetListResult), 
         DateTime.MinValue);
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
@@ -140,7 +140,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
+      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
     };
     
     TestingUtcDate.DoTick();
@@ -157,7 +157,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
+      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
     };
     
     var opstart = TestingUtcDate.DoTick();
@@ -174,7 +174,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new BaseFunctionConfig(), readopcfg, objstate.NextCheckpoint)
+      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
     };
     TestingUtcDate.DoTick();
     await RunOps(opconfigs, runner);
@@ -210,11 +210,11 @@ public class AbstractFunctionStaticHelperTests {
   static class Factories {
     
     
-    public static List<ReadOperationConfig> READ_OP_CONFIGS => [
-      new(new SystemEntityTypeName("1"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
-      new(new SystemEntityTypeName("2"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
-      new(new SystemEntityTypeName("3"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
-      new(new SystemEntityTypeName("4"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult)
+    public static List<OperationConfig> READ_OP_CONFIGS => [
+      new ReadOperationConfig(new SystemEntityTypeName("1"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new ReadOperationConfig(new SystemEntityTypeName("2"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new ReadOperationConfig(new SystemEntityTypeName("3"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult),
+      new ReadOperationConfig(new SystemEntityTypeName("4"), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult)
     ];
   }
   

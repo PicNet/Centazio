@@ -71,15 +71,14 @@ public class FunctionRunnerTests {
     Assert.That(results.OpResults.Single().Result, Is.EqualTo(new EmptyReadOperationResult()));
   }
   
-  record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>([
-    new(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
+  record EmptyFunctionConfig() : FunctionConfig([
+    new ReadOperationConfig(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()))
   ]);
   
   class EmptyFunction(ICtlRepository ctl) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
-    
-    public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
+    protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
     public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
@@ -95,8 +94,7 @@ public class FunctionRunnerTests {
   class SimpleFunction(ICtlRepository ctl, int results) : AbstractFunction<ReadOperationConfig>(C.System1Name, LifecycleStage.Defaults.Read, ctl) {
 
     private readonly ICtlRepository ctlrepo = ctl;
-    
-    public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
+    protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
     public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();

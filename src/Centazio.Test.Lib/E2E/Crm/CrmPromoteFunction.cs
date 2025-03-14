@@ -5,10 +5,10 @@ namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
 
-  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityTypeName.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, BuildMembershipTypes),
-    new(typeof(CrmCustomer), new(nameof(CrmCustomer)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, BuildCustomers) { IsBidirectional = true },
-    new(typeof(CrmInvoice), new(nameof(CrmInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, BuildInvoices) { IsBidirectional = true }
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new PromoteOperationConfig(typeof(CrmMembershipType), new(nameof(CrmMembershipType)), CoreEntityTypeName.From<CoreMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, BuildMembershipTypes),
+    new PromoteOperationConfig(typeof(CrmCustomer), new(nameof(CrmCustomer)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, BuildCustomers) { IsBidirectional = true },
+    new PromoteOperationConfig(typeof(CrmInvoice), new(nameof(CrmInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, BuildInvoices) { IsBidirectional = true }
   ]);
 
   private Task<List<EntityEvaluationResult>> BuildMembershipTypes(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => Task.FromResult(toeval.Select(eval => {

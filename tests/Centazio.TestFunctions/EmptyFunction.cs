@@ -45,7 +45,7 @@ public class TestFunctionIntegration(string environment) : IntegrationBase<TestS
 
 public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl) {
 
-  public override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
+  protected override FunctionConfig GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
   ]);
 

@@ -5,9 +5,9 @@ namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
 
-  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, EvaluateCustomers) { IsBidirectional = true },
-    new(typeof(FinInvoice), new(nameof(FinInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, EvaluateInvoices) { IsBidirectional = true }
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new PromoteOperationConfig(typeof(FinAccount), new(nameof(FinAccount)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, EvaluateCustomers) { IsBidirectional = true },
+    new PromoteOperationConfig(typeof(FinInvoice), new(nameof(FinInvoice)), CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, EvaluateInvoices) { IsBidirectional = true }
   ]);
   
   Task<List<EntityEvaluationResult>> EvaluateCustomers(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => Task.FromResult(toeval.Select(eval => {

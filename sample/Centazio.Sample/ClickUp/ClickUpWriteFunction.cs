@@ -5,8 +5,8 @@ using Centazio.Core.Write;
 namespace Centazio.Sample.ClickUp;
 
 public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUpApi api) : WriteFunction(SampleConstants.Systems.ClickUp, core, ctl) {
-  
-  public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
+
+  protected override FunctionConfig GetFunctionConfiguration() => new([
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToClickUpTasks, WriteClickUpTasks)
   ]);
 

@@ -6,7 +6,7 @@ public interface IRunnableFunction : IDisposable {
   SystemName System { get; }
   LifecycleStage Stage { get; }
   bool Running { get; }
-  BaseFunctionConfig Config { get; }
+  FunctionConfig Config { get; }
   
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
 }
@@ -16,9 +16,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   public SystemName System { get; }
   public LifecycleStage Stage { get; }
   
-  // todo: I dont like these two configs just to be able to call FunctionRunner.RunFunction() 
-  public FunctionConfig<C> SpecificConfig { get; }
-  public BaseFunctionConfig Config { get; }
+  public FunctionConfig Config { get; }
   
   public bool Running { get; private set; }
   
@@ -31,24 +29,25 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     
     this.ctl = ctl;
     
-    Config = SpecificConfig = GetFunctionConfiguration();
+    Config = GetFunctionConfiguration();
   }
 
-  public abstract FunctionConfig<C> GetFunctionConfiguration();
+  protected abstract FunctionConfig GetFunctionConfiguration();
   public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
   public virtual async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
-      var opstates = await LoadOperationsStates(SpecificConfig, sys, ctl);
+      var opstates = await LoadOperationsStates(Config, sys, ctl);
       var readyops = GetReadyOperations(opstates);
       return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
     } finally { Running = false; }
   }
 
-  internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
+  internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations
+            .Cast<C>()
             .Select(async op => {
       var state = await ctl.GetOrCreateObjectState(system, op.Object, op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint);
       return new OperationStateAndConfig<C>(state, conf, op, state.NextCheckpoint);

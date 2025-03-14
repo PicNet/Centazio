@@ -7,31 +7,25 @@ public record FunctionConfigDefaults {
   public static DateTime DefaultFirstTimeCheckpoint { get; set; } = UtcDate.UtcNow.AddMonths(-1);
 }
 
-public interface IFunctionConfig : IDisposable {
-  int TimeoutMinutes { get; init; }
-
+public record FunctionConfig(List<OperationConfig> Operations) : IDisposable {
+  public int TimeoutMinutes { get; init; }
+  
   /// <summary>
   /// When a function operation is run for the first time, there is no 'last run'.  This is used as a
   /// replacement for this 'last run' value and any data since this date is considered ready for processing.
   /// Note: This can be overwritten in each operation's specific `OperationConfig`.
   /// </summary>
-  DateTime DefaultFirstTimeCheckpoint { get; init; }
-
+  public DateTime DefaultFirstTimeCheckpoint { get; init; } = FunctionConfigDefaults.DefaultFirstTimeCheckpoint;
+  
   /// <summary>
   /// Whether to log and swallow exceptions, or throw instead.  Logging exceptions works well
   /// for serverless environments where exceptions add no value, but on local hosted or testing
   /// environments Exceptions add more value.
   /// </summary>
-  bool ThrowExceptions { get; init; }
-
-  IChecksumAlgorithm ChecksumAlgorithm { get; init; }
-}
-
-public record BaseFunctionConfig : IFunctionConfig {
-  public int TimeoutMinutes { get; init; }
-  public DateTime DefaultFirstTimeCheckpoint { get; init; } = FunctionConfigDefaults.DefaultFirstTimeCheckpoint;
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
 
+  public List<OperationConfig> Operations { get => field.Any() ? field : throw new ArgumentNullException(nameof(Operations)); } = Operations;
+  
   private IChecksumAlgorithm? checksum;
   public IChecksumAlgorithm ChecksumAlgorithm {
     get => checksum ??= new Sha256ChecksumAlgorithm();
@@ -42,11 +36,6 @@ public record BaseFunctionConfig : IFunctionConfig {
   }
   
   public void Dispose() { checksum?.Dispose(); }
-}
-
-public record FunctionConfig<C>(List<C> Operations) : BaseFunctionConfig, ILoggable where C : OperationConfig {
-
-  public List<C> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   
   public string LoggableValue => $"Operations[{Operations.Count}]";
 }

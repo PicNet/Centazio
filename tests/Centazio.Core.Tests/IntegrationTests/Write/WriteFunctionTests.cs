@@ -70,7 +70,7 @@ public class WriteFunctionTests {
     Assert.That(sys.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write)));
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(C.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
     Assert.That(obj.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName)));
-    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName, func.ExposeConfig.DefaultFirstTimeCheckpoint)
+    Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName, func.Config.DefaultFirstTimeCheckpoint)
         .Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? String.Empty, func.Thrown?.ToString())));
     Assert.That(allcusts, Is.EquivalentTo([ceam.CoreEntity]));
     Assert.That(maps, Is.Empty);
@@ -84,10 +84,8 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
   
-  public FunctionConfig<WriteOperationConfig> ExposeConfig => SpecificConfig;
-  
-  public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
-    new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new WriteOperationConfig(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
   ]) { ThrowExceptions = false, ChecksumAlgorithm = Helpers.TestingChecksumAlgorithm };
 
   public void Reset() {

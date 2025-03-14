@@ -5,10 +5,10 @@ namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
 
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmMembershipTypeUpdates),
-    new(SystemEntityTypeName.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmCustomerUpdates),
-    new(SystemEntityTypeName.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmInvoiceUpdates)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new ReadOperationConfig(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmMembershipTypeUpdates),
+    new ReadOperationConfig(SystemEntityTypeName.From<CrmCustomer>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmCustomerUpdates),
+    new ReadOperationConfig(SystemEntityTypeName.From<CrmInvoice>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmInvoiceUpdates)
   ]);
 
   public async Task<ReadOperationResult> GetCrmMembershipTypeUpdates(OperationStateAndConfig<ReadOperationConfig> config) => GetUpdatesImpl(config, await api.GetMembershipTypes(config.Checkpoint));

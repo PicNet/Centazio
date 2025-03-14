@@ -8,6 +8,6 @@ public abstract record OperationConfig(
 
 public record OperationStateAndConfig<C>(
     ObjectState State,
-    IFunctionConfig FuncConfig,
+    FunctionConfig FuncConfig,
     C OpConfig, 
     DateTime Checkpoint) where C : OperationConfig;

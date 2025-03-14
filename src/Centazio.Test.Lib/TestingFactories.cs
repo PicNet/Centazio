@@ -48,7 +48,7 @@ public static class TestingFactories {
     var success = EOperationResult.Success.ToString();
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), UtcDate.UtcNow),
         
-        new BaseFunctionConfig(),
+        new FunctionConfig([]),
         new(new SystemEntityTypeName(success), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResult),
         DateTime.MinValue);
   }
@@ -56,7 +56,7 @@ public static class TestingFactories {
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateErroringOpStateAndConf(ICtlRepository repo) {
     var error = EOperationResult.Error.ToString();
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(error), new(error)), new SystemEntityTypeName(error), UtcDate.UtcNow),
-        new BaseFunctionConfig { ThrowExceptions = false },
+        new FunctionConfig([]) { ThrowExceptions = false },
         new(new SystemEntityTypeName(error), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception(error)),
         DateTime.MinValue);
   }
@@ -78,8 +78,8 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
 
 public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl) {
 
-  public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
-    new(Constants.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new ReadOperationConfig(Constants.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
   ]);
 
   private Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) => 
@@ -89,8 +89,8 @@ public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepo
 
 public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : PromoteFunction(system, stage, core, ctl) {
 
-  public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
-    new (typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
   ]);
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 

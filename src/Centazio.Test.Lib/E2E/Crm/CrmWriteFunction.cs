@@ -5,9 +5,9 @@ namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(SimulationConstants.CRM_SYSTEM, ctx.CoreStore, ctx.CtlRepo) {
 
-  public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
-    new(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, CovertCoreCustomerToCrm, WriteCustomers),
-    new(CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, CovertCoreInvoiceToCrm, WriteInvoices)
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new WriteOperationConfig(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, CovertCoreCustomerToCrm, WriteCustomers),
+    new WriteOperationConfig(CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, CovertCoreInvoiceToCrm, WriteInvoices)
   ]);
   
   private Task<CovertCoresToSystemsResult> CovertCoreCustomerToCrm(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
