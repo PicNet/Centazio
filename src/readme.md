@@ -10,10 +10,13 @@
         a way of converting to standard .Net settings so they can be set using the Azure UI
     - support overriding function specific settings like service plan, etc 
   - Aws:
-    - implement 
-- bring back function-to-function triggers, considering 1 minute limit in AWS.  This should be automatic and driven
-    by results of a function, eg.  function `read-x` returns `10 x read` should auto trigger `promote-x` by having
-    `promote-x` register to listen to read xs
+    - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
+    - image: public.ecr.aws/lambda/dotnet:9
+    - currently hardcodes 1 minute trigger
+- bring back function-to-function triggers:
+  - on completion a function needs to declare that either 'SystemEntity:<entity_type>' 'CoreEntity:<entity_type>' changed
+  - functions configs then needs to declare which SystemEntity/CoreEntity should trigger the function
+ 
 - function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
 - use picnet github to host publicly
 - nuget all code
