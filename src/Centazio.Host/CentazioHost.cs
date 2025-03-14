@@ -39,20 +39,18 @@ public class CentazioHost {
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     var functions = await new FunctionsInitialiser(cmdsetts.Env, registrar).Init(functypes);
     
-    await using var timer = StartHost(functions, registrar);
+    await using var timer = StartHost(functions, BuildFunctionRunner(registrar.ServiceProvider));
     DisplayInstructions();
   }
 
-  private Timer StartHost(List<IRunnableFunction> functions, CentazioServicesRegistrar registrar) {
-    var runner = new FunctionRunner(new SelfHostChangesNotifier(), registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), registrar.ServiceProvider.GetRequiredService<CentazioSettings>());
+  private static IFunctionRunner BuildFunctionRunner(ServiceProvider prov) => 
+      new FunctionRunner(new SelfHostChangesNotifier(), prov.GetRequiredService<ICtlRepository>(), prov.GetRequiredService<CentazioSettings>());
+
+  private Timer StartHost(List<IRunnableFunction> functions, IFunctionRunner runner) {
     return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctions(object? state) => await functions
-        .Select(async f => {
-          // todo: shit!! I hate generics
-          // return await runner.RunFunction(f);
-          return await Task.FromResult(true);
-        })
+        .Select(async f => await runner.RunFunction(f))
         .Synchronous();
   }
 
@@ -66,7 +64,7 @@ public class CentazioHost {
 public class SelfHostChangesNotifier : IChangesNotifier {
 
   // todo: implement
-  public Task Notify(List<ObjectName> changes) {
+  public Task Notify(List<ObjectName> objs) {
     return Task.CompletedTask;
   }
 

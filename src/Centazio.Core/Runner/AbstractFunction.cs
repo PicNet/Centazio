@@ -4,7 +4,10 @@ namespace Centazio.Core.Runner;
 
 public interface IRunnableFunction : IDisposable {
   SystemName System { get; }
-  LifecycleStage Stage { get; } 
+  LifecycleStage Stage { get; }
+  bool Running { get; }
+  BaseFunctionConfig Config { get; }
+  
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
 }
 
@@ -12,12 +15,15 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 
   public SystemName System { get; }
   public LifecycleStage Stage { get; }
-  public FunctionConfig<C> Config { get; }
+  
+  // todo: I dont like these two configs just to be able to call FunctionRunner.RunFunction() 
+  public FunctionConfig<C> SpecificConfig { get; }
+  public BaseFunctionConfig Config { get; }
   
   public bool Running { get; private set; }
   
   protected readonly ICtlRepository ctl;
-  public DateTime FunctionStartTime { get; private set; }
+  protected DateTime FunctionStartTime { get; private set; }
   
   protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
     System = system;
@@ -25,7 +31,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     
     this.ctl = ctl;
     
-    Config = GetFunctionConfiguration();
+    Config = SpecificConfig = GetFunctionConfiguration();
   }
 
   public abstract FunctionConfig<C> GetFunctionConfiguration();
@@ -35,7 +41,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
-      var opstates = await LoadOperationsStates(Config, sys, ctl);
+      var opstates = await LoadOperationsStates(SpecificConfig, sys, ctl);
       var readyops = GetReadyOperations(opstates);
       return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
     } finally { Running = false; }

@@ -6,18 +6,21 @@ using Microsoft.Extensions.Logging;
 
 namespace {{it.NewAssemblyName}};
 
-public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {  
+public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
+  private static readonly CentazioServicesRegistrar registrar = new(new ServiceCollection());
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Azure() {    
-    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}", new CentazioServicesRegistrar(new ServiceCollection()))
-        .Init<{{it.ClassFullName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
+    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}", registrar)
+        .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
-  [Function(nameof({{it.ClassFullName}}))] public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo timer) {    
+  [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo timer) {    
     var start = UtcDate.UtcNow;
     log.LogInformation("{{it.ClassName}} running");
-    try { await (await impl.Value).RunFunction(); } 
-    finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
+    try { 
+      var (function, runner) = (await impl.Value, registrar.ServiceProvider.GetRequiredService<IFunctionRunner>());
+      await runner.RunFunction(function); 
+    } finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }
 }

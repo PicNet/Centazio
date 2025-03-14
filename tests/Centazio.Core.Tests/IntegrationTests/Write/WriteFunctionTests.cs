@@ -84,7 +84,7 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   public bool Throws { get; set; }
   public Exception? Thrown { get; private set; }
   
-  public FunctionConfig<WriteOperationConfig> ExposeConfig => Config;
+  public FunctionConfig<WriteOperationConfig> ExposeConfig => SpecificConfig;
   
   public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)

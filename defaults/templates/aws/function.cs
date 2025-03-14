@@ -1,5 +1,5 @@
-using Centazio.Core.Runner;
 using Centazio.Core.Misc;
+using Centazio.Core.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Amazon.Lambda.Core;
 using Serilog;
@@ -10,10 +10,11 @@ using Serilog;
 namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler {
+  private static readonly CentazioServicesRegistrar registrar = new(new ServiceCollection());
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {    
-    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}", new CentazioServicesRegistrar(new ServiceCollection()))
+    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}", registrar)
         .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
@@ -21,7 +22,8 @@ public class {{it.ClassName}}Handler {
     var start = UtcDate.UtcNow;
     Log.Information("{{it.ClassName}} running");
     try { 
-      await (await impl.Value).RunFunction();
+      var (function, runner) = (await impl.Value, registrar.ServiceProvider.GetRequiredService<IFunctionRunner>());
+      await runner.RunFunction(function);
       return $"{{it.ClassName}} executed successfully";
     } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }

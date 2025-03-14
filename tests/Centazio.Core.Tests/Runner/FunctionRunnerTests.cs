@@ -42,12 +42,12 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
     var count = 10;
-    var results = await F.RunFunc(new SimpleFunction(repo, count), ctl: repo);
+    var results = (await F.RunFunc(new SimpleFunction(repo, count), ctl: repo));
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
-    Assert.That(results.OpResults, Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
+    Assert.That(results.OpResults.Select(r => r.Result), Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
@@ -68,7 +68,7 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
-    Assert.That(results.OpResults, Is.EquivalentTo([new EmptyReadOperationResult()]));
+    Assert.That(results.OpResults.Single().Result, Is.EqualTo(new EmptyReadOperationResult()));
   }
   
   record EmptyFunctionConfig() : FunctionConfig<ReadOperationConfig>([

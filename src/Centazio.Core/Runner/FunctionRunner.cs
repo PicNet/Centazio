@@ -5,16 +5,17 @@ using Centazio.Core.Settings;
 namespace Centazio.Core.Runner;
 
 public interface IChangesNotifier {
-  Task Notify(List<ObjectName> changes);
+  Task Notify(List<ObjectName> objs);
 }
 
 public interface IFunctionRunner {
-  Task<FunctionRunResults> RunFunction<C>(AbstractFunction<C> func) where C : OperationConfig;
+  Task<FunctionRunResults> RunFunction(IRunnableFunction func);
 }
 
 public class FunctionRunner(IChangesNotifier changesnotif, ICtlRepository ctl, CentazioSettings settings) : IFunctionRunner {
   
-  public async Task<FunctionRunResults> RunFunction<C>(AbstractFunction<C> func) where C : OperationConfig {
+  public async Task<FunctionRunResults> RunFunction(IRunnableFunction func) {
+    var start = UtcDate.UtcNow;
     if (func.Running) return new AlreadyRunningFunctionRunResults();
 
     // Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
@@ -49,7 +50,7 @@ public class FunctionRunner(IChangesNotifier changesnotif, ICtlRepository ctl, C
       return new ErrorFunctionRunResults(ex);
     }
 
-    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(func.FunctionStartTime));
+    async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
   
   private async Task NotifyChanges(List<OpResultAndObject> changes) {

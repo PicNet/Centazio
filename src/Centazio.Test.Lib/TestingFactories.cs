@@ -100,10 +100,10 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
 
 public class TestingChangeNotifier : IChangesNotifier {
 
-  public List<ObjectName> Notifications { get; set; } = [];
+  public List<ObjectName> Objects { get; set; } = [];
   
-  public Task Notify(List<ObjectName> changes) {
-    Notifications = changes.ToList();
+  public Task Notify(List<ObjectName> objs) {
+    Objects = objs.ToList();
     return Task.CompletedTask;
   }
 
