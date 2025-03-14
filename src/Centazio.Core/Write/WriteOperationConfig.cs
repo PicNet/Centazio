@@ -9,7 +9,7 @@ public record WriteOperationConfig(
     CoreEntityTypeName CoreEntityTypeName, 
     ValidCron Cron,
     CovertCoreEntitiesToSystemEntitiesHandler CovertCoreEntitiesToSystemEntities,
-    WriteEntitiesToTargetSystemHandler WriteEntitiesToTargetSystem) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
+    WriteEntitiesToTargetSystemHandler WriteEntitiesToTargetSystem) : OperationConfig(CoreEntityTypeName, [ (CoreEntityTypeName, LifecycleStage.Defaults.Promote) ], Cron), ILoggable {
   
   public string LoggableValue => $"{CoreEntityTypeName.Value}";
 }

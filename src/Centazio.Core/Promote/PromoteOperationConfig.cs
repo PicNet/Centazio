@@ -40,7 +40,7 @@ public record PromoteOperationConfig(
     SystemEntityTypeName SystemEntityTypeName,
     CoreEntityTypeName CoreEntityTypeName,
     ValidCron Cron, 
-    BuildCoreEntitiesHandler BuildCoreEntities) : OperationConfig(CoreEntityTypeName, Cron), ILoggable {
+    BuildCoreEntitiesHandler BuildCoreEntities) : OperationConfig(CoreEntityTypeName, [ (SystemEntityTypeName, LifecycleStage.Defaults.Read) ], Cron), ILoggable {
   
   
   public Type SystemEntityType { get; } = ValidateSystemEntityTypeImplementsISystemEntity(SystemEntityType);

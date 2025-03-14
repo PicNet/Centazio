@@ -9,6 +9,8 @@ public interface IRunnableFunction : IDisposable {
   FunctionConfig Config { get; }
   
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
+  List<(ObjectName, LifecycleStage)> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
+
 }
 
 public abstract class AbstractFunction<C> : IRunnableFunction where C : OperationConfig {

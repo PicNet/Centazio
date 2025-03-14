@@ -3,7 +3,7 @@
 public delegate Task<ReadOperationResult> GetUpdatesAfterCheckpointHandler(OperationStateAndConfig<ReadOperationConfig> config);
 
 public record ReadOperationConfig(SystemEntityTypeName SystemEntityTypeName, ValidCron Cron, GetUpdatesAfterCheckpointHandler GetUpdatesAfterCheckpoint) 
-        : OperationConfig(SystemEntityTypeName, Cron), ILoggable {
+        : OperationConfig(SystemEntityTypeName, [], Cron), ILoggable {
 
   // ReSharper disable once RedundantExplicitPositionalPropertyDeclaration
   public SystemEntityTypeName SystemEntityTypeName { get; init; } = SystemEntityTypeName;

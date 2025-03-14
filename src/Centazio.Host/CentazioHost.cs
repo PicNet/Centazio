@@ -1,4 +1,5 @@
-﻿using Centazio.Core;
+﻿using System.Threading.Channels;
+using Centazio.Core;
 using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -10,6 +11,7 @@ using Timer = System.Threading.Timer;
 
 namespace Centazio.Host;
 
+// todo: add unit tests to CentazioHost
 public interface IHostConfiguration {
   public string Env { get; }
   public string AssemblyNames { get; }
@@ -30,6 +32,10 @@ public interface IHostConfiguration {
 
 public class CentazioHost {
   
+  // todo: make ObjectName, LifecycleStage a record
+  private readonly Dictionary<(ObjectName, LifecycleStage), List<IRunnableFunction>> TriggerMap = [];
+  private readonly Channel<(ObjectName, LifecycleStage)> pubsub = Channel.CreateUnbounded<(ObjectName, LifecycleStage)>();
+  
   public async Task Run(IHostConfiguration cmdsetts) {
     Log.Logger = LogInitialiser.GetConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     
@@ -39,12 +45,37 @@ public class CentazioHost {
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     var functions = await new FunctionsInitialiser(cmdsetts.Env, registrar).Init(functypes);
     
-    await using var timer = StartHost(functions, BuildFunctionRunner(registrar.ServiceProvider));
-    DisplayInstructions();
+    var notif = new SelfHostChangesNotifier(pubsub.Writer);
+    var runner = BuildFunctionRunner(notif, registrar.ServiceProvider);
+    
+    RegisterDynamicTriggers(functions);
+    
+    await using var timer = StartHost(functions, runner);
+    
+    var reader = pubsub.Reader;
+    await Task.Run(async () => {
+      while (await reader.WaitToReadAsync()) {
+        while (reader.TryRead(out var key)) {
+          if (!TriggerMap.TryGetValue((key.Item1, key.Item2), out var pubs)) return;
+          await pubs
+            .Select(async f => await runner.RunFunction(f))
+            .Synchronous();
+        }
+      }
+    });
+    
+    await DisplayInstructions();
+    pubsub.Writer.Complete();
   }
 
-  private static IFunctionRunner BuildFunctionRunner(ServiceProvider prov) => 
-      new FunctionRunner(new SelfHostChangesNotifier(), prov.GetRequiredService<ICtlRepository>(), prov.GetRequiredService<CentazioSettings>());
+  private void RegisterDynamicTriggers(List<IRunnableFunction> functions) => 
+      functions.ForEach(func => func.Triggers().ForEach(key => {
+        if (!TriggerMap.ContainsKey(key)) TriggerMap[key] = [];
+        TriggerMap[key].Add(func);
+      }));
+
+  private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, ServiceProvider prov) => 
+      new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), prov.GetRequiredService<CentazioSettings>());
 
   private Timer StartHost(List<IRunnableFunction> functions, IFunctionRunner runner) {
     return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
@@ -54,18 +85,18 @@ public class CentazioHost {
         .Synchronous();
   }
 
-  private void DisplayInstructions() {
-    Console.WriteLine("\nPress 'Enter' to exit\n\n");
-    Console.ReadLine();
+  private Task DisplayInstructions() {
+    return Task.Run(() => {
+      Console.WriteLine("\nPress 'Enter' to exit\n\n");
+      Console.ReadLine();
+    });
   }
 
 }
 
-public class SelfHostChangesNotifier : IChangesNotifier {
-
-  // todo: implement
-  public Task Notify(List<ObjectName> objs) {
-    return Task.CompletedTask;
-  }
+public class SelfHostChangesNotifier(ChannelWriter<(ObjectName, LifecycleStage)> onfire) : IChangesNotifier {
+  
+  public async Task Notify(LifecycleStage stage, List<ObjectName> objs) => 
+      await Task.WhenAll(objs.Select(async obj => await onfire.WriteAsync((obj, stage))));
 
 }
