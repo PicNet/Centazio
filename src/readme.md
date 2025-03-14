@@ -13,7 +13,10 @@
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger
-- bring back function-to-function triggers:
+- function-to-function triggers:
+  - aws/azure
+  - the triggered function should get as a parameter the objects that changed
+  - functions currently work out their triggers, we should allow using FunctionConfig to override this
   - on completion a function needs to declare that either 'SystemEntity:<entity_type>' 'CoreEntity:<entity_type>' changed
   - functions configs then needs to declare which SystemEntity/CoreEntity should trigger the function
  

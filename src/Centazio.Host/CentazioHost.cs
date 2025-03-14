@@ -39,6 +39,8 @@ public class CentazioHost {
   public async Task Run(IHostConfiguration cmdsetts) {
     Log.Logger = LogInitialiser.GetConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     
+    var userexit = DisplayInstructions();
+    
     FunctionConfigDefaults.ThrowExceptions = true;
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
@@ -64,7 +66,7 @@ public class CentazioHost {
       }
     });
     
-    await DisplayInstructions();
+    await userexit;
     pubsub.Writer.Complete();
   }
 
@@ -78,6 +80,7 @@ public class CentazioHost {
       new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), prov.GetRequiredService<CentazioSettings>());
 
   private Timer StartHost(List<IRunnableFunction> functions, IFunctionRunner runner) {
+    
     return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctions(object? state) => await functions
