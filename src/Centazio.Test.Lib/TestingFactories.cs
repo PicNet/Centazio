@@ -20,15 +20,17 @@ public static class TestingFactories {
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
+  public static TestingChangeNotifier ChangeNotifier() => new();
+  public static FunctionRunner FuncRunner(IChangesNotifier? notif = null, ICtlRepository? ctl = null) => new(notif ?? ChangeNotifier(), ctl ?? CtlRepo(), Settings()); 
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
-      ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo(), Settings());
+      ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());
       
   public static PromoteFunction PromoteFunc(
       IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo(), Settings());
+      new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
 
   public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
@@ -72,7 +74,7 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
       Task.FromResult(maps.Values.Select(Deserialize).Cast<Map.CoreToSysMap>().ToList());
 }
 
-public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, CentazioSettings settings) : ReadFunction(system, stager, ctl, settings) {
+public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl) {
 
   public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new(Constants.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
@@ -83,7 +85,7 @@ public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepo
 
 }
 
-public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : PromoteFunction(system, stage, core, ctl, settings) {
+public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : PromoteFunction(system, stage, core, ctl) {
 
   public override FunctionConfig<PromoteOperationConfig> GetFunctionConfiguration() => new([
     new (typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
@@ -91,5 +93,16 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 
       Task.FromResult(new List<EntityEvaluationResult>());
+
+}
+
+public class TestingChangeNotifier : IChangesNotifier {
+
+  public List<ObjectName> Notifications { get; set; } = [];
+  
+  public Task Notify(List<ObjectName> changes) {
+    Notifications = changes.ToList();
+    return Task.CompletedTask;
+  }
 
 }

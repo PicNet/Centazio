@@ -23,8 +23,8 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Promote() {
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
-    var func = new ClickUpPromoteFunction(stager, core, ctl, F.Settings());
-    var results = (await func.RunFunction()).OpResults.Single();
+    var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), F.FuncRunner(ctl: ctl));
+    var results = (await runner.RunFunction(func)).OpResults.Single();
     var ss = await ctl.GetSystemState(SC.Systems.ClickUp, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
@@ -32,21 +32,21 @@ public class ClickUpFunctionsTests {
     await using var db = core.Db();
     var coretasks = await core.Tasks(db).ToListAsync();
     
-    Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
+    Assert.That(results.Result.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
     Assert.That(coretasks.Select(t => t.Name).ToList(), Is.EquivalentTo(stagedtasks));
   }
 
   [Test] public async Task Test_Write() {
     var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
-    var func = new ClickUpWriteFunction(core, ctl, api, F.Settings());
-    var results = await func.RunFunction();
+    var func = new ClickUpWriteFunction(core, ctl, api);
+    var results = await F.FuncRunner(ctl: ctl).RunFunction(func);
     Assert.That(results, Is.Not.Null);
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new ClickUpReadFunction(stager, ctl, api, F.Settings());
-    return (await func.RunFunction()).OpResults.Single();
+    var func = new ClickUpReadFunction(stager, ctl, api);
+    return (await F.FuncRunner(ctl: ctl).RunFunction(func)).OpResults.Single().Result;
   }
   
   private readonly ClickUpApi api = new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());

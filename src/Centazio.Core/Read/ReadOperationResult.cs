@@ -6,7 +6,7 @@ public abstract record ReadOperationResult(
     int ResultLength, 
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     DateTime? NextCheckpoint = null,
-    Exception? Exception = null) : OperationResult(Result, Message, AbortVote, NextCheckpoint, Exception), ILoggable {
+    Exception? Exception = null) : OperationResult(Result, Message, ResultLength, AbortVote, NextCheckpoint, Exception), ILoggable {
   
   public static ReadOperationResult EmptyResult() => new EmptyReadOperationResult();
   public static ReadOperationResult Create(List<string> lst, DateTime nextcheckpoint) => !lst.Any() ? throw new Exception("Empty results should return ReadOperationResult.EmptyResult()") : new ListReadOperationResult(lst, nextcheckpoint);

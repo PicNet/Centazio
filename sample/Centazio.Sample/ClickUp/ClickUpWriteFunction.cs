@@ -1,11 +1,10 @@
 ﻿using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Runner;
-using Centazio.Core.Settings;
 using Centazio.Core.Write;
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUpApi api, CentazioSettings settings) : WriteFunction(SampleConstants.Systems.ClickUp, core, ctl, settings) {
+public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUpApi api) : WriteFunction(SampleConstants.Systems.ClickUp, core, ctl) {
   
   public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToClickUpTasks, WriteClickUpTasks)

@@ -10,7 +10,7 @@ public abstract record WriteOperationResult(
     string Message,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue,
     Exception? Exception = null)
-    : OperationResult(Result, Message, AbortVote, null, Exception), ILoggable {
+    : OperationResult(Result, Message, EntitiesCreated.Count + EntitiesUpdated.Count, AbortVote, null, Exception), ILoggable {
 
   public int TotalChanges => EntitiesCreated.Count + EntitiesUpdated.Count;
   

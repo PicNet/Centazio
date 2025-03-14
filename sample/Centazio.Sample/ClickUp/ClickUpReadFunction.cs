@@ -1,11 +1,10 @@
 ﻿using Centazio.Core.Read;
 using Centazio.Core.Runner;
-using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, ClickUpApi api, CentazioSettings settings) : ReadFunction(SampleConstants.Systems.ClickUp, stager, ctl, settings) {
+public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, ClickUpApi api) : ReadFunction(SampleConstants.Systems.ClickUp, stager, ctl) {
 
   public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new([
     new ReadOperationConfig(SampleConstants.SystemEntities.ClickUp.Task, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)

@@ -2,14 +2,13 @@
 using Centazio.Core.Ctl;
 using Centazio.Core.Promote;
 using Centazio.Core.Read;
-using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
 
 namespace Centazio.Core;
 
-public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, CentazioSettings settings) : 
-    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, ctl, settings) {
+public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
+    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, ctl) {
   
   protected ReadOperationResult CreateResult(List<string> results, DateTime? nextcheckpointutc = null) => !results.Any() ? 
       ReadOperationResult.EmptyResult() : 
@@ -23,8 +22,8 @@ public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtl
 
 }
 
-public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : 
-    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, ctl, settings) {
+public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
+    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, ctl) {
 
   public override async Task<OperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
     var steps = new PromotionSteps(core, ctl, op);
@@ -48,8 +47,8 @@ public abstract class PromoteFunction(SystemName system, IStagedEntityRepository
 
 public delegate ISystemEntity ConvertCoreToSystemEntityForWritingHandler<E>(SystemEntityId systemid, E coreent) where E : ICoreEntity;
 
-public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl, CentazioSettings settings) : 
-    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, ctl, settings) {
+public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
+    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, ctl) {
 
   public override async Task<OperationResult> RunOperation(OperationStateAndConfig<WriteOperationConfig> op) {
     var coretype = op.State.Object.ToCoreEntityTypeName;

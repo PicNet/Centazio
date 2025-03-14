@@ -81,7 +81,7 @@ public class FunctionRunnerTests {
     
     public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
+    public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));
@@ -98,7 +98,7 @@ public class FunctionRunnerTests {
     
     public override FunctionConfig<ReadOperationConfig> GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    protected override async Task<List<OperationResult>> RunFunctionOperations(SystemState state1) {
+    public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));

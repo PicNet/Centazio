@@ -1,33 +1,29 @@
-﻿using System.Diagnostics;
-using Centazio.Core.Ctl;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Ctl;
 
 namespace Centazio.Core.Runner;
 
 public interface IRunnableFunction : IDisposable {
   SystemName System { get; }
   LifecycleStage Stage { get; } 
-  Task<FunctionRunResults> RunFunction();
+  Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
 }
 
 public abstract class AbstractFunction<C> : IRunnableFunction where C : OperationConfig {
 
   public SystemName System { get; }
   public LifecycleStage Stage { get; }
+  public FunctionConfig<C> Config { get; }
   
-  protected DateTime FunctionStartTime { get; private set; }
-  protected FunctionConfig<C> Config { get; }
+  public bool Running { get; private set; }
+  
   protected readonly ICtlRepository ctl;
+  public DateTime FunctionStartTime { get; private set; }
   
-  private bool running;
-  private readonly CentazioSettings settings;
-
-  protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl, CentazioSettings settings) {
+  protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
     System = system;
     Stage = stage;
     
     this.ctl = ctl;
-    this.settings = settings;
     
     Config = GetFunctionConfiguration();
   }
@@ -35,56 +31,14 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   public abstract FunctionConfig<C> GetFunctionConfiguration();
   public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
-  public async Task<FunctionRunResults> RunFunction() {
-    // prevent race-conditions with slow databases
-    if (running) return new AlreadyRunningFunctionRunResults();
-
+  public virtual async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys) {
+    if (Running) throw new Exception("function is already running");
+    (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
-      running = true;
-      return await RunFunctionImpl();
-    } finally { running = false; }
-
-    async Task<FunctionRunResults> RunFunctionImpl() {
-      FunctionStartTime = UtcDate.UtcNow;
-  
-      // Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
-  
-      var state = await ctl.GetOrCreateSystemState(System, Stage);
-      if (!state.Active) {
-        Log.Debug("function is inactive, ignoring run {@SystemState}", state);
-        return new InactiveFunctionRunResults();
-      }
-      if (state.Status != ESystemStateStatus.Idle) {
-        var minutes = UtcDate.UtcNow.Subtract(state.LastStarted ?? throw new UnreachableException()).TotalMinutes;
-        var maxallowed = Config.TimeoutMinutes > 0 ? Config.TimeoutMinutes : settings.Defaults.FunctionMaxAllowedRunningMinutes; 
-        if (minutes <= maxallowed) {
-          Log.Debug("function is already running, ignoring run {@SystemState}", state);
-          return new AlreadyRunningFunctionRunResults();
-        }
-        Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, Config.TimeoutMinutes, minutes);
-      }
-  
-      try {
-        // not setting last start here as we need the LastStart to represent the time the function was started before this run
-        state = await ctl.SaveSystemState(state.Running());
-        var results = await RunFunctionOperations(state);
-        await SaveCompletedState();
-        return new SuccessFunctionRunResults(results);
-      } catch (Exception ex) {
-        await SaveCompletedState();
-        Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
-        if (Config.ThrowExceptions) throw;
-        return new ErrorFunctionRunResults(ex);
-      }
-
-      async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(FunctionStartTime));
-    }
-  }
-
-  protected virtual async Task<List<OperationResult>> RunFunctionOperations(SystemState sys) {
-    var opstates = await LoadOperationsStates(Config, sys, ctl);
-    var readyops = GetReadyOperations(opstates);
-    return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
+      var opstates = await LoadOperationsStates(Config, sys, ctl);
+      var readyops = GetReadyOperations(opstates);
+      return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
+    } finally { Running = false; }
   }
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig<C> conf, SystemState system, ICtlRepository ctl) {
@@ -105,12 +59,12 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     return states.Where(IsOperationReady).ToList();
   }
   
-  internal async Task<List<OperationResult>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, bool throws = true) {
+  internal async Task<List<OpResultAndObject>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, bool throws = true) {
     return await ops
         .Select(async op => await RunAndSaveOp(op))
-        .Synchronous(r => r.AbortVote == EOperationAbortVote.Abort);
+        .Synchronous(r => r.Result.AbortVote == EOperationAbortVote.Abort);
 
-    async Task<OperationResult> RunAndSaveOp(OperationStateAndConfig<C> op) {
+    async Task<OpResultAndObject> RunAndSaveOp(OperationStateAndConfig<C> op) {
       var opstart = UtcDate.UtcNow;
       Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
@@ -123,16 +77,20 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       return result;
     }
     
-    async Task<OperationResult> RunOp(OperationStateAndConfig<C> op) {
-      try { return await RunOperation(op); } 
-      catch (Exception ex) {
+    async Task<OpResultAndObject> RunOp(OperationStateAndConfig<C> op) {
+      try {
+        var result = await RunOperation(op);
+        return new OpResultAndObject(op.State.Object, result);
+      } catch (Exception ex) {
         Log.Error(ex, "unhandled RunOperation exception {@ErrorMessage}", ex.Message);
         if (throws) throw;
-        return new ErrorOperationResult(EOperationAbortVote.Abort, ex);
+        // todo: '0' here means that no changes will be notified, it is possible for functions to have partial success and should be supported
+        return new OpResultAndObject(op.State.Object, new ErrorOperationResult(0, EOperationAbortVote.Abort, ex));
       }
     }
 
-    async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, OperationResult res) {
+    async Task SaveOp(OperationStateAndConfig<C> op, DateTime start, OpResultAndObject result) {
+      var res = result.Result;
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
           op.State.Success(res.NextCheckpoint ?? start, start, res.AbortVote, message) :
@@ -143,9 +101,3 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 
   public void Dispose() { Config.Dispose(); }
 }
-
-public abstract record FunctionRunResults(List<OperationResult> OpResults, string Message); 
-internal sealed record SuccessFunctionRunResults(List<OperationResult> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
-internal sealed record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
-internal sealed record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
-internal sealed record ErrorFunctionRunResults(Exception Exception) : FunctionRunResults([], Exception.ToString());
