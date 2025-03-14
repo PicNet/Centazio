@@ -10,5 +10,12 @@ public class CentazioServicesRegistrar(IServiceCollection svcs) {
   public void Register<T>(Func<IServiceProvider, T> factory) where T : class => svcs.TryAddSingleton(factory);
   public void Register(Type type, object instance) => svcs.TryAdd(ServiceDescriptor.Singleton(type, instance));
   public void RegisterServiceTypeFactory(Type type, Type factorytype) => svcs.TryAddSingleton(type, factorytype);
-  public ServiceProvider BuildServiceProvider() => svcs.BuildServiceProvider();
+  
+  private ServiceProvider? prov;
+  public ServiceProvider ServiceProvider => prov ?? throw new Exception("BuildServiceProvider has not been called");
+  public ServiceProvider BuildServiceProvider() {
+    if (prov is not null) throw new Exception("BuildServiceProvider has already been called");
+    return prov = svcs.BuildServiceProvider();
+  }
+
 }

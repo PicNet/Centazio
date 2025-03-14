@@ -9,11 +9,11 @@ public class FunctionsInitialiser {
   
   private readonly string environment;
   private CentazioSettings Settings { get; }
-  private CentazioServicesRegistrar Registrar { get; }
+  private CentazioServicesRegistrar registrar { get; }
 
-  public FunctionsInitialiser(string environment) {
-    this.environment = environment;
-    (Settings, Registrar) = (LoadSettings(), new CentazioServicesRegistrar(new ServiceCollection()));
+  public FunctionsInitialiser(string environment, CentazioServicesRegistrar registrar) {
+    (this.environment, this.registrar) = (environment, registrar);
+    Settings = LoadSettings();
   }
 
   public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
@@ -22,9 +22,9 @@ public class FunctionsInitialiser {
     RegisterCoreServices();
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
     var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environment)).ToList();
-    integrations.ForEach(integration => integration.RegisterServices(Registrar));
-    functions.ForEach(func => Registrar.Register(func));
-    var prov = Registrar.BuildServiceProvider();
+    integrations.ForEach(integration => integration.RegisterServices(registrar));
+    functions.ForEach(func => registrar.Register(func));
+    var prov = registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
     await Task.WhenAll(integrations.Select(integration => integration.Initialise(prov)));
@@ -33,11 +33,9 @@ public class FunctionsInitialiser {
   }
 
   private CentazioSettings LoadSettings() => 
-      new SettingsLoader().Load<CentazioSettings>(environment);
+      SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(environment), registrar);
 
   private void RegisterCoreServices() {
-    SettingsLoader.RegisterSettingsHierarchy(Settings, Registrar);
-    
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{Settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{Settings.CtlRepository.Provider}]");
@@ -46,8 +44,8 @@ public class FunctionsInitialiser {
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(Settings.CtlRepository.Provider);
     
     void AddCoreService<SF, I>(string provider) where SF : IServiceFactory<I> where I : class {
-      Registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));
-      Registrar.Register<I>(prov => prov.GetRequiredService<SF>().GetService());
+      registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));
+      registrar.Register<I>(prov => prov.GetRequiredService<SF>().GetService());
     }
   }
 

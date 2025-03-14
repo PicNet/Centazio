@@ -12,7 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{85E0FAEE-523
 	ProjectSection(SolutionItems) = preProject
 		src\readme.md = src\readme.md
 		src\tutorial.md = src\tutorial.md
-		\\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env = \\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\dev.env
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Centazio.Providers", "Centazio.Providers", "{95FE1321-2F07-45ED-ABA6-AA354B308CE7}"

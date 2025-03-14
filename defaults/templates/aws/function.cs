@@ -1,5 +1,6 @@
 using Centazio.Core.Runner;
 using Centazio.Core.Misc;
+using Microsoft.Extensions.DependencyInjection;
 using Amazon.Lambda.Core;
 using Serilog;
 
@@ -12,7 +13,8 @@ public class {{it.ClassName}}Handler {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {    
-    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}").Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
+    impl = new(async () => await new FunctionsInitialiser("{{it.Environment}}", new CentazioServicesRegistrar(new ServiceCollection()))
+        .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
   public async Task<string> Handle(ILambdaContext context) {

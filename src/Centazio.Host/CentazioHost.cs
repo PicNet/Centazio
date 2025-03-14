@@ -1,5 +1,9 @@
-﻿using Centazio.Core.Misc;
+﻿using Centazio.Core;
+using Centazio.Core.Ctl;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
 using Timer = System.Threading.Timer;
@@ -32,23 +36,38 @@ public class CentazioHost {
     FunctionConfigDefaults.ThrowExceptions = true;
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
-    var functions = await new FunctionsInitialiser(cmdsetts.Env).Init(functypes);
+    var registrar = new CentazioServicesRegistrar(new ServiceCollection());
+    var functions = await new FunctionsInitialiser(cmdsetts.Env, registrar).Init(functypes);
     
-    await using var timer = StartHost(functions);
+    await using var timer = StartHost(functions, registrar);
     DisplayInstructions();
   }
 
-  private Timer StartHost(List<IRunnableFunction> functions) {
+  private Timer StartHost(List<IRunnableFunction> functions, CentazioServicesRegistrar registrar) {
+    var runner = new FunctionRunner(new SelfHostChangesNotifier(), registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), registrar.ServiceProvider.GetRequiredService<CentazioSettings>());
     return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctions(object? state) => await functions
-        .Select(async f => await f.RunFunction())
+        .Select(async f => {
+          // todo: shit!! I hate generics
+          // return await runner.RunFunction(f);
+          return await Task.FromResult(true);
+        })
         .Synchronous();
   }
 
   private void DisplayInstructions() {
     Console.WriteLine("\nPress 'Enter' to exit\n\n");
     Console.ReadLine();
+  }
+
+}
+
+public class SelfHostChangesNotifier : IChangesNotifier {
+
+  // todo: implement
+  public Task Notify(List<ObjectName> changes) {
+    return Task.CompletedTask;
   }
 
 }

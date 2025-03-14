@@ -3,7 +3,7 @@ using Centazio.Core.Write;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(SimulationConstants.CRM_SYSTEM, ctx.CoreStore, ctx.CtlRepo, ctx.Settings) {
+public class CrmWriteFunction(SimulationCtx ctx, CrmApi api) : WriteFunction(SimulationConstants.CRM_SYSTEM, ctx.CoreStore, ctx.CtlRepo) {
 
   public override FunctionConfig<WriteOperationConfig> GetFunctionConfiguration() => new([
     new(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, CovertCoreCustomerToCrm, WriteCustomers),

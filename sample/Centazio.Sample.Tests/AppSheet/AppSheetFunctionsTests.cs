@@ -25,7 +25,7 @@ public class AppSheetFunctionsTests {
     await CreateAndRunReadFunction(stager, ctl);
     
     var func = new AppSheetPromoteFunction(stager, core, ctl);
-    var results = (await func.RunFunction()).OpResults.Single();
+    var results = (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
     var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTask>().Task).ToList();
@@ -40,7 +40,7 @@ public class AppSheetFunctionsTests {
 
   private static async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
     var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi(F.Settings<SampleSettings>().AppSheet, F.Secrets<SampleSecrets>()));
-    var results = (await func.RunFunction()).OpResults.Single();
+    var results = (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
     return results;
   }
 

@@ -27,18 +27,18 @@ public class ReadFunctionTests {
     var staged0 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this run should be empty as no TestingUtcDate.DoTick
-    var r1 = (await func.RunFunction()).OpResults.Single();
+    var r1 = (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged1 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // this should include the single customer added as a List result type
     var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListReadOperationResult) (await func.RunFunction()).OpResults.Single();
+    var r2 = (ListReadOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged2 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
-    var r3 = (await func.RunFunction()).OpResults; 
+    var r3 = (await F.RunFunc(func, ctl)).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     var staged3 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
     
@@ -80,7 +80,7 @@ public class ReadFunctionTests {
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl, F.Settings()) {
+public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl) {
 
   private readonly DummyCrmApi crmApi = new();
 

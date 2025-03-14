@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Settings;
+﻿using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Test.Lib.E2E.Crm;
 using Centazio.Test.Lib.E2E.Fin;
 using Serilog;
@@ -13,6 +14,7 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
+  private FunctionRunner runner = null!;
   private CrmReadFunction crm_read = null!;
   private CrmPromoteFunction crm_promote = null!;
   private CrmWriteFunction crm_write = null!;
@@ -23,7 +25,8 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
   public async Task Initialise() {
     await ctx.Initialise();
     
-    (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
+    // todo: simulation should handle simulating change notifier also, and test that same results are achieved
+    (crm, fin, runner) = (new CrmApi(ctx), new FinApi(ctx), new FunctionRunner(new TestingChangeNotifier(), ctx.CtlRepo, ctx.Settings));
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
@@ -52,12 +55,12 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-    await crm_read.RunFunction();
-    await crm_promote.RunFunction();
-    await fin_read.RunFunction(); 
-    await fin_promote.RunFunction();
-    await crm_write.RunFunction();
-    await fin_write.RunFunction();
+    await runner.RunFunction(crm_read);
+    await runner.RunFunction(crm_promote);
+    await runner.RunFunction(fin_read); 
+    await runner.RunFunction(fin_promote);
+    await runner.RunFunction(crm_write);
+    await runner.RunFunction(fin_write);
     
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();

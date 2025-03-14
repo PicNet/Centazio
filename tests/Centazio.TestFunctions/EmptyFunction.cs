@@ -43,7 +43,7 @@ public class TestFunctionIntegration(string environment) : IntegrationBase<TestS
 
 }
 
-public class EmptyFunction(ICtlRepository ctl, CentazioSettings settings) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl, settings) {
+public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl) {
 
   public override FunctionConfig<EmptyFunctionOperationConfig> GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 
@@ -55,7 +55,7 @@ public class EmptyFunction(ICtlRepository ctl, CentazioSettings settings) : Abst
 
 public record EmptyFunctionOperationConfig(string Name) : OperationConfig(Constants.Object, CronExpressionsHelper.EveryXSeconds(20));
 
-public record EmptyFunctionOperationResult() : OperationResult(EOperationResult.Success, nameof(Message));
+public record EmptyFunctionOperationResult() : OperationResult(EOperationResult.Success, nameof(Message), 0);
 
 public static class Constants {
   internal static readonly LifecycleStage Stage = new ("TestFunctions.Stage");

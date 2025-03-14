@@ -83,12 +83,12 @@ public class AbstractFunctionStaticHelperTests {
     
     var states2 = new List<OperationStateAndConfig<ReadOperationConfig>> { await F.CreateErroringOpStateAndConf(repo) };
     var results2 = await RunOps(states2, runner);
-    var res2ex = results2.Single().Exception;
+    var res2ex = results2.Single().Result.Exception;
     
     var newstates = repo.Objects.Values.ToList();
 
     Assert.That(results1, Is.EquivalentTo([new EmptyReadOperationResult()]));
-    Assert.That(results2, Is.EquivalentTo([new ErrorOperationResult(EOperationAbortVote.Abort, res2ex)]));
+    Assert.That(results2, Is.EquivalentTo([new ErrorOperationResult(0, EOperationAbortVote.Abort, res2ex)]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     Assert.That(newstates[0], Is.EqualTo(ExpObjState(EOperationResult.Success, EOperationAbortVote.Continue, 0, UtcDate.UtcNow)));
@@ -104,11 +104,11 @@ public class AbstractFunctionStaticHelperTests {
     };
     
     var results = await RunOps(states, runner);
-    var resex = results.Single().Exception;
+    var resex = results.Single().Result.Exception;
     var newstates = repo.Objects.Values.ToList();
     
     Assert.That(results, Is.EquivalentTo([
-      new ErrorOperationResult(EOperationAbortVote.Abort, resex)
+      new ErrorOperationResult(0, EOperationAbortVote.Abort, resex)
     ]));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
@@ -126,10 +126,10 @@ public class AbstractFunctionStaticHelperTests {
     states[0] = states[0] with { OpConfig = states[0].OpConfig with { GetUpdatesAfterCheckpoint = ThrowsError } }; 
     var results = (await RunOps(states, runner)).ToList();
     var newstates = repo.Objects.Values.ToList();
-    var ex = results[0].Exception ?? throw new Exception();
+    var ex = results[0].Result.Exception ?? throw new Exception();
 
     Assert.That(results, Has.Count.EqualTo(1));
-    Assert.That(results[0], Is.EqualTo(new ErrorOperationResult(EOperationAbortVote.Abort, ex)));
+    Assert.That(results[0].Result, Is.EqualTo(new ErrorOperationResult(0, EOperationAbortVote.Abort, ex)));
     
     Assert.That(newstates, Has.Count.EqualTo(2));
     var exp2 = ExpObjState(EOperationResult.Error, EOperationAbortVote.Abort, 0, UtcDate.UtcNow, ex);
@@ -172,7 +172,7 @@ public class AbstractFunctionStaticHelperTests {
   }
   
   [Test] public async Task Test_RunOperations_sets_NextCheckpoint_to_result_when_non_empty_success() {
-    var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), TestingFactories.SeRepo(), repo, TestingFactories.Settings()));
+    var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), TestingFactories.SeRepo(), repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
@@ -187,7 +187,7 @@ public class AbstractFunctionStaticHelperTests {
     Assert.That(loaded.NextCheckpoint, Is.EqualTo(successcp));
   }
   
-  private async Task<List<OperationResult>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
+  private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
       await func.RunOperationsTillAbort(ops, false);
 
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, Exception? ex = null) {

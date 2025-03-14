@@ -19,7 +19,7 @@ public class WriteFunctionTests {
     // customer1 = customer1 with { Meta = customer1.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     // customer2 = customer2 with { Meta = customer2.Meta with { OriginalSystemId = upsert1[0].Meta.OriginalSystemId} };
     
-    var res1 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
+    var res1 = (WriteOperationResult) (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
     var expresults1 = new [] { 
       Map.Create(C.System2Name, customer1.CoreEntity).SuccessCreate(func.Created[0].SystemId, func.Created[0].SystemEntityChecksum), 
       Map.Create(C.System2Name, customer2.CoreEntity).SuccessCreate(func.Created[1].SystemId, func.Created[1].SystemEntityChecksum) };
@@ -30,7 +30,7 @@ public class WriteFunctionTests {
     
     var customer22 = customer2.Update(C.System2Name, (CoreEntity) customer2.CoreEntity with { FirstName = "22" }, Helpers.TestingCoreEntityChecksum);
     var upsert2 = await core.Upsert(C.CoreEntityName, [customer22]);
-    var res2 = (WriteOperationResult) (await func.RunFunction()).OpResults.Single();
+    var res2 = (WriteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var expresults2 = new [] { expresults1[1].Update().SuccessUpdate(func.Updated.Single().SystemEntityChecksum) };
     var (created2, updated2) = (func.Created.ToList(), func.Updated.ToList());
 
@@ -57,7 +57,7 @@ public class WriteFunctionTests {
     var ceam = CoreEntityAndMeta.Create(C.System1Name, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     await core.Upsert(C.CoreEntityName, [ceam]);
     
-    var result = (ErrorOperationResult) (await func.RunFunction()).OpResults.Single();
+    var result = (ErrorOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var sys = ctl.Systems.Single();
     var obj = ctl.Objects.Single();
     var allcusts = await core.GetAllCoreEntities();
@@ -77,7 +77,7 @@ public class WriteFunctionTests {
   }
 }
 
-public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : WriteFunction(C.System2Name, core, ctl, F.Settings()) {
+public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : WriteFunction(C.System2Name, core, ctl) {
 
   public List<Map.Created> Created { get; } = [];
   public List<Map.Updated> Updated { get; } = [];
