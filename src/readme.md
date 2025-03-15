@@ -17,11 +17,10 @@
   - aws/azure
   - the triggered function should get as a parameter the objects that changed
   - functions currently work out their triggers, we should allow using FunctionConfig to override this
-  - on completion a function needs to declare that either 'SystemEntity:<entity_type>' 'CoreEntity:<entity_type>' changed
-  - functions configs then needs to declare which SystemEntity/CoreEntity should trigger the function
   - read vs promote/write should now have separate default refresh rates since read can trigger others
 - `centazio host run Centazio.Sample` is showing lots of `function is already running, ignoring run`
- 
+- aws/azure should have their own defaults (like default cron)
+- defaults should also specify default cron for read/promote/write functions
 - function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
 - use picnet github to host publicly
 - nuget all code

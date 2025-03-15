@@ -8,8 +8,9 @@ public abstract record ReadOperationResult(
     DateTime? NextCheckpoint = null,
     Exception? Exception = null) : OperationResult(Result, Message, ResultLength, AbortVote, NextCheckpoint, Exception), ILoggable {
   
-  public static ReadOperationResult EmptyResult() => new EmptyReadOperationResult();
-  public static ReadOperationResult Create(List<string> lst, DateTime nextcheckpoint) => !lst.Any() ? throw new Exception("Empty results should return ReadOperationResult.EmptyResult()") : new ListReadOperationResult(lst, nextcheckpoint);
+  public static ReadOperationResult EmptyResult(EOperationAbortVote abort = EOperationAbortVote.Continue) => new EmptyReadOperationResult(abort);
+  public static ReadOperationResult Create(List<string> lst, DateTime nextcheckpoint, EOperationAbortVote abort = EOperationAbortVote.Continue) => 
+      !lst.Any() ? throw new Exception("Empty results should return ReadOperationResult.EmptyResult()") : new ListReadOperationResult(lst, nextcheckpoint, abort);
   
   public string LoggableValue => $"{Result} -> {ResultLength} Message[{Message}]";
 
