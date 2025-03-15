@@ -19,6 +19,8 @@
   - functions currently work out their triggers, we should allow using FunctionConfig to override this
   - on completion a function needs to declare that either 'SystemEntity:<entity_type>' 'CoreEntity:<entity_type>' changed
   - functions configs then needs to declare which SystemEntity/CoreEntity should trigger the function
+  - read vs promote/write should now have separate default refresh rates since read can trigger others
+- `centazio host run Centazio.Sample` is showing lots of `function is already running, ignoring run`
  
 - function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
 - use picnet github to host publicly

@@ -16,8 +16,14 @@ public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtl
 
   public override async Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) {
     var res = await op.OpConfig.GetUpdatesAfterCheckpoint(op);
-    if (res is ListReadOperationResult lr) await stager.Stage(op.State.System, op.OpConfig.SystemEntityTypeName, lr.PayloadList);
-    return res;
+    if (res is not ListReadOperationResult lr) { return res; }
+    
+    // IEntityStager can ignore previously staged items, so adjust the count here to avoid redundant
+    //    function-to-function triggers/notifications
+    var staged = await stager.Stage(op.State.System, op.OpConfig.SystemEntityTypeName, lr.PayloadList);
+    return !staged.Any() ? 
+        new EmptyReadOperationResult(res.AbortVote) : 
+        new ListReadOperationResult(staged.Select(s => s.Data.Value).ToList(), lr.SpecificNextCheckpoint, lr.AbortVote);
   }
 
 }

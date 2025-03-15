@@ -40,7 +40,7 @@ public class FunctionRunner(IChangesNotifier changesnotif, ICtlRepository ctl, C
       state = await ctl.SaveSystemState(state.Running());
       var results = await func.RunFunctionOperations(state);
       await SaveCompletedState();
-      await NotifyChanges(func.Stage, results.Where(r => r.Result.ChangedCount > 0).ToList());
+      await NotifyChanges(func.Stage, results);
       return new SuccessFunctionRunResults(results);
     } catch (Exception ex) {
       await SaveCompletedState();
@@ -51,11 +51,12 @@ public class FunctionRunner(IChangesNotifier changesnotif, ICtlRepository ctl, C
     }
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
-  }
-  
-  private async Task NotifyChanges(LifecycleStage stage, List<OpResultAndObject> changes) {
-    if (!changes.Any()) return;
-    await changesnotif.Notify(stage, changes.Select(c => c.Object).Distinct().ToList()); 
+    
+    async Task NotifyChanges(LifecycleStage stage, List<OpResultAndObject> changes) {
+      var wcounts = changes.Where(r => r.Result.ChangedCount > 0).ToList();
+      if (!wcounts.Any()) return;
+      await changesnotif.Notify(stage, wcounts.Select(c => c.Object).Distinct().ToList());
+    }
   }
 }
 

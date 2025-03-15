@@ -1,6 +1,8 @@
 namespace Centazio.Core.Runner;
 
-public abstract record OperationConfig(ObjectName Object, List<(ObjectName, LifecycleStage)> Triggers, ValidCron Cron) {
+public record OpChangeTriggerKey(ObjectName Object, LifecycleStage Stage);
+
+public abstract record OperationConfig(ObjectName Object, List<OpChangeTriggerKey> Triggers, ValidCron Cron) {
   public DateTime? FirstTimeCheckpoint { get; init; }
 }
 

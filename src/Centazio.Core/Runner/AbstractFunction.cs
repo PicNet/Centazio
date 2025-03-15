@@ -9,7 +9,7 @@ public interface IRunnableFunction : IDisposable {
   FunctionConfig Config { get; }
   
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
-  List<(ObjectName, LifecycleStage)> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
+  List<OpChangeTriggerKey> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
 
 }
 
@@ -76,7 +76,6 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
       var result = await RunOp(op);
-      
       await SaveOp(op, opstart, result);
       
       Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result);

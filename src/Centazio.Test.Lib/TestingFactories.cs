@@ -4,7 +4,6 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
-using Centazio.Core.Write;
 using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Test.Lib;
@@ -41,9 +40,6 @@ public static class TestingFactories {
     return CoreEntityAndMeta.Create(Constants.System1Name, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
   }
 
-  public static WriteOperationRunner<C> WriteRunner<C>(TestingInMemoryBaseCtlRepository? ctl = null, TestingInMemoryCoreStorageRepository? core = null) where C : WriteOperationConfig  
-      => new(ctl ?? CtlRepo(), core ?? CoreRepo());
-  
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(ICtlRepository repo) {
     var success = EOperationResult.Success.ToString();
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), UtcDate.UtcNow),
