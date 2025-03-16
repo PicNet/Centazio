@@ -9,8 +9,11 @@ using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
+using Centazio.Core.Misc;
+using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
 namespace Centazio.Cli.Infra.Aws;
@@ -33,8 +36,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
 
       using var lambda = new AmazonLambdaClient(credentials, region);
-
-      var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], ["<todo: subdirectories>"]);
+      var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], []);
       var funcarn = await GetOrCreateLambdaFunction();
       await SetUpTimer(lambda, funcarn);
       await SetUpLogging();
@@ -119,11 +121,16 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
 
     private async Task SetUpTimer(AmazonLambdaClient lambda, string funcarn) {
       using var evbridge = new AmazonEventBridgeClient(credentials, region);
-      var rulenm = $"{project.AwsFunctionName}-MinuteTrigger";
-
+      var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
+      var functype = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
+      var registrar = new CentazioServicesRegistrar(new ServiceCollection());
+      var functions = await new FunctionsInitialiser(["aws"], registrar).Init([functype]);
+      var ressecs = functions.GetMinimumPollSeconds(settings.Defaults);
+      if (ressecs < 60) throw new Exception($"AWS minimum resolution is 60 seconds but {ressecs} was found");
+          
       var rulearn = (await evbridge.PutRuleAsync(new PutRuleRequest {
         Name = rulenm,
-        ScheduleExpression = "rate(1 minute)",
+        ScheduleExpression = $"rate({ressecs / 60} minute)",
         State = RuleState.ENABLED,
         Description = $"Trigger {project.AwsFunctionName} Lambda function every minute"
       })).RuleArn;

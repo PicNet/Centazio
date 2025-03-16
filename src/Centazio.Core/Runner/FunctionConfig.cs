@@ -23,6 +23,12 @@ public record FunctionConfig(List<OperationConfig> Operations) : IDisposable {
   /// environments Exceptions add more value.
   /// </summary>
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
+  
+  /// <summary>
+  /// Allows the setting of the host poll frequency.  If this is not set then we use the settings.[cloud].json
+  /// properties: ReadFunctionPollSeconds, PromoteFunctionPollSeconds, WriteFunctionPollSeconds, OtherFunctionPollSeconds
+  /// </summary>
+  public int FunctionPollSeconds { get; } = 0;
 
   public List<OperationConfig> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   

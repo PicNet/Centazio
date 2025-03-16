@@ -136,22 +136,38 @@ public record DefaultsSettings {
 
   public required string GeneratedCodeFolder { get; init; }
   public required int FunctionMaxAllowedRunningMinutes { get; init; }
+  public required int ReadFunctionPollSeconds { get; init; }
+  public required int PromoteFunctionPollSeconds { get; init; }
+  public required int WriteFunctionPollSeconds { get; init; }
+  public required int OtherFunctionPollSeconds { get; init; }
   public required ConsoleCommandsSettings ConsoleCommands { get; init; }
 
   public Dto ToDto() => new() { 
     GeneratedCodeFolder = GeneratedCodeFolder,
     FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes,
+    ReadFunctionPollSeconds = ReadFunctionPollSeconds,
+    PromoteFunctionPollSeconds = PromoteFunctionPollSeconds,
+    WriteFunctionPollSeconds = WriteFunctionPollSeconds,
+    OtherFunctionPollSeconds = OtherFunctionPollSeconds,
     ConsoleCommands = ConsoleCommands.ToDto(),
   };
 
   public record Dto : IDto<DefaultsSettings> { 
     public string? GeneratedCodeFolder { get; init; }
     public int? FunctionMaxAllowedRunningMinutes { get; init; }
+    public int? ReadFunctionPollSeconds { get; init; }
+    public int? PromoteFunctionPollSeconds { get; init; }
+    public int? WriteFunctionPollSeconds { get; init; }
+    public int? OtherFunctionPollSeconds { get; init; }
     public ConsoleCommandsSettings.Dto? ConsoleCommands { get; init; }
 
     public DefaultsSettings ToBase() => new() { 
       GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
       FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
+      ReadFunctionPollSeconds = ReadFunctionPollSeconds ?? 0,
+      PromoteFunctionPollSeconds = PromoteFunctionPollSeconds ?? 0,
+      WriteFunctionPollSeconds = WriteFunctionPollSeconds ?? 0,
+      OtherFunctionPollSeconds = OtherFunctionPollSeconds ?? 0,
       ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
     };
   }

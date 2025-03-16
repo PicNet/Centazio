@@ -28,7 +28,8 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), templater.ParseFromPath($"azure/{fname}"));
     }
   }
-
+  
+  // todo: pass the Cron expression to the template here from FunctionConfig.FunctionPollSeconds
   private async Task AddAzureFunctionsToProject(List<Type> functions) {
     await functions.ForEachSequentialAsync(async func => {
       var clcontent = templater.ParseFromPath("azure/function.cs", new {

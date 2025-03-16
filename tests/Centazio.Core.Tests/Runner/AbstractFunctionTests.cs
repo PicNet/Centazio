@@ -1,12 +1,13 @@
 ﻿using Centazio.Core.Read;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Runner;
 
-public class AbstractFunctionStaticHelperTests {
+public class AbstractFunctionTests {
 
-  private readonly string name = nameof(AbstractFunctionStaticHelperTests);
+  private readonly string name = nameof(AbstractFunctionTests);
   private TestingInMemoryBaseCtlRepository repo;
   
   [SetUp] public void SetUp() => repo = F.CtlRepo();
@@ -182,6 +183,21 @@ public class AbstractFunctionStaticHelperTests {
     
     var loaded = await repo.GetObjectState(sysstate, new(name)) ?? throw new Exception();
     Assert.That(loaded.NextCheckpoint, Is.EqualTo(successcp));
+  }
+  
+  [Test] public void Test_poll_seconds() {
+    var defs = new DefaultsSettings {
+      ConsoleCommands = null!,
+      GeneratedCodeFolder = null!,
+      FunctionMaxAllowedRunningMinutes = 0,
+      ReadFunctionPollSeconds = 1,
+      PromoteFunctionPollSeconds = 2,
+      WriteFunctionPollSeconds = 3,
+      OtherFunctionPollSeconds = 4,
+    };
+    Assert.That(((IRunnableFunction) F.ReadFunc()).FunctionPollSeconds(defs), Is.EqualTo(1));
+    Assert.That(((IRunnableFunction) F.PromoteFunc()).FunctionPollSeconds(defs), Is.EqualTo(2));
+    Assert.That(((IRunnableFunction) F.WriteFunc()).FunctionPollSeconds(defs), Is.EqualTo(3));
   }
   
   private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 

@@ -43,9 +43,9 @@ public class CentazioHost {
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     var functions = await new FunctionsInitialiser([cmdsetts.Env, nameof(CentazioHost).ToLower()], registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
-    
-    var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), registrar.ServiceProvider);
-    await using var timer = StartHost(functions, runner);
+    var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
+    var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), settings, registrar.ServiceProvider);
+    await using var timer = StartHost(settings, functions, runner);
     _ = DoDynamicTriggers(functions, pubsub.Reader, runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
@@ -75,11 +75,11 @@ public class CentazioHost {
     });
   }
 
-  private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, ServiceProvider prov) => 
-      new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), prov.GetRequiredService<CentazioSettings>());
+  private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, CentazioSettings settings, ServiceProvider prov) => 
+      new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), settings);
 
-  private Timer StartHost(List<IRunnableFunction> functions, IFunctionRunner runner) {
-    return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+  private Timer StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
+    return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(functions.GetMinimumPollSeconds(settings.Defaults)));
     
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctions(object? state) => await functions

@@ -4,6 +4,7 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
+using Centazio.Core.Write;
 using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Test.Lib;
@@ -34,6 +35,12 @@ public static class TestingFactories {
       ICoreStorage? core = null) => 
       new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
 
+  public static WriteFunction WriteFunc(
+      IStagedEntityRepository? serepo = null, 
+      ICtlRepository? ctl = null, 
+      ICoreStorage? core = null) => 
+      new EmptyWriteFunction(new (nameof(TestingFactories)), core ?? CoreRepo(), ctl ?? CtlRepo());
+  
   public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
@@ -92,6 +99,13 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 
       Task.FromResult(new List<EntityEvaluationResult>());
 
+}
+
+public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : WriteFunction(system, core, ctl) {
+
+  protected override FunctionConfig GetFunctionConfiguration() => new([
+    new WriteOperationConfig(Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
+  ]);
 }
 
 public class TestingChangeNotifier : IChangesNotifier {
