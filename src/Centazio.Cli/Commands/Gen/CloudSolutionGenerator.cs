@@ -9,8 +9,6 @@ using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Cli.Commands.Gen;
 
-public enum ECloudEnv { Azure = 1, Aws = 2 }
-
 public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, string environment) {
 
   protected CsProjModel model = null!;
@@ -95,7 +93,7 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   }
 
   private void AddSettingsFilesToProject() {
-    var files = new SettingsLoader().GetSettingsFilePathList(environment);
+    var files = new SettingsLoader().GetSettingsFilePathList(environment, project.CloudName.ToLower());
     AddCopyFilesToProject(files);
   }
 

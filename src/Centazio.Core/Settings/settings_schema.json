@@ -1,7 +1,12 @@
 ﻿{
   "Defaults": {
     "GeneratedCodeFolder": { "type": "string", "required": true },
+    
     "FunctionMaxAllowedRunningMinutes": { "type": "int", "required":  true },
+    "ReadFunctionPollSeconds": { "type": "int", "required":  true },
+    "PromoteFunctionPollSeconds": { "type": "int", "required":  true },
+    "WriteFunctionPollSeconds": { "type": "int", "required":  true },
+    "OtherFunctionPollSeconds": { "type": "int", "required":  true },
 
     "ConsoleCommands": {
       "Az": {

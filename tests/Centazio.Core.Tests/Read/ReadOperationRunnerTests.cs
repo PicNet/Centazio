@@ -63,7 +63,7 @@ public class ReadOperationRunnerTests {
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, GetUpdatesAfterCheckpointHandler impl) 
     => new (
         await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString()), UtcDate.UtcNow),
-        new FunctionConfig([]),
+        F.EmptyFunctionConfig(),
         new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, impl), DateTime.MinValue);
   
 

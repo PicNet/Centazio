@@ -41,7 +41,7 @@ public class CentazioHost {
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    var functions = await new FunctionsInitialiser(cmdsetts.Env, registrar).Init(functypes);
+    var functions = await new FunctionsInitialiser([cmdsetts.Env, nameof(CentazioHost).ToLower()], registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     
     var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), registrar.ServiceProvider);

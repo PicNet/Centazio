@@ -24,7 +24,7 @@ public record FunctionConfig(List<OperationConfig> Operations) : IDisposable {
   /// </summary>
   public bool ThrowExceptions { get; init; } = FunctionConfigDefaults.ThrowExceptions;
 
-  public List<OperationConfig> Operations { get => field.Any() ? field : throw new ArgumentNullException(nameof(Operations)); } = Operations;
+  public List<OperationConfig> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   
   private IChecksumAlgorithm? checksum;
   public IChecksumAlgorithm ChecksumAlgorithm {

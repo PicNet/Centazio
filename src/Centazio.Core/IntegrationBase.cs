@@ -10,17 +10,12 @@ public interface IIntegrationBase {
 }
 
 
-public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase 
+public abstract class IntegrationBase<TSettings, TSecrets>(TSettings Settings, TSecrets Secrets) : IIntegrationBase 
     where TSettings : CentazioSettings
     where TSecrets : CentazioSecrets {
 
-  protected TSettings Settings { get; }
-  protected TSecrets Secrets { get; }
-  
-  protected IntegrationBase(string env) {
-    Settings = new SettingsLoader().Load<TSettings>(env);
-    Secrets = new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(env);
-  }
+  protected TSettings Settings { get; } = Settings;
+  protected TSecrets Secrets { get; } = Secrets;
   
   public void RegisterServices(CentazioServicesRegistrar registrar) {
     SettingsLoader.RegisterSettingsHierarchy(Settings, registrar);

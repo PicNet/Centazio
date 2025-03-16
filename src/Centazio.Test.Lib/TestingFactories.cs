@@ -26,6 +26,7 @@ public static class TestingFactories {
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
       ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());
+  public static FunctionConfig EmptyFunctionConfig() => new([new ReadOperationConfig(new(nameof(TestingFactories)), CronExpressionsHelper.EverySecond(), _ => null!)]);
       
   public static PromoteFunction PromoteFunc(
       IStagedEntityRepository? serepo = null, 
@@ -43,8 +44,7 @@ public static class TestingFactories {
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(ICtlRepository repo) {
     var success = EOperationResult.Success.ToString();
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), UtcDate.UtcNow),
-        
-        new FunctionConfig([]),
+        EmptyFunctionConfig(),
         new(new SystemEntityTypeName(success), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResult),
         DateTime.MinValue);
   }
@@ -52,7 +52,7 @@ public static class TestingFactories {
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateErroringOpStateAndConf(ICtlRepository repo) {
     var error = EOperationResult.Error.ToString();
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(error), new(error)), new SystemEntityTypeName(error), UtcDate.UtcNow),
-        new FunctionConfig([]) { ThrowExceptions = false },
+        EmptyFunctionConfig() with { ThrowExceptions = false },
         new(new SystemEntityTypeName(error), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception(error)),
         DateTime.MinValue);
   }

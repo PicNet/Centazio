@@ -54,7 +54,7 @@ public class AbstractFunctionStaticHelperTests {
           LastResult = EOperationResult.Success,
           LastAbortVote = EOperationAbortVote.Continue
         }, 
-        new FunctionConfig([]), 
+        F.EmptyFunctionConfig(), 
         new(new SystemEntityTypeName(opname), new (new (cron)), GetListResult), 
         DateTime.MinValue);
     DateTime Dt(string dt) => DateTime.Parse(dt).ToUniversalTime();
@@ -140,7 +140,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
+      new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     
     TestingUtcDate.DoTick();
@@ -157,7 +157,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
+      new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     
     var opstart = TestingUtcDate.DoTick();
@@ -174,7 +174,7 @@ public class AbstractFunctionStaticHelperTests {
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
-      new(objstate, new FunctionConfig([]), readopcfg, objstate.NextCheckpoint)
+      new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
     TestingUtcDate.DoTick();
     await RunOps(opconfigs, runner);

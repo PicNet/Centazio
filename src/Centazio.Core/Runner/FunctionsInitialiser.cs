@@ -1,29 +1,24 @@
 ﻿using Centazio.Core.Ctl;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Runner;
 
-public class FunctionsInitialiser {
-  
-  private readonly string environment;
-  private CentazioSettings Settings { get; }
-  private CentazioServicesRegistrar registrar { get; }
-
-  public FunctionsInitialiser(string environment, CentazioServicesRegistrar registrar) {
-    (this.environment, this.registrar) = (environment, registrar);
-    Settings = LoadSettings();
-  }
+public class FunctionsInitialiser(string[] environments, CentazioServicesRegistrar registrar) {
 
   public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
   
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
-    RegisterCoreServices();
+    var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(environments), registrar);
+    var secrets = new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(environments.First());
+    
+    RegisterCoreServices(settings);
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
-    var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environment)).ToList();
+    var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, settings, secrets)).ToList();
     integrations.ForEach(integration => integration.RegisterServices(registrar));
-    functions.ForEach(func => registrar.Register(func));
+    functions.ForEach(registrar.Register);
     var prov = registrar.BuildServiceProvider();
     
     await InitialiseCoreServices(prov);
@@ -31,17 +26,15 @@ public class FunctionsInitialiser {
     
     return functions.Select(func => (IRunnableFunction) prov.GetRequiredService(func)).ToList();
   }
+  
 
-  private CentazioSettings LoadSettings() => 
-      SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(environment), registrar);
-
-  private void RegisterCoreServices() {
+  private void RegisterCoreServices(CentazioSettings settings) {
     Log.Debug($"HostBootstrapper registering core services:" +
-        $"\n\tStagedEntityRepository [{Settings.StagedEntityRepository.Provider}]" +
-        $"\n\tCtlRepository [{Settings.CtlRepository.Provider}]");
+        $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
+        $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
     
-    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(Settings.StagedEntityRepository.Provider);
-    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(Settings.CtlRepository.Provider);
+    AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
+    AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     
     void AddCoreService<SF, I>(string provider) where SF : IServiceFactory<I> where I : class {
       registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));

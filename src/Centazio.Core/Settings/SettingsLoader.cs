@@ -5,27 +5,36 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Centazio.Core.Settings;
 
 public interface ISettingsLoader {
-  T Load<T>(string environment);
+  T Load<T>(params string[] environments);
 }
 
-public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) : ISettingsLoader {
+public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_PREFIX, string? dir = null) : ISettingsLoader {
 
-  private const string DEFAULT_FILE_NAME = "settings.json";
+  private const string DEFAULT_FILE_NAME_PREFIX = "settings";
   
-  private readonly string filename =  filename.EndsWith(".json") && !String.IsNullOrWhiteSpace(filename) ? filename : throw new Exception("settings filename should be a valid json file");
-  
-  public List<string> GetSettingsFilePathList(string environment) {
-    var defaults = FsUtils.GetSolutionFilePath("defaults", filename.Replace(".json", $".defaults.json"));
-    if (!File.Exists(defaults)) defaults = null;
-    var basefile = SearchForSettingsFile(filename) ?? throw new Exception($"could not find settings file [{filename}] in the current directory hierarchy");
-    var envfile = String.IsNullOrWhiteSpace(environment) ? null : SearchForSettingsFile(filename.Replace(".json", $".{environment}.json"));
+  public List<string> GetSettingsFilePathList(params string[] environments) {
+    var potentials = new List<(string, bool)> { 
+      ($"defaults/{fnprefix}.defaults.json", false),
+      ($"defaults/{fnprefix}.<environment>.json", false),
+      ($"{fnprefix}.json", true),
+      ($"{fnprefix}.<environment>.json", false),
+    };
     
-    return new [] { defaults, basefile, envfile }.OfType<string>().ToList();
+    return potentials.SelectMany(p => {
+      var (file, required) = p;
+      var files = file.Contains("<environment>", StringComparison.Ordinal) ? 
+          environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => file.Replace("<environment>", env, StringComparison.Ordinal)) : 
+          [file];
+      return files.Select(f => {
+        var path = FsUtils.GetSolutionFilePath(dir is null ? [f] : [dir, f]);
+        return File.Exists(path) ? path : !required ? null : throw new Exception($"could not find required settings file [{path}]");
+      });
+    }).OfType<string>().ToList();
   }
   
-  public T Load<T>(string environment) {
-    var files = GetSettingsFilePathList(environment);
-    Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environment[{environment}]");
+  public T Load<T>(params string[] environments) {
+    var files = GetSettingsFilePathList(environments);
+    Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
     
     var builder = new ConfigurationBuilder();
     files.ForEach(file => builder.AddJsonFile(file));
@@ -36,20 +45,6 @@ public class SettingsLoader(string filename = SettingsLoader.DEFAULT_FILE_NAME) 
     return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
   }
 
-  private string? SearchForSettingsFile(string file) {
-    var limit = Path.GetFullPath(FsUtils.GetSolutionRootDirectory());
-    return Impl(Environment.CurrentDirectory);
-    
-    string? Impl(string dir) {
-      var path = Path.GetFullPath(Path.Combine(dir, file));
-      if (File.Exists(path)) return path;
-      if (limit == dir) return null;
-      
-      var parent = Directory.GetParent(dir)?.FullName;
-      return parent is null ? null : Impl(parent);
-    }
-  }
-  
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 
       RegisterSettingsHierarchyImpl(settings, registrar.Register);
 

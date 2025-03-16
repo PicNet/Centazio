@@ -54,7 +54,7 @@ public class PromotionStepsTests {
   private OperationStateAndConfig<PromoteOperationConfig> GetOpConfig(SystemName system) {
     var opconf = new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(system, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
-        new FunctionConfig([]),
+        F.EmptyFunctionConfig(),
         new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, PromoteOperationRunnerTests.ErrorConvertingToCore), DateTime.MinValue);
     return opconf;
   }

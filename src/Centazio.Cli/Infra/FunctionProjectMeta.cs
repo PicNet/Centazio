@@ -1,18 +1,23 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
-using Centazio.Cli.Commands.Gen;
 using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Infra;
 
+public enum ECloudEnv { Azure = 1, Aws = 2 }
+
 public class AzureFunctionProjectMeta(Assembly assembly, string generatedfolder) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
-  public override string ProjectName => $"{Assembly.GetName().Name}.{ECloudEnv.Azure}";
+  public override string CloudName => ECloudEnv.Azure.ToString();
+  public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
 }
 
 public class AwsFunctionProjectMeta(Assembly assembly, string generatedfolder, string function) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
   
   public readonly string AwsFunctionName = function;
-  public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{ECloudEnv.Aws}";
+  
+  public override string CloudName => ECloudEnv.Aws.ToString();
+  public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{CloudName}";
+  
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
   public string RoleName => $"{DashedProjectName}-{AwsFunctionName}-role".ToLower();
 
@@ -23,6 +28,8 @@ public abstract class AbstractFunctionProjectMeta(Assembly assembly, string gene
   [JsonIgnore] public Assembly Assembly => assembly;
   
   public abstract string ProjectName { get; }
+  public abstract string CloudName { get; }
+  
   public string SolutionDirPath => Path.Combine(FsUtils.GetSolutionFilePath(), generatedfolder, ProjectName);
   public string ProjectDirPath => SolutionDirPath;
   public string CsprojFile => $"{ProjectName}.csproj";

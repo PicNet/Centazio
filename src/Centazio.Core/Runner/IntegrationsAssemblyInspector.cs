@@ -1,19 +1,23 @@
-﻿using U = Centazio.Core.Misc.ReflectionUtils;
+﻿using Centazio.Core.Secrets;
+using Centazio.Core.Settings;
+using U = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Core.Runner;
 
 public static class IntegrationsAssemblyInspector {
 
-  public static IIntegrationBase GetCentazioIntegration(Assembly assembly, string environment) {
+  public static IIntegrationBase GetCentazioIntegration<TSettings, TSecrets>(Assembly assembly, TSettings settings, TSecrets secrets) 
+      where TSettings : CentazioSettings
+      where TSecrets : CentazioSecrets {
     return ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
     
     IIntegrationBase ValidateIntegrationFound(List<Type> integrations) {
       if (!integrations.Any()) throw new Exception($"Could not find the Centazio Integration in provided assembly[{assembly.GetName().FullName}]");
       if (integrations.Count > 1) throw new Exception($"Found {integrations.Count} Centazio Integrations in assembly[{assembly.GetName().FullName}].  There should only ever be one Integration per deployment unit");
       var integration = integrations.Single();
-      if (integration.GetConstructor([typeof(string)]) is null) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor that takes an 'environment' string");
+      if (integration.GetConstructor([typeof(TSettings), typeof(TSecrets)]) is null) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor");
       
-      return (IIntegrationBase) (Activator.CreateInstance(integration, environment) ?? throw new Exception());
+      return (IIntegrationBase) (Activator.CreateInstance(integration, settings, secrets) ?? throw new Exception());
     }
   }
 

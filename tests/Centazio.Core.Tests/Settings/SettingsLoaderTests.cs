@@ -4,10 +4,10 @@ namespace Centazio.Core.Tests.Settings;
 
 public class SettingsLoaderTests {
 
+  private const string test_fn_prefix = "test_settings";
   private const string test_settings_json = @"{ ""FileForTestingSettingsLoader"": ""Testing content"", ""OverridableSetting"": ""To be overriden"", ""EmptySetting"": """", ""MissingSetting"": null }";
   private const string test_settings_env_json = @"{ ""OverridableSetting"": ""Overriden"", ""EmptySetting"": ""No longer empty"", ""MissingSetting"": ""No longer missing"" }";
   
-  [TearDown] public void TearDown() {}
   
   [Test] public void Test_loading_of_settings_from_dir_hierarchy() {
     TestSettings(CreateLoadAndDeleteSettings(".", String.Empty));
@@ -32,12 +32,12 @@ public class SettingsLoaderTests {
   
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
-      File.WriteAllText(Path.Combine(dir, "test_settings.json"), test_settings_json);
-      File.WriteAllText(Path.Combine(dir, $"test_settings.{environment}.json"), test_settings_env_json);
-      return (TestSettingsObj) new SettingsLoader("test_settings.json").Load<TestSettingsObjRaw>(environment); 
+      File.WriteAllText(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.json"), test_settings_json);
+      File.WriteAllText(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.{environment}.json"), test_settings_env_json);
+      return (TestSettingsObj) new SettingsLoader(test_fn_prefix, dir).Load<TestSettingsObjRaw>(environment); 
     } finally { 
-      File.Delete(Path.Combine(dir, "test_settings.json"));
-      File.Delete(Path.Combine(dir, $"test_settings.{environment}.json"));
+      File.Delete(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.json"));
+      File.Delete(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.{environment}.json"));
     }
   }
 }
