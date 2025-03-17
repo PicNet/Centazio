@@ -4,7 +4,7 @@ namespace Centazio.Core.Runner;
 
 public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChangesNotifier {
 
-  private readonly Channel<OpChangeTriggerKey> pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
+  internal readonly Channel<OpChangeTriggerKey> pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
   
   public Task InitDynamicTriggers(IFunctionRunner runner) {
     var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();
@@ -17,13 +17,14 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
       while (await pubsub.Reader.WaitToReadAsync()) {
         while (pubsub.Reader.TryRead(out var key)) {
           if (!triggermap.TryGetValue(key, out var pubs)) return;
-          await pubs
-              .Select(async f => {
-                DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
-                return await runner.RunFunction(f);
-              })
-              .Synchronous();
+          await pubs.Select(async f => {
+            DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
+            return await runner.RunFunction(f);
+          }).Synchronous();
         }
+
+	    	// todo: remove
+        Console.WriteLine("channel should be empty");
       }
     });
   }

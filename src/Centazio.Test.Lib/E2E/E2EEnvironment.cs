@@ -10,7 +10,6 @@ namespace Centazio.Test.Lib.E2E;
 public class E2EEnvironment(ISimulationProvider provider, CentazioSettings settings) : IAsyncDisposable {
 
   private readonly SimulationCtx ctx = new(provider, settings);
-  
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
@@ -21,6 +20,9 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
   private FinReadFunction fin_read = null!;
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
+  private IChangesNotifier notifier = null!;
+  
+  private readonly bool UseRealChangeNotifier = true;
   
   public async Task Initialise() {
     await ctx.Initialise();
@@ -29,11 +31,12 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
-    
-    // todo: simulation should handle simulating change notifier also, and test that same results are achieved
-    // var notif = new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
-    var notif = new TestingChangeNotifier();
-    runner = new FunctionRunner(notif, ctx.CtlRepo, ctx.Settings);
+    var allfuncs = new List<IRunnableFunction> { crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write };
+    notifier = UseRealChangeNotifier ? 
+        new InProcessChangesNotifier(allfuncs) : 
+        new TestingChangeNotifier();
+    runner = new FunctionRunner(notifier, ctx.CtlRepo, ctx.Settings);
+    if (notifier is InProcessChangesNotifier ipcn) { _ = ipcn.InitDynamicTriggers(runner); }
   }
   
   public async Task RunSimulation() {
@@ -45,7 +48,23 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
     }
     
     await Enumerable.Range(0, SimulationConstants.TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
-    Console.WriteLine("debug");
+    var completedstate = new {
+      CoreStorage = new {
+        MembershipTypes = await ctx.CoreStore.GetMembershipTypes(),
+        Customers = await ctx.CoreStore.GetCustomers(),
+        Invoices = await ctx.CoreStore.GetInvoices(),
+      },
+      CrmApi = new {
+        crm.MembershipTypes,
+        crm.Customers,
+        crm.Invoices
+      },
+      FinApi = new {
+        fin.Accounts,
+        fin.Invoices
+      }
+    };
+    await File.WriteAllTextAsync(FsUtils.GetSolutionFilePath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
   }
   
   public async ValueTask DisposeAsync() => await ctx.DisposeAsync();
@@ -60,13 +79,20 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
+     
     await runner.RunFunction(crm_read);
-    await runner.RunFunction(crm_promote);
-    await runner.RunFunction(fin_read); 
-    await runner.RunFunction(fin_promote);
-    await runner.RunFunction(crm_write);
-    await runner.RunFunction(fin_write);
-    
+    await runner.RunFunction(fin_read);
+    if (notifier is InProcessChangesNotifier ipcn) {
+      while (ipcn.pubsub.Reader.Count > 0) {
+        await Task.Delay(50);
+      }
+      Console.WriteLine("1");
+    } else {
+      await runner.RunFunction(crm_promote);
+      await runner.RunFunction(fin_promote);
+      await runner.RunFunction(crm_write);
+      await runner.RunFunction(fin_write);
+    }
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();
   }
