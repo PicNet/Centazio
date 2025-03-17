@@ -44,9 +44,9 @@ public class CentazioHost {
     var functions = await new FunctionsInitialiser([cmdsetts.Env, nameof(CentazioHost).ToLower()], registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
-    var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), settings, registrar.ServiceProvider);
+    var runner = new FunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
     
-    await StartHost(settings, functions, runner);
+    StartTimerBasedTriggers(settings, functions, runner);
     _ = DoDynamicTriggers(functions, pubsub.Reader, runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
@@ -55,7 +55,6 @@ public class CentazioHost {
 
   private Task DoDynamicTriggers(List<IRunnableFunction> functions, ChannelReader<OpChangeTriggerKey> reader, IFunctionRunner runner) {
     var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();
-    
     functions.ForEach(func => func.Triggers().ForEach(key => {
       if (!triggermap.ContainsKey(key)) triggermap[key] = [];
       triggermap[key].Add(func);
@@ -76,31 +75,30 @@ public class CentazioHost {
     });
   }
 
-  private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, CentazioSettings settings, ServiceProvider prov) => 
-      new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), settings);
-
-  private async Task StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
-    Timer? timer = null;
-    await DoNextFunctions();
+  private void StartTimerBasedTriggers(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
+    functions
+        .GroupBy(f => f.GetFunctionPollCronExpression(settings.Defaults))
+        .ForEach(g => _ = new FunctionTimerGroup(g.Key, g.ToList(), RunFunctionsInGroupAndResetTimer));
     
-    async Task DoNextFunctions() {
-      if (timer is not null) await timer.DisposeAsync();
-      
-      var now = UtcDate.UtcNow;
-      var nextset = functions
-          .GroupBy(f => f.GetFunctionPollCronExpression(settings.Defaults).Value.GetNextOccurrence(now))
-          .MinBy(g => g.Key) ?? throw new Exception();
-      var delay = nextset.Key - UtcDate.UtcNow ?? throw new Exception();
-      timer = new Timer(_ => RunFunctions(nextset.ToList()), null, delay, Timeout.InfiniteTimeSpan);
-    }
     // ReSharper disable once AsyncVoidMethod
-    async void RunFunctions(List<IRunnableFunction> nextset) {
-      await nextset
-          .Select(async f => await runner.RunFunction(f))
-          .Synchronous();
-      
-      await DoNextFunctions();
+    async void RunFunctionsInGroupAndResetTimer(FunctionTimerGroup g) {
+      await g.Timer.DisposeAsync();
+      await g.Functions.Select(async f => await runner.RunFunction(f)).Synchronous();
+      g.Timer = new Timer(_ => RunFunctionsInGroupAndResetTimer(g), null, g.Delay(DateTime.UtcNow), Timeout.InfiniteTimeSpan);
     }
+  }
+  
+  public class FunctionTimerGroup {
+    public ValidCron Cron { get; }
+    public List<IRunnableFunction> Functions { get; }
+    public Timer Timer { get; set; }  
+
+    public FunctionTimerGroup(ValidCron cron, List<IRunnableFunction> functions, Action<FunctionTimerGroup> rungroup) {
+      (Cron, Functions) = (cron, functions);
+      Timer = new Timer(_ => rungroup(this), null, Delay(UtcDate.UtcNow), Timeout.InfiniteTimeSpan);
+    }
+    
+    public TimeSpan Delay(DateTime utcnow) => Cron.Value.GetNextOccurrence(utcnow) - utcnow ?? throw new Exception();
   }
 }
 
