@@ -1,14 +1,10 @@
-﻿using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
-using U = Centazio.Core.Misc.ReflectionUtils;
+﻿using U = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Core.Runner;
 
 public static class IntegrationsAssemblyInspector {
 
-  public static IIntegrationBase GetCentazioIntegration<TSettings, TSecrets>(Assembly assembly, TSettings settings, TSecrets secrets) 
-      where TSettings : CentazioSettings
-      where TSecrets : CentazioSecrets {
+  public static IIntegrationBase GetCentazioIntegration(Assembly assembly, params string[] environments) {
     return ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
     
     IIntegrationBase ValidateIntegrationFound(List<Type> integrations) {
@@ -17,7 +13,7 @@ public static class IntegrationsAssemblyInspector {
       var integration = integrations.Single();
       var ctors = integration.GetConstructors(); 
       if (ctors.Length != 1) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor");
-      return (IIntegrationBase) (ctors.Single().Invoke([settings, secrets]) ?? throw new Exception());
+      return (IIntegrationBase) (ctors.Single().Invoke([environments]) ?? throw new Exception());
     }
   }
 

@@ -8,7 +8,8 @@ public interface ISecretsLoader  {
 }
 
 public class SecretsFileLoader(string dir) : ISecretsLoader {
-  
+
+  // todo: change to take params string[] environments and handle multiple overwritting files
   public string GetSecretsFilePath(string environment) {
     var path = Path.Combine(dir, $"{environment}.env");
     if (!File.Exists(path)) throw new FileNotFoundException(path);

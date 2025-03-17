@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Sample;
 
-public class SampleIntegration(SampleSettings settings, SampleSecrets secrets) : IntegrationBase<SampleSettings, SampleSecrets>(settings, secrets) {
+public class SampleIntegration(params string[] environments) : IntegrationBase<SampleSettings, SampleSecrets>(environments) {
   
   protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) {
     var core = new SampleCoreStorageRepository(() => new SampleDbContext(Settings.CoreStorage.ConnectionString), new SqliteDbFieldsHelper());

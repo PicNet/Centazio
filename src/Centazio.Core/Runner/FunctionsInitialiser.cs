@@ -16,7 +16,7 @@ public class FunctionsInitialiser(string[] environments, CentazioServicesRegistr
     
     RegisterCoreServices(settings);
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();
-    var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, settings, secrets)).ToList();
+    var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environments)).ToList();
     integrations.ForEach(integration => integration.RegisterServices(registrar));
     functions.ForEach(registrar.Register);
     var prov = registrar.BuildServiceProvider();
