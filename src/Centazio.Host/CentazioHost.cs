@@ -45,7 +45,8 @@ public class CentazioHost {
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), settings, registrar.ServiceProvider);
-    await using var timer = StartHost(settings, functions, runner);
+    
+    await StartHost(settings, functions, runner);
     _ = DoDynamicTriggers(functions, pubsub.Reader, runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
@@ -78,14 +79,28 @@ public class CentazioHost {
   private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, CentazioSettings settings, ServiceProvider prov) => 
       new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), settings);
 
-  private Timer StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
-    // return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(functions.GetMinimumPollSeconds(settings.Defaults)));
-    return null!;
+  private async Task StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
+    Timer? timer = null;
+    await DoNextFunctions();
     
+    async Task DoNextFunctions() {
+      if (timer is not null) await timer.DisposeAsync();
+      
+      var now = UtcDate.UtcNow;
+      var nextset = functions
+          .GroupBy(f => f.GetFunctionPollCronExpression(settings.Defaults).Value.GetNextOccurrence(now))
+          .MinBy(g => g.Key) ?? throw new Exception();
+      var delay = nextset.Key - UtcDate.UtcNow ?? throw new Exception();
+      timer = new Timer(_ => RunFunctions(nextset.ToList()), null, delay, Timeout.InfiniteTimeSpan);
+    }
     // ReSharper disable once AsyncVoidMethod
-    async void RunFunctions(object? state) => await functions
-        .Select(async f => await runner.RunFunction(f))
-        .Synchronous();
+    async void RunFunctions(List<IRunnableFunction> nextset) {
+      await nextset
+          .Select(async f => await runner.RunFunction(f))
+          .Synchronous();
+      
+      await DoNextFunctions();
+    }
   }
 }
 
