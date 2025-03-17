@@ -18,9 +18,6 @@
   - aws/azure
   - the triggered function should get as a parameter the objects that changed
   - functions currently work out their triggers, we should allow using FunctionConfig to override this
-  - read vs promote/write should now have separate default refresh rates since read can trigger others
-- `centazio host run Centazio.Sample` is showing lots of `function is already running, ignoring run`
-- defaults should also specify default cron for read/promote/write functions
 - function cron trigger should translate to AWS/Azure trigger, 
 - use picnet github to host publicly
 - nuget all code

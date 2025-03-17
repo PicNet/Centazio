@@ -11,7 +11,6 @@ using Timer = System.Threading.Timer;
 
 namespace Centazio.Host;
 
-// todo: add unit tests to CentazioHost
 public interface IHostConfiguration {
   public string Env { get; }
   public string AssemblyNames { get; }
