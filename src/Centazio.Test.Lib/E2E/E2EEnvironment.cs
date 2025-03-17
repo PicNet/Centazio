@@ -25,11 +25,15 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
   public async Task Initialise() {
     await ctx.Initialise();
     
-    // todo: simulation should handle simulating change notifier also, and test that same results are achieved
-    (crm, fin, runner) = (new CrmApi(ctx), new FinApi(ctx), new FunctionRunner(new TestingChangeNotifier(), ctx.CtlRepo, ctx.Settings));
+    (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
+    
+    // todo: simulation should handle simulating change notifier also, and test that same results are achieved
+    // var notif = new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
+    var notif = new TestingChangeNotifier();
+    runner = new FunctionRunner(notif, ctx.CtlRepo, ctx.Settings);
   }
   
   public async Task RunSimulation() {
@@ -41,6 +45,7 @@ public class E2EEnvironment(ISimulationProvider provider, CentazioSettings setti
     }
     
     await Enumerable.Range(0, SimulationConstants.TOTAL_EPOCHS).Select(RunEpoch).Synchronous();
+    Console.WriteLine("debug");
   }
   
   public async ValueTask DisposeAsync() => await ctx.DisposeAsync();
