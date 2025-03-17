@@ -3,10 +3,10 @@
     "GeneratedCodeFolder": { "type": "string", "required": true },
     
     "FunctionMaxAllowedRunningMinutes": { "type": "int", "required":  true },
-    "ReadFunctionPollSeconds": { "type": "int", "required":  true },
-    "PromoteFunctionPollSeconds": { "type": "int", "required":  true },
-    "WriteFunctionPollSeconds": { "type": "int", "required":  true },
-    "OtherFunctionPollSeconds": { "type": "int", "required":  true },
+    "ReadFunctionPollExpression": { "type": "string", "required":  true },
+    "PromoteFunctionPollExpression": { "type": "string", "required":  true },
+    "WriteFunctionPollExpression": { "type": "string", "required":  true },
+    "OtherFunctionPollExpression": { "type": "string", "required":  true },
 
     "ConsoleCommands": {
       "Az": {

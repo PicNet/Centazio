@@ -37,9 +37,10 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
         ClassFullName=func.FullName,
         FunctionNamespace=func.Namespace, 
         NewAssemblyName = project.ProjectName,
-        Environment=environment
+        Environment=environment,
+        FunctionTimerCronExpr="*/30 * * * * *"
       });
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}.cs"), clcontent);
+      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Azure.cs"), clcontent);
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
     });
   }

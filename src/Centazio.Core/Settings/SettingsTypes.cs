@@ -136,38 +136,38 @@ public record DefaultsSettings {
 
   public required string GeneratedCodeFolder { get; init; }
   public required int FunctionMaxAllowedRunningMinutes { get; init; }
-  public required int ReadFunctionPollSeconds { get; init; }
-  public required int PromoteFunctionPollSeconds { get; init; }
-  public required int WriteFunctionPollSeconds { get; init; }
-  public required int OtherFunctionPollSeconds { get; init; }
+  public required string ReadFunctionPollExpression { get; init; }
+  public required string PromoteFunctionPollExpression { get; init; }
+  public required string WriteFunctionPollExpression { get; init; }
+  public required string OtherFunctionPollExpression { get; init; }
   public required ConsoleCommandsSettings ConsoleCommands { get; init; }
 
   public Dto ToDto() => new() { 
     GeneratedCodeFolder = GeneratedCodeFolder,
     FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes,
-    ReadFunctionPollSeconds = ReadFunctionPollSeconds,
-    PromoteFunctionPollSeconds = PromoteFunctionPollSeconds,
-    WriteFunctionPollSeconds = WriteFunctionPollSeconds,
-    OtherFunctionPollSeconds = OtherFunctionPollSeconds,
+    ReadFunctionPollExpression = ReadFunctionPollExpression,
+    PromoteFunctionPollExpression = PromoteFunctionPollExpression,
+    WriteFunctionPollExpression = WriteFunctionPollExpression,
+    OtherFunctionPollExpression = OtherFunctionPollExpression,
     ConsoleCommands = ConsoleCommands.ToDto(),
   };
 
   public record Dto : IDto<DefaultsSettings> { 
     public string? GeneratedCodeFolder { get; init; }
     public int? FunctionMaxAllowedRunningMinutes { get; init; }
-    public int? ReadFunctionPollSeconds { get; init; }
-    public int? PromoteFunctionPollSeconds { get; init; }
-    public int? WriteFunctionPollSeconds { get; init; }
-    public int? OtherFunctionPollSeconds { get; init; }
+    public string? ReadFunctionPollExpression { get; init; }
+    public string? PromoteFunctionPollExpression { get; init; }
+    public string? WriteFunctionPollExpression { get; init; }
+    public string? OtherFunctionPollExpression { get; init; }
     public ConsoleCommandsSettings.Dto? ConsoleCommands { get; init; }
 
     public DefaultsSettings ToBase() => new() { 
       GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
       FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
-      ReadFunctionPollSeconds = ReadFunctionPollSeconds ?? 0,
-      PromoteFunctionPollSeconds = PromoteFunctionPollSeconds ?? 0,
-      WriteFunctionPollSeconds = WriteFunctionPollSeconds ?? 0,
-      OtherFunctionPollSeconds = OtherFunctionPollSeconds ?? 0,
+      ReadFunctionPollExpression = String.IsNullOrWhiteSpace(ReadFunctionPollExpression) ? throw new ArgumentNullException(nameof(ReadFunctionPollExpression)) : ReadFunctionPollExpression.Trim(),
+      PromoteFunctionPollExpression = String.IsNullOrWhiteSpace(PromoteFunctionPollExpression) ? throw new ArgumentNullException(nameof(PromoteFunctionPollExpression)) : PromoteFunctionPollExpression.Trim(),
+      WriteFunctionPollExpression = String.IsNullOrWhiteSpace(WriteFunctionPollExpression) ? throw new ArgumentNullException(nameof(WriteFunctionPollExpression)) : WriteFunctionPollExpression.Trim(),
+      OtherFunctionPollExpression = String.IsNullOrWhiteSpace(OtherFunctionPollExpression) ? throw new ArgumentNullException(nameof(OtherFunctionPollExpression)) : OtherFunctionPollExpression.Trim(),
       ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
     };
   }

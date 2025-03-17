@@ -7,7 +7,8 @@
     - application insights
     - key vault, see: https://claude.ai/chat/2538ccd6-d0e3-49a2-a155-74972ddb606b
     - currently settings are done using the `settings.json` files, these are hard to change in Azure, so perhaps find 
-        a way of converting to standard .Net settings so they can be set using the Azure UI
+        a way of converting to standard .Net settings so they can be set using the Azure UI.  If this is done then
+        the CRON triggers should be in settings instead of hardcoded in the generated function wrappers
     - support overriding function specific settings like service plan, etc 
   - Aws:
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
@@ -20,7 +21,7 @@
   - read vs promote/write should now have separate default refresh rates since read can trigger others
 - `centazio host run Centazio.Sample` is showing lots of `function is already running, ignoring run`
 - defaults should also specify default cron for read/promote/write functions
-- function cron trigger should translate to AWS/Azure trigger, no need to have two levels of cron triggers
+- function cron trigger should translate to AWS/Azure trigger, 
 - use picnet github to host publicly
 - nuget all code
 - cli:

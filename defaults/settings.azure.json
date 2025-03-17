@@ -1,8 +1,8 @@
 {
   "Defaults": {
-    "ReadFunctionPollSeconds": 20,
-    "PromoteFunctionPollSeconds": 180,
-    "WriteFunctionPollSeconds": 180,
-    "OtherFunctionPollSeconds": 300,
+    "ReadFunctionPollExpression": "*/30 * * * * *",
+    "PromoteFunctionPollExpression": "0 */3 * * * *",
+    "WriteFunctionPollExpression": "0 */3 * * * *",
+    "OtherFunctionPollExpression": "0 */5 * * * *"
   }
 }

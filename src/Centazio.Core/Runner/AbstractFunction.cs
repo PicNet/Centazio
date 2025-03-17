@@ -12,19 +12,13 @@ public interface IRunnableFunction : IDisposable {
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
   
   List<OpChangeTriggerKey> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
-  int FunctionPollSeconds(DefaultsSettings defs) {
-    var interval = Config.FunctionPollSeconds > 0 ? Config.FunctionPollSeconds : 
-          this is ReadFunction ? defs.ReadFunctionPollSeconds : 
-          this is PromoteFunction ? defs.PromoteFunctionPollSeconds : 
-          this is WriteFunction ? defs.WriteFunctionPollSeconds : 
-          defs.OtherFunctionPollSeconds;
-    return interval > 0 ? interval : throw new ArgumentOutOfRangeException(nameof(Config.FunctionPollSeconds)); 
+  ValidCron GetFunctionPollCronExpression(DefaultsSettings defs) {
+    return new(Config.FunctionPollExpression 
+        ?? (this is ReadFunction ? defs.ReadFunctionPollExpression : 
+            this is PromoteFunction ? defs.PromoteFunctionPollExpression : 
+            this is WriteFunction ? defs.WriteFunctionPollExpression : 
+            defs.OtherFunctionPollExpression));
   } 
-}
-
-public static class IRunnableFunctionListExtensions {
-  public static int GetMinimumPollSeconds(this List<IRunnableFunction> functions, DefaultsSettings defs) => 
-      functions.Min(f => f.FunctionPollSeconds(defs)); 
 }
 
 public abstract class AbstractFunction<C> : IRunnableFunction where C : OperationConfig {

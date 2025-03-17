@@ -15,7 +15,7 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
         .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
-  [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo timer) {    
+  [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("{{ it.FunctionTimerCronExpr }}")] TimerInfo timer) {    
     var start = UtcDate.UtcNow;
     log.LogInformation("{{it.ClassName}} running");
     try { 

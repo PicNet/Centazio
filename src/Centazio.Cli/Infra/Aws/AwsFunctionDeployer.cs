@@ -124,13 +124,11 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
       var functype = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
       var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-      var functions = await new FunctionsInitialiser(["aws"], registrar).Init([functype]);
-      var ressecs = functions.GetMinimumPollSeconds(settings.Defaults);
-      if (ressecs < 60) throw new Exception($"AWS minimum resolution is 60 seconds but {ressecs} was found");
+      var func = (await new FunctionsInitialiser(["aws"], registrar).Init([functype])).Single();
           
       var rulearn = (await evbridge.PutRuleAsync(new PutRuleRequest {
         Name = rulenm,
-        ScheduleExpression = $"rate({ressecs / 60} minute)",
+        ScheduleExpression = $"cron({func.GetFunctionPollCronExpression(settings.Defaults).Value})",
         State = RuleState.ENABLED,
         Description = $"Trigger {project.AwsFunctionName} Lambda function every minute"
       })).RuleArn;

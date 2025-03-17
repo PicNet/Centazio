@@ -15,9 +15,9 @@ public static class IntegrationsAssemblyInspector {
       if (!integrations.Any()) throw new Exception($"Could not find the Centazio Integration in provided assembly[{assembly.GetName().FullName}]");
       if (integrations.Count > 1) throw new Exception($"Found {integrations.Count} Centazio Integrations in assembly[{assembly.GetName().FullName}].  There should only ever be one Integration per deployment unit");
       var integration = integrations.Single();
-      if (integration.GetConstructor([typeof(TSettings), typeof(TSecrets)]) is null) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor");
-      
-      return (IIntegrationBase) (Activator.CreateInstance(integration, settings, secrets) ?? throw new Exception());
+      var ctors = integration.GetConstructors(); 
+      if (ctors.Length != 1) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor");
+      return (IIntegrationBase) (ctors.Single().Invoke([settings, secrets]) ?? throw new Exception());
     }
   }
 

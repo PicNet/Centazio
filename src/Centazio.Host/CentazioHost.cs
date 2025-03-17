@@ -4,6 +4,7 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
+using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
@@ -45,7 +46,7 @@ public class CentazioHost {
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var runner = BuildFunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), settings, registrar.ServiceProvider);
-    await using var timer = StartHost(settings, functions, runner);
+    StartHost(settings, functions, runner);
     _ = DoDynamicTriggers(functions, pubsub.Reader, runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
@@ -78,13 +79,24 @@ public class CentazioHost {
   private static IFunctionRunner BuildFunctionRunner(SelfHostChangesNotifier notifier, CentazioSettings settings, ServiceProvider prov) => 
       new FunctionRunner(notifier, prov.GetRequiredService<ICtlRepository>(), settings);
 
-  private Timer StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
-    return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(functions.GetMinimumPollSeconds(settings.Defaults)));
+  private void StartHost(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
+    // todo: have different timers for different cron expressions
+    // return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(functions.GetMinimumPollSeconds(settings.Defaults)));
+    functions.GroupBy(f => f.GetFunctionPollCronExpression(settings.Defaults).Expression).ForEach(g => {
+      RecurringJob.AddOrUpdate(g.Key, () => RunFunctions(runner, g.ToList()), g.Key);
+    });
+    /*
+      return new Timer(RunFunctions, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
     
-    // ReSharper disable once AsyncVoidMethod
-    async void RunFunctions(object? state) => await functions
-        .Select(async f => await runner.RunFunction(f))
-        .Synchronous();
+      // ReSharper disable once AsyncVoidMethod
+      async void RunFunctions(object? state) => await functions
+          .Select(async f => await runner.RunFunction(f))
+          .Synchronous();
+    });
+    */
+  }
+  public async Task RunFunctions(IFunctionRunner runner, List<IRunnableFunction> functions) {
+    await functions.Select(runner.RunFunction).Synchronous();
   }
 }
 

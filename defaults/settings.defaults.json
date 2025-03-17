@@ -1,6 +1,12 @@
 {
   "Defaults": {
     "GeneratedCodeFolder": "generated",
+    
+    "ReadFunctionPollExpression": "*/15 * * * * *",
+    "PromoteFunctionPollExpression": "0 * * * * *",
+    "WriteFunctionPollExpression": "0 * * * * *",
+    "OtherFunctionPollExpression": "0 * * * * *",
+    
     "FunctionMaxAllowedRunningMinutes": 15,
     "ConsoleCommands": {
       "Az": {

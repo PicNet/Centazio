@@ -190,14 +190,14 @@ public class AbstractFunctionTests {
       ConsoleCommands = null!,
       GeneratedCodeFolder = null!,
       FunctionMaxAllowedRunningMinutes = 0,
-      ReadFunctionPollSeconds = 1,
-      PromoteFunctionPollSeconds = 2,
-      WriteFunctionPollSeconds = 3,
-      OtherFunctionPollSeconds = 4,
+      ReadFunctionPollExpression = "*/1 * * * * *",
+      PromoteFunctionPollExpression = "*/2 * * * * *",
+      WriteFunctionPollExpression = "*/3 * * * * *",
+      OtherFunctionPollExpression = "*/4 * * * * *"
     };
-    Assert.That(((IRunnableFunction) F.ReadFunc()).FunctionPollSeconds(defs), Is.EqualTo(1));
-    Assert.That(((IRunnableFunction) F.PromoteFunc()).FunctionPollSeconds(defs), Is.EqualTo(2));
-    Assert.That(((IRunnableFunction) F.WriteFunc()).FunctionPollSeconds(defs), Is.EqualTo(3));
+    Assert.That(((IRunnableFunction) F.ReadFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/1 * * * * *")));
+    Assert.That(((IRunnableFunction) F.PromoteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/2 * * * * *")));
+    Assert.That(((IRunnableFunction) F.WriteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/3 * * * * *")));
   }
   
   private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
