@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Stage;
+﻿using Centazio.Core.Runner;
+using Centazio.Core.Stage;
 
 namespace Centazio.Core.Tests.Inspect;
 
@@ -11,6 +12,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
     { nameof(ValidCron), [nameof(ValidCron.Expression)] },
     { nameof(DbFieldType), ["*"] },
+    { nameof(FunctionConfig), [nameof(FunctionConfig.FunctionPollExpression)] },
     { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }
   };
   

@@ -22,12 +22,12 @@ public interface IAwsFunctionDeployer {
   Task Deploy(AwsFunctionProjectMeta project);
 }
 
-public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : IAwsFunctionDeployer {
+public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets, string environment) : IAwsFunctionDeployer {
 
   public async Task Deploy(AwsFunctionProjectMeta project) => 
-      await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project).DeployImpl();
+      await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, environment).DeployImpl();
 
-  class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project) {
+  class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project, string environment) {
 
     private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
     
@@ -124,7 +124,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
       var functype = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
       var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-      var func = (await new FunctionsInitialiser(["aws"], registrar).Init([functype])).Single();
+      var func = (await new FunctionsInitialiser([environment, "aws"], registrar).Init([functype])).Single();
           
       var rulearn = (await evbridge.PutRuleAsync(new PutRuleRequest {
         Name = rulenm,

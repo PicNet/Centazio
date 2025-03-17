@@ -1,6 +1,4 @@
-﻿using Cronos;
-
-namespace Centazio.Core.Tests.Misc;
+﻿namespace Centazio.Core.Tests.Misc;
 
 public class CronExpressionsHelperTests {
 
@@ -12,8 +10,8 @@ public class CronExpressionsHelperTests {
   }
   
   [Test] public void Test_EveryXSeconds_arg_validation() {
-    Assert.Throws<CronFormatException>(() => CronExpressionsHelper.EveryXSeconds(0));
-    Assert.Throws<CronFormatException>(() => CronExpressionsHelper.EveryXSeconds(60));
+    Assert.Throws<ArgumentOutOfRangeException>(() => CronExpressionsHelper.EveryXSeconds(0));
+    Assert.Throws<ArgumentOutOfRangeException>(() => CronExpressionsHelper.EveryXSeconds(60));
   }
   
   [Test] public void Test_EveryXSeconds_success() {
@@ -22,8 +20,8 @@ public class CronExpressionsHelperTests {
   }
 
   [Test] public void Test_EveryXMinutes_arg_validation() {
-    Assert.Throws<CronFormatException>(() => CronExpressionsHelper.EveryXMinutes(0));
-    Assert.Throws<CronFormatException>(() => CronExpressionsHelper.EveryXMinutes(60));
+    Assert.Throws<ArgumentOutOfRangeException>(() => CronExpressionsHelper.EveryXMinutes(0));
+    Assert.Throws<ArgumentOutOfRangeException>(() => CronExpressionsHelper.EveryXMinutes(60));
   }
   
   [Test] public void Test_EveryXMinutes_success() {

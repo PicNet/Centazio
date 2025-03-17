@@ -83,7 +83,7 @@ public class CentazioHost {
     async void RunFunctionsInGroupAndResetTimer(FunctionTimerGroup g) {
       await g.Timer.DisposeAsync();
       await g.Functions.Select(async f => await runner.RunFunction(f)).Synchronous();
-      g.Timer = new Timer(_ => RunFunctionsInGroupAndResetTimer(g), null, g.Delay(DateTime.UtcNow), Timeout.InfiniteTimeSpan);
+      g.Timer = new Timer(_ => RunFunctionsInGroupAndResetTimer(g), null, g.Delay(UtcDate.UtcNow), Timeout.InfiniteTimeSpan);
     }
   }
   
