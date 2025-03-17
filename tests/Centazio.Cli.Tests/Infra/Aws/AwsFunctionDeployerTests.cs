@@ -22,7 +22,7 @@ public class AwsFunctionDeployerTests {
     
     await new AwsCloudSolutionGenerator(settings, templater, project, "in-mem").GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
-    await new AwsFunctionDeployer(settings, secrets, "in-mem").Deploy(project);
+    await new AwsFunctionDeployer(settings, secrets).Deploy(project);
     
     // var after = AzCmd.ListFunctionApps();
     // var funcs = AzCmd.ListFunctionsInApp(appname);

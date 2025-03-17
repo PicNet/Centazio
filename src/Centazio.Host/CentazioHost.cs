@@ -43,35 +43,14 @@ public class CentazioHost {
     var functions = await new FunctionsInitialiser([cmdsetts.Env, nameof(CentazioHost).ToLower()], registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
-    var runner = new FunctionRunner(new SelfHostChangesNotifier(pubsub.Writer), registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
+    var notifier = new InProcessChangesNotifier(functions);
+    var runner = new FunctionRunner(notifier, registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
     
     StartTimerBasedTriggers(settings, functions, runner);
-    _ = DoDynamicTriggers(functions, pubsub.Reader, runner);
+    _ = notifier.InitDynamicTriggers(runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
     pubsub.Writer.Complete();
-  }
-
-  private Task DoDynamicTriggers(List<IRunnableFunction> functions, ChannelReader<OpChangeTriggerKey> reader, IFunctionRunner runner) {
-    var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();
-    functions.ForEach(func => func.Triggers().ForEach(key => {
-      if (!triggermap.ContainsKey(key)) triggermap[key] = [];
-      triggermap[key].Add(func);
-    }));
-    
-    return Task.Run(async () => {
-      while (await reader.WaitToReadAsync()) {
-        while (reader.TryRead(out var key)) {
-          if (!triggermap.TryGetValue(key, out var pubs)) return;
-          await pubs
-              .Select(async f => {
-                DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
-                return await runner.RunFunction(f);
-              })
-              .Synchronous();
-        }
-      }
-    });
   }
 
   private void StartTimerBasedTriggers(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
@@ -99,11 +78,4 @@ public class CentazioHost {
     
     public TimeSpan Delay(DateTime utcnow) => Cron.Value.GetNextOccurrence(utcnow) - utcnow ?? throw new Exception();
   }
-}
-
-public class SelfHostChangesNotifier(ChannelWriter<OpChangeTriggerKey> onfire) : IChangesNotifier {
-  
-  public async Task Notify(LifecycleStage stage, List<ObjectName> objs) => 
-      await Task.WhenAll(objs.Select(async obj => await onfire.WriteAsync(new (obj, stage))));
-
 }
