@@ -57,26 +57,3 @@ public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEnti
   
   public object GetChecksumSubset() => new { CoreId, Id = CoreId };
 }
-
-public record TestSettingsRaw {
-  public List<string>? SecretsFolders { get; init; }
-  
-  public static explicit operator TestSettings(TestSettingsRaw raw) => new(
-      raw.SecretsFolders ?? throw new ArgumentNullException(nameof(SecretsFolders)));
-}
-
-public record TestSettings(List<string> SecretsFolders) {
-  public string GetSecretsFolder() => FsUtils.FindFirstValidDirectory(SecretsFolders);
-}
-
-public record TestSecretsRaw {
-  public string? AWS_KEY { get; init; }
-  public string? AWS_SECRET { get; init; }
-  public string? SQL_CONN_STR { get; init; }
-  
-  public static explicit operator TestSecrets(TestSecretsRaw raw) => new(
-      raw.AWS_KEY ?? throw new ArgumentNullException(nameof(AWS_KEY)),
-      raw.AWS_SECRET ?? throw new ArgumentNullException(nameof(AWS_SECRET)),
-      raw.SQL_CONN_STR ?? throw new ArgumentNullException(nameof(SQL_CONN_STR)));
-}
-public record TestSecrets(string AWS_KEY, string AWS_SECRET, string SQL_CONN_STR);
