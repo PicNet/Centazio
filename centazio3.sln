@@ -9,10 +9,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Core.Tests", "tests\Centazio.Core.Tests\Centazio.Core.Tests.csproj", "{1653C645-36BD-429C-A737-1F73144E6D58}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{85E0FAEE-523F-43E6-9FA8-53EFA08E2F35}"
-	ProjectSection(SolutionItems) = preProject
-		src\readme.md = src\readme.md
-		src\tutorial.md = src\tutorial.md
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Centazio.Providers", "Centazio.Providers", "{95FE1321-2F07-45ED-ABA6-AA354B308CE7}"
 EndProject
@@ -55,6 +51,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5
 		Directory.Packages.props = Directory.Packages.props
 		settings.in-mem.json = settings.in-mem.json
 		\\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\in-mem.env = \\aus-syd-dc05.internal.picnet.com.au\secrets\centazio3\azure_sample.env
+		readme.md = readme.md
+		tutorial.md = tutorial.md
+		todo.md = todo.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.TestFunctions", "tests\Centazio.TestFunctions\Centazio.TestFunctions.csproj", "{16243103-CE9F-46A1-94D6-2ECA60FCA696}"
