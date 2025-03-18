@@ -14,6 +14,7 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   protected CsProjModel model = null!;
   protected readonly ITemplater templater = templater;
   protected readonly string environment = environment;
+  protected readonly CentazioSettings settings = settings;
   
   public async Task GenerateSolution() {
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);

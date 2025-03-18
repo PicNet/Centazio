@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli.Infra;
 using Centazio.Core.Misc;
+using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen;
@@ -29,16 +30,16 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
     }
   }
   
-  // todo: pass the Cron expression to the template here from FunctionConfig.FunctionPollSeconds
   private async Task AddAzureFunctionsToProject(List<Type> functions) {
     await functions.ForEachSequentialAsync(async func => {
+      var impl = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(func);
       var clcontent = templater.ParseFromPath("azure/function.cs", new {
         ClassName=func.Name,
         ClassFullName=func.FullName,
         FunctionNamespace=func.Namespace, 
         NewAssemblyName = project.ProjectName,
         Environment=environment,
-        FunctionTimerCronExpr="*/30 * * * * *"
+        FunctionTimerCronExpr=impl.GetFunctionPollCronExpression(settings.Defaults)
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Azure.cs"), clcontent);
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
