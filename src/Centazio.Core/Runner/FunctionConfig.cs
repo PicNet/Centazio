@@ -28,7 +28,7 @@ public record FunctionConfig(List<OperationConfig> Operations) : IDisposable {
   /// Allows the setting of the host polling frequency (usnig Cron/NCron syntax).  If this is not set then we use the
   /// settings.[cloud].json properties: ReadFunctionPollExpression, PromoteFunctionPollExpression, WriteFunctionPollExpression, OtherFunctionPollExpression
   /// </summary>
-  public string? FunctionPollExpression { get; }
+  public string? FunctionPollExpression { get; init; }
 
   public List<OperationConfig> Operations { get; } = Operations.Any() ? Operations : throw new ArgumentNullException(nameof(Operations));
   

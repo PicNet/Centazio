@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Centazio.Cli.Infra;
 using Centazio.Core;
 using Centazio.Core.Runner;
@@ -99,8 +100,11 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   }
 
   private void AddSecretsFilesToProject() {
-    var path = new SecretsFileLoader(settings.GetSecretsFolder()).GetSecretsFilePath(environment);
-    AddCopyFilesToProject([path]);
+    var loader = new SecretsFileLoader(settings.GetSecretsFolder());
+    var paths = new List<string> { loader.GetSecretsFilePath(environment, true) ?? throw new UnreachableException() };
+    var envpath = loader.GetSecretsFilePath(project.CloudName.ToLower(), false);
+    if (envpath is not null) paths.Add(envpath);
+    AddCopyFilesToProject(paths);
   }
   
   private void AddCopyFilesToProject(List<string> files) {

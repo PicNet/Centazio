@@ -3,25 +3,27 @@
 namespace Centazio.Core.Secrets;
 
 public interface ISecretsLoader  {
-  string GetSecretsFilePath(string environment);
-  T Load<T>(string environment);
+  T Load<T>(params string[] environments);
+  string? GetSecretsFilePath(string environment, bool required);
 }
 
 public class SecretsFileLoader(string dir) : ISecretsLoader {
 
-  // todo: change to take params string[] environments and handle multiple overwritting files
-  public string GetSecretsFilePath(string environment) {
-    var path = Path.Combine(dir, $"{environment}.env");
-    if (!File.Exists(path)) throw new FileNotFoundException(path);
-    return path;
-  }
-  
-  public T Load<T>(string environment) {
-    var path = GetSecretsFilePath(environment);
-    Log.Information($"loading secrets - file [{path.Split(Path.DirectorySeparatorChar).Last()}]");
-    
-    var secrets = LoadSecretsFileAsDictionary(path);
+  public T Load<T>(params string[] environments) {
+    if (!environments.Any()) throw new ArgumentNullException(nameof(environments));
+    var paths = environments.Select((env, idx) => GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
+    Log.Information($"loading secrets files[{String.Join(',', paths.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
+    var secrets = new Dictionary<string, string>();
+    paths.ForEach(path => 
+        LoadSecretsFileAsDictionary(path)
+            .Where(kvp => !String.IsNullOrWhiteSpace(kvp.Value))
+            .ForEach(kvp => secrets[kvp.Key] = kvp.Value));
     return ValidateAndSetLoadedSecrets<T>(secrets); 
+  }
+
+  public string? GetSecretsFilePath(string environment, bool required) {
+    var path = Path.Combine(dir, $"{environment}.env");
+    return File.Exists(path) ? path : !required ? null : throw new FileNotFoundException(path);
   }
 
   private Dictionary<string, string> LoadSecretsFileAsDictionary(string path) => File.ReadAllLines(path)
@@ -31,7 +33,7 @@ public class SecretsFileLoader(string dir) : ISecretsLoader {
         var (Key, Value) = l.Split('=');
         return (key: Key, rest: Value);
       })
-      .ToDictionary(kvp => kvp.key, kvp => String.Join('=', kvp.rest));
+      .ToDictionary(kvp => kvp.key, kvp => String.Join('=', kvp.rest).Trim());
 
   private T ValidateAndSetLoadedSecrets<T>(Dictionary<string, string> secrets) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));

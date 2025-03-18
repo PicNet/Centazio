@@ -4,22 +4,26 @@ namespace Centazio.Core.Tests.Secrets;
 
 public class SecretsFileLoaderTests {
 
-  [Test] public void Test_loading_from_local() {
-    var contents = @"SETTING1=VALUE1;
+  private const string FULL_CONTENT = @"SETTING1=VALUE1;
 SETTING2=VALUE 2 with spaces 
 # line with comments ignored
 SETTING3_NUMBER=123#anything after comments ignored
 SETTING4=trailing space with semmi ;
 SETTING5=val;with;semmis;
 SETTING6=val=with=equals";
-    Assert.That(Load("testing", contents), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
+  
+  [Test] public void Test_loading_from_local() {
+    Assert.That(Load(("testing", FULL_CONTENT)), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
   }
   
-  private TestSettingsTargetObj Load(string env, string contents) {
-    var file = $"{env}.env";
-    File.WriteAllText(file, contents);
-    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(env); }
-    finally { File.Delete(file); }
+  [Test] public void Test_overwriting_secrets() {
+    Assert.That(Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "overwritten", "val;with;semmis;", "val=with=equals")));
+  }
+  
+  private TestSettingsTargetObj Load(params List<(string env, string contents)> envs) {
+    envs.ForEach(f => File.WriteAllText($"{f.env}.env", f.contents));
+    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToArray()); }
+    finally { envs.ForEach(f => File.Delete($"{f.env}.env")); }
   }
 
   // ReSharper disable once ClassNeverInstantiated.Local

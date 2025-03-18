@@ -11,6 +11,7 @@ public class SqlConn {
   
   private static SqlConn? instance;
   
+  // todo: stop passing environment around, just pass in settings
   public static async Task<SqlConn> GetInstance(bool real, string environment) {
     if (instance is not null) return instance.Real == real ? instance : throw new Exception($"cannot change Real/Container between tests");
     instance = new SqlConn(real, environment);
