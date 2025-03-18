@@ -9,7 +9,7 @@ public interface IRunnableFunction : IDisposable {
   bool Running { get; }
   FunctionConfig Config { get; }
   
-  Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
+  Task RunFunctionOperations(SystemState sys, List<OpResultAndObject> runningresults);
   
   List<OpChangeTriggerKey> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   ValidString GetFunctionPollCronExpression(DefaultsSettings defs) {
@@ -45,13 +45,13 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected abstract FunctionConfig GetFunctionConfiguration();
   public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
-  public virtual async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
       var opstates = await LoadOperationsStates(Config, sys, ctl);
       var readyops = GetReadyOperations(opstates);
-      return await RunOperationsTillAbort(readyops, Config.ThrowExceptions);
+      await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }
 
@@ -74,9 +74,9 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     return states.Where(IsOperationReady).ToList();
   }
   
-  internal async Task<List<OpResultAndObject>> RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, bool throws = true) {
-    return await ops
-        .Select(async op => await RunAndSaveOp(op))
+  internal async Task RunOperationsTillAbort(List<OperationStateAndConfig<C>> ops, List<OpResultAndObject> runningresults, bool throws = true) {
+    await ops
+        .Select(async op => runningresults.AddAndReturn(await RunAndSaveOp(op)))
         .Synchronous(r => r.Result.AbortVote == EOperationAbortVote.Abort);
 
     async Task<OpResultAndObject> RunAndSaveOp(OperationStateAndConfig<C> op) {
@@ -98,7 +98,11 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       } catch (Exception ex) {
         Log.Error(ex, "unhandled RunOperation exception {@ErrorMessage}", ex.Message);
         if (throws) throw;
-        // todo: '0' here means that no changes will be notified, it is possible for functions to have partial success and should be supported
+        // note: the '0' argument to `ErrorOperationResult` means that no changes will be notified, it
+        //    is possible for functions to have partial success (when they process items sequentially and
+        //    not in a batch) but this is a rare occurrence and will be addressed if encountered in
+        //    the wild.  However, any solution will be ugly as we will need to somehow track a counter
+        //    of successful changes and that will be hard to implicitly document in the api.
         return new OpResultAndObject(op.State.Object, new ErrorOperationResult(0, EOperationAbortVote.Abort, ex));
       }
     }

@@ -42,7 +42,7 @@ public class FunctionRunnerTests {
   
   [Test] public async Task Test_run_functions_with_multiple_results() {
     var count = 10;
-    var results = (await F.RunFunc(new SimpleFunction(repo, count), ctl: repo));
+    var results = await F.RunFunc(new SimpleFunction(repo, count), ctl: repo);
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
@@ -80,11 +80,10 @@ public class FunctionRunnerTests {
     private readonly ICtlRepository ctlrepo = ctl;
     protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
+    public override async Task RunFunctionOperations(SystemState state1, List<OpResultAndObject> runningresults) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));
-      return [];
     }
 
     public override Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();
@@ -96,11 +95,11 @@ public class FunctionRunnerTests {
     private readonly ICtlRepository ctlrepo = ctl;
     protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    public override async Task<List<OpResultAndObject>> RunFunctionOperations(SystemState state1) {
+    public override async Task RunFunctionOperations(SystemState state1, List<OpResultAndObject> runningresults) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));
-      return Enumerable.Range(0, results).Select(_ => new OpResultAndObject(C.SystemEntityName, new EmptyReadOperationResult())).ToList();
+      runningresults.AddRange(Enumerable.Range(0, results).Select(_ => new OpResultAndObject(C.SystemEntityName, new EmptyReadOperationResult())));
     }
 
     public override Task<OperationResult> RunOperation(OperationStateAndConfig<ReadOperationConfig> op) => throw new Exception();

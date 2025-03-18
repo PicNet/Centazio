@@ -35,19 +35,22 @@ public class FunctionRunner(IChangesNotifier changesnotif, ICtlRepository ctl, C
       Log.Information("function considered stuck, running again {@SystemState} {@MaximumRunningMinutes} {@MinutesSinceStart}", state, func.Config.TimeoutMinutes, minutes);
     }
 
+    // keep track of running results, so even if one operation fails, we can
+    //    notify other functions of successfull operations
+    List<OpResultAndObject> runningresults = [];
+    
     try {
       // not setting last start here as we need the LastStart to represent the time the function was started before this run
       state = await ctl.SaveSystemState(state.Running());
-      var results = await func.RunFunctionOperations(state);
-      await SaveCompletedState();
-      await NotifyChanges(func.Stage, results);
-      return new SuccessFunctionRunResults(results);
+      await func.RunFunctionOperations(state, runningresults);
+      return new SuccessFunctionRunResults(runningresults);
     } catch (Exception ex) {
-      await SaveCompletedState();
       Log.Error(ex, "unhandled function error, returning empty OpResults {@SystemState}", state);
       if (func.Config.ThrowExceptions) throw;
-      // todo: need to call `NotifyChanges` for partially successfull functions
       return new ErrorFunctionRunResults(ex);
+    } finally {
+      await SaveCompletedState();
+      await NotifyChanges(func.Stage, runningresults);
     }
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));

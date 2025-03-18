@@ -200,8 +200,11 @@ public class AbstractFunctionTests {
     Assert.That(((IRunnableFunction) F.WriteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/3 * * * * *")));
   }
   
-  private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 
-      await func.RunOperationsTillAbort(ops, false);
+  private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) {
+    var results = new List<OpResultAndObject>();
+    await func.RunOperationsTillAbort(ops, results, false);
+    return results;
+  }
 
   private ObjectState ExpObjState(EOperationResult res, EOperationAbortVote vote, int len, DateTime nextcheckpoint, Exception? ex = null) {
     return new ObjectState(new(res.ToString()), new(res.ToString()), new SystemEntityTypeName(res.ToString()), nextcheckpoint, true) {
