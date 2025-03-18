@@ -12,19 +12,16 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
       if (!triggermap.ContainsKey(key)) triggermap[key] = [];
       triggermap[key].Add(func);
     }));
-    
+
     return Task.Run(async () => {
       while (await pubsub.Reader.WaitToReadAsync()) {
         while (pubsub.Reader.TryRead(out var key)) {
-          if (!triggermap.TryGetValue(key, out var pubs)) return;
+          if (!triggermap.TryGetValue(key, out var pubs)) { break; }
           await pubs.Select(async f => {
             DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
             return await runner.RunFunction(f);
           }).Synchronous();
         }
-
-	    	// todo: remove
-        Console.WriteLine("channel should be empty");
       }
     });
   }

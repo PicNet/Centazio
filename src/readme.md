@@ -17,7 +17,6 @@
 - function-to-function triggers:
   - aws/azure
   - the triggered function should get as a parameter the objects that changed
-  - functions currently work out their triggers, we should allow using FunctionConfig to override this
 - function cron trigger should translate to AWS/Azure trigger, 
 - use picnet github to host publicly
 - nuget all code
