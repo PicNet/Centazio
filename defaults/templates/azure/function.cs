@@ -11,8 +11,8 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Azure() {    
-    impl = new(async () => await new FunctionsInitialiser({{it.Environments}}, registrar)
-        .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
+    impl = new(async () => (await new FunctionsInitialiser({{it.Environments}}, registrar)
+        .Init([typeof({{it.ClassName}})])).Single(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
   [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("{{ it.FunctionTimerCronExpr }}")] TimerInfo timer) {    

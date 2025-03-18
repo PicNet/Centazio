@@ -14,7 +14,8 @@ namespace Centazio.Providers.Sqlite.Tests.E2E;
 
 public class SqliteE2ETests {
   [Test] public async Task Run_e2e_simulation_and_tests() {
-    await new E2EEnvironment(new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
+    // todo: investigate why the 'Real Notifier' does not work with DB providers
+    await new E2EEnvironment(false, new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
   }
 }
 

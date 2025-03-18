@@ -26,10 +26,10 @@ public class InProcessChangesNotifierTests {
   [Test] public async Task Test_notification_works() {
     var func = new Func(stage2, [new(C.SystemEntityName, new (stage1))], [C.CoreEntityName]);
     
-    // todo: this circular dependency is not nice
     var notif = new InProcessChangesNotifier([func]);
-    var runner = new Runner(notif);
+    var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif);
     _ = notif.InitDynamicTriggers(runner);
+    
     var notifications = 10;
     await Enumerable.Range(0, notifications).Select(async _ => {
       await notif.Notify(stage1, [C.SystemEntityName]);

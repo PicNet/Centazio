@@ -23,7 +23,7 @@ public static class TestingFactories {
   public static TestingChangeNotifier ChangeNotifier() => new();
   public static Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl, IChangesNotifier? notif = null) where C : OperationConfig => 
       FuncRunner(notif, ctl).RunFunction(func);
-  public static FunctionRunner FuncRunner(IChangesNotifier? notif = null, ICtlRepository? ctl = null) => new(notif ?? ChangeNotifier(), ctl ?? CtlRepo(), Settings()); 
+  public static FunctionRunner FuncRunner(IChangesNotifier? notif = null, ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), Settings()); 
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
       ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());

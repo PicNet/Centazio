@@ -2,9 +2,15 @@
 
 namespace Centazio.Core.Runner;
 
+public interface IChangesNotifier {
+  Task Notify(LifecycleStage stage, List<ObjectName> objs);
+}
+
 public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChangesNotifier {
 
-  internal readonly Channel<OpChangeTriggerKey> pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
+  private readonly Channel<OpChangeTriggerKey> pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
+  
+  public bool IsEmpty => pubsub.Reader.Count == 0;
   
   public Task InitDynamicTriggers(IFunctionRunner runner) {
     var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();

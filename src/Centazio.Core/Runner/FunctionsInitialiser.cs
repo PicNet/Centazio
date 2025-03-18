@@ -7,8 +7,6 @@ namespace Centazio.Core.Runner;
 
 public class FunctionsInitialiser(List<string> environments, CentazioServicesRegistrar registrar) {
 
-  public async Task<IRunnableFunction> Init<F>() where F : IRunnableFunction => (await Init([typeof(F)])).Single();
-  
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
     var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(environments), registrar);
     

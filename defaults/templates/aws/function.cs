@@ -14,8 +14,8 @@ public class {{it.ClassName}}Handler {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {    
-    impl = new(async () => await new FunctionsInitialiser({{it.Environments}}, registrar)
-        .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
+    impl = new(async () => (await new FunctionsInitialiser({{it.Environments}}, registrar)
+        .Init([typeof({{it.ClassName}})])).Single(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
   public async Task<string> Handle(ILambdaContext context) {
