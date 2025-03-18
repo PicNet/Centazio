@@ -12,8 +12,8 @@ public interface IRunnableFunction : IDisposable {
   Task<List<OpResultAndObject>> RunFunctionOperations(SystemState sys);
   
   List<OpChangeTriggerKey> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
-  ValidCron GetFunctionPollCronExpression(DefaultsSettings defs) {
-    return new(Config.FunctionPollExpression 
+  ValidString GetFunctionPollCronExpression(DefaultsSettings defs) {
+    return new ValidString(Config.FunctionPollExpression 
         ?? (this is ReadFunction ? defs.ReadFunctionPollExpression : 
             this is PromoteFunction ? defs.PromoteFunctionPollExpression : 
             this is WriteFunction ? defs.WriteFunctionPollExpression : 

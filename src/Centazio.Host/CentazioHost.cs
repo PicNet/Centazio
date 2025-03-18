@@ -71,8 +71,8 @@ public class CentazioHost {
     public List<IRunnableFunction> Functions { get; }
     public Timer Timer { get; set; }  
 
-    public FunctionTimerGroup(ValidCron cron, List<IRunnableFunction> functions, Action<FunctionTimerGroup> rungroup) {
-      (Cron, Functions) = (cron, functions);
+    public FunctionTimerGroup(ValidString cron, List<IRunnableFunction> functions, Action<FunctionTimerGroup> rungroup) {
+      (Cron, Functions) = (new(cron.Value), functions);
       Timer = new Timer(_ => rungroup(this), null, Delay(UtcDate.UtcNow), Timeout.InfiniteTimeSpan);
     }
     

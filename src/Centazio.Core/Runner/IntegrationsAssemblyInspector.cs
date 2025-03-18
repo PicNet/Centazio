@@ -35,5 +35,12 @@ public static class IntegrationsAssemblyInspector {
     bool DoesTypeMatchFilter(Type type) => !filters.Any() || filters.Contains("All", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => (type.FullName ?? String.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase));
   }
-
+  
+  public static IRunnableFunction CreateFuncWithNullCtorArgs(Type functype) {
+    return functype.GetConstructors().Select(ctor => {
+      var args = ctor.GetParameters().Select(_ => null as object).ToArray();
+      try { return (IRunnableFunction) ctor.Invoke(args); }
+      catch { return null; }
+    }).First(func => func is not null) ?? throw new Exception($"Could not create a dummy instance of function [{functype.FullName}]");
+  }
 }

@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,6 @@ public class FunctionsInitialiser(string[] environments, CentazioServicesRegistr
   
   public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
     var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(environments), registrar);
-    var secrets = new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(environments.First());
     
     RegisterCoreServices(settings);
     var assemblies = functions.Select(f => f.Assembly).Distinct().ToList();

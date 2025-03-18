@@ -9,11 +9,9 @@ using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
-using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Microsoft.Extensions.DependencyInjection;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
 namespace Centazio.Cli.Infra.Aws;
@@ -118,14 +116,13 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       Log.Information($"Updated function: {response.FunctionArn}");
       return response.FunctionArn;
     }
-
+    
     private async Task SetUpTimer(AmazonLambdaClient lambda, string funcarn) {
       using var evbridge = new AmazonEventBridgeClient(credentials, region);
       var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
       var functype = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
-      var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-      var func = (await new FunctionsInitialiser(["in-mem"], registrar).Init([functype])).Single();
-          
+      var func = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(functype);
+      
       var rulearn = (await evbridge.PutRuleAsync(new PutRuleRequest {
         Name = rulenm,
         ScheduleExpression = $"cron({func.GetFunctionPollCronExpression(settings.Defaults).Value})",

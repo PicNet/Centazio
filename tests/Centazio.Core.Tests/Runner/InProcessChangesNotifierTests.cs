@@ -31,7 +31,7 @@ public class InProcessChangesNotifierTests {
     var runner = new Runner(notif);
     _ = notif.InitDynamicTriggers(runner);
     var notifications = 10;
-    await Enumerable.Range(0, notifications).Select(async i => {
+    await Enumerable.Range(0, notifications).Select(async _ => {
       await notif.Notify(stage1, [C.SystemEntityName]);
       await Task.Delay(50);
     }).Synchronous();
@@ -59,7 +59,7 @@ public class InProcessChangesNotifierTests {
       new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers }  
     ]);
     
-    public int RunCount { get; private set; } = 0; 
+    public int RunCount { get; private set; } 
     
     public void Dispose() { throw new Exception(); }
     

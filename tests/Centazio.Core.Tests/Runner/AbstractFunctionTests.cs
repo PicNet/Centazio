@@ -195,9 +195,9 @@ public class AbstractFunctionTests {
       WriteFunctionPollExpression = "*/3 * * * * *",
       OtherFunctionPollExpression = "*/4 * * * * *"
     };
-    Assert.That(((IRunnableFunction) F.ReadFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/1 * * * * *")));
-    Assert.That(((IRunnableFunction) F.PromoteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/2 * * * * *")));
-    Assert.That(((IRunnableFunction) F.WriteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidCron("*/3 * * * * *")));
+    Assert.That(((IRunnableFunction) F.ReadFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/1 * * * * *")));
+    Assert.That(((IRunnableFunction) F.PromoteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/2 * * * * *")));
+    Assert.That(((IRunnableFunction) F.WriteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/3 * * * * *")));
   }
   
   private async Task<List<OpResultAndObject>> RunOps(List<OperationStateAndConfig<ReadOperationConfig>> ops, AbstractFunction<ReadOperationConfig> func) => 

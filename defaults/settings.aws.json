@@ -1,8 +1,8 @@
 {
   "Defaults": {
-    "ReadFunctionPollExpression": "* * * * * ",
-    "PromoteFunctionPollExpression": "*/3 * * * * ",
-    "WriteFunctionPollExpression": "*/3 * * * * ",
-    "OtherFunctionPollExpression": "*/5 * * * * "
+    "ReadFunctionPollExpression": "* * * * ? *",
+    "PromoteFunctionPollExpression": "*/3 * * * ? *",
+    "WriteFunctionPollExpression": "*/3 * * * ? *",
+    "OtherFunctionPollExpression": "*/5 * * * ? *"
   }
 }
