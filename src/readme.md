@@ -1,4 +1,5 @@
 # Todo
+- copy this todo list into todo.md and start working on a good readme
 - aws/azure wrappers:
   - Azure:
     - fix Log.Logger, currently only injected ILogger<> works

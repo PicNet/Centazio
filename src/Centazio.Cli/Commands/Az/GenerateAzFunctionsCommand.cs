@@ -17,7 +17,7 @@ public class GenerateAzFunctionsCommand(CentazioSettings coresettings, ITemplate
   protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
-    await UiHelpers.Progress("Generating Azure Function project", async () => await new AzureCloudSolutionGenerator(coresettings, templater, project, settings.Env).GenerateSolution());
+    await UiHelpers.Progress("Generating Azure Function project", async () => await new AzureCloudSolutionGenerator(coresettings, templater, project, settings.Environments.ToList()).GenerateSolution());
     await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
   }
 

@@ -12,7 +12,7 @@ using Timer = System.Threading.Timer;
 namespace Centazio.Host;
 
 public interface IHostConfiguration {
-  public string Env { get; }
+  public List<string> EnvironmentsList { get; }
   public string AssemblyNames { get; }
   public string FunctionFilter { get; }
   public bool Quiet { get; }
@@ -40,7 +40,8 @@ public class CentazioHost {
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    var functions = await new FunctionsInitialiser([cmdsetts.Env, nameof(CentazioHost).ToLower()], registrar).Init(functypes);
+    // todo: why ToArray, should just use List<string> everywhere
+    var functions = await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()).ToArray(), registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier(functions);

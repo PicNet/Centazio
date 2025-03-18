@@ -25,7 +25,8 @@ public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAws
   protected override async Task ExecuteImpl(string name, Settings settings) {
     var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder, settings.FunctionName);
     
-    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.Env).GenerateSolution());
+    // todo: see if we can remove all these settings.Environments.ToList() if base class can accept environments as List<string>
+    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.Environments.ToList()).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
     await UiHelpers.Progress($"Deploying the Lambda Function '{project.DashedProjectName}'", async () => await impl.Deploy(project));

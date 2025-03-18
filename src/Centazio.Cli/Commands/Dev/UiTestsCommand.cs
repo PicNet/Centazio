@@ -14,6 +14,9 @@ public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
   protected override async Task ExecuteImpl(string name, CommonSettings cmdsetts) {
     UiHelpers.Log($"[underline bold white]Running Ui Tests[/]\n\n");
     
+    Title("UiHelpers.Log - Arguments Parsed");
+    AnsiConsole.WriteLine(Json.Serialize(cmdsetts));
+    
     Title("UiHelpers.Log - Levels");
     AnsiConsole.WriteLine("AnsiConsole.WriteLine");
     Enum.GetValues<LogEventLevel>().OrderBy(v => v).ForEach(v => UiHelpers.Log($"UiHelpers.Log({v})", v)); 
@@ -42,6 +45,10 @@ public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
     Title($"UiHelpers.Ask");
     UiHelpers.Ask($"[{RandCol()}]Ask[/] (no default)");
     UiHelpers.Ask($"[{RandCol()}]Ask[/] (with default)", "default value");
+    
+    Title($"UiHelpers.AskForArr");
+    UiHelpers.AskForArr($"[{RandCol()}]Ask[/] (no default)");
+    UiHelpers.AskForArr($"[{RandCol()}]Ask[/] (with default)", ["value1", "value2"]);
     
     Title($"UiHelpers.Confirm");
     UiHelpers.Confirm($"[{RandCol()}]Confirm[/] (no default)");

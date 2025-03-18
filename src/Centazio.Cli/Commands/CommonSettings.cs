@@ -8,11 +8,12 @@ namespace Centazio.Cli.Commands;
 public class CommonSettings : CommandSettings {
   
   [CommandOption("-e|--env <ENVIRONMENT>")]
-  [DefaultValue(CentazioConstants.DEFAULT_ENVIRONMENT)]
-  public string Env { get; set; } = null!;
+  [DefaultValue(new [] { CentazioConstants.DEFAULT_ENVIRONMENT })]
+  public string[] Environments { get; set; } = null!;
+  public List<string> EnvironmentsList => Environments.ToList();
   
   internal Task SetInteractiveCommonOpts() {
-    Env = UiHelpers.Ask("Environment", CentazioConstants.DEFAULT_ENVIRONMENT);
+    Environments = UiHelpers.AskForArr("Environment (csv)", [CentazioConstants.DEFAULT_ENVIRONMENT]);
     return Task.CompletedTask;
   }
 }

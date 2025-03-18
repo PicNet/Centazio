@@ -5,7 +5,7 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen;
 
-internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzureFunctionProjectMeta project, string environment) : CloudSolutionGenerator(settings, templater, project, environment) {
+internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzureFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAzureNuGetReferencesToProject(added);
@@ -38,7 +38,7 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
         ClassFullName=func.FullName,
         FunctionNamespace=func.Namespace, 
         NewAssemblyName = project.ProjectName,
-        Environment=environment,
+        Environments=GetEnvironmentsArrayString(),
         FunctionTimerCronExpr=impl.GetFunctionPollCronExpression(settings.Defaults)
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Azure.cs"), clcontent);

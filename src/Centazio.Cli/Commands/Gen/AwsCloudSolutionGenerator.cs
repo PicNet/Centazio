@@ -4,7 +4,7 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen;
 
-internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, string environment) : CloudSolutionGenerator(settings, templater, project, environment) {
+internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAwsNuGetReferencesToProject(added);
@@ -24,8 +24,7 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
       model.Files.Add($"aws-lambda-tools-defaults.json");
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"aws-lambda-tools-defaults.json"), templater.ParseFromPath("aws/aws-lambda-tools-defaults.json", new {
         ClassName = func.Name,
-        AssemblyName = project.ProjectDirPath, 
-        Environment = environment 
+        AssemblyName = project.ProjectDirPath 
       }));
     });
   }
@@ -36,7 +35,7 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
         ClassName = func.Name,
         ClassFullName = func.FullName,
         FunctionNamespace = func.Namespace,
-        Environment = environment
+        Environments = GetEnvironmentsArrayString()
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Handler.cs"), handlerContent);
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new { 

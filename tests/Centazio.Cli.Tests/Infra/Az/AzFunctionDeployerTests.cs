@@ -21,7 +21,7 @@ public class AzFunctionDeployerTests {
     AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await new AzureCloudSolutionGenerator(settings, templater, project, "in-mem").GenerateSolution();
+    await new AzureCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
@@ -35,7 +35,7 @@ public class AzFunctionDeployerTests {
   
   [Test] public async Task Test_CreateFunctionAppZip() {
     if (!Directory.Exists(project.PublishPath)) {
-      await new AzureCloudSolutionGenerator(settings, templater, project, "in-mem").GenerateSolution();
+      await new AzureCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
       await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     }
     

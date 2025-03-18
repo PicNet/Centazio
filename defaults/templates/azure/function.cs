@@ -11,7 +11,7 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Azure() {    
-    impl = new(async () => await new FunctionsInitialiser(["{{it.Environment}}", "azure"], registrar)
+    impl = new(async () => await new FunctionsInitialiser({{it.Environments}}, registrar)
         .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 

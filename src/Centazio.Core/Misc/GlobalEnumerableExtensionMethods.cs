@@ -15,6 +15,14 @@ public static class GlobalEnumerableExtensionMethods {
     lst.AddRange(items);
     return items;
   }
+  
+  public static IList<T> AddIfNotExists<T>(this IList<T> lst, T item) {
+    if (lst.Contains(item)) return lst;
+
+    var copy = lst.ToList();
+    copy.Add(item);
+    return copy;
+  }
 
   public static void ForEach<T>(this IEnumerable<T> e, Action<T> action) {
     foreach (var t in e) action(t);

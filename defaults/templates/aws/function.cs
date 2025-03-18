@@ -14,7 +14,7 @@ public class {{it.ClassName}}Handler {
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {    
-    impl = new(async () => await new FunctionsInitialiser(["{{it.Environment}}", "aws"], registrar)
+    impl = new(async () => await new FunctionsInitialiser({{it.Environments}}, registrar)
         .Init<{{it.ClassName}}>(), LazyThreadSafetyMode.ExecutionAndPublication);
   }
 

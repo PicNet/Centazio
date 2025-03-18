@@ -27,6 +27,14 @@ public static class UiHelpers {
           ? AnsiConsole.Ask<string>(prompt + ":").Trim() 
           : AnsiConsole.Ask(prompt, defaultval.Trim()).Trim();
   
+  public static string[] AskForArr(string prompt, string[]? defaultval = null) {
+    var defaultvalcsv = String.Join(", ", defaultval ?? []);
+    while (true) {
+      var csv = Ask(prompt, defaultvalcsv).Split(',').Select(env => env.Trim()).ToArray();
+      if (csv.Any()) return csv;
+    }
+  }
+
   public static bool Confirm(string prompt, bool defaultval = false) =>
       AnsiConsole.Confirm(prompt + ":", defaultval);
 

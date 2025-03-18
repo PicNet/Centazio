@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using Centazio.Cli.Infra;
 using Centazio.Core;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -10,11 +10,10 @@ using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Cli.Commands.Gen;
 
-public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, string environment) {
+public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, List<string> environments) {
 
   protected CsProjModel model = null!;
   protected readonly ITemplater templater = templater;
-  protected readonly string environment = environment;
   protected readonly CentazioSettings settings = settings;
   
   public async Task GenerateSolution() {
@@ -95,15 +94,13 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   }
 
   private void AddSettingsFilesToProject() {
-    var files = new SettingsLoader().GetSettingsFilePathList(environment, project.CloudName.ToLower());
+    var files = new SettingsLoader().GetSettingsFilePathList(environments.AddIfNotExists(project.CloudName.ToLower()).ToArray());
     AddCopyFilesToProject(files);
   }
 
   private void AddSecretsFilesToProject() {
     var loader = new SecretsFileLoader(settings.GetSecretsFolder());
-    var paths = new List<string> { loader.GetSecretsFilePath(environment, true) ?? throw new UnreachableException() };
-    var envpath = loader.GetSecretsFilePath(project.CloudName.ToLower(), false);
-    if (envpath is not null) paths.Add(envpath);
+    var paths = environments.AddIfNotExists(project.CloudName.ToLower()).Select((env, idx) => loader.GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
     AddCopyFilesToProject(paths);
   }
   
@@ -121,6 +118,11 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
         if (!added.TryAdd(p.name, true)) return;
         model.NuGetReferences.Add(new(p.name, p.version));
       });
+  
+  protected string GetEnvironmentsArrayString() {
+    var envs = environments.AddIfNotExists(project.CloudName.ToLower());
+    return $"[\"{String.Join("\",\"", envs)}\"]";
+  }
   
   protected abstract Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added);
 }
