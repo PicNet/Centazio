@@ -43,7 +43,7 @@ END
   public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";
   public override string TableName(string schema, string table) => $"[{schema}].[{table}]";
 
-  public override string GenerateIndexScript(string schema, string table, params string[] columns) {
+  public override string GenerateIndexScript(string schema, string table, params List<string> columns) {
     var name = $"ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))}";
     return $"DROP INDEX IF EXISTS {name} ON {TableName(schema, table)};\nCREATE INDEX {name} ON {TableName(schema, table)} ({String.Join(", ", columns)});";
   }

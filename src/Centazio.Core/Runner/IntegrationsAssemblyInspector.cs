@@ -4,7 +4,7 @@ namespace Centazio.Core.Runner;
 
 public static class IntegrationsAssemblyInspector {
 
-  public static IIntegrationBase GetCentazioIntegration(Assembly assembly, params string[] environments) {
+  public static IIntegrationBase GetCentazioIntegration(Assembly assembly, params List<string> environments) {
     return ValidateIntegrationFound(U.GetAllTypesThatImplement(typeof(IntegrationBase<,>), assembly));
     
     IIntegrationBase ValidateIntegrationFound(List<Type> integrations) {

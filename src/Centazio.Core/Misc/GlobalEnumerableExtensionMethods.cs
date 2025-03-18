@@ -16,7 +16,7 @@ public static class GlobalEnumerableExtensionMethods {
     return items;
   }
   
-  public static IList<T> AddIfNotExists<T>(this IList<T> lst, T item) {
+  public static List<T> AddIfNotExists<T>(this List<T> lst, T item) {
     if (lst.Contains(item)) return lst;
 
     var copy = lst.ToList();

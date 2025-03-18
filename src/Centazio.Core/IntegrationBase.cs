@@ -17,7 +17,7 @@ public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase
   protected TSettings Settings { get; }
   protected TSecrets Secrets { get; }
   
-  protected IntegrationBase(params string[] environments) {
+  protected IntegrationBase(params List<string> environments) {
     Settings = new SettingsLoader().Load<TSettings>(environments);
     Secrets = new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(environments);
   }

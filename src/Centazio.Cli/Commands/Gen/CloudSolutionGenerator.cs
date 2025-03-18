@@ -94,7 +94,7 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   }
 
   private void AddSettingsFilesToProject() {
-    var files = new SettingsLoader().GetSettingsFilePathList(environments.AddIfNotExists(project.CloudName.ToLower()).ToArray());
+    var files = new SettingsLoader().GetSettingsFilePathList(environments.AddIfNotExists(project.CloudName.ToLower()));
     AddCopyFilesToProject(files);
   }
 

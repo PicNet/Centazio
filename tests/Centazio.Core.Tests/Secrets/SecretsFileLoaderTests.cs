@@ -22,7 +22,7 @@ SETTING6=val=with=equals";
   
   private TestSettingsTargetObj Load(params List<(string env, string contents)> envs) {
     envs.ForEach(f => File.WriteAllText($"{f.env}.env", f.contents));
-    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToArray()); }
+    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList()); }
     finally { envs.ForEach(f => File.Delete($"{f.env}.env")); }
   }
 

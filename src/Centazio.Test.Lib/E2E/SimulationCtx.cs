@@ -38,7 +38,7 @@ public class SimulationCtx : IAsyncDisposable {
   }
   
  
-  public void Debug(string message, params object[] args) {
+  public void Debug(string message, params List<object> args) {
     if (C.SILENCE_SIMULATION) return;
     if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message, args);
     else DevelDebug.WriteLine(message);

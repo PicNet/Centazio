@@ -5,7 +5,7 @@ namespace Centazio.Core.Tests.Inspect;
 internal static class InspectUtils {
   private static readonly char SEP = Path.DirectorySeparatorChar;
   
-  public static List<string> CsFiles(string? dir, params string[] ignore) => GetSolnFiles(dir, "*.cs")
+  public static List<string> CsFiles(string? dir, params List<string> ignore) => GetSolnFiles(dir, "*.cs")
       .Where(f => !ignore.Any(f.EndsWith) && !f.Contains($"{SEP}obj{SEP}"))
       .ToList();
   

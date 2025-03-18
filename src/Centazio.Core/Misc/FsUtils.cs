@@ -22,7 +22,7 @@ public static class FsUtils {
         ?? throw new Exception($"failed to find the root directory by searching for [{file}]");
   }
   
-  public static string GetSolutionFilePath(params string[] steps) => 
+  public static string GetSolutionFilePath(params List<string> steps) => 
       Path.Combine(steps.Prepend(GetSolutionRootDirectory()).ToArray());
 
   public static string FindFirstValidDirectory(List<string> directories) => directories.FirstOrDefault(dir => {

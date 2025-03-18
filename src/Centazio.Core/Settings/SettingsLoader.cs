@@ -5,14 +5,14 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Centazio.Core.Settings;
 
 public interface ISettingsLoader {
-  T Load<T>(params string[] environments);
+  T Load<T>(params List<string> environments);
 }
 
 public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_PREFIX, string? dir = null) : ISettingsLoader {
 
   private const string DEFAULT_FILE_NAME_PREFIX = "settings";
   
-  public List<string> GetSettingsFilePathList(params string[] environments) {
+  public List<string> GetSettingsFilePathList(params List<string> environments) {
     var potentials = new List<(string, bool)> { 
       ($"defaults/{fnprefix}.defaults.json", false),
       ($"defaults/{fnprefix}.<environment>.json", false),
@@ -32,7 +32,7 @@ public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_P
     }).OfType<string>().ToList();
   }
   
-  public T Load<T>(params string[] environments) {
+  public T Load<T>(params List<string> environments) {
     var files = GetSettingsFilePathList(environments);
     Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
     

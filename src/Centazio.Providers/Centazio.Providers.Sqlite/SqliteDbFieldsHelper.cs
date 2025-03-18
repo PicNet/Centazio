@@ -11,7 +11,7 @@ public class SqliteDbFieldsHelper : AbstractDbFieldsHelper {
   PRIMARY KEY ({String.Join(", ", pkfields)}){additionaltxt})";
   }
 
-  public override string GenerateIndexScript(string schema, string table, params string[] columns) => 
+  public override string GenerateIndexScript(string schema, string table, params List<string> columns) => 
       $"CREATE INDEX IF NOT EXISTS ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))} ON {TableName(schema, table)} ({String.Join(", ", columns)});";
 
   public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";

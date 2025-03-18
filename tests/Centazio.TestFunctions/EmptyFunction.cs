@@ -36,7 +36,7 @@ public record TestSettings : CentazioSettings {
   }
 }
 
-public class TestFunctionIntegration(params string[] environments) : IntegrationBase<TestSettings, CentazioSecrets>(environments) {
+public class TestFunctionIntegration(params List<string> environments) : IntegrationBase<TestSettings, CentazioSecrets>(environments) {
 
   public override Task Initialise(ServiceProvider prov) => Task.CompletedTask;
   protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) { }

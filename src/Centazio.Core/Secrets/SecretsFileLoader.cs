@@ -3,13 +3,13 @@
 namespace Centazio.Core.Secrets;
 
 public interface ISecretsLoader  {
-  T Load<T>(params string[] environments);
+  T Load<T>(params List<string> environments);
   string? GetSecretsFilePath(string environment, bool required);
 }
 
 public class SecretsFileLoader(string dir) : ISecretsLoader {
 
-  public T Load<T>(params string[] environments) {
+  public T Load<T>(params List<string> environments) {
     if (!environments.Any()) throw new ArgumentNullException(nameof(environments));
     var paths = environments.Select((env, idx) => GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
     Log.Information($"loading secrets files[{String.Join(',', paths.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
