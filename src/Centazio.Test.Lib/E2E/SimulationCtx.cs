@@ -38,10 +38,15 @@ public class SimulationCtx : IAsyncDisposable {
   }
   
  
-  public void Debug(string message, params List<object> args) {
+  public void Debug(string message, IEnumerable<string>? details = null) {
     if (C.SILENCE_SIMULATION) return;
-    if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message, args);
+    if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message + DetailsToString(details));
     else DevelDebug.WriteLine(message);
+  }
+  
+  public string DetailsToString(IEnumerable<string>? details) {
+    var detailslst = details?.ToList() ?? [];
+    return !detailslst.Any() ? String.Empty : ":\n\t" + String.Join("\n\t", detailslst);
   }
   
   public SystemEntityId NewGuiSeid() => new (Rng.NewGuid().ToString());

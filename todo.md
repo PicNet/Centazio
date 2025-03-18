@@ -17,7 +17,7 @@
 - function-to-function triggers:
   - aws/azure
   - the triggered function should get as a parameter the objects that changed 
-- use picnet github to host publicly
+- update readme and use picnet github to host publicly
 - nuget all code
 - cli:
   - install as `dotnet tool`

@@ -12,9 +12,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
+// todo: this can deadlock, happens even with a small (50) delay in InProcessChangesNotifier.  With longer throttles this does not happen
 public class SqliteE2ETests {
   [Test] public async Task Run_e2e_simulation_and_tests() {
-    // todo: investigate why the 'Real Notifier' does not work with DB providers
     await new E2EEnvironment(false, new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
   }
 }

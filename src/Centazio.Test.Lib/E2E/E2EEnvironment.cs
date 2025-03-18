@@ -77,7 +77,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   private async Task RunEpoch(int epoch) {
     ctx.Epoch.SetEpoch(epoch);
     RandomTimeStep();
-    ctx.Debug($"epoch[{epoch}] starting - running simulation step [{{@Now}}]", UtcDate.UtcNow);
+    ctx.Debug($"epoch[{epoch}] starting - running simulation step [{UtcDate.UtcNow:yy-MM-dd HH:mm:ss}]");
     
     crm.Simulation.Step();
     fin.Simulation.Step(); 
@@ -140,10 +140,12 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   
   [IgnoreNamingConventions] private void CompareByChecksumWithoutSysId(SystemName system, IEnumerable<ISystemEntity> fromcores, IEnumerable<ISystemEntity> targets) {
     var (corecs, targetscs) = (fromcores.Select(Describe).OrderBy(str => str).ToList(), targets.Select(Describe).OrderBy(str => str).ToList());
-    if (!corecs.SequenceEqual(targetscs)) throw new E2ETestFailedException($"[{system}] checksum comparison failed\ncore entities:\n\t{String.Join("\n\t", corecs)}\ntarget system entities:\n\t{String.Join("\n\t", targetscs)}");
+    if (!corecs.SequenceEqual(targetscs)) throw new E2ETestFailedException($"[{system}] checksum comparison failed" +
+        $"\ncore entities ({corecs.Count}):{ctx.DetailsToString(corecs)}" +
+        $"\ntarget system entities ({targetscs.Count}):{ctx.DetailsToString(targetscs)}");
     
     // remove the SystemId from the checksum subset to make this validation simpler.  Otherwise above would need much more complex code to set the correct IDs
     //    from Map objects on every validation
-    object Describe(ISystemEntity e) => Json.Serialize(e.CreatedWithId(new (system == SimulationConstants.CRM_SYSTEM ? Guid.Empty.ToString() : "0")).GetChecksumSubset());
+    string Describe(ISystemEntity e) => Json.Serialize(e.CreatedWithId(new (system == SimulationConstants.CRM_SYSTEM ? Guid.Empty.ToString() : "0")).GetChecksumSubset());
   }
 }

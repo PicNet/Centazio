@@ -22,8 +22,8 @@ public interface IEpochTracker {
   public async Task ValidateAdded<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
     var actual = added.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
-    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.GetShortDisplayName()}")) + 
-        $"\nActual {typeof(T).Name} Created({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")));
+    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count})" + ctx.DetailsToString(ascore.Select(e => $"{e.GetShortDisplayName()}")) + 
+        $"\nActual {typeof(T).Name} Created({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")));
     
     if(actual.Any(e => e.Meta.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
     if(actual.Any(e => e.Meta.DateCreated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
@@ -38,8 +38,8 @@ public interface IEpochTracker {
         .Where(e => !eadded.Contains(e)) 
         .ToList();
     var actual = updated.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
-    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Updated({ascore.Count}):\n\t" + String.Join("\n\t", ascore.Select(e => $"{e.GetShortDisplayName()}")) + 
-        $"\nActual {typeof(T).Name} Updated({actual.Count}):\n\t" + String.Join("\n\t", actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")));
+    if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Updated({ascore.Count})" + ctx.DetailsToString(ascore.Select(e => $"{e.GetShortDisplayName()}")) + 
+        $"\nActual {typeof(T).Name} Updated({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")));
     if(actual.Any(e => e.Meta.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
     if(actual.Any(e => e.Meta.DateCreated >= UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
   }

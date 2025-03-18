@@ -73,9 +73,10 @@ public static class GlobalEnumerableExtensionMethods {
     foreach (var task in tasks) await task;
   }
   
-  public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null) {
+  public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null, int throttlemillis = 0) {
     var results = new List<T>();
     foreach (var task in tasks) {
+      if (throttlemillis > 0) await Task.Delay(throttlemillis);
       var res = await task; 
       results.Add(res);
       if (abort is not null && abort(res)) { return results; }

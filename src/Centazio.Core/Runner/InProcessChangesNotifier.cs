@@ -12,6 +12,8 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
   
   public bool IsEmpty => pubsub.Reader.Count == 0;
   
+  // todo: instead of taking the runner here should we instead take an Func<IRunnableFunction, Task>
+  //    and instead of `IRunnableFunction` use a generic type that supports Triggers function?
   public Task InitDynamicTriggers(IFunctionRunner runner) {
     var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();
     functions.ForEach(func => func.Triggers().ForEach(key => {
@@ -26,7 +28,8 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
           await pubs.Select(async f => {
             DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
             return await runner.RunFunction(f);
-          }).Synchronous();
+          }).Synchronous(throttlemillis: 50);
+          // todo: throttlemillis required so SQLite does not lock, move to parameter or somewhere better
         }
       }
     });
