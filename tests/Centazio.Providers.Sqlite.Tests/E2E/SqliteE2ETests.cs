@@ -12,14 +12,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
-// todo: SQLite is deadlocking
 public class SqliteE2ETests {
-  [Test] public async Task Run_e2e_simulation_and_tests() => 
-      await new E2EEnvironment(true, new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
-
+  private const string dbfile="test.db";
+  
+  [SetUp, TearDown] public void CleanUp() => File.Delete(dbfile);
+  
+  // todo: test is failing after 5 epochs
+  [Test] public async Task Run_e2e_simulation_and_tests() =>
+      await new E2EEnvironment(true, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
 }
 
-public class SqliteSimulationProvider : ISimulationProvider {
+public class SqliteSimulationProvider(string dbfile) : ISimulationProvider {
+  // in-memory sqlite locks, so use file
+  private readonly string connstr = $"Data Source={dbfile};Cache=Shared";
+  
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
@@ -27,14 +33,14 @@ public class SqliteSimulationProvider : ISimulationProvider {
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqliteDbFieldsHelper();
     CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
-        SqliteTestConstants.DEFAULT_CONNSTR,
+        connstr,
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 
         nameof(ObjectState).ToLower(), 
         nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(SqliteTestConstants.DEFAULT_CONNSTR)), dbf).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(connstr)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
-        () => new SqliteSimulationDbContext(), 
+        () => new SqliteSimulationDbContext(connstr), 
         ctx.Epoch, dbf).Initialise();
   }
   
@@ -45,7 +51,7 @@ public class SqliteSimulationProvider : ISimulationProvider {
   }
 }
 
-public class SqliteSimulationDbContext() : SqliteDbContext(SqliteTestConstants.DEFAULT_CONNSTR) {
+public class SqliteSimulationDbContext(string connstr) : SqliteDbContext(connstr) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) {
     SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);
