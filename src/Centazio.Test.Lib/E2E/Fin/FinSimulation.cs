@@ -19,7 +19,7 @@ public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<Fi
     if (count == 0) return [];
     
     var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(ctx.NewIntSeid(), ctx.NewName(nameof(FinAccount), accounts, idx), UtcDate.UtcNow)).ToList();
-    ctx.Debug($"FinSimulation - AddAccounts[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})"));
+    ctx.Debug($"FinSimulation - AddAccounts[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})").ToList());
     accounts.AddRange(toadd);
     return toadd.ToList();
   }
@@ -49,7 +49,7 @@ public class FinSimulation(SimulationCtx ctx, List<FinAccount> accounts, List<Fi
     
     var toadd = new List<FinInvoice>();
     Enumerable.Range(0, count).ForEach(_ => toadd.Add(new FinInvoice(ctx.NewIntSeid(), Rng.RandomItem(accounts).SystemId, Rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)), null)));
-    ctx.Debug($"FinSimulation - AddInvoices[{count}]", toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}"));
+    ctx.Debug($"FinSimulation - AddInvoices[{count}]", toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}").ToList());
     invoices.AddRange(toadd);
     return toadd;
   }

@@ -38,13 +38,13 @@ public class SimulationCtx : IAsyncDisposable {
   }
   
  
-  public void Debug(string message, IEnumerable<string>? details = null) {
+  public void Debug(string message, List<string>? details = null) {
     if (C.SILENCE_SIMULATION) return;
     if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message + DetailsToString(details));
     else DevelDebug.WriteLine(message);
   }
   
-  public string DetailsToString(IEnumerable<string>? details) {
+  public string DetailsToString(List<string>? details) {
     var detailslst = details?.ToList() ?? [];
     return !detailslst.Any() ? String.Empty : ":\n\t" + String.Join("\n\t", detailslst);
   }

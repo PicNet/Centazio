@@ -12,8 +12,6 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
   
   public bool IsEmpty => pubsub.Reader.Count == 0;
   
-  // todo: instead of taking the runner here should we instead take an Func<IRunnableFunction, Task>
-  //    and instead of `IRunnableFunction` use a generic type that supports Triggers function?
   public Task InitDynamicTriggers(IFunctionRunner runner) {
     var triggermap = new Dictionary<OpChangeTriggerKey, List<IRunnableFunction>>();
     functions.ForEach(func => func.Triggers().ForEach(key => {

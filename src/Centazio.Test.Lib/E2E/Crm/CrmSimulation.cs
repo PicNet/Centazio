@@ -23,7 +23,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     var toadd = Enumerable.Range(0, count)
         .Select(idx => new CrmCustomer(ctx.NewGuiSeid(), UtcDate.UtcNow, Rng.RandomItem(api.MembershipTypes).SystemId, ctx.NewName(nameof(CrmCustomer), api.Customers, idx)))
         .ToList();
-    ctx.Debug($"CrmSimulation - AddCustomers[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})"));
+    ctx.Debug($"CrmSimulation - AddCustomers[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})").ToList());
     api.Customers.AddRange(toadd);
     return toadd;
   }
@@ -58,7 +58,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmApi api) {
     ctx.Debug($"CrmSimulation - AddInvoices[{count}]", toadd.Select(i => {
       var cust = api.Customers.Single(c => c.SystemId == i.CustomerSystemId) as IHasDisplayName;
       return $"Cust:{cust.GetShortDisplayName()}/Inv:{i.SystemId}:{i.AmountCents}c";
-    }));
+    }).ToList());
     
     api.Invoices.AddRange(toadd);
     return toadd.ToList();

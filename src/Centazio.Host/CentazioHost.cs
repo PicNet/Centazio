@@ -44,7 +44,7 @@ public class CentazioHost {
     var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier(functions);
-    var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);;
+    var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
     var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier);
     
     StartTimerBasedTriggers(settings, functions, runner);
