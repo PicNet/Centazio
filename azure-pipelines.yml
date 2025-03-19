@@ -25,6 +25,20 @@ steps:
     includePreviewVersions: true
     installationPath: '$(Agent.ToolsDirectory)/dotnet'
 
+- task: PowerShell@2
+  displayName: "Show current user info"
+  inputs:
+    targetType: inline
+    script: |
+      Write-Host "whoami:"
+      whoami
+      Write-Host "`nwhoami /all:"
+      whoami /all
+      Write-Host "`nEnvironment Variables:"
+      Write-Host "USERDOMAIN = $env:USERDOMAIN"
+      Write-Host "USERNAME   = $env:USERNAME"
+      Write-Host "Full user  = $env:USERDOMAIN\$env:USERNAME"
+
 - script: dotnet --info
   displayName: 'dotnet info'
   
