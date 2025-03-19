@@ -5,15 +5,24 @@ using Centazio.Core.Settings;
 namespace Centazio.Core.Runner;
 
 public interface IFunctionRunner {
+  public bool Running { get; }
   Task<FunctionRunResults> RunFunction(IRunnableFunction func);
 }
 
 public class FunctionRunner(ICtlRepository ctl, CentazioSettings settings) : IFunctionRunner {
-  
+
+  public bool Running { get; private set; }
+
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func) {
+    Running = true;
+    try { return await RunImpl(func); }
+    finally { Running = false; } 
+  }
+
+  private async Task<FunctionRunResults> RunImpl(IRunnableFunction func) {
     var start = UtcDate.UtcNow;
     if (func.Running) return new AlreadyRunningFunctionRunResults();
-
+    
     // Log.Debug("checking function [{@System}/{@Stage}] - {@Now}", System, Stage, UtcDate.UtcNow);
 
     var state = await ctl.GetOrCreateSystemState(func.System, func.Stage);
@@ -50,6 +59,7 @@ public class FunctionRunner(ICtlRepository ctl, CentazioSettings settings) : IFu
 
     async Task SaveCompletedState() => await ctl.SaveSystemState(state.Completed(start));
   }
+
 }
 
 public abstract record FunctionRunResults(List<OpResultAndObject> OpResults, string Message); 

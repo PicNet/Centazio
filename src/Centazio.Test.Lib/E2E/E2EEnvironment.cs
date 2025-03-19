@@ -31,9 +31,8 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
-    var allfuncs = new List<IRunnableFunction> { crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write };
     notifier = notify ? 
-        new InProcessChangesNotifier(allfuncs) : 
+        new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]) : 
         new TestingChangeNotifier();
     runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
     if (notifier is InProcessChangesNotifier ipcn) { _ = ipcn.InitDynamicTriggers(runner); }
@@ -88,7 +87,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     await runner.RunFunction(crm_read);
     await runner.RunFunction(fin_read);
     if (notifier is InProcessChangesNotifier ipcn) {
-      while (!ipcn.IsEmpty) { await Task.Delay(15); }
+      while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
     } else {
       await runner.RunFunction(crm_promote);
       await runner.RunFunction(fin_promote);

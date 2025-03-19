@@ -12,10 +12,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.SqlServer.Tests.E2E;
 
 public class SqlServerE2ETests {
-  [Test] public async Task Run_e2e_simulation_and_tests() {
-    // todo: investigate why the 'Real Notifier' does not work with DB providers
-    await new E2EEnvironment(false, new SqlServerSimulationProvider(), TestingFactories.Settings()).RunSimulation();
-  }
+  [Test] public async Task Run_e2e_simulation_and_tests() => 
+      await new E2EEnvironment(true, new SqlServerSimulationProvider(), TestingFactories.Settings()).RunSimulation();
+
 }
 
 public class SqlServerSimulationProvider : ISimulationProvider {

@@ -72,10 +72,14 @@ public class InProcessChangesNotifierTests {
   
   class Runner(IChangesNotifier notif) : IFunctionRunner {
 
+    public bool Running { get; private set; }
+
     public async Task<FunctionRunResults> RunFunction(IRunnableFunction func) {
+      Running = true;
       var results = new List<OpResultAndObject>();
       await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), results);
       await notif.Notify(func.Stage, results.Select(c => c.Object).Distinct().ToList());
+      Running = false;
       return new SuccessFunctionRunResults(results);
     }
 

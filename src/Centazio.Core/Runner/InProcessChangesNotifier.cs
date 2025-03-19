@@ -25,11 +25,10 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions) : IChan
       while (await pubsub.Reader.WaitToReadAsync()) {
         while (pubsub.Reader.TryRead(out var key)) {
           if (!triggermap.TryGetValue(key, out var pubs)) { break; }
-          await pubs.Select(async f => {
+          await Task.WhenAll(pubs.Select(async f => {
             DataFlowLogger.Log($"Func-To-Func Trigger[{key.Object}]", key.Stage, f.GetType().Name, [key.Object]);
             return await runner.RunFunction(f);
-          }).Synchronous(throttlemillis: 50);
-          // todo: throttlemillis required so SQLite does not lock, move to parameter or somewhere better
+          }));
         }
       }
     });

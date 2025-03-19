@@ -12,11 +12,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
-// todo: this can deadlock, happens even with a small (50) delay in InProcessChangesNotifier.  With longer throttles this does not happen
+// todo: SQLite is deadlocking
 public class SqliteE2ETests {
-  [Test] public async Task Run_e2e_simulation_and_tests() {
-    await new E2EEnvironment(false, new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
-  }
+  [Test] public async Task Run_e2e_simulation_and_tests() => 
+      await new E2EEnvironment(true, new SqliteSimulationProvider(), TestingFactories.Settings()).RunSimulation();
+
 }
 
 public class SqliteSimulationProvider : ISimulationProvider {
