@@ -11,7 +11,7 @@ public class AddResourceGroupCommand(CentazioSettings clisetts, IAzResourceGroup
     ResourceGroupName = UiHelpers.Ask("Resource Group Name", clisetts.AzureSettings.ResourceGroup) 
   });
 
-  protected override async Task ExecuteImpl(string name, Settings settings) {
+  protected override async Task ExecuteImpl(Settings settings) {
     ArgumentException.ThrowIfNullOrWhiteSpace(settings.ResourceGroupName);
     await UiHelpers.ProgressWithErrorMessage("Loading resource group list", async () => await impl.AddResourceGroup(settings.ResourceGroupName));
   }

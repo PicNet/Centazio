@@ -8,21 +8,22 @@ public interface ICentazioCommand {
 
 public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCommand where S : CommonSettings {
 
+  protected string CommandName { get; private set; } = null!;
   protected bool Interactive { get; private set; }
 
   public override async Task<int> ExecuteAsync(CommandContext context, S settings) {
-    Interactive = false;
-    await ExecuteImpl(context.Name, settings);
+    (Interactive, CommandName) = (false, context.Name);
+    await ExecuteImpl(settings);
     return 0;
   }
   
   public async Task RunInteractiveCommand(string name) {
-    Interactive = true;
+    (Interactive, CommandName) = (true, name);
     var settings = await GetInteractiveSettings();
     await settings.SetInteractiveCommonOpts();
-    await ExecuteImpl(name, settings);
+    await ExecuteImpl(settings);
   }
 
   protected abstract Task<S> GetInteractiveSettings();
-  protected abstract Task ExecuteImpl(string name, S settings);
+  protected abstract Task ExecuteImpl(S settings);
 }

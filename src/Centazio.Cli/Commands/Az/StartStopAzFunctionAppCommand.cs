@@ -14,16 +14,16 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(string name, Settings settings) {
-    if (name != "start" && name != "stop") throw new ArgumentException($"only start/stop command is supported");
+  protected override async Task ExecuteImpl(Settings settings) {
+    if (CommandName != "start" && CommandName != "stop") throw new ArgumentException($"only start/stop command is supported");
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
-    if (name == "start") {
+    if (CommandName == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {
         await Task.Run(() => cmd.Az(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
         UiHelpers.Log($"Azure Function App '{project.DashedProjectName}' successfully started.");
       });
-    } else if (name == "stop") {
+    } else if (CommandName == "stop") {
       if (!UiHelpers.Confirm($"Are you sure you want to stop Azure Function App '{project.DashedProjectName}'")) {
         UiHelpers.Log("Aborting, no function stopped", LogEventLevel.Warning);
         return;

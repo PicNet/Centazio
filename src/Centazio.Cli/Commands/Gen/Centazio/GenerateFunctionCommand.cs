@@ -11,7 +11,7 @@ public class GenerateFunctionCommand(ITemplater templater) : AbstractCentazioCom
     FunctionName = UiHelpers.Ask("Function Name")
   });
 
-  protected override Task ExecuteImpl(string name, Settings settings) {
+  protected override Task ExecuteImpl(Settings settings) {
     if (Directory.GetDirectories(".", settings.FunctionName).Any()) {
       UiHelpers.Log($"The current directory already contains a '{settings.FunctionName}' directory.  Please remove this directory before you proceed.");
       return Task.CompletedTask;

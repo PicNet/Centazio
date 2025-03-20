@@ -17,7 +17,7 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(string name, Settings settings) {
+  protected override async Task ExecuteImpl(Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
 
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzureCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());

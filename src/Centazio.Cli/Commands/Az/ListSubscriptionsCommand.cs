@@ -7,7 +7,7 @@ public class ListSubscriptionsCommand(IAzSubscriptions impl) : AbstractCentazioC
   
   protected override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
-  protected override async Task ExecuteImpl(string name, CommonSettings settings) => 
+  protected override async Task ExecuteImpl(CommonSettings settings) => 
       await UiHelpers.Progress("Loading Subscriptions list", async () =>
           UiHelpers.Table(["Name", "Id", "State"], 
               (await impl.ListSubscriptions())

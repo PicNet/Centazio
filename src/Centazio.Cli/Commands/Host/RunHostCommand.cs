@@ -12,7 +12,7 @@ public class RunHostCommand(CentazioHost host) : AbstractCentazioCommand<RunHost
     FunctionFilter = UiHelpers.Ask("Function Filter", "All") 
   });
 
-  protected override async Task ExecuteImpl(string name, Settings cmdsetts) => await host.Run(cmdsetts);
+  protected override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(cmdsetts);
 
   public class Settings : CommonSettings, IHostConfiguration {
     [CommandArgument(0, "[ASSEMBLY_NAME]")] public required string AssemblyNames { get; init; }

@@ -12,7 +12,7 @@ public class AddAccountCommand(CentazioSettings clisetts, IAwsAccounts impl)
     AccountName = UiHelpers.Ask("Account Name", clisetts.AwsSettings.AccountName) 
   });
 
-  protected override async Task ExecuteImpl(string name, Settings settings) {
+  protected override async Task ExecuteImpl(Settings settings) {
     if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "AccountName is required" : "<ACCOUNT_NAME> is required");
     await UiHelpers.ProgressWithErrorMessage("Creating account", async () => await impl.AddAccount(settings.AccountName));
   }

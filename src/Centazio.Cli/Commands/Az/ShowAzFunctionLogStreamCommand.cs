@@ -13,7 +13,7 @@ public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICom
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override Task ExecuteImpl(string name, Settings settings) {
+  protected override Task ExecuteImpl(Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
     return Task.CompletedTask;

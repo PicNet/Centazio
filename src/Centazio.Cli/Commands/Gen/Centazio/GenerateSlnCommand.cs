@@ -11,7 +11,7 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
   });
 
   // todo: why do we have this `name` parameter here?
-  protected override Task ExecuteImpl(string name, Settings settings) {
+  protected override Task ExecuteImpl(Settings settings) {
     var done = Task.CompletedTask;
     if (Directory.GetDirectories(".", settings.SolutionName).Any()) {
       UiHelpers.Log($"The current directory already contains a '{settings.SolutionName}' directory.  Please remove this directory before you proceed.");

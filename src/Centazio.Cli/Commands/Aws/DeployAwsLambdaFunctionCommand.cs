@@ -23,7 +23,7 @@ public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAws
     return Task.FromResult(settings);
   }
 
-  protected override async Task ExecuteImpl(string name, Settings settings) {
+  protected override async Task ExecuteImpl(Settings settings) {
     var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder, settings.FunctionName);
     
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());
