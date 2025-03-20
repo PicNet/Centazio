@@ -8,7 +8,7 @@ using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
-namespace Centazio.Cli.Commands.Gen;
+namespace Centazio.Cli.Commands.Gen.Cloud;
 
 public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, List<string> environments) {
 

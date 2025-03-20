@@ -3,7 +3,7 @@ using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 
-namespace Centazio.Cli.Commands.Gen;
+namespace Centazio.Cli.Commands.Gen.Cloud;
 
 internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzureFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 

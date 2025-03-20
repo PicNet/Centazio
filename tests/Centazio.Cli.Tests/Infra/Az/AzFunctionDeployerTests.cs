@@ -1,4 +1,5 @@
-﻿using Centazio.Cli.Infra.Az;
+﻿using Centazio.Cli.Commands.Gen.Cloud;
+using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Secrets;

@@ -2,7 +2,7 @@
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 
-namespace Centazio.Cli.Commands.Gen;
+namespace Centazio.Cli.Commands.Gen.Cloud;
 
 internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 

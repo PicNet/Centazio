@@ -2,6 +2,7 @@
 using Centazio.Cli.Commands.Aws;
 using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Commands.Dev;
+using Centazio.Cli.Commands.Gen.Centazio;
 using Centazio.Cli.Commands.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
@@ -79,6 +80,9 @@ public class CommandsTree {
       new BranchNode("dev", [
         CreateCommandNode<UiTestsCommand>("ui-test"),
         CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")
+      ]),
+      new BranchNode("gen", [
+        CreateCommandNode<GenerateSlnCommand>("sln")
       ]),
     ],
     "exit");

@@ -1,4 +1,5 @@
-﻿using Centazio.Cli.Infra.Misc;
+﻿using Centazio.Cli.Commands.Gen.Cloud;
+using Centazio.Cli.Infra.Misc;
 using Centazio.Core;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
