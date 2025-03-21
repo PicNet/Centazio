@@ -27,14 +27,11 @@ public class CheckStandardNamingOfCommonTypes {
     typeof(ObjectName)
   ];
   
-  private readonly List<string> IGNORE = ["Centazio.Sample"];
-  
   [Test] public void Test_naming_standards() {
     var errors = new List<string>();
     InspectUtils.LoadCentazioAssemblies().ForEach(ValidateAssembly);
 
     void ValidateAssembly(Assembly ass) {
-      if (IGNORE.Any(i => ass.GetName().Name!.Contains(i))) return;
       ass.GetExportedTypes().ForEach(ValidateType);
 
       void ValidateType(Type objtype) {

@@ -68,8 +68,6 @@ public class ReflectionUtilsTests {
     Assert.That(ass.Location.Contains(Path.Combine("Centazio.TestFunctions", "bin")));
   }
   
-  // todo: ensure all Centazio namespaces do not reference Centazio.Sample project, use Centazio.TestFunctions instead
-  // todo: move Centazio.Sample.Tests settings test into this project
   [Test] public void Test_GetAllTypesThatImplement() {
     var integration = ReflectionUtils.GetAllTypesThatImplement(typeof(IntegrationBase<,>), ["Centazio.TestFunctions"]).Single();
     Assert.That(integration.FullName, Is.EqualTo("Centazio.TestFunctions.TestFunctionIntegration"));

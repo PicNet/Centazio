@@ -1,4 +1,6 @@
-﻿using Centazio.Core.Settings;
+﻿using System.Collections;
+using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Tests.Settings;
 
@@ -30,6 +32,18 @@ public class SettingsLoaderTests {
     Assert.That(settings.StagedEntityRepository.ConnectionString, Is.EqualTo("Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"));
   }
   
+  [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
+    var svcs = new TestServivesCollection();
+    var registrar = new CentazioServicesRegistrar(svcs);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<CentazioSettings>(), registrar);
+    var expected = new List<Type> { typeof(CentazioSettings), typeof(DefaultsSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
+    
+    Assert.That(expected.All(t => svcs.Registered.Contains(t)));
+    
+    Assert.That(settings.SecretsFolders, Has.Count.GreaterThan(0));
+    Assert.That(settings.Defaults, Is.Not.Null);
+  }
+  
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     try {
       File.WriteAllText(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.json"), test_settings_json);
@@ -57,3 +71,26 @@ internal record TestSettingsObjRaw {
 }
 
 internal record TestSettingsObj(string FileForTestingSettingsLoader, string OverridableSetting, string EmptySetting, string? MissingSetting);
+
+public class TestServivesCollection : IServiceCollection {
+
+  public List<Type> Registered { get; } = [];
+  
+  public int Count => 0;
+  public bool IsReadOnly => false;
+  
+  public IEnumerator<ServiceDescriptor> GetEnumerator() => throw new Exception();
+  IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+  
+  public void Add(ServiceDescriptor item) => Registered.Add(item.ServiceType);
+  public void Clear() => throw new Exception();
+  public bool Contains(ServiceDescriptor item) => throw new Exception();
+  public void CopyTo(ServiceDescriptor[] array, int arrayIndex) => throw new Exception();
+  public bool Remove(ServiceDescriptor item) => throw new Exception();
+  public int IndexOf(ServiceDescriptor item) => throw new Exception();
+  public void Insert(int index, ServiceDescriptor item) => throw new Exception();
+  public void RemoveAt(int index) => throw new Exception();
+  
+  public ServiceDescriptor this[int index] { get => throw new Exception(); set => throw new Exception(); }
+
+}

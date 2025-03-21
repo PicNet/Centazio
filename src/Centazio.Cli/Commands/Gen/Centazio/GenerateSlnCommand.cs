@@ -9,7 +9,6 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
     SolutionName = UiHelpers.Ask("Solution Name")
   });
 
-  // todo: why do we have this `name` parameter here?
   protected override Task ExecuteImpl(Settings settings) {
     var done = Task.CompletedTask;
     if (Directory.GetDirectories(".", settings.SolutionName).Any()) {

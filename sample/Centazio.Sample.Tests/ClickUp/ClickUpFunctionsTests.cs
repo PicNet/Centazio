@@ -24,8 +24,6 @@ public class ClickUpFunctionsTests {
   }
 
   [Test] public async Task Test_Promote() {
-    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; // todo:remove
-    
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
     var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), F.FuncRunner(ctl: ctl));

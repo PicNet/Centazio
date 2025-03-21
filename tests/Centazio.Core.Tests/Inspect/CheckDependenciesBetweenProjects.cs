@@ -5,7 +5,6 @@ public class CheckDependenciesBetweenProjects {
   private readonly Dictionary<string, List<string>> ADDITIONAL_ALLOWS = new() { { "Centazio.Cli", ["Centazio.Host"] } };
   private readonly List<string> TEST_PROJ_DEFAULT_ALLOWS = ["Centazio.Core", "Centazio.Test.Lib"];
   private readonly List<string> SRC_PROJ_DEFAULT_ALLOWS = ["Centazio.Core"];
-  private readonly List<string> IGNORE = ["Centazio.Sample"];
 
   [Test] public void Check_project_references() {
     var errors = new List<string>();
@@ -13,7 +12,6 @@ public class CheckDependenciesBetweenProjects {
     var dependencies = ParseDependencies(files);
     if (dependencies["Centazio.Core"].Any()) errors.Add("Centazio.Core should have no project dependencies");
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) >= 0).ForEach(testproj => {
-      if (IGNORE.Any(testproj.Contains)) return;
       var target = testproj.Replace(".Tests", String.Empty);
       var allowed = ADDITIONAL_ALLOWS.TryGetValue(testproj, out var value) ? value : [];
       allowed.AddRange(TEST_PROJ_DEFAULT_ALLOWS.Concat([target]));
@@ -22,8 +20,6 @@ public class CheckDependenciesBetweenProjects {
       if (bad.Any()) errors.Add($"Test Project [{testproj}] should at most depend on 'Centazio.Core', 'Centazio.Test.Lib' and '{target}'.  Had extra dependencies: " + String.Join(",", bad));
     });
     dependencies.Keys.Where(k => k.IndexOf(".Tests", StringComparison.OrdinalIgnoreCase) < 0).ForEach(proj => {
-      if (IGNORE.Any(proj.Contains)) return;
-      
       var allowed = ADDITIONAL_ALLOWS.TryGetValue(proj, out var value) ? value : [];
       allowed.AddRange(SRC_PROJ_DEFAULT_ALLOWS);
       
