@@ -1,3 +1,31 @@
+# Centazio
+#### Data Integration, Workflow and Master Data Platform by PicNet
+
+Centazio is a data integration platform created for .Net developers.  Centazio provides the following features:
+* Sophisticated CLI the help you with the management of your cloud resources
+* A robust, fault-tolerant framework for building integrations
+* A workflow engine to automate manual tasks
+* A centralised reporting database that integrates all your data from disparate systems
+
+<p align="center">
+  <a href="https://picnet.com.au/application-integration-services/">
+    <img src="https://www.picnet.com.au/images/centazio-assets/centazio_cli.png" alt="Centazio CLI" width="460">
+  </a>
+</p>
+
+# Getting Started
+
+## Installation
+
+`dotnet tool install centazio`
+
+## Reading Data
+Let's create a simple data ingestion task:
+
+`centazio gen soln CentazioSolution`
+`cd CentazioSolution`
+`centazio gen proj ReadFunction 
+
 ## Serialisation / Deserialisation / Mapping
 Data integration is all about getting data from one source, converting it and writing it to another target.  This source
 or target could be an API, database, files, etc. and the quality and reliability of the data and its schema cannot be 
@@ -120,3 +148,9 @@ todo: expand
 - `centazio az func generate Centazio.TestFunctions EmptyFunction` - Generate dummy function (single) AWS wrapper
 - `centazio aws func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
 - `centazio azure func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
+
+# Sponsors
+<a href="https://picnet.com.au" style="color:inherit;text-decoration: none">
+Centazio is proudly sponsored by PicNet.
+<p align="center"><img src="https://www.picnet.com.au/images/centazio-assets/picnet.jpg" alt="PicNet" width="250"></p>
+</a>
