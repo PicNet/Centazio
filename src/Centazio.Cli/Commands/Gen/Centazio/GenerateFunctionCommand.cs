@@ -5,7 +5,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen.Centazio;
 
-public class GenerateFunctionCommand(ITemplater templater) : AbstractCentazioCommand<GenerateFunctionCommand.Settings> {
+public class GenerateFunctionCommand(ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<GenerateFunctionCommand.Settings> {
 
   protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     FunctionName = UiHelpers.Ask("Function Name")
@@ -18,6 +18,8 @@ public class GenerateFunctionCommand(ITemplater templater) : AbstractCentazioCom
     }
     
     var dir = Directory.CreateDirectory(settings.FunctionName);
+    cmd.DotNet($"sln add {settings.FunctionName}", dir.FullName);
+    
     var contents = templater.ParseFromPath("Solution.sln", new { Projects = 1 });
     Console.WriteLine(contents);
     return Task.CompletedTask;
@@ -25,6 +27,10 @@ public class GenerateFunctionCommand(ITemplater templater) : AbstractCentazioCom
 
   public class Settings : CommonSettings {
     [CommandArgument(0, "<FUNCTION_NAME>")] public required string FunctionName { get; init; }
+    [CommandOption("-r|--read")] public bool Read { get; set; }
+    [CommandOption("-p|--promote")] public bool Promote { get; set; }
+    [CommandOption("-w|--write")] public bool Write { get; set; }
+    [CommandOption("-o|--other")] public bool Other { get; set; }
   }
 
 }
