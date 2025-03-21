@@ -7,7 +7,7 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 * A workflow engine to automate manual tasks
 * A centralised reporting database that integrates all your data from disparate systems
 
-<p align="center">
+<p style="text-align: center;">
   <a href="https://picnet.com.au/application-integration-services/">
     <img src="https://www.picnet.com.au/images/centazio-assets/centazio_cli.png" alt="Centazio CLI" width="460">
   </a>
@@ -145,6 +145,8 @@ todo: expand
 
 - Install: `dotnet tool install --prerelease --global Centazio.Cli`
 - Update: `dotnet tool update --prerelease --global Centazio.Cli`
+- Remove: `dotnet tool uninstall --global Centazio.Cli`, `dotnet tool uninstall --local Centazio.Cli`
+- Check: `dotnet tool list --global`, `dotnet tool list --local`
 - `centazio host run Centazio.Sample` - This will run the AppSheet / ClickUp integration sample project
 - `centazio az func generate Centazio.TestFunctions` - Generate dummy functions (can be many) Azure wrapper 
 - `centazio az func generate Centazio.TestFunctions EmptyFunction` - Generate dummy function (single) AWS wrapper
@@ -154,5 +156,5 @@ todo: expand
 # Sponsors
 <a href="https://picnet.com.au" style="color:inherit;text-decoration: none">
 Centazio is proudly sponsored by PicNet.
-<p align="center"><img src="https://www.picnet.com.au/images/centazio-assets/picnet.jpg" alt="PicNet" width="250"></p>
+<p style="text-align: center;"><img src="https://www.picnet.com.au/images/centazio-assets/picnet.jpg" alt="PicNet" width="250"></p>
 </a>

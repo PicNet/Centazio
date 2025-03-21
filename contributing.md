@@ -47,3 +47,21 @@
 - Create: `rm packages/*; dotnet pack -v detailed -c Release -o packages`
 - Pubish: `dotnet nuget push ./packages/*.nupkg --api-key <api-key> --source https://api.nuget.org/v3/index.json`
 
+## Centazio Cli
+- To work with a local version of the Centazio.Cli NuGet tool use:
+- `dotnet tool install --prerelease --local --add-source ./nupkg ./packages/Centazio.Cli`
+- For rapid development you can use the following approach: 
+  - In the directory of the integration project add a reference to the Centazio.Cli project:
+  ```
+   <ItemGroup>
+    <ProjectReference Include="..\path\to\Centazio.Cli\Centazio.Cli.csproj" />
+  </ItemGroup>
+  ```
+  - Create a wrapper for the Centazio.Cli:
+  ```
+  // Program.cs
+  using Centazio.Cli;
+  
+  Program.Main(args);
+  ```
+  - Run with `dotnet run --project ./path/to/Wrapper -- arg1 arg2...`
