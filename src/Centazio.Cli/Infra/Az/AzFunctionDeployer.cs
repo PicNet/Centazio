@@ -5,7 +5,6 @@ using Azure.Core;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
-using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 

@@ -1,9 +1,10 @@
 ﻿using Centazio.Providers.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.Shared;
 
-public class SampleDbContext(string connstr) : SqliteDbContext(connstr) {
+// tood: where is this used?
+public class CoreStorageDbContext(string connstr) : SqliteDbContext(connstr) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema("dbo")

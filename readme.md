@@ -6,6 +6,7 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 * A robust, fault-tolerant framework for building integrations
 * A workflow engine to automate manual tasks
 * A centralised reporting database that integrates all your data from disparate systems
+* Guidance on best-practices for data integration
 
 <p style="text-align: center;">
   <a href="https://picnet.com.au/application-integration-services/">
@@ -15,16 +16,87 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 
 # Getting Started
 
-## Installation
+This simple getting started guide will guide you in creating a simple integration between two systems:
+- [Google AppSheet](https://www.appsheet.com/)
+- [ClickUp](https://clickup.com/)
 
-`dotnet tool install centazio`
+## Installation Centazio
 
-## Reading Data
-Let's create a simple data ingestion task:
+- `dotnet tool install centazio`
+- Create a secrets file anywhere on your computer (outside of a git directory).  For now lets name this `dev.env`
+- TODO: add more details
 
-`centazio gen soln CentazioSolution`
-`cd CentazioSolution`
-`centazio gen proj ReadFunction 
+## Set up ClickUp
+- Create a free ClickUp account: https://clickup.com/
+- Create PAT: Avatar -> Settings -> Apps -> Generate: Copy the generated token
+- Add a line in your secrets file (`dev.env`) with your PAT, example:
+  `CLICKUP_TOKEN=pk_12345678_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456`
+- Create a list to todo items, and copy the list ID from URL (the trailing number)
+
+## Set up AppSheet
+- https://www.appsheet.com/ -> Get Started
+- Create an app -> Settings -> Integrations -> Enable (and copy App ID) 
+- Create Application Access Key (and copy key)
+- Save App (CTRL S)
+  - Add aline to your serets file (`dev.env`) with the api key, example:
+  `APPSHEET_KEY=V2-<abcde-abcde-abcde-abcde-abcde-abcde-abcde-abcde>`
+
+## Start Coding
+
+### Setup the Centazio solution
+- `centazio gen sln CentazioTesting`
+- `cd CentazioTesting`
+For now notice the `CentazioTesting.Shared` project that has been created and feel free to look around the generated 
+code.  We will go over each generated component in detail later on in this document.
+
+### Reading ClickUp Items
+Let's create a simple data ingestion task that will read new todo items added to your ClickUp list.
+`centazio gen func -t r -s ClickUp`
+or
+`centazio gen func -t read -s ClickUp`
+or
+`centazio gen func -type read -system ClickUp`
+TODO
+
+### Promoting ClickUp Items
+Now that our click data is in the staging database, it is time to promote it to the master data or core storage
+database.  The core storage database should be the combined intelligence of all your systems in one centralised
+location/database.
+`centazio gen func -t p -s ClickUp`
+or
+`centazio gen func -t promote -s ClickUp`
+or
+`centazio gen func -type promote -system ClickUp`
+TODO
+
+### Writing Items to Google AppSheet
+We now have some data in our master data or core storage database.  Other systems can now be fed that data.
+`centazio gen func -t w -s AppSheet`
+or
+`centazio gen func -t write -s AppSheet`
+or
+`centazio gen func -type write -system AppSheet`
+TODO
+
+### The Rest
+Please see the [Centazio.Sample](https://github.com/PicNet/Centazio/tree/master/sample) project in the [Centazio
+GitHub repository](https://github.com/PicNet/Centazio/) for a complete two-way implementation of this integration.
+
+### High Level FAQ
+- What other types of functions does Centazio support?
+We have seen Read, Promote and Write functions.  This three-step process to data integration is what PicNet has found
+to be a good starting point for fault-tolerant data integration.  However, there are always edge cases not covered by
+this paradigm.  For everything else just create an 'Other' function:
+`centazio gen func -type other -system SystemName`
+
+'Other' functions can perform any other task without any guide rails, so take care.  These functions are ideal for:
+- Periodic tasks such as:
+  - Data archival
+  - Data aggregation
+  - Workflow tasks (sending emails, reports, etc)
+  - Validating data quality
+  - Running machine learning models
+  - Etc.
 
 ## Serialisation / Deserialisation / Mapping
 Data integration is all about getting data from one source, converting it and writing it to another target.  This source

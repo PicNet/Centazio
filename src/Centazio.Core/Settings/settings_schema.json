@@ -31,15 +31,6 @@
     }
   },
   "SecretsFolders": [{ "type": "string", "required": true }],
-  "ClickUp": {
-    "BaseUrl": { "type": "string", "required": true },
-    "ListId": { "type": "string", "required": true }
-  },
-  "AppSheet": {
-    "BaseUrl": { "type": "string", "required": true },
-    "AppId": { "type": "string", "required": true },
-    "TableName": { "type": "string", "required": true }
-  },
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },
     "ConnectionString": { "type": "string", "required": true },

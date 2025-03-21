@@ -1,18 +1,19 @@
 ﻿using System.Collections;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
+using Centazio.Sample.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Sample.Tests;
 
-public class SampleSettingsLoaderTests {
+public class SettingsLoaderTests {
 
   
   [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
     var svcs = new TestServivesCollection();
     var registrar = new CentazioServicesRegistrar(svcs);
-    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<SampleSettings>(), registrar);
-    var expected = new List<Type> { typeof(SampleSettings), typeof(ClickUpSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
+    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<Settings>(), registrar);
+    var expected = new List<Type> { typeof(Settings), typeof(ClickUpSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
     
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));
     Assert.That(settings.SecretsFolders, Has.Count.GreaterThan(0));

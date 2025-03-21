@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Sample.AppSheet;
+using Centazio.Sample.Shared;
 
 namespace Centazio.Sample.Tests.AppSheet;
 
@@ -37,6 +38,6 @@ public class AppSheetApiTests {
     Assert.That(cleanup.Count, Is.EqualTo(start.Count)); 
   }
   
-  private AppSheetApi Api() => new(F.Settings<SampleSettings>().AppSheet, F.Secrets<SampleSecrets>());
+  private AppSheetApi Api() => new(F.Settings<Settings>().AppSheet, F.Secrets<Secrets>());
 
 }

@@ -1,4 +1,6 @@
 ﻿global using Serilog;
+global using Centazio.Cli.Infra;
+global using Centazio.Cli.Infra.Misc;
 
 using System.Runtime.CompilerServices;
 

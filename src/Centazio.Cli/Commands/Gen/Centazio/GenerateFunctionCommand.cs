@@ -1,6 +1,4 @@
-﻿using Centazio.Cli.Infra;
-using Centazio.Cli.Infra.Misc;
-using Centazio.Cli.Infra.Ui;
+﻿using Centazio.Cli.Infra.Ui;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen.Centazio;
@@ -21,7 +19,7 @@ public class GenerateFunctionCommand(ICommandRunner cmd, ITemplater templater) :
     cmd.DotNet($"sln add {settings.FunctionName}", dir.FullName);
     
     var contents = templater.ParseFromPath("Solution.sln", new { Projects = 1 });
-    Console.WriteLine(contents);
+    // todo: imlpement
     return Task.CompletedTask;
   }
 

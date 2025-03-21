@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Sample.AppSheet;
 using Centazio.Sample.ClickUp;
+using Centazio.Sample.Shared;
 using Centazio.Sample.Tests.ClickUp;
 
 namespace Centazio.Sample.Tests;
@@ -16,7 +17,7 @@ public class ResetSampleDbsAndApis {
   private void ResetDb() => File.Delete(Path.Combine(FsUtils.GetSolutionRootDirectory(), "sample.db"));
 
   private async Task ResetApis() {
-    var (settings, secrets) = (F.Settings<SampleSettings>(), F.Secrets<SampleSecrets>());
+    var (settings, secrets) = (F.Settings<Settings>(), F.Secrets<Secrets>());
     var (clickup, appsheet) =  (new ClickUpApi(settings.ClickUp, secrets), new AppSheetApi(settings.AppSheet, secrets));
     await DeleteClickUpTasks(clickup);
     await DeleteAppSheetTasks(appsheet);

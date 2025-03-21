@@ -30,7 +30,7 @@ public class FunctionRunnerTests {
   }
   
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
     
     var results = await F.RunFunc(emptufunc, ctl: repo);
     
@@ -51,7 +51,7 @@ public class FunctionRunnerTests {
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
     
     var results = await F.RunFunc(emptufunc, ctl: repo);
     
@@ -62,7 +62,7 @@ public class FunctionRunnerTests {
   }
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
-    repo.Systems.Add((C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
     var results = await F.RunFunc(new SimpleFunction(repo, 1), ctl: repo);
     
     Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));

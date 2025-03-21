@@ -2,7 +2,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
-      <ProjectReference Include="..\Centazio.Sample\Centazio.Sample.csproj" />
+      <ProjectReference Include="..\Centazio.Sample.AppSheet\Centazio.Sample.AppSheet.csproj" />
+      <ProjectReference Include="..\Centazio.Sample.ClickUp\Centazio.Sample.ClickUp.csproj" />
+      <ProjectReference Include="..\Centazio.Sample.Shared\Centazio.Sample.Shared.csproj" />
     </ItemGroup>
 
 </Project>

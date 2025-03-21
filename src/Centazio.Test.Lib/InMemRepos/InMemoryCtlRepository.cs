@@ -2,41 +2,52 @@
 
 namespace Centazio.Test.Lib.InMemRepos;
 
+public record SystemStateKey(SystemName System, LifecycleStage Stage) {
+  public override string ToString() => $"{System.Value}/{Stage.Value}";
+}
+
+public record ObjectStateKey(SystemName System, LifecycleStage Stage, ObjectName Object) {
+  public override string ToString() => $"{System.Value}/{Stage.Value}/{Object.Value}";
+}
+
 public class InMemoryBaseCtlRepository : AbstractCtlRepository {
 
-  protected readonly Dictionary<(SystemName, LifecycleStage), SystemState> systems = new();
-  protected readonly Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> objects = new();
+  protected readonly Dictionary<SystemStateKey, SystemState> systems = new();
+  protected readonly Dictionary<ObjectStateKey, ObjectState> objects = new();
   protected readonly Dictionary<Map.Key, string> maps = new();
   
   public override Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) 
-      => Task.FromResult(systems.GetValueOrDefault((system, stage)));
+      => Task.FromResult(systems.GetValueOrDefault(new (system, stage)));
   
   public override Task<SystemState> SaveSystemState(SystemState state) {
-    var key = (state.System, state.Stage);
+    var key = new SystemStateKey(state.System, state.Stage);
     if (!systems.ContainsKey(key)) throw new Exception($"SystemState [{state}] not found");
     return Task.FromResult(systems[key] = state);
   }
 
   public override Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
-    var key = (system, stage);
+    var key = new SystemStateKey(system, stage);
     if (systems.ContainsKey(key)) throw new Exception($"SystemState [{key}] already exists");
     return Task.FromResult(systems[key] = SystemState.Create(system, stage));
   }
   
-  public override Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) => 
-      Task.FromResult(objects.GetValueOrDefault((system.System, system.Stage, obj)));
-  
+  public override Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
+    var key = new ObjectStateKey(system.System, system.Stage, obj);
+    return Task.FromResult(objects.GetValueOrDefault(key));
+    
+  }
+
   public override Task<ObjectState> SaveObjectState(ObjectState state) {
-    var key = (state.System, state.Stage, state.Object);
+    var key = new ObjectStateKey(state.System, state.Stage, state.Object);
     if (!objects.ContainsKey(key)) throw new Exception($"ObjectState [{state}] not found");
     return Task.FromResult(objects[key] = state);
   }
   
   public override Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) {
-    var key = (system.System, system.Stage, obj);
+    var key = new ObjectStateKey(system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    var os = new ObjectState(system.System, system.Stage, obj, nextcheckpoint, true);
-    return Task.FromResult(objects[key] = os);
+    var state = new ObjectState(system.System, system.Stage, obj, nextcheckpoint, true);
+    return Task.FromResult(objects[key] = state);
   }
   
   protected override Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
@@ -64,7 +75,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
     var results = ids.Distinct()
         .Select(cid => Deserialize(maps.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == coretype && (issysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value))
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        .Where(v => v != default)
+        .Where(v => v is not null)
         .ToList();
     return Task.FromResult(results);
   }

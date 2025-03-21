@@ -173,52 +173,6 @@ public record DefaultsSettings {
   }
 }
 
-public record ClickUpSettings {
-
-  public required string BaseUrl { get; init; }
-  public required string ListId { get; init; }
-
-  public Dto ToDto() => new() { 
-    BaseUrl = BaseUrl,
-    ListId = ListId,
-  };
-
-  public record Dto : IDto<ClickUpSettings> { 
-    public string? BaseUrl { get; init; }
-    public string? ListId { get; init; }
-
-    public ClickUpSettings ToBase() => new() { 
-      BaseUrl = String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-      ListId = String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim(),
-    };
-  }
-}
-
-public record AppSheetSettings {
-
-  public required string BaseUrl { get; init; }
-  public required string AppId { get; init; }
-  public required string TableName { get; init; }
-
-  public Dto ToDto() => new() { 
-    BaseUrl = BaseUrl,
-    AppId = AppId,
-    TableName = TableName,
-  };
-
-  public record Dto : IDto<AppSheetSettings> { 
-    public string? BaseUrl { get; init; }
-    public string? AppId { get; init; }
-    public string? TableName { get; init; }
-
-    public AppSheetSettings ToBase() => new() { 
-      BaseUrl = String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-      AppId = String.IsNullOrWhiteSpace(AppId) ? throw new ArgumentNullException(nameof(AppId)) : AppId.Trim(),
-      TableName = String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim(),
-    };
-  }
-}
-
 public record StagedEntityRepositorySettings {
 
   public required string Provider { get; init; }

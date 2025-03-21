@@ -3,10 +3,18 @@ namespace Centazio.Core.Tests.Inspect;
 public class InspectUtilsTests {
 
   [Test] public void Test_GetSolnFiles_csproj() {
-    var csprojs = InspectUtils.GetSolnFiles(null, "*.csproj");
-    Assert.That(csprojs.SingleOrDefault(f => f.EndsWith("Centazio.Core.csproj")), Is.Not.Null);
-    Assert.That(csprojs.SingleOrDefault(f => f.EndsWith("Centazio.Sample.csproj")), Is.Not.Null);
-    Assert.That(csprojs.SingleOrDefault(f => f.EndsWith("Centazio.Test.Lib.csproj")), Is.Not.Null);
+    var csprojs = InspectUtils.GetSolnFiles(null, "*.csproj").Select(f => f.Split(Path.DirectorySeparatorChar).Last()).ToList();
+    var exp = new List<string> {
+      "Centazio.Cli.csproj",
+      "Centazio.Core.csproj",
+      "Centazio.Host.csproj",
+      "Centazio.Test.Lib.csproj",
+      "Centazio.Cli.Tests.csproj",
+      "Centazio.Core.Tests.csproj",
+      "Centazio.Providers.Sqlite.Tests.csproj",
+      "Centazio.Providers.Sqlite.csproj",
+    };
+    Assert.That(exp.All(e => csprojs.Contains(e)));
   }
 
 }

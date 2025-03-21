@@ -1,11 +1,11 @@
 ﻿using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.Shared;
 
-public class SampleCoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
+public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
   
-  public async Task<SampleCoreStorageRepository> Initialise() {
+  public async Task<CoreStorageRepository> Initialise() {
     await using var db = Db();
     
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(nameof(Core.Ctl).ToLower(), nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));

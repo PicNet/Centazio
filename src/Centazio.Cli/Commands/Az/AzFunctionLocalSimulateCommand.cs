@@ -1,9 +1,6 @@
 ﻿using System.ComponentModel;
-using Centazio.Cli.Commands.Gen;
 using Centazio.Cli.Commands.Gen.Cloud;
-using Centazio.Cli.Infra;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Cli.Infra.Misc;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;

@@ -3,6 +3,7 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Core.Tests.IntegrationTests.Write;
 
@@ -67,9 +68,9 @@ public class WriteFunctionTests {
     Assert.That(result.AbortVote, Is.EqualTo(EOperationAbortVote.Abort));
     Assert.That(result.Result, Is.EqualTo(EOperationResult.Error));
     
-    Assert.That(sys.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write)));
+    Assert.That(sys.Key, Is.EqualTo(new SystemStateKey(C.System2Name, LifecycleStage.Defaults.Write)));
     Assert.That(sys.Value, Is.EqualTo(SystemState.Create(C.System2Name, LifecycleStage.Defaults.Write).Completed(UtcDate.UtcNow)));
-    Assert.That(obj.Key, Is.EqualTo((C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName)));
+    Assert.That(obj.Key, Is.EqualTo(new ObjectStateKey(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName)));
     Assert.That(obj.Value, Is.EqualTo(ObjectState.Create(C.System2Name, LifecycleStage.Defaults.Write, C.CoreEntityName, func.Config.DefaultFirstTimeCheckpoint)
         .Error(UtcDate.UtcNow, EOperationAbortVote.Abort, obj.Value.LastRunMessage ?? String.Empty, func.Thrown?.ToString())));
     Assert.That(allcusts, Is.EquivalentTo([ceam.CoreEntity]));

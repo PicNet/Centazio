@@ -71,8 +71,8 @@ public static class TestingFactories {
 public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
 
 public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITestingCtlRepository {
-  public Dictionary<(SystemName, LifecycleStage), SystemState> Systems => systems;
-  public Dictionary<(SystemName, LifecycleStage, ObjectName), ObjectState> Objects => objects;
+  public Dictionary<SystemStateKey, SystemState> Systems => systems;
+  public Dictionary<ObjectStateKey, ObjectState> Objects => objects;
   public Dictionary<Map.Key, string> Maps => maps;
   
   public Task<List<Map.CoreToSysMap>> GetAllMaps() => 

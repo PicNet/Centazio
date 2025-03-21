@@ -2,8 +2,12 @@
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpApi(ClickUpSettings settings, SampleSecrets secrets) {
 
+public class ClickUpApi(ClickUpSettings settings, Secrets secrets) {
+
+  public static readonly string CLICK_UP_OPEN_STATUS = "to do";
+  public static readonly string CLICK_UP_COMPLETE_STATUS = "complete";
+  
   private static HttpClient? http; 
   
   public async Task<List<TaskJsonAndDateUpdated>> GetTasksAfter(DateTime after) {
@@ -27,8 +31,8 @@ public class ClickUpApi(ClickUpSettings settings, SampleSecrets secrets) {
   }
 
   public async Task UpdateTask(string id, string name) => await UpdateImpl(id, new { name });
-  public async Task OpenTask(string id) => await UpdateImpl(id, new { status = SampleConstants.Misc.CLICK_UP_OPEN_STATUS });
-  public async Task CloseTask(string id) => await UpdateImpl(id, new { status = SampleConstants.Misc.CLICK_UP_COMPLETE_STATUS });
+  public async Task OpenTask(string id) => await UpdateImpl(id, new { status = CLICK_UP_OPEN_STATUS });
+  public async Task CloseTask(string id) => await UpdateImpl(id, new { status = CLICK_UP_COMPLETE_STATUS });
   public async Task DeleteTask(string id) => await Client.DeleteAsync($"task/{id}");
 
   // https://developer.clickup.com/reference/updatetask

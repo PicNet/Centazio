@@ -7,6 +7,8 @@ using Centazio.Core.Write;
 
 namespace Centazio.Core;
 
+// todo: move these to their respective Read/Promote/Write namespaces
+
 public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
     AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, ctl) {
   

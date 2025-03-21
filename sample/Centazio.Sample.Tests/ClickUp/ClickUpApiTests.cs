@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Sample.ClickUp;
+using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
 
 namespace Centazio.Sample.Tests.ClickUp;
@@ -48,6 +49,6 @@ public class ClickUpApiTests {
     await Api.DeleteTask(TEST_TASK_ID); 
   }
   
-  private ClickUpApi Api => new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());
+  private ClickUpApi Api => new(F.Settings<Settings>().ClickUp, F.Secrets<Secrets>());
 
 }

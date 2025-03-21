@@ -1,13 +1,13 @@
 using Centazio.Core.Settings;
 
-namespace Centazio.Sample;
+namespace Centazio.Sample.Shared;
 
-public record SampleSettings : CentazioSettings {
+public record Settings : CentazioSettings {
 
   public required ClickUpSettings ClickUp { get; init; }
   public required AppSheetSettings AppSheet { get; init; }
   
-  protected SampleSettings(CentazioSettings centazio) : base (centazio) {}
+  protected Settings(CentazioSettings centazio) : base (centazio) {}
 
   public override Dto ToDto() {
     return new(base.ToDto()) {
@@ -16,16 +16,16 @@ public record SampleSettings : CentazioSettings {
     };
   }
 
-  public new record Dto : CentazioSettings.Dto, IDto<SampleSettings> {
+  public new record Dto : CentazioSettings.Dto, IDto<Settings> {
     public ClickUpSettings.Dto? ClickUp { get; init; }
     public AppSheetSettings.Dto? AppSheet { get; init; }
     
     public Dto() {} // required for initialisation in `SettingsLoader.cs`
     internal Dto(CentazioSettings.Dto centazio) : base(centazio) {}
     
-    public new SampleSettings ToBase() {
+    public new Settings ToBase() {
       var centazio = base.ToBase();
-      return new SampleSettings(centazio) {
+      return new Settings(centazio) {
         // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
         SecretsFolders = centazio.SecretsFolders,  
         ClickUp = ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)),

@@ -4,10 +4,10 @@ using Centazio.Core.Write;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetWriteFunction(SampleCoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(SampleConstants.Systems.AppSheet, core, ctl) {
+public class AppSheetWriteFunction(CoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(AppSheetConstants.AppSheetSystemName, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(SampleConstants.CoreEntities.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
+    new WriteOperationConfig(CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 
   private Task<CovertCoresToSystemsResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 

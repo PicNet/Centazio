@@ -8,7 +8,6 @@ using Amazon.IdentityManagement.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Amazon.Runtime;
-using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;

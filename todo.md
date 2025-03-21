@@ -14,21 +14,18 @@
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger
+    
 - function-to-function triggers:
   - aws/azure
   - the triggered function should get as a parameter the objects that changed 
-- update readme and use picnet github to host publicly
-- nuget all code
+  
 - cli:
-  - install as `dotnet tool`
-    - have a `cetazio dev-mode` command to switch between nuget and development mode (with git cloned centazio libs)
   - simulate should not open a new window when running just one function
   - code generators for new solution/project/integration/function
 
-- check that all provider tests in Centazio.Core have Provider counterparts
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - fix azure devops testing pipeline
-- documentation and blogs
+- documentation
 
 ## Low
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)

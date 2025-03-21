@@ -3,8 +3,11 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Sample.ClickUp;
+using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
 namespace Centazio.Sample.Tests.ClickUp;
 
@@ -13,20 +16,22 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Read() {
     var (stager, ctl) = (F.SeRepo(), F.CtlRepo());
     var results = await CreateAndRunReadFunction(stager, ctl);
-    var ss = await ctl.GetSystemState(SC.Systems.ClickUp, LifecycleStage.Defaults.Read) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.SystemEntities.ClickUp.Task) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(ClickUpConstants.ClickUpSystemName, LifecycleStage.Defaults.Read) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, ClickUpConstants.ClickUpTaskEntityName) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
   }
 
   [Test] public async Task Test_Promote() {
+    LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal; // todo:remove
+    
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
     var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), F.FuncRunner(ctl: ctl));
     var results = (await runner.RunFunction(func)).OpResults.Single();
-    var ss = await ctl.GetSystemState(SC.Systems.ClickUp, LifecycleStage.Defaults.Promote) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(ClickUpConstants.ClickUpSystemName, LifecycleStage.Defaults.Promote) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
     
     await using var db = core.Db();
@@ -49,6 +54,6 @@ public class ClickUpFunctionsTests {
     return (await F.FuncRunner(ctl: ctl).RunFunction(func)).OpResults.Single().Result;
   }
   
-  private readonly ClickUpApi api = new(F.Settings<SampleSettings>().ClickUp, F.Secrets<SampleSecrets>());
+  private readonly ClickUpApi api = new(F.Settings<Settings>().ClickUp, F.Secrets<Secrets>());
 
 }

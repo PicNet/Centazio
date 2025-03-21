@@ -3,6 +3,7 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Sample.AppSheet;
+using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,8 @@ public class AppSheetFunctionsTests {
   [Test] public async Task Test_Read() {
     var (stager, ctl) = (F.SeRepo(), F.CtlRepo());
     var results = await CreateAndRunReadFunction(stager, ctl);
-    var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Read) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.SystemEntities.AppSheet.Task) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(AppSheetConstants.AppSheetSystemName, LifecycleStage.Defaults.Read) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, AppSheetConstants.AppSheetTaskEntityName) ?? throw new Exception();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
@@ -26,8 +27,8 @@ public class AppSheetFunctionsTests {
     
     var func = new AppSheetPromoteFunction(stager, core, ctl);
     var results = (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
-    var ss = await ctl.GetSystemState(SC.Systems.AppSheet, LifecycleStage.Defaults.Promote) ?? throw new Exception();
-    var os = await ctl.GetObjectState(ss, SC.CoreEntities.Task) ?? throw new Exception();
+    var ss = await ctl.GetSystemState(AppSheetConstants.AppSheetSystemName, LifecycleStage.Defaults.Promote) ?? throw new Exception();
+    var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTask>().Task).ToList();
     
     await using var db = core.Db();
@@ -39,7 +40,7 @@ public class AppSheetFunctionsTests {
   }
 
   private static async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi(F.Settings<SampleSettings>().AppSheet, F.Secrets<SampleSecrets>()));
+    var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi(F.Settings<Settings>().AppSheet, F.Secrets<Secrets>()));
     var results = (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
     return results;
   }
