@@ -1,5 +1,13 @@
 <Project>
+    <!-- General Properties for all Projects -->
     <PropertyGroup>
+        <Description>PicNet's Systems Integration, Workflow and Master Data Platform</Description>
+        <Version>0.1.0-beta</Version>
+        <Authors>PicNet Pty Ltd</Authors>
+        <Company>PicNet Pty Ltd</Company>
+        <RepositoryUrl>https://github.com/yourusername/centazio</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        
         <TargetFramework>net9.0</TargetFramework>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -7,6 +15,22 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     </PropertyGroup>
+    
+    
+    <!-- NuGet Properties -->
+    <PropertyGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
+        <PackageId>$(MSBuildProjectName)</PackageId>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/yourusername/centazio</PackageProjectUrl>
+        <PackageTags>picnet;integration</PackageTags>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
+    </PropertyGroup>
+    
+    <ItemGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
+        <None Include="$(MSBuildThisFileDirectory)readme.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    
+    <!-- Unit Test Projects -->
     
     <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
         <IsTestProject>true</IsTestProject>
@@ -27,4 +51,5 @@
         <PackageReference Include="NUnit3TestAdapter" />
         <Using Include="NUnit.Framework" />
     </ItemGroup>
+    
 </Project>

@@ -42,3 +42,8 @@
   internal
 - To disable standard logging during testing edit `GlobalTestSuiteInitialiser.cs` and pass `LogEventLevel.Fatal`
     to the `LogInitialiser.GetConsoleConfig` initialiser
+
+## NuGet
+- Create: `rm packages/*; dotnet pack -v detailed -c Release -o packages`
+- Pubish: `dotnet nuget push ./packages/*.nupkg --api-key <api-key> --source https://api.nuget.org/v3/index.json`
+

@@ -3,6 +3,7 @@ log/
 bin/
 obj/
 generated/
+packages/
 *.user
 *.db
 *.db-journal

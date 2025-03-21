@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>centazio</ToolCommandName>
     </PropertyGroup>
 
     <ItemGroup>

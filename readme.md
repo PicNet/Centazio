@@ -143,6 +143,8 @@ todo: expand
 
 ## Common Commands
 
+- Install: `dotnet tool install --prerelease --global Centazio.Cli`
+- Update: `dotnet tool update --prerelease --global Centazio.Cli`
 - `centazio host run Centazio.Sample` - This will run the AppSheet / ClickUp integration sample project
 - `centazio az func generate Centazio.TestFunctions` - Generate dummy functions (can be many) Azure wrapper 
 - `centazio az func generate Centazio.TestFunctions EmptyFunction` - Generate dummy function (single) AWS wrapper
