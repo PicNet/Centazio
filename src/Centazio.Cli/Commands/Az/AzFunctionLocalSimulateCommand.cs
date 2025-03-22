@@ -10,11 +10,11 @@ namespace Centazio.Cli.Commands.Az;
 
 public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
 
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzureCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());

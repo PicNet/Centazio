@@ -7,11 +7,11 @@ namespace Centazio.Cli.Commands.Az;
 
 public class AddResourceGroupCommand(CentazioSettings clisetts, IAzResourceGroups impl) : AbstractCentazioCommand<AddResourceGroupCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     ResourceGroupName = UiHelpers.Ask("Resource Group Name", clisetts.AzureSettings.ResourceGroup) 
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     ArgumentException.ThrowIfNullOrWhiteSpace(settings.ResourceGroupName);
     await UiHelpers.ProgressWithErrorMessage("Loading resource group list", async () => await impl.AddResourceGroup(settings.ResourceGroupName));
   }

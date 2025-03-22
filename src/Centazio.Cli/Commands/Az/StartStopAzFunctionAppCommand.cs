@@ -8,11 +8,11 @@ namespace Centazio.Cli.Commands.Az;
 
 public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<StartStopAzFunctionAppCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     if (CommandName != "start" && CommandName != "stop") throw new ArgumentException($"only start/stop command is supported");
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     

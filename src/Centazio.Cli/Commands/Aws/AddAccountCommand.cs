@@ -8,11 +8,11 @@ namespace Centazio.Cli.Commands.Aws;
 public class AddAccountCommand(CentazioSettings clisetts, IAwsAccounts impl) 
     : AbstractCentazioCommand<AddAccountCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AccountName = UiHelpers.Ask("Account Name", clisetts.AwsSettings.AccountName) 
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     if (String.IsNullOrWhiteSpace(settings.AccountName)) throw new Exception(Interactive ? "AccountName is required" : "<ACCOUNT_NAME> is required");
     await UiHelpers.ProgressWithErrorMessage("Creating account", async () => await impl.AddAccount(settings.AccountName));
   }

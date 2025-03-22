@@ -14,6 +14,26 @@ public interface ITemplater {
 }
 public class Templater(CentazioSettings settings, CentazioSecrets secrets) : ITemplater {
   
+  internal static string TestingRootDir = String.Empty;
+  
+  /// <summary>
+  /// This method will work when running using the centazio 'dotnet tool' and when running within
+  ///     the Centazio development hierarchy
+  /// </summary>
+  public static string TemplatePath(params List<string> steps) {
+    return Path.Combine(steps.ToList().Prepend(RootDir()).ToArray());
+    
+    string RootDir() {
+      try { return FsUtils.GetSolutionRootDirectory(); }
+      catch (Exception) { 
+        return !String.IsNullOrEmpty(TestingRootDir) 
+          ? TestingRootDir 
+          :  Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) 
+          ?? throw new Exception(); 
+      }
+    }
+  }
+  
   public string ParseFromPath(string path, object? model = null) => 
       ParseFromContent(File.ReadAllText(FsUtils.GetSolutionFilePath("defaults", "templates", path)), model);
 

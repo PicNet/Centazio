@@ -7,9 +7,9 @@ namespace Centazio.Cli.Commands.Dev;
 
 public class GenerateSettingTypesCommand(ITemplater templater) : AbstractCentazioCommand<CommonSettings> {
   
-  protected override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
+  public override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
-  protected override async Task ExecuteImpl(CommonSettings cmdsetts) {
+  public override async Task ExecuteImpl(CommonSettings cmdsetts) {
     var dir = FsUtils.GetSolutionFilePath("src", "Centazio.Core", "Settings");
     var json = await File.ReadAllTextAsync(Path.Combine(dir, "settings_schema.json"));
     var schema = JsonNode.Parse(json) ?? throw new Exception();

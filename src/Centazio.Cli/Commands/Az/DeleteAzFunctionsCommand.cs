@@ -9,11 +9,11 @@ namespace Centazio.Cli.Commands.Az;
 
 public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctionDeleter impl) : AbstractCentazioCommand<DeleteAzFunctionsCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
     if (!UiHelpers.Confirm($"Are you sure you want to delete Azure Function '{project.DashedProjectName}'")) {

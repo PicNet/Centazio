@@ -5,11 +5,11 @@ namespace Centazio.Cli.Commands.Gen.Centazio;
 
 public class GenerateFunctionCommand(ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<GenerateFunctionCommand.Settings> {
 
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     FunctionName = UiHelpers.Ask("Function Name")
   });
 
-  protected override Task ExecuteImpl(Settings settings) {
+  public override Task ExecuteImpl(Settings settings) {
     if (Directory.GetDirectories(".", settings.FunctionName).Any()) {
       UiHelpers.Log($"The current directory already contains a '{settings.FunctionName}' directory.  Please remove this directory before you proceed.");
       return Task.CompletedTask;

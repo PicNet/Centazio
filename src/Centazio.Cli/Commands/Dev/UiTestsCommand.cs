@@ -9,9 +9,9 @@ public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
 
   private const int DELAY_MS = 500; 
   
-  protected override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
+  public override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
-  protected override async Task ExecuteImpl(CommonSettings cmdsetts) {
+  public override async Task ExecuteImpl(CommonSettings cmdsetts) {
     UiHelpers.Log($"[underline bold white]Running Ui Tests[/]\n\n");
     
     Title("UiHelpers.Log - Arguments Parsed");

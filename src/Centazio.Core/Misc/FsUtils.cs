@@ -29,4 +29,12 @@ public static class FsUtils {
       try { return Directory.Exists(dir); }
       catch { return false; }
     }) ?? throw new Exception($"Could not find a valid directory");
+  
+  public static void CopyDirFiles(string from, string to, string ext, bool deleteto = false) {
+    if (deleteto) {
+      if (Directory.Exists(to)) Directory.Delete(to, true);
+      Directory.CreateDirectory(to);
+    }
+    Directory.GetFiles(from, ext).ForEach(file => File.Copy(file, Path.Combine(to, Path.GetFileName(file))));
+  }
 }

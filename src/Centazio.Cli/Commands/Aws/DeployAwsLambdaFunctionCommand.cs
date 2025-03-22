@@ -11,7 +11,7 @@ namespace Centazio.Cli.Commands.Aws;
 
 public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAwsFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAwsLambdaFunctionCommand.Settings> {
   
-  protected override Task<Settings> GetInteractiveSettings() {
+  public override Task<Settings> GetInteractiveSettings() {
     var assembly = UiHelpers.Ask("Assembly Name");
     var settings = new Settings { 
       AssemblyName = assembly,
@@ -20,7 +20,7 @@ public class DeployAwsLambdaFunctionCommand(CentazioSettings coresettings,  IAws
     return Task.FromResult(settings);
   }
 
-  protected override async Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder, settings.FunctionName);
     
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());

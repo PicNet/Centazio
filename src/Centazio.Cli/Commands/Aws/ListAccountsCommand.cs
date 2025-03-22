@@ -5,9 +5,9 @@ namespace Centazio.Cli.Commands.Aws;
 
 public class ListAccountsCommand(IAwsAccounts impl) : AbstractCentazioCommand<CommonSettings> {
   
-  protected override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
+  public override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
-  protected override async Task ExecuteImpl(CommonSettings settings) => 
+  public override async Task ExecuteImpl(CommonSettings settings) => 
       await UiHelpers.Progress("Loading account list", async () => 
           UiHelpers.Table(["Name", "Id", "Arn", "Status", "Email"], 
               (await impl.ListAccounts())

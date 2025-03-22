@@ -77,7 +77,7 @@ public class CommandRunner : ICommandRunner {
     var tool = command.Split('\\').Last();
     if (installed.TryGetValue(tool, out var isinstalled)) { return isinstalled; }
     
-    var results = Run(command, "--version", quiet: true, checktool: false);
+    var results = Run(command, "--version", quiet: true, checktool: false, cwd: Environment.CurrentDirectory);
     isinstalled = String.IsNullOrWhiteSpace(results.Err);
     if (!isinstalled) {
       Console.WriteLine($"tool '{tool}' is not installed.");

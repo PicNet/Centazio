@@ -6,8 +6,6 @@ using Centazio.Sample.ClickUp;
 using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
-using Serilog.Events;
 
 namespace Centazio.Sample.Tests.ClickUp;
 

@@ -7,12 +7,12 @@ namespace Centazio.Cli.Commands.Host;
 
 public class RunHostCommand(CentazioHost host) : AbstractCentazioCommand<RunHostCommand.Settings>{
 
-  protected override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
+  public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),
     FunctionFilter = UiHelpers.Ask("Function Filter", "All") 
   });
 
-  protected override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(cmdsetts);
+  public override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(cmdsetts);
 
   public class Settings : CommonSettings, IHostConfiguration {
     [CommandArgument(0, "[ASSEMBLY_NAME]")] public required string AssemblyNames { get; init; }
