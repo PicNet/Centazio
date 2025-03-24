@@ -8,7 +8,7 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 * A centralised reporting database that integrates all your data from disparate systems
 * Guidance on best-practices for data integration
 
-<p style="text-align: center;">
+<p align="center">
   <a href="https://picnet.com.au/application-integration-services/">
     <img src="https://www.picnet.com.au/images/centazio-assets/centazio_cli.png" alt="Centazio CLI" width="460">
   </a>
@@ -223,10 +223,10 @@ todo: expand
 - `centazio az func generate Centazio.TestFunctions` - Generate dummy functions (can be many) Azure wrapper 
 - `centazio az func generate Centazio.TestFunctions EmptyFunction` - Generate dummy function (single) AWS wrapper
 - `centazio aws func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
-- `centazio azure func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
+- `centazio az func deploy Centazio.TestFunctions` - Package and deploy dummy functions to AWS
 
 # Sponsors
 <a href="https://picnet.com.au" style="color:inherit;text-decoration: none">
 Centazio is proudly sponsored by PicNet.
-<p style="text-align: center;"><img src="https://www.picnet.com.au/images/centazio-assets/picnet.jpg" alt="PicNet" width="250"></p>
+<p align="center"><img src="https://www.picnet.com.au/images/centazio-assets/picnet.jpg" alt="PicNet" width="250"></p>
 </a>

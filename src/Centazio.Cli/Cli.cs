@@ -1,5 +1,6 @@
 ﻿using Centazio.Cli.Commands;
 using Centazio.Cli.Infra.Ui;
+using Centazio.Core.Misc;
 using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -31,10 +32,7 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
   
   private void ShowSplash() {
     UiHelpers.Log("\n\n");
-    // todo: removed until vulnerability in package is resolved
-    //    Error: Centazio.Cli.csproj: [NU1903] Warning As Error: Package 'SixLabors.ImageSharp' 3.1.5 has a known high severity vulnerability, https://github.com/advisories/GHSA-2cmq-823j-5qj8
-    //    see: https://github.com/spectreconsole/spectre.console/issues/1776
-    // AnsiConsole.Write(new CanvasImage(FsUtils.GetSolutionFilePath("src", "Centazio.Cli", "swirl.png")).MaxWidth(32));
+    AnsiConsole.Write(new CanvasImage(FsUtils.GetSolutionFilePath("src", "Centazio.Cli", "swirl.png")).MaxWidth(32));
     AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
     UiHelpers.Log("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }

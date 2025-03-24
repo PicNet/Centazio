@@ -26,8 +26,7 @@
       <PackageReference Include="Serilog.Sinks.File" />
       <PackageReference Include="Spectre.Console" />
       <PackageReference Include="Spectre.Console.Cli" />
-      <!-- vulnerability in package, remove until resolved -->
-      <!-- <PackageReference Include="Spectre.Console.ImageSharp" /> -->
+      <PackageReference Include="Spectre.Console.ImageSharp" />
       <PackageReference Include="Microsoft.Data.Sqlite" />
     </ItemGroup>
 
