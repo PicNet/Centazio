@@ -10,29 +10,27 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
     SolutionName = UiHelpers.Ask("Solution Name")
   });
 
-  public override Task ExecuteImpl(Settings settings) {
-    var done = Task.CompletedTask;
+  public override async Task ExecuteImpl(Settings settings) {
     if (Directory.GetDirectories(".", settings.SolutionName).Any()) {
       UiHelpers.Log($"The current directory ({Environment.CurrentDirectory}) already contains a '{settings.SolutionName}' directory.  Please remove this '{settings.SolutionName}' directory and try again.");
-      return done;
+      return;
     }
-    if (Directory.GetFiles(".", "*.sln").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to already contain a .Net solution.  Are you sure you want to proceed?")) return done;
-    if (Directory.GetFiles(".", "*.csproj").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to be a .Net project.  Are you sure you want to proceed?")) return done;
+    if (Directory.GetFiles(".", "*.sln").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to already contain a .Net solution.  Are you sure you want to proceed?")) return;
+    if (Directory.GetFiles(".", "*.csproj").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to be a .Net project.  Are you sure you want to proceed?")) return;
     
-    var sln = GenerateCode(settings);
+    var sln = await GenerateCode(settings);
     
     UiHelpers.Log($"Solution '{sln}' generated in current directory ({Environment.CurrentDirectory}), please run `cd {sln}; centazio gen func <function_name>` to generate your first Centazio function");
-    return done;
   }
 
-  private string GenerateCode(Settings settings) {
+  private async Task<string> GenerateCode(Settings settings) {
     var (sln, shared, slndir) = (settings.SolutionName, $"{settings.SolutionName}.Shared", Directory.CreateDirectory(settings.SolutionName).FullName);
     var shareddir = Path.Combine(slndir, shared);
     
     CreateSlnFile();
     CreateEmptySharedProj();
     CopySampleProjSharedProjFiles();
-    AdjustCopiedFiles();
+    await AdjustCopiedFiles();
     
     return sln;
 
@@ -51,14 +49,14 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
       var from = Templater.TemplatePath("defaults", "templates", "centazio", "Solution.Shared");
       FsUtils.CopyDirFiles(from, shareddir, "*.cs");
     }
-    
-    void AdjustCopiedFiles() {
-      Directory.GetFiles(shareddir, "*.cs").ForEach(path => {
+
+    async Task AdjustCopiedFiles() {
+      await Directory.GetFiles(shareddir, "*.cs").Select(async path => {
         var fn = Path.GetFileName(path);
-        var contents = File.ReadAllText(path).Replace("Centazio.Sample", sln);
+        var contents = (await File.ReadAllTextAsync(path)).Replace("Centazio.Sample", sln);
         if (fn.Contains("Sample") || contents.Contains("Sample")) throw new Exception();
-        File.WriteAllText(path, contents);
-      });
+        await File.WriteAllTextAsync(path, contents);
+      }).Synchronous();
     }
   }
 

@@ -7,6 +7,7 @@ public class CheckForEmptyStringUsage {
     InspectUtils.CsFiles(null, "CheckForEmptyStringUsage.cs", "SolutionGenerator.cs", "AwsFunctionDeployer.cs").ForEach(file => {
       var contents = File.ReadAllText(file).Replace("\\\"", String.Empty);
       contents = Regex.Replace(contents, "@\".+\"", String.Empty);
+      contents = Regex.Replace(contents, "@\\$\".+\"", String.Empty);
       contents = Regex.Replace(contents, "\"\"\".+\"", String.Empty);
       var idx = contents.IndexOf("\"\"", StringComparison.Ordinal); 
       if (idx >= 0)
