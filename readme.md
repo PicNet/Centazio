@@ -2,17 +2,56 @@
 #### Data Integration, Workflow and Master Data Platform by PicNet
 
 Centazio is a data integration platform created for .Net developers.  Centazio provides the following features:
-* Sophisticated CLI the help you with the management of your cloud resources
-* A robust, fault-tolerant framework for building integrations
-* A workflow engine to automate manual tasks
-* A centralised reporting database that integrates all your data from disparate systems
-* Guidance on best-practices for data integration
+- Sophisticated CLI the help you with the management of your cloud resources
+- A robust, fault-tolerant framework for building integrations
+- A workflow engine to automate manual tasks
+- A centralised reporting database that integrates all your data from disparate systems
+- Guidance on best-practices for data integration
 
 <p align="center">
   <a href="https://picnet.com.au/application-integration-services/">
     <img src="https://www.picnet.com.au/images/centazio-assets/centazio_cli.png" alt="Centazio CLI" width="460">
   </a>
 </p>
+
+# Principles
+- Zero Trust:  
+  - Expect all systems to go down, expect Centazio to go down.  However, if something goes down, never bring 
+    down other parts of the environment
+  - Expect APIs to change without warning, expect data to be incorrect and need cleansing.  Never trust, always confirm
+    and apply your own level of validation
+- Core Storage:
+  - Data from all system should be stored in a central database that is ideal for reporting and business workflows.
+  - The core storage database uses business language, independent of the source systems
+  - The core storage is the only source of data when writing to target systems
+- Independence:
+  - All systems should be independent and totally ignorant of other systems
+  - All integrations to systems should be done in an isolated fashion
+  - Integration steps should be isolated from other steps
+- Main Steps:
+  - Read: When reading data from a source system, this data should be read with as little modification as possible.
+    This raw data can be saved in a staging area to be later cleanse.  The read step should not worry about validation,
+    cleansing, etc.
+  - Promote: Promoting staging data to Core Storage is done by Promote functions.  All data cleansing, basic aggregation,
+    transformation and language standadisation should be done in the Promote step.
+  - Write: Writing data to target systems is done in this step.  All data for writing should come from the Core Storage
+    database and never directly from source systems.
+  - Other: Any other integration function, such as data aggregation, machine learning, reporting, workflows, etc. Can be 
+    done by 'Other' functions.
+
+# Serverless / Independence
+The principles descibed above are ideally serviced by using Serverless architectures.  Each system and step should be its
+own totally isolated serverless function.  For instance, reading data from System1 to write to System 2 will be broken 
+down into the following Serverless functions:
+
+- System1ReadFunction
+- System1PromoteFunction
+- System2WriteFunction
+
+Each of these functions are independent of each other, can be independently developed, tested, documented, etc.  They
+are also fault tollerant of failures in any other function.
+
+Centazio currently supports Self Hosting, AWS Lambda and Azure Functions based deployments for Centazio Functions.
 
 # Getting Started
 
@@ -79,24 +118,7 @@ or
 TODO
 
 ### The Rest
-Please see the [Centazio.Sample](https://github.com/PicNet/Centazio/tree/master/sample) project in the [Centazio
-GitHub repository](https://github.com/PicNet/Centazio/) for a complete two-way implementation of this integration.
-
-### High Level FAQ
-- What other types of functions does Centazio support?
-We have seen Read, Promote and Write functions.  This three-step process to data integration is what PicNet has found
-to be a good starting point for fault-tolerant data integration.  However, there are always edge cases not covered by
-this paradigm.  For everything else just create an 'Other' function:
-`centazio gen func -type other -system SystemName`
-
-'Other' functions can perform any other task without any guide rails, so take care.  These functions are ideal for:
-- Periodic tasks such as:
-  - Data archival
-  - Data aggregation
-  - Workflow tasks (sending emails, reports, etc)
-  - Validating data quality
-  - Running machine learning models
-  - Etc.
+Please see the [Centazio.Sample](https://github.com/PicNet/Centazio/tree/master/sample) project in the [Centazio GitHub repository](https://github.com/PicNet/Centazio/) for a complete two-way implementation of this sample integration.
 
 ## Serialisation / Deserialisation / Mapping
 Data integration is all about getting data from one source, converting it and writing it to another target.  This source
