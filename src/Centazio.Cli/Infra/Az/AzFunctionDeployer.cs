@@ -61,6 +61,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
         new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" },
         new AppServiceNameValuePair { Name = "SiteConfigProperties", Value = "1" },
         new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = Secrets.AZ_BLOB_STORAGE_ENDPOINT },
+        new AppServiceNameValuePair { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = Secrets.AZ_APP_INSIGHT_CONNECTION_STRING },
       ]
     },
     AppServicePlanId = farmid

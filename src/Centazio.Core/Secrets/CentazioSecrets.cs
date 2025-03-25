@@ -10,6 +10,7 @@ public record CentazioSecrets {
   public string AZ_CLIENT_ID { get; }
   public string AZ_SECRET_ID { get; }
   public string AZ_SUBSCRIPTION_ID { get; }
+  public string AZ_APP_INSIGHT_CONNECTION_STRING { get; }
   public string AZ_BLOB_STORAGE_ENDPOINT { get; }
   
   public string? SQL_CONN_STR { get; init; }
@@ -23,10 +24,11 @@ public record CentazioSecrets {
     AZ_SECRET_ID = other.AZ_SECRET_ID;
     AZ_SUBSCRIPTION_ID = other.AZ_SUBSCRIPTION_ID;
     AZ_BLOB_STORAGE_ENDPOINT = other.AZ_BLOB_STORAGE_ENDPOINT;
+    AZ_APP_INSIGHT_CONNECTION_STRING = other.AZ_APP_INSIGHT_CONNECTION_STRING;
     SQL_CONN_STR = other.SQL_CONN_STR;
   }
   
-  private CentazioSecrets(string AWS_KEY, string AWS_SECRET, string AWS_REGION, string AZ_TENANT_ID, string AZ_CLIENT_ID, string AZ_SECRET_ID, string AZ_SUBSCRIPTION_ID, string AZ_BLOB_STORAGE_ENDPOINT, string SQL_CONN_STR) {
+  private CentazioSecrets(string AWS_KEY, string AWS_SECRET, string AWS_REGION, string AZ_TENANT_ID, string AZ_CLIENT_ID, string AZ_SECRET_ID, string AZ_SUBSCRIPTION_ID, string AZ_BLOB_STORAGE_ENDPOINT, string AZ_APP_INSIGHT_CONNECTION_STRING, string SQL_CONN_STR) {
     this.AWS_KEY = AWS_KEY;
     this.AWS_SECRET = AWS_SECRET;
     this.AWS_REGION = AWS_REGION;
@@ -35,6 +37,7 @@ public record CentazioSecrets {
     this.AZ_SECRET_ID = AZ_SECRET_ID;
     this.AZ_SUBSCRIPTION_ID = AZ_SUBSCRIPTION_ID;
     this.AZ_BLOB_STORAGE_ENDPOINT = AZ_BLOB_STORAGE_ENDPOINT;
+    this.AZ_APP_INSIGHT_CONNECTION_STRING = AZ_APP_INSIGHT_CONNECTION_STRING;
     this.SQL_CONN_STR = SQL_CONN_STR;
   }
   
@@ -47,6 +50,7 @@ public record CentazioSecrets {
     public string? AZ_CLIENT_ID { get; set; }
     public string? AZ_SECRET_ID { get; set; }
     public string? AZ_SUBSCRIPTION_ID { get; set; }
+    public string? AZ_APP_INSIGHT_CONNECTION_STRING { get; set; }
     public string? AZ_BLOB_STORAGE_ENDPOINT { get; set; }
     
     public string? SQL_CONN_STR { get; set; }
@@ -61,6 +65,7 @@ public record CentazioSecrets {
       String.IsNullOrWhiteSpace(AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : AZ_SECRET_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim(),
       String.IsNullOrWhiteSpace(AZ_BLOB_STORAGE_ENDPOINT) ? throw new ArgumentNullException(nameof(AZ_BLOB_STORAGE_ENDPOINT)) : AZ_BLOB_STORAGE_ENDPOINT.Trim(),
+      String.IsNullOrWhiteSpace(AZ_APP_INSIGHT_CONNECTION_STRING) ? throw new ArgumentNullException(nameof(AZ_APP_INSIGHT_CONNECTION_STRING)) : AZ_APP_INSIGHT_CONNECTION_STRING.Trim(),
       
       String.IsNullOrWhiteSpace(SQL_CONN_STR) ? throw new ArgumentNullException(nameof(SQL_CONN_STR)) : SQL_CONN_STR.Trim());
   }

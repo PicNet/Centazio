@@ -1,10 +1,11 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzureFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
+internal class AzureCloudSolutionGenerator(CentazioSettings settings, CentazioSecrets secrets, ITemplater templater, AzureFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAzureNuGetReferencesToProject(added);
@@ -16,7 +17,12 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
       AddLatestNuGetReferencesToProject([
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Azure.Functions.Worker.Extensions.Timer",
-        "Microsoft.Azure.Functions.Worker.Sdk"
+        "Microsoft.Azure.Functions.Worker.Sdk",
+        "Microsoft.Azure.Functions.Worker",
+        "Microsoft.ApplicationInsights.WorkerService",
+        "Microsoft.Azure.Functions.Worker.ApplicationInsights",
+        "Serilog.Sinks.ApplicationInsights",
+        "Serilog.Extensions.Hosting"
       ], added);
   
   private async Task AddAzConfigJsonFilesToProject() {
@@ -25,7 +31,9 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
     
     async Task AddTemplateFileToProject(string fname) {
       model.Files.Add(fname);
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), templater.ParseFromPath($"azure/{fname}"));
+      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), templater.ParseFromPath($"azure/{fname}", new {
+        AppInsightsConnectionString = secrets.AZ_APP_INSIGHT_CONNECTION_STRING
+      }));
     }
   }
   

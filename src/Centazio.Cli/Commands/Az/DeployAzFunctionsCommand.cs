@@ -4,12 +4,13 @@ using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
+public class DeployAzFunctionsCommand(CentazioSettings coresettings, CentazioSecrets secrets,  IAzFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
@@ -18,7 +19,7 @@ public class DeployAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   public override async Task ExecuteImpl(Settings settings) {
     var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings.Defaults.GeneratedCodeFolder);
     
-    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzureCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());
+    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzureCloudSolutionGenerator(coresettings, secrets, templater, project, settings.EnvironmentsList).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
     await UiHelpers.Progress($"Deploying the Azure Function '{project.DashedProjectName}'", async () => await impl.Deploy(project));
