@@ -11,7 +11,6 @@ public class ProjectPublisherTests {
   
   private readonly CentazioSettings settings = TestingFactories.Settings();
   private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
-  private readonly CentazioSecrets secrets = TestingFactories.Secrets();
 
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
     await Impl(new DotNetCliProjectPublisher(settings, templater).PublishProject);
@@ -19,7 +18,7 @@ public class ProjectPublisherTests {
   
   private async Task Impl(Func<AzureFunctionProjectMeta, Task> builder) {
     var project = MiscHelpers.AzureEmptyFunctionProject();
-    await new AzureCloudSolutionGenerator(settings, secrets, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
+    await new AzureCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
     
     if (Directory.Exists(project.PublishPath)) Directory.Delete(project.PublishPath, true);
     await builder(project);

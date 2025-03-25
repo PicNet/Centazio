@@ -1,8 +1,5 @@
 {
   "IsEncrypted": false,
-  {{ if AppInsightsConnectionString }}
-    "APPLICATIONINSIGHTS_CONNECTION_STRING": "{{ AppInsightsConnectionString }}",
-  {{ end }}
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
   }

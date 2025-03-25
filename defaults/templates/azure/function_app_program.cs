@@ -1,45 +1,41 @@
-using Centazio.Core.Misc;
+﻿using Centazio.Core.Misc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
+using System;
 
-var connectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+var connstr = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+var logconfig = LogInitialiser.GetConsoleConfig();
 
-Log.Logger = new LoggerConfiguration()
-  .MinimumLevel.Debug()
-  .WriteTo.Console()
-  .WriteTo.ApplicationInsights(
-    connectionString,
+if (!string.IsNullOrWhiteSpace(connstr)) {
+  logconfig = logconfig.WriteTo.ApplicationInsights(
+    connstr,
     new TraceTelemetryConverter(),
-    Serilog.Events.LogEventLevel.Information)
-  .CreateLogger();
+    Serilog.Events.LogEventLevel.Information
+  );
+}
+
+Log.Logger = logconfig.CreateLogger();
 
 new HostBuilder()
   .UseSerilog()
   .ConfigureFunctionsWorkerDefaults()
   .ConfigureServices((context, services) => {
-    services.AddApplicationInsightsTelemetryWorkerService(options => {
-      if (!string.IsNullOrWhiteSpace(connectionString))
-        options.ConnectionString = connectionString;
-    });
+    if(!string.IsNullOrWhiteSpace(connstr)) InitialiseApplicationInsights(services, connstr);
 
-    services.ConfigureFunctionsApplicationInsights();
-
-    services.Configure<LoggerFilterOptions>(options => {
-      options.Rules.Clear();
-      options.Rules.Add(new LoggerFilterRule(
-        "Microsoft.ApplicationInsights.ApplicationInsightsLoggerProvider",
-        null,
-        LogLevel.Information,
-        null));
-    });
-
-    services.AddLogging(loggingBuilder => {
-      loggingBuilder.AddSerilog(dispose: true);
+    services.AddLogging(builder => {
+      builder.AddSerilog(dispose: true);
     });
   })
-  .Build()
-  .Run();
+  .Build().Run();
+
+void InitialiseApplicationInsights(IServiceCollection services, string connstr) {
+  services.AddApplicationInsightsTelemetryWorkerService(options => {
+    options.ConnectionString = connstr;
+  });
+
+  services.ConfigureFunctionsApplicationInsights();
+}
