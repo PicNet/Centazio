@@ -22,7 +22,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.dotnetver }}
+        include-prerelease: true
+
     - name: Check Docker version
       run: docker version
 
