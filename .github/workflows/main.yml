@@ -22,18 +22,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    
+    - name: Show current user
+      run: whoami
 
     - name: Check Docker version
-      run: sudo docker version
+      run: docker version
 
     - name: dotnet info
-      run: sudo dotnet --info
+      run: dotnet --info
 
     - name: dotnet restore
-      run: sudo dotnet restore --verbosity normal
+      run: dotnet restore --verbosity normal
 
     - name: dotnet build
-      run: sudo dotnet build --configuration ${{ env.buildcfg }} --verbosity normal --no-restore
+      run: dotnet build --configuration ${{ env.buildcfg }} --verbosity normal --no-restore
 
     - name: dotnet test
-      run: sudo dotnet test --no-restore --no-build
+      run: dotnet test --no-restore --no-build
