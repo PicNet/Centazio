@@ -83,15 +83,14 @@ Centazio currently supports Self Hosting (own server), AWS Lambda and Azure Func
 
 # Getting Started
 
-This simple getting started guide will guide you in creating a simple integration between two systems:
+This simple getting started guide will guide you in creating a simple one-way integration between two systems:
 - [Google AppSheet](https://www.appsheet.com/)
 - [ClickUp](https://clickup.com/)
 
-## Installation Centazio
+## Installing Centazio
 
-- `dotnet tool install centazio`
-- Create a secrets file anywhere on your computer (outside of a git directory).  For now lets name this `dev.env`
-- TODO: add more details
+- `dotnet tool install --prerelease --global Centazio.Cli`
+- Create a secrets file anywhere on your computer (outside of the current git directory).  Name this file `dev.env`
 
 ## Set up ClickUp
 - Create a free ClickUp account: https://clickup.com/
