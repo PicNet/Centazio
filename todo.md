@@ -26,6 +26,7 @@
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - fix azure devops testing pipeline
 - documentation
+- the readme should automatically insert code samples from the real codebase, instead of duplicating it
 
 ## Low
 - remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)

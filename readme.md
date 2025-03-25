@@ -16,10 +16,9 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 
 # Principles
 - Zero Trust:  
-  - Expect all systems to go down, expect Centazio to go down.  However, if something goes down, never bring 
-    down other parts of the environment
-  - Expect APIs to change without warning, expect data to be incorrect and need cleansing.  Never trust, always confirm
-    and apply your own level of validation
+  - Expect all systems to go down, expect Centazio to go down.  However, if something goes down, never bring down other parts of the environment
+  - Expect APIs, database schemas, ETL file schemas, etc. to change without warning, expect data to be incorrect and need cleansing.  Never trust, always confirm and apply your own level of validation
+  - Always automatically and regularly test all assumptions made when dealing with external systems.
 - Core Storage:
   - Data from all system should be stored in a central database that is ideal for reporting and business workflows.
   - The core storage database uses business language, independent of the source systems
@@ -38,20 +37,49 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
     database and never directly from source systems.
   - Other: Any other integration function, such as data aggregation, machine learning, reporting, workflows, etc. Can be 
     done by 'Other' functions.
+- Testing Guide Lines
+  - Automatically and regularly test everything
+  - Read - Read operations at a minimum should check, for each entity, for each source system:
+    - Source system schemas (API, database, text files) have not changed from what is expected
+    - Date formats and timezones in raw data are as expected
+    - Expected admin/catgory values have not changed from expected
+    - API limits (rate limits) have not changed
+    - Incremental data loading works as expected ('last_updated' > 'date' is respected)
+    - API performance is adequate and within agreed SLAs from Vendors
+    - Deleted entities can be retreived from the API, i.e. are soft deleted and available for query
+  - Promote - Promote operations should check:
+    - All required data transformations are functioning correctly
+    - All source system languge is tranformed to the business's ubiquitous language upon promotion
+    - All required data cleansing is applied during the operation
+    - All sensitive data is correctly handled
+    - All date/time transformations are applied correctly.  Centazio Core Storage should only ever store UTC dates for all datetime fields
+  - Write - Write operations should check:
+    - Write tests should read data back after writing to ensure the data is as expected
+    - Target system schemas (API, database, text files) have not changed from what is expected
+    - Date formats and timezones are as expected
+    - All Core Storage admin/categorical field values are supported by the target system
+    - API limits (rate limits) have not changed    
+    - API performance is adequate and within agreed SLAs from Vendors
+  - Other - Other operation tests should be customised to their required functionality.  Some common scenarios include:
+    - Testing that 'Data Validation' operations correctly delete entities that do not support soft-deletes in source systems
+    - Test that required emails or workflows are executed as expected
+    - Test that data aggregation works and is mathematically correct
+    - Test machine learning model retraining results in achieving the benchmark loss-function levels
+    - Test reporting tasks generate reports and that reporting data is as expected
 
 # Serverless / Independence
-The principles descibed above are ideally serviced by using Serverless architectures.  Each system and step should be its
-own totally isolated serverless function.  For instance, reading data from System1 to write to System 2 will be broken 
-down into the following Serverless functions:
+The principles descibed above are ideally serviced by using Serverless architectures.  Each system and operation type (Read,Promote,Write) should be in its own totally isolated Serverless function (we could even isolate each entity type if we wanted to).  For instance; reading new Incidents from the Incident Management System, and then creating corresponding Alerts in the Notification System would be broken down into the following Serverless functions:
 
-- System1ReadFunction
-- System1PromoteFunction
-- System2WriteFunction
+- IncidentMgtSysReadFunction
+- IncidentMgtSysPromoteFunction
+- NotificationSystemWriteFunction
 
-Each of these functions are independent of each other, can be independently developed, tested, documented, etc.  They
-are also fault tollerant of failures in any other function.
+Each of these functions are independent of each other, can be independently developed, tested, documented, etc.  They are also fault tollerant of failures in any other function.
 
-Centazio currently supports Self Hosting, AWS Lambda and Azure Functions based deployments for Centazio Functions.
+It is common for the Read function to be triggered by a timer, the other functions can either be triggered by timers or through messages sent via queues.  This messaging infrastructure
+is supplied by Centazio.  However, being a fault-tollerant centric system, we should never solely rely on these queues, we should always have timer based triggers to ensure that the integration will eventually be called.
+
+Centazio currently supports Self Hosting (own server), AWS Lambda and Azure Functions based deployments for Centazio integrations.  All supporting infrastructure such as logging, alerting, queues, events, notifications, email providers, networking, etc. Can also be managed by Centazio or you can use your own cloud management and DevOps pipelines to control.
 
 # Getting Started
 
@@ -120,122 +148,114 @@ TODO
 ### The Rest
 Please see the [Centazio.Sample](https://github.com/PicNet/Centazio/tree/master/sample) project in the [Centazio GitHub repository](https://github.com/PicNet/Centazio/) for a complete two-way implementation of this sample integration.
 
-## Serialisation / Deserialisation / Mapping
-Data integration is all about getting data from one source, converting it and writing it to another target.  This source
-or target could be an API, database, files, etc. and the quality and reliability of the data and its schema cannot be 
-trusted.  As such, you should *not* assume that fields exist, have valid values, etc. when reading data from an external
-source.  A pattern used in Centazio to handle this is to have the concept of `Dto` objects which are then converted
-to their expected types with all required validation.  
+## Core Centazio Developer Concepts:
+
+The following are more details that you will need as you progress with Centazio and encounter more complex scenarios.  
+
+### Serialisation / Deserialisation / Mapping
+Data integration is all about getting data from one source, converting it and writing it to another target.  This source or target could be an API, database, files, etc. and the quality and reliability of the data and its schema cannot be trusted.  As such, you should *not* assume that fields exist, have valid values, etc. when reading data from an external source.  A pattern used in Centazio to handle this is to have the concept of `Dto` internal objects which are then converted to their expected types with all required validation.  
 
 This pattern has the following characteristics:
-- Main record type should have a private constructor with the minimal set of fields required for creation of the record
-- Since there is no private primary constructors, all properties must be declared (with no setters)
+- The Main record:
+  - should be sealed
+  - should have no public constructors (including default constructure) to ensure that serialisation libraries or ORM libraries cannot create these objects
+  - all fields should then either be set by this private constructor or by init only required fields
+  - should use stronly typed ids, and other value types
+- The Dto record:
+  - shold be an inner class of the main record type, Centazio uses the name `Dto` for all of its Dto implementations.
+  - should implement the `IDto<MainRecordType>` interface
+  - all fields should be nullable
+  - must implement the `IDto<MainRecordType>.ToBase` method with all required validations and conversions to strongly typed value objects
+
+Example: 
+  
 ```
 public sealed record StagedEntity {
   public Guid Id { get; }
   public SystemName System { get; }
   public ObjectName Object { get; }
+
+  private StagedEntity(Guid id, SystemName system, ObjectName object) {
+    (Id, SystemName, Object) = (id, system, object);
+  } 
+
+  public record Dto : IDto<StagedEntity> {
+    public string? Id { get; init; }
+    public string? System { get; init; }
+    public string? Object { get; init; }
+
+    public StagedEntity ToBase() => new StagedEntity(
+      String.IsNullOrWhiteSpace(Id) 
+          ? throw new ArgumentNullException(nameof(Id)) 
+          : Guid.Parse(Id),
+      String.IsNullOrWhiteSpace(System) 
+          ? throw new ArgumentNullException(nameof(System)) 
+          : new SystemName(System),
+      String.IsNullOrWhiteSpace(Object) 
+          ? throw new ArgumentNullException(nameof(Object)) 
+          : new ObjectName(Object)
+    );
+  }
+}
+```
+### Projects / Assemblies / Functions
+Centazio makes it possible to have multiple functions per assembly.  However, if you are working in AWS you may want to avoid this and just have a single function per assembly.  This will more align with the way AWS Lambdas are deployed.  Multi-function assembly is still supported, you will just need to specify the function you want to deploy to AWS from within the Assembly.
+
+If you are using Azure, then a multi-function assembly is more akin to Function Apps and will be deployed together to Azure as one deployment unit.
+
+### IIntegrationBase
+
+Every generated Centazio project needs a class that imlements the `IIntegrationBase` interface.  This class has two responsibilities, one is to register all DI resources used by the functions in the project and an initialise method, used to initialise any resources used by functions in the given assembly:
+
+```
+public interface IIntegrationBase {
+  void RegisterServices(CentazioServicesRegistrar registrar);
+  Task Initialise(ServiceProvider prov);
+}
+```
+
+### Operations
+
+Every Centazio Function is broken up by operations.  Each operation can control its timer intervals, and is tracked independently by the control tables.  Operations allow a clear way of separating entity specific operations for specific systems.  Say we are reading incident management data from the 'Incident Mangement System'.  We could have the following `ImsReadFunc.cs` function:
+
+```
+public class ImsReadFunc(ImsApi api) : ReadFunction(sysname, stager, ctl) {
+
+  protected override FunctionConfig GetFunctionConfiguration() => 
+      new FunctionConfig([
+    new ReadOperationConfig('Incs', '* * * * * *', GetIncidents),
+    new ReadOperationConfig('Alerts', '* * * * * *', GetAlerts),
+    new ReadOperationConfig('Emails', '* * * * * *', GetSentEmails)
+  ]);
   ...
 }
 ```
 
-- A `public static` factory `Create` method needs to be added to set these minimal fields.  This factory method should
-do all required data and field validation.  However, complex validations should be avoided and custom factory methods
-should be provided to provide support for different creation scenarios.
+Here we break down reading the IMS data into three operations, one for reading Incidents, another for Alerts and finally an operation for reading Sent Emails.
+
+You can manage this separation of operations how best suits your project.  Another common pattern is to have one function per system, per operation, per entity type.  This could be overkill, but sometimes this level of separation of concerns can add benefits:
+
 ```
-public sealed record StagedEntity {
+public class ImsReadIncidentsFunc(ImsApi api) 
+    : ReadFunction(sysname, stager, ctl) {
+
+  protected override FunctionConfig GetFunctionConfiguration() => 
+      new FunctionConfig([
+    new ReadOperationConfig('Incs', '* * * * * *', GetIncidents)    
+  ]);
   ...
-  public static StagedEntity Create(SystemName system, ObjectName obj, DateTime staged, ValidString data, ValidString checksum) => new(Guid.CreateVersion7(), source, obj, staged, data, checksum);
-  ...
+}
 ```
 
-- Any change of internal state should be done using mutator methods that return a new instance of the mutated object
-- Fields that do require mutation will need `private` `init` only setters
-- These mutators and factory methods should handle all internal infrastructure logic such as setting the
-created/updated dates, etc.
-```
-public sealed record StagedEntity {
-  ...
-  public DateTime? DatePromoted { get; private init; }
-  ...
-  public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
-  ...
-```
+### Configuration
 
-- Deserialise and serialisation should be done via an inner `Dto` class
-- This class must be an inner class to access the private init only setters
-- This class needs a parameterless constructor and all fields must be nullable
-```
-public sealed record StagedEntity {
-  ...
-  public record Dto {
-    public Guid? Id { get; init; }
-    ...
-  }
-```
+TODO
 
-- Explicit cast operator overrides can then be used to convert between this `Dto` and main record type.  
-- All field validation must happen in these methods
-```
-  public sealed record StagedEntity {
-  ...
-  public record Dto {
-    public static explicit operator StagedEntity(Dto dto) => new(...) { ... };
-    public static explicit operator Dto(StagedEntity se) => new { ... };    
-  }
-```
+### Secrets
 
-- This pattern allows Enums to be serialised/deserialised as strings and converted to Enums in the converter methods
-and other more complex transformations and validations.
-- See `StagedEntity.cs` for an implementation example of this pattern
+TODO
 
-- Example consumption of this pattern:
-```
-// serialise StagedEntity as StagedEntity.Dto
-JsonSerializer.Serialize(staged.Select(e => (StagedEntity.Dto)e));
-
-// deserialise from unsafe StagedEntity.Dto to StagedEntity
-JsonSerializer.Deserialize<List<StagedEntity.Dto>>(json).Select(e => (StagedEntity) e).ToList()
-```
-
-- For unit tests that require modifying inner state to test edge cases then this `Dto` can also be used to circumvent
-these safety measures:
-```
-var x = (StagedEntity) new StagedEntity.Dto { ... };
-```
-
-## Functions
-
-A central facet of Centazio is the concept of 'Functions'.  The three main common functions are read, promote and write.
-Each source system should have a read and promote function.  Each target (or sink) system should have a write function.
-
-Read: Read functions read data from the source system, via an api, database, etc.  This data is written in its raw format
-to the staging area.
-
-Promote: Promote functions read newly added data from the staging area and 'promote' this data into the core storage.
-
-Write: Write functions read newly updated data in core storage to the target systems.
-
-### Function Technical Details
-
-#### FunctionRunner:
-
-The `FunctionRunner` class is the main controller that executes a function.  This class will be called by the host
-container, whether that is an AWS Lambda Function, Azure Function or a local process.  The `FunctionRunner` needs to
-be initialised with the following components:
-
-- An instance of `AbstractFunction` which is the function to be executed
-- An instance of `IOperationRunner` which is a specialised implementation of this interface that knows how to 
-  perform the required operations of this function
-
-The `RunFunction` method is the method that the host will call to execute this function and all child operations.
-
-
-#### AbstractFunction<C, R>:
-
-todo: expand 
-
-## Common Commands
+## Common CLI Commands
 
 - Install: `dotnet tool install --prerelease --global Centazio.Cli`
 - Update: `dotnet tool update --prerelease --global Centazio.Cli`
