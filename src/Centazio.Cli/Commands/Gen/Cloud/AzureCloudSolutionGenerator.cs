@@ -22,6 +22,7 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, CentazioSe
         "Microsoft.ApplicationInsights.WorkerService",
         "Microsoft.Azure.Functions.Worker.ApplicationInsights",
         "Serilog.Sinks.ApplicationInsights",
+        "Microsoft.Extensions.Logging",
         "Serilog.Extensions.Hosting"
       ], added);
   
