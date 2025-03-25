@@ -6,12 +6,12 @@ using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Sett
 
 namespace Centazio.Cli.Tests.Commands;
 
-public class GenerateSlnCommandTests {
+public class GenerateSlnAndFuncCommandTests {
 
   private readonly string properroot = FsUtils.GetSolutionRootDirectory();
   private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetSolutionRootDirectory(), "..", "test-generator"));
-  private readonly string sln = nameof(GenerateSlnCommandTests);
-  private readonly string slnfile = nameof(GenerateSlnCommandTests) + ".sln";
+  private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
+  private readonly string slnfile = nameof(GenerateSlnAndFuncCommandTests) + ".sln";
   private readonly CommandRunner runner = new(); 
   
   [SetUp] public void SetUp() {
@@ -37,7 +37,9 @@ public class GenerateSlnCommandTests {
     
     Environment.CurrentDirectory = Path.Combine(testdir, sln);
     Assert.That(File.Exists(slnfile), Is.True);
-    await ValidateProjectExistsInSln("GenerateSlnCommandTests.Shared");
+    await ValidateProjectExistsInSln($"{sln}.Shared");
+    
+    runner.DotNet("build", Environment.CurrentDirectory); 
   }
 
   [Test] public async Task Test_generate_project() {
@@ -45,7 +47,7 @@ public class GenerateSlnCommandTests {
     
     Environment.CurrentDirectory = Path.Combine(testdir, sln);
     var cmd = new GenerateFunctionCommand(runner);
-    // todo: add `nameof(Settings.Other)` to `modes`
+    // todo: add `nameof(Settings.Other)` to `modes` and have corresponding ClickUp function to copy
     var modes = new [] { nameof(Settings.Read), nameof(Settings.Promote), nameof(Settings.Write) };
     
     await modes.Select(async mode => { await DoMode(mode); }).Synchronous();
@@ -70,6 +72,7 @@ public class GenerateSlnCommandTests {
         var contents = await File.ReadAllTextAsync(file);
         Assert.That(contents.Contains("Sample"), Is.False, file);
         Assert.That(contents.Contains("ClickUp"), Is.False, file);
+        Assert.That(contents.Contains("AppSheet"), Is.False, file);
         Assert.That(contents.Contains(system), Is.True, file);
       }).Synchronous();
       

@@ -32,6 +32,10 @@ public class GenerateFunctionCommand(ICommandRunner cmd) : AbstractCentazioComma
       cmd.DotNet($"new classlib --name {settings.FunctionName}", Environment.CurrentDirectory);
       File.Delete(Path.Combine(settings.FunctionName, "Class1.cs"));
       cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
+      
+      cmd.DotNet("add package --prerelease Centazio.Core", settings.FunctionName);
+      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", settings.FunctionName);
+      cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
     }
     
     var from = Templater.TemplatePath("defaults", "templates", "centazio", "Functions");

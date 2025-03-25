@@ -31,6 +31,7 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
     CreateEmptySharedProj();
     CopySampleProjSharedProjFiles();
     await AdjustCopiedFiles();
+    InstallRequiredNuGetPackages();
     
     return sln;
 
@@ -57,6 +58,11 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
         if (fn.Contains("Sample") || contents.Contains("Sample")) throw new Exception();
         await File.WriteAllTextAsync(path, contents);
       }).Synchronous();
+    }
+    
+    void InstallRequiredNuGetPackages() {
+      cmd.DotNet("add package --prerelease Centazio.Core", Path.Combine(slndir, shared));
+      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", Path.Combine(slndir, shared));
     }
   }
 

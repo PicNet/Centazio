@@ -6,7 +6,6 @@ using Centazio.Sample.Tests.ClickUp;
 
 namespace Centazio.Sample.Tests;
 
-// [Ignore("only run manually")] 
 public class ResetSampleDbsAndApis {
   
   [Test] public async Task Reset() {
@@ -18,7 +17,7 @@ public class ResetSampleDbsAndApis {
 
   private async Task ResetApis() {
     var (settings, secrets) = (F.Settings<Settings>(), F.Secrets<Secrets>());
-    var (clickup, appsheet) =  (new ClickUpApi(settings.ClickUp, secrets), new AppSheetApi(settings.AppSheet, secrets));
+    var (clickup, appsheet) =  (new ClickUpApi(settings, secrets), new AppSheetApi(settings.AppSheet, secrets));
     await DeleteClickUpTasks(clickup);
     await DeleteAppSheetTasks(appsheet);
   }

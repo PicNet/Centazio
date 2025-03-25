@@ -9,7 +9,7 @@ public class CoreStorageDbContext(string connstr) : SqliteDbContext(connstr) {
   protected override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema("dbo")
       .Entity<CoreStorageMeta.Dto>(e => {
-        e.ToTable(nameof(CoreStorageMeta).ToLower(), nameof(Core.Ctl).ToLower());
+        e.ToTable(nameof(CoreStorageMeta).ToLower(), "ctl");
         e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
       })
       .Entity<CoreTask.Dto>(e => {

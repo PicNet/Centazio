@@ -49,6 +49,6 @@ public class ClickUpApiTests {
     await Api.DeleteTask(TEST_TASK_ID); 
   }
   
-  private ClickUpApi Api => new(F.Settings<Settings>().ClickUp, F.Secrets<Secrets>());
+  private ClickUpApi Api => new(F.Settings<Settings>(), F.Secrets<Secrets>());
 
 }
