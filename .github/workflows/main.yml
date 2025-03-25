@@ -1,0 +1,45 @@
+name: .NET CI
+
+on:
+  push:
+    branches:
+      - master
+      - devops
+      - dev
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.user'
+      - '.git/**'
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    env:
+      dotnetver: '9.x'
+      buildcfg: 'Debug'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.dotnetver }}
+        include-prerelease: true
+
+    - name: Check Docker version
+      run: docker version
+
+    - name: dotnet info
+      run: dotnet --info
+
+    - name: dotnet restore
+      run: dotnet restore --verbosity normal
+
+    - name: dotnet build
+      run: dotnet build --configuration ${{ env.buildcfg }} --verbosity normal --no-restore
+
+    - name: dotnet test
+      run: dotnet test --no-restore --no-build
