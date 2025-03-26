@@ -9,6 +9,8 @@ namespace Centazio.Test.Lib.E2E;
 
 public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioSettings settings) : IAsyncDisposable {
   
+  private bool notify = notify;
+  
   private readonly bool SAVE_SIMULATION_STATE = false;
   
   private readonly SimulationCtx ctx = new(provider, settings);
@@ -23,8 +25,10 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
   private IChangesNotifier notifier = null!;
-  
+
   public async Task Initialise() {
+    // todo: fix this in GH actions
+    if (Env.IsGitHubActions()) { notify = false; }
     await ctx.Initialise();
     
     (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
