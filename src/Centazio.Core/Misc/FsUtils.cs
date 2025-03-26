@@ -6,7 +6,7 @@ public static class FsUtils {
   
   public static string GetSolutionRootDirectory() {
     if (rootdir is not null) return rootdir;
-    if (CloudUtils.IsCloudEnviornment()) return rootdir = Environment.CurrentDirectory;
+    if (Env.IsCloudEnviornment()) return rootdir = Environment.CurrentDirectory;
     
     var file = "settings.json";
 

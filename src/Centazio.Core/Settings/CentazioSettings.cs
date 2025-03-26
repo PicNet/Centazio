@@ -35,7 +35,7 @@ public record CentazioSettings {
   }
   
   public string GetSecretsFolder() => 
-      CloudUtils.IsCloudEnviornment() 
+      Env.IsCloudEnviornment() 
           ? Environment.CurrentDirectory 
           : FsUtils.FindFirstValidDirectory(SecretsFolders);
 

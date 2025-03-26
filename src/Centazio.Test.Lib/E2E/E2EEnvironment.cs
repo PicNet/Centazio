@@ -40,8 +40,10 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   
   public async Task RunSimulation() {
     await Initialise();
-    if (SimulationConstants.SILENCE_LOGGING) LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
-    if (SimulationConstants.LOGGING_FILTERS.Any()) {
+    if (Env.IsGitHubActions() || SimulationConstants.SILENCE_LOGGING) {
+      SimulationConstants.SILENCE_SIMULATION = true;
+      LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    } else if (SimulationConstants.LOGGING_FILTERS.Any()) {
       Log.Logger = LogInitialiser.GetConsoleConfig(filters: SimulationConstants.LOGGING_FILTERS).CreateLogger();
       Log.Information($"logging filter enabled[{String.Join(',', SimulationConstants.LOGGING_FILTERS)}]");
     }
