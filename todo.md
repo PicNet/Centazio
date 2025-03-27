@@ -14,7 +14,11 @@
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger
-    
+
+- code gen:
+  - sln: review secrets/settings, has stuff that needs removing
+  - proj: not compiling, needs full review, not adding IIntegrationBase
+
 - function-to-function triggers:
   - aws/azure
   - the triggered function should get as a parameter the objects that changed 
@@ -24,8 +28,6 @@
   - code generators for new solution/project/integration/function
 
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
-- fix azure devops testing pipeline
-- documentation
 - the readme should automatically insert code samples from the real codebase, instead of duplicating it
 
 ## Low
