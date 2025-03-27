@@ -71,11 +71,12 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
   }
 
   protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
-    var issysid = typeof(V) == typeof(SystemEntityId);
+    var issysent = typeof(V) == typeof(SystemEntityId);
     var results = ids.Distinct()
-        .Select(cid => Deserialize(maps.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == coretype && (issysid ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value))
+        .Select(cid => Deserialize(maps.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == coretype && (issysent ? kvp.Key.SystemId : kvp.Key.CoreId) == cid && kvp.Key.System == system).Value))
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         .Where(v => v is not null)
+        .OrderBy(e => issysent ? e.SystemId.Value : e.CoreId.Value)
         .ToList();
     return Task.FromResult(results);
   }

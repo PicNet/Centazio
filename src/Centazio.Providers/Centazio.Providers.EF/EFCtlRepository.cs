@@ -69,12 +69,16 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
   }
 
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
+    var issysent = typeof(V) == typeof(SystemEntityId);
     var idvals = ids.Select(id => id.Value);
     
     await using var db = getdb();
-    var query = typeof(V) == typeof(SystemEntityId) 
+    var query = issysent 
         ? db.CoreToSystemMaps.Where(m => m.System == system.Value && m.CoreEntityTypeName == coretype.Value && idvals.Contains(m.SystemId)) 
         : db.CoreToSystemMaps.Where(m => m.System == system.Value && m.CoreEntityTypeName == coretype.Value && idvals.Contains(m.CoreId));
-    return (await query.ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    return (await query.ToListAsync())
+        .Select(dto => dto.ToBase())
+        .OrderBy(e => issysent ? e.SystemId.Value : e.CoreId.Value)
+        .ToList();
   }
 }

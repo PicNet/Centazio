@@ -60,6 +60,11 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     await repo2.DisposeAsync();
   }
   
+  private List<T> ValidateAndReturn<T>(List<T> a, List<T> b) {
+    Json.ValidateJsonEqual(a.Cast<object>(), b.Cast<object>(), repo1.GetType().Name, repo2.GetType().Name);
+    return a;
+  }
+  
   private T ValidateAndReturn<T>(T a, T b) {
     Json.ValidateJsonEqual(a, b, repo1.GetType().Name, repo2.GetType().Name);
     return a;

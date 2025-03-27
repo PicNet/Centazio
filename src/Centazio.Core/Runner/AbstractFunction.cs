@@ -89,7 +89,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       var result = await RunOp(op);
       await SaveOp(op, opstart, result);
       
-      Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result);
+      Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result.Result.Message);
       
       return result;
     }

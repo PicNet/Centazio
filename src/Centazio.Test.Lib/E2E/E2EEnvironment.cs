@@ -29,6 +29,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   public async Task Initialise() {
     // todo: fix this in GH actions
     if (Env.IsGitHubActions()) { notify = false; }
+    Log.Logger = LogInitialiser.GetConsoleConfig(template: "{Message}{NewLine}").CreateLogger();
     await ctx.Initialise();
     
     (crm, fin) = (new CrmApi(ctx), new FinApi(ctx));
@@ -36,7 +37,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
     notifier = notify ? 
-        new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]) : 
+        new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write], false) : 
         new TestingChangeNotifier();
     runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
     if (notifier is InProcessChangesNotifier ipcn) { _ = ipcn.InitDynamicTriggers(runner); }

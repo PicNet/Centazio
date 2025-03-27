@@ -86,8 +86,8 @@ public static class Json {
     }
   }
 
-  public static bool ValidateJsonEqual(IEnumerable<object> a, IEnumerable<object> b, string aname="Actual", string bname="Expected") {
-    return ValidateJsonEqual((object) 
+  public static bool ValidateJsonEquivalent(IEnumerable<object> a, IEnumerable<object> b, string aname="Actual", string bname="Expected") {
+    return ValidateJsonEqual(
         a.Select(Serialize).OrderBy(s => s).ToList(), 
         b.Select(Serialize).OrderBy(s => s).ToList(), aname, bname);
   }
