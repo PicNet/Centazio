@@ -21,10 +21,9 @@ public class GenerateSlnAndFuncCommandTests {
 
   [SetUp] public void SetUp() {
     FsUtils.TestingRootDir = properroot;
-    Directory.CreateDirectory(testdir);
     Environment.CurrentDirectory = testdir;
-
-    if (Directory.Exists(sln)) Directory.Delete(sln, true);
+    
+    FsUtils.EmptyDirectory(testdir);
   }
 
   [TearDown] public void TearDown() {

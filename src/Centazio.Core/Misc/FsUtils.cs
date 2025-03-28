@@ -38,6 +38,16 @@ public static class FsUtils {
     Directory.GetFiles(from, ext).ForEach(file => File.Copy(file, Path.Combine(to, Path.GetFileName(file))));
   }
   
+  // use this as a replacement to Directory.Delete(dir, true); as it will allow open directories to still be deleted
+  public static void EmptyDirectory(string dir) {
+    if (!Directory.Exists(dir)) {
+      Directory.CreateDirectory(dir);
+      return;
+    }
+    Directory.GetDirectories(dir).ForEach(d => Directory.Delete(d, true));
+    Directory.GetFiles(dir).ForEach(File.Delete);
+  }
+  
   internal static string TestingRootDir = String.Empty;
   
   /// <summary>
