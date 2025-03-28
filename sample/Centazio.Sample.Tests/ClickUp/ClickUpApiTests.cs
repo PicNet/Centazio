@@ -24,8 +24,9 @@ public class ClickUpApiTests {
     if (Env.IsGitHubActions()) await Task.Delay(250);
     var tasks = await Api.GetTasksAfter(start.AddMinutes(-1));
     Console.WriteLine($"start[{start}] Is GH[{Env.IsGitHubActions()}] id[{id}] tasjs[{tasks.Count}]");
-    var taskjson = tasks.Single();
-    var task = Json.Deserialize<ClickUpTask>(taskjson.Json);
+    var task = tasks
+        .Select(t => Json.Deserialize<ClickUpTask>(t.Json))
+        .Single(t => t.id == id);
     await Api.DeleteTask(id);
     
     Assert.That(first, Is.Empty);
