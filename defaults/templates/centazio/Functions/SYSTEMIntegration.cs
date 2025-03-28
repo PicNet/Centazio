@@ -1,7 +1,7 @@
 ﻿using Centazio.Providers.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Centazio.Sample.ClickUp;
+namespace {{ it.Namespace }};
 
 public class SampleIntegration(params List<string> environments) : IntegrationBase<Settings, Secrets>(environments) {
   
@@ -9,7 +9,7 @@ public class SampleIntegration(params List<string> environments) : IntegrationBa
     var core = new CoreStorageRepository(() => new CoreStorageDbContext(Settings.CoreStorage.ConnectionString), new SqliteDbFieldsHelper());
     registrar.Register<ICoreStorage>(core);
     registrar.Register(core);
-    registrar.Register<ClickUpApi>();
+    registrar.Register<{{ it.SystemName }}Api>();
   }
 
   public override async Task Initialise(ServiceProvider prov) {

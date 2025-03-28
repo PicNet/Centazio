@@ -1,9 +1,8 @@
 ﻿using Centazio.Providers.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Sample.Shared;
+namespace {{ it.Namespace }};
 
-// tood: where is this used?
 public class CoreStorageDbContext(string connstr) : SqliteDbContext(connstr) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) => builder
@@ -12,8 +11,8 @@ public class CoreStorageDbContext(string connstr) : SqliteDbContext(connstr) {
         e.ToTable(nameof(CoreStorageMeta).ToLower(), "ctl");
         e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
       })
-      .Entity<CoreTask.Dto>(e => {
-        e.ToTable(nameof(CoreTask).ToLower());
+      .Entity<ExampleEntity.Dto>(e => {
+        e.ToTable(nameof(ExampleEntity).ToLower());
         e.HasKey(e2 => e2.CoreId);
       });
 

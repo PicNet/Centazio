@@ -2,4 +2,4 @@
 global using Centazio.Core.CoreRepo;
 global using Centazio.Core.Misc;
 global using Centazio.Core.Ctl;
-global using Centazio.Sample.Shared;
+global using {{ it.SharedProjectNamespace }};

@@ -1,7 +1,7 @@
 ﻿using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Sample.Shared;
+namespace {{ it.Namespace }};
 
 public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
   
@@ -9,15 +9,15 @@ public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelp
     await using var db = Db();
     
     await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript("dbo", nameof(CoreTask).ToLower(), dbf.GetDbFields<CoreTask>(), [nameof(ICoreEntity.CoreId)]));
+    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript("dbo", nameof(ExampleEntity).ToLower(), dbf.GetDbFields<ExampleEntity>(), [nameof(ICoreEntity.CoreId)]));
     
     return this;
   }
   
-  public DbSet<CoreTask.Dto> Tasks(CentazioDbContext db) => db.Set<CoreTask.Dto>();
+  public DbSet<ExampleEntity.Dto> Tasks(CentazioDbContext db) => db.Set<ExampleEntity.Dto>();
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
     var strids = coreids.Select(id => id.Value).ToList();
-    return (await db.Set<CoreTask.Dto>().Where(t => strids.Contains(t.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList();
+    return (await db.Set<ExampleEntity.Dto>().Where(t => strids.Contains(t.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList();
   }
 }

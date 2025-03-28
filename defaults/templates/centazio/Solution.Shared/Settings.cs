@@ -1,24 +1,19 @@
 using Centazio.Core.Settings;
 
-namespace Centazio.Sample.Shared;
+namespace {{ it.Namespace }};
 
 public record Settings : CentazioSettings {
 
-  public required ClickUpSettings ClickUp { get; init; }
-  public required AppSheetSettings AppSheet { get; init; }
+  public required CustomSettingSettings CustomSetting { get; init; }
   
   protected Settings(CentazioSettings centazio) : base (centazio) {}
 
   public override Dto ToDto() {
-    return new(base.ToDto()) {
-      ClickUp = ClickUp.ToDto(),
-      AppSheet = AppSheet.ToDto(),
-    };
+    return new(base.ToDto()) { CustomSetting = CustomSetting.ToDto() };
   }
 
   public new record Dto : CentazioSettings.Dto, IDto<Settings> {
-    public ClickUpSettings.Dto? ClickUp { get; init; }
-    public AppSheetSettings.Dto? AppSheet { get; init; }
+    public CustomSettingSettings.Dto? CustomSetting { get; init; }
     
     public Dto() {} // required for initialisation in `SettingsLoader.cs`
     internal Dto(CentazioSettings.Dto centazio) : base(centazio) {}
@@ -28,67 +23,29 @@ public record Settings : CentazioSettings {
       return new Settings(centazio) {
         // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
         SecretsFolders = centazio.SecretsFolders,  
-        ClickUp = ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)),
-        AppSheet = AppSheet?.ToBase() ?? throw new SettingsSectionMissingException(nameof(AppSheet)) 
+        CustomSetting = CustomSetting?.ToBase() ?? throw new SettingsSectionMissingException(nameof(CustomSetting)) 
       };
     }
 
   }
 }
 
-public record ClickUpSettings {
-  public string BaseUrl { get; }
-  public string ListId { get; }
+public record CustomSettingSettings {
+  public string ExampleProperty { get; }
   
-  private ClickUpSettings(string baseurl, string listid) {
-    BaseUrl = baseurl;
-    ListId = listid;
+  private CustomSettingSettings(string propval) {
+    ExampleProperty = propval;
   }
 
   public Dto ToDto() => new() {
-    BaseUrl = String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-    ListId = String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim()
+    ExampleProperty = String.IsNullOrWhiteSpace(ExampleProperty) ? throw new ArgumentNullException(nameof(ExampleProperty)) : ExampleProperty.Trim()
   };
 
-  public record Dto : IDto<ClickUpSettings> {
-    public string? BaseUrl { get; init; }
-    public string? ListId { get; init; }
+  public record Dto : IDto<CustomSettingSettings> {
+    public string? ExampleProperty { get; init; }
     
-    public ClickUpSettings ToBase() => new (
-      String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-      String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim()
+    public CustomSettingSettings ToBase() => new (
+      String.IsNullOrWhiteSpace(ExampleProperty) ? throw new ArgumentNullException(nameof(ExampleProperty)) : ExampleProperty.Trim()
     );
   }
-
-}
-
-public record AppSheetSettings {
-  public string BaseUrl { get; }
-  public string AppId { get; }
-  public string TableName { get; }
-  
-  private AppSheetSettings(string baseurl, string appid, string tablename) {
-    BaseUrl = baseurl;
-    AppId = appid;
-    TableName = tablename;
-  }
-
-  public Dto ToDto() => new() {
-    BaseUrl = String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-    AppId = String.IsNullOrWhiteSpace(AppId) ? throw new ArgumentNullException(nameof(AppId)) : AppId.Trim(),
-    TableName = String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim()
-  };
-
-  public record Dto : IDto<AppSheetSettings> {
-    public string? BaseUrl { get; init; }
-    public string? AppId { get; init; }
-    public string? TableName { get; init; }
-    
-    public AppSheetSettings ToBase() => new (
-      String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
-      String.IsNullOrWhiteSpace(AppId) ? throw new ArgumentNullException(nameof(AppId)) : AppId.Trim(),
-      String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim()
-    );
-  }
-
 }

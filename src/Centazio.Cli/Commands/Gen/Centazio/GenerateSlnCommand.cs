@@ -1,10 +1,10 @@
-﻿using Centazio.Cli.Infra.Ui;
-using Centazio.Core.Misc;
+﻿using Centazio.Cli.Infra.Gen;
+using Centazio.Cli.Infra.Ui;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen.Centazio;
 
-public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<GenerateSlnCommand.Settings> {
+public class GenerateSlnCommand(ICentazioCodeGenerator gen) : AbstractCentazioCommand<GenerateSlnCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     SolutionName = UiHelpers.Ask("Solution Name")
@@ -18,50 +18,9 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
     if (Directory.GetFiles(".", "*.sln").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to already contain a .Net solution.  Are you sure you want to proceed?")) return;
     if (Directory.GetFiles(".", "*.csproj").Any() && !UiHelpers.Confirm($"The current directory ({Environment.CurrentDirectory}) appears to be a .Net project.  Are you sure you want to proceed?")) return;
     
-    var sln = await GenerateCode(settings);
+    var sln = await gen.GenerateSolution(settings.SolutionName);
     
     UiHelpers.Log($"Solution '{sln}' generated in current directory ({Environment.CurrentDirectory}), please run `cd {sln}; centazio gen func <function_name>` to generate your first Centazio function");
-  }
-
-  private async Task<string> GenerateCode(Settings settings) {
-    var (sln, shared, slndir) = (settings.SolutionName, $"{settings.SolutionName}.Shared", Directory.CreateDirectory(settings.SolutionName).FullName);
-    var shareddir = Path.Combine(slndir, shared);
-    
-    CreateSlnFile();
-    CreateEmptySharedProj();
-    CopySampleProjSharedProjFiles();
-    await AdjustCopiedFiles();
-    InstallRequiredNuGetPackages();
-    
-    return sln;
-
-    void CreateSlnFile() { cmd.DotNet($"new sln --name {sln}", slndir); }
-
-    void CreateEmptySharedProj() {
-      var csproj = Path.Combine(shared, $"{shared}.csproj");
-      cmd.DotNet($"new classlib --name {shared}", slndir);
-      cmd.DotNet($"sln {sln}.sln add {csproj}", slndir);
-      File.Delete(Path.Combine(slndir, shared, "Class1.cs"));
-    }
-    
-    void CopySampleProjSharedProjFiles() {
-      var from = FsUtils.GetTemplatesPath("defaults", "templates", "centazio", "Solution.Shared");
-      FsUtils.CopyDirFiles(from, shareddir, "*.cs");
-    }
-
-    async Task AdjustCopiedFiles() {
-      await Directory.GetFiles(shareddir, "*.cs").Select(async path => {
-        var fn = Path.GetFileName(path);
-        var contents = (await File.ReadAllTextAsync(path)).Replace("Centazio.Sample", sln);
-        if (fn.Contains("Sample") || contents.Contains("Sample")) throw new Exception();
-        await File.WriteAllTextAsync(path, contents);
-      }).Synchronous();
-    }
-    
-    void InstallRequiredNuGetPackages() {
-      cmd.DotNet("add package --prerelease Centazio.Core", Path.Combine(slndir, shared));
-      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", Path.Combine(slndir, shared));
-    }
   }
 
   public class Settings : CommonSettings {

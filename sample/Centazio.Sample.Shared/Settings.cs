@@ -4,20 +4,20 @@ namespace Centazio.Sample.Shared;
 
 public record Settings : CentazioSettings {
 
-  public required ClickUpSettings ClickUp { get; init; }
+  public required CustomSettingSettings CustomSetting { get; init; }
   public required AppSheetSettings AppSheet { get; init; }
   
   protected Settings(CentazioSettings centazio) : base (centazio) {}
 
   public override Dto ToDto() {
     return new(base.ToDto()) {
-      ClickUp = ClickUp.ToDto(),
+      ClickUp = CustomSetting.ToDto(),
       AppSheet = AppSheet.ToDto(),
     };
   }
 
   public new record Dto : CentazioSettings.Dto, IDto<Settings> {
-    public ClickUpSettings.Dto? ClickUp { get; init; }
+    public CustomSettingSettings.Dto? ClickUp { get; init; }
     public AppSheetSettings.Dto? AppSheet { get; init; }
     
     public Dto() {} // required for initialisation in `SettingsLoader.cs`
@@ -28,7 +28,7 @@ public record Settings : CentazioSettings {
       return new Settings(centazio) {
         // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
         SecretsFolders = centazio.SecretsFolders,  
-        ClickUp = ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)),
+        CustomSetting = ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)),
         AppSheet = AppSheet?.ToBase() ?? throw new SettingsSectionMissingException(nameof(AppSheet)) 
       };
     }
@@ -36,11 +36,11 @@ public record Settings : CentazioSettings {
   }
 }
 
-public record ClickUpSettings {
+public record CustomSettingSettings {
   public string BaseUrl { get; }
   public string ListId { get; }
   
-  private ClickUpSettings(string baseurl, string listid) {
+  private CustomSettingSettings(string baseurl, string listid) {
     BaseUrl = baseurl;
     ListId = listid;
   }
@@ -50,11 +50,11 @@ public record ClickUpSettings {
     ListId = String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim()
   };
 
-  public record Dto : IDto<ClickUpSettings> {
+  public record Dto : IDto<CustomSettingSettings> {
     public string? BaseUrl { get; init; }
     public string? ListId { get; init; }
     
-    public ClickUpSettings ToBase() => new (
+    public CustomSettingSettings ToBase() => new (
       String.IsNullOrWhiteSpace(BaseUrl) ? throw new ArgumentNullException(nameof(BaseUrl)) : BaseUrl.Trim(),
       String.IsNullOrWhiteSpace(ListId) ? throw new ArgumentNullException(nameof(ListId)) : ListId.Trim()
     );

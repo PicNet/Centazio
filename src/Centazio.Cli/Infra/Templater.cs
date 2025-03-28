@@ -14,8 +14,10 @@ public interface ITemplater {
 }
 public class Templater(CentazioSettings settings, CentazioSecrets secrets) : ITemplater {
   
-  public string ParseFromPath(string path, object? model = null) => 
-      ParseFromContent(File.ReadAllText(FsUtils.GetSolutionFilePath("defaults", "templates", path)), model);
+  public string ParseFromPath(string path, object? model = null) {
+    var filepath = Path.IsPathFullyQualified(path) ? path : FsUtils.GetSolutionFilePath("defaults", "templates", path); 
+    return ParseFromContent(File.ReadAllText(filepath), model);
+  }
 
   public string ParseFromContent(string contents, object? model = null) {
     var dyn = ToDynamic(model);

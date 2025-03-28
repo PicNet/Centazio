@@ -1,11 +1,11 @@
-﻿using Centazio.Cli.Infra.Ui;
-using Centazio.Core.Misc;
+﻿using Centazio.Cli.Infra.Gen;
+using Centazio.Cli.Infra.Ui;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen.Centazio;
 
-public class GenerateFunctionCommand(ICommandRunner cmd) : AbstractCentazioCommand<GenerateFunctionCommand.Settings> {
+public class GenerateFunctionCommand(ICentazioCodeGenerator gen) : AbstractCentazioCommand<GenerateFunctionCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     SystemName = UiHelpers.Ask("Function Name")
@@ -24,33 +24,10 @@ public class GenerateFunctionCommand(ICommandRunner cmd) : AbstractCentazioComma
     }
     
     var slnfile = Path.GetFileName(slns.Single());
-    var sln = slnfile.Split('.').First();
-    var files = new List<string> { "Assembly.cs", "ClickUpApi.cs", "ClickUp[MODE]Function.cs", "ClickUpTypes.cs" };
-    if (!String.IsNullOrWhiteSpace(settings.AssemblyName)) files.Add("ClickUpIntegration.cs");
-    
-    if (String.IsNullOrWhiteSpace(settings.AssemblyName)) {
-      cmd.DotNet($"new classlib --name {settings.FunctionName}", Environment.CurrentDirectory);
-      File.Delete(Path.Combine(settings.FunctionName, "Class1.cs"));
-      cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
-      
-      cmd.DotNet("add package --prerelease Centazio.Core", settings.FunctionName);
-      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", settings.FunctionName);
-      cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
-    }
-    
-    var from = FsUtils.GetTemplatesPath("defaults", "templates", "centazio", "Functions");
-    await files.Select(async file => {
-      var fromfile = file.Replace("[MODE]", settings.ModeName);
-      var todir = String.IsNullOrWhiteSpace(settings.AssemblyName) ? settings.FunctionName : settings.AssemblyName;
-      var tofile = fromfile.Replace("ClickUp", settings.SystemName);
-      var contents = (await File.ReadAllTextAsync(Path.Combine(from, fromfile)))
-          .Replace("ClickUp", settings.SystemName)
-          .Replace("Centazio.Sample", sln);
-      await File.WriteAllTextAsync(Path.Combine(todir, tofile), contents);
-    }).Synchronous();
+    await gen.GenerateFunction(slnfile, settings);
   }
 
-  public class Settings : CommonSettings {
+  public class Settings : CommonSettings, IFunctionGenerateSettings {
     [CommandArgument(0, "<SYSTEM_NAME>")] public required string SystemName { get; init; }
     [CommandOption("-a|--assembly")] public string? AssemblyName { get; set; }
     [CommandOption("-r|--read")] public bool Read { get; set; }
@@ -58,8 +35,8 @@ public class GenerateFunctionCommand(ICommandRunner cmd) : AbstractCentazioComma
     [CommandOption("-w|--write")] public bool Write { get; set; }
     [CommandOption("-o|--other")] public bool Other { get; set; }
     
-    internal string ModeName => Read ? nameof(Read) : Promote ? nameof(Promote) : Write ? nameof(Write) : nameof(Other);
-    internal string FunctionName => SystemName + ModeName + "Function";
+    public string ModeName => Read ? nameof(Read) : Promote ? nameof(Promote) : Write ? nameof(Write) : nameof(Other);
+    public string FunctionName => SystemName + ModeName + "Function";
     
     public override ValidationResult Validate() {
       var results = base.Validate();
