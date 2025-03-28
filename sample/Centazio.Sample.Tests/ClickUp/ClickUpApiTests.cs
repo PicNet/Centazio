@@ -22,7 +22,9 @@ public class ClickUpApiTests {
     if (Env.IsGitHubActions()) await Task.Delay(250); // delays to avoid flakyness in DI
     var id = await Api.CreateTask(name);
     if (Env.IsGitHubActions()) await Task.Delay(250);
-    var taskjson = (await Api.GetTasksAfter(start)).Single();
+    var tasks = await Api.GetTasksAfter(start.AddMinutes(-1));
+    Console.WriteLine($"start[{start}] Is GH[{Env.IsGitHubActions()}] id[{id}] tasjs[{tasks.Count}]");
+    var taskjson = tasks.Single();
     var task = Json.Deserialize<ClickUpTask>(taskjson.Json);
     await Api.DeleteTask(id);
     
