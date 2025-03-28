@@ -16,12 +16,12 @@ public class ClickUpApiTests {
   }
   
   [Test] public async Task Test_create_task() {
-    var start = DateTime.UtcNow;
-    // using DateTime.UtcNow on purpose as we want empty result set
-    var first = await Api.GetTasksAfter(DateTime.UtcNow);
+    var start = DateTime.UtcNow; // using DateTime.UtcNow on purpose as we want empty result set
+    var first = await Api.GetTasksAfter(start);
     var name = $"{nameof(ClickUpApiTests)}:{Guid.NewGuid()}";
+    if (Env.IsGitHubActions()) await Task.Delay(250); // delays to avoid flakyness in DI
     var id = await Api.CreateTask(name);
-    
+    if (Env.IsGitHubActions()) await Task.Delay(250);
     var taskjson = (await Api.GetTasksAfter(start)).Single();
     var task = Json.Deserialize<ClickUpTask>(taskjson.Json);
     await Api.DeleteTask(id);

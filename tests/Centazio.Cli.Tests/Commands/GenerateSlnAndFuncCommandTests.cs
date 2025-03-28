@@ -20,7 +20,7 @@ public class GenerateSlnAndFuncCommandTests {
   }
 
   [SetUp] public void SetUp() {
-    Templater.TestingRootDir = properroot;
+    FsUtils.TestingRootDir = properroot;
     Directory.CreateDirectory(testdir);
     Environment.CurrentDirectory = testdir;
 
@@ -28,7 +28,7 @@ public class GenerateSlnAndFuncCommandTests {
   }
 
   [TearDown] public void TearDown() {
-    Templater.TestingRootDir = string.Empty;
+    FsUtils.TestingRootDir = string.Empty;
   }
 
   [Test] public async Task Test_generate_solution() {

@@ -7,5 +7,6 @@ global using Serilog;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Centazio.Core.Tests")]
+[assembly: InternalsVisibleTo("Centazio.Cli.Tests")]
 [assembly: InternalsVisibleTo("Centazio.Test.Lib")]
 [assembly: InternalsVisibleTo("Centazio.E2E.Tests")]

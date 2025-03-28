@@ -45,9 +45,7 @@ public class GenerateSlnCommand(ICommandRunner cmd) : AbstractCentazioCommand<Ge
     }
     
     void CopySampleProjSharedProjFiles() {
-      // todo: change all `FsUtils.GetSolutionFilePath` in Centazio.Cli project to use `Templater.TemplatePath` so that it works using a global dotnet tool
-      // or perhaps better yet, find a better place than Templater for this, as its not just templates that need root directory in the Cli project. 
-      var from = Templater.TemplatePath("defaults", "templates", "centazio", "Solution.Shared");
+      var from = FsUtils.GetTemplatesPath("defaults", "templates", "centazio", "Solution.Shared");
       FsUtils.CopyDirFiles(from, shareddir, "*.cs");
     }
 

@@ -8,7 +8,7 @@ public static class FsUtils {
     if (rootdir is not null) return rootdir;
     if (Env.IsCloudEnviornment()) return rootdir = Environment.CurrentDirectory;
     
-    var file = "settings.json";
+    var file = "centazio3.sln";
 
     string? Impl(string dir) {
       var path = Path.Combine(dir, file);
@@ -36,5 +36,25 @@ public static class FsUtils {
       Directory.CreateDirectory(to);
     }
     Directory.GetFiles(from, ext).ForEach(file => File.Copy(file, Path.Combine(to, Path.GetFileName(file))));
+  }
+  
+  internal static string TestingRootDir = String.Empty;
+  
+  /// <summary>
+  /// This method will work when running using the centazio 'dotnet tool' and when running within
+  ///     the Centazio development hierarchy
+  /// </summary>
+  public static string GetTemplatesPath(params List<string> steps) {
+    return Path.Combine(steps.ToList().Prepend(RootDir()).ToArray());
+    
+    string RootDir() {
+      try { return GetSolutionRootDirectory(); }
+      catch (Exception) { 
+        return !String.IsNullOrEmpty(TestingRootDir) 
+          ? TestingRootDir 
+          :  Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) 
+          ?? throw new Exception("Could not find a valid templates directory"); 
+      }
+    }
   }
 }

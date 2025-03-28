@@ -17,7 +17,7 @@ public class SqliteE2ETests {
   
   [SetUp, TearDown] public void CleanUp() => File.Delete(dbfile);
   
-  // todo: test is failing after 5 epochs
+  // todo: test is failing with real notifier
   [Test] public async Task Run_e2e_simulation_and_tests() =>
       await new E2EEnvironment(true, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
 }

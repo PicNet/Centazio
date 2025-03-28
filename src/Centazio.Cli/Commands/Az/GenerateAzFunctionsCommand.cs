@@ -2,7 +2,6 @@
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Misc;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 

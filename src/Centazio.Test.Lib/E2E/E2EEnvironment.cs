@@ -27,8 +27,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   private IChangesNotifier notifier = null!;
 
   public async Task Initialise() {
-    // todo: fix this in GH actions
-    if (Env.IsGitHubActions()) { notify = false; }
+    if (Env.IsGitHubActions()) { notify = false; } // todo: remove this line once SqliteE2E is fixed
     Log.Logger = LogInitialiser.GetConsoleConfig(template: "{Message}{NewLine}").CreateLogger();
     await ctx.Initialise();
     

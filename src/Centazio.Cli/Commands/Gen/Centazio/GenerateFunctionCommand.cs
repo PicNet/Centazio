@@ -38,7 +38,7 @@ public class GenerateFunctionCommand(ICommandRunner cmd) : AbstractCentazioComma
       cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
     }
     
-    var from = Templater.TemplatePath("defaults", "templates", "centazio", "Functions");
+    var from = FsUtils.GetTemplatesPath("defaults", "templates", "centazio", "Functions");
     await files.Select(async file => {
       var fromfile = file.Replace("[MODE]", settings.ModeName);
       var todir = String.IsNullOrWhiteSpace(settings.AssemblyName) ? settings.FunctionName : settings.AssemblyName;
