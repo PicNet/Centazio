@@ -3,7 +3,7 @@
 namespace Centazio.Sample.ClickUp;
 
 
-public class ClickUpApi(ClickUpSettings settings, Secrets secrets) {
+public class ClickUpApi(Settings settings, Secrets secrets) {
 
   public static readonly string CLICK_UP_OPEN_STATUS = "to do";
   public static readonly string CLICK_UP_COMPLETE_STATUS = "complete";
@@ -12,7 +12,7 @@ public class ClickUpApi(ClickUpSettings settings, Secrets secrets) {
   
   public async Task<List<TaskJsonAndDateUpdated>> GetTasksAfter(DateTime after) {
     // https://developer.clickup.com/reference/gettasks
-    var json = await Query($"list/{settings.ListId}/task?archived=false&order_by=updated&reverse=true&include_closed=true&date_updated_gt={after.ToMillis()}");
+    var json = await Query($"list/{settings.ClickUp.ListId}/task?archived=false&order_by=updated&reverse=true&include_closed=true&date_updated_gt={after.ToMillis()}");
     return Json.SplitList(json, "tasks")
         .Select(taskjson => new TaskJsonAndDateUpdated(taskjson, UtcDate.FromMillis(taskjson, @"""date_updated"":""([^""]+)""")))
         // it is possible for the ClickUp API to include some tasks even though we specify date_updated_gt, so filter manually
@@ -24,7 +24,7 @@ public class ClickUpApi(ClickUpSettings settings, Secrets secrets) {
   public async Task<string> CreateTask(string name) {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
     
-    var resp = await Client.PostAsync($"list/{settings.ListId}/task", Json.SerializeToHttpContent(new { name }));
+    var resp = await Client.PostAsync($"list/{settings.ClickUp.ListId}/task", Json.SerializeToHttpContent(new { name }));
     var json = await resp.Content.ReadAsStringAsync();
     var node = JsonNode.Parse(json) ?? throw new Exception();
     return node["id"]?.ToString() ?? throw new Exception();
@@ -45,7 +45,7 @@ public class ClickUpApi(ClickUpSettings settings, Secrets secrets) {
   }
 
   private HttpClient Client => http ??= new HttpClient { 
-    BaseAddress = new Uri(settings.BaseUrl),
+    BaseAddress = new Uri(settings.ClickUp.BaseUrl),
     DefaultRequestHeaders = { {"Authorization", secrets.CLICKUP_TOKEN }, }
   };
 
