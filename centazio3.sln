@@ -63,6 +63,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Sample.ClickUp", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Sample.AppSheet", "sample\Centazio.Sample.AppSheet\Centazio.Sample.AppSheet.csproj", "{CB575946-6429-4156-A7BA-38833137CF47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Providers.PostgresSql", "src\Centazio.Providers\Centazio.Providers.PostgresSql\Centazio.Providers.PostgresSql.csproj", "{10EB304E-5328-46EC-8CED-D940457F6CB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Providers.PostgresSql.Tests", "tests\Centazio.Providers.PostgresSql.Tests\Centazio.Providers.PostgresSql.Tests.csproj", "{7769378D-BC15-43AD-AC11-0AE8FAE2EE86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -145,6 +149,14 @@ Global
 		{CB575946-6429-4156-A7BA-38833137CF47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB575946-6429-4156-A7BA-38833137CF47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB575946-6429-4156-A7BA-38833137CF47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10EB304E-5328-46EC-8CED-D940457F6CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10EB304E-5328-46EC-8CED-D940457F6CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10EB304E-5328-46EC-8CED-D940457F6CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10EB304E-5328-46EC-8CED-D940457F6CB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7769378D-BC15-43AD-AC11-0AE8FAE2EE86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7769378D-BC15-43AD-AC11-0AE8FAE2EE86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7769378D-BC15-43AD-AC11-0AE8FAE2EE86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7769378D-BC15-43AD-AC11-0AE8FAE2EE86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1653C645-36BD-429C-A737-1F73144E6D58} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
@@ -168,5 +180,7 @@ Global
 		{16243103-CE9F-46A1-94D6-2ECA60FCA696} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
 		{12BDCB0D-A9F0-4A1E-8ACF-7BDE132630AC} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
 		{CB575946-6429-4156-A7BA-38833137CF47} = {A6ED965F-9625-4DBC-A9A3-BB53C946433B}
+		{10EB304E-5328-46EC-8CED-D940457F6CB7} = {95FE1321-2F07-45ED-ABA6-AA354B308CE7}
+		{7769378D-BC15-43AD-AC11-0AE8FAE2EE86} = {60BD8B72-2AC8-4D12-A2BA-87BDD7C803AB}
 	EndGlobalSection
 EndGlobal

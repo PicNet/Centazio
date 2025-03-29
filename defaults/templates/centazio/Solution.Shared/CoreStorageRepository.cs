@@ -8,8 +8,8 @@ public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelp
   public async Task<CoreStorageRepository> Initialise() {
     await using var db = Db();
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript("dbo", nameof(ExampleEntity).ToLower(), dbf.GetDbFields<ExampleEntity>(), [nameof(ICoreEntity.CoreId)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript("dbo", nameof(ExampleEntity).ToLower(), dbf.GetDbFields<ExampleEntity>(), [nameof(ICoreEntity.CoreId)]));
     
     return this;
   }

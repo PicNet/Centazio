@@ -1,6 +1,7 @@
 ﻿using Centazio.Core.Misc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Serilog;
 
 namespace Centazio.Providers.EF;
 
@@ -38,4 +39,10 @@ public abstract class CentazioDbContext : DbContext {
     await AddRangeAsync(dtos);
     return await SaveChangesAsync();
   }
+  
+  public async Task ExecSql(string sql) {
+    try { await Database.ExecuteSqlRawAsync(sql); }
+    catch (Exception e) { Log.Error($"error [{e.Message}] executing sql:\n\t" + sql); throw; }
+  }
+
 }

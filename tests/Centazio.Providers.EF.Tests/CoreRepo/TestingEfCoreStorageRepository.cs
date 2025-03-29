@@ -9,21 +9,21 @@ namespace Centazio.Providers.EF.Tests.CoreRepo;
 public class TestingEfCoreStorageRepository(Func<CentazioDbContext> getdb, IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb), ITestingCoreStorage {
   
   private static string CoreSchemaName => "dbo";
-  private static string CtlSchemaName => nameof(Core.Ctl);
+  private static string CtlSchemaName => nameof(Core.Ctl).ToLower();
   private static string CoreEntityName => nameof(CoreEntity).ToLower();
   private static string CoreStorageMetaName => nameof(CoreStorageMeta).ToLower();
 
   public async Task<ITestingCoreStorage> Initalise() {
     await using var db = Db();
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(CoreSchemaName, CoreEntityName, dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreEntityName, dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
     return this;
   }
 
   public override async ValueTask DisposeAsync() {
     await using var db = Db();
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CoreSchemaName, CoreEntityName));
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
+    await db.ExecSql(dbf.GenerateDropTableScript(CoreSchemaName, CoreEntityName));
+    await db.ExecSql(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
     await base.DisposeAsync();
   }
 

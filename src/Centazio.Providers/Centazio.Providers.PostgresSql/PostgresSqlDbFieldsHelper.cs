@@ -1,27 +1,19 @@
 ﻿using System.Text;
 using Centazio.Core.Misc;
 
-namespace Centazio.Providers.SqlServer;
+namespace Centazio.Providers.PostgresSql;
 
-// todo: stop using capitals for all sql helpers
-public class SqlServerDbFieldsHelper : AbstractDbFieldsHelper {
+public class PostgresSqlDbFieldsHelper : AbstractDbFieldsHelper {
   
   public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null) {
     var sql = new StringBuilder();
-    if (!String.IsNullOrWhiteSpace(schema)) {
-      sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{schema}')
-  EXEC('CREATE SCHEMA [{schema}] AUTHORIZATION [dbo]');");
-    }
+    if (!String.IsNullOrWhiteSpace(schema)) { sql.AppendLine($"CREATE SCHEMA IF NOT EXISTS {schema};"); }
+    
     sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
-BEGIN
-  CREATE TABLE {TableName(schema, table)} (
-    {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
-    PRIMARY KEY ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()}
-  )
-END
-");
+CREATE TABLE IF NOT EXISTS {TableName(schema, table)} (
+  {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
+  PRIMARY KEY ({String.Join(", ", pkfields.Select(ColumnName))}){GetUniquesSql()}{GetFksSql()}
+);");
     string GetUniquesSql() {
       if (uniques is null || !uniques.Any()) return String.Empty;
       return ",\n" + String.Join(',', uniques.Select(u => $"UNIQUE({String.Join(',', u.Select(ColumnName))})"));
@@ -38,24 +30,25 @@ END
     var typestr = 
         f.FieldType == typeof(int) ? "int" : 
         f.FieldType == typeof(decimal) ? "decimal" : 
-        f.FieldType == typeof(DateTime) ? "datetime2" : 
+        f.FieldType == typeof(DateTime) ? "timestamp" : 
         f.FieldType == typeof(DateOnly) ? "date" : 
-        f.FieldType == typeof(Boolean) ? "bit" : 
-        f.FieldType == typeof(Guid) ? "uniqueidentifier" : 
-        f.FieldType == typeof(string) ? "nvarchar" : 
+        f.FieldType == typeof(Boolean) ? "boolean" : 
+        f.FieldType == typeof(Guid) ? "uuid" :
+        f.FieldType == typeof(string) && f.Length == "max" ? "text" :
+        f.FieldType == typeof(string) ? "varchar" : 
         throw new NotSupportedException(f.FieldType.Name);
-    if (!String.IsNullOrWhiteSpace(f.Length)) typestr += $"({f.Length})";
+    if (!String.IsNullOrWhiteSpace(f.Length) && f.Length != "max") typestr += $"({f.Length})";
     var nullstr = f.Required ? "not null" : "null";
-    return $"{ColumnName(f.Name)} {typestr} {nullstr}";
+    return $"\"{f.Name}\" {typestr} {nullstr}";
   }
 
   public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";
-  public override string ColumnName(string column) => $"[{column}]";
-  public override string TableName(string schema, string table) => $"[{schema}].[{table}]";
+  public override string ColumnName(string column) => $"\"{column}\"";
+  public override string TableName(string schema, string table) => $"{schema}.{table}";
 
   public override string GenerateIndexScript(string schema, string table, params List<string> columns) {
     var name = $"ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))}";
-    return $"DROP INDEX IF EXISTS {ColumnName(name)} ON {TableName(schema, table)};\nCREATE INDEX {name} ON {TableName(schema, table)} ({String.Join(", ", columns.Select(ColumnName))});";
+    return $"CREATE INDEX IF NOT EXISTS {name} ON {TableName(schema, table)} ({String.Join(", ", columns.Select(ColumnName))});";
   }
 
 }

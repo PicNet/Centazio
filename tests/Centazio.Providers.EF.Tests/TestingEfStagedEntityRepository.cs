@@ -10,9 +10,11 @@ public class TestingEfStagedEntityRepository(EFStagedEntityRepositoryOptions opt
     await using var db = opts.Db();
     await DropTablesImpl(db);
     
-    await db.Database.ExecuteSqlRawAsync(dbf.GenerateCreateTableScript(db.SchemaName, db.StagedEntityTableName, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)], $"UNIQUE({nameof(StagedEntity.System)}, {nameof(StagedEntity.SystemEntityTypeName)}, {nameof(StagedEntity.StagedEntityChecksum)})"));
-    var index = dbf.GenerateIndexScript(db.SchemaName, db.StagedEntityTableName, nameof(StagedEntity.System), nameof(StagedEntity.SystemEntityTypeName), nameof(StagedEntity.DateStaged));
-    await db.Database.ExecuteSqlRawAsync(index);
+    var createsql = dbf.GenerateCreateTableScript(db.SchemaName, db.StagedEntityTableName, dbf.GetDbFields<StagedEntity>(), [nameof(StagedEntity.Id)],
+        [[nameof(StagedEntity.System), nameof(StagedEntity.SystemEntityTypeName), nameof(StagedEntity.StagedEntityChecksum)]]);
+    await db.ExecSql(createsql);
+    var ixsql = dbf.GenerateIndexScript(db.SchemaName, db.StagedEntityTableName, nameof(StagedEntity.System), nameof(StagedEntity.SystemEntityTypeName), nameof(StagedEntity.DateStaged));
+    await db.ExecSql(ixsql);
     
     return this;
   }
@@ -22,6 +24,7 @@ public class TestingEfStagedEntityRepository(EFStagedEntityRepositoryOptions opt
     await DropTablesImpl(db);
   }
 
-  private async Task DropTablesImpl(AbstractStagedEntityRepositoryDbContext db) { await db.Database.ExecuteSqlRawAsync(dbf.GenerateDropTableScript(db.SchemaName, db.StagedEntityTableName)); }
+  private async Task DropTablesImpl(AbstractStagedEntityRepositoryDbContext db) => 
+      await db.ExecSql(dbf.GenerateDropTableScript(db.SchemaName, db.StagedEntityTableName));
 
 }

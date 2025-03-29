@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.PostgresSql\Centazio.Providers.PostgresSql.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+      <ProjectReference Include="..\Centazio.Providers.EF.Tests\Centazio.Providers.EF.Tests.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Testcontainers.PostgreSql" />
+    </ItemGroup>
+
+</Project>

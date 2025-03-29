@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />      
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
+      <ProjectReference Include="..\Centazio.Providers.EF\Centazio.Providers.EF.csproj" />
+    </ItemGroup>
+
+</Project>

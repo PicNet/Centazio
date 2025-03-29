@@ -23,9 +23,10 @@ public class AbstractDbFieldsHelperTests {
 
   class TestDbFieldsHelper : AbstractDbFieldsHelper {
 
-    public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, string? additional = null) => throw new Exception();
+    public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null) => throw new Exception();
     public override string GenerateIndexScript(string schema, string table, params List<string> columns) => throw new Exception();
     public override string GenerateDropTableScript(string schema, string table) => throw new Exception();
+    public override string ColumnName(string column) => throw new Exception();
     public override string TableName(string schema, string table) => throw new Exception();
 
   }

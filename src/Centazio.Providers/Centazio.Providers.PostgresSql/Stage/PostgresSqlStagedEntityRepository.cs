@@ -6,19 +6,19 @@ using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
-namespace Centazio.Providers.Sqlite.Stage;
+namespace Centazio.Providers.PostgresSql.Stage;
 
-public class SqliteStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings) : IServiceFactory<IStagedEntityRepository> {
+public class PostgresSqlStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
     var opts = new EFStagedEntityRepositoryOptions(
         settings.Limit, 
         new Sha256ChecksumAlgorithm().Checksum, 
-        () => new SqliteStagedEntityContext(settings.ConnectionString));
-    return new SqliteStagedEntityRepository(opts, new SqliteDbFieldsHelper(), settings.CreateSchema);
+        () => new PostgresSqlStagedEntityContext(settings.ConnectionString));
+    return new PostgresSqlStagedEntityRepository(opts, new PostgresSqlDbFieldsHelper(), settings.CreateSchema);
   }
 }
 
-public class SqliteStagedEntityRepository(EFStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf, bool createschema) : EFStagedEntityRepository(opts) {
+public class PostgresSqlStagedEntityRepository(EFStagedEntityRepositoryOptions opts, IDbFieldsHelper dbf, bool createschema) : EFStagedEntityRepository(opts) {
   
   public override async Task<IStagedEntityRepository> Initialise() {
     if (!createschema) return this;
