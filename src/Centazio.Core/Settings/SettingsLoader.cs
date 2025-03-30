@@ -38,7 +38,8 @@ public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_P
     
     var builder = new ConfigurationBuilder();
     // todo: handle comments - "//.*"?
-    files.ForEach(file => builder.AddJsonFile(file));
+    // todo: this is overriding whole sections, need custom merge, see: https://claude.ai/chat/e50dca2e-1d52-480f-bc3d-b028f60c934e
+    files.ForEach(file => builder.AddJsonFile(file, false, true));
     
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
