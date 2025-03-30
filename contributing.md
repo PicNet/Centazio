@@ -45,7 +45,7 @@
 
 ## NuGet
 - Create: `rm packages/*; dotnet pack -v detailed -c Release -o packages`
-- Pubish: `dotnet nuget push ./packages/*.nupkg --api-key <api-key> --source https://api.nuget.org/v3/index.json`
+- Pubish: `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
 
 ## Centazio Cli
 - To work with a local version of the Centazio.Cli NuGet tool use:

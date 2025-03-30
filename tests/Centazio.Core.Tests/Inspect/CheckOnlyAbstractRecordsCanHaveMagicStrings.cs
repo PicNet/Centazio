@@ -12,6 +12,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
     { nameof(ValidCron), [nameof(ValidCron.Expression)] },
     { nameof(DbFieldType), ["*"] },
+    { nameof(ForeignKey), ["*"] },
     { nameof(FunctionConfig), [nameof(FunctionConfig.FunctionPollExpression)] },
     { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }
   };

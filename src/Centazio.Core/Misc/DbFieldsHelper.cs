@@ -3,6 +3,8 @@
 namespace Centazio.Core.Misc;
 
 public record DbFieldType(string Name, Type FieldType, string Length, bool Required);
+
+[IgnoreNamingConventions]
 public record ForeignKey(string[] Columns, string PkTableSchema, string PkTable, string[]? PkColumns = null) {
   public readonly string[] PkColumns = PkColumns ?? Columns;
 }
@@ -12,6 +14,7 @@ public interface IDbFieldsHelper {
   string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null);
   string GenerateIndexScript(string schema, string table, params List<string> columns);
   string GenerateDropTableScript(string schema, string table);
+  string ColumnName(string column);
   string TableName(string schema, string table);
 
 }
