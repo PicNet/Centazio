@@ -284,6 +284,51 @@ public record CoreStorageSettings {
   }
 }
 
+public record AzFunctionsSettings {
+
+  public string? Name { get; init; }
+  public string? Region { get; init; }
+  public string? ResourceGroup { get; init; }
+  public string? FunctionApp { get; init; }
+  public string? AppServicePlan { get; init; }
+  public string? WebSite { get; init; }
+  public string? AppServiceSkuName { get; init; }
+  public string? AppServiceSkuTier { get; init; }
+
+  public Dto ToDto() => new() { 
+    Name = Name,
+    Region = Region,
+    ResourceGroup = ResourceGroup,
+    FunctionApp = FunctionApp,
+    AppServicePlan = AppServicePlan,
+    WebSite = WebSite,
+    AppServiceSkuName = AppServiceSkuName,
+    AppServiceSkuTier = AppServiceSkuTier,
+  };
+
+  public record Dto : IDto<AzFunctionsSettings> { 
+    public string? Name { get; init; }
+    public string? Region { get; init; }
+    public string? ResourceGroup { get; init; }
+    public string? FunctionApp { get; init; }
+    public string? AppServicePlan { get; init; }
+    public string? WebSite { get; init; }
+    public string? AppServiceSkuName { get; init; }
+    public string? AppServiceSkuTier { get; init; }
+
+    public AzFunctionsSettings ToBase() => new() { 
+            Name = Name?.Trim(),
+            Region = Region?.Trim(),
+            ResourceGroup = ResourceGroup?.Trim(),
+            FunctionApp = FunctionApp?.Trim(),
+            AppServicePlan = AppServicePlan?.Trim(),
+            WebSite = WebSite?.Trim(),
+            AppServiceSkuName = AppServiceSkuName?.Trim(),
+            AppServiceSkuTier = AppServiceSkuTier?.Trim(),
+    };
+  }
+}
+
 public record AzureSettings {
 
   public required string Region { get; init; }
@@ -294,6 +339,7 @@ public record AzureSettings {
   public required string WebSiteNameTemplate { get; init; }
   public required string AppServiceSkuName { get; init; }
   public required string AppServiceSkuTier { get; init; }
+  public required List<AzFunctionsSettings> AzFunctions { get; init; }
 
   public Dto ToDto() => new() { 
     Region = Region,
@@ -304,6 +350,7 @@ public record AzureSettings {
     WebSiteNameTemplate = WebSiteNameTemplate,
     AppServiceSkuName = AppServiceSkuName,
     AppServiceSkuTier = AppServiceSkuTier,
+    AzFunctions = AzFunctions?.Select(item => item.ToDto()).ToList(),
   };
 
   public record Dto : IDto<AzureSettings> { 
@@ -315,6 +362,7 @@ public record AzureSettings {
     public string? WebSiteNameTemplate { get; init; }
     public string? AppServiceSkuName { get; init; }
     public string? AppServiceSkuTier { get; init; }
+    public List<AzFunctionsSettings.Dto>? AzFunctions { get; init; }
 
     public AzureSettings ToBase() => new() { 
       Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
@@ -325,6 +373,7 @@ public record AzureSettings {
       WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
       AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
       AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
+      AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? throw new ArgumentNullException(nameof(AzFunctions)),
     };
   }
 }

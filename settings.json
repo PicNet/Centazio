@@ -35,7 +35,10 @@
   "AzureSettings": {
     "Region": "Australia East",
     "ResourceGroup": "Centazio_3_Testing",
-    "AppServicePlan": "Centazio-TestFunctions-Azure-Plan"
+    "AppServicePlan": "Centazio-TestFunctions-Azure-Plan",
+    
+    // todo: this should not be required
+    "AzFunctions": [{}]
   },
   "AwsSettings": {
     "Region": "ap-southeast-2",

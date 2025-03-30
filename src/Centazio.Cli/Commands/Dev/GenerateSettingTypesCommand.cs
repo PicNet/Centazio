@@ -61,7 +61,8 @@ public record {{ it.ClassName }} {
 
       var fields = props.Select(prop => new FieldSpec(prop, classnm)).ToList();
       
-      fields.Where(f => f.IsObj).ForEach(nestedtype => GenerateClassAndNestedTypes(nestedtype.SettingsName, nestedtype.Value.AsObject().ToList(), generated));
+      fields.Where(f => f.IsObj).ForEach(obj => GenerateClassAndNestedTypes(obj.SettingsName, obj.Value.AsObject().ToList(), generated));
+      fields.Where(f => f.IsArray).ForEach(arr => GenerateClassAndNestedTypes(arr.ElementTypeName, arr.ElementTypeProps.ToList(), generated));
       
       sb.AppendLine(templater.ParseFromContent(RECORD_TEMPLATE, new { ClassName = classnm, Fields = fields }));
     }
@@ -78,17 +79,42 @@ public record {{ it.ClassName }} {
     
     public FieldSpec(KeyValuePair<string, JsonNode?> prop, string classnm) {
       (ClassName, Name, Value) = (classnm, prop.Key, prop.Value ?? throw new Exception());
-      
-      var obj = Value.GetValueKind() == JsonValueKind.Object ? Value.AsObject() : null;
-      Type = obj?["type"]?.GetValue<string>() ?? "string";
-      Required = obj?["required"]?.GetValue<bool>() ?? true;
+
+      if (Value.GetValueKind() == JsonValueKind.Object) {
+        var obj = Value.AsObject();
+        if (IsFieldSpec(obj)) {
+          Type = obj["type"]?.GetValue<string>() ?? "string";
+          Required = obj["required"]?.GetValue<bool>() ?? true;
+        } else {
+          Type = "object";
+          Required = true;
+        }
+      } else if (IsArray && Value.AsArray().Count > 0) {
+        Type = $"List<{Name}Settings.Dto>";
+        Required = true;
+      } else {
+        Type = "string";
+        Required = true;
+      }
     }
     
+    public bool IsArray => Value.GetValueKind() == JsonValueKind.Array;
+    public bool IsObj => Value.GetValueKind() == JsonValueKind.Object && !IsFieldSpec(Value.AsObject());
+    
     public string SettingsName => Char.ToUpper(Name[0]) + Name[1..] + "Settings";
-            
+    public string ElementTypeName => Char.ToUpper(Name[0]) + Name[1..] + "Settings";
+
+    public IEnumerable<KeyValuePair<string, JsonNode?>> ElementTypeProps { get {
+      if (!IsArray || Value.AsArray().Count == 0) return [];
+      var first = Value.AsArray()[0];
+      return first?.GetValueKind() == JsonValueKind.Object ? first.AsObject().ToList() : [];
+    } }
+
+  
     public string PropertyDefenition { get {
       var requiredmod = Required ? "required " : string.Empty;
       var opt = Required ? String.Empty : "?";
+      if (IsArray) return $"public {requiredmod}List<{ElementTypeName}>{opt} {Name} {{ get; init; }}";
       return IsObj 
           ? $"public {requiredmod}{SettingsName}{opt} {Name} {{ get; init; }}" 
           : $"public {requiredmod}{Type}{opt} {Name} {{ get; init; }}";
@@ -99,17 +125,17 @@ public record {{ it.ClassName }} {
         : $"public {Type}? {Name} {{ get; init; }}";
 
     public string ToDtoPropertyPair { get {
+      if (IsArray) { return $"{Name} = {Name}?.Select(item => item.ToDto()).ToList(),"; }
       if (IsObj) return $"{Name} = {Name}.ToDto(),";
       return $"{Name} = {Name},";
     }}
     
     public string ToBasePropertyPair { get {
+      if (IsArray) { return Required ? $"{Name} = {Name}?.Select(dto => dto.ToBase()).ToList() ?? throw new ArgumentNullException(nameof({Name}))," : $"{Name} = {Name}?.Select(dto => dto.ToBase()).ToList() ?? new List<{ElementTypeName}>(),"; }
       if (IsObj) { return Required ? $"{Name} = {Name}?.ToBase() ?? throw new ArgumentNullException(nameof({Name}))," : $"      {Name} = {Name}?.ToBase() ?? new(),"; }
       if (Type == "string") { return Required ? $"{Name} = String.IsNullOrWhiteSpace({Name}) ? throw new ArgumentNullException(nameof({Name})) : {Name}.Trim()," : $"      {Name} = {Name}?.Trim(),"; }
       return $"{Name} = {Name} ?? {GetDefaultValue()},";
     } }
-
-    public bool IsObj => Value.GetValueKind() == JsonValueKind.Object && !IsFieldSpec(Value.AsObject());
     
     private bool IsFieldSpec(JsonObject obj) => obj.ContainsKey("type") || obj.ContainsKey("required") || obj.ContainsKey("default");
 
