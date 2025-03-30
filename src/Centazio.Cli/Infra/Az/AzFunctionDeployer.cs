@@ -49,23 +49,20 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     return op.Value;
   }
 
-  private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid) => new(location) {
-    Kind = "functionapp",
-    SiteConfig = new SiteConfigProperties {
-      NetFrameworkVersion = "v9.0",
-      AppSettings = [
-        // todo: confirm if all these are required
-        new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
-        new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
-        new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
-        new AppServiceNameValuePair { Name = "WEBSITE_RUN_FROM_PACKAGE", Value = "1" },
-        new AppServiceNameValuePair { Name = "SiteConfigProperties", Value = "1" },
-        new AppServiceNameValuePair { Name = "AzureWebJobsStorage", Value = Secrets.AZ_BLOB_STORAGE_ENDPOINT },
-        new AppServiceNameValuePair { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = Secrets.AZ_APP_INSIGHT_CONNECTION_STRING },
-      ]
-    },
-    AppServicePlanId = farmid
-  };
+  private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid) {
+    var envvars = new List<AppServiceNameValuePair> {
+      new() { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
+      new() { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
+      new() { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
+      new() { Name = "AzureWebJobsStorage", Value = Secrets.AZ_BLOB_STORAGE_ENDPOINT },
+    };
+    if (!String.IsNullOrWhiteSpace(Secrets.AZ_APP_INSIGHT_CONNECTION_STRING)) { envvars.Add(new() { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = Secrets.AZ_APP_INSIGHT_CONNECTION_STRING }); }
+    return new WebSiteData(location) {
+      Kind = "functionapp",
+      SiteConfig = new SiteConfigProperties { NetFrameworkVersion = "v9.0", AppSettings = envvars },
+      AppServicePlanId = farmid
+    };
+  }
 
   private async Task PublishFunctionApp(WebSiteResource appres, AzureFunctionProjectMeta project) {
     var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], [".azurefunctions", "runtimes"]);

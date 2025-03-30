@@ -21,7 +21,7 @@
   
 - cli:
   - simulate should not open a new window when running just one function
-  - code generators for new solution/project/integration/function
+  - installed cli should work in any directory (need to include templates in download) 
 
 - full getting started walk through, test it actually works
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
