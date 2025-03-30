@@ -35,7 +35,8 @@ internal class CliBootstrapper {
           svcs.AddSingleton(t);
         });
     
-    var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader().Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(
+        new SettingsLoader().Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMeneCommand>()

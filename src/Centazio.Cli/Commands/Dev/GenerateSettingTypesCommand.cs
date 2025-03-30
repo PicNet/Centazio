@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Commands.Dev;
@@ -12,6 +13,7 @@ public class GenerateSettingTypesCommand(ITemplater templater) : AbstractCentazi
   public override async Task ExecuteImpl(CommonSettings cmdsetts) {
     var dir = FsUtils.GetSolutionFilePath("src", "Centazio.Core", "Settings");
     var json = await File.ReadAllTextAsync(Path.Combine(dir, "settings_schema.json"));
+    json = Regex.Replace(json, "//.*", String.Empty);
     var schema = JsonNode.Parse(json) ?? throw new Exception();
 
     var sb = new StringBuilder();

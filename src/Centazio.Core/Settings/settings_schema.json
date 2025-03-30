@@ -32,7 +32,7 @@
   },
   "SecretsFolders": [{ "type": "string", "required": true }],
   // todo: add
-  "Functions": [{ "type": "CentazioFunctionSettings", "required": false }],
+  // "Functions": [{ "type": "CentazioFunctionSettings", "required": false }],
   
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },

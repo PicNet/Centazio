@@ -37,11 +37,13 @@ public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_P
     Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
     
     var builder = new ConfigurationBuilder();
+    // todo: handle comments - "//.*"?
     files.ForEach(file => builder.AddJsonFile(file));
     
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
-    builder.Build().Bind(obj);
+    var conf = builder.Build(); 
+    conf.Bind(obj);
     return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
   }
 
