@@ -59,21 +59,25 @@
   "Azure": {
     "Region": { "type": "string", "required": true },
     "ResourceGroup": { "type": "string", "required": true },
-    "AppServicePlan": { "type": "string", "required": false },
+    
+    "FunctionAppName": { "type": "string", "required": false },
+    "AppServicePlanName": { "type": "string", "required": false },
+    "WebSiteName": { "type": "string", "required": false },
+    
+    "AppServiceSkuName": { "type": "string", "required": true },
+    "AppServiceSkuTier": { "type": "string", "required": true },
     
     "FunctionAppNameTemplate": { "type": "string", "required": true },
     "AppServicePlanNameTemplate": { "type": "string", "required": true },
     "WebSiteNameTemplate": { "type": "string", "required": true },
-    "AppServiceSkuName": { "type": "string", "required": true },
-    "AppServiceSkuTier": { "type": "string", "required": true },
     
     "AzFunctions": [{
-      "Name": { "type": "string", "required": false },
+      "Assembly": { "type": "string", "required": false },
       "Region": { "type": "string", "required": false },
       "ResourceGroup": { "type": "string", "required": false },
-      "FunctionApp": { "type": "string", "required": false },
-      "AppServicePlan": { "type": "string", "required": false },
-      "WebSite": { "type": "string", "required": false },
+      "FunctionAppName": { "type": "string", "required": false },
+      "AppServicePlanName": { "type": "string", "required": false },
+      "WebSiteName": { "type": "string", "required": false },
       "AppServiceSkuName": { "type": "string", "required": false },
       "AppServiceSkuTier": { "type": "string", "required": false }
     }]

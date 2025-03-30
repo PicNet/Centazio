@@ -43,6 +43,6 @@ public class DtoHelpersTests {
     var settings = F.Settings();
     var manualdto = settings.ToDto();
     var autodto = DtoHelpers.ToDto<CentazioSettings, CentazioSettings.Dto>(settings);
-    Assert.That(autodto, Is.EqualTo(manualdto));
+    Json.ValidateJsonEqual(autodto, manualdto);
   }
 }

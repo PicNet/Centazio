@@ -15,10 +15,6 @@
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger
 
-- code gen:
-  - sln: review secrets/settings, has stuff that needs removing
-  - proj: not compiling, needs full review, not adding IIntegrationBase
-
 - function-to-function triggers:
   - aws/azure
   - the triggered function should get as a parameter the objects that changed 
@@ -27,6 +23,7 @@
   - simulate should not open a new window when running just one function
   - code generators for new solution/project/integration/function
 
+- full getting started walk through, test it actually works
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - the readme should automatically insert code samples from the real codebase, instead of duplicating it
 

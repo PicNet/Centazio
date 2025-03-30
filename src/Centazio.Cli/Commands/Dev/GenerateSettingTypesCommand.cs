@@ -104,7 +104,7 @@ public record {{ it.ClassName }} {
     public string SettingsName => Char.ToUpper(Name[0]) + Name[1..] + "Settings";
     public string ElementTypeName => Char.ToUpper(Name[0]) + Name[1..] + "Settings";
 
-    public IEnumerable<KeyValuePair<string, JsonNode?>> ElementTypeProps { get {
+    public List<KeyValuePair<string, JsonNode?>> ElementTypeProps { get {
       if (!IsArray || Value.AsArray().Count == 0) return [];
       var first = Value.AsArray()[0];
       return first?.GetValueKind() == JsonValueKind.Object ? first.AsObject().ToList() : [];
@@ -114,10 +114,11 @@ public record {{ it.ClassName }} {
     public string PropertyDefenition { get {
       var requiredmod = Required ? "required " : string.Empty;
       var opt = Required ? String.Empty : "?";
-      if (IsArray) return $"public {requiredmod}List<{ElementTypeName}>{opt} {Name} {{ get; init; }}";
-      return IsObj 
-          ? $"public {requiredmod}{SettingsName}{opt} {Name} {{ get; init; }}" 
-          : $"public {requiredmod}{Type}{opt} {Name} {{ get; init; }}";
+      return IsArray 
+          ? $"public {requiredmod}List<{ElementTypeName}>{opt} {Name} {{ get; init; }}" 
+          : IsObj 
+              ? $"public {requiredmod}{SettingsName}{opt} {Name} {{ get; init; }}" 
+              : $"public {requiredmod}{Type}{opt} {Name} {{ get; init; }}";
     } }
     
     public string DtoPropertyDefenition => IsObj 
@@ -131,9 +132,10 @@ public record {{ it.ClassName }} {
     }}
     
     public string ToBasePropertyPair { get {
-      if (IsArray) { return Required ? $"{Name} = {Name}?.Select(dto => dto.ToBase()).ToList() ?? throw new ArgumentNullException(nameof({Name}))," : $"{Name} = {Name}?.Select(dto => dto.ToBase()).ToList() ?? new List<{ElementTypeName}>(),"; }
-      if (IsObj) { return Required ? $"{Name} = {Name}?.ToBase() ?? throw new ArgumentNullException(nameof({Name}))," : $"      {Name} = {Name}?.ToBase() ?? new(),"; }
-      if (Type == "string") { return Required ? $"{Name} = String.IsNullOrWhiteSpace({Name}) ? throw new ArgumentNullException(nameof({Name})) : {Name}.Trim()," : $"      {Name} = {Name}?.Trim(),"; }
+      if (IsArray) return $"{Name} = {Name}?.Select(dto => dto.ToBase()).ToList() ?? new List<{ElementTypeName}>(),";
+      if (IsObj) return Required ? $"{Name} = {Name}?.ToBase() ?? throw new ArgumentNullException(nameof({Name}))," : $"      {Name} = {Name}?.ToBase() ?? new(),";
+      if (Type == "string") return Required ? $"{Name} = String.IsNullOrWhiteSpace({Name}) ? throw new ArgumentNullException(nameof({Name})) : {Name}.Trim()," : $"      {Name} = {Name}?.Trim(),";
+      
       return $"{Name} = {Name} ?? {GetDefaultValue()},";
     } }
     

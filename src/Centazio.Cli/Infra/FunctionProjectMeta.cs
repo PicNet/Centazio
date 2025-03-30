@@ -8,30 +8,33 @@ namespace Centazio.Cli.Infra;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-// todo: all below should read from function settings, then from azure settings, finally from the name template
 public class AzureFunctionProjectMeta(Assembly assembly, CentazioSettings settings, ITemplater templater) :  AbstractFunctionProjectMeta(assembly, settings) {
+  
   public override string CloudName => ECloudEnv.Azure.ToString();
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
   
-  public string GetFunctionAppName() {
-    return templater.ParseFromContent(settings.AzureSettings.FunctionAppNameTemplate, this);
-  }
-
-  public string GetAppServicePlanName() {
-    return settings.AzureSettings.AppServicePlan ??
-        templater.ParseFromContent(settings.AzureSettings.AppServicePlanNameTemplate, this);
-  }
+  private readonly AzureSettings azsett = settings.AzureSettings;
+  private readonly AzFunctionsSettings? funcsett = settings.AzureSettings.AzFunctions.SingleOrDefault(f => f.Assembly == assembly.GetName().Name);
   
-  public AppServiceSkuDescription GetAppServiceSku() {
-    return  new AppServiceSkuDescription { 
-      Name = settings.AzureSettings.AppServiceSkuName, 
-      Tier = settings.AzureSettings.AppServiceSkuTier 
-    };
-  }
+  public string GetFunctionAppName() => 
+      funcsett?.FunctionAppName ?? 
+      azsett.FunctionAppName ??
+      templater.ParseFromContent(azsett.FunctionAppNameTemplate, this);
 
-  public string GetWebSiteName() {
-    return templater.ParseFromContent(settings.AzureSettings.WebSiteNameTemplate, this);
-  }
+  public string GetAppServicePlanName() =>
+      funcsett?.AppServicePlanName ?? 
+      azsett.AppServicePlanName ??
+      templater.ParseFromContent(azsett.AppServicePlanNameTemplate, this);
+
+  public AppServiceSkuDescription GetAppServiceSku() => new() { 
+    Name = funcsett?.AppServiceSkuName ?? azsett.AppServiceSkuName, 
+    Tier = funcsett?.AppServiceSkuTier ?? azsett.AppServiceSkuTier 
+  };
+
+  public string GetWebSiteName() => 
+      funcsett?.WebSiteName ?? 
+      azsett.WebSiteName ??
+      templater.ParseFromContent(azsett.WebSiteNameTemplate, this);
 
 }
 

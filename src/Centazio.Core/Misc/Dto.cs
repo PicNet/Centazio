@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Misc;
+﻿using System.Collections;
+
+namespace Centazio.Core.Misc;
 
 public interface IDto<out T> { T ToBase(); }
 public interface ICoreEntityDto<out T> : IDto<T> { string CoreId { get; } }
@@ -41,9 +43,22 @@ public static class DtoHelpers {
   
   private static object? GetDtoVal(object? origval) {
     if (origval is null) return origval;
-    if (origval.GetType().IsEnum) return origval.ToString();
+    var origtype = origval.GetType();
+    if (origtype.IsEnum) return origval.ToString();
     if (origval is ValidString vs) return vs.Value;
     if (HasDto(origval)) return ToDto(origval);
+    if (origtype.IsGenericType && origtype.GetGenericTypeDefinition() == typeof(List<>)) {
+      var elemtype = origtype.GetGenericArguments().First();
+      var dtoelem = GetDtoTypeFromTypeHierarchy(elemtype);
+      if (dtoelem is null) return origval; // non dto lists, like List<string>
+      
+      var listtype = typeof(List<>).MakeGenericType(dtoelem);
+      var dtolst = (IList) (Activator.CreateInstance(listtype) ?? throw new Exception());
+      foreach (var o in (IList)origval) {
+        dtolst.Add(GetDtoVal(o));
+      }
+      return dtolst;
+    } 
     return origval;
   }
 

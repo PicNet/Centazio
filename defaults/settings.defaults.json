@@ -32,5 +32,13 @@
   },
   "CtlRepository": {
     "SystemStateTableName": "system_state",
-    "ObjectStateTableName": "object_state"}
+    "ObjectStateTableName": "object_state"
+  },
+  "AzureSettings": {
+    "FunctionAppNameTemplate": "{{ it.DashedProjectName }}",
+    "AppServicePlanNameTemplate": "{{ it.DashedProjectName }}-Plan",
+    "WebSiteNameTemplate": "{{ it.DashedProjectName }}",
+    "AppServiceSkuName": "Y1",
+    "AppServiceSkuTier": "Dynamic"
+  }
 }
