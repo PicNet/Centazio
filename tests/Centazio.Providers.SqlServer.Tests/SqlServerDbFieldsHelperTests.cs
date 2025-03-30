@@ -17,12 +17,12 @@ public class SqlServerDbFieldsHelperTests {
   [Test] public void Test_GetSqlServerCreateTableScript() {
     var dbf = new SqlServerDbFieldsHelper();
     var sql = dbf.GenerateCreateTableScript("schemaname", nameof(SystemState), dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]);
-    var exp = @"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'schemaname')
-  EXEC('CREATE SCHEMA [schemaname] AUTHORIZATION [dbo]');
+    var exp = @"if not exists (select * from sys.schemas where name = N'schemaname')
+  exec('create schema [schemaname] authorization [dbo]');
 
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='SystemState' AND xtype='U')
-BEGIN
-  CREATE TABLE [schemaname].[SystemState] (
+if not exists (select * from sysobjects where name='SystemState' and xtype='U')
+begin
+  create table [schemaname].[SystemState] (
     [System] nvarchar(32) not null,
     [Stage] nvarchar(32) not null,
     [DateCreated] datetime2 not null,
@@ -31,9 +31,9 @@ BEGIN
     [Status] nvarchar(128) not null,    
     [LastStarted] datetime2 null,
     [LastCompleted] datetime2 null,
-    PRIMARY KEY (System, Stage)
+    primary key (System, Stage)
   )
-END";
+end";
     Assert.That(WS(sql), Is.EqualTo(WS(exp)));
   }
   

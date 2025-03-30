@@ -4,7 +4,6 @@ using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.PostgresSql.Stage;
 

@@ -3,33 +3,32 @@ using Centazio.Core.Misc;
 
 namespace Centazio.Providers.SqlServer;
 
-// todo: stop using capitals for all sql helpers
 public class SqlServerDbFieldsHelper : AbstractDbFieldsHelper {
   
   public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null) {
     var sql = new StringBuilder();
     if (!String.IsNullOrWhiteSpace(schema)) {
       sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'{schema}')
-  EXEC('CREATE SCHEMA [{schema}] AUTHORIZATION [dbo]');");
+if not exists (select * from sys.schemas where name = N'{schema}')
+  exec('create schema [{schema}] authorization [dbo]');");
     }
     sql.AppendLine($@"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='{table}' AND xtype='U')
-BEGIN
-  CREATE TABLE {TableName(schema, table)} (
+if not exists (select * from sysobjects where name='{table}' and xtype='U')
+begin
+  create table {TableName(schema, table)} (
     {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
-    PRIMARY KEY ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()}
+    primary key ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()}
   )
-END
+end
 ");
     string GetUniquesSql() {
       if (uniques is null || !uniques.Any()) return String.Empty;
-      return ",\n" + String.Join(',', uniques.Select(u => $"UNIQUE({String.Join(',', u.Select(ColumnName))})"));
+      return ",\n" + String.Join(',', uniques.Select(u => $"unique({String.Join(',', u.Select(ColumnName))})"));
     }
     
     string GetFksSql() {
       if (fks is null || !fks.Any()) return String.Empty;
-      return ",\n" + String.Join(',', fks.Select(fk => $"FOREIGN KEY({ String.Join(',', fk.Columns.Select(ColumnName))  }) REFERENCES {TableName(fk.PkTableSchema, fk.PkTable)}({ String.Join(',', fk.PkColumns.Select(ColumnName)) })"));
+      return ",\n" + String.Join(',', fks.Select(fk => $"foreign key({ String.Join(',', fk.Columns.Select(ColumnName))  }) references {TableName(fk.PkTableSchema, fk.PkTable)}({ String.Join(',', fk.PkColumns.Select(ColumnName)) })"));
     }
     return sql.ToString().Trim();
   }
@@ -49,13 +48,13 @@ END
     return $"{ColumnName(f.Name)} {typestr} {nullstr}";
   }
 
-  public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";
+  public override string GenerateDropTableScript(string schema, string table) =>  $"drop table if exists {TableName(schema, table)}";
   public override string ColumnName(string column) => $"[{column}]";
   public override string TableName(string schema, string table) => $"[{schema}].[{table}]";
 
   public override string GenerateIndexScript(string schema, string table, params List<string> columns) {
     var name = $"ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))}";
-    return $"DROP INDEX IF EXISTS {ColumnName(name)} ON {TableName(schema, table)};\nCREATE INDEX {name} ON {TableName(schema, table)} ({String.Join(", ", columns.Select(ColumnName))});";
+    return $"drop index if exists {ColumnName(name)} on {TableName(schema, table)};\ncreate index {name} on {TableName(schema, table)} ({String.Join(", ", columns.Select(ColumnName))});";
   }
 
 }

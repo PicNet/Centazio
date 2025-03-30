@@ -5,25 +5,25 @@ namespace Centazio.Providers.Sqlite;
 public class SqliteDbFieldsHelper : AbstractDbFieldsHelper {
 
   public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null) {
-    return $@"CREATE TABLE IF NOT EXISTS {TableName(schema, table)} (
+    return $@"create table if not exists {TableName(schema, table)} (
   {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
-  PRIMARY KEY ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()})";
+  primary key ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()})";
     
     string GetUniquesSql() {
       if (uniques is null || !uniques.Any()) return String.Empty;
-      return String.Join(',', uniques.Select(u => $"UNIQUE({String.Join(',', u.Select(ColumnName))})"));
+      return String.Join(',', uniques.Select(u => $"unique({String.Join(',', u.Select(ColumnName))})"));
     }
     
     string GetFksSql() {
       if (fks is null || !fks.Any()) return String.Empty;
-      return String.Join(',', fks.Select(fk => $"FOREIGN KEY({ String.Join(',', fk.Columns.Select(ColumnName))  }) REFERENCES {TableName(fk.PkTableSchema, fk.PkTable)}({ String.Join(',', fk.PkColumns.Select(ColumnName)) })"));
+      return String.Join(',', fks.Select(fk => $"foreign key({ String.Join(',', fk.Columns.Select(ColumnName))  }) references {TableName(fk.PkTableSchema, fk.PkTable)}({ String.Join(',', fk.PkColumns.Select(ColumnName)) })"));
     }
   }
 
   public override string GenerateIndexScript(string schema, string table, params List<string> columns) => 
-      $"CREATE INDEX IF NOT EXISTS ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))} ON {TableName(schema, table)} ({String.Join(", ", columns)});";
+      $"create index if not exists ix_{table}_{String.Join("_", columns.Select(c => c.ToLower()))} on {TableName(schema, table)} ({String.Join(", ", columns)});";
 
-  public override string GenerateDropTableScript(string schema, string table) =>  $"DROP TABLE IF EXISTS {TableName(schema, table)}";
+  public override string GenerateDropTableScript(string schema, string table) =>  $"drop table if exists {TableName(schema, table)}";
   public override string ColumnName(string column) => $"[{column}]";
   public override string TableName(string schema, string table) => $"[{table}]";
 

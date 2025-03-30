@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Stage;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests;
 

@@ -17,9 +17,9 @@ public class PostgresSqlDbFieldsHelperTests {
   [Test] public void Test_GenerateCreateTableScript() {
     var dbf = new PostgresSqlDbFieldsHelper();
     var sql = dbf.GenerateCreateTableScript("schemaname", nameof(SystemState), dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]);
-    var exp = $@"CREATE SCHEMA IF NOT EXISTS schemaname;
+    var exp = $@"create schema if not exists schemaname;
 
-CREATE TABLE IF NOT EXISTS schemaname.SystemState (
+create table if not exists schemaname.SystemState (
   ""System"" varchar(32) not null,
   ""Stage"" varchar(32) not null,
   ""DateCreated"" timestamp not null,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS schemaname.SystemState (
   ""Status"" varchar(128) not null,  
   ""LastStarted"" timestamp null,
   ""LastCompleted"" timestamp null,
-  PRIMARY KEY (""System"", ""Stage"")
+  primary key (""System"", ""Stage"")
 );
 ";
     Assert.That(WS(sql), Is.EqualTo(WS(exp)));

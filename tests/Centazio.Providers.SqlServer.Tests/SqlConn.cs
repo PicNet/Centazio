@@ -39,7 +39,7 @@ public class SqlConn {
       var iswin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
       var builder = iswin ? new MsSqlBuilder() : new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted("/opt/mssql-tools18/bin/sqlcmd", "-C", "-Q", "SELECT 1;"));
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted("/opt/mssql-tools18/bin/sqlcmd", "-C", "-Q", "select 1;"));
       
       container = builder.Build();
       await container.StartAsync();

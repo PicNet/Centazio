@@ -4,7 +4,6 @@ using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 using Centazio.Providers.EF;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Ctl;
 

@@ -17,7 +17,7 @@ public class SqliteDbFieldsHelperTests {
   [Test] public void Test_GenerateCreateTableScript() {
     var dbf = new SqliteDbFieldsHelper();
     var sql = dbf.GenerateCreateTableScript("schemaname", nameof(SystemState), dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]);
-    var exp = $@"CREATE TABLE IF NOT EXISTS [SystemState] (
+    var exp = $@"create table if not exists [SystemState] (
   [System] nvarchar(32) not null,
   [Stage] nvarchar(32) not null,
   [DateCreated] datetime not null,
@@ -26,7 +26,7 @@ public class SqliteDbFieldsHelperTests {
   [Status] nvarchar(128) not null,  
   [LastStarted] datetime null,
   [LastCompleted] datetime null,
-  PRIMARY KEY (System, Stage)
+  primary key (System, Stage)
 )
 ";
     Assert.That(WS(sql), Is.EqualTo(WS(exp)));
