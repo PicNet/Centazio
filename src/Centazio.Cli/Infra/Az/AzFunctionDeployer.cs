@@ -36,16 +36,16 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   }
 
   private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, AzureFunctionProjectMeta project) {
-    try { return (await rg.GetWebSiteAsync(project.DashedProjectName)).Value; }
+    try { return (await rg.GetWebSiteAsync(project.GetFunctionAppName(settings))).Value; }
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
   private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzureFunctionProjectMeta project, string location) {
-    var plandata = new AppServicePlanData(location) { Sku = new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" }, Kind = "functionapp" };
-    var name = settings.AzureSettings.AppServicePlan ?? $"{project.DashedProjectName}-Plan";
+    var plandata = new AppServicePlanData(location) { Kind = "functionapp" , Sku = project.GetAppServiceSku(settings) };
+    var name = project.GetAppServicePlanName(settings);
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, name, plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
-    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.DashedProjectName, appconf);
+    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.GetWebSiteName(settings), appconf);
     return op.Value;
   }
 
@@ -53,8 +53,8 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     Kind = "functionapp",
     SiteConfig = new SiteConfigProperties {
       NetFrameworkVersion = "v9.0",
-      Use32BitWorkerProcess = false,
       AppSettings = [
+        // todo: confirm if all these are required
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
         new AppServiceNameValuePair { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },

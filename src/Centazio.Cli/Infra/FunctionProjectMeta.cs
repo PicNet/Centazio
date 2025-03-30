@@ -1,14 +1,35 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
+using Azure.ResourceManager.AppService.Models;
 using Centazio.Core.Misc;
+using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
+// todo: pass settings in the ctor to avoid passing in each Name function
 public class AzureFunctionProjectMeta(Assembly assembly, string generatedfolder) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
   public override string CloudName => ECloudEnv.Azure.ToString();
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
+  
+  public string GetFunctionAppName(CentazioSettings settings) {
+    return DashedProjectName;
+  }
+  
+  public string GetAppServicePlanName(CentazioSettings settings) {
+    return settings.AzureSettings.AppServicePlan ?? $"{DashedProjectName}-Plan";
+  }
+  
+  public AppServiceSkuDescription GetAppServiceSku(CentazioSettings settings) {
+    // todo: read from function settings if not defaults
+    return  new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" };
+  }
+
+  public string GetWebSiteName(CentazioSettings settings) {
+    return DashedProjectName;
+  }
+
 }
 
 public class AwsFunctionProjectMeta(Assembly assembly, string generatedfolder, string function) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
