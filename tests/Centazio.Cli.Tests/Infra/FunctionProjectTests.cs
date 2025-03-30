@@ -6,8 +6,8 @@ namespace Centazio.Cli.Tests.Infra;
 public class FunctionProjectTests {
 
   [Test] public void Test_propery_values_are_as_expected() {
-    var genfolder = TestingFactories.Settings().Defaults.GeneratedCodeFolder;
-    var proj = new AzureFunctionProjectMeta(GetType().Assembly, genfolder);
+    var settings = TestingFactories.Settings();
+    var proj = new AzureFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings, TestingFactories.Secrets()));
     
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));
     Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
@@ -17,7 +17,7 @@ public class FunctionProjectTests {
     Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "bin", "Release", "net9.0", "publish")));
     
 
-    string GenRel(params List<string> steps) => FsUtils.GetSolutionFilePath(steps.Prepend(genfolder).ToList()); 
+    string GenRel(params List<string> steps) => FsUtils.GetSolutionFilePath(steps.Prepend(settings.Defaults.GeneratedCodeFolder).ToList()); 
   }
 
 }

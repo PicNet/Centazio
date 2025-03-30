@@ -289,22 +289,42 @@ public record AzureSettings {
   public required string Region { get; init; }
   public required string ResourceGroup { get; init; }
   public string? AppServicePlan { get; init; }
+  public required string FunctionAppNameTemplate { get; init; }
+  public required string AppServicePlanNameTemplate { get; init; }
+  public required string WebSiteNameTemplate { get; init; }
+  public required string AppServiceSkuName { get; init; }
+  public required string AppServiceSkuTier { get; init; }
 
   public Dto ToDto() => new() { 
     Region = Region,
     ResourceGroup = ResourceGroup,
     AppServicePlan = AppServicePlan,
+    FunctionAppNameTemplate = FunctionAppNameTemplate,
+    AppServicePlanNameTemplate = AppServicePlanNameTemplate,
+    WebSiteNameTemplate = WebSiteNameTemplate,
+    AppServiceSkuName = AppServiceSkuName,
+    AppServiceSkuTier = AppServiceSkuTier,
   };
 
   public record Dto : IDto<AzureSettings> { 
     public string? Region { get; init; }
     public string? ResourceGroup { get; init; }
     public string? AppServicePlan { get; init; }
+    public string? FunctionAppNameTemplate { get; init; }
+    public string? AppServicePlanNameTemplate { get; init; }
+    public string? WebSiteNameTemplate { get; init; }
+    public string? AppServiceSkuName { get; init; }
+    public string? AppServiceSkuTier { get; init; }
 
     public AzureSettings ToBase() => new() { 
       Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
       ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
             AppServicePlan = AppServicePlan?.Trim(),
+      FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
+      AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
+      WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
+      AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
+      AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
     };
   }
 }

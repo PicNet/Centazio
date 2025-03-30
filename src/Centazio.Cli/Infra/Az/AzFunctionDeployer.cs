@@ -36,16 +36,16 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
   }
 
   private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, AzureFunctionProjectMeta project) {
-    try { return (await rg.GetWebSiteAsync(project.GetFunctionAppName(settings))).Value; }
+    try { return (await rg.GetWebSiteAsync(project.GetFunctionAppName())).Value; }
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
   private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzureFunctionProjectMeta project, string location) {
-    var plandata = new AppServicePlanData(location) { Kind = "functionapp" , Sku = project.GetAppServiceSku(settings) };
-    var name = project.GetAppServicePlanName(settings);
+    var plandata = new AppServicePlanData(location) { Kind = "functionapp" , Sku = project.GetAppServiceSku() };
+    var name = project.GetAppServicePlanName();
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, name, plandata)).Value;
     var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
-    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.GetWebSiteName(settings), appconf);
+    var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.GetWebSiteName(), appconf);
     return op.Value;
   }
 

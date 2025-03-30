@@ -8,31 +8,34 @@ namespace Centazio.Cli.Infra;
 
 public enum ECloudEnv { Azure = 1, Aws = 2 }
 
-// todo: pass settings in the ctor to avoid passing in each Name function
-public class AzureFunctionProjectMeta(Assembly assembly, string generatedfolder) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
+// todo: all below should read from function settings, then from azure settings, finally from the name template
+public class AzureFunctionProjectMeta(Assembly assembly, CentazioSettings settings, ITemplater templater) :  AbstractFunctionProjectMeta(assembly, settings) {
   public override string CloudName => ECloudEnv.Azure.ToString();
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
   
-  public string GetFunctionAppName(CentazioSettings settings) {
-    return DashedProjectName;
-  }
-  
-  public string GetAppServicePlanName(CentazioSettings settings) {
-    return settings.AzureSettings.AppServicePlan ?? $"{DashedProjectName}-Plan";
-  }
-  
-  public AppServiceSkuDescription GetAppServiceSku(CentazioSettings settings) {
-    // todo: read from function settings if not defaults
-    return  new AppServiceSkuDescription { Name = "Y1", Tier = "Dynamic" };
+  public string GetFunctionAppName() {
+    return templater.ParseFromContent(settings.AzureSettings.FunctionAppNameTemplate, this);
   }
 
-  public string GetWebSiteName(CentazioSettings settings) {
-    return DashedProjectName;
+  public string GetAppServicePlanName() {
+    return settings.AzureSettings.AppServicePlan ??
+        templater.ParseFromContent(settings.AzureSettings.AppServicePlanNameTemplate, this);
+  }
+  
+  public AppServiceSkuDescription GetAppServiceSku() {
+    return  new AppServiceSkuDescription { 
+      Name = settings.AzureSettings.AppServiceSkuName, 
+      Tier = settings.AzureSettings.AppServiceSkuTier 
+    };
+  }
+
+  public string GetWebSiteName() {
+    return templater.ParseFromContent(settings.AzureSettings.WebSiteNameTemplate, this);
   }
 
 }
 
-public class AwsFunctionProjectMeta(Assembly assembly, string generatedfolder, string function) :  AbstractFunctionProjectMeta(assembly, generatedfolder) {
+public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings, string function) :  AbstractFunctionProjectMeta(assembly, settings) {
   
   public readonly string AwsFunctionName = function;
   
@@ -44,14 +47,15 @@ public class AwsFunctionProjectMeta(Assembly assembly, string generatedfolder, s
 
 }
 
-public abstract class AbstractFunctionProjectMeta(Assembly assembly, string generatedfolder) {
+public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSettings settings) {
   
+  [JsonIgnore] protected readonly CentazioSettings settings = settings;
   [JsonIgnore] public Assembly Assembly => assembly;
   
   public abstract string ProjectName { get; }
   public abstract string CloudName { get; }
   
-  public string SolutionDirPath => Path.Combine(FsUtils.GetSolutionFilePath(), generatedfolder, ProjectName);
+  public string SolutionDirPath => Path.Combine(FsUtils.GetSolutionFilePath(), settings.Defaults.GeneratedCodeFolder, ProjectName);
   public string ProjectDirPath => SolutionDirPath;
   public string CsprojFile => $"{ProjectName}.csproj";
   public string CsprojPath => Path.Combine(ProjectDirPath, $"{ProjectName}.csproj");

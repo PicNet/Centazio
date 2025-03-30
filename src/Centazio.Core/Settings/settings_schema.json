@@ -31,6 +31,9 @@
     }
   },
   "SecretsFolders": [{ "type": "string", "required": true }],
+  // todo: add
+  "Functions": [{ "type": "CentazioFunctionSettings", "required": false }],
+  
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },
     "ConnectionString": { "type": "string", "required": true },
@@ -58,7 +61,13 @@
   "Azure": {
     "Region": { "type": "string", "required": true },
     "ResourceGroup": { "type": "string", "required": true },
-    "AppServicePlan": { "type": "string", "required": false }
+    "AppServicePlan": { "type": "string", "required": false },
+    
+    "FunctionAppNameTemplate": { "type": "string", "required": true },
+    "AppServicePlanNameTemplate": { "type": "string", "required": true },
+    "WebSiteNameTemplate": { "type": "string", "required": true },
+    "AppServiceSkuName": { "type": "string", "required": true },
+    "AppServiceSkuTier": { "type": "string", "required": true }
   },
   "Aws": {
     "Region": { "type": "string", "required": true },
