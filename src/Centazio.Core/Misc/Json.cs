@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Centazio.Core.Misc;
 
@@ -91,11 +92,15 @@ public static class Json {
         a.Select(Serialize).OrderBy(s => s).ToList(), 
         b.Select(Serialize).OrderBy(s => s).ToList(), aname, bname);
   }
+  
   public static bool ValidateJsonEqual(object? actual, object? expected, string aname="Actual", string bname="Expected") {
     var (actualjson, expjson) = (JsonSerializer.Serialize(actual, DEFAULT_OPTS), JsonSerializer.Serialize(expected, DEFAULT_OPTS));
     if (actualjson == expjson) return true;
     throw new Exception($"Expected json representations to be equivalent:\n{aname}: {actualjson}\n{bname}: {expjson}");
   }
+
+  public static string ReadFile(string file) => Regex.Replace(File.ReadAllText(file), "// .*", String.Empty);
+  public static Stream ReadFileAsStream(string file) => new MemoryStream(Encoding.UTF8.GetBytes(ReadFile(file)));
 
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
     var dtoprops = dtot.GetProperties();

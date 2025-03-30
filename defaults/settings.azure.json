@@ -5,7 +5,7 @@
     "WriteFunctionPollExpression": "0 */3 * * * *",
     "OtherFunctionPollExpression": "0 */5 * * * *"
   },
-  "Azure": {
+  "AzureSettings": {
     "FunctionAppNameTemplate": "{{ it.DashedProjectName }}",
     "AppServicePlanNameTemplate": "{{ it.DashedProjectName }}-Plan",
     "WebSiteNameTemplate": "{{ it.DashedProjectName }}",
