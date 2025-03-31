@@ -64,8 +64,8 @@ public static class FsUtils {
     return Path.Combine(steps.Prepend(Path.Combine(GetTemplatesRootDir(), "defaults", "templates")).ToArray());
     
     string GetTemplatesRootDir() {
-      if (!String.IsNullOrEmpty(TestingRootDir)) return TestingRootDir;
-      if (Env.IsCentazioDevDir()) return GetSolutionRootDirectory();
+      if (Env.IsCentazioDevDir() || Env.IsUnitTest()) 
+        return String.IsNullOrEmpty(TestingRootDir) ? GetSolutionRootDirectory() : TestingRootDir;
       
       var cliass = Assembly.GetExecutingAssembly(); 
       if (cliass.GetName().Name != "Centazio.Cli") throw new Exception("expected GetTemplatesPath to be called from Centazio.Cli context");
