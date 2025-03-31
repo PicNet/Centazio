@@ -44,8 +44,9 @@
     to the `LogInitialiser.GetConsoleConfig` initialiser
 
 ## NuGet
-- Create: `rm packages/*; dotnet pack -v detailed -c Release -o packages`
-- Pubish: `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
+- Create: `rm packages/*; ./src/bump.sh; dotnet pack -v detailed -c Release -o packages`
+- Publish: `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
+- Note: Publishing can take up to 15 minutes to get the new version
 
 ## Centazio Cli
 - To work with a local version of the Centazio.Cli NuGet tool use:

@@ -4,6 +4,7 @@ using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Commands.Dev;
 using Centazio.Cli.Commands.Gen.Centazio;
 using Centazio.Cli.Commands.Host;
+using Centazio.Core.Misc;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -36,7 +37,7 @@ public class CommandsTree {
   public CommandsTree(IServiceProvider prov) {
     Provider = prov;
     
-    RootNode = new("centazio", [
+    var children = new List<Node> {
       ///////////////////////////////////////////////
       // AWS
       ///////////////////////////////////////////////
@@ -77,15 +78,18 @@ public class CommandsTree {
       new BranchNode("host", [
         CreateCommandNode<RunHostCommand>("run"),
       ]),
-      new BranchNode("dev", [
+      new BranchNode("gen", [
+        CreateCommandNode<GenerateSlnCommand>("sln"),
+        CreateCommandNode<GenerateFunctionCommand>("func")
+      ]),
+    };
+    if (Env.IsCentazioDevDir()) {
+      children.Add(new BranchNode("dev", [
         CreateCommandNode<UiTestsCommand>("ui-test"),
         CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")
-      ]),
-      new BranchNode("gen", [
-        CreateCommandNode<GenerateSlnCommand>("sln")
-      ]),
-    ],
-    "exit");
+      ]));
+    }
+    RootNode = new("centazio", children, "exit");
   }
 
   public void Initialise(IConfigurator cfg) {

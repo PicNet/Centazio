@@ -44,7 +44,7 @@ public class CommandRunner : ICommandRunner {
     
     var cmdname = new FileInfo(command).Name.Split('.').First();
     if (!quiet) Log.Information($"running[{cmdname}] args[{args}] cwd[{cwd}]");
-    cwd ??= FsUtils.GetSolutionFilePath();
+    cwd ??= FsUtils.GetCliDir();
     
     var output = new StringBuilder();
     var error = new StringBuilder();
