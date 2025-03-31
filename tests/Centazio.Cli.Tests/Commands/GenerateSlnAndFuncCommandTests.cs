@@ -28,6 +28,7 @@ public class GenerateSlnAndFuncCommandTests {
 
   [TearDown] public void TearDown() {
     FsUtils.TestingRootDir = string.Empty;
+    Environment.CurrentDirectory = properroot;
   }
 
   [Test] public async Task Test_generate_solution() {
