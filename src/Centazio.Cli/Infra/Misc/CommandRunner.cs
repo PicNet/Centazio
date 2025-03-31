@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Infra.Misc;
 

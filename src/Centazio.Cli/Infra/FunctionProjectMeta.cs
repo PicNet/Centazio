@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using Azure.ResourceManager.AppService.Models;
-using Centazio.Core.Misc;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra;

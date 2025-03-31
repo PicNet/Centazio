@@ -33,6 +33,8 @@ internal static class InspectUtils {
     var include = new List<string> { "src", "tests" };
     return Directory.GetFiles(dir ?? FsUtils.GetSolutionRootDirectory(), extension, SearchOption.AllDirectories)
         .Where(f => include.Any(d => f.Contains($"{Path.DirectorySeparatorChar}{d}{Path.DirectorySeparatorChar}")))
+        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
         .ToList();
   }
 

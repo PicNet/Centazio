@@ -4,7 +4,6 @@ using Centazio.Cli.Commands.Az;
 using Centazio.Cli.Commands.Dev;
 using Centazio.Cli.Commands.Gen.Centazio;
 using Centazio.Cli.Commands.Host;
-using Centazio.Core.Misc;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 

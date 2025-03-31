@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Misc;
-
-namespace Centazio.Cli.Infra.Gen;
+﻿namespace Centazio.Cli.Infra.Gen;
 
 public interface ICentazioCodeGenerator {
   Task<string> GenerateSolution(string slnname);

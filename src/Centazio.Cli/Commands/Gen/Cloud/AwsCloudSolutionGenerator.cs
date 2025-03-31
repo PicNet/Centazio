@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Misc;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 

@@ -1,5 +1,4 @@
 ﻿using System.IO.Compression;
-using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Infra.Misc;
 
