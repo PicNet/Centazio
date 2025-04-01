@@ -115,7 +115,7 @@ public record {{ it.ClassName }} {
       var requiredmod = Required ? "required " : string.Empty;
       var opt = Required ? String.Empty : "?";
       return IsArray 
-          ? $"public {requiredmod}List<{ElementTypeName}>{opt} {Name} {{ get; init; }}" 
+          ? $"public {requiredmod}List<{ElementTypeName}> {Name} {{ get; init; }}" 
           : IsObj 
               ? $"public {requiredmod}{SettingsName}{opt} {Name} {{ get; init; }}" 
               : $"public {requiredmod}{Type}{opt} {Name} {{ get; init; }}";
@@ -126,7 +126,7 @@ public record {{ it.ClassName }} {
         : $"public {Type}? {Name} {{ get; init; }}";
 
     public string ToDtoPropertyPair { get {
-      if (IsArray) { return $"{Name} = {Name}?.Select(item => item.ToDto()).ToList(),"; }
+      if (IsArray) { return $"{Name} = {Name}.Select(item => item.ToDto()).ToList(),"; }
       if (IsObj) return $"{Name} = {Name}.ToDto(),";
       return $"{Name} = {Name},";
     }}

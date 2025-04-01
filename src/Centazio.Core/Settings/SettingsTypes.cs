@@ -354,7 +354,7 @@ public record AzureSettings {
     FunctionAppNameTemplate = FunctionAppNameTemplate,
     AppServicePlanNameTemplate = AppServicePlanNameTemplate,
     WebSiteNameTemplate = WebSiteNameTemplate,
-    AzFunctions = AzFunctions?.Select(item => item.ToDto()).ToList(),
+    AzFunctions = AzFunctions.Select(item => item.ToDto()).ToList(),
   };
 
   public record Dto : IDto<AzureSettings> { 

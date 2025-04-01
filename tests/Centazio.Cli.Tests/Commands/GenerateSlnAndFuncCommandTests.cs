@@ -20,14 +20,14 @@ public class GenerateSlnAndFuncCommandTests {
   
 
   [SetUp] public void SetUp() {
-    FsUtils.TestingRootDir = properroot;
+    FsUtils.TestingCliRootDir = properroot;
     Environment.CurrentDirectory = testdir;
     
-    FsUtils.EmptyDirectory(testdir);
+    if (Directory.Exists(sln)) Directory.Delete(sln, true);
   }
 
   [TearDown] public void TearDown() {
-    FsUtils.TestingRootDir = string.Empty;
+    FsUtils.TestingCliRootDir = string.Empty;
     Environment.CurrentDirectory = properroot;
   }
 

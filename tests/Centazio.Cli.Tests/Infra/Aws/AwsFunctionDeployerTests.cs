@@ -17,7 +17,8 @@ public class AwsFunctionDeployerTests {
   private readonly AwsFunctionProjectMeta project = MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
   
   [Test] public async Task Test_Full_Pipeline_Deployment_to_Aws() {
-    var appname = project.DashedProjectName;
+    // todo: implement aws
+    // var appname = project.DashedProjectName;
     
     // AzCmd.DeleteFunctionApp(appname);
     // var before = AzCmd.ListFunctionApps();

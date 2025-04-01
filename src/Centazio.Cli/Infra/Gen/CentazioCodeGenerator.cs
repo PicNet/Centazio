@@ -69,7 +69,7 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
       var contents = templater.ParseFromPath(Path.Combine(from, fromfile), new {
         SharedProjectNamespace = $"{sln}.Shared", 
         Namespace = $"{sln}.{settings.SystemName}",
-        SystemName = settings.SystemName
+        settings.SystemName
       }); 
       await File.WriteAllTextAsync(Path.Combine(todir, tofile), contents);
     }).Synchronous();

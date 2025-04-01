@@ -24,8 +24,8 @@ public static class FsUtils {
   public static string GetSolutionFilePath(params List<string> steps) => 
       Path.Combine(steps.ToList().Prepend(GetSolutionRootDirectory()).ToArray());
 
-  // todo: this TestingRootDir is ugly, remove
-  internal static string TestingRootDir = String.Empty;
+  // todo: this TestingCliRootDir is ugly, remove
+  internal static string TestingCliRootDir = String.Empty;
 
   public static string GetSlnOrCurrDir() => 
       Env.IsUnitTest() || Env.IsCentazioDevDir() 
@@ -36,7 +36,7 @@ public static class FsUtils {
     if (Env.IsCloudEnviornment()) throw new Exception($"{nameof(GetCliInstallDir)} not supported in cloud environments");
     return Path.Combine(steps.ToList().Prepend(GetCliRootDir()).ToArray());
     string GetCliRootDir() {
-      if (Env.IsCentazioDevDir() || Env.IsUnitTest()) return String.IsNullOrEmpty(TestingRootDir) ? GetSolutionRootDirectory() : TestingRootDir;
+      if (Env.IsCentazioDevDir() || Env.IsUnitTest()) return String.IsNullOrEmpty(TestingCliRootDir) ? GetSolutionRootDirectory() : TestingCliRootDir;
 
       var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
       if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliInstallDir)} to be called from Centazio.Cli context");
