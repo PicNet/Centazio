@@ -57,7 +57,8 @@ public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSet
   public abstract string ProjectName { get; }
   public abstract string CloudName { get; }
   
-  public string SolutionDirPath => FsUtils.GetCliDir(settings.Defaults.GeneratedCodeFolder, ProjectName);
+  // the root directory (solution dir) should always be relative to the cwd
+  public string SolutionDirPath => Path.Combine(Environment.CurrentDirectory, settings.Defaults.GeneratedCodeFolder, ProjectName);
   public string ProjectDirPath => SolutionDirPath;
   public string CsprojFile => $"{ProjectName}.csproj";
   public string CsprojPath => Path.Combine(ProjectDirPath, $"{ProjectName}.csproj");

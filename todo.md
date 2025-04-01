@@ -1,4 +1,7 @@
 # Todo
+- after running `centazio gen sln` using the menu, the app did not exit
+- running the cli should not require the settings.json or settings.env.json, it should be able to run just with the 
+  default settings.  Local settings.json should only be needed when working in functions, etc. i.e. in a solution.
 - aws/azure wrappers:
   - Azure:
     - fix Log.Logger, currently only injected ILogger<> works

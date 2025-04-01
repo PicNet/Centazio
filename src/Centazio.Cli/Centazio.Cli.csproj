@@ -37,7 +37,7 @@
         <Pack>true</Pack>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <BuildAction>Content</BuildAction>
-        <PackagePath>contentFiles\any\any\defaults\%(RecursiveDir)</PackagePath>
+        <PackagePath>content\defaults\%(RecursiveDir)</PackagePath>
       </Content>
       <None Remove="swirl.png"/>
       <Content Include="swirl.png">

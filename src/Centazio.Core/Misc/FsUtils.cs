@@ -1,5 +1,6 @@
 namespace Centazio.Core.Misc;
 
+// todo: clean up all these methods with correct names
 public static class FsUtils {
   
   private static string? rootdir;
@@ -19,15 +20,30 @@ public static class FsUtils {
     }
     return (rootdir = Impl(Environment.CurrentDirectory)) ?? throw new Exception($"failed to find the root directory by searching for [{file}]");
   }
-  
-  public static string GetCliDir(params List<string> steps) {
-    if (Env.IsCloudEnviornment()) throw new Exception("GetCliRootDir not supported in cloud environments");
-    var root = Env.IsCentazioDevDir() ? GetSolutionRootDirectory() : Environment.CurrentDirectory;
-    return Path.Combine(steps.ToList().Prepend(root).ToArray());
-  }
-  
+
   public static string GetSolutionFilePath(params List<string> steps) => 
       Path.Combine(steps.ToList().Prepend(GetSolutionRootDirectory()).ToArray());
+
+  // todo: this TestingRootDir is ugly, remove
+  internal static string TestingRootDir = String.Empty;
+
+  public static string GetSlnOrCurrDir() => 
+      Env.IsUnitTest() || Env.IsCentazioDevDir() 
+          ? GetSolutionRootDirectory() 
+          : Environment.CurrentDirectory;
+
+  public static string GetCliInstallDir(params List<string> steps) {
+    if (Env.IsCloudEnviornment()) throw new Exception($"{nameof(GetCliInstallDir)} not supported in cloud environments");
+    return Path.Combine(steps.ToList().Prepend(GetCliRootDir()).ToArray());
+    string GetCliRootDir() {
+      if (Env.IsCentazioDevDir() || Env.IsUnitTest()) return String.IsNullOrEmpty(TestingRootDir) ? GetSolutionRootDirectory() : TestingRootDir;
+
+      var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
+      if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliInstallDir)} to be called from Centazio.Cli context");
+      var clidir = Path.GetDirectoryName(exe.Location) ?? throw new Exception("Could not find a valid templates directory");
+      return Path.GetFullPath(Path.Combine(clidir, "..", "..", "..", "content"));
+    }
+  }
 
   public static string FindFirstValidDirectory(List<string> directories) => directories.FirstOrDefault(dir => {
       try { return Directory.Exists(dir); }
@@ -52,25 +68,7 @@ public static class FsUtils {
     Directory.GetFiles(dir).ForEach(File.Delete);
   }
   
-  internal static string TestingRootDir = String.Empty;
-  
-  /// <summary>
-  /// This method will work when running using the centazio 'dotnet tool' and when running within
-  ///     the Centazio development hierarchy
-  /// </summary>
-  public static string GetTemplatesPath(params List<string> steps) {
-    if (Env.IsCloudEnviornment()) throw new Exception($"GetTemplatesPath should not be called from a cloud environment");
-    
-    return Path.Combine(steps.Prepend(Path.Combine(GetTemplatesRootDir(), "defaults", "templates")).ToArray());
-    
-    string GetTemplatesRootDir() {
-      if (Env.IsCentazioDevDir() || Env.IsUnitTest()) 
-        return String.IsNullOrEmpty(TestingRootDir) ? GetSolutionRootDirectory() : TestingRootDir;
-      
-      var cliass = Assembly.GetExecutingAssembly(); 
-      if (cliass.GetName().Name != "Centazio.Cli") throw new Exception("expected GetTemplatesPath to be called from Centazio.Cli context");
-      return Path.GetDirectoryName(cliass.Location) 
-          ?? throw new Exception("Could not find a valid templates directory"); 
-    }
-  }
+  public static string GetTemplatesPath(params List<string> steps) => 
+      Path.Combine(steps.Prepend(Path.Combine(GetCliInstallDir(), "defaults", "templates")).ToArray());
+
 }

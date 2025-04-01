@@ -15,6 +15,8 @@ return new CliBootstrapper().Initialise().Start(args);
 internal class CliBootstrapper {
 
   public Cli Initialise() { 
+    Environment.SetEnvironmentVariable("IS_CLI", "true");
+    
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig().CreateLogger();
     var services = InitialiseDi();
     var cli = services.GetRequiredService<Cli>();

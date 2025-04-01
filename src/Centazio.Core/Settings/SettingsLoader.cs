@@ -8,26 +8,33 @@ public interface ISettingsLoader {
   T Load<T>(params List<string> environments);
 }
 
-public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_PREFIX, string? dir = null) : ISettingsLoader {
+public record PotentialSettingFile(string FileName, bool Required, bool IsDefaultsFile);
 
+public record SettingsLoaderConfig(string FileNamePrefix = SettingsLoaderConfig.DEFAULT_FILE_NAME_PREFIX, string? RootDirectory = null, bool IgnoreDefaults = false) {
   private const string DEFAULT_FILE_NAME_PREFIX = "settings";
   
+  public readonly string RootDirectory = RootDirectory ?? FsUtils.GetSlnOrCurrDir();
+}
+
+public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader {
+  private readonly SettingsLoaderConfig conf = conf ?? new SettingsLoaderConfig();
+  
   public List<string> GetSettingsFilePathList(params List<string> environments) {
-    var potentials = new List<(string, bool)> { 
-      ($"defaults/{fnprefix}.defaults.json", false),
-      ($"defaults/{fnprefix}.<environment>.json", false),
-      ($"{fnprefix}.json", true),
-      ($"{fnprefix}.<environment>.json", false),
+    var potentials = new List<PotentialSettingFile> {
+      new ($"{conf.FileNamePrefix}.defaults.json", true, true),
+      new ($"{conf.FileNamePrefix}.<environment>.json", false, true),
+      new ($"{conf.FileNamePrefix}.json", true, false),
+      new ($"{conf.FileNamePrefix}.<environment>.json", false, false),
     };
     
-    return potentials.SelectMany(p => {
-      var (file, required) = p;
-      var files = file.Contains("<environment>", StringComparison.Ordinal) ? 
-          environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => file.Replace("<environment>", env, StringComparison.Ordinal)) : 
-          [file];
+    return potentials.SelectMany(spec => {
+      if (spec.IsDefaultsFile && conf.IgnoreDefaults) return [];
+      var files = spec.FileName.Contains("<environment>", StringComparison.Ordinal) ? 
+          environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => spec.FileName.Replace("<environment>", env, StringComparison.Ordinal)) : 
+          [spec.FileName];
       return files.Select(f => {
-        var path = FsUtils.GetSolutionFilePath(dir is null ? [f] : [dir, f]);
-        return File.Exists(path) ? path : !required ? null : throw new Exception($"could not find required settings file [{path}]");
+        var path = Path.Combine(spec.IsDefaultsFile ? FsUtils.GetCliInstallDir("defaults") : conf.RootDirectory, f);
+        return File.Exists(path) ? path : !spec.Required ? null : throw new Exception($"could not find required settings file [{path}]");
       });
     }).OfType<string>().ToList();
   }
@@ -41,8 +48,8 @@ public class SettingsLoader(string fnprefix = SettingsLoader.DEFAULT_FILE_NAME_P
     
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
-    var conf = builder.Build(); 
-    conf.Bind(obj);
+    var settings = builder.Build(); 
+    settings.Bind(obj);
     return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
   }
 

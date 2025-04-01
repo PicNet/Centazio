@@ -49,20 +49,12 @@
 - Note: Publishing can take up to 15 minutes to get the new version
 
 ## Centazio Cli
-- To work with a local version of the Centazio.Cli NuGet tool use:
-- `dotnet tool install --prerelease --local --add-source ./nupkg ./packages/Centazio.Cli`
-- For rapid development you can use the following approach: 
-  - In the directory of the integration project add a reference to the Centazio.Cli project:
-  ```
-   <ItemGroup>
-    <ProjectReference Include="..\path\to\Centazio.Cli\Centazio.Cli.csproj" />
-  </ItemGroup>
-  ```
-  - Create a wrapper for the Centazio.Cli:
-  ```
-  // Program.cs
-  using Centazio.Cli;
-  
-  Program.Main(args);
-  ```
-  - Run with `dotnet run --project ./path/to/Wrapper -- arg1 arg2...`
+To work with a local version of the Centazio.Cli NuGet tool use:
+- `rm packages/*; src/bump.sh; dotnet pack -v detailed -c Release -o packages` -- note: bump IS required
+- `dotnet new tool-manifest`  -- required only once to set up local dotnet tools in test dir (not source dir) 
+- `dotnet tool install --prerelease --local --add-source ../centazio3/packages/ Centazio.Cli`
+- `dotnet centazio [args]` -- run centazio cli
+- `dotnet tool uninstall --local Centazio.Cli` -- uninstall
+
+For a more seamless local development copy `src/devcli.sh` into your testing directory and run this each time you want to
+rebuild the cli. Consider reverting all the minor version updates before commiting in `Directory.Build.props`.
