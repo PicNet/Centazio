@@ -8,7 +8,7 @@ public static class UiHelpers {
   public static void Log(string message, LogEventLevel level = LogEventLevel.Information) {
     var formatted = message.IndexOf("[/]", StringComparison.Ordinal) >= 0 
         ? message 
-        : $"[{GetColour()}]{message.Trim()}[/]";  
+        : $"[{GetColour()}]{message}[/]";  
     AnsiConsole.MarkupLine(formatted);
     
     string GetColour() => level switch {

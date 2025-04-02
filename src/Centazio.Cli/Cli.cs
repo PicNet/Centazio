@@ -11,7 +11,7 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
   public int Start(string[] args) {
     ShowSplash();
     
-    var app = new CommandApp<InteractiveCliMeneCommand>(services)
+    var app = new CommandApp<InteractiveCliMenuCommand>(services)
         .WithData(menu);
     app.Configure(cfg => {
 #if DEBUG

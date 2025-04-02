@@ -29,7 +29,9 @@ public class CommandNode<T>(string id, ICentazioCommand cmd) : AbstractCommandNo
 }
 
 public class CommandsTree {
-
+  
+  private static readonly string EXIT_LABEL = "exit";
+  
   internal BranchNode RootNode { get; }
   private IServiceProvider Provider { get; }
   
@@ -88,7 +90,7 @@ public class CommandsTree {
         CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")
       ]));
     }
-    RootNode = new("centazio", children, "exit");
+    RootNode = new("centazio", children, EXIT_LABEL);
   }
 
   public void Initialise(IConfigurator cfg) {

@@ -1,4 +1,5 @@
-﻿using Spectre.Console.Cli;
+﻿using Centazio.Cli.Infra.Ui;
+using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;
 
@@ -14,6 +15,7 @@ public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCom
   public override async Task<int> ExecuteAsync(CommandContext context, S settings) {
     (Interactive, CommandName) = (false, context.Name);
     await ExecuteImpl(settings);
+    UiHelpers.Log($"Centazio CLI command '{context.Name}' completed.");
     return 0;
   }
   

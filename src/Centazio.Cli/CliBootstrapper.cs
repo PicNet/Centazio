@@ -40,7 +40,7 @@ internal class CliBootstrapper {
         new SettingsLoader().Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
     return svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
-        .AddSingleton<InteractiveCliMeneCommand>()
+        .AddSingleton<InteractiveCliMenuCommand>()
         .AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT))
         
         .AddSingleton<Cli>()
