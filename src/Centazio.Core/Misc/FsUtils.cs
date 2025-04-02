@@ -1,6 +1,5 @@
 namespace Centazio.Core.Misc;
 
-// todo: clean up all these methods with correct names
 public static class FsUtils {
   
   private static string? devroot;

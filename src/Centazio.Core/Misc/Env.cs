@@ -2,9 +2,10 @@
 
 public class Env {
 
-  // todo: add aws or better way to detect this
-  public static bool IsHostedEnv() => Environment.GetEnvironmentVariable("CENTAZIO_HOST") == "true" 
-      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("FUNCTIONS_WORKER_RUNTIME"));
+  public static bool IsHostedEnv() => 
+      Environment.GetEnvironmentVariable("CENTAZIO_HOST") == "true" 
+      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("FUNCTIONS_WORKER_RUNTIME")) 
+      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
   
   public static bool IsGitHubActions() => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
   
