@@ -13,7 +13,7 @@ public record PotentialSettingFile(string FileName, bool Required, bool IsDefaul
 public record SettingsLoaderConfig(string FileNamePrefix = SettingsLoaderConfig.DEFAULT_FILE_NAME_PREFIX, string? RootDirectory = null, bool IgnoreDefaults = false) {
   private const string DEFAULT_FILE_NAME_PREFIX = "settings";
   
-  public readonly string RootDirectory = RootDirectory ?? FsUtils.GetSlnOrCurrDir();
+  public readonly string RootDirectory = RootDirectory ?? (Env.IsInDev() ? FsUtils.GetDevPath() : Environment.CurrentDirectory);
 }
 
 public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader {
@@ -33,8 +33,12 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
           environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => spec.FileName.Replace("<environment>", env, StringComparison.Ordinal)) : 
           [spec.FileName];
       return files.Select(f => {
-        var path = Path.Combine(spec.IsDefaultsFile ? FsUtils.GetCliInstallDir("defaults") : conf.RootDirectory, f);
-        return File.Exists(path) ? path : !spec.Required ? null : throw new Exception($"could not find required settings file [{path}]");
+        var path = spec.IsDefaultsFile ? FsUtils.GetCliDir("defaults", f) : Path.Combine(conf.RootDirectory, f);
+        return File.Exists(path) ? path : !spec.Required ? null : Throw();
+
+        string Throw() {
+          throw new Exception($"could not find required settings file [{path}]");
+        }
       });
     }).OfType<string>().ToList();
   }

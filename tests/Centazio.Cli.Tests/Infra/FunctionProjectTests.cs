@@ -17,7 +17,7 @@ public class FunctionProjectTests {
     Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.sln")));
     Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "bin", "Release", "net9.0", "publish")));
     
-    string GenRel(params List<string> steps) => FsUtils.GetSolutionFilePath(steps.Prepend(settings.Defaults.GeneratedCodeFolder).ToList()); 
+    string GenRel(params List<string> steps) => FsUtils.GetDevPath(steps.Prepend(settings.Defaults.GeneratedCodeFolder).ToList()); 
   }
 
 }

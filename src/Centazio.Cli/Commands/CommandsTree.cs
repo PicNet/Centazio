@@ -82,7 +82,7 @@ public class CommandsTree {
         CreateCommandNode<GenerateFunctionCommand>("func")
       ]),
     };
-    if (Env.IsCentazioDevDir()) {
+    if (Env.IsInDev()) {
       children.Add(new BranchNode("dev", [
         CreateCommandNode<UiTestsCommand>("ui-test"),
         CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")

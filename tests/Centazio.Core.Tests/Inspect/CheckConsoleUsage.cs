@@ -19,7 +19,7 @@ public class CheckConsoleUsage {
   [Test] public void Test_no_use_of_AnsiConsole_in_CLI_project() {
     var errors = new List<string>();
     var NOT_ALLOWED = new [] { "AnsiConsole." };
-    InspectUtils.CsFiles(FsUtils.GetSolutionFilePath("src", "Centazio.Cli"), "Cli.cs", "UiHelpers.cs", "UiTestsCommand.cs").ForEach(file => {
+    InspectUtils.CsFiles(FsUtils.GetDevPath("src", "Centazio.Cli"), "Cli.cs", "UiHelpers.cs", "UiTestsCommand.cs").ForEach(file => {
       var contents = File.ReadAllText(file);
       NOT_ALLOWED.ForEach(na => {
         if (contents.IndexOf(na, StringComparison.Ordinal) >= 0) {

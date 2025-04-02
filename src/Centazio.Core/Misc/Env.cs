@@ -2,7 +2,9 @@
 
 public class Env {
 
-  public static bool IsCloudEnviornment() => !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("FUNCTIONS_WORKER_RUNTIME"));
+  // todo: add aws or better way to detect this
+  public static bool IsHostedEnv() => Environment.GetEnvironmentVariable("CENTAZIO_HOST") == "true" 
+      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("FUNCTIONS_WORKER_RUNTIME"));
   
   public static bool IsGitHubActions() => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
   
@@ -10,9 +12,8 @@ public class Env {
   
   public static bool IsCli() => Environment.GetEnvironmentVariable("IS_CLI") == "true";
 
-  public static bool IsCentazioDevDir() {
-    if (IsCloudEnviornment() || IsGitHubActions()) return false;
-    try { FsUtils.GetSolutionRootDirectory(); return true; }
+  public static bool IsInDev() {
+    try { FsUtils.GetDevPath(); return true; }
     catch { return false; }
   }
 

@@ -1,4 +1,15 @@
 # Todo
+- not working - ./centazio.sh host run Centazio.Sample.ClickUp 
+- a good integration test that checks:
+  - package nuget
+  - dotnet tool install (from local nuget)
+  - centazio gen sln
+  - centazio gen func
+  - create simple func (that causes a side effect that can be checked)
+  - run func using `centazio host`
+  - test func worked
+  - test func in azure that works
+  - test func in aws that works
 - after running `centazio gen sln` using the menu, the app did not exit
 - running the cli should not require the settings.json or settings.env.json, it should be able to run just with the 
   default settings.  Local settings.json should only be needed when working in functions, etc. i.e. in a solution.

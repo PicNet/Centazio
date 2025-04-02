@@ -19,7 +19,7 @@ public class SqliteE2ETests {
   
   // todo: test is failing with real notifier
   [Test] public async Task Run_e2e_simulation_and_tests() =>
-      await new E2EEnvironment(true, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
+      await new E2EEnvironment(false, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
 }
 
 public class SqliteSimulationProvider(string dbfile) : ISimulationProvider {

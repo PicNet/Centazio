@@ -29,8 +29,8 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
     }
     
     void CopySampleProjSharedProjFiles() {
-      var from = FsUtils.GetTemplatesPath("centazio", "Solution.Shared");
-      FsUtils.CopyDirFiles(from, shareddir, "*.*");
+      var from = FsUtils.GetTemplatePath("centazio", "Solution.Shared");
+      Directory.GetFiles(from, "*.*").ForEach(file => File.Copy(file, Path.Combine(shareddir, Path.GetFileName(file))));
     }
 
     async Task AdjustCopiedFiles() {
@@ -59,7 +59,7 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
       cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
     }
     
-    var from = FsUtils.GetTemplatesPath("centazio", "Functions");
+    var from = FsUtils.GetTemplatePath("centazio", "Functions");
     var files = new List<string> { "Assembly.cs", "SYSTEMApi.cs", "SYSTEM[MODE]Function.cs", "SYSTEMTypes.cs" };
     if (!String.IsNullOrWhiteSpace(settings.AssemblyName)) files.Add("SYSTEMIntegration.cs");
     await files.Select(async file => {

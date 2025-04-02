@@ -35,9 +35,14 @@ public record CentazioSettings {
   }
   
   public string GetSecretsFolder() => 
-      Env.IsCloudEnviornment() 
-          ? Environment.CurrentDirectory 
-          : FsUtils.FindFirstValidDirectory(SecretsFolders);
+      Env.IsInDev() 
+          ? FindFirstValidDirectory(SecretsFolders) 
+          : Environment.CurrentDirectory;
+
+  public static string FindFirstValidDirectory(List<string> directories) => directories.FirstOrDefault(dir => {
+      try { return Directory.Exists(dir); }
+      catch { return false; }
+    }) ?? throw new Exception($"Could not find a valid directory");
 
   public virtual Dto ToDto() => new() {
       SecretsFolders = SecretsFolders,

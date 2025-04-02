@@ -32,6 +32,8 @@ public interface IHostConfiguration {
 public class CentazioHost {
   
   public async Task Run(IHostConfiguration cmdsetts) {
+    Environment.SetEnvironmentVariable("CENTAZIO_HOST", "true");
+    
     Log.Logger = LogInitialiser.GetConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     
     Console.WriteLine("\nPress 'Enter' to exit\n\n");

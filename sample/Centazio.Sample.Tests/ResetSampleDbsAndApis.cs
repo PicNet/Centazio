@@ -13,7 +13,7 @@ public class ResetSampleDbsAndApis {
     await ResetApis();
   }
 
-  private void ResetDb() => File.Delete(FsUtils.GetSolutionFilePath("sample.db"));
+  private void ResetDb() => File.Delete(FsUtils.GetDevPath("sample.db"));
 
   private async Task ResetApis() {
     var (settings, secrets) = (F.Settings<Settings>(), F.Secrets<Secrets>());

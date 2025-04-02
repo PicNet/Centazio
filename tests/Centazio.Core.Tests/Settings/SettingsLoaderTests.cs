@@ -47,12 +47,12 @@ public class SettingsLoaderTests {
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
     dir = Path.GetFullPath(dir);
     try {
-      File.WriteAllText(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.json"), test_settings_json);
-      File.WriteAllText(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.{environment}.json"), test_settings_env_json);
+      File.WriteAllText(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.json"), test_settings_json);
+      File.WriteAllText(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.{environment}.json"), test_settings_env_json);
       return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(test_fn_prefix, dir, true)).Load<TestSettingsObjRaw>(environment); 
     } finally { 
-      File.Delete(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.json"));
-      File.Delete(FsUtils.GetSolutionFilePath(dir, $"{test_fn_prefix}.{environment}.json"));
+      File.Delete(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.json"));
+      File.Delete(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.{environment}.json"));
     }
   }
 }

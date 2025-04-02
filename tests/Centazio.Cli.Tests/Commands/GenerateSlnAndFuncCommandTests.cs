@@ -10,11 +10,11 @@ namespace Centazio.Cli.Tests.Commands;
 
 public class GenerateSlnAndFuncCommandTests {
 
-  private readonly string properroot = FsUtils.GetSolutionRootDirectory();
+  private readonly string properroot = FsUtils.GetDevPath();
   private readonly CommandRunner runner = new();
   private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
   private readonly string slnfile = nameof(GenerateSlnAndFuncCommandTests) + ".sln";
-  private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetSolutionRootDirectory(), "..", "test-generator"));
+  private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetDevPath(), "..", "test-generator"));
   private readonly ICentazioCodeGenerator gen = new CentazioCodeGenerator(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()));
   private readonly string SYSTEM_NAME = "Acme";
   

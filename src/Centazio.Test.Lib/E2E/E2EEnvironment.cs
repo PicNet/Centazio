@@ -73,7 +73,7 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
           fin.Invoices
         }
       };
-      await File.WriteAllTextAsync(FsUtils.GetSolutionFilePath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
+      await File.WriteAllTextAsync(FsUtils.GetDevPath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
     }
   }
   
