@@ -1,5 +1,4 @@
 # Todo
-- not working - ./centazio.sh host run Centazio.Sample.ClickUp 
 - a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
