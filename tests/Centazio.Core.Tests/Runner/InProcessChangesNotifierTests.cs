@@ -13,7 +13,7 @@ public class InProcessChangesNotifierTests {
   private readonly LifecycleStage stage3 = new("stage3");
   
   [Test] public void Test_Triggers_aggregation_works() {
-    var triggers = new List<OpChangeTriggerKey> {
+    var triggers = new List<ObjectChangeTrigger> {
       new(C.SystemEntityName, stage2),
       new(C.SystemEntityName, stage3),
       new(new("x"), stage1)
@@ -40,7 +40,7 @@ public class InProcessChangesNotifierTests {
   }
   
   [Test] public void Test_overwritting_op_config_triggers_works() {
-    var triggers = new List<OpChangeTriggerKey> { new(C.SystemEntityName, stage1) };
+    var triggers = new List<ObjectChangeTrigger> { new(C.SystemEntityName, stage1) };
     var roc = new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers };
     var poc = new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers };
     var woc = new WriteOperationConfig(C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!) { Triggers = triggers };
@@ -50,7 +50,7 @@ public class InProcessChangesNotifierTests {
     Assert.That(woc.Triggers, Is.EquivalentTo(triggers));
   }
   
-  class Func(LifecycleStage stage, List<OpChangeTriggerKey> triggers, List<ObjectName> result) : IRunnableFunction {
+  class Func(LifecycleStage stage, List<ObjectChangeTrigger> triggers, List<ObjectName> result) : IRunnableFunction {
     
     public SystemName System { get; } = C.System1Name;
     public LifecycleStage Stage { get; } = stage; 
@@ -63,7 +63,7 @@ public class InProcessChangesNotifierTests {
     
     public void Dispose() { throw new Exception(); }
     
-    public Task RunFunctionOperations(SystemState sys, List<OpResultAndObject> runningresults) {
+    public Task RunFunctionOperations(SystemState sys, FunctionTrigger trigger, List<OpResultAndObject> runningresults) {
       RunCount++;
       return Task.FromResult(result.Select(obj => new OpResultAndObject(obj, ReadOperationResult.EmptyResult())).ToList());
     }
@@ -74,10 +74,10 @@ public class InProcessChangesNotifierTests {
 
     public bool Running { get; private set; }
 
-    public async Task<FunctionRunResults> RunFunction(IRunnableFunction func) {
+    public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, FunctionTrigger trigger) {
       Running = true;
       var results = new List<OpResultAndObject>();
-      await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), results);
+      await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), trigger, results);
       await notif.Notify(func.Stage, results.Select(c => c.Object).Distinct().ToList());
       Running = false;
       return new SuccessFunctionRunResults(results);

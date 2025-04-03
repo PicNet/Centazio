@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Settings;
+﻿using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
@@ -29,11 +30,13 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
 
   private async Task AddAwsFunctionsToProject(List<Type> functions) {
     await functions.ForEachSequentialAsync(async func => {
+      var impl = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(func);
       var handlerContent = templater.ParseFromPath("aws/function.cs", new {
         ClassName = func.Name,
         ClassFullName = func.FullName,
         FunctionNamespace = func.Namespace,
-        Environments = GetEnvironmentsArrayString()
+        Environments = GetEnvironmentsArrayString(),
+        FunctionTimerCronExpr = impl.GetFunctionPollCronExpression(settings.Defaults)
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Handler.cs"), handlerContent);
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new { 

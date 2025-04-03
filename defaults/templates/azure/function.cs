@@ -20,7 +20,7 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
     log.LogInformation("{{it.ClassName}} running");
     try { 
       var (function, runner) = (await impl.Value, registrar.ServiceProvider.GetRequiredService<IFunctionRunner>());
-      await runner.RunFunction(function); 
+      await runner.RunFunction(function, new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")); 
     } finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }
 }

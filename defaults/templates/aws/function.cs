@@ -23,7 +23,7 @@ public class {{it.ClassName}}Handler {
     Log.Information("{{it.ClassName}} running");
     try { 
       var (function, runner) = (await impl.Value, registrar.ServiceProvider.GetRequiredService<IFunctionRunner>());
-      await runner.RunFunction(function);
+      await runner.RunFunction(function, new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}"));
       return $"{{it.ClassName}} executed successfully";
     } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }

@@ -43,7 +43,7 @@ public class CentazioHost {
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     var functions = await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()), registrar).Init(functypes);
-    var pubsub = Channel.CreateUnbounded<OpChangeTriggerKey>();
+    var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier(functions);
     var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
@@ -64,7 +64,7 @@ public class CentazioHost {
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctionsInGroupAndResetTimer(FunctionTimerGroup g) {
       await g.Timer.DisposeAsync();
-      await g.Functions.Select(async f => await runner.RunFunction(f)).Synchronous();
+      await g.Functions.Select(async f => await runner.RunFunction(f, new TimerChangeTrigger(g.Cron.Expression))).Synchronous();
       g.Timer = new Timer(_ => RunFunctionsInGroupAndResetTimer(g), null, g.Delay(UtcDate.UtcNow), Timeout.InfiniteTimeSpan);
     }
   }

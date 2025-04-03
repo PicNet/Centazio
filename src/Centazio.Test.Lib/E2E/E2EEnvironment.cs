@@ -89,16 +89,16 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-     
-    await runner.RunFunction(crm_read);
-    await runner.RunFunction(fin_read);
+    var trigger = new TimerChangeTrigger(nameof(E2EEnvironment));
+    await runner.RunFunction(crm_read, trigger);
+    await runner.RunFunction(fin_read, trigger);
     if (notifier is InProcessChangesNotifier ipcn) {
       while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
     } else {
-      await runner.RunFunction(crm_promote);
-      await runner.RunFunction(fin_promote);
-      await runner.RunFunction(crm_write);
-      await runner.RunFunction(fin_write);
+      await runner.RunFunction(crm_promote, trigger);
+      await runner.RunFunction(fin_promote, trigger);
+      await runner.RunFunction(crm_write, trigger);
+      await runner.RunFunction(fin_write, trigger);
     }
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();

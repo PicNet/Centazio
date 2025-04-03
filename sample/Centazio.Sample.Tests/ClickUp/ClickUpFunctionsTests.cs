@@ -25,7 +25,7 @@ public class ClickUpFunctionsTests {
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
     var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), F.FuncRunner(ctl: ctl));
-    var results = (await runner.RunFunction(func)).OpResults.Single();
+    var results = (await runner.RunFunction(func, new TimerChangeTrigger("test"))).OpResults.Single();
     var ss = await ctl.GetSystemState(ClickUpConstants.ClickUpSystemName, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
@@ -41,13 +41,13 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Write() {
     var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
     var func = new ClickUpWriteFunction(core, ctl, api);
-    var results = await F.FuncRunner(ctl: ctl).RunFunction(func);
+    var results = await F.FuncRunner(ctl: ctl).RunFunction(func, new TimerChangeTrigger("test"));
     Assert.That(results, Is.Not.Null);
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
     var func = new ClickUpReadFunction(stager, ctl, api);
-    return (await F.FuncRunner(ctl: ctl).RunFunction(func)).OpResults.Single().Result;
+    return (await F.FuncRunner(ctl: ctl).RunFunction(func, new TimerChangeTrigger("test"))).OpResults.Single().Result;
   }
   
   private readonly ClickUpApi api = new(F.Settings<Settings>(), F.Secrets<Secrets>());

@@ -22,7 +22,7 @@ public static class TestingFactories {
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
   public static TestingChangeNotifier ChangeNotifier() => new();
   public static Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl, IChangesNotifier? notif = null) where C : OperationConfig => 
-      FuncRunner(notif, ctl).RunFunction(func);
+      FuncRunner(notif, ctl).RunFunction(func, new TimerChangeTrigger("test"));
   public static FunctionRunner FuncRunner(IChangesNotifier? notif = null, ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), Settings()); 
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
