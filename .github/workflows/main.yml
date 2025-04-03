@@ -32,6 +32,9 @@ jobs:
     - name: Check Docker version
       run: docker version
 
+    - name: Upgrade Azure CLI
+      run: az upgrade
+
     - name: dotnet info
       run: dotnet --info
 
