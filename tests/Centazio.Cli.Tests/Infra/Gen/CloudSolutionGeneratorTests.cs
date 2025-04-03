@@ -25,7 +25,6 @@ public class CloudSolutionGeneratorTests {
   
   [Test] public async Task Test_Aws_GenerateSolution() {
     var project = MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
-    Console.WriteLine("project.SolutionDirPath:" + project.SolutionDirPath);
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
     await new AwsCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
