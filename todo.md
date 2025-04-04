@@ -1,4 +1,6 @@
 # Todo
+- fix promote -> write func-to-func trigger generates 'other' systems, not the same that promoted it
+    - currently in the simulation the Crm Promote is triggering Crm Write
 - a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)

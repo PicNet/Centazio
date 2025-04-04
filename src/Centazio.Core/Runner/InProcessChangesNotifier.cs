@@ -8,7 +8,7 @@ public interface IChangesNotifier {
 
 public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool parallel=true) : IChangesNotifier {
 
-  private readonly Channel<ObjectChangeTrigger> pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
+  private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   
   public bool IsEmpty => pubsub.Reader.Count == 0;
   
@@ -20,20 +20,21 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool pa
     }));
 
     return Task.Run(async () => {
-      // wait for next message to pubsub queue
       while (await pubsub.Reader.WaitToReadAsync()) {
-        
+
+        // invert the `triggermap` and get a list of functions with their triggers
         Dictionary<IRunnableFunction, List<FunctionTrigger>> allfuncs = [];
-        // get all waiting messages (triggers) in pubsub queue and create a map of triggers to their target function
-        while (pubsub.Reader.TryRead(out var trigger)) {
-          if (!triggermap.TryGetValue(trigger, out var funcs)) continue;
-          funcs.ForEach(func => {
-            if (!allfuncs.ContainsKey(func)) allfuncs[func] = [];
-            allfuncs[func].Add(trigger);
+        while (pubsub.Reader.TryRead(out var triggers)) {
+          triggers.ForEach(trigger => {
+            if (!triggermap.TryGetValue(trigger, out var funcs)) return;
+            funcs.ForEach(func => {
+              if (!allfuncs.ContainsKey(func)) allfuncs[func] = [];
+              allfuncs[func].Add(trigger);
+            });
           });
         }
         
-        // run the functions, passing in which triggers affected the function
+        // run the functions, passing list of triggers which affected the function
         var tasks = allfuncs.Keys.Select(async f => {
           DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
           return await runner.RunFunction(f, allfuncs[f]);
@@ -44,8 +45,8 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool pa
   }
   
   public async Task Notify(LifecycleStage stage, List<ObjectName> objs) {
-    var tasks = objs.Select(async obj => await pubsub.Writer.WriteAsync(new(obj, stage)));
-    await RunTasks(tasks);
+    var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(obj, stage)).ToList();
+    await pubsub.Writer.WriteAsync(triggers);
   }
   
   private async Task RunTasks(IEnumerable<Task> tasks) {

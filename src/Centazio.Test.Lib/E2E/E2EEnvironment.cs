@@ -95,13 +95,14 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     if (notifier is InProcessChangesNotifier ipcn) {
       // allow the notifier to run and all writes flushed to db
       while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
-      await Task.Delay(50);
+      await Task.Delay(250);
     } else {
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
       await runner.RunFunction(crm_write, trigger);
       await runner.RunFunction(fin_write, trigger);
     }
+    await Task.Delay(250);
     ctx.Debug($"epoch[{epoch}] functions completed - validating");
     await ValidateEpoch();
   }

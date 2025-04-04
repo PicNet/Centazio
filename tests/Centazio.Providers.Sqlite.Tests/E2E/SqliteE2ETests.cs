@@ -15,11 +15,11 @@ namespace Centazio.Providers.Sqlite.Tests.E2E;
 public class SqliteE2ETests {
   private const string dbfile="test.db";
   
-  [SetUp, TearDown] public void CleanUp() => File.Delete(dbfile);
-  
+  [SetUp] public void CleanUp() { File.Delete(dbfile); }
+
   // todo: test is failing with real notifier
   [Test] public async Task Run_e2e_simulation_and_tests() =>
-      await new E2EEnvironment(false, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
+      await new E2EEnvironment(true, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
 }
 
 public class SqliteSimulationProvider(string dbfile) : ISimulationProvider {
