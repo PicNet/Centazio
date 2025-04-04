@@ -63,7 +63,7 @@ public class InProcessChangesNotifierTests {
     
     public void Dispose() { throw new Exception(); }
     
-    public Task RunFunctionOperations(SystemState sys, FunctionTrigger trigger, List<OpResultAndObject> runningresults) {
+    public Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) {
       RunCount++;
       return Task.FromResult(result.Select(obj => new OpResultAndObject(obj, ReadOperationResult.EmptyResult())).ToList());
     }
@@ -74,10 +74,10 @@ public class InProcessChangesNotifierTests {
 
     public bool Running { get; private set; }
 
-    public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, FunctionTrigger trigger) {
+    public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
       Running = true;
       var results = new List<OpResultAndObject>();
-      await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), trigger, results);
+      await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), triggers, results);
       await notif.Notify(func.Stage, results.Select(c => c.Object).Distinct().ToList());
       Running = false;
       return new SuccessFunctionRunResults(results);

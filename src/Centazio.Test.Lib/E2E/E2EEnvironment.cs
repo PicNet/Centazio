@@ -89,11 +89,13 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     
     ctx.Debug($"epoch[{epoch}] simulation step completed - running functions");
     
-    var trigger = new TimerChangeTrigger(nameof(E2EEnvironment));
+    var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
     await runner.RunFunction(crm_read, trigger);
     await runner.RunFunction(fin_read, trigger);
     if (notifier is InProcessChangesNotifier ipcn) {
+      // allow the notifier to run and all writes flushed to db
       while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
+      await Task.Delay(50);
     } else {
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);

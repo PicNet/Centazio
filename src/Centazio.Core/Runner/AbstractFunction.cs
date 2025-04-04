@@ -12,7 +12,7 @@ public interface IRunnableFunction : IDisposable {
   bool Running { get; }
   FunctionConfig Config { get; }
   
-  Task RunFunctionOperations(SystemState sys, FunctionTrigger trigger, List<OpResultAndObject> runningresults);
+  Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults);
   
   List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   ValidString GetFunctionPollCronExpression(DefaultsSettings defs) {
@@ -48,7 +48,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected abstract FunctionConfig GetFunctionConfiguration();
   public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
-  public virtual async Task RunFunctionOperations(SystemState sys, FunctionTrigger trigger, List<OpResultAndObject> runningresults) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {

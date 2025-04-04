@@ -20,10 +20,9 @@ public static class TestingFactories {
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static TestingChangeNotifier ChangeNotifier() => new();
-  public static Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl, IChangesNotifier? notif = null) where C : OperationConfig => 
-      FuncRunner(notif, ctl).RunFunction(func, new TimerChangeTrigger("test"));
-  public static FunctionRunner FuncRunner(IChangesNotifier? notif = null, ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), Settings()); 
+  public static Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl) where C : OperationConfig => 
+      FuncRunner(ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
+  public static FunctionRunner FuncRunner(ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), Settings()); 
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
       ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());

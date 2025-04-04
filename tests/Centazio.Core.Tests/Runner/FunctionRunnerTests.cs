@@ -80,7 +80,7 @@ public class FunctionRunnerTests {
     private readonly ICtlRepository ctlrepo = ctl;
     protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    public override async Task RunFunctionOperations(SystemState state1, FunctionTrigger trigger, List<OpResultAndObject> runningresults) {
+    public override async Task RunFunctionOperations(SystemState state1, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));
@@ -95,7 +95,7 @@ public class FunctionRunnerTests {
     private readonly ICtlRepository ctlrepo = ctl;
     protected override FunctionConfig GetFunctionConfiguration() => new EmptyFunctionConfig();
 
-    public override async Task RunFunctionOperations(SystemState state1, FunctionTrigger trigger, List<OpResultAndObject> runningresults) {
+    public override async Task RunFunctionOperations(SystemState state1, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) {
       var state2 = await ctlrepo.GetSystemState(System, Stage) ?? throw new Exception();
       Assert.That(state2.Status, Is.EqualTo(ESystemStateStatus.Running));
       Assert.That(state1, Is.EqualTo(state2));

@@ -20,15 +20,25 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool pa
     }));
 
     return Task.Run(async () => {
+      // wait for next message to pubsub queue
       while (await pubsub.Reader.WaitToReadAsync()) {
+        
+        Dictionary<IRunnableFunction, List<FunctionTrigger>> allfuncs = [];
+        // get all waiting messages (triggers) in pubsub queue and create a map of triggers to their target function
         while (pubsub.Reader.TryRead(out var trigger)) {
-          if (!triggermap.TryGetValue(trigger, out var funcs)) { break; }
-          var tasks = funcs.Select(async f => {
-            DataFlowLogger.Log($"Func-To-Func Trigger[{trigger.Object}]", trigger.Stage, f.GetType().Name, [trigger.Object]);
-            return await runner.RunFunction(f, trigger);
+          if (!triggermap.TryGetValue(trigger, out var funcs)) continue;
+          funcs.ForEach(func => {
+            if (!allfuncs.ContainsKey(func)) allfuncs[func] = [];
+            allfuncs[func].Add(trigger);
           });
-          await RunTasks(tasks);
         }
+        
+        // run the functions, passing in which triggers affected the function
+        var tasks = allfuncs.Keys.Select(async f => {
+          DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
+          return await runner.RunFunction(f, allfuncs[f]);
+        });
+        await RunTasks(tasks);
       }
     });
   }

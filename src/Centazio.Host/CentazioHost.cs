@@ -64,7 +64,7 @@ public class CentazioHost {
     // ReSharper disable once AsyncVoidMethod
     async void RunFunctionsInGroupAndResetTimer(FunctionTimerGroup g) {
       await g.Timer.DisposeAsync();
-      await g.Functions.Select(async f => await runner.RunFunction(f, new TimerChangeTrigger(g.Cron.Expression))).Synchronous();
+      await g.Functions.Select(async f => await runner.RunFunction(f, [new TimerChangeTrigger(g.Cron.Expression)])).Synchronous();
       g.Timer = new Timer(_ => RunFunctionsInGroupAndResetTimer(g), null, g.Delay(UtcDate.UtcNow), Timeout.InfiniteTimeSpan);
     }
   }
