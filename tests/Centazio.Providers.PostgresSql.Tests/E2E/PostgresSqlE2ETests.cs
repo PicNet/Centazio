@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -16,7 +17,7 @@ public class PostgresSqlE2ETests {
   
   [Test] public async Task Run_e2e_simulation_and_tests() {
     var connstr = await new PostgresSqlConnection().Init();
-    await new E2EEnvironment(true, new PostgresSqlSimulationProvider(connstr), TestingFactories.Settings()).RunSimulation();
+    await new E2EEnvironment(new InProcessChangesNotifier(), new PostgresSqlSimulationProvider(connstr), TestingFactories.Settings()).RunSimulation();
   }
 
 }

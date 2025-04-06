@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -19,7 +20,8 @@ public class SqliteE2ETests {
 
   // todo: test is failing with real notifier
   [Test] public async Task Run_e2e_simulation_and_tests() =>
-      await new E2EEnvironment(true, new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
+      // await new E2EEnvironment(new InProcessChangesNotifier(), new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
+      await new E2EEnvironment(new InstantChangesNotifier(), new SqliteSimulationProvider(dbfile), TestingFactories.Settings()).RunSimulation();
 }
 
 public class SqliteSimulationProvider(string dbfile) : ISimulationProvider {

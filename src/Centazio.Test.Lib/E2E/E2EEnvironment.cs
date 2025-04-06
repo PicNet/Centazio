@@ -7,9 +7,9 @@ using Serilog.Events;
 
 namespace Centazio.Test.Lib.E2E;
 
-public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioSettings settings) : IAsyncDisposable {
-  
-  private bool notify = notify;
+// todo: would be good to have multiple kinds of simulations, such as a simple one-way, one-epoch integration,
+//    this class could just be the engine to run any sort of simulation
+public class E2EEnvironment(IChangesNotifier notifier, ISimulationProvider provider, CentazioSettings settings) : IAsyncDisposable {
   
   private readonly bool SAVE_SIMULATION_STATE = false;
   
@@ -24,10 +24,12 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
   private FinReadFunction fin_read = null!;
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
-  private IChangesNotifier notifier = null!;
+  private IChangesNotifier notifier = notifier;
 
   public async Task Initialise() {
-    if (Env.IsGitHubActions()) { notify = false; } // todo: remove this line once SqliteE2E is fixed
+    // todo: remove this line once SqliteE2E is fixed, this line effectively removes the real notifier when running in CI
+    if (Env.IsGitHubActions()) { notifier = new NoOpChangeNotifier(); } 
+    
     Log.Logger = LogInitialiser.GetConsoleConfig(template: "{Message}{NewLine}").CreateLogger();
     await ctx.Initialise();
     
@@ -35,11 +37,9 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
-    notifier = notify ? 
-        new InProcessChangesNotifier([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write], false) : 
-        new TestingChangeNotifier();
+    notifier.Init([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
     runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
-    if (notifier is InProcessChangesNotifier ipcn) { _ = ipcn.InitDynamicTriggers(runner); }
+    _ = notifier.Run(runner);
   }
   
   public async Task RunSimulation() {
@@ -92,9 +92,9 @@ public class E2EEnvironment(bool notify, ISimulationProvider provider, CentazioS
     var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
     await runner.RunFunction(crm_read, trigger);
     await runner.RunFunction(fin_read, trigger);
-    if (notifier is InProcessChangesNotifier ipcn) {
+    if (notifier is not NoOpChangeNotifier ipcn) {
       // allow the notifier to run and all writes flushed to db
-      while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
+      // while (!ipcn.IsEmpty || runner.Running) { await Task.Delay(15); }
       await Task.Delay(250);
     } else {
       await runner.RunFunction(crm_promote, trigger);

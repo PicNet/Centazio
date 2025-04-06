@@ -3,22 +3,27 @@
 namespace Centazio.Core.Runner;
 
 public interface IChangesNotifier {
+  void Init(List<IRunnableFunction> functions);
+  Task Run(IFunctionRunner runner);
   Task Notify(LifecycleStage stage, List<ObjectName> objs);
+
 }
 
-public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool parallel=true) : IChangesNotifier {
+public class InProcessChangesNotifier(bool parallel = true) : IChangesNotifier {
 
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
+  private readonly Dictionary<ObjectChangeTrigger, List<IRunnableFunction>> triggermap = [];
   
   public bool IsEmpty => pubsub.Reader.Count == 0;
   
-  public Task InitDynamicTriggers(IFunctionRunner runner) {
-    var triggermap = new Dictionary<ObjectChangeTrigger, List<IRunnableFunction>>();
+  public void Init(List<IRunnableFunction> functions) {
     functions.ForEach(func => func.Triggers().ForEach(key => {
       if (!triggermap.ContainsKey(key)) triggermap[key] = [];
       triggermap[key].Add(func);
     }));
-
+  }
+  
+  public Task Run(IFunctionRunner runner) {
     return Task.Run(async () => {
       while (await pubsub.Reader.WaitToReadAsync()) {
 
@@ -48,7 +53,7 @@ public class InProcessChangesNotifier(List<IRunnableFunction> functions, bool pa
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(obj, stage)).ToList();
     await pubsub.Writer.WriteAsync(triggers);
   }
-  
+
   private async Task RunTasks(IEnumerable<Task> tasks) {
     if (parallel) await Task.WhenAll(tasks);
     else await tasks.Synchronous();

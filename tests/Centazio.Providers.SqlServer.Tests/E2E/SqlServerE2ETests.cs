@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl;
+using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -13,7 +14,7 @@ namespace Centazio.Providers.SqlServer.Tests.E2E;
 
 public class SqlServerE2ETests {
   [Test] public async Task Run_e2e_simulation_and_tests() => 
-      await new E2EEnvironment(true, new SqlServerSimulationProvider(), TestingFactories.Settings()).RunSimulation();
+      await new E2EEnvironment(new InProcessChangesNotifier(), new SqlServerSimulationProvider(), TestingFactories.Settings()).RunSimulation();
 
 }
 

@@ -13,7 +13,7 @@ public static class SimulationConstants {
   public static List<string> LOGGING_FILTERS { get; } = [];
   public static readonly int RANDOM_SEED = 999;
   
-  public static readonly int TOTAL_EPOCHS = 100;
+  public static readonly int TOTAL_EPOCHS = 25;
   
   public static readonly SystemEntityId PENDING_MEMBERSHIP_TYPE_ID = new(Rng.NewGuid().ToString());
   public static readonly int CRM_MAX_EDIT_MEMBERSHIPS = 2;

@@ -45,12 +45,13 @@ public class CentazioHost {
     var functions = await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()), registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
-    var notifier = new InProcessChangesNotifier(functions);
+    var notifier = new InProcessChangesNotifier();
     var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
     var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier);
     
     StartTimerBasedTriggers(settings, functions, runner);
-    _ = notifier.InitDynamicTriggers(runner);
+    notifier.Init(functions);
+    _ = notifier.Run(runner);
     
     await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
     pubsub.Writer.Complete();

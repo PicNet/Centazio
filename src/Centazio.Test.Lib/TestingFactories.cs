@@ -107,13 +107,57 @@ public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlReposi
   ]);
 }
 
-public class TestingChangeNotifier : IChangesNotifier {
+public class NoOpChangeNotifier : IChangesNotifier {
 
   public List<(LifecycleStage, ObjectName)> Notifications { get; set; } = [];
   
+  public void Init(List<IRunnableFunction> functions) {}
+  public Task Run(IFunctionRunner runner) => Task.CompletedTask;
   public Task Notify(LifecycleStage stage, List<ObjectName> objs) {
     Notifications = objs.Select(obj => (stage, obj)).ToList();
     return Task.CompletedTask;
   }
 
+  public Task Init(IFunctionRunner runner, List<IRunnableFunction> functions) => Task.CompletedTask;
+
+}
+
+public class InstantChangesNotifier() : IChangesNotifier {
+
+  private readonly Dictionary<ObjectChangeTrigger, List<IRunnableFunction>> triggermap = [];
+  
+  public bool IsEmpty => true;
+  private IFunctionRunner? runner;
+  
+  
+  public void Init(List<IRunnableFunction> functions) {
+    functions.ForEach(func => func.Triggers().ForEach(key => {
+      if (!triggermap.ContainsKey(key)) triggermap[key] = [];
+      triggermap[key].Add(func);
+    }));
+  }
+  
+  public Task Run(IFunctionRunner funrun) {
+    runner = funrun;
+    return Task.CompletedTask;
+  }
+  
+  public async Task Notify(LifecycleStage stage, List<ObjectName> objs) {
+    if (runner is null) throw new Exception();
+    
+    var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(obj, stage)).ToList();
+    Dictionary<IRunnableFunction, List<FunctionTrigger>> allfuncs = [];
+    triggers.ForEach(trigger => {
+      if (!triggermap.TryGetValue(trigger, out var funcs)) return;
+      funcs.ForEach(func => {
+        if (!allfuncs.ContainsKey(func)) allfuncs[func] = [];
+        allfuncs[func].Add(trigger);
+      });
+    });
+    
+    await allfuncs.Keys.Select(f => {
+      DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
+      return runner.RunFunction(f, allfuncs[f]);
+    }).Synchronous();
+  }
 }

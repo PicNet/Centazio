@@ -26,9 +26,10 @@ public class InProcessChangesNotifierTests {
   [Test] public async Task Test_notification_works() {
     var func = new Func(stage2, [new(C.SystemEntityName, new (stage1))], [C.CoreEntityName]);
     
-    var notif = new InProcessChangesNotifier([func]);
+    var notif = new InProcessChangesNotifier();
+    notif.Init([func]);
     var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif);
-    _ = notif.InitDynamicTriggers(runner);
+    _ = notif.Run(runner);
     
     var notifications = 10;
     await Enumerable.Range(0, notifications).Select(async _ => {
