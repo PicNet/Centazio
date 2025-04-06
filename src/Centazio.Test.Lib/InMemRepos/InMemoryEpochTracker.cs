@@ -1,6 +1,4 @@
-﻿using Centazio.Test.Lib.E2E;
-
-namespace Centazio.Test.Lib.InMemRepos;
+﻿namespace Centazio.Test.Lib.InMemRepos;
 
 [IgnoreNamingConventions] public class InMemoryEpochTracker : IEpochTracker {
 

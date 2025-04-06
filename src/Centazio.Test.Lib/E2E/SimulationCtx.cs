@@ -8,7 +8,7 @@ namespace Centazio.Test.Lib.E2E;
 
 public class SimulationCtx : IAsyncDisposable {
   
-  private readonly ISimulationProvider provider;
+  private readonly ISimulationStorage storage;
   
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
@@ -19,8 +19,8 @@ public class SimulationCtx : IAsyncDisposable {
   public EpochTracker Epoch { get; set; }
   public EntityConverter Converter { get; set; } = null!;
 
-  public SimulationCtx(ISimulationProvider provider, CentazioSettings settings) {
-    this.provider = provider;
+  public SimulationCtx(ISimulationStorage storage, CentazioSettings settings) {
+    this.storage = storage;
     
     Settings = settings;
     ChecksumAlg = new Sha256ChecksumAlgorithm();
@@ -28,11 +28,11 @@ public class SimulationCtx : IAsyncDisposable {
   }
   
   public async Task Initialise() {
-    await provider.Initialise(this);
+    await storage.Initialise(this);
     
-    CtlRepo = provider.CtlRepo;
-    StageRepository = provider.StageRepository;
-    CoreStore = provider.CoreStore;
+    CtlRepo = storage.CtlRepo;
+    StageRepository = storage.StageRepository;
+    CoreStore = storage.CoreStore;
     
     Converter = new(CtlRepo);
   }
@@ -49,7 +49,7 @@ public class SimulationCtx : IAsyncDisposable {
     return !detailslst.Any() ? String.Empty : ":\n\t" + String.Join("\n\t", detailslst);
   }
   
-  public SystemEntityId NewGuiSeid() => new (Rng.NewGuid().ToString());
+  public SystemEntityId NewGuidSeid() => new (Rng.NewGuid().ToString());
   public SystemEntityId NewIntSeid() => new (Rng.Next(Int32.MaxValue).ToString());
   
   public string NewName<T>(string prefix, List<T> target, int idx) => $"{prefix}_{target.Count + idx}:0";
@@ -60,6 +60,6 @@ public class SimulationCtx : IAsyncDisposable {
   }
 
   public async ValueTask DisposeAsync() {
-    await provider.DisposeAsync();
+    await storage.DisposeAsync();
   }
 }

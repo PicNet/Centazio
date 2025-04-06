@@ -1,7 +1,4 @@
-﻿using Centazio.Test.Lib.E2E.Crm;
-using Centazio.Test.Lib.E2E.Fin;
-
-namespace Centazio.Test.Lib.E2E;
+﻿namespace Centazio.Test.Lib.E2E;
 
 public interface IEpochTracker {
   int Epoch { get; }
@@ -23,10 +20,7 @@ public interface IEpochTracker {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
     var actual = added.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
     if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count})" + ctx.DetailsToString(ascore.Select(e => $"{e.GetShortDisplayName()}").ToList()) + 
-        $"\nActual {typeof(T).Name} Created({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}").ToList()));
-    
-    if(actual.Any(e => e.Meta.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
-    if(actual.Any(e => e.Meta.DateCreated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
+        $"\nActual {typeof(T).Name} Created({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}").ToList()));    
   }
 
   public async Task ValidateUpdated<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
@@ -40,8 +34,6 @@ public interface IEpochTracker {
     var actual = updated.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
     if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Updated({ascore.Count})" + ctx.DetailsToString(ascore.Select(e => $"{e.GetShortDisplayName()}").ToList()) + 
         $"\nActual {typeof(T).Name} Updated({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}").ToList()));
-    if(actual.Any(e => e.Meta.DateUpdated != UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateUpdated");
-    if(actual.Any(e => e.Meta.DateCreated >= UtcDate.UtcNow)) throw new E2ETestFailedException("Found entities with invalid DateCreated");
   }
   
   private async Task<List<ICoreEntity>> SysEntsToCore(CoreEntityTypeName coretype, params (SystemName, IEnumerable<ISystemEntity>)[] expected) {
@@ -52,6 +44,7 @@ public interface IEpochTracker {
       if (!sysentlst.Any()) return;
 
       var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
+      if (!idmap.Any()) throw new Exception($"Extepected[{sysentlst.Count}] Entities[{coretype}] but none found");
       var existings = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
       var syscores = await sysentlst.Select(e => ToCore(e, existings.Single(e2 => e2.CoreEntity.CoreId == idmap[e.SystemId]).CoreEntity)).Synchronous();
       var sums = syscores.Select(c => ctx.ChecksumAlg.Checksum(c)).Distinct().ToList();

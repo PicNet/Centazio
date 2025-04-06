@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Ctl;
-using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
@@ -12,13 +11,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.SqlServer.Tests.E2E;
 
-public class SqlServerE2ETests {
-  [Test] public async Task Run_e2e_simulation_and_tests() => 
-      await new E2EEnvironment(new InProcessChangesNotifier(), new SqlServerSimulationProvider(), TestingFactories.Settings()).RunSimulation();
-
+public class SqlServerE2ETests : BaseE2ETests {
+  protected override Task<ISimulationStorage> GetStorage() => Task.FromResult<ISimulationStorage>(new SqlServerSimulationStorage());
 }
 
-public class SqlServerSimulationProvider : ISimulationProvider {
+public class SqlServerSimulationStorage : ISimulationStorage {
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;

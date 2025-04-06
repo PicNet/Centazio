@@ -122,7 +122,7 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
 }
 
-public class InstantChangesNotifier() : IChangesNotifier {
+public class InstantChangesNotifier : IChangesNotifier {
 
   private readonly Dictionary<ObjectChangeTrigger, List<IRunnableFunction>> triggermap = [];
   
@@ -156,6 +156,7 @@ public class InstantChangesNotifier() : IChangesNotifier {
     });
     
     await allfuncs.Keys.Select(f => {
+      TestingUtcDate.DoTick();
       DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
       return runner.RunFunction(f, allfuncs[f]);
     }).Synchronous();

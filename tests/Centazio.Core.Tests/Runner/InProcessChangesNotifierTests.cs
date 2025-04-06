@@ -28,7 +28,7 @@ public class InProcessChangesNotifierTests {
     
     var notif = new InProcessChangesNotifier();
     notif.Init([func]);
-    var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif);
+    var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif, () => {});
     _ = notif.Run(runner);
     
     var notifications = 10;

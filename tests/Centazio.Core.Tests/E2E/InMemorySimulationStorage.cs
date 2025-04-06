@@ -5,7 +5,7 @@ using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Core.Tests.E2E;
 
-public class InMemorySimulationProvider : ISimulationProvider {
+public class InMemorySimulationStorage : ISimulationStorage {
 
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;

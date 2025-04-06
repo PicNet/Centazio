@@ -1,28 +1,23 @@
 ﻿using Centazio.Core.Ctl;
 using Centazio.Core.Ctl.Entities;
-using Centazio.Core.Runner;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.PostgresSql.Ctl;
 using Centazio.Providers.PostgresSql.Stage;
-using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.PostgresSql.Tests.E2E;
 
-public class PostgresSqlE2ETests {
-  
-  [Test] public async Task Run_e2e_simulation_and_tests() {
-    var connstr = await new PostgresSqlConnection().Init();
-    await new E2EEnvironment(new InProcessChangesNotifier(), new PostgresSqlSimulationProvider(connstr), TestingFactories.Settings()).RunSimulation();
-  }
-
+public class PostgresSqlE2ETests : BaseE2ETests {
+  private string? connstr;
+  protected override async Task<ISimulationStorage> GetStorage() => 
+      new PostgresSqlSimulationStorage(connstr ??= await new PostgresSqlConnection().Init());
 }
 
-public class PostgresSqlSimulationProvider(string connstr) : ISimulationProvider {
+public class PostgresSqlSimulationStorage(string connstr) : ISimulationStorage {
   
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;

@@ -1,5 +1,4 @@
-﻿using Centazio.Test.Lib.E2E;
-using Centazio.Test.Lib.InMemRepos;
+﻿using Centazio.Test.Lib.InMemRepos;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;

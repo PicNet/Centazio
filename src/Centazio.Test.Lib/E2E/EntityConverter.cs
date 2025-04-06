@@ -1,7 +1,4 @@
-﻿using Centazio.Test.Lib.E2E.Crm;
-using Centazio.Test.Lib.E2E.Fin;
-
-namespace Centazio.Test.Lib.E2E;
+﻿namespace Centazio.Test.Lib.E2E;
 
 public class EntityConverter(ICtlRepository ctl) {
   

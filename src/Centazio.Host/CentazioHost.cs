@@ -47,7 +47,7 @@ public class CentazioHost {
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier();
     var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
-    var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier);
+    var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
     
     StartTimerBasedTriggers(settings, functions, runner);
     notifier.Init(functions);

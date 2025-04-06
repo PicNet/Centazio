@@ -2,7 +2,7 @@
 
 namespace Centazio.Test.Lib.E2E;
 
-public interface ISimulationProvider : IAsyncDisposable {
+public interface ISimulationStorage : IAsyncDisposable {
   Task Initialise(SimulationCtx simulationCtx);
   ICtlRepository CtlRepo { get; }
   IStagedEntityRepository StageRepository { get; }
