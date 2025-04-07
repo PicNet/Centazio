@@ -7,10 +7,10 @@ namespace Centazio.Sample.AppSheet;
 public class AppSheetWriteFunction(CoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(AppSheetConstants.AppSheetSystemName, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
+    new WriteOperationConfig(System, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)
   ]);
 
-  private Task<CovertCoresToSystemsResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
+  private Task<ConvertCoresToSystemsResult> CovertCoreTasksToAppSheetTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) => 
       Task.FromResult(CovertCoresToSystems<CoreTask>(tocreate, toupdate, (id, e) => AppSheetTask.Create(id.ToString(), e.Name, e.Completed)));
   
   private Task<WriteOperationResult> WriteAppSheetTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 

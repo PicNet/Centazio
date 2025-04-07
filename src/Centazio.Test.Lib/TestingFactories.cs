@@ -92,7 +92,7 @@ public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepo
 public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : PromoteFunction(system, stage, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
+    new PromoteOperationConfig(System, typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
   ]);
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 
@@ -103,18 +103,18 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
 public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : WriteFunction(system, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
+    new WriteOperationConfig(System, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
   ]);
 }
 
 public class NoOpChangeNotifier : IChangesNotifier {
 
-  public List<(LifecycleStage, ObjectName)> Notifications { get; set; } = [];
+  public List<ObjectChangeTrigger> Notifications { get; set; } = [];
   
   public void Init(List<IRunnableFunction> functions) {}
   public Task Run(IFunctionRunner runner) => Task.CompletedTask;
-  public Task Notify(LifecycleStage stage, List<ObjectName> objs) {
-    Notifications = objs.Select(obj => (stage, obj)).ToList();
+  public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
+    Notifications = objs.Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
     return Task.CompletedTask;
   }
 
@@ -124,17 +124,13 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
 public class InstantChangesNotifier : IChangesNotifier {
 
-  private readonly Dictionary<ObjectChangeTrigger, List<IRunnableFunction>> triggermap = [];
-  
-  public bool IsEmpty => true;
   private IFunctionRunner? runner;
+  private List<IRunnableFunction> functions = null!;
   
   
-  public void Init(List<IRunnableFunction> functions) {
-    functions.ForEach(func => func.Triggers().ForEach(key => {
-      if (!triggermap.ContainsKey(key)) triggermap[key] = [];
-      triggermap[key].Add(func);
-    }));
+  // todo: move to ctor
+  public void Init(List<IRunnableFunction> funcs) {
+    functions = funcs;
   }
   
   public Task Run(IFunctionRunner funrun) {
@@ -142,23 +138,11 @@ public class InstantChangesNotifier : IChangesNotifier {
     return Task.CompletedTask;
   }
   
-  public async Task Notify(LifecycleStage stage, List<ObjectName> objs) {
+  public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
     if (runner is null) throw new Exception();
     
-    var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(obj, stage)).ToList();
-    Dictionary<IRunnableFunction, List<FunctionTrigger>> allfuncs = [];
-    triggers.ForEach(trigger => {
-      if (!triggermap.TryGetValue(trigger, out var funcs)) return;
-      funcs.ForEach(func => {
-        if (!allfuncs.ContainsKey(func)) allfuncs[func] = [];
-        allfuncs[func].Add(trigger);
-      });
-    });
-    
-    await allfuncs.Keys.Select(f => {
-      TestingUtcDate.DoTick();
-      DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
-      return runner.RunFunction(f, allfuncs[f]);
-    }).Synchronous();
+    var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
+    var totrigger = NotifierUtils.GetFunctionToTriggersPairs(triggers, functions);
+          foreach (var pair in totrigger) { await runner.RunFunction(pair.Key, pair.Value); }
   }
 }

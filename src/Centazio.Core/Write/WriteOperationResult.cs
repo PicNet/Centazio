@@ -29,7 +29,7 @@ public abstract record WriteOperationResult(
   }
 }
 
-internal sealed record SuccessWriteOperationResult(
+internal record SuccessWriteOperationResult(
     List<Map.Created> EntitiesCreated,
     List<Map.Updated> EntitiesUpdated,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)

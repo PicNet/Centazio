@@ -14,7 +14,9 @@ public interface IRunnableFunction : IDisposable {
   
   Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults);
   
-  List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
+  List<ObjectChangeTrigger> Triggers();
+  bool IsTriggeredBy(ObjectChangeTrigger trigger);
+  
   ValidString GetFunctionPollCronExpression(DefaultsSettings defs) {
     return new ValidString(Config.FunctionPollExpression 
         ?? (this is ReadFunction ? defs.ReadFunctionPollExpression : 
@@ -57,6 +59,12 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }
+
+  // todo: this no longer needs to be public if the function knows how it is triggered
+  public List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
+  
+  public bool IsTriggeredBy(ObjectChangeTrigger trigger) => 
+      Triggers().Any(functrigger => functrigger.Matches(trigger));
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations

@@ -66,7 +66,7 @@ public class FunctionRunner(ICtlRepository ctl, CentazioSettings settings) : IFu
 }
 
 public abstract record FunctionRunResults(List<OpResultAndObject> OpResults, string Message); 
-internal sealed record SuccessFunctionRunResults(List<OpResultAndObject> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
-internal sealed record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
-internal sealed record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
-internal sealed record ErrorFunctionRunResults(List<OpResultAndObject> OpResults, Exception Exception) : FunctionRunResults(OpResults, Exception.ToString());
+internal record SuccessFunctionRunResults(List<OpResultAndObject> OpResults) : FunctionRunResults(OpResults, "SuccessFunctionRunResults");
+internal record AlreadyRunningFunctionRunResults() : FunctionRunResults([], "AlreadyRunningFunctionRunResults");
+internal record InactiveFunctionRunResults() : FunctionRunResults([], "InactiveFunctionRunResults");
+internal record ErrorFunctionRunResults(List<OpResultAndObject> OpResults, Exception Exception) : FunctionRunResults(OpResults, Exception.ToString());

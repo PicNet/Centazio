@@ -7,7 +7,7 @@ namespace Centazio.Sample.AppSheet;
 public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(AppSheetConstants.AppSheetSystemName, stager, corestg, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(typeof(AppSheetTask), AppSheetConstants.AppSheetTaskEntityName, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
+    new PromoteOperationConfig(System, typeof(AppSheetTask), AppSheetConstants.AppSheetTaskEntityName, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 
   ]);
 
   private Task<List<EntityEvaluationResult>> PromoteTasks(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {

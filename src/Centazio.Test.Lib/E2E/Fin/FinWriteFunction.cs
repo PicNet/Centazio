@@ -6,15 +6,15 @@ namespace Centazio.Test.Lib.E2E.Fin;
 public class FinWriteFunction(SimulationCtx ctx, FinApi api) : WriteFunction(SimulationConstants.FIN_SYSTEM, ctx.CoreStore, ctx.CtlRepo) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, ConvertCoreCustomers, WriteCustomers),
-    new WriteOperationConfig(CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, ConvertCoreInvoices, WriteInvoices)
+    new WriteOperationConfig(System, CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, ConvertCoreCustomers, WriteCustomers),
+    new WriteOperationConfig(System, CoreEntityTypeName.From<CoreInvoice>(), TestingDefaults.CRON_EVERY_SECOND, ConvertCoreInvoices, WriteInvoices)
   ]);
 
-  private Task<CovertCoresToSystemsResult> ConvertCoreCustomers(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  private Task<ConvertCoresToSystemsResult> ConvertCoreCustomers(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     return Task.FromResult(CovertCoresToSystems<CoreCustomer>(tocreate, toupdate, (id, e) => ctx.Converter.CoreCustomerToFinAccount(id, e)));
   }
   
-  private async Task<CovertCoresToSystemsResult> ConvertCoreInvoices(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  private async Task<ConvertCoresToSystemsResult> ConvertCoreInvoices(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var cores = tocreate.Select(e => e.CoreEntity).Concat(toupdate.Select(e => e.CoreEntity)).ToList();
     var maps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(System, CoreEntityTypeName.From<CoreCustomer>(), cores, nameof(CoreInvoice.CustomerCoreId));
     return CovertCoresToSystems<CoreInvoice>(tocreate, toupdate, (id, e) => ctx.Converter.CoreInvoiceToFinInvoice(id, e, maps));

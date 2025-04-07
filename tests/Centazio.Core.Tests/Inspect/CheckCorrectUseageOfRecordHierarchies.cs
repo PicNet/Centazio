@@ -11,7 +11,7 @@ public class CheckCorrectUseageOfRecordHierarchies {
     var allimpls = records.Where(r => !r.IsAbstract).ToList();
     resultbases.ForEach(baserec => {
       var impls = allimpls.Where(baserec.IsAssignableFrom).ToList();
-      if (impls.Any()) errors.Add($"abstract 'Result' records should not export any subclasses, i.e. they should be 'internal sealed' and be created using factory methods on the base abstract record. Found the following violations:\n\t" + String.Join("\n\t", impls));
+      if (impls.Any()) errors.Add($"abstract 'Result' records should not export any subclasses, and should be created using factory methods on the base abstract record. Found the following violations:\n\t" + String.Join("\n\t", impls));
     });
     Assert.That(errors, Is.Empty, "\n\n" + String.Join("\n", errors) + "\n\n\n\n----------------------------------------------\n");
     

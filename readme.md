@@ -249,7 +249,6 @@ Data integration is all about getting data from one source, converting it and wr
 
 This pattern has the following characteristics:
 - The Main record:
-  - should be sealed
   - should have no public constructors (including default constructor) to ensure that serialisation libraries or ORM libraries cannot create these objects
   - all fields should then either be set by this private constructor or by init only required fields
   - should use strongly typed ids, and other value types
@@ -262,7 +261,7 @@ This pattern has the following characteristics:
 Example: 
   
 ```
-public sealed record StagedEntity {
+public record StagedEntity {
   public Guid Id { get; }
   public SystemName System { get; }
   public ObjectName Object { get; }

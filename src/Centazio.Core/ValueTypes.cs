@@ -19,15 +19,17 @@ public record ValidString(string Value) {
 
 [MaxLength2(64)] public abstract record EntityId(string Value) : ValidString(Value);
 
-public sealed record CoreEntityId(string Value) : EntityId(Value) {
+public record CoreEntityId(string Value) : EntityId(Value) {
   public static readonly CoreEntityId DEFAULT_VALUE = new("0");
 }
 
-public sealed record SystemEntityId(string Value) : EntityId(Value) {
+public record SystemEntityId(string Value) : EntityId(Value) {
   public static readonly SystemEntityId DEFAULT_VALUE = new("*");
 }
 
-[MaxLength2(32)] public sealed record SystemName(string Value) : ValidString(Value);
+[MaxLength2(32)] public record NotSystem(SystemName System) : SystemName(System.Value);
+
+[MaxLength2(32)] public record SystemName(string Value) : ValidString(Value);
 
 [MaxLength2(32)] public record ObjectName : ValidString {
   internal ObjectName(string Value) : base(Value) {}
@@ -36,18 +38,18 @@ public sealed record SystemEntityId(string Value) : EntityId(Value) {
   internal CoreEntityTypeName ToCoreEntityTypeName => this as CoreEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityTypeName)}'");
 }
 
-public sealed record SystemEntityTypeName(string Value) : ObjectName(Value) {
+public record SystemEntityTypeName(string Value) : ObjectName(Value) {
   public static SystemEntityTypeName From<E>() where E : ISystemEntity => new(typeof(E).Name);
   public static SystemEntityTypeName From<E>(E sysent) where E : ISystemEntity => new(sysent.GetType().Name);
 }
 
-public sealed record CoreEntityTypeName(string Value) : ObjectName(Value) {
+public record CoreEntityTypeName(string Value) : ObjectName(Value) {
   public static CoreEntityTypeName From<E>() where E : ICoreEntity => new(typeof(E).Name);
   public static CoreEntityTypeName From<E>(E core) where E : ICoreEntity => new(core.GetType().Name);
   public static CoreEntityTypeName From(Type coretype) => new(coretype.Name);
 }
 
-[MaxLength2(32)] public sealed record LifecycleStage(string Value) : ValidString(Value) {
+[MaxLength2(32)] public record LifecycleStage(string Value) : ValidString(Value) {
   [IgnoreNamingConventions] 
   public static class Defaults {
     public static readonly LifecycleStage Read = new(nameof(Read));

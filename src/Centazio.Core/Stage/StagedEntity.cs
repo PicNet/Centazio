@@ -3,7 +3,7 @@ using Centazio.Core.Checksum;
 
 namespace Centazio.Core.Stage;
 
-public sealed record StagedEntity {
+public record StagedEntity {
   
   public static StagedEntity Create(SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), system, systype, staged, data, checksum);
   

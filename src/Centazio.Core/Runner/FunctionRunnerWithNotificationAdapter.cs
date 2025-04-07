@@ -10,7 +10,7 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
     var results = await runner.RunFunction(func, triggers);
     var wcounts = results.OpResults.Where(r => r.Result.ChangedCount > 0).ToList();
     if (!wcounts.Any()) return results;
-    await notifier.Notify(func.Stage, wcounts.Select(c => c.Object).Distinct().ToList());
+    await notifier.Notify(func.System, func.Stage, wcounts.Select(c => c.Object).Distinct().ToList());
     return results;
   }
 

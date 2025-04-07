@@ -14,9 +14,9 @@ public class InProcessChangesNotifierTests {
   
   [Test] public void Test_Triggers_aggregation_works() {
     var triggers = new List<ObjectChangeTrigger> {
-      new(C.SystemEntityName, stage2),
-      new(C.SystemEntityName, stage3),
-      new(new("x"), stage1)
+      new(C.System1Name, stage2, C.SystemEntityName),
+      new(C.System1Name, stage3, C.SystemEntityName),
+      new(C.System1Name, stage1, new("x"))
     };
     var func = new Func(new("1"), triggers, []);
     var actual = ((IRunnableFunction) func).Triggers();
@@ -24,7 +24,7 @@ public class InProcessChangesNotifierTests {
   }
   
   [Test] public async Task Test_notification_works() {
-    var func = new Func(stage2, [new(C.SystemEntityName, new (stage1))], [C.CoreEntityName]);
+    var func = new Func(stage2, [new(C.System1Name, new (stage1), C.SystemEntityName)], [C.CoreEntityName]);
     
     var notif = new InProcessChangesNotifier();
     notif.Init([func]);
@@ -33,7 +33,7 @@ public class InProcessChangesNotifierTests {
     
     var notifications = 10;
     await Enumerable.Range(0, notifications).Select(async _ => {
-      await notif.Notify(stage1, [C.SystemEntityName]);
+      await notif.Notify(C.System1Name, stage1, [C.SystemEntityName]);
       await Task.Delay(50);
     }).Synchronous();
     
@@ -41,10 +41,10 @@ public class InProcessChangesNotifierTests {
   }
   
   [Test] public void Test_overwritting_op_config_triggers_works() {
-    var triggers = new List<ObjectChangeTrigger> { new(C.SystemEntityName, stage1) };
+    var triggers = new List<ObjectChangeTrigger> { new(C.System1Name, stage1, C.SystemEntityName) };
     var roc = new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers };
-    var poc = new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers };
-    var woc = new WriteOperationConfig(C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!) { Triggers = triggers };
+    var poc = new PromoteOperationConfig(C.System1Name, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers };
+    var woc = new WriteOperationConfig(C.System1Name, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!) { Triggers = triggers };
     
     Assert.That(roc.Triggers, Is.EquivalentTo(triggers));
     Assert.That(poc.Triggers, Is.EquivalentTo(triggers));
@@ -68,6 +68,11 @@ public class InProcessChangesNotifierTests {
       RunCount++;
       return Task.FromResult(result.Select(obj => new OpResultAndObject(obj, ReadOperationResult.EmptyResult())).ToList());
     }
+    
+    // todo: this is copied from AbstractFunction, clean up
+    public List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
+    public bool IsTriggeredBy(ObjectChangeTrigger trigger) => 
+        Triggers().Any(functrigger => functrigger.Matches(trigger));
 
   }
   
@@ -79,7 +84,7 @@ public class InProcessChangesNotifierTests {
       Running = true;
       var results = new List<OpResultAndObject>();
       await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), triggers, results);
-      await notif.Notify(func.Stage, results.Select(c => c.Object).Distinct().ToList());
+      await notif.Notify(func.System, func.Stage, results.Select(c => c.Object).Distinct().ToList());
       Running = false;
       return new SuccessFunctionRunResults(results);
     }

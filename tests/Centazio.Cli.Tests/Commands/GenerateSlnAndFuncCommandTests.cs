@@ -46,6 +46,8 @@ public class GenerateSlnAndFuncCommandTests {
     runner.DotNet("build", Environment.CurrentDirectory);
   }
 
+  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
+  //    NuGet packages are out of sync with current version of the generated code.
   [Test] public async Task Test_generate_project_for_each_lifecycle_stage() {
     await Test_generate_solution();
 
@@ -85,6 +87,8 @@ public class GenerateSlnAndFuncCommandTests {
     }
   }
 
+  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
+  //    NuGet packages are out of sync with current version of the generated code.
   [Test] public async Task Test_generate_project_in_existing_assembly() {
     await Test_generate_solution();
     Environment.CurrentDirectory = Path.Combine(testdir, sln);

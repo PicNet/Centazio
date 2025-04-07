@@ -27,10 +27,10 @@ public class PromoteOperationRunnerTests {
   } 
   
   [Test] public void Test_PromoteOperationConfig_validates_SystemEntityType_as_expected() {
-    Assert.Throws<Exception>(() => { _ = new PromoteOperationConfig(GetType(), new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!); });
+    Assert.Throws<Exception>(() => { _ = new PromoteOperationConfig(C.System1Name, GetType(), new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!); });
     
     var validtype = typeof(System1Entity);
-    var validconf = new PromoteOperationConfig(validtype, new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!);
+    var validconf = new PromoteOperationConfig(C.System1Name, validtype, new(nameof(PromoteOperationRunnerTests)), new(nameof(PromoteOperationRunnerTests)), CronExpressionsHelper.EverySecond(), (_, _) => null!);
     Assert.That(validconf.SystemEntityType, Is.EqualTo(validtype));
     
     
@@ -42,7 +42,7 @@ public class PromoteOperationRunnerTests {
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
         F.EmptyFunctionConfig(),
-        new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, SuccessfulConversionToCore), DateTime.MinValue));
+        new PromoteOperationConfig(C.System1Name, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, SuccessfulConversionToCore), DateTime.MinValue));
     var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.FirstName);
     
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
@@ -66,7 +66,7 @@ public class PromoteOperationRunnerTests {
       await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
           ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
           F.EmptyFunctionConfig() with { ThrowExceptions = false },
-          new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
+          new PromoteOperationConfig(C.System1Name, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
       Assert.Fail();
     } catch {
       var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.CoreId);

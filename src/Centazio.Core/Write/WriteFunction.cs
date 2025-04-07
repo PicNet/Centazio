@@ -60,7 +60,7 @@ public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRe
     }
   }
   
-  protected CovertCoresToSystemsResult CovertCoresToSystems<E>(List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate, ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
+  protected ConvertCoresToSystemsResult CovertCoresToSystems<E>(List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate, ConvertCoreToSystemEntityForWritingHandler<E> converter) where E : ICoreEntity {
     var tocreate2 = tocreate.Select(m => {
       var coreent = m.CoreEntity.To<E>();
       var sysent = converter(SystemEntityId.DEFAULT_VALUE, coreent);

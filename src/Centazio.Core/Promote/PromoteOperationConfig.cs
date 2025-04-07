@@ -29,18 +29,19 @@ public record EntityForPromotionEvaluation {
 }
 
 public abstract record EntityEvaluationResult(ISystemEntity SystemEntity);
-internal sealed record EntityToPromote(ISystemEntity SystemEntity, CoreEntityAndMeta CoreEntityAndMeta) : EntityEvaluationResult(SystemEntity);
-internal sealed record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
+internal record EntityToPromote(ISystemEntity SystemEntity, CoreEntityAndMeta CoreEntityAndMeta) : EntityEvaluationResult(SystemEntity);
+internal record EntityToIgnore(ISystemEntity SystemEntity, ValidString IgnoreReason) : EntityEvaluationResult(SystemEntity);
 
 
 public delegate Task<List<EntityEvaluationResult>> BuildCoreEntitiesHandler(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval);
 
 public record PromoteOperationConfig(
+    SystemName System,
     Type SystemEntityType, 
     SystemEntityTypeName SystemEntityTypeName,
     CoreEntityTypeName CoreEntityTypeName,
     ValidCron Cron, 
-    BuildCoreEntitiesHandler BuildCoreEntities) : OperationConfig(CoreEntityTypeName, [ new(SystemEntityTypeName, LifecycleStage.Defaults.Read) ], Cron), ILoggable {
+    BuildCoreEntitiesHandler BuildCoreEntities) : OperationConfig(CoreEntityTypeName, [ new(System, LifecycleStage.Defaults.Read, SystemEntityTypeName) ], Cron), ILoggable {
   
   
   public Type SystemEntityType { get; } = ValidateSystemEntityTypeImplementsISystemEntity(SystemEntityType);

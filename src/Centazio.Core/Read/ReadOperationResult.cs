@@ -16,10 +16,10 @@ public abstract record ReadOperationResult(
 
 }
 
-internal sealed record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal record EmptyReadOperationResult(EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(EOperationResult.Success, "EmptyReadOperationResult", 0, AbortVote);
 
-internal sealed record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
+internal record ListReadOperationResult(List<string> PayloadList, DateTime SpecificNextCheckpoint, EOperationAbortVote AbortVote = EOperationAbortVote.Continue) 
     : ReadOperationResult(
         EOperationResult.Success,
         $"ListReadOperationResult[{PayloadList.Count}]", 

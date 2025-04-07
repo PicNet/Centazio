@@ -86,7 +86,7 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   public Exception? Thrown { get; private set; }
   
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
+    new WriteOperationConfig(System, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, CovertCoreEntitiesToSystemEntities, WriteEntitiesToTargetSystem)
   ]) { ThrowExceptions = false, ChecksumAlgorithm = Helpers.TestingChecksumAlgorithm };
 
   public void Reset() {
@@ -94,10 +94,10 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
     Updated.Clear();
   }
   
-  private Task<CovertCoresToSystemsResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
+  private Task<ConvertCoresToSystemsResult> CovertCoreEntitiesToSystemEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) {
     var ccreate = tocreate.Select(e => new CoreSystemAndPendingCreateMap(e.CoreEntity, ToSysEnt(e.CoreEntity), e.Map, Helpers.TestingChecksumAlgorithm)).ToList();
     var cupdate = toupdate.Select(e => e.AddSystemEntity(ToSysEnt(e.CoreEntity, Guid.Parse(e.Map.SystemId.Value)), Helpers.TestingChecksumAlgorithm)).ToList();
-    return Task.FromResult(new CovertCoresToSystemsResult(ccreate, cupdate));
+    return Task.FromResult(new ConvertCoresToSystemsResult(ccreate, cupdate));
   }
 
   private Task<WriteOperationResult> WriteEntitiesToTargetSystem(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) {

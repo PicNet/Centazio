@@ -7,7 +7,7 @@ namespace {{ it.Namespace }};
 public class {{ it.SystemName }}WriteFunction(ICoreStorage core, ICtlRepository ctl, {{ it.SystemName }}Api api) : WriteFunction({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(CoreEntityTypes.ExampleEntity, CronExpressionsHelper.EveryXSeconds(5), CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities, Write{{ it.SystemName }}ExampleEntities)
+    new WriteOperationConfig(System, CoreEntityTypes.ExampleEntity, CronExpressionsHelper.EveryXSeconds(5), CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities, Write{{ it.SystemName }}ExampleEntities)
   ]);
 
   private Task<CovertCoresToSystemsResult> CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>

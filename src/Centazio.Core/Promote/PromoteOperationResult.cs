@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Promote;
 
-internal sealed record SuccessPromoteOperationResult(
+internal record SuccessPromoteOperationResult(
     List<(StagedEntity StagedEntity, ISystemEntity SystemEntity, ICoreEntity CoreEntity)> ToPromote,
     List<(StagedEntity StagedEntity, ValidString IgnoreReason)> ToIgnore,
     EOperationAbortVote AbortVote = EOperationAbortVote.Continue)

@@ -147,7 +147,7 @@ public class PromoteFunctionWithSinglePromoteCustomerOperation(IStagedEntityRepo
   public bool IgnoreNext { get; set; }
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, BuildCoreEntities) { IsBidirectional = bidi }
+    new PromoteOperationConfig(System, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, BuildCoreEntities) { IsBidirectional = bidi }
   ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {

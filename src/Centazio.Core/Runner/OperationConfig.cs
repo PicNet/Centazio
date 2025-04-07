@@ -2,8 +2,12 @@ namespace Centazio.Core.Runner;
 
 public abstract record FunctionTrigger;
 
-public record ObjectChangeTrigger(ObjectName Object, LifecycleStage Stage) : FunctionTrigger {
-  public override string ToString() => $"{Object.Value}/{Stage.Value}";
+public record ObjectChangeTrigger(SystemName System, LifecycleStage Stage, ObjectName Object) : FunctionTrigger {
+  public override string ToString() => $"{System.Value}/{Object.Value}/{Stage.Value}";
+  
+  public bool Matches(ObjectChangeTrigger other) => 
+      other.Stage == Stage && other.Object == Object 
+          && (System is NotSystem ? other.System != System : other.System == System);
 }
 
 public record TimerChangeTrigger(string Expression) : FunctionTrigger {
