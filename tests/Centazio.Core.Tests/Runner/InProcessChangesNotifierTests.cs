@@ -10,19 +10,7 @@ public class InProcessChangesNotifierTests {
 
   private readonly LifecycleStage stage1 = new("stage1");
   private readonly LifecycleStage stage2 = new("stage2");
-  private readonly LifecycleStage stage3 = new("stage3");
-  
-  [Test] public void Test_Triggers_aggregation_works() {
-    var triggers = new List<ObjectChangeTrigger> {
-      new(C.System1Name, stage2, C.SystemEntityName),
-      new(C.System1Name, stage3, C.SystemEntityName),
-      new(C.System1Name, stage1, new("x"))
-    };
-    var func = new Func(new("1"), triggers, []);
-    var actual = ((IRunnableFunction) func).Triggers();
-    Assert.That(actual, Is.EquivalentTo(triggers));
-  }
-  
+
   [Test] public async Task Test_notification_works() {
     var func = new Func(stage2, [new(C.System1Name, new (stage1), C.SystemEntityName)], [C.CoreEntityName]);
     
@@ -53,14 +41,15 @@ public class InProcessChangesNotifierTests {
   
   class Func(LifecycleStage stage, List<ObjectChangeTrigger> triggers, List<ObjectName> result) : IRunnableFunction {
     
-    public SystemName System { get; } = C.System1Name;
+    public SystemName System => C.System1Name;
     public LifecycleStage Stage { get; } = stage; 
-    public bool Running { get; } = false;
+    public bool Running => false;
+
     public FunctionConfig Config { get; } = new ([
       new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), null!) { Triggers = triggers }  
     ]);
     
-    public int RunCount { get; private set; } 
+    public int RunCount { get; private set; }
     
     public void Dispose() { throw new Exception(); }
     
@@ -69,10 +58,8 @@ public class InProcessChangesNotifierTests {
       return Task.FromResult(result.Select(obj => new OpResultAndObject(obj, ReadOperationResult.EmptyResult())).ToList());
     }
     
-    // todo: this is copied from AbstractFunction, clean up
-    public List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
     public bool IsTriggeredBy(ObjectChangeTrigger trigger) => 
-        Triggers().Any(functrigger => functrigger.Matches(trigger));
+        triggers.Any(functrigger => functrigger.Matches(trigger));
 
   }
   

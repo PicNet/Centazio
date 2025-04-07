@@ -14,7 +14,6 @@ public interface IRunnableFunction : IDisposable {
   
   Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults);
   
-  List<ObjectChangeTrigger> Triggers();
   bool IsTriggeredBy(ObjectChangeTrigger trigger);
   
   ValidString GetFunctionPollCronExpression(DefaultsSettings defs) {
@@ -36,6 +35,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   public bool Running { get; private set; }
   
   protected readonly ICtlRepository ctl;
+  private readonly List<ObjectChangeTrigger> triggers;
   protected DateTime FunctionStartTime { get; private set; }
   
   protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
@@ -45,6 +45,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     this.ctl = ctl;
     
     Config = GetFunctionConfiguration();
+    triggers = Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   }
 
   protected abstract FunctionConfig GetFunctionConfiguration();
@@ -59,12 +60,9 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }
-
-  // todo: this no longer needs to be public if the function knows how it is triggered
-  public List<ObjectChangeTrigger> Triggers() => Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   
   public bool IsTriggeredBy(ObjectChangeTrigger trigger) => 
-      Triggers().Any(functrigger => functrigger.Matches(trigger));
+      triggers.Any(functrigger => functrigger.Matches(trigger));
 
   internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig conf, SystemState system, ICtlRepository ctl) {
     return (await conf.Operations

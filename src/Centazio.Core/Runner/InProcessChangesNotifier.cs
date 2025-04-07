@@ -7,10 +7,8 @@ public class InProcessChangesNotifier : IChangesNotifier {
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   private List<IRunnableFunction> functions = null!;
   
-  // todo: move to ctor if possible?
   public void Init(List<IRunnableFunction> funcs) { functions = funcs; }
   
-  // todo: copy new logic into the InstantNotifier
   public Task Run(IFunctionRunner runner) {
     return Task.Run(async () => {
       while (await pubsub.Reader.WaitToReadAsync()) {

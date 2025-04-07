@@ -128,7 +128,6 @@ public class InstantChangesNotifier : IChangesNotifier {
   private List<IRunnableFunction> functions = null!;
   
   
-  // todo: move to ctor
   public void Init(List<IRunnableFunction> funcs) {
     functions = funcs;
   }
