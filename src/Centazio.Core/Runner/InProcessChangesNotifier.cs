@@ -9,12 +9,10 @@ public interface IChangesNotifier {
 
 }
 
-public class InProcessChangesNotifier(bool parallel = true) : IChangesNotifier {
+public class InProcessChangesNotifier : IChangesNotifier {
 
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   private readonly Dictionary<ObjectChangeTrigger, List<IRunnableFunction>> triggermap = [];
-  
-  public bool IsEmpty => pubsub.Reader.Count == 0;
   
   public void Init(List<IRunnableFunction> functions) {
     functions.ForEach(func => func.Triggers().ForEach(key => {
@@ -40,11 +38,10 @@ public class InProcessChangesNotifier(bool parallel = true) : IChangesNotifier {
         }
         
         // run the functions, passing list of triggers which affected the function
-        var tasks = allfuncs.Keys.Select(async f => {
-          DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[f])}]", String.Empty, f.GetType().Name, [String.Empty]);
-          return await runner.RunFunction(f, allfuncs[f]);
-        });
-        await RunTasks(tasks);
+        foreach (var func in allfuncs.Keys) {
+          DataFlowLogger.Log($"Func-To-Func Triggers[{String.Join(", ", allfuncs[func])}]", String.Empty, func.GetType().Name, [String.Empty]);
+          await runner.RunFunction(func, allfuncs[func]);
+        }
       }
     });
   }
@@ -52,11 +49,6 @@ public class InProcessChangesNotifier(bool parallel = true) : IChangesNotifier {
   public async Task Notify(LifecycleStage stage, List<ObjectName> objs) {
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(obj, stage)).ToList();
     await pubsub.Writer.WriteAsync(triggers);
-  }
-
-  private async Task RunTasks(IEnumerable<Task> tasks) {
-    if (parallel) await Task.WhenAll(tasks);
-    else await tasks.Synchronous();
   }
 
 }

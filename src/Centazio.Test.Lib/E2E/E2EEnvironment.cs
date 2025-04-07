@@ -86,21 +86,20 @@ public class E2EEnvironment(
     ctx.Debug($"Epoch: [{epoch}] simulation step completed - running functions");
     
     var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
+    TestingUtcDate.DoTick();
     await runner.RunFunction(crm_read, trigger);
+    
+    TestingUtcDate.DoTick();
     await runner.RunFunction(fin_read, trigger);
     
-    if (notifier is not NoOpChangeNotifier) {
-      // allow the notifier to run and all writes flushed to db
-      // todo: improve this
-      while (runner.Running) { await Task.Delay(15); }
-      await Task.Delay(50);
+    if (notifier is InProcessChangesNotifier) {
+      await Task.Delay(500);
     } else {
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
       await runner.RunFunction(crm_write, trigger);
       await runner.RunFunction(fin_write, trigger);
     }
-    await Task.Delay(250);
     ctx.Debug($"Epoch: [{epoch}] functions completed - validating");
     await ValidateEpoch();
   }
