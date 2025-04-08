@@ -6,5 +6,7 @@ public interface ISimulationStorage : IAsyncDisposable {
   Task Initialise(SimulationCtx simulationCtx);
   ICtlRepository CtlRepo { get; }
   IStagedEntityRepository StageRepository { get; }
-  ISimulationCoreStorageRepository CoreStore { get; } 
+  ISimulationCoreStorageRepository CoreStore { get; }
+  
+  int PostEpochDelayMs { get; }
 }

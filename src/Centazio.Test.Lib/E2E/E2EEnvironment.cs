@@ -92,9 +92,10 @@ public class E2EEnvironment(
     TestingUtcDate.DoTick();
     await runner.RunFunction(fin_read, trigger);
     
-    if (notifier is InProcessChangesNotifier) {
-      await Task.Delay(500);
-    } else {
+    // async notifiers need to wait for their background
+    //    threads to finnish triggering other functions
+    if (notifier.IsAsync) { await Task.Delay(storage.PostEpochDelayMs); } 
+    else {
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
       await runner.RunFunction(crm_write, trigger);

@@ -12,35 +12,41 @@ using Microsoft.EntityFrameworkCore;
 namespace Centazio.Providers.Sqlite.Tests.E2E;
 
 public class SqliteE2ETests : BaseE2ETests {
-  protected override Task<ISimulationStorage> GetStorage() {
-    var dbfile = TestContext.CurrentContext.Test.Name + ".db";
-    if (File.Exists(dbfile)) File.Delete(dbfile);
-    return Task.FromResult<ISimulationStorage>(new SqliteSimulationStorage(dbfile));
-  }
+  protected override Task<ISimulationStorage> GetStorage() => 
+      Task.FromResult<ISimulationStorage>(new SqliteSimulationStorage());
+
 }
 
-public class SqliteSimulationStorage(string dbfile) : ISimulationStorage {
-  // in-memory sqlite locks, so use file
-  private readonly string connstr = $"Data Source={dbfile};Cache=Shared";
+public class SqliteSimulationStorage : ISimulationStorage {
   
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
+  // sqlite is terrible with multithreading and needs a delay during the simulation when using an async notifier
+  public int PostEpochDelayMs => 750;  
+
   public async Task Initialise(SimulationCtx ctx) {
+    var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));  
     var dbf = new SqliteDbFieldsHelper();
     CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
-        connstr,
+        ctl_db,
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 
         nameof(ObjectState).ToLower(), 
         nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(connstr)), dbf).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(staging_db)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
-        () => new SqliteSimulationDbContext(connstr), 
+        () => new SqliteSimulationDbContext(core_db), 
         ctx.Epoch, dbf).Initialise();
+    
+    string GetNewDbFileConnStr(string repo) {
+      var dbfile = $"{TestContext.CurrentContext.Test.Name}_{repo}.db";
+      if (File.Exists(dbfile)) File.Delete(dbfile);
+      return $"Data Source={dbfile};Cache=Shared;";
+    }
   }
-  
+
   public async ValueTask DisposeAsync() {
     await CoreStore.DisposeAsync();
     await StageRepository.DisposeAsync();

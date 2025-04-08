@@ -4,6 +4,8 @@ public interface IChangesNotifier {
   void Init(List<IRunnableFunction> functions);
   Task Run(IFunctionRunner runner);
   Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs);
+  bool IsAsync { get; }
+
 }
 
 public static class NotifierUtils {

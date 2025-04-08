@@ -19,7 +19,8 @@ public class SqlServerSimulationStorage : ISimulationStorage {
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
-  
+  public int PostEpochDelayMs => 500;
+
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqlServerDbFieldsHelper();
     var connstr = (await SqlConn.GetInstance(false, TestingFactories.Secrets())).ConnStr;
