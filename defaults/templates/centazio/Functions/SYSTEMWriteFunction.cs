@@ -10,7 +10,7 @@ public class {{ it.SystemName }}WriteFunction(ICoreStorage core, ICtlRepository 
     new WriteOperationConfig(System, CoreEntityTypes.ExampleEntity, CronExpressionsHelper.EveryXSeconds(5), CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities, Write{{ it.SystemName }}ExampleEntities)
   ]);
 
-  private Task<CovertCoresToSystemsResult> CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
+  private Task<ConvertCoresToSystemsResult> CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
       Task.FromResult(CovertCoresToSystems<ExampleEntity>(tocreate, toupdate, (id, e) => new {{ it.SystemName }}ExampleEntity(id.Value, e.Name, UtcDate.ToMillis().ToString())));
 
   private Task<WriteOperationResult> Write{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
