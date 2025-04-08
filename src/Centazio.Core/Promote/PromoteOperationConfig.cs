@@ -63,5 +63,9 @@ public record PromoteOperationConfig(
   private static Type ValidateSystemEntityTypeImplementsISystemEntity(Type type) => 
       type.GetInterfaces().FirstOrDefault(i => i == typeof(ISystemEntity)) is not null ? type : throw new Exception($"PromoteOperationConfig.SystemEntityType must be a `Type` that implements the ISystemEntity interface");
 
+  // Triggered by any ReadFunction for same System/Object
+  public override bool ShouldRunBasedOnTriggers(List<ObjectChangeTrigger> triggeredby) => 
+      triggeredby.Any(t => t.Stage == LifecycleStage.Defaults.Read && t.System == System && t.Object == SystemEntityTypeName);
+
 }
 

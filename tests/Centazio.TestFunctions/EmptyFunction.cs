@@ -53,7 +53,9 @@ public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionO
 
 }
 
-public record EmptyFunctionOperationConfig(string Name) : OperationConfig(Constants.Object, [], CronExpressionsHelper.EveryXSeconds(20));
+public record EmptyFunctionOperationConfig(string Name) : OperationConfig(Constants.Object, [], CronExpressionsHelper.EveryXSeconds(20)) {
+  public override bool ShouldRunBasedOnTriggers(List<ObjectChangeTrigger> triggeredby) => true;
+}
 
 public record EmptyFunctionOperationResult() : OperationResult(EOperationResult.Success, nameof(Message), 0);
 

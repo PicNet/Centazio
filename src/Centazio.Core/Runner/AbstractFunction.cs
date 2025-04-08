@@ -51,12 +51,12 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   protected abstract FunctionConfig GetFunctionConfiguration();
   public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
-  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
       var opstates = await LoadOperationsStates(Config, sys, ctl);
-      var readyops = GetReadyOperations(opstates);
+      var readyops = GetReadyOperations(opstates, triggeredby);
       await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }
@@ -75,8 +75,11 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     .ToList();
   }
 
-  internal static List<OperationStateAndConfig<C>> GetReadyOperations(List<OperationStateAndConfig<C>> states) {
+  internal static List<OperationStateAndConfig<C>> GetReadyOperations(List<OperationStateAndConfig<C>> states, List<FunctionTrigger> triggeredby) {
     bool IsOperationReady(OperationStateAndConfig<C> op) {
+      // todo: ensure we have a test that checks any operation that was skipped because of `RunOperationBasedOnTriggers` does not get its checkpoint updated
+      var objtriggers = triggeredby.OfType<ObjectChangeTrigger>().ToList();
+      if (objtriggers.Any() && !op.OpConfig.ShouldRunBasedOnTriggers(objtriggers)) return false;
       var next = op.OpConfig.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
       return next <= UtcDate.UtcNow;
     }

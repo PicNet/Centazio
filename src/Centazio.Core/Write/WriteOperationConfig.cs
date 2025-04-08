@@ -13,4 +13,9 @@ public record WriteOperationConfig(
     WriteEntitiesToTargetSystemHandler WriteEntitiesToTargetSystem) : OperationConfig(CoreEntityTypeName, [ new(new NotSystem(System), LifecycleStage.Defaults.Promote, CoreEntityTypeName) ], Cron), ILoggable {
   
   public string LoggableValue => $"{CoreEntityTypeName.Value}";
+  
+  // Triggered by any PromoteFunction for same Object but from other System
+  public override bool ShouldRunBasedOnTriggers(List<ObjectChangeTrigger> triggeredby) => 
+      triggeredby.Any(t => t.Stage == LifecycleStage.Defaults.Promote && t.Object == Object && t.System != System);
+
 }

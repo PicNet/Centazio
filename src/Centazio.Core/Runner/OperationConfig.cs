@@ -17,6 +17,8 @@ public record TimerChangeTrigger(string Expression) : FunctionTrigger {
 public abstract record OperationConfig(ObjectName Object, List<ObjectChangeTrigger> Triggers, ValidCron Cron) {
   public DateTime? FirstTimeCheckpoint { get; init; }
   public List<ObjectChangeTrigger> Triggers { get; set; } = Triggers;
+  
+  public abstract bool ShouldRunBasedOnTriggers(List<ObjectChangeTrigger> triggeredby);
 }
 
 public record OperationStateAndConfig<C>(ObjectState State, FunctionConfig FuncConfig, C OpConfig, DateTime Checkpoint) where C : OperationConfig;

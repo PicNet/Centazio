@@ -72,7 +72,7 @@ public class AbstractFunctionTests {
       Op("5", "0 0 0 * * MON", Dt("2024-07-29T00:00:00Z")), // Weekly on Monday at 00:00 UTC, now is not Monday
       Op("6", "0 0 * * * *", Dt("2024-08-01T01:00:00Z"))    // Hourly at 00 minutes, not yet ready
     } ;
-    var ready = AbstractFunction<ReadOperationConfig>.GetReadyOperations(ops); 
+    var ready = AbstractFunction<ReadOperationConfig>.GetReadyOperations(ops, []); 
     Assert.That(ready.Select(op => op.State.Object.Value), Is.EquivalentTo(["1", "2", "3"]));
   }
   

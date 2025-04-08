@@ -13,6 +13,8 @@ public class ClickUpOtherFunction(ICtlRepository ctl) : AbstractFunction<EmptyFu
       Task.FromResult<OperationResult>(new EmptyFunctionOperationResult());
 }
 
-public record EmptyFunctionOperationConfig(string Name) : OperationConfig(new CoreEntityTypeName("Object"), [], CronExpressionsHelper.EveryXSeconds(20));
+public record EmptyFunctionOperationConfig(string Name) : OperationConfig(new CoreEntityTypeName("Object"), [], CronExpressionsHelper.EveryXSeconds(20)) {
+  public override bool ShouldRunBasedOnTriggers(List<ObjectChangeTrigger> triggeredby) => true;
+}
 
 public record EmptyFunctionOperationResult() : OperationResult(EOperationResult.Success, nameof(Message), 0);
