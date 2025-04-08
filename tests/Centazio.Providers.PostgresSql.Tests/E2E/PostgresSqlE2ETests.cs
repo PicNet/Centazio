@@ -23,7 +23,7 @@ public class PostgresSqlSimulationStorage(string connstr) : ISimulationStorage {
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
-  public int PostEpochDelayMs => 150;
+  public int PostEpochDelayMs => 250;
 
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new PostgresSqlDbFieldsHelper();
