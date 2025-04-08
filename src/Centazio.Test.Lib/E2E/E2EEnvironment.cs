@@ -94,13 +94,13 @@ public class E2EEnvironment(
     
     // async notifiers need to wait for their background
     //    threads to finnish triggering other functions
-    if (notifier.IsAsync) { await Task.Delay(storage.PostEpochDelayMs); } 
-    else {
+    if (notifier is NoOpChangeNotifier) {
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
       await runner.RunFunction(crm_write, trigger);
       await runner.RunFunction(fin_write, trigger);
-    }
+    } else { await Task.Delay(storage.PostEpochDelayMs); }
+    
     ctx.Debug($"Epoch: [{epoch}] functions completed - validating");
     await ValidateEpoch();
   }
