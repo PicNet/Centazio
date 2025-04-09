@@ -15,8 +15,10 @@ public class GenerateSlnAndFuncCommandTests {
   private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
   private readonly string slnfile = nameof(GenerateSlnAndFuncCommandTests) + ".sln";
   private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetDevPath(), "..", "test-generator"));
-  private readonly ICentazioCodeGenerator gen = new CentazioCodeGenerator(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()));
   private readonly string SYSTEM_NAME = "Acme";
+  
+  private readonly CentazioCodeGenerator nugetgen = new(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()));
+  private readonly CentazioCodeGenerator refgen = new(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()), false);
   
 
   [SetUp] public void SetUp() {
@@ -31,10 +33,32 @@ public class GenerateSlnAndFuncCommandTests {
     Environment.CurrentDirectory = properroot;
   }
 
-  [Test] public async Task Test_generate_solution() {
-    var cmd = new GenerateSlnCommand(gen);
+  [Test] public async Task Test_generate_solution_with_nugets() => 
+      await GenerateSlnTestImpl(true);
+  
+  [Test] public async Task Test_generate_solution_with_references() => 
+      await GenerateSlnTestImpl(false);
+
+  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
+  //    NuGet packages are out of sync with current version of the generated code.
+  [Test] public async Task Test_generate_project_for_each_lifecycle_stage_using_nugets() => 
+      await GenerateFuncInOwnDirImpl(true);
+
+  [Test] public async Task Test_generate_project_for_each_lifecycle_stage_using_refs() => 
+      await GenerateFuncInOwnDirImpl(false);
+
+  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
+  //    NuGet packages are out of sync with current version of the generated code.
+  [Test] public async Task Test_generate_project_in_existing_assembly_using_nugets() => 
+      await GenerateProjInExistingAssemblyImpl(true);
+
+  [Test] public async Task Test_generate_project_in_existing_assembly_using_refs() => 
+      await GenerateProjInExistingAssemblyImpl(false);
+  
+  private async Task GenerateSlnTestImpl(bool usenuget) {
+    var cmd = new GenerateSlnCommand(GetGen(usenuget));
     var existsbefore = Directory.Exists(sln);
-    await cmd.ExecuteImpl(new GenerateSlnCommand.Settings { SolutionName = sln });
+    await cmd.ExecuteImpl(new GenerateSlnCommand.Settings { SolutionName = sln, CoreStorageProvider = "Sqlite" });
 
     Assert.That(existsbefore, Is.False);
     Assert.That(Directory.Exists(sln), Is.True);
@@ -45,14 +69,11 @@ public class GenerateSlnAndFuncCommandTests {
 
     runner.DotNet("build", Environment.CurrentDirectory);
   }
-
-  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
-  //    NuGet packages are out of sync with current version of the generated code.
-  [Test] public async Task Test_generate_project_for_each_lifecycle_stage() {
-    await Test_generate_solution();
-
+  
+  private async Task GenerateFuncInOwnDirImpl(bool usenuget) {
+    await GenerateSlnTestImpl(usenuget);
     Environment.CurrentDirectory = Path.Combine(testdir, sln);
-    var cmd = new GenerateFunctionCommand(gen);
+    var cmd = new GenerateFunctionCommand(GetGen(usenuget));
 
     var modes = new[] { nameof(Settings.Read), nameof(Settings.Promote), nameof(Settings.Write), nameof(Settings.Other) };
     await modes.Select(async mode => { await DoMode(mode); }).Synchronous();
@@ -86,14 +107,13 @@ public class GenerateSlnAndFuncCommandTests {
       runner.DotNet("build", Environment.CurrentDirectory); // build solution
     }
   }
-
-  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
-  //    NuGet packages are out of sync with current version of the generated code.
-  [Test] public async Task Test_generate_project_in_existing_assembly() {
-    await Test_generate_solution();
+  
+  private async Task GenerateProjInExistingAssemblyImpl(bool usenuget) {
+    await GenerateSlnTestImpl(usenuget);
+    
     Environment.CurrentDirectory = Path.Combine(testdir, sln);
 
-    var cmd = new GenerateFunctionCommand(gen);
+    var cmd = new GenerateFunctionCommand(GetGen(usenuget));
     var sett = new Settings { SystemName = SYSTEM_NAME, Read = true };
     await cmd.ExecuteImpl(sett);
 
@@ -107,6 +127,8 @@ public class GenerateSlnAndFuncCommandTests {
     runner.DotNet("build", Environment.CurrentDirectory); // build the whole solution
   }
 
+  private CentazioCodeGenerator GetGen(bool usenuget) => usenuget ? nugetgen : refgen;
+  
   private async Task ValidateProjectExistsInSln(string projname) =>
       Assert.That(Regex.Match(await File.ReadAllTextAsync(slnfile),
               @$"Project\(\""\{{.*}}\""\) = \""{projname}\"", \""{projname}\\{projname}.csproj\"", \""\{{.*}}\""")

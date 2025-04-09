@@ -1,13 +1,13 @@
 ﻿namespace Centazio.Cli.Infra.Gen;
 
 public interface ICentazioCodeGenerator {
-  Task<string> GenerateSolution(string slnname);
+  Task<string> GenerateSolution(string slnname, string? provider);
   Task GenerateFunction(string slnfile, IFunctionGenerateSettings settings);
 }
 
-public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : ICentazioCodeGenerator {
+public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, bool usenuget=true) : ICentazioCodeGenerator {
 
-  public async Task<string> GenerateSolution(string slnname) {
+  public async Task<string> GenerateSolution(string slnname, string? provider) {
     var (sln, shared, slndir) = (slnname, $"{slnname}.Shared", Directory.CreateDirectory(slnname).FullName);
     var shareddir = Path.Combine(slndir, shared);
     
@@ -15,10 +15,9 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
     CreateEmptySharedProj();
     CopySampleProjSharedProjFiles();
     await AdjustCopiedFiles();
-    InstallRequiredNuGetPackages();
-    
+    InstallCentazioNuGetsOrRefs(Path.Combine(slndir, shared), provider);
     return sln;
-
+    
     void CreateSlnFile() { cmd.DotNet($"new sln --name {sln}", slndir); }
 
     void CreateEmptySharedProj() {
@@ -39,11 +38,6 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
         await File.WriteAllTextAsync(path, contents);
       }).Synchronous();
     }
-    
-    void InstallRequiredNuGetPackages() {
-      cmd.DotNet("add package --prerelease Centazio.Core", Path.Combine(slndir, shared));
-      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", Path.Combine(slndir, shared));
-    }
   }
   
   public async Task GenerateFunction(string slnfile, IFunctionGenerateSettings settings) {
@@ -54,8 +48,7 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
       File.Delete(Path.Combine(settings.FunctionName, "Class1.cs"));
       cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
       
-      cmd.DotNet("add package --prerelease Centazio.Core", settings.FunctionName);
-      cmd.DotNet("add package --prerelease Centazio.Providers.Sqlite", settings.FunctionName);
+      InstallCentazioNuGetsOrRefs(settings.FunctionName, null);
       cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
     }
     
@@ -73,6 +66,20 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater) : I
       }); 
       await File.WriteAllTextAsync(Path.Combine(todir, tofile), contents);
     }).Synchronous();
+  }
+  
+  private void InstallCentazioNuGetsOrRefs(string projdir, string? provider) {
+    if (usenuget) InstallNuGets(); else InstallRefs();
+
+    void InstallNuGets() {
+      cmd.DotNet("add package --prerelease Centazio.Core", projdir);
+      if (provider is not null) cmd.DotNet($"add package --prerelease Centazio.Providers.{provider}", projdir);
+    }
+    
+    void InstallRefs() {
+      cmd.DotNet($"add reference {FsUtils.GetDevPath("src", "Centazio.Core")}", projdir);
+      if (provider is not null) cmd.DotNet($"add reference {FsUtils.GetDevPath("src", "Centazio.Providers", $"Centazio.Providers.{provider}")}", projdir);
+    }
   }
 }
 
