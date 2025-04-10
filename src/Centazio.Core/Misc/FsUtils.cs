@@ -6,17 +6,8 @@ public static class FsUtils {
   private static string? cliinstall;
   
   public static string GetDevPath(params List<string> steps) {
-    var file = "centazio3.sln";
-    devroot ??= GetDevRootDir(Environment.CurrentDirectory) ?? throw new Exception($"failed to find the root directory by searching for [{file}]"); 
+    devroot ??= TryToFindDirectoryOfFile("centazio3.sln") ?? throw new Exception($"failed to find the root dev directory"); 
     return GetPathFromRootAndSteps(devroot, steps);
-        
-    string? GetDevRootDir(string dir) {
-      var path = Path.Combine(dir, file);
-      if (File.Exists(path)) return dir;
-
-      var parent = Directory.GetParent(dir)?.FullName;
-      return parent is null ? null : GetDevRootDir(parent);
-    }
   }
   
   internal static string TestingCliRootDir = String.Empty;
@@ -48,5 +39,13 @@ public static class FsUtils {
 
   private static string GetPathFromRootAndSteps(string root, params List<string> steps) => 
       Path.GetFullPath(Path.Combine(steps.Prepend(root).ToArray()));
+
+  public static string? TryToFindDirectoryOfFile(string file, string? from = null) {
+    var path = Path.Combine(from ?? Environment.CurrentDirectory, file);
+    if (File.Exists(path)) return from;
+
+    var parent = Directory.GetParent(from ?? Environment.CurrentDirectory)?.FullName;
+    return parent is null ? null : TryToFindDirectoryOfFile(file, parent);
+  }
 
 }

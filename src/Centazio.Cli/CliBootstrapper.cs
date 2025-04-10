@@ -29,20 +29,9 @@ internal class CliBootstrapper {
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
     
-    GetType().Assembly.GetTypes()
-        .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
-        .ForEach(t => {
-          svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
-          svcs.AddSingleton(t);
-        });
-    
-    var settings = SettingsLoader.RegisterSettingsHierarchy(
-        new SettingsLoader().Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
-    return svcs
+    svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMenuCommand>()
-        .AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT))
-        
         .AddSingleton<Cli>()
         .AddSingleton<InteractiveMenu>()
         .AddSingleton<CommandsTree>()
@@ -56,8 +45,31 @@ internal class CliBootstrapper {
         .AddSingleton<IAwsFunctionDeployer, AwsFunctionDeployer>()
         .AddSingleton<IAzFunctionDeployer, AzFunctionDeployer>()
         .AddSingleton<IAzFunctionDeleter, AzFunctionDeleter>()
-        .AddSingleton<CentazioHost>()
-        .BuildServiceProvider();
+        .AddSingleton<CentazioHost>();
+    
+    // todo: we should not register commands that rely on CentazioSettings if its not
+    //    available.  Also need to be removed from CentazioTree
+    var available = LoadSettingsAndSecretsIfAvailable();
+    RegisterCliCommands();
+    return svcs.BuildServiceProvider();
+    
+    bool LoadSettingsAndSecretsIfAvailable() {
+      var dir = FsUtils.TryToFindDirectoryOfFile("settings.json");
+      if (dir is null) return false;
+      var conf = new SettingsLoaderConfig(RootDirectory: dir);  
+      var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
+      svcs.AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT));
+      return true;
+    }
+    
+    void RegisterCliCommands() {
+      GetType().Assembly.GetTypes()
+          .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
+          .ForEach(t => {
+            svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
+            svcs.AddSingleton(t);
+          });
+    }
   }
 
   private void InitialiseExceptionHandler(Cli cli) => AppDomain.CurrentDomain.UnhandledException += 

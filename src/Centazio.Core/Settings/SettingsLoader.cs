@@ -11,6 +11,7 @@ public interface ISettingsLoader {
 public record PotentialSettingFile(string FileName, bool Required, bool IsDefaultsFile);
 
 public record SettingsLoaderConfig(string FileNamePrefix = SettingsLoaderConfig.DEFAULT_FILE_NAME_PREFIX, string? RootDirectory = null, bool IgnoreDefaults = false) {
+  // todo: remove this, just hardcode "settings.json" no need to be this flexible just for tests
   private const string DEFAULT_FILE_NAME_PREFIX = "settings";
   
   public readonly string RootDirectory = RootDirectory ?? (Env.IsInDev() ? FsUtils.GetDevPath() : Environment.CurrentDirectory);

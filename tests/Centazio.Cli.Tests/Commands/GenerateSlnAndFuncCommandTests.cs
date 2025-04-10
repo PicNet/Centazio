@@ -23,7 +23,7 @@ public class GenerateSlnAndFuncCommandTests {
 
   [SetUp] public void SetUp() {
     FsUtils.TestingCliRootDir = properroot;
-    Environment.CurrentDirectory = testdir;
+    Environment.CurrentDirectory = Directory.CreateDirectory(testdir).FullName;
     
     if (Directory.Exists(sln)) Directory.Delete(sln, true);
   }
@@ -31,6 +31,7 @@ public class GenerateSlnAndFuncCommandTests {
   [TearDown] public void TearDown() {
     FsUtils.TestingCliRootDir = string.Empty;
     Environment.CurrentDirectory = properroot;
+    if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
   }
 
   [Test] public async Task Test_generate_solution_with_nugets() => 
