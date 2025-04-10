@@ -26,6 +26,6 @@ public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCom
     await ExecuteImpl(settings);
   }
 
-  public abstract Task ExecuteImpl(S settings);
   public abstract Task<S> GetInteractiveSettings();
+  public abstract Task ExecuteImpl(S settings);
 }

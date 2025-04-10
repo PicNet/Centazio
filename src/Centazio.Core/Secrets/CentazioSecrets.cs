@@ -14,6 +14,7 @@ public record CentazioSecrets {
   public string? AZ_APP_INSIGHT_CONNECTION_STRING { get; }
   
   public string? SQL_CONN_STR { get; init; }
+  public string? NUGET_API_KEY { get; }
   
   protected CentazioSecrets(CentazioSecrets other) {
     AWS_KEY = other.AWS_KEY;
@@ -26,6 +27,7 @@ public record CentazioSecrets {
     AZ_BLOB_STORAGE_ENDPOINT = other.AZ_BLOB_STORAGE_ENDPOINT;
     AZ_APP_INSIGHT_CONNECTION_STRING = other.AZ_APP_INSIGHT_CONNECTION_STRING;
     SQL_CONN_STR = other.SQL_CONN_STR;
+    NUGET_API_KEY = other.NUGET_API_KEY;
   }
   
   private CentazioSecrets(
@@ -38,7 +40,8 @@ public record CentazioSecrets {
       string AZ_SUBSCRIPTION_ID, 
       string AZ_BLOB_STORAGE_ENDPOINT, 
       string? AZ_APP_INSIGHT_CONNECTION_STRING, 
-      string? SQL_CONN_STR) {
+      string? SQL_CONN_STR,
+      string? NUGET_API_KEY) {
     this.AWS_KEY = AWS_KEY;
     this.AWS_SECRET = AWS_SECRET;
     this.AWS_REGION = AWS_REGION;
@@ -49,6 +52,7 @@ public record CentazioSecrets {
     this.AZ_BLOB_STORAGE_ENDPOINT = AZ_BLOB_STORAGE_ENDPOINT;
     this.AZ_APP_INSIGHT_CONNECTION_STRING = AZ_APP_INSIGHT_CONNECTION_STRING;
     this.SQL_CONN_STR = SQL_CONN_STR;
+    this.NUGET_API_KEY = NUGET_API_KEY;
   }
   
   public record Dto : IDto<CentazioSecrets> {
@@ -65,6 +69,8 @@ public record CentazioSecrets {
     
     public string? SQL_CONN_STR { get; set; }
     
+    public string? NUGET_API_KEY { get; set; }
+    
     public CentazioSecrets ToBase() => new(
       String.IsNullOrWhiteSpace(AWS_KEY) ? throw new ArgumentNullException(nameof(AWS_KEY)) : AWS_KEY.Trim(),
       String.IsNullOrWhiteSpace(AWS_SECRET) ? throw new ArgumentNullException(nameof(AWS_SECRET)) : AWS_SECRET.Trim(),
@@ -77,6 +83,7 @@ public record CentazioSecrets {
       String.IsNullOrWhiteSpace(AZ_BLOB_STORAGE_ENDPOINT) ? throw new ArgumentNullException(nameof(AZ_BLOB_STORAGE_ENDPOINT)) : AZ_BLOB_STORAGE_ENDPOINT.Trim(),
       AZ_APP_INSIGHT_CONNECTION_STRING?.Trim(),
       
-      SQL_CONN_STR?.Trim());
+      SQL_CONN_STR?.Trim(),
+      NUGET_API_KEY?.Trim());
   }
 }

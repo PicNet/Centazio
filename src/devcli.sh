@@ -5,7 +5,7 @@ SLN_DIR="../centazio3"
 dotnet tool uninstall --local Centazio.Cli
 rm -rf ./config/
 cd $SLN_DIR
-rm packages/*; src/bump.sh; dotnet pack -v detailed -c Release -o packages
+./centazio.sh dev publish -p
 cd $CURR_DIR
 cp $SLN_DIR/settings.* $CURR_DIR
 dotnet new tool-manifest --force

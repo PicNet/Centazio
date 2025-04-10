@@ -87,7 +87,8 @@ public class CommandsTree {
     if (Env.IsInDev()) {
       children.Add(new BranchNode("dev", [
         CreateCommandNode<UiTestsCommand>("ui-test"),
-        CreateCommandNode<GenerateSettingTypesCommand>("gen-settings")
+        CreateCommandNode<GenerateSettingTypesCommand>("gen-settings"),
+        CreateCommandNode<PackageAndPublishNuGetsCommand>("publish"),
       ]));
     }
     RootNode = new("centazio", children, EXIT_LABEL);
