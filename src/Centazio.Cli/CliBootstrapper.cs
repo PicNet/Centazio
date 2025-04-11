@@ -54,7 +54,7 @@ internal class CliBootstrapper {
     return svcs.BuildServiceProvider();
     
     bool LoadSettingsAndSecretsIfAvailable() {
-      var dir = FsUtils.TryToFindDirectoryOfFile("settings.json");
+      var dir = FsUtils.TryToFindDirectoryOfFile(CentazioConstants.SETTINGS_FILE_NAME);
       if (dir is null) return false;
       var conf = new SettingsLoaderConfig(RootDirectory: dir);  
       var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);

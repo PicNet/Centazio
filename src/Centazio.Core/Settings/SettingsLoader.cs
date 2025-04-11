@@ -10,9 +10,7 @@ public interface ISettingsLoader {
 
 public record PotentialSettingFile(string FileName, bool Required, bool IsDefaultsFile);
 
-public record SettingsLoaderConfig(string FileNamePrefix = SettingsLoaderConfig.DEFAULT_FILE_NAME_PREFIX, string? RootDirectory = null, bool IgnoreDefaults = false) {
-  // todo: remove this, just hardcode "settings.json" no need to be this flexible just for tests
-  private const string DEFAULT_FILE_NAME_PREFIX = "settings";
+public record SettingsLoaderConfig(string? RootDirectory = null, bool IgnoreDefaults = false) {
   
   public readonly string RootDirectory = RootDirectory ?? (Env.IsInDev() ? FsUtils.GetDevPath() : Environment.CurrentDirectory);
 }
@@ -22,10 +20,10 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
   
   public List<string> GetSettingsFilePathList(params List<string> environments) {
     var potentials = new List<PotentialSettingFile> {
-      new ($"{conf.FileNamePrefix}.defaults.json", true, true),
-      new ($"{conf.FileNamePrefix}.<environment>.json", false, true),
-      new ($"{conf.FileNamePrefix}.json", true, false),
-      new ($"{conf.FileNamePrefix}.<environment>.json", false, false),
+      new (CentazioConstants.DEFAULTS_SETTINGS_FILE_NAME, true, true),
+      new (CentazioConstants.ENV_SETTINGS_FILE_NAME, false, true),
+      new (CentazioConstants.SETTINGS_FILE_NAME, true, false),
+      new (CentazioConstants.ENV_SETTINGS_FILE_NAME, false, false),
     };
     
     return potentials.SelectMany(spec => {

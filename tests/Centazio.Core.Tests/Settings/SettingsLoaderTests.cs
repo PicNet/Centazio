@@ -6,11 +6,20 @@ namespace Centazio.Core.Tests.Settings;
 
 public class SettingsLoaderTests {
 
-  private const string test_fn_prefix = "test_settings";
   private const string test_settings_json = @"{ ""FileForTestingSettingsLoader"": ""Testing content"", ""OverridableSetting"": ""To be overriden"", ""EmptySetting"": """", ""MissingSetting"": null }";
   private const string test_settings_env_json = @"{ ""OverridableSetting"": ""Overriden"", ""EmptySetting"": ""No longer empty"", ""MissingSetting"": ""No longer missing"" }";
+
+  // run tests outside of the dev environment to ensure we dont interfere with real settings file
+  private static readonly string root = Path.GetFullPath(FsUtils.GetDevPath("..", nameof(SettingsLoaderTests)));
+  private static readonly string deeper = Path.Combine(root, "1", "2", "3", "4");
   
+  [SetUp] public void SetUp() => 
+      Directory.CreateDirectory(deeper);
   
+  [TearDown] public void TearDown() {
+    Directory.Delete(root, true);
+  }
+
   [Test] public void Test_loading_of_settings_from_dir_hierarchy() {
     TestSettings(CreateLoadAndDeleteSettings(".", String.Empty));
     TestSettings(CreateLoadAndDeleteSettings("..", String.Empty));
@@ -45,14 +54,15 @@ public class SettingsLoaderTests {
   }
   
   private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
-    dir = Path.GetFullPath(dir);
+    dir = Path.GetFullPath(Path.Combine(deeper, dir));
+    var envfn = String.IsNullOrWhiteSpace(environment) ? null : CentazioConstants.ENV_SETTINGS_FILE_NAME.Replace("<environment>", environment);
     try {
-      File.WriteAllText(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.json"), test_settings_json);
-      File.WriteAllText(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.{environment}.json"), test_settings_env_json);
-      return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(test_fn_prefix, dir, true)).Load<TestSettingsObjRaw>(environment); 
+      File.WriteAllText(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME), test_settings_json);
+      if (envfn is not null) File.WriteAllText(Path.Combine(dir, envfn), test_settings_env_json);
+      return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(dir, true)).Load<TestSettingsObjRaw>(environment); 
     } finally { 
-      File.Delete(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.json"));
-      File.Delete(FsUtils.GetDevPath(dir, $"{test_fn_prefix}.{environment}.json"));
+      File.Delete(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME));
+      if (envfn is not null) File.Delete(Path.Combine(dir, envfn));
     }
   }
 }
