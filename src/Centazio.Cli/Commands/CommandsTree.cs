@@ -14,9 +14,9 @@ public abstract class Node(string id, Node? parent = null) {
   public string Id => id;
 }
 
-public class BranchNode(string id, List<Node> children, string backlbl="back") : Node(id) {
+public class BranchNode(string id, List<Node?> children, string backlbl="back") : Node(id) {
   public string BackLabel => backlbl;
-  public List<Node> Children => children;
+  public List<Node> Children => children.OfType<Node>().ToList();
 }
 
 public abstract class AbstractCommandNode(string id, ICentazioCommand cmd) : Node(id) {
@@ -38,7 +38,7 @@ public class CommandsTree {
   public CommandsTree(IServiceProvider prov) {
     Provider = prov;
     
-    var children = new List<Node> {
+    var children = new List<Node?> {
       ///////////////////////////////////////////////
       // AWS
       ///////////////////////////////////////////////
@@ -95,6 +95,10 @@ public class CommandsTree {
   }
 
   public void Initialise(IConfigurator cfg) {
+    RootNode.Children
+        .OfType<BranchNode>()
+        .ForEach(n => AddChildToRootCfg(RootNode, n));
+    
     void AddChildToRootCfg(BranchNode root, BranchNode lvl1) {
       lvl1.Parent = root;
       cfg.AddBranch(lvl1.Id, branch => lvl1.Children.ForEach(
@@ -113,8 +117,6 @@ public class CommandsTree {
         default: throw new UnreachableException();
       }
     }
-    
-    RootNode.Children.ForEach(n => AddChildToRootCfg(RootNode, (BranchNode) n));
   }
 
   public string GetNodeCommandShortcut(Node? node) {
@@ -126,7 +128,12 @@ public class CommandsTree {
     return String.Join(' ', ancestry.Select(n2 => n2.Id));
   }
 
-  private CommandNode<T> CreateCommandNode<T>(string id) where T : class, ICentazioCommand, ICommandLimiter<CommandSettings> => 
-      new(id, Provider.GetRequiredService<T>());
+  private CommandNode<T>? CreateCommandNode<T>(string id) where T : class, ICentazioCommand, ICommandLimiter<CommandSettings> {
+    // if the command is not registered then do not add it to the tree.  This is commonly only for commands
+    //    that require CentazioSettings and they are not available.  See CliBootstrapper for code that
+    //    does not register these commands if settings are not available.
+    var command = Provider.GetService<T>();
+    return command is null ? null : new CommandNode<T>(id, command);
+  }
 
 }

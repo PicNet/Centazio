@@ -28,7 +28,7 @@ internal class CliBootstrapper {
 
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
-    
+    var available = LoadSettingsAndSecretsIfAvailable();
     svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
         .AddSingleton<InteractiveCliMenuCommand>()
@@ -46,10 +46,6 @@ internal class CliBootstrapper {
         .AddSingleton<IAzFunctionDeployer, AzFunctionDeployer>()
         .AddSingleton<IAzFunctionDeleter, AzFunctionDeleter>()
         .AddSingleton<CentazioHost>();
-    
-    // todo: we should not register commands that rely on CentazioSettings if its not
-    //    available.  Also need to be removed from CentazioTree
-    var available = LoadSettingsAndSecretsIfAvailable();
     RegisterCliCommands();
     return svcs.BuildServiceProvider();
     
@@ -65,11 +61,19 @@ internal class CliBootstrapper {
     void RegisterCliCommands() {
       GetType().Assembly.GetTypes()
           .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
+          // do not register any command that requires settings or secrets if they are not `available`
+          .Where(t => available || !DoesCommandRequireSettings(t))
           .ForEach(t => {
             svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
             svcs.AddSingleton(t);
           });
     }
+    
+    bool DoesCommandRequireSettings(Type cmdtype) => 
+        cmdtype.GetConstructors()
+            .SelectMany(c => c.GetParameters())
+            .Any(p => typeof(CentazioSettings).IsAssignableFrom(p.ParameterType) 
+                || typeof(CentazioSecrets).IsAssignableFrom(p.ParameterType));
   }
 
   private void InitialiseExceptionHandler(Cli cli) => AppDomain.CurrentDomain.UnhandledException += 
