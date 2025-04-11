@@ -35,21 +35,16 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   public bool Running { get; private set; }
   
   protected readonly ICtlRepository ctl;
-  private readonly List<ObjectChangeTrigger> triggers;
   protected DateTime FunctionStartTime { get; private set; }
   
+  private readonly List<ObjectChangeTrigger> triggers;
+  
   protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
-    System = system;
-    Stage = stage;
-    
-    this.ctl = ctl;
-    
-    Config = GetFunctionConfiguration();
+    (System, Stage, this.ctl, Config) = (system, stage, ctl, GetFunctionConfiguration());
     triggers = Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   }
 
   protected abstract FunctionConfig GetFunctionConfiguration();
-  public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
 
   public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
@@ -129,5 +124,7 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
     }
   }
 
+  public abstract Task<OperationResult> RunOperation(OperationStateAndConfig<C> op);
+  
   public void Dispose() { Config.Dispose(); }
 }
