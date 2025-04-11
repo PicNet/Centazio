@@ -132,6 +132,39 @@ public record ConsoleCommandsSettings {
   }
 }
 
+public record AzureDefaultValuesSettings {
+
+  public required string FunctionAppNameTemplate { get; init; }
+  public required string AppServicePlanNameTemplate { get; init; }
+  public required string WebSiteNameTemplate { get; init; }
+  public required string AppServiceSkuName { get; init; }
+  public required string AppServiceSkuTier { get; init; }
+
+  public Dto ToDto() => new() { 
+    FunctionAppNameTemplate = FunctionAppNameTemplate,
+    AppServicePlanNameTemplate = AppServicePlanNameTemplate,
+    WebSiteNameTemplate = WebSiteNameTemplate,
+    AppServiceSkuName = AppServiceSkuName,
+    AppServiceSkuTier = AppServiceSkuTier,
+  };
+
+  public record Dto : IDto<AzureDefaultValuesSettings> { 
+    public string? FunctionAppNameTemplate { get; init; }
+    public string? AppServicePlanNameTemplate { get; init; }
+    public string? WebSiteNameTemplate { get; init; }
+    public string? AppServiceSkuName { get; init; }
+    public string? AppServiceSkuTier { get; init; }
+
+    public AzureDefaultValuesSettings ToBase() => new() { 
+      FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
+      AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
+      WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
+      AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
+      AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
+    };
+  }
+}
+
 public record DefaultsSettings {
 
   public required string GeneratedCodeFolder { get; init; }
@@ -141,6 +174,7 @@ public record DefaultsSettings {
   public required string WriteFunctionPollExpression { get; init; }
   public required string OtherFunctionPollExpression { get; init; }
   public required ConsoleCommandsSettings ConsoleCommands { get; init; }
+  public required AzureDefaultValuesSettings AzureDefaultValues { get; init; }
 
   public Dto ToDto() => new() { 
     GeneratedCodeFolder = GeneratedCodeFolder,
@@ -150,6 +184,7 @@ public record DefaultsSettings {
     WriteFunctionPollExpression = WriteFunctionPollExpression,
     OtherFunctionPollExpression = OtherFunctionPollExpression,
     ConsoleCommands = ConsoleCommands.ToDto(),
+    AzureDefaultValues = AzureDefaultValues.ToDto(),
   };
 
   public record Dto : IDto<DefaultsSettings> { 
@@ -160,6 +195,7 @@ public record DefaultsSettings {
     public string? WriteFunctionPollExpression { get; init; }
     public string? OtherFunctionPollExpression { get; init; }
     public ConsoleCommandsSettings.Dto? ConsoleCommands { get; init; }
+    public AzureDefaultValuesSettings.Dto? AzureDefaultValues { get; init; }
 
     public DefaultsSettings ToBase() => new() { 
       GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
@@ -169,6 +205,7 @@ public record DefaultsSettings {
       WriteFunctionPollExpression = String.IsNullOrWhiteSpace(WriteFunctionPollExpression) ? throw new ArgumentNullException(nameof(WriteFunctionPollExpression)) : WriteFunctionPollExpression.Trim(),
       OtherFunctionPollExpression = String.IsNullOrWhiteSpace(OtherFunctionPollExpression) ? throw new ArgumentNullException(nameof(OtherFunctionPollExpression)) : OtherFunctionPollExpression.Trim(),
       ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
+      AzureDefaultValues = AzureDefaultValues?.ToBase() ?? throw new ArgumentNullException(nameof(AzureDefaultValues)),
     };
   }
 }
@@ -336,11 +373,6 @@ public record AzureSettings {
   public string? FunctionAppName { get; init; }
   public string? AppServicePlanName { get; init; }
   public string? WebSiteName { get; init; }
-  public required string AppServiceSkuName { get; init; }
-  public required string AppServiceSkuTier { get; init; }
-  public required string FunctionAppNameTemplate { get; init; }
-  public required string AppServicePlanNameTemplate { get; init; }
-  public required string WebSiteNameTemplate { get; init; }
   public required List<AzFunctionsSettings> AzFunctions { get; init; }
 
   public Dto ToDto() => new() { 
@@ -349,11 +381,6 @@ public record AzureSettings {
     FunctionAppName = FunctionAppName,
     AppServicePlanName = AppServicePlanName,
     WebSiteName = WebSiteName,
-    AppServiceSkuName = AppServiceSkuName,
-    AppServiceSkuTier = AppServiceSkuTier,
-    FunctionAppNameTemplate = FunctionAppNameTemplate,
-    AppServicePlanNameTemplate = AppServicePlanNameTemplate,
-    WebSiteNameTemplate = WebSiteNameTemplate,
     AzFunctions = AzFunctions.Select(item => item.ToDto()).ToList(),
   };
 
@@ -363,11 +390,6 @@ public record AzureSettings {
     public string? FunctionAppName { get; init; }
     public string? AppServicePlanName { get; init; }
     public string? WebSiteName { get; init; }
-    public string? AppServiceSkuName { get; init; }
-    public string? AppServiceSkuTier { get; init; }
-    public string? FunctionAppNameTemplate { get; init; }
-    public string? AppServicePlanNameTemplate { get; init; }
-    public string? WebSiteNameTemplate { get; init; }
     public List<AzFunctionsSettings.Dto>? AzFunctions { get; init; }
 
     public AzureSettings ToBase() => new() { 
@@ -376,11 +398,6 @@ public record AzureSettings {
             FunctionAppName = FunctionAppName?.Trim(),
             AppServicePlanName = AppServicePlanName?.Trim(),
             WebSiteName = WebSiteName?.Trim(),
-      AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
-      AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
-      FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
-      AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
-      WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
       AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
     };
   }

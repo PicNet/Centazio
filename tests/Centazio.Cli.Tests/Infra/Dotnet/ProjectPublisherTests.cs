@@ -9,7 +9,7 @@ namespace Centazio.Cli.Tests.Infra.Dotnet;
 public class ProjectPublisherTests {
   
   private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
 
   [Test] public async Task Test_DotNetCliProjectBuilder_BuildProject() {
     await Impl(new DotNetCliProjectPublisher(settings, templater).PublishProject);

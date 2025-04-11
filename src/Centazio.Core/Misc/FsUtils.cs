@@ -2,11 +2,13 @@ namespace Centazio.Core.Misc;
 
 public static class FsUtils {
   
+  private static readonly string TEST_DEV_FILE = "centazio3.sln";
+  
   private static string? devroot;
   private static string? cliinstall;
   
   public static string GetDevPath(params List<string> steps) {
-    devroot ??= TryToFindDirectoryOfFile("centazio3.sln") ?? throw new Exception($"failed to find the root dev directory"); 
+    devroot ??= TryToFindDirectoryOfFile(TEST_DEV_FILE) ?? throw new Exception($"failed to find the root dev directory"); 
     return GetPathFromRootAndSteps(devroot, steps);
   }
   
@@ -21,11 +23,16 @@ public static class FsUtils {
       var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
       if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliDir)} to be called from Centazio.Cli context");
       var clidir = Path.GetDirectoryName(exe.Location) ?? throw new Exception("Could not find a valid templates directory");
-      return Path.GetFullPath(Path.Combine(clidir, "..", "..", "..", "content"));
+      // if the current Cli assembly is actually inside the dev directory,
+      //    then just use the dev root directory, otherwise use the embedded 'content' directory
+      var cliindev = TryToFindDirectoryOfFile(TEST_DEV_FILE, clidir);
+      return Path.GetFullPath(cliindev ?? Path.Combine(clidir, "..", "..", "..", "content"));
     }
   }
   
-  public static string GetTemplatePath(params List<string> steps) => GetPathFromRootAndSteps(GetCliDir("defaults", "templates"), steps);
+  public static string GetDefaultsDir(params List<string> steps) => GetPathFromRootAndSteps(GetCliDir("defaults"), steps);
+  
+  public static string GetTemplateDir(params List<string> steps) => GetPathFromRootAndSteps(GetDefaultsDir("templates"), steps);
 
   // use this as a replacement to Directory.Delete(dir, true); as it will allow open directories to still be deleted
   public static void EmptyDirectory(string dir) {

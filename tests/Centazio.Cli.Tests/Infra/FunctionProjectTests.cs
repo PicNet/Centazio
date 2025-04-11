@@ -8,7 +8,7 @@ public class FunctionProjectTests {
 
   [Test] public void Test_propery_values_are_as_expected() {
     var settings = TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "azure");
-    var proj = new AzureFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings, TestingFactories.Secrets()));
+    var proj = new AzureFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings));
 
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));
     Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));

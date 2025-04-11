@@ -40,7 +40,7 @@
         <PackagePath>content\defaults\%(RecursiveDir)</PackagePath>
       </Content>
       <None Remove="swirl.png"/>
-      <Content Include="swirl.png">
+      <Content Include="..\..\swirl.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <None Remove="log\**" />

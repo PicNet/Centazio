@@ -8,7 +8,7 @@ namespace Centazio.Cli.Tests;
 public static class MiscHelpers {
   private static readonly ICommandRunner cmd = new CommandRunner();
   private static readonly CentazioSettings settings = TestingFactories.Settings();
-  private static readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
+  private static readonly ITemplater templater = new Templater(TestingFactories.Settings());
   
   public static AzureFunctionProjectMeta AzureEmptyFunctionProject() => 
       new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings(), templater);

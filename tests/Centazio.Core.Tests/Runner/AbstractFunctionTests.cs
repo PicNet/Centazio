@@ -193,7 +193,14 @@ public class AbstractFunctionTests {
       ReadFunctionPollExpression = "*/1 * * * * *",
       PromoteFunctionPollExpression = "*/2 * * * * *",
       WriteFunctionPollExpression = "*/3 * * * * *",
-      OtherFunctionPollExpression = "*/4 * * * * *"
+      OtherFunctionPollExpression = "*/4 * * * * *",
+      AzureDefaultValues = new AzureDefaultValuesSettings {
+        AppServiceSkuName = String.Empty,
+        AppServiceSkuTier = String.Empty,
+        FunctionAppNameTemplate = String.Empty,
+        WebSiteNameTemplate = String.Empty,
+        AppServicePlanNameTemplate = String.Empty
+      }
     };
     Assert.That(((IRunnableFunction) F.ReadFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/1 * * * * *")));
     Assert.That(((IRunnableFunction) F.PromoteFunc()).GetFunctionPollCronExpression(defs), Is.EqualTo(new ValidString("*/2 * * * * *")));

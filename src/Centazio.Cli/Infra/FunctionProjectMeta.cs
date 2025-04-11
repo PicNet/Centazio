@@ -13,27 +13,28 @@ public class AzureFunctionProjectMeta(Assembly assembly, CentazioSettings settin
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
   
   private readonly AzureSettings azsett = settings.AzureSettings;
+  private readonly AzureDefaultValuesSettings defaults = settings.Defaults.AzureDefaultValues;
   private readonly AzFunctionsSettings? funcsett = settings.AzureSettings.AzFunctions.SingleOrDefault(f => f.Assembly == assembly.GetName().Name);
   
   public string GetFunctionAppName() => 
       funcsett?.FunctionAppName ?? 
       azsett.FunctionAppName ??
-      templater.ParseFromContent(azsett.FunctionAppNameTemplate, this);
+      templater.ParseFromContent(defaults.FunctionAppNameTemplate, this);
 
   public string GetAppServicePlanName() =>
       funcsett?.AppServicePlanName ?? 
       azsett.AppServicePlanName ??
-      templater.ParseFromContent(azsett.AppServicePlanNameTemplate, this);
+      templater.ParseFromContent(defaults.AppServicePlanNameTemplate, this);
 
   public AppServiceSkuDescription GetAppServiceSku() => new() { 
-    Name = funcsett?.AppServiceSkuName ?? azsett.AppServiceSkuName, 
-    Tier = funcsett?.AppServiceSkuTier ?? azsett.AppServiceSkuTier 
+    Name = funcsett?.AppServiceSkuName ?? defaults.AppServiceSkuName, 
+    Tier = funcsett?.AppServiceSkuTier ?? defaults.AppServiceSkuTier 
   };
 
   public string GetWebSiteName() => 
       funcsett?.WebSiteName ?? 
       azsett.WebSiteName ??
-      templater.ParseFromContent(azsett.WebSiteNameTemplate, this);
+      templater.ParseFromContent(defaults.WebSiteNameTemplate, this);
 
 }
 

@@ -10,7 +10,13 @@ public interface ISettingsLoader {
 
 public record PotentialSettingFile(string FileName, bool Required, bool IsDefaultsFile);
 
-public record SettingsLoaderConfig(string? RootDirectory = null, bool IgnoreDefaults = false) {
+public enum EDefaultSettingsMode {
+  BOTH,
+  ONLY_BASE_SETTINGS,
+  ONLY_DEFAULT_SETTINGS
+}
+
+public record SettingsLoaderConfig(string? RootDirectory = null, EDefaultSettingsMode Defaults = EDefaultSettingsMode.BOTH) {
   
   public readonly string RootDirectory = RootDirectory ?? (Env.IsInDev() ? FsUtils.GetDevPath() : Environment.CurrentDirectory);
 }
@@ -27,7 +33,9 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     };
     
     return potentials.SelectMany(spec => {
-      if (spec.IsDefaultsFile && conf.IgnoreDefaults) return [];
+      if (spec.IsDefaultsFile && conf.Defaults == EDefaultSettingsMode.ONLY_BASE_SETTINGS) return [];
+      if (!spec.IsDefaultsFile && conf.Defaults == EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS) return [];
+      
       var files = spec.FileName.Contains("<environment>", StringComparison.Ordinal) ? 
           environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => spec.FileName.Replace("<environment>", env, StringComparison.Ordinal)) : 
           [spec.FileName];

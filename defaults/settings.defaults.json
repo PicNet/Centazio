@@ -1,4 +1,5 @@
 {
+  "SecretsFolders": [""],
   "Defaults": {
     "GeneratedCodeFolder": "generated",
     
@@ -28,17 +29,13 @@
       "Lambda": {
         "ShowLogStream": "azure functionapp logstream {{it.AppName}}" 
       }
+    },
+    "AzureDefaultValues": {
+      "FunctionAppNameTemplate": "{{ it.DashedProjectName }}",
+      "AppServicePlanNameTemplate": "{{ it.DashedProjectName }}-Plan",
+      "WebSiteNameTemplate": "{{ it.DashedProjectName }}",
+      "AppServiceSkuName": "Y1",
+      "AppServiceSkuTier": "Dynamic"
     }
-  },
-  "CtlRepository": {
-    "SystemStateTableName": "system_state",
-    "ObjectStateTableName": "object_state"
-  },
-  "AzureSettings": {
-    "FunctionAppNameTemplate": "{{ it.DashedProjectName }}",
-    "AppServicePlanNameTemplate": "{{ it.DashedProjectName }}-Plan",
-    "WebSiteNameTemplate": "{{ it.DashedProjectName }}",
-    "AppServiceSkuName": "Y1",
-    "AppServiceSkuTier": "Dynamic"
   }
 }

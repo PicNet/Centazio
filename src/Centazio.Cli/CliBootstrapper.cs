@@ -9,7 +9,6 @@ using Centazio.Core.Settings;
 using Centazio.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
-using SQLitePCL;
 
 return new CliBootstrapper().Initialise().Start(args);
 
@@ -29,9 +28,10 @@ internal class CliBootstrapper {
 
   private ServiceProvider InitialiseDi() {
     var svcs = new ServiceCollection();
-    var available = LoadSettingsAndSecretsIfAvailable();
-    // these are dependencies that require settings or secrets, not added when running in
-    //    directories without settings.json available
+    var indev = LoadDevSettingsIfAvailableOtherwiseDefaults();
+    
+    // these are dependencies that require dev settings or secrets (with aws/azure details), and are not added
+    //    when running in directories without settings.json available
     var devdeps = new Dictionary<Type, Type> {
       { typeof(IAwsAccounts), typeof(AwsAccounts) },
       { typeof(IAzSubscriptions), typeof(AzSubscriptions) },
@@ -39,8 +39,6 @@ internal class CliBootstrapper {
       { typeof(IAwsFunctionDeployer), typeof(AwsFunctionDeployer) },
       { typeof(IAzFunctionDeployer), typeof(AzFunctionDeployer) },
       { typeof(IAzFunctionDeleter), typeof(AzFunctionDeleter) },
-      { typeof(ITemplater), typeof(Templater) },
-      { typeof(ICentazioCodeGenerator), typeof(CentazioCodeGenerator) },
     };
     svcs
         .AddSingleton<ITypeRegistrar>(new TypeRegistrar(svcs))
@@ -49,25 +47,29 @@ internal class CliBootstrapper {
         .AddSingleton<InteractiveCliMenuCommand>()
         .AddSingleton<CommandsTree>()
         .AddSingleton<ICommandRunner, CommandRunner>()
+        .AddSingleton<ITemplater, Templater>()
+        .AddSingleton<ICentazioCodeGenerator, CentazioCodeGenerator>()
         .AddSingleton<CentazioHost>();
-    if (available) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
+    if (indev) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
     RegisterCliCommands();
     return svcs.BuildServiceProvider();
     
-    bool LoadSettingsAndSecretsIfAvailable() {
-      var dir = FsUtils.TryToFindDirectoryOfFile(CentazioConstants.SETTINGS_FILE_NAME);
-      if (dir is null) return false;
-      var conf = new SettingsLoaderConfig(RootDirectory: dir);  
+    bool LoadDevSettingsIfAvailableOtherwiseDefaults() {
+      var devdir = FsUtils.TryToFindDirectoryOfFile(CentazioConstants.SETTINGS_FILE_NAME);
+      var isindev = devdir is not null;
+      
+      var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
+      var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);  
       var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
-      svcs.AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT));
-      return true;
+      if (isindev) svcs.AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT));
+      return isindev;
     }
     
     void RegisterCliCommands() {
       GetType().Assembly.GetTypes()
           .Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(ICentazioCommand)))
           // do not register any command that requires settings or secrets if they are not `available`
-          .Where(t => available || !DoesClassRequireSettings(t))
+          .Where(t => indev || !DoesClassRequireSettings(t))
           .ForEach(t => {
             svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
             svcs.AddSingleton(t);

@@ -28,6 +28,13 @@
       "Lambda": {
         "ShowLogStream": { "type": "string", "required": true }
       }
+    },
+    "AzureDefaultValues": {
+      "FunctionAppNameTemplate": { "type": "string", "required": true },
+      "AppServicePlanNameTemplate": { "type": "string", "required": true },
+      "WebSiteNameTemplate": { "type": "string", "required": true },
+      "AppServiceSkuName": { "type": "string", "required": true },
+      "AppServiceSkuTier": { "type": "string", "required": true }
     }
   },
   "SecretsFolders": [{ "type": "string", "required": true }],
@@ -63,13 +70,6 @@
     "FunctionAppName": { "type": "string", "required": false },
     "AppServicePlanName": { "type": "string", "required": false },
     "WebSiteName": { "type": "string", "required": false },
-    
-    "AppServiceSkuName": { "type": "string", "required": true },
-    "AppServiceSkuTier": { "type": "string", "required": true },
-    
-    "FunctionAppNameTemplate": { "type": "string", "required": true },
-    "AppServicePlanNameTemplate": { "type": "string", "required": true },
-    "WebSiteNameTemplate": { "type": "string", "required": true },
     
     "AzFunctions": [{
       "Assembly": { "type": "string", "required": false },

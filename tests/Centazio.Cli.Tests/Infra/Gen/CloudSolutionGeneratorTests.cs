@@ -9,7 +9,7 @@ namespace Centazio.Cli.Tests.Infra.Gen;
 public class CloudSolutionGeneratorTests {
 
   private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
   private readonly ICommandRunner cmd = new CommandRunner();
 
   [Test] public async Task Test_Azure_GenerateSolution() {

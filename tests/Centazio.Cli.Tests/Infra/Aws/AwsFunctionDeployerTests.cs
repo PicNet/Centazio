@@ -13,7 +13,7 @@ public class AwsFunctionDeployerTests {
 
   private static readonly CentazioSettings settings = TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "aws");
   private static readonly CentazioSecrets secrets = TestingFactories.Secrets();
-  private readonly ITemplater templater = new Templater(settings, secrets);
+  private readonly ITemplater templater = new Templater(settings);
   private readonly AwsFunctionProjectMeta project = MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
   
   [Test] public async Task Test_Full_Pipeline_Deployment_to_Aws() {

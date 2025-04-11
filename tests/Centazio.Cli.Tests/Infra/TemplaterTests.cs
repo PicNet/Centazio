@@ -6,7 +6,7 @@ namespace Centazio.Cli.Tests.Infra;
 public class TemplaterTests {
 
   private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
   
   [Test] public void Test_parse_simple_property() {
       var contents = @"

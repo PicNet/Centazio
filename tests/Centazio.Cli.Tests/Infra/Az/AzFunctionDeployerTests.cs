@@ -13,7 +13,7 @@ public class AzFunctionDeployerTests {
 
   private readonly CentazioSettings settings = TestingFactories.Settings();
   private readonly CentazioSecrets secrets = TestingFactories.Secrets();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings(), TestingFactories.Secrets());
+  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
   private readonly AzureFunctionProjectMeta project = MiscHelpers.AzureEmptyFunctionProject();
   
   [Test, Ignore("slow")] public async Task Test_Full_Pipeline_Deployment_to_Azure() {

@@ -59,7 +59,7 @@ public class SettingsLoaderTests {
     try {
       File.WriteAllText(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME), test_settings_json);
       if (envfn is not null) File.WriteAllText(Path.Combine(dir, envfn), test_settings_env_json);
-      return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(dir, true)).Load<TestSettingsObjRaw>(environment); 
+      return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(dir, EDefaultSettingsMode.ONLY_BASE_SETTINGS)).Load<TestSettingsObjRaw>(environment); 
     } finally { 
       File.Delete(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME));
       if (envfn is not null) File.Delete(Path.Combine(dir, envfn));

@@ -30,11 +30,8 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
   }
   
   private void ShowSplash() {
-    var image = Env.IsInDev() ? FsUtils.GetDevPath("src", "Centazio.Cli", "swirl.png") : FsUtils.GetCliDir("swirl.png");
-    if (!File.Exists(image)) return;
-    
     UiHelpers.Log("\n\n");
-    AnsiConsole.Write(new CanvasImage(image).MaxWidth(32));
+    AnsiConsole.Write(new CanvasImage(FsUtils.GetCliDir("swirl.png")).MaxWidth(32));
     AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
     UiHelpers.Log("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }

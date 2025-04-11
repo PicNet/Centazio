@@ -65,7 +65,7 @@ public record CentazioSettings {
     public CoreStorageSettings.Dto? CoreStorage { get; init; }
     
     public CentazioSettings ToBase() => new() {
-      SecretsFolders = SecretsFolders is null || !SecretsFolders.Any() ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders,
+      SecretsFolders = SecretsFolders ?? throw new ArgumentNullException(nameof(SecretsFolders) + " wtf"),
       _Defaults = Defaults?.ToBase(),
       _AwsSettings = AwsSettings?.ToBase(),
       _AzureSettings = AzureSettings?.ToBase(),

@@ -1,7 +1,6 @@
 ﻿using System.Dynamic;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Scriban;
 
@@ -11,16 +10,16 @@ public interface ITemplater {
   string ParseFromPath(string path, object? model = null);
   string ParseFromContent(string content, object? model = null);
 }
-public class Templater(CentazioSettings settings, CentazioSecrets secrets) : ITemplater {
+public class Templater(CentazioSettings settings) : ITemplater {
   
   public string ParseFromPath(string path, object? model = null) {
-    var filepath = Path.IsPathFullyQualified(path) ? path : FsUtils.GetTemplatePath(path); 
+    var filepath = Path.IsPathFullyQualified(path) ? path : FsUtils.GetTemplateDir(path); 
     return ParseFromContent(File.ReadAllText(filepath), model);
   }
 
   public string ParseFromContent(string contents, object? model = null) {
     var dyn = ToDynamic(model);
-    (dyn.settings, dyn.secrets) = (settings, secrets);
+    dyn.settings = settings;
     return Template.Parse(contents).Render(new { it=dyn }, m => m.Name);
   }
 

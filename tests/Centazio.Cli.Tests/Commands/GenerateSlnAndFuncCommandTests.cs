@@ -17,8 +17,8 @@ public class GenerateSlnAndFuncCommandTests {
   private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetDevPath(), "..", "test-generator"));
   private readonly string SYSTEM_NAME = "Acme";
   
-  private readonly CentazioCodeGenerator nugetgen = new(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()));
-  private readonly CentazioCodeGenerator refgen = new(new CommandRunner(), new Templater(TestingFactories.Settings(), TestingFactories.Secrets()), false);
+  private readonly CentazioCodeGenerator nugetgen = new(new CommandRunner(), new Templater(TestingFactories.Settings()));
+  private readonly CentazioCodeGenerator refgen = new(new CommandRunner(), new Templater(TestingFactories.Settings()), false);
   
 
   [SetUp] public void SetUp() {
