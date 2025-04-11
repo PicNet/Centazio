@@ -10,8 +10,6 @@
   - test func worked
   - test func in azure that works
   - test func in aws that works
-- running the cli should not require the settings.json or settings.env.json, it should be able to run just with the 
-  default settings.  Local settings.json should only be needed when working in functions, etc. i.e. in a solution.
 - aws/azure wrappers:
   - Azure:
     - fix Log.Logger, currently only injected ILogger<> works
@@ -22,20 +20,18 @@
     - currently settings are done using the `settings.json` files, these are hard to change in Azure, so perhaps find 
         a way of converting to standard .Net settings so they can be set using the Azure UI.  If this is done then
         the CRON triggers should be in settings instead of hardcoded in the generated function wrappers
-    - support overriding function specific settings like service plan, etc 
+    - support overriding function specific settings like service plan, etc
+    - function-to-function triggers
   - Aws:
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger
+    - function-to-function triggers
 
-- function-to-function triggers:
-  - aws/azure
-  - the triggered function should get as a parameter the objects that changed 
-  
 - cli:
   - simulate should not open a new window when running just one function
+  - generator needs a bit of work, comments, etc.  Do tutorial
 
-- full 'getting started' walk through, test it actually works
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - the readme should automatically insert code samples from the real codebase, instead of duplicating it
 
