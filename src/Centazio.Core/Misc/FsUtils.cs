@@ -42,7 +42,7 @@ public static class FsUtils {
 
   public static string? TryToFindDirectoryOfFile(string file, string? from = null) {
     var path = Path.Combine(from ?? Environment.CurrentDirectory, file);
-    if (File.Exists(path)) return from;
+    if (File.Exists(path)) return from ?? Environment.CurrentDirectory;
 
     var parent = Directory.GetParent(from ?? Environment.CurrentDirectory)?.FullName;
     return parent is null ? null : TryToFindDirectoryOfFile(file, parent);

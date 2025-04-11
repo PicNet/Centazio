@@ -12,11 +12,16 @@ namespace Centazio.Cli.Commands;
 public abstract class Node(string id, Node? parent = null) {
   public Node? Parent { get; set; } = parent;
   public string Id => id;
+  public virtual bool IsValid => true;
 }
 
 public class BranchNode(string id, List<Node?> children, string backlbl="back") : Node(id) {
+
   public string BackLabel => backlbl;
-  public List<Node> Children => children.OfType<Node>().ToList();
+  public List<Node> Children => children.OfType<Node>().Where(c => c.IsValid).ToList();
+  
+  // to be added to the cli, a branch must have at lease one valid child
+  public override bool IsValid => Children.Any();
 }
 
 public abstract class AbstractCommandNode(string id, ICentazioCommand cmd) : Node(id) {
@@ -96,10 +101,10 @@ public class CommandsTree {
 
   public void Initialise(IConfigurator cfg) {
     RootNode.Children
-        .OfType<BranchNode>()
-        .ForEach(n => AddChildToRootCfg(RootNode, n));
+        .OfType<BranchNode>() 
+        .ForEach(n => AddFirstLevelBranches(RootNode, n));
     
-    void AddChildToRootCfg(BranchNode root, BranchNode lvl1) {
+    void AddFirstLevelBranches(BranchNode root, BranchNode lvl1) {
       lvl1.Parent = root;
       cfg.AddBranch(lvl1.Id, branch => lvl1.Children.ForEach(
             lvl2 => AddNodeChildToParentCfg(branch, lvl1, lvl2)));

@@ -51,7 +51,7 @@
 ## Centazio Cli
 To work with a local version of the Centazio.Cli NuGet tool use:
 - `rm packages/*; src/bump.sh; dotnet pack -v detailed -c Release -o packages` -- note: bump IS required
-- `dotnet new tool-manifest`  -- required only once to set up local dotnet tools in test dir (not source dir) 
+- `dotnet new tool-manifest`  -- required only once to set up local dotnet tools in a test dir outside of source tree 
 - `dotnet tool install --prerelease --local --add-source ../centazio3/packages/ Centazio.Cli`
 - `dotnet centazio [args]` -- run centazio cli
 - `dotnet tool uninstall --local Centazio.Cli` -- uninstall

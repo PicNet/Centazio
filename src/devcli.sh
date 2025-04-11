@@ -7,7 +7,6 @@ rm -rf ./config/
 cd $SLN_DIR
 ./centazio.sh dev publish -p
 cd $CURR_DIR
-cp $SLN_DIR/settings.* $CURR_DIR
 dotnet new tool-manifest --force
 dotnet tool install --prerelease --local --add-source ../centazio3/packages/ Centazio.Cli
 dotnet centazio "$@"
