@@ -7,6 +7,7 @@ using Centazio.Core.Write;
 namespace Centazio.Core.Runner;
 
 public interface IRunnableFunction : IDisposable {
+  
   SystemName System { get; }
   LifecycleStage Stage { get; }
   bool Running { get; }
