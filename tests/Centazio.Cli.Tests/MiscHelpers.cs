@@ -10,7 +10,7 @@ public static class MiscHelpers {
   private static readonly CentazioSettings settings = TestingFactories.Settings();
   private static readonly ITemplater templater = new Templater(TestingFactories.Settings());
   
-  public static AzureFunctionProjectMeta AzureEmptyFunctionProject() => 
+  public static AzFunctionProjectMeta AzEmptyFunctionProject() => 
       new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings(), templater);
   
   public static AwsFunctionProjectMeta AwsEmptyFunctionProject(string function) => 

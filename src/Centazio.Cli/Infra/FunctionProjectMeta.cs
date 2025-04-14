@@ -5,11 +5,11 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra;
 
-public enum ECloudEnv { Azure = 1, Aws = 2 }
+public enum ECloudEnv { Az = 1, Aws = 2 }
 
-public class AzureFunctionProjectMeta(Assembly assembly, CentazioSettings settings, ITemplater templater) :  AbstractFunctionProjectMeta(assembly, settings) {
+public class AzFunctionProjectMeta(Assembly assembly, CentazioSettings settings, ITemplater templater) :  AbstractFunctionProjectMeta(assembly, settings) {
   
-  public override string CloudName => ECloudEnv.Azure.ToString();
+  public override string CloudName => ECloudEnv.Az.ToString();
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
   
   private readonly AzureSettings azsett = settings.AzureSettings;

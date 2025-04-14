@@ -11,14 +11,14 @@ using Centazio.Core.Settings;
 namespace Centazio.Cli.Infra.Az;
 
 public interface IAzFunctionDeployer {
-  Task Deploy(AzureFunctionProjectMeta project);
+  Task Deploy(AzFunctionProjectMeta project);
 }
 
 // try to replicate command: az functionapp deployment source config-zip -g <resource group name> -n <function app name> --src <zip file path>
 public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
 
   
-  public async Task Deploy(AzureFunctionProjectMeta project) {
+  public async Task Deploy(AzFunctionProjectMeta project) {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
     
@@ -28,19 +28,19 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     await PublishFunctionApp(appres, project);
   }
 
-  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, AzureFunctionProjectMeta project) {
+  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project) {
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
     return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
   }
 
-  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, AzureFunctionProjectMeta project) {
+  private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, AzFunctionProjectMeta project) {
     try { return (await rg.GetWebSiteAsync(project.GetFunctionAppName())).Value; }
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
-  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzureFunctionProjectMeta project, string location) {
+  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project, string location) {
     var plandata = new AppServicePlanData(location) { Kind = "functionapp" , Sku = project.GetAppServiceSku() };
     var name = project.GetAppServicePlanName();
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, name, plandata)).Value;
@@ -64,7 +64,7 @@ public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secre
     };
   }
 
-  private async Task PublishFunctionApp(WebSiteResource appres, AzureFunctionProjectMeta project) {
+  private async Task PublishFunctionApp(WebSiteResource appres, AzFunctionProjectMeta project) {
     var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], [".azurefunctions", "runtimes"]);
     var cred = await GetPublishCredentials(appres);
     

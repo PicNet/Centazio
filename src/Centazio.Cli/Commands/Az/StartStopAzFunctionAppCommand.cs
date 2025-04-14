@@ -13,7 +13,7 @@ public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, IComma
 
   public override async Task ExecuteImpl(Settings settings) {
     if (CommandName != "start" && CommandName != "stop") throw new ArgumentException($"only start/stop command is supported");
-    var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
+    var project = new AzFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
     
     if (CommandName == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {

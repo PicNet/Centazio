@@ -12,11 +12,11 @@ public class CloudSolutionGeneratorTests {
   private readonly ITemplater templater = new Templater(TestingFactories.Settings());
   private readonly ICommandRunner cmd = new CommandRunner();
 
-  [Test] public async Task Test_Azure_GenerateSolution() {
-    var project = MiscHelpers.AzureEmptyFunctionProject();
+  [Test] public async Task Test_Az_GenerateSolution() {
+    var project = MiscHelpers.AzEmptyFunctionProject();
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
-    await new AzureCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
+    await new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
     var results = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
@@ -35,8 +35,8 @@ public class CloudSolutionGeneratorTests {
   }
   
   [Test, Ignore("This test is quite slow and we have already verified that it works")] public async Task Test_that_generating_solution_twice_works() {
-    var project = MiscHelpers.AzureEmptyFunctionProject();
-    var generator = new AzureCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]);
+    var project = MiscHelpers.AzEmptyFunctionProject();
+    var generator = new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]);
     
     await generator.GenerateSolution();
     await generator.GenerateSolution();

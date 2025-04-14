@@ -3,20 +3,19 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzureFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
+internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
-    await AddAzureNuGetReferencesToProject(added);
+    await AddAzNuGetReferencesToProject(added);
     await AddAzConfigJsonFilesToProject();
-    await AddAzureFunctionsToProject(functions);
+    await AddAzFunctionsToProject(functions);
   }
 
-  private Task AddAzureNuGetReferencesToProject(Dictionary<string, bool> added) => 
+  private Task AddAzNuGetReferencesToProject(Dictionary<string, bool> added) => 
       AddLatestNuGetReferencesToProject([
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Azure.Functions.Worker.Extensions.Timer",
         "Microsoft.Azure.Functions.Worker.Sdk",
-        "Microsoft.Azure.Functions.Worker",
         "Microsoft.ApplicationInsights.WorkerService",
         "Microsoft.Azure.Functions.Worker.ApplicationInsights",
         "Serilog.Sinks.ApplicationInsights",
@@ -34,7 +33,7 @@ internal class AzureCloudSolutionGenerator(CentazioSettings settings, ITemplater
     }
   }
   
-  private async Task AddAzureFunctionsToProject(List<Type> functions) {
+  private async Task AddAzFunctionsToProject(List<Type> functions) {
     await functions.ForEachSequentialAsync(async func => {
       var impl = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(func);
       var clcontent = templater.ParseFromPath("azure/function.cs", new {

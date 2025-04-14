@@ -13,7 +13,7 @@ public class DeleteAzFunctionsCommand(CentazioSettings coresettings,  IAzFunctio
   });
 
   public override async Task ExecuteImpl(Settings settings) {
-    var project = new AzureFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
+    var project = new AzFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
     
     if (!UiHelpers.Confirm($"Are you sure you want to delete Azure Function '{project.DashedProjectName}'")) {
       UiHelpers.Log("Aborting, no function deleted", LogEventLevel.Warning);
