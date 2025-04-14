@@ -41,7 +41,8 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   private readonly List<ObjectChangeTrigger> triggers;
   
   protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
-    (System, Stage, this.ctl, Config) = (system, stage, ctl, GetFunctionConfiguration());
+    (System, Stage, this.ctl) = (system, stage, ctl);
+    Config = GetFunctionConfiguration();
     triggers = Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   }
 
