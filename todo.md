@@ -1,4 +1,20 @@
 # Todo
+- secrets management 
+  - replace current SecretsLoader with Azure Key Vault loader
+    - local development
+    - devops pipelines
+    - prod workloads
+- aws/azure wrappers:
+  - Azure:
+    - fix Log.Logger, currently only injected ILogger<> works
+    - application insights (is this completed?) 
+    - function-to-function triggers
+  - Aws:
+    - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
+    - image: public.ecr.aws/lambda/dotnet:9
+    - currently hardcodes 1 minute trigger
+    - function-to-function triggers
+
 - a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
@@ -10,16 +26,6 @@
   - test func worked
   - test func in azure that works
   - test func in aws that works
-- aws/azure wrappers:
-  - Azure:
-    - fix Log.Logger, currently only injected ILogger<> works
-    - application insights (is this completed?) 
-    - function-to-function triggers
-  - Aws:
-    - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
-    - image: public.ecr.aws/lambda/dotnet:9
-    - currently hardcodes 1 minute trigger
-    - function-to-function triggers
 - cli:
   - simulate should not open a new window when running just one function
   - generator needs a bit of work, comments, etc.  Do tutorial
