@@ -32,6 +32,7 @@
 
 - new `Centazio.TestFunctions` that implement read/promote/write so we can fully test all workflows
 - the readme should automatically insert code samples from the real codebase, instead of duplicating it
+- `centazio host run` on generated folder not working (see test branch dir=sample2/CentazioTestin cmd=centazio host run CentazioTesting.Shared)
 
 ## Low
 - snowflake provider
