@@ -1,4 +1,7 @@
-﻿using Centazio.Cli.Commands.Gen.Cloud;
+﻿using Amazon;
+using Amazon.Lambda;
+using Amazon.Runtime;
+using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
@@ -6,6 +9,8 @@ using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
+using Docker.DotNet;
+using Spectre.Console;
 
 namespace Centazio.Cli.Tests.Infra.Aws;
 
@@ -18,21 +23,22 @@ public class AwsFunctionDeployerTests {
   
   [Test] public async Task Test_Full_Pipeline_Deployment_to_Aws() {
     // todo: implement aws
-    // var appname = project.DashedProjectName;
-    
-    // AzCmd.DeleteFunctionApp(appname);
-    // var before = AzCmd.ListFunctionApps();
-    
+     var appname = project.AwsFunctionName;
+
+    RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
+    using var lambda = new AmazonLambdaClient(new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), region);
+
+    var before = (await lambda.ListFunctionsAsync()).Functions.Select(f => f.FunctionName);
+    if (before.Contains(appname)) await lambda.DeleteFunctionAsync(appname);
+
     await new AwsCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     await new AwsFunctionDeployer(settings, secrets).Deploy(project);
-    
-    // var after = AzCmd.ListFunctionApps();
-    // var funcs = AzCmd.ListFunctionsInApp(appname);
-    
-    // Assert.That(before, Does.Not.Contain(appname));
-    // Assert.That(after, Does.Contain(appname));
-    // Assert.That(funcs, Does.Contain($"{appname}/EmptyFunction"));
+
+    var after = (await lambda.ListFunctionsAsync()).Functions.Select(f => f.FunctionName);
+
+    Assert.That(before, Does.Not.Contain(appname));
+    Assert.That(after, Does.Contain(appname));
   } 
   
   [Test] public async Task Test_aws_zip_file() {

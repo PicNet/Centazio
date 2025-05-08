@@ -44,20 +44,21 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     var sln = slnfile.Split('.').First();
     
     if (String.IsNullOrWhiteSpace(settings.AssemblyName)) {
-      cmd.DotNet($"new classlib --name {settings.FunctionName}", Environment.CurrentDirectory);
-      File.Delete(Path.Combine(settings.FunctionName, "Class1.cs"));
-      cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
+      cmd.DotNet($"new classlib --name {sln}.{settings.SystemName}", Environment.CurrentDirectory);
+      File.Delete(Path.Combine($"{sln}.{settings.SystemName}", "Class1.cs"));
+      cmd.DotNet($"sln {slnfile} add {sln}.{settings.SystemName}/{sln}.{settings.SystemName}.csproj", Environment.CurrentDirectory);
       
-      InstallCentazioNuGetsOrRefs(settings.FunctionName, null);
-      cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
+      InstallCentazioNuGetsOrRefs($"{sln}.{settings.SystemName}", null);
+      cmd.DotNet($"add reference ../{sln}.Shared", $"{sln}.{settings.SystemName}");
     }
-    
+
+
     var from = FsUtils.GetTemplateDir("centazio", "Functions");
     var files = new List<string> { "Assembly.cs", "SYSTEMApi.cs", "SYSTEM[MODE]Function.cs", "SYSTEMTypes.cs" };
     if (!String.IsNullOrWhiteSpace(settings.AssemblyName)) files.Add("SYSTEMIntegration.cs");
     await files.Select(async file => {
       var fromfile = file.Replace("[MODE]", settings.ModeName);
-      var todir = String.IsNullOrWhiteSpace(settings.AssemblyName) ? settings.FunctionName : settings.AssemblyName;
+      var todir = String.IsNullOrWhiteSpace(settings.AssemblyName) ? $"{sln}.{settings.SystemName}" : settings.AssemblyName;
       var tofile = fromfile.Replace("SYSTEM", settings.SystemName);
       var contents = templater.ParseFromPath(Path.Combine(from, fromfile), new {
         SharedProjectNamespace = $"{sln}.Shared", 

@@ -125,7 +125,7 @@ This simple getting started guide will guide you in creating a simple one-way in
 ## Start Coding
 
 ### Setup the Centazio solution
-- `centazio gen sln CentazioTesting`
+- `centazio gen sln CentazioTesting --provider Sqlite`
 - `cd CentazioTesting`
  
 For now notice the `CentazioTesting.Shared` project that has been created and feel free to look around the generated 
@@ -405,7 +405,7 @@ Centazio will manage this serialisation/deserialisation, deployment to cloud env
 - Update: `dotnet tool update --prerelease --global Centazio.Cli`
 - Remove: `dotnet tool uninstall --global Centazio.Cli`, `dotnet tool uninstall --local Centazio.Cli`
 - Check: `dotnet tool list --global`, `dotnet tool list --local`
-- Generate Solution: `centazio gen sln YourSolutionName`
+- Generate Solution: `centazio gen sln YourSolutionName --provider <Sqlite|SqlServer|PostgresSql|EF|Aws>`
 - Generate Function: `centazio gen func YourFunctionName`
 - Run Local Host: `centazio host run Centazio.Sample` - This will run the AppSheet / ClickUp integration sample project
 - Generate Azure Function: `centazio az func generate YourFunctionName` - Generate an Azure Functions wrapper for 

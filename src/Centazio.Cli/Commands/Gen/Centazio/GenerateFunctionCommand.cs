@@ -45,7 +45,7 @@ public class GenerateFunctionCommand(ICentazioCodeGenerator gen) : AbstractCenta
       if (selected != 1) return ValidationResult.Error("The generate function command must have one of the flags set: --read, --promote, --write or --other");
       
       if (String.IsNullOrWhiteSpace(AssemblyName)) return results;
-      if (!File.Exists($"{AssemblyName}.csproj")) return ValidationResult.Error($"Could not find the specified assembly file: '{AssemblyName}.csproj'");
+      if (!File.Exists($"{AssemblyName}\\{AssemblyName}.csproj")) return ValidationResult.Error($"Could not find the specified assembly file: '{AssemblyName}.csproj'");
       return results;
     } 
 
