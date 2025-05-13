@@ -80,8 +80,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       var results1 =  cmd.Aws(@$"ecr get-login-password --region {region.SystemName}", project.ProjectDirPath);
       if (!results1.Success) { throw new Exception(results1.Err); }
 
-      var loginPassword =  results1.Out;
-      cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: loginPassword);
+      cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: results1.Out);
       cmd.Docker(@$"push {ecrUri}/{projectName}", project.ProjectDirPath);
       
       
