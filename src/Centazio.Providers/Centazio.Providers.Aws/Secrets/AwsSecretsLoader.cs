@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using Centazio.Core;
 using Centazio.Core.Secrets;
 
 namespace Centazio.Providers.Aws.Secrets;
@@ -25,4 +26,9 @@ public class AwsSecretsLoader(EvaluateSecretIdForEnvironment eval) : AbstractSec
     return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
   }
 
+}
+
+public class AwsSecretsLoaderFactory() : IServiceFactory<ISecretsLoader> {
+  // todo: how are we going to inject the EvaluateSecretIdForEnvironment delegate
+  public ISecretsLoader GetService() => new AwsSecretsLoader(env => env);
 }
