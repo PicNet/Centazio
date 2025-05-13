@@ -174,7 +174,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       ""Action"": [
         ""ecr:GetDownloadUrlForLayer"",
         ""ecr:BatchGetImage"",
-        ""ecr:BatchCheckLayerAvailability"",
+        ""ecr:BatchCheckLayerAvailability""
       ],
       ""Resource"": ""arn:aws:ecr:{region.SystemName}:{accountId}:repository/{project.ProjectName.ToLower()}""
     }}
