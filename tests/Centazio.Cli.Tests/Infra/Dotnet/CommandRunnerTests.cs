@@ -42,4 +42,26 @@ public class CommandRunnerTests {
     Assert.That(!results.NewWindow);
   }
   
+  [Test] public void Test_aws() {
+    var results = cmd.Aws(VERSION);
+    
+    Assert.That(results.Args, Is.EqualTo(VERSION));
+    Assert.That(results.Command, Is.EqualTo("aws"));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetDevPath()));
+    Assert.That(results.Err, Is.Not.Null);
+    Assert.That(results.Out, Is.Not.Null);
+    Assert.That(!results.NewWindow);
+  }
+  
+  [Test] public void Test_docker() {
+    var results = cmd.Docker(VERSION);
+    
+    Assert.That(results.Args, Is.EqualTo(VERSION));
+    Assert.That(results.Command, Is.EqualTo("docker"));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetDevPath()));
+    Assert.That(results.Err, Is.Not.Null);
+    Assert.That(results.Out, Is.Not.Null);
+    Assert.That(!results.NewWindow);
+  }
+  
 }
