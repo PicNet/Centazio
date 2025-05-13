@@ -11,18 +11,18 @@ namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
   
-  public static CentazioSettings Settings(params List<string> environments) => Settings<CentazioSettings>(environments);
-  public static E Settings<E>(params List<string> environments) => new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
+  public static async Task<CentazioSettings> Settings(params List<string> environments) => await Settings<CentazioSettings>(environments);
+  public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
   
   public static async Task<CentazioSecrets> Secrets() => await Secrets<CentazioSecrets>();
-  public static async Task<E> Secrets<E>() => await new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
+  public static async Task<E> Secrets<E>() => await new SecretsFileLoader((await Settings()).GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl) where C : OperationConfig => 
-      FuncRunner(ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
-  public static FunctionRunner FuncRunner(ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), Settings()); 
+  public static async Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl) where C : OperationConfig => 
+      await (await FuncRunner(ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
+  public static async Task<FunctionRunner> FuncRunner(ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), await Settings()); 
   public static ReadFunction ReadFunc(
       IEntityStager? stager = null, 
       ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());

@@ -5,8 +5,13 @@ namespace Centazio.Cli.Tests.Infra;
 
 public class TemplaterTests {
 
-  private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
+  private CentazioSettings settings;
+  private ITemplater templater;
+  
+  [SetUp] public async Task SetUp() {
+    settings = await TestingFactories.Settings();
+    templater = new Templater(settings);
+  }
   
   [Test] public void Test_parse_simple_property() {
       var contents = @"

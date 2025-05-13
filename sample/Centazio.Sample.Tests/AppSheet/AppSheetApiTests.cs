@@ -38,6 +38,6 @@ public class AppSheetApiTests {
     Assert.That(cleanup.Count, Is.EqualTo(start.Count)); 
   }
   
-  private async Task<AppSheetApi> GetApi() => new(F.Settings<Settings>().AppSheet, await F.Secrets<Secrets>());
+  private async Task<AppSheetApi> GetApi() => new((await F.Settings<Settings>()).AppSheet, await F.Secrets<Secrets>());
 
 }

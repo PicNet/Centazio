@@ -17,11 +17,14 @@ public class GenerateSlnAndFuncCommandTests {
   private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetDevPath(), "..", "test-generator"));
   private readonly string SYSTEM_NAME = "Acme";
   
-  private readonly CentazioCodeGenerator nugetgen = new(new CommandRunner(), new Templater(TestingFactories.Settings()));
-  private readonly CentazioCodeGenerator refgen = new(new CommandRunner(), new Templater(TestingFactories.Settings()), false);
+  private CentazioCodeGenerator nugetgen;
+  private CentazioCodeGenerator refgen; 
   
 
-  [SetUp] public void SetUp() {
+  [SetUp] public async Task SetUp() {
+    var settings = await TestingFactories.Settings();
+    nugetgen = new(new CommandRunner(), new Templater(settings));
+    refgen = new(new CommandRunner(), new Templater(settings), false);
     FsUtils.TestingCliRootDir = properroot;
     Environment.CurrentDirectory = Directory.CreateDirectory(testdir).FullName;
     

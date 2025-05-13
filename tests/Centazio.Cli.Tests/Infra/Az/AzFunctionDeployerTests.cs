@@ -10,14 +10,21 @@ namespace Centazio.Cli.Tests.Infra.Az;
 
 public class AzFunctionDeployerTests {
 
-  private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
-  private readonly AzFunctionProjectMeta project = MiscHelpers.AzEmptyFunctionProject();
+  private CentazioSettings settings;
+  private ITemplater templater;
+  private AzFunctionProjectMeta project;
+  
+  [SetUp] public async Task SetUp() {
+    settings = await TestingFactories.Settings();
+    templater = new Templater(settings);
+    project = await MiscHelpers.AzEmptyFunctionProject();
+  }
+  
   
   [Test, Ignore("slow")] public async Task Test_Full_Pipeline_Deployment_to_Az() {
     var secrets = await TestingFactories.Secrets();
     var appname = project.DashedProjectName;
-    AzCmd.DeleteFunctionApp(appname);
+    await AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
     await new AzCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();

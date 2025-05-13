@@ -12,9 +12,11 @@ public class E2EEnvironment(
   
   private readonly bool SAVE_SIMULATION_STATE = false;
   
-  private readonly SimulationCtx ctx = new(storage, TestingFactories.Settings());
+  
   private readonly CrmDb crmdb = new();
   private readonly FinDb findb = new();
+  
+  private SimulationCtx ctx = null!;
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
@@ -28,6 +30,7 @@ public class E2EEnvironment(
 
   public async Task Initialise() {
     InitLogger();
+    ctx = new (storage, await TestingFactories.Settings());
     await ctx.Initialise();
     
     (crm, fin) = (new CrmApi(crmdb), new FinApi(findb));

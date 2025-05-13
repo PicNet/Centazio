@@ -16,7 +16,7 @@ public class ResetSampleDbsAndApis {
   private void ResetDb() => File.Delete(FsUtils.GetDevPath("sample.db"));
 
   private async Task ResetApis() {
-    var (settings, secrets) = (F.Settings<Settings>(), await F.Secrets<Secrets>());
+    var (settings, secrets) = (await F.Settings<Settings>(), await F.Secrets<Secrets>());
     var (clickup, appsheet) =  (new ClickUpApi(settings, secrets), new AppSheetApi(settings.AppSheet, secrets));
     await DeleteClickUpTasks(clickup);
     await DeleteAppSheetTasks(appsheet);

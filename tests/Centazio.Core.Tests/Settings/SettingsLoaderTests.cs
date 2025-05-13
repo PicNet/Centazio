@@ -20,31 +20,31 @@ public class SettingsLoaderTests {
     Directory.Delete(root, true);
   }
 
-  [Test] public void Test_loading_of_settings_from_dir_hierarchy() {
-    TestSettings(CreateLoadAndDeleteSettings(".", String.Empty));
-    TestSettings(CreateLoadAndDeleteSettings("..", String.Empty));
-    TestSettings(CreateLoadAndDeleteSettings("../..", String.Empty));
+  [Test] public async Task Test_loading_of_settings_from_dir_hierarchy() {
+    TestSettings(await CreateLoadAndDeleteSettings(".", String.Empty));
+    TestSettings(await CreateLoadAndDeleteSettings("..", String.Empty));
+    TestSettings(await CreateLoadAndDeleteSettings("../..", String.Empty));
     
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "To be overriden", String.Empty, String.Empty)));
   }
   
-  [Test] public void Test_loading_of_settings_with_overriding_environment_file() {
-    TestSettings(CreateLoadAndDeleteSettings(".", "test"));
-    TestSettings(CreateLoadAndDeleteSettings("..", "test"));
-    TestSettings(CreateLoadAndDeleteSettings("../..", "test"));
+  [Test] public async Task Test_loading_of_settings_with_overriding_environment_file() {
+    TestSettings(await CreateLoadAndDeleteSettings(".", "test"));
+    TestSettings(await CreateLoadAndDeleteSettings("..", "test"));
+    TestSettings(await CreateLoadAndDeleteSettings("../..", "test"));
                 
     void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "Overriden", "No longer empty", "No longer missing")));
   }
   
-  [Test] public void Test_loading_in_mem_sample_settings() {
-    var settings = F.Settings("in-mem");
+  [Test] public async Task Test_loading_in_mem_sample_settings() {
+    var settings = await F.Settings("in-mem");
     Assert.That(settings.StagedEntityRepository.ConnectionString, Is.EqualTo("Data Source=InMemoryCentazio;Mode=Memory;Cache=Shared"));
   }
   
-  [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
+  [Test] public async Task Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
     var svcs = new TestServivesCollection();
     var registrar = new CentazioServicesRegistrar(svcs);
-    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<CentazioSettings>(), registrar);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(await F.Settings<CentazioSettings>(), registrar);
     var expected = new List<Type> { typeof(CentazioSettings), typeof(DefaultsSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
     
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));
@@ -53,13 +53,13 @@ public class SettingsLoaderTests {
     Assert.That(settings.Defaults, Is.Not.Null);
   }
   
-  private TestSettingsObj CreateLoadAndDeleteSettings(string dir, string environment) {
+  private async Task<TestSettingsObj> CreateLoadAndDeleteSettings(string dir, string environment) {
     dir = Path.GetFullPath(Path.Combine(deeper, dir));
     var envfn = String.IsNullOrWhiteSpace(environment) ? null : CentazioConstants.ENV_SETTINGS_FILE_NAME.Replace("<environment>", environment);
     try {
-      File.WriteAllText(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME), test_settings_json);
-      if (envfn is not null) File.WriteAllText(Path.Combine(dir, envfn), test_settings_env_json);
-      return (TestSettingsObj) new SettingsLoader(new SettingsLoaderConfig(dir, EDefaultSettingsMode.ONLY_BASE_SETTINGS)).Load<TestSettingsObjRaw>(environment); 
+      await File.WriteAllTextAsync(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME), test_settings_json);
+      if (envfn is not null) await File.WriteAllTextAsync(Path.Combine(dir, envfn), test_settings_env_json);
+      return (TestSettingsObj) await new SettingsLoader(new SettingsLoaderConfig(dir, EDefaultSettingsMode.ONLY_BASE_SETTINGS)).Load<TestSettingsObjRaw>(environment); 
     } finally { 
       File.Delete(Path.Combine(dir, CentazioConstants.SETTINGS_FILE_NAME));
       if (envfn is not null) File.Delete(Path.Combine(dir, envfn));

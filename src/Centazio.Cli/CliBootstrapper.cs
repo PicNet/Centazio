@@ -10,15 +10,15 @@ using Centazio.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
-return new CliBootstrapper().Initialise().Start(args);
+return (await new CliBootstrapper().Initialise()).Start(args);
 
 internal class CliBootstrapper {
 
-  public Cli Initialise() { 
+  public async Task<Cli> Initialise() { 
     Environment.SetEnvironmentVariable("IS_CLI", "true");
     
     Log.Logger = LogInitialiser.GetFileAndConsoleConfig().CreateLogger();
-    var services = InitialiseDi();
+    var services = await InitialiseDi();
     var cli = services.GetRequiredService<Cli>();
     
     InitialiseExceptionHandler(cli);
@@ -26,9 +26,9 @@ internal class CliBootstrapper {
   }
   
 
-  private ServiceProvider InitialiseDi() {
+  private async Task<ServiceProvider> InitialiseDi() {
     var svcs = new ServiceCollection();
-    var indev = LoadDevSettingsIfAvailableOtherwiseDefaults();
+    var indev = await LoadDevSettingsIfAvailableOtherwiseDefaults();
     
     // these are dependencies that require dev settings or secrets (with aws/azure details), and are not added
     //    when running in directories without settings.json available
@@ -53,14 +53,14 @@ internal class CliBootstrapper {
     if (indev) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
     RegisterCliCommands();
     return svcs.BuildServiceProvider();
-    
-    bool LoadDevSettingsIfAvailableOtherwiseDefaults() {
+
+    async Task<bool> LoadDevSettingsIfAvailableOtherwiseDefaults() {
       var devdir = FsUtils.TryToFindDirectoryOfFile(CentazioConstants.SETTINGS_FILE_NAME);
       var isindev = devdir is not null;
       
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
       var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);  
-      var settings = SettingsLoader.RegisterSettingsHierarchy(new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
+      var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
       if (isindev) svcs.AddSingleton(new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT));
       return isindev;
     }

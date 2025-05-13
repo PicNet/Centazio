@@ -9,10 +9,10 @@ namespace Centazio.Sample.Tests;
 public class SettingsLoaderTests {
 
   
-  [Test] public void Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
+  [Test] public async Task Test_RegisterSettingsAndRecordPropertiesAsSingletons() {
     var svcs = new TestServivesCollection();
     var registrar = new CentazioServicesRegistrar(svcs);
-    var settings = SettingsLoader.RegisterSettingsHierarchy(F.Settings<Settings>(), registrar);
+    var settings = SettingsLoader.RegisterSettingsHierarchy(await F.Settings<Settings>(), registrar);
     var expected = new List<Type> { typeof(Settings), typeof(CustomSettingSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
     
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));

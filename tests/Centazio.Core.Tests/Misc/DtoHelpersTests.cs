@@ -39,8 +39,8 @@ public class DtoHelpersTests {
     };   
   }
   
-  [Test] public void Test_Complex_ToDto() {
-    var settings = F.Settings();
+  [Test] public async Task Test_Complex_ToDto() {
+    var settings = await F.Settings();
     var manualdto = settings.ToDto();
     var autodto = DtoHelpers.ToDto<CentazioSettings, CentazioSettings.Dto>(settings);
     Json.ValidateJsonEqual(autodto, manualdto);

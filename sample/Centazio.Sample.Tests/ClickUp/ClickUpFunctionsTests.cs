@@ -24,7 +24,7 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Promote() {
     var (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), await SampleTestHelpers.GetSampleCoreStorage());
     await CreateAndRunReadFunction(stager, ctl);
-    var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), F.FuncRunner(ctl: ctl));
+    var (func, runner) = (new ClickUpPromoteFunction(stager, core, ctl), await F.FuncRunner(ctl: ctl));
     var results = (await runner.RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)])).OpResults.Single();
     var ss = await ctl.GetSystemState(ClickUpConstants.ClickUpSystemName, LifecycleStage.Defaults.Promote) ?? throw new Exception();
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
@@ -41,15 +41,15 @@ public class ClickUpFunctionsTests {
   [Test] public async Task Test_Write() {
     var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
     var func = new ClickUpWriteFunction(core, ctl, await GetApi());
-    var results = await F.FuncRunner(ctl: ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
+    var results = await (await F.FuncRunner(ctl: ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
     Assert.That(results, Is.Not.Null);
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
     var func = new ClickUpReadFunction(stager, ctl, await GetApi());
-    return (await F.FuncRunner(ctl: ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)])).OpResults.Single().Result;
+    return (await (await F.FuncRunner(ctl: ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)])).OpResults.Single().Result;
   }
   
-  private async Task<ClickUpApi> GetApi() => new(F.Settings<Settings>(), await F.Secrets<Secrets>());
+  private async Task<ClickUpApi> GetApi() => new(await F.Settings<Settings>(), await F.Secrets<Secrets>());
 
 }

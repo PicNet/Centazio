@@ -40,7 +40,7 @@ public class AppSheetFunctionsTests {
   }
 
   private static async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi(F.Settings<Settings>().AppSheet, await F.Secrets<Secrets>()));
+    var func = new AppSheetReadFunction(stager, ctl, new AppSheetApi((await F.Settings<Settings>()).AppSheet, await F.Secrets<Secrets>()));
     var results = (await F.RunFunc(func, ctl: ctl)).OpResults.Single().Result;
     return results;
   }

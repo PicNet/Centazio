@@ -7,13 +7,19 @@ using Centazio.Test.Lib;
 namespace Centazio.Cli.Tests.Infra.Gen;
 
 public class CloudSolutionGeneratorTests {
-
-  private readonly CentazioSettings settings = TestingFactories.Settings();
-  private readonly ITemplater templater = new Templater(TestingFactories.Settings());
+  
   private readonly ICommandRunner cmd = new CommandRunner();
+  
+  private CentazioSettings settings;
+  private ITemplater templater;
+  
+  [SetUp] public async Task SetUp() {
+    settings = await TestingFactories.Settings();
+    templater = new Templater(settings);
+  }
 
   [Test] public async Task Test_Az_GenerateSolution() {
-    var project = MiscHelpers.AzEmptyFunctionProject();
+    var project = await MiscHelpers.AzEmptyFunctionProject();
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
     await new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
@@ -24,7 +30,7 @@ public class CloudSolutionGeneratorTests {
   }
   
   [Test] public async Task Test_Aws_GenerateSolution() {
-    var project = MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
+    var project = await MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
     await new AwsCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
@@ -35,7 +41,7 @@ public class CloudSolutionGeneratorTests {
   }
   
   [Test, Ignore("This test is quite slow and we have already verified that it works")] public async Task Test_that_generating_solution_twice_works() {
-    var project = MiscHelpers.AzEmptyFunctionProject();
+    var project = await MiscHelpers.AzEmptyFunctionProject();
     var generator = new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]);
     
     await generator.GenerateSolution();

@@ -6,8 +6,8 @@ namespace Centazio.Cli.Tests.Infra;
 
 public class FunctionProjectTests {
 
-  [Test] public void Test_propery_values_are_as_expected() {
-    var settings = TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "azure");
+  [Test] public async Task Test_propery_values_are_as_expected() {
+    var settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "azure");
     var proj = new AzFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings));
 
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));

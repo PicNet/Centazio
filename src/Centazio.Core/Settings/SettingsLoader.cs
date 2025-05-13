@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Centazio.Core.Settings;
 
 public interface ISettingsLoader {
-  T Load<T>(params List<string> environments);
+  Task<T> Load<T>(params List<string> environments);
 }
 
 public record PotentialSettingFile(string FileName, bool Required, bool IsDefaultsFile);
@@ -50,7 +50,7 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     }).OfType<string>().ToList();
   }
   
-  public T Load<T>(params List<string> environments) {
+  public Task<T> Load<T>(params List<string> environments) {
     var files = GetSettingsFilePathList(environments);
     Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
     
@@ -61,7 +61,7 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
     var settings = builder.Build(); 
     settings.Bind(obj);
-    return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
+    return Task.FromResult(dtot is null ? (T) obj : ((IDto<T>)obj).ToBase());
   }
 
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 
