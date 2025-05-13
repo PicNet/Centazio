@@ -20,12 +20,6 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
   
   private async Task AddAwsConfigFilesToProject(List<Type> functions) {
     await functions.ForEachSequentialAsync(async func => {
-      model.Files.Add($"aws-lambda-tools-defaults.json");
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"aws-lambda-tools-defaults.json"), templater.ParseFromPath("aws/aws-lambda-tools-defaults.json", new {
-        ClassName = func.Name,
-        AssemblyName = func.Namespace 
-      }));
-      
       model.Files.Add($"Dockerfile");
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Dockerfile"), templater.ParseFromPath("aws/Dockerfile", new {
         ClassName = func.Name,
