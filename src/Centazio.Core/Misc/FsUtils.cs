@@ -1,5 +1,9 @@
 namespace Centazio.Core.Misc;
 
+// todo: FsUtils needs a FromRoot which is either the dev root, cli root or cloud root depending on context.  It needs to work as follows (I think):
+//    - if In dev directory, fall back to dev root
+//    - if in Cli DotNet Tool, use cli root
+//    - Else Environment.CurrentDirectory
 public static class FsUtils {
   
   private static readonly string TEST_DEV_FILE = "centazio3.sln";

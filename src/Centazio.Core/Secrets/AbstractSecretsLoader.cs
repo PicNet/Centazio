@@ -7,7 +7,7 @@ public abstract class AbstractSecretsLoader : ISecretsLoader {
     return ValidateAndConvertSecretsToDto<T>(dict);
   }
 
-  private async Task<IDictionary<string, string>> LoadSecretsAsDictionary(List<string> environments) {
+  private async Task<Dictionary<string, string>> LoadSecretsAsDictionary(List<string> environments) {
     if (!environments.Any()) throw new ArgumentNullException(nameof(environments));
     
     Log.Information($"loading secrets environments[{String.Join(',', environments.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}]");
@@ -23,7 +23,7 @@ public abstract class AbstractSecretsLoader : ISecretsLoader {
   protected abstract Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required);
   
 
-  private T ValidateAndConvertSecretsToDto<T>(IDictionary<string, string> secrets) {
+  private T ValidateAndConvertSecretsToDto<T>(Dictionary<string, string> secrets) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var target = dtot ?? typeof(T);
     var typed = Activator.CreateInstance(target) ?? throw new Exception($"Type {target.FullName} could not be constructed");

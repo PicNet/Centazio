@@ -38,11 +38,10 @@ public record CentazioSettings {
       Env.IsInDev() 
           ? FindFirstValidDirectory(SecretsFolders) 
           : Environment.CurrentDirectory;
-
-  public static string FindFirstValidDirectory(List<string> directories) => directories.FirstOrDefault(dir => {
-      try { return Directory.Exists(dir); }
-      catch { return false; }
-    }) ?? throw new Exception($"Could not find a valid directory");
+  
+  public static string FindFirstValidDirectory(List<string> directories) => 
+      directories.Select(dir => Path.IsPathFullyQualified(dir) ? dir : FsUtils.GetDevPath(dir)).First(Directory.Exists) 
+      ?? throw new Exception($"Could not find a valid directory");
 
   public virtual Dto ToDto() => new() {
       SecretsFolders = SecretsFolders,

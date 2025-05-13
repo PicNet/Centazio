@@ -10,12 +10,12 @@ public class FunctionProjectTests {
     var settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "azure");
     var proj = new AzFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings));
 
-    Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Azure"));
-    Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
-    Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure")));
-    Assert.That(proj.CsprojFile, Is.EqualTo("Centazio.Cli.Tests.Azure.csproj"));
-    Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "Centazio.Cli.Tests.Azure.sln")));
-    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Azure", "bin", "Release", "net9.0", "publish")));
+    Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Az"));
+    Assert.That(proj.SolutionDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az")));
+    Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az")));
+    Assert.That(proj.CsprojFile, Is.EqualTo("Centazio.Cli.Tests.Az.csproj"));
+    Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az", "Centazio.Cli.Tests.Az.sln")));
+    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az", "bin", "Release", "net9.0", "publish")));
     
     string GenRel(params List<string> steps) => FsUtils.GetDevPath(steps.Prepend(settings.Defaults.GeneratedCodeFolder).ToList()); 
   }
