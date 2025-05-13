@@ -5,24 +5,22 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centazio.Core;
 
 public interface IIntegrationBase {
-  void RegisterServices(CentazioServicesRegistrar registrar);
+  Task RegisterServices(CentazioServicesRegistrar registrar);
   Task Initialise(ServiceProvider prov);
 }
 
 
-public abstract class IntegrationBase<TSettings, TSecrets> : IIntegrationBase 
+public abstract class IntegrationBase<TSettings, TSecrets>(params List<string> environments) : IIntegrationBase
     where TSettings : CentazioSettings
     where TSecrets : CentazioSecrets {
 
-  protected TSettings Settings { get; }
-  protected TSecrets Secrets { get; }
-  
-  protected IntegrationBase(params List<string> environments) {
+  protected TSettings Settings { get; private set; } = null!;
+  protected TSecrets Secrets { get; private set; } = null!;
+
+  public async Task RegisterServices(CentazioServicesRegistrar registrar) {
     Settings = new SettingsLoader().Load<TSettings>(environments);
-    Secrets = new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(environments);
-  }
-  
-  public void RegisterServices(CentazioServicesRegistrar registrar) {
+    Secrets = await new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(environments);
+    
     SettingsLoader.RegisterSettingsHierarchy(Settings, registrar);
     registrar.Register(Secrets);
     

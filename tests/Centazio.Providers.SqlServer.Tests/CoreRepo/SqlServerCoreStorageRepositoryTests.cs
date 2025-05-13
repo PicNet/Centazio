@@ -8,7 +8,7 @@ namespace Centazio.Providers.SqlServer.Tests.CoreRepo;
 public class SqlServerCoreStorageRepositoryTests : BaseCoreStorageRepositoryTests {
   
   protected override async Task<ITestingCoreStorage> GetRepository() {
-    var connstr = (await SqlConn.GetInstance(false, TestingFactories.Secrets())).ConnStr;
+    var connstr = (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).ConnStr;
     return await new TestingEfCoreStorageRepository(
         () => new SqlServerCoreStorageRepositoryTestsDbContect(connstr), 
         new SqlServerDbFieldsHelper()).Initalise();

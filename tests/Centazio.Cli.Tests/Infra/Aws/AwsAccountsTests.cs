@@ -7,7 +7,7 @@ namespace Centazio.Cli.Tests.Infra.Aws;
 public class AwsAccountsTests {
   
  [Test] public async Task Test_ListAccounts() {
-   var impl = new AwsAccounts(TestingFactories.Secrets());
+   var impl = new AwsAccounts(await TestingFactories.Secrets());
    var accounts = await impl.ListAccounts();
    Assert.That(accounts, Is.Not.Empty);
  } 

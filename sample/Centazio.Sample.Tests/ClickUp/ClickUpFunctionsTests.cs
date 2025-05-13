@@ -40,16 +40,16 @@ public class ClickUpFunctionsTests {
 
   [Test] public async Task Test_Write() {
     var (core, ctl) = (await SampleTestHelpers.GetSampleCoreStorage(), F.CtlRepo());
-    var func = new ClickUpWriteFunction(core, ctl, api);
+    var func = new ClickUpWriteFunction(core, ctl, await GetApi());
     var results = await F.FuncRunner(ctl: ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
     Assert.That(results, Is.Not.Null);
   }
   
   private async Task<OperationResult> CreateAndRunReadFunction(TestingStagedEntityRepository stager, TestingInMemoryBaseCtlRepository ctl) {
-    var func = new ClickUpReadFunction(stager, ctl, api);
+    var func = new ClickUpReadFunction(stager, ctl, await GetApi());
     return (await F.FuncRunner(ctl: ctl).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)])).OpResults.Single().Result;
   }
   
-  private readonly ClickUpApi api = new(F.Settings<Settings>(), F.Secrets<Secrets>());
+  private async Task<ClickUpApi> GetApi() => new(F.Settings<Settings>(), await F.Secrets<Secrets>());
 
 }

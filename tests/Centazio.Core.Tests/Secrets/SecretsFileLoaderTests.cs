@@ -12,17 +12,17 @@ SETTING4=trailing space with semmi ;
 SETTING5=val;with;semmis;
 SETTING6=val=with=equals";
   
-  [Test] public void Test_loading_from_local() {
-    Assert.That(Load(("testing", FULL_CONTENT)), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
+  [Test] public async Task Test_loading_from_local() {
+    Assert.That(await Load(("testing", FULL_CONTENT)), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "trailing space with semmi ;", "val;with;semmis;", "val=with=equals")));
   }
   
-  [Test] public void Test_overwriting_secrets() {
-    Assert.That(Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "overwritten", "val;with;semmis;", "val=with=equals")));
+  [Test] public async Task Test_overwriting_secrets() {
+    Assert.That(await Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")), Is.EqualTo(new TestSettingsTargetObj("VALUE1;", "VALUE 2 with spaces", 123, "overwritten", "val;with;semmis;", "val=with=equals")));
   }
   
-  private TestSettingsTargetObj Load(params List<(string env, string contents)> envs) {
+  private async Task<TestSettingsTargetObj> Load(params List<(string env, string contents)> envs) {
     envs.ForEach(f => File.WriteAllText($"{f.env}.env", f.contents));
-    try { return (TestSettingsTargetObj) new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList()); }
+    try { return (TestSettingsTargetObj) await new SecretsFileLoader(".").Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList()); }
     finally { envs.ForEach(f => File.Delete($"{f.env}.env")); }
   }
 

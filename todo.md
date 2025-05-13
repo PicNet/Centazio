@@ -10,6 +10,7 @@
     - application insights (is this completed?) 
     - function-to-function triggers
   - Aws:
+    - AwsSecretsLoader and corresponding IServiceFactory 
     - https://docs.aws.amazon.com/lambda/latest/dg/csharp-image.html
     - image: public.ecr.aws/lambda/dotnet:9
     - currently hardcodes 1 minute trigger

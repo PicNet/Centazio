@@ -14,8 +14,8 @@ public static class TestingFactories {
   public static CentazioSettings Settings(params List<string> environments) => Settings<CentazioSettings>(environments);
   public static E Settings<E>(params List<string> environments) => new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
   
-  public static CentazioSecrets Secrets() => Secrets<CentazioSecrets>();
-  public static E Secrets<E>() => new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
+  public static async Task<CentazioSecrets> Secrets() => await Secrets<CentazioSecrets>();
+  public static async Task<E> Secrets<E>() => await new SecretsFileLoader(Settings().GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

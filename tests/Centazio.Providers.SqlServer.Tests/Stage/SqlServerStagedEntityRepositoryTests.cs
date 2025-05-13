@@ -10,7 +10,7 @@ namespace Centazio.Providers.SqlServer.Tests.Stage;
 
 public class SqlServerStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
-    var connstr = (await SqlConn.GetInstance(false, TestingFactories.Secrets())).ConnStr;
+    var connstr = (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).ConnStr;
     var opts = new EFStagedEntityRepositoryOptions(limit, checksum, () => new SqlServerStagedEntityContext(connstr, nameof(Ctl).ToLower(), nameof(StagedEntity).ToLower()));
     return await new TestingEfStagedEntityRepository(opts, new SqlServerDbFieldsHelper()).Initialise();
   }

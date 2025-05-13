@@ -7,37 +7,37 @@ namespace Centazio.Sample.Tests.AppSheet;
 public class AppSheetApiTests {
 
   [Test] public async Task Test_AddTasks() {
-    var start = await Api().GetAllTasks();
-    var added = await Api().AddTasks([Guid.NewGuid().ToString()]);
-    var end = await Api().GetAllTasks();
+    var start = await (await GetApi()).GetAllTasks();
+    var added = await (await GetApi()).AddTasks([Guid.NewGuid().ToString()]);
+    var end = await (await GetApi()).GetAllTasks();
       
     Assert.That(added.Count, Is.EqualTo(1));
     Assert.That(end.Count, Is.EqualTo(start.Count + 1));
     
-    await Api().DeleteTasks(added);
-    var cleanup = await Api().GetAllTasks();
+    await (await GetApi()).DeleteTasks(added);
+    var cleanup = await (await GetApi()).GetAllTasks();
     
     Assert.That(cleanup.Count, Is.EqualTo(start.Count));
   }
   
   [Test] public async Task Test_EditTasks() {
-    var start = await Api().GetAllTasks();
+    var start = await (await GetApi()).GetAllTasks();
     var (val1, val2) = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
-    var added = await Api().AddTasks([val1]);
+    var added = await (await GetApi()).AddTasks([val1]);
     var toedit = added.Single() with { Task = val2 };
-    var edited = await Api().EditTasks([toedit]);
-    var end = (await Api().GetAllTasks()).Select(Json.Deserialize<AppSheetTask>).ToList();
+    var edited = await (await GetApi()).EditTasks([toedit]);
+    var end = (await (await GetApi()).GetAllTasks()).Select(Json.Deserialize<AppSheetTask>).ToList();
     
     Assert.That(end.Count, Is.EqualTo(start.Count + 1));
     Assert.That(edited.Single().Task, Is.EqualTo(val2));
     Assert.That(end.Single(t => t.RowId == toedit.RowId).Task, Is.EqualTo(val2));
     
-    await Api().DeleteTasks(added);
-    var cleanup = await Api().GetAllTasks();
+    await (await GetApi()).DeleteTasks(added);
+    var cleanup = await (await GetApi()).GetAllTasks();
     
     Assert.That(cleanup.Count, Is.EqualTo(start.Count)); 
   }
   
-  private AppSheetApi Api() => new(F.Settings<Settings>().AppSheet, F.Secrets<Secrets>());
+  private async Task<AppSheetApi> GetApi() => new(F.Settings<Settings>().AppSheet, await F.Secrets<Secrets>());
 
 }

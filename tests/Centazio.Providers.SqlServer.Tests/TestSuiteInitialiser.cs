@@ -14,7 +14,7 @@ namespace Centazio.Providers.SqlServer.Tests;
   }
   
   [OneTimeTearDown] public async Task GlobalTearDown() {
-    await (await SqlConn.GetInstance(false, TestingFactories.Secrets())).Dispose();
+    await (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).Dispose();
   }
 
 }

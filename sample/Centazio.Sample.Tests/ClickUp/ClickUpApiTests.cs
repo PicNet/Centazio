@@ -9,25 +9,25 @@ public class ClickUpApiTests {
 
   // https://app.clickup.com/t/{test_task_id}
   internal static readonly string TEST_TASK_ID = "86cxvdxet";
-  private readonly ClickUpApi Api = new(F.Settings<Settings>(), F.Secrets<Secrets>());
+  
   
   [Test] public async Task Test_print_task_list() {
-    var tasks = await Api.GetTasksAfter(UtcDate.UtcNow.AddYears(-10));
+    var tasks = await (await GetApi()).GetTasksAfter(UtcDate.UtcNow.AddYears(-10));
     DevelDebug.WriteLine("TASKS:\n\t" + String.Join("\n\t", tasks.Select(t => t.Json)));
   }
   
   [Test] public async Task Test_create_task() {
     if (Env.IsGitHubActions()) return; // flaky test, ignore in CI
-    
+    var api = await GetApi();
     var start = DateTime.UtcNow.AddMinutes(-1); // using DateTime.UtcNow on purpose as we want empty result set
-    var first = await Api.GetTasksAfter(DateTime.UtcNow);
+    var first = await api.GetTasksAfter(DateTime.UtcNow);
     var name = $"{nameof(ClickUpApiTests)}:{Guid.NewGuid()}";
-    var id = await Api.CreateTask(name);
-    var created = (await Api.GetTasksAfter(start))
+    var id = await api.CreateTask(name);
+    var created = (await api.GetTasksAfter(start))
         .Select(t => Json.Deserialize<ClickUpTask>(t.Json))
         .Single(t => t.id == id);
-    await Api.DeleteTask(id);
-    var afterdel = (await Api.GetTasksAfter(start))
+    await api.DeleteTask(id);
+    var afterdel = (await api.GetTasksAfter(start))
         .Select(t => Json.Deserialize<ClickUpTask>(t.Json))
         .Count(t => t.id == id);
     
@@ -39,18 +39,20 @@ public class ClickUpApiTests {
   
   [Test] public async Task Test_update_task() {
     var name = "Centazio Unit Test Task (do not delete): " + Guid.NewGuid();
-    await Api.UpdateTask(TEST_TASK_ID, name); 
+    await (await GetApi()).UpdateTask(TEST_TASK_ID, name); 
   }
   
   [Test] public async Task Test_close_task() { 
-    await Api.CloseTask(TEST_TASK_ID); 
+    await (await GetApi()).CloseTask(TEST_TASK_ID); 
   }
   
   [Test] public async Task Test_open_task() { 
-    await Api.OpenTask(TEST_TASK_ID); 
+    await (await GetApi()).OpenTask(TEST_TASK_ID); 
   }
   
   [Test, Ignore("Do not delete, as there is no way to get task back")] public async Task Test_delete_task() { 
-    await Api.DeleteTask(TEST_TASK_ID); 
+    await (await GetApi()).DeleteTask(TEST_TASK_ID); 
   }
+  
+  private async Task<ClickUpApi> GetApi() => new(F.Settings<Settings>(), await F.Secrets<Secrets>());
 }
