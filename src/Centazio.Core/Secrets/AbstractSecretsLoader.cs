@@ -7,7 +7,21 @@ public abstract class AbstractSecretsLoader : ISecretsLoader {
     return ValidateAndConvertSecretsToDto<T>(dict);
   }
 
-  protected abstract Task<IDictionary<string, string>> LoadSecretsAsDictionary(List<string> environments);
+  private async Task<IDictionary<string, string>> LoadSecretsAsDictionary(List<string> environments) {
+    if (!environments.Any()) throw new ArgumentNullException(nameof(environments));
+    
+    Log.Information($"loading secrets environments[{String.Join(',', environments.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}]");
+    return (await environments
+        .Select((env, idx) => LoadSecretsAsDictionaryForEnvironment(env, idx == 0))
+        .Synchronous())
+        .Aggregate(new Dictionary<string, string>(), (secrets, step) => {
+      step.ForEach(kvp => secrets[kvp.Key] = kvp.Value);
+      return secrets;
+    });
+  }
+  
+  protected abstract Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required);
+  
 
   private T ValidateAndConvertSecretsToDto<T>(IDictionary<string, string> secrets) {
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
