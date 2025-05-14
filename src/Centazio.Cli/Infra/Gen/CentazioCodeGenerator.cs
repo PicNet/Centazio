@@ -8,8 +8,6 @@ public interface ICentazioCodeGenerator {
 public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, bool usenuget=true) : ICentazioCodeGenerator {
 
   public async Task<string> GenerateSolution(string slnname, string? provider) {
-    if (!usenuget && !Env.IsInDev()) throw new Exception(nameof(CentazioCodeGenerator) + " should use NuGet packages if not running inside a Centazio dev directory");
-      
     var (sln, shared, slndir) = (slnname, $"{slnname}.Shared", Directory.CreateDirectory(slnname).FullName);
     var shareddir = Path.Combine(slndir, shared);
     

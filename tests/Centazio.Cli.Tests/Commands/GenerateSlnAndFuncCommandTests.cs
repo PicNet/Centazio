@@ -8,10 +8,9 @@ using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Sett
 
 namespace Centazio.Cli.Tests.Commands;
 
-// todo: not working with new test FsUtil mechanics
 public class GenerateSlnAndFuncCommandTests {
 
-  private readonly string properroot = FsUtils.GetCentazioPath();
+  private readonly string properroot = Environment.CurrentDirectory;
   private readonly CommandRunner runner = new();
   private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
   private readonly string slnfile = nameof(GenerateSlnAndFuncCommandTests) + ".sln";
@@ -26,7 +25,8 @@ public class GenerateSlnAndFuncCommandTests {
     var settings = await TestingFactories.Settings();
     nugetgen = new(new CommandRunner(), new Templater(settings));
     refgen = new(new CommandRunner(), new Templater(settings), false);
-    FsUtils.TestingCliRootDir = properroot;
+    Environment.SetEnvironmentVariable("IS_CLI", "true");
+    FsUtils.TestingCliRootDir = FsUtils.GetCentazioPath();
     Environment.CurrentDirectory = Directory.CreateDirectory(testdir).FullName;
     
     if (Directory.Exists(sln)) Directory.Delete(sln, true);
@@ -35,6 +35,7 @@ public class GenerateSlnAndFuncCommandTests {
   [TearDown] public void TearDown() {
     FsUtils.TestingCliRootDir = string.Empty;
     Environment.CurrentDirectory = properroot;
+    Environment.SetEnvironmentVariable("IS_CLI", null);
     if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
   }
 

@@ -32,8 +32,7 @@ public static class FsUtils {
     return GetPathFromRootAndSteps(cliinstall ??= GetCliRootDir(), steps);
     
     string GetCliRootDir() {
-      if (Env.IsInDev()) return String.IsNullOrEmpty(TestingCliRootDir) ? GetDevPath() : TestingCliRootDir;
-
+      if (!String.IsNullOrWhiteSpace(TestingCliRootDir)) return TestingCliRootDir;
       var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
       if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliPath)} to be called from Centazio.Cli context");
       var clidir = Path.GetDirectoryName(exe.Location) ?? throw new Exception("Could not find a valid templates directory");
