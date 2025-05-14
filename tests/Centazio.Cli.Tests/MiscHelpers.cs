@@ -11,28 +11,30 @@ namespace Centazio.Cli.Tests;
 
 public static class MiscHelpers {
   private static readonly ICommandRunner cmd = new CommandRunner();
-  private static readonly CentazioSettings settings = TestingFactories.Settings();
-  private static readonly CentazioSecrets secrets = TestingFactories.Secrets();
-  private static readonly ITemplater templater = new Templater(TestingFactories.Settings());
+  public static async Task<AzFunctionProjectMeta> AzEmptyFunctionProject() => 
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), await TestingFactories.Settings(), new Templater(await TestingFactories.Settings()));
   
-  public static AzFunctionProjectMeta AzEmptyFunctionProject() => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings(), templater);
-  
-  public static AwsFunctionProjectMeta AwsEmptyFunctionProject(string function) => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), TestingFactories.Settings(), function);
+  public static async Task<AwsFunctionProjectMeta> AwsEmptyFunctionProject(string function) => 
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), await TestingFactories.Settings(), function);
 
   public static class Az {
-    public static List<string> ListFunctionApps() {
+    public static async Task<List<string>> ListFunctionApps() {
+      var settings = await TestingFactories.Settings();
+      var templater = new Templater(settings);
       var outstr = cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctionApps)).Out;
       return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
-    public static List<string> ListFunctionsInApp(string appname) {
+    public static async Task<List<string>> ListFunctionsInApp(string appname) {
+      var settings = await TestingFactories.Settings();
+      var templater = new Templater(settings);
       var outstr = cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctions, new { AppName = appname })).Out;
       return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
     }
     
-    public static void DeleteFunctionApp(string appname) {
+    public static async Task DeleteFunctionApp(string appname) {
+      var settings = await TestingFactories.Settings();
+      var templater = new Templater(settings);
       cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.DeleteFunctionApp, new { AppName = appname }));
     }
     
@@ -42,7 +44,7 @@ public static class MiscHelpers {
   
   public static class Aws {
     public static async Task<List<string>> ListFunctionApps() {
-      using var lambda = GetAmazonLambdaClient();
+      using var lambda = await GetAmazonLambdaClient();
       var functions = await lambda.ListFunctionsAsync();
       return functions.Functions.Select(r => r.FunctionName).ToList();
     }
@@ -52,12 +54,14 @@ public static class MiscHelpers {
     }
     
     public static async Task DeleteFunctionApp(string appname) {
-      using var lambda = GetAmazonLambdaClient();
+      using var lambda = await GetAmazonLambdaClient();
       await lambda.DeleteFunctionAsync(appname);
     }
     
-    private static AmazonLambdaClient GetAmazonLambdaClient()
+    private static async Task<AmazonLambdaClient> GetAmazonLambdaClient()
     {
+      var settings = await TestingFactories.Settings();
+      var secrets = await TestingFactories.Secrets();
       AmazonLambdaClient? lambda = null;
       try
       {

@@ -102,11 +102,14 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
     AddCopyFilesToProject(paths);
   }
   
-  private void AddCopyFilesToProject(List<string> files) {
+  private void AddCopyFilesToProject(List<string> files, string subdir = "") {
+    var targetDir = Path.Combine(project.ProjectDirPath, subdir);
+    if (!File.Exists(targetDir)) { Directory.CreateDirectory(targetDir); }
+
     files.ForEach(path => {
       var fname = Path.GetFileName(path);
       model.Files.Add(fname);
-      File.Copy(path, Path.Combine(project.ProjectDirPath, fname), true);
+      File.Copy(path, Path.Combine(targetDir, fname), true);
     });
   }
   
