@@ -40,7 +40,7 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
           environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => spec.FileName.Replace("<environment>", env, StringComparison.Ordinal)) : 
           [spec.FileName];
       return files.Select(f => {
-        var path = spec.IsDefaultsFile ? FsUtils.GetCliDir("defaults", f) : Path.Combine(conf.RootDirectory, f);
+        var path = spec.IsDefaultsFile ? FsUtils.GetCliPath("defaults", f) : Path.Combine(conf.RootDirectory, f);
         return File.Exists(path) ? path : !spec.Required ? null : Throw();
 
         string Throw() {
