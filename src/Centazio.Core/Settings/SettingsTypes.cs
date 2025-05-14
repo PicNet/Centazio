@@ -36,11 +36,11 @@ public record AzSettings {
     public string? StopFunctionApp { get; init; }
 
     public AzSettings ToBase() => new() { 
-      ListFunctionApps = String.IsNullOrWhiteSpace(ListFunctionApps) ? throw new ArgumentNullException(nameof(ListFunctionApps)) : ListFunctionApps.Trim(),
-      ListFunctions = String.IsNullOrWhiteSpace(ListFunctions) ? throw new ArgumentNullException(nameof(ListFunctions)) : ListFunctions.Trim(),
-      DeleteFunctionApp = String.IsNullOrWhiteSpace(DeleteFunctionApp) ? throw new ArgumentNullException(nameof(DeleteFunctionApp)) : DeleteFunctionApp.Trim(),
-      StartFunctionApp = String.IsNullOrWhiteSpace(StartFunctionApp) ? throw new ArgumentNullException(nameof(StartFunctionApp)) : StartFunctionApp.Trim(),
-      StopFunctionApp = String.IsNullOrWhiteSpace(StopFunctionApp) ? throw new ArgumentNullException(nameof(StopFunctionApp)) : StopFunctionApp.Trim(),
+ListFunctionApps = String.IsNullOrWhiteSpace(ListFunctionApps) ? throw new ArgumentNullException(nameof(ListFunctionApps)) : ListFunctionApps.Trim(),
+ListFunctions = String.IsNullOrWhiteSpace(ListFunctions) ? throw new ArgumentNullException(nameof(ListFunctions)) : ListFunctions.Trim(),
+DeleteFunctionApp = String.IsNullOrWhiteSpace(DeleteFunctionApp) ? throw new ArgumentNullException(nameof(DeleteFunctionApp)) : DeleteFunctionApp.Trim(),
+StartFunctionApp = String.IsNullOrWhiteSpace(StartFunctionApp) ? throw new ArgumentNullException(nameof(StartFunctionApp)) : StartFunctionApp.Trim(),
+StopFunctionApp = String.IsNullOrWhiteSpace(StopFunctionApp) ? throw new ArgumentNullException(nameof(StopFunctionApp)) : StopFunctionApp.Trim(),
     };
   }
 }
@@ -62,8 +62,8 @@ public record FuncSettings {
     public string? ShowLogStream { get; init; }
 
     public FuncSettings ToBase() => new() { 
-      LocalSimulateFunction = String.IsNullOrWhiteSpace(LocalSimulateFunction) ? throw new ArgumentNullException(nameof(LocalSimulateFunction)) : LocalSimulateFunction.Trim(),
-      ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
+LocalSimulateFunction = String.IsNullOrWhiteSpace(LocalSimulateFunction) ? throw new ArgumentNullException(nameof(LocalSimulateFunction)) : LocalSimulateFunction.Trim(),
+ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
     };
   }
 }
@@ -89,9 +89,9 @@ public record DotNetSettings {
     public string? PublishProject { get; init; }
 
     public DotNetSettings ToBase() => new() { 
-      CleanProject = String.IsNullOrWhiteSpace(CleanProject) ? throw new ArgumentNullException(nameof(CleanProject)) : CleanProject.Trim(),
-      BuildProject = String.IsNullOrWhiteSpace(BuildProject) ? throw new ArgumentNullException(nameof(BuildProject)) : BuildProject.Trim(),
-      PublishProject = String.IsNullOrWhiteSpace(PublishProject) ? throw new ArgumentNullException(nameof(PublishProject)) : PublishProject.Trim(),
+CleanProject = String.IsNullOrWhiteSpace(CleanProject) ? throw new ArgumentNullException(nameof(CleanProject)) : CleanProject.Trim(),
+BuildProject = String.IsNullOrWhiteSpace(BuildProject) ? throw new ArgumentNullException(nameof(BuildProject)) : BuildProject.Trim(),
+PublishProject = String.IsNullOrWhiteSpace(PublishProject) ? throw new ArgumentNullException(nameof(PublishProject)) : PublishProject.Trim(),
     };
   }
 }
@@ -109,7 +109,7 @@ public record LambdaSettings {
     public string? ShowLogStream { get; init; }
 
     public LambdaSettings ToBase() => new() { 
-      ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
+ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
     };
   }
 }
@@ -139,10 +139,10 @@ public record ConsoleCommandsSettings {
     public LambdaSettings.Dto? Lambda { get; init; }
 
     public ConsoleCommandsSettings ToBase() => new() { 
-      Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
-      Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
-      DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
-      Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
+Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
+Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
+DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
+Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
     };
   }
 }
@@ -176,11 +176,11 @@ public record AzureDefaultValuesSettings {
     public string? AppServiceSkuTier { get; init; }
 
     public AzureDefaultValuesSettings ToBase() => new() { 
-      FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
-      AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
-      WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
-      AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
-      AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
+FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
+AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
+WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
+AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
+AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
     };
   }
 }
@@ -226,14 +226,14 @@ public record DefaultsSettings {
     public AzureDefaultValuesSettings.Dto? AzureDefaultValues { get; init; }
 
     public DefaultsSettings ToBase() => new() { 
-      GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
-      FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
-      ReadFunctionPollExpression = String.IsNullOrWhiteSpace(ReadFunctionPollExpression) ? throw new ArgumentNullException(nameof(ReadFunctionPollExpression)) : ReadFunctionPollExpression.Trim(),
-      PromoteFunctionPollExpression = String.IsNullOrWhiteSpace(PromoteFunctionPollExpression) ? throw new ArgumentNullException(nameof(PromoteFunctionPollExpression)) : PromoteFunctionPollExpression.Trim(),
-      WriteFunctionPollExpression = String.IsNullOrWhiteSpace(WriteFunctionPollExpression) ? throw new ArgumentNullException(nameof(WriteFunctionPollExpression)) : WriteFunctionPollExpression.Trim(),
-      OtherFunctionPollExpression = String.IsNullOrWhiteSpace(OtherFunctionPollExpression) ? throw new ArgumentNullException(nameof(OtherFunctionPollExpression)) : OtherFunctionPollExpression.Trim(),
-      ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
-      AzureDefaultValues = AzureDefaultValues?.ToBase() ?? throw new ArgumentNullException(nameof(AzureDefaultValues)),
+GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
+FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
+ReadFunctionPollExpression = String.IsNullOrWhiteSpace(ReadFunctionPollExpression) ? throw new ArgumentNullException(nameof(ReadFunctionPollExpression)) : ReadFunctionPollExpression.Trim(),
+PromoteFunctionPollExpression = String.IsNullOrWhiteSpace(PromoteFunctionPollExpression) ? throw new ArgumentNullException(nameof(PromoteFunctionPollExpression)) : PromoteFunctionPollExpression.Trim(),
+WriteFunctionPollExpression = String.IsNullOrWhiteSpace(WriteFunctionPollExpression) ? throw new ArgumentNullException(nameof(WriteFunctionPollExpression)) : WriteFunctionPollExpression.Trim(),
+OtherFunctionPollExpression = String.IsNullOrWhiteSpace(OtherFunctionPollExpression) ? throw new ArgumentNullException(nameof(OtherFunctionPollExpression)) : OtherFunctionPollExpression.Trim(),
+ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
+AzureDefaultValues = AzureDefaultValues?.ToBase() ?? throw new ArgumentNullException(nameof(AzureDefaultValues)),
     };
   }
 }
@@ -271,12 +271,12 @@ public record StagedEntityRepositorySettings {
     public int? Limit { get; init; }
 
     public StagedEntityRepositorySettings ToBase() => new() { 
-      Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-      ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-      SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-      TableName = String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim(),
-      CreateSchema = CreateSchema ?? false,
-      Limit = Limit ?? 0,
+Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
+TableName = String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim(),
+CreateSchema = CreateSchema ?? false,
+Limit = Limit ?? 0,
     };
   }
 }
@@ -318,13 +318,13 @@ public record CtlRepositorySettings {
     public bool? CreateSchema { get; init; }
 
     public CtlRepositorySettings ToBase() => new() { 
-      Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-      ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-      SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-      SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? throw new ArgumentNullException(nameof(SystemStateTableName)) : SystemStateTableName.Trim(),
-      ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? throw new ArgumentNullException(nameof(ObjectStateTableName)) : ObjectStateTableName.Trim(),
-      CoreToSysMapTableName = String.IsNullOrWhiteSpace(CoreToSysMapTableName) ? throw new ArgumentNullException(nameof(CoreToSysMapTableName)) : CoreToSysMapTableName.Trim(),
-      CreateSchema = CreateSchema ?? false,
+Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
+SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? throw new ArgumentNullException(nameof(SystemStateTableName)) : SystemStateTableName.Trim(),
+ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? throw new ArgumentNullException(nameof(ObjectStateTableName)) : ObjectStateTableName.Trim(),
+CoreToSysMapTableName = String.IsNullOrWhiteSpace(CoreToSysMapTableName) ? throw new ArgumentNullException(nameof(CoreToSysMapTableName)) : CoreToSysMapTableName.Trim(),
+CreateSchema = CreateSchema ?? false,
     };
   }
 }
@@ -358,11 +358,11 @@ public record CoreStorageSettings {
     public bool? CreateSchema { get; init; }
 
     public CoreStorageSettings ToBase() => new() { 
-      Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-      ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-      SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-      CtlSchemaName = String.IsNullOrWhiteSpace(CtlSchemaName) ? throw new ArgumentNullException(nameof(CtlSchemaName)) : CtlSchemaName.Trim(),
-      CreateSchema = CreateSchema ?? false,
+Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
+SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
+CtlSchemaName = String.IsNullOrWhiteSpace(CtlSchemaName) ? throw new ArgumentNullException(nameof(CtlSchemaName)) : CtlSchemaName.Trim(),
+CreateSchema = CreateSchema ?? false,
     };
   }
 }
@@ -408,14 +408,14 @@ public record AzFunctionsSettings {
     public string? AppServiceSkuTier { get; init; }
 
     public AzFunctionsSettings ToBase() => new() { 
-            Assembly = Assembly?.Trim(),
-            Region = Region?.Trim(),
-            ResourceGroup = ResourceGroup?.Trim(),
-            FunctionAppName = FunctionAppName?.Trim(),
-            AppServicePlanName = AppServicePlanName?.Trim(),
-            WebSiteName = WebSiteName?.Trim(),
-            AppServiceSkuName = AppServiceSkuName?.Trim(),
-            AppServiceSkuTier = AppServiceSkuTier?.Trim(),
+      Assembly = Assembly?.Trim(),
+      Region = Region?.Trim(),
+      ResourceGroup = ResourceGroup?.Trim(),
+      FunctionAppName = FunctionAppName?.Trim(),
+      AppServicePlanName = AppServicePlanName?.Trim(),
+      WebSiteName = WebSiteName?.Trim(),
+      AppServiceSkuName = AppServiceSkuName?.Trim(),
+      AppServiceSkuTier = AppServiceSkuTier?.Trim(),
     };
   }
 }
@@ -453,12 +453,12 @@ public record AzureSettings {
     public List<AzFunctionsSettings.Dto>? AzFunctions { get; init; }
 
     public AzureSettings ToBase() => new() { 
-      Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-      ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
-            FunctionAppName = FunctionAppName?.Trim(),
-            AppServicePlanName = AppServicePlanName?.Trim(),
-            WebSiteName = WebSiteName?.Trim(),
-      AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
+Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
+ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
+      FunctionAppName = FunctionAppName?.Trim(),
+      AppServicePlanName = AppServicePlanName?.Trim(),
+      WebSiteName = WebSiteName?.Trim(),
+AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
     };
   }
 }
@@ -487,9 +487,9 @@ public record AwsSettings {
     public string? SecretsManagerStoreIdTemplate { get; init; }
 
     public AwsSettings ToBase() => new() { 
-      Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-      AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
-            SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
+Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
+AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
+      SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
     };
   }
 }

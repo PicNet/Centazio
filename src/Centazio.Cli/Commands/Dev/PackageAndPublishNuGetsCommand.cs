@@ -32,12 +32,12 @@ public class PackageAndPublishNuGetsCommand(CentazioSecrets secrets, ICommandRun
     var pattern = @"<Version>(\d+)\.(\d+)\.(\d+)((-[a-zA-Z0-9]+)?)</Version>";
 
     content = Regex.Replace(content, pattern, match => {
-        var major = match.Groups[1].Value;
-        var minor = match.Groups[2].Value;
-        var patch = Int32.Parse(match.Groups[3].Value);
-        var suffix = match.Groups[4].Value;
-        
-        return $"<Version>{major}.{minor}.{patch + 1}{suffix}</Version>";
+      var major = match.Groups[1].Value;
+      var minor = match.Groups[2].Value;
+      var patch = Int32.Parse(match.Groups[3].Value);
+      var suffix = match.Groups[4].Value;
+      
+      return $"<Version>{major}.{minor}.{patch + 1}{suffix}</Version>";
     });
     File.WriteAllText(path, content);
 

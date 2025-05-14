@@ -44,14 +44,14 @@ public record CentazioSettings {
       ?? throw new Exception($"Could not find a valid directory");
 
   public virtual Dto ToDto() => new() {
-      SecretsFolders = SecretsFolders,
-      Defaults = _Defaults?.ToDto(),
-      AwsSettings = _AwsSettings?.ToDto(),
-      AzureSettings = _AzureSettings?.ToDto(),
-      StagedEntityRepository = _StagedEntityRepository?.ToDto(),
-      CtlRepository = _CtlRepository?.ToDto(),
-      CoreStorage = _CoreStorage?.ToDto()
-    };
+    SecretsFolders = SecretsFolders,
+    Defaults = _Defaults?.ToDto(),
+    AwsSettings = _AwsSettings?.ToDto(),
+    AzureSettings = _AzureSettings?.ToDto(),
+    StagedEntityRepository = _StagedEntityRepository?.ToDto(),
+    CtlRepository = _CtlRepository?.ToDto(),
+    CoreStorage = _CoreStorage?.ToDto()
+  };
   
   public record Dto : IDto<CentazioSettings> {
     public List<string>? SecretsFolders { get; init; }

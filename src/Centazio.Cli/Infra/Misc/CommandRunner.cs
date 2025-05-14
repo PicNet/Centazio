@@ -5,6 +5,7 @@ using System.Text;
 namespace Centazio.Cli.Infra.Misc;
 
 public class CommandResults(string command, string args, string dir, string @out, string err, bool newwindow) {
+  
   public string Command { get; } = command.Trim();
   public string Args { get; } = args.Trim();
   public string Dir { get; } = dir.Trim();
@@ -87,13 +88,12 @@ public class CommandRunner : ICommandRunner {
     if (!isinstalled) {
       Console.WriteLine($"tool '{tool}' is not installed.");
     }
-    return (installed[tool] = isinstalled);
+    return installed[tool] = isinstalled;
   }
 
   private void RunProcess(Process p, string? input) {
     p.Start();
-    if (input != null)
-    {
+    if (input != null) {
       p.StandardInput.WriteLine(input);
       p.StandardInput.Close();
     }
@@ -104,8 +104,7 @@ public class CommandRunner : ICommandRunner {
 
   private void RunProcessNewWindow(Process p, string? input) { 
     p.Start();
-    if (input != null)
-    {
+    if (input != null) {
       p.StandardInput.WriteLine(input);
       p.StandardInput.Close();
     }

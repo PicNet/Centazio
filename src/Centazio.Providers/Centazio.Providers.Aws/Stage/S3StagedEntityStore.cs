@@ -78,9 +78,8 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
     }
     if (!todelete.Any()) return;
     
-    await Client.DeleteObjectsAsync(new DeleteObjectsRequest {
-        BucketName = bucket, 
-        Objects = todelete.Select(key => new KeyVersion {Key = key }).ToList() });
+    await Client.DeleteObjectsAsync(
+        new DeleteObjectsRequest { BucketName = bucket, Objects = todelete.Select(key => new KeyVersion {Key = key }).ToList() });
   }
   
   

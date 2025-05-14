@@ -38,9 +38,9 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
     
     var status = (await Client.CreateTableAsync(
         new(table, [ new(AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, KeyType.HASH), new(AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, KeyType.RANGE)]) {
-            AttributeDefinitions = [ 
-              new (AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, ScalarAttributeType.S), 
-              new (AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, ScalarAttributeType.S)],
+          AttributeDefinitions = [ 
+            new (AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY, ScalarAttributeType.S), 
+            new (AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY, ScalarAttributeType.S)],
 
             BillingMode = BillingMode.PAY_PER_REQUEST
           })).TableDescription.TableStatus;
@@ -72,18 +72,8 @@ public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string tabl
       // Also, IN expression does not work for single item, so change single
       //    item to `=` expression :(
       FilterExpression = newchecksums.Count > 1 
-          ? new() {
-            ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} IN (:checksums)",
-            ExpressionAttributeValues = new() {
-              { ":checksums", checksumstrs }
-            } 
-          } 
-          : new() {
-            ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} = :checksum",
-            ExpressionAttributeValues = new() {
-              { ":checksum", checksumstrs.Single() }
-            }
-          }
+          ? new() { ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} IN (:checksums)", ExpressionAttributeValues = new() { { ":checksums", checksumstrs } } } 
+          : new() { ExpressionStatement = $"{nameof(StagedEntity.StagedEntityChecksum)} = :checksum", ExpressionAttributeValues = new() { { ":checksum", checksumstrs.Single() } } }
     };
     var search = LoadTable().Query(queryconf);
     var results = await search.GetNextSetAsync();

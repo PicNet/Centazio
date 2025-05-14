@@ -45,7 +45,7 @@ public record {{ it.ClassName }} {
     {{ field.DtoPropertyDefenition }}{{ end }}
 
     public {{ it.ClassName }} ToBase() => new() { {{ for field in it.Fields }}
-      {{ field.ToBasePropertyPair }}{{ end }}
+{{ field.ToBasePropertyPair }}{{ end }}
     };
   }
 }";

@@ -41,8 +41,8 @@ public abstract class BaseCtlRepositoryMappingsTests {
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<Map.Created> { 
-       Map.Create(Constants.System1Name, TestingFactories.NewCoreEntity(FIRST_NAME, FIRST_NAME).CoreEntity).SuccessCreate(Constants.Sys1Id1, SCS()),
-       Map.Create(Constants.System1Name, TestingFactories.NewCoreEntity(LAST_NAME, LAST_NAME).CoreEntity).SuccessCreate(Constants.Sys1Id2, SCS())
+      Map.Create(Constants.System1Name, TestingFactories.NewCoreEntity(FIRST_NAME, FIRST_NAME).CoreEntity).SuccessCreate(Constants.Sys1Id1, SCS()),
+      Map.Create(Constants.System1Name, TestingFactories.NewCoreEntity(LAST_NAME, LAST_NAME).CoreEntity).SuccessCreate(Constants.Sys1Id2, SCS())
     }; 
     TestingUtcDate.DoTick();
     var created = (await ctl.CreateSysMap(Constants.System1Name, Constants.CoreEntityName, original)).ToList();

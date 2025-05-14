@@ -3,8 +3,6 @@ using Amazon.Lambda;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
-using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests;
@@ -57,26 +55,22 @@ public static class MiscHelpers {
       using var lambda = await GetAmazonLambdaClient();
       await lambda.DeleteFunctionAsync(appname);
     }
-    
-    private static async Task<AmazonLambdaClient> GetAmazonLambdaClient()
-    {
+
+    private static async Task<AmazonLambdaClient> GetAmazonLambdaClient() {
       var settings = await TestingFactories.Settings();
       var secrets = await TestingFactories.Secrets();
       AmazonLambdaClient? lambda = null;
-      try
-      {
+      try {
         var region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
         lambda = new AmazonLambdaClient(new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), region);
         return lambda;
       }
-      catch
-      {
+      catch {
         lambda?.Dispose();
         throw;
       }
     }
-    
-    // ReSharper disable once ClassNeverInstantiated.Local
-    private record NameObj(string Name);
+
   }
+
 }
