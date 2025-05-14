@@ -2,6 +2,7 @@ using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
 using Serilog;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -10,10 +11,14 @@ using Serilog;
 namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler {
-  private static readonly CentazioServicesRegistrar registrar = new(new ServiceCollection());
+  private static readonly ServiceCollection services = new();
+  private static readonly CentazioServicesRegistrar registrar = new(services);
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
-  static {{it.ClassName}}Handler() {    
+  static {{it.ClassName}}Handler() {
+    // Register the IFunctionRunner
+    services.AddScoped<IFunctionRunner, FunctionRunner>();
+    
     impl = new(async () => (await new FunctionsInitialiser({{it.Environments}}, registrar)
         .Init([typeof({{it.ClassName}})])).Single(), LazyThreadSafetyMode.ExecutionAndPublication);
   }

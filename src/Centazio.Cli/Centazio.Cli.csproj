@@ -8,10 +8,12 @@
 
     <ItemGroup>
       <PackageReference Include="AWSSDK.CloudWatchLogs" />
+      <PackageReference Include="AWSSDK.ECR" />
       <PackageReference Include="AWSSDK.EventBridge" />
       <PackageReference Include="AWSSDK.IdentityManagement" />
       <PackageReference Include="AWSSDK.Lambda" />
       <PackageReference Include="AWSSDK.Organizations" />
+      <PackageReference Include="AWSSDK.SecurityToken" />
       <PackageReference Include="Azure.Identity" />
       <PackageReference Include="Azure.ResourceManager" />
       <PackageReference Include="Azure.ResourceManager.AppService" />

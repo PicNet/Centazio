@@ -19,11 +19,13 @@ public class CommandResults(string command, string args, string dir, string @out
 }
 
 public interface ICommandRunner {
-  CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
-  CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
-  CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
-  CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false);
-  CommandResults Run(string cmd, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = false);
+  CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Aws(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Docker(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null);
+  CommandResults Run(string cmd, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = false, string? input = null);
 }
 
 public class CommandRunner : ICommandRunner {
@@ -34,11 +36,14 @@ public class CommandRunner : ICommandRunner {
 
   private readonly Dictionary<string, bool> installed = new();
   
-  public CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet", args, cwd, quiet, newwindow);
-  public CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run(AzCommand, args, cwd, quiet, newwindow);
-  public CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("func", args, cwd, quiet, newwindow);
-  public CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false) => Run("dotnet-lambda", args, cwd, quiet, newwindow);
-  public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true) {
+  public CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("dotnet", args, cwd, quiet, newwindow, input: input);
+  public CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run(AzCommand, args, cwd, quiet, newwindow, input: input);
+  public CommandResults Func(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("func", args, cwd, quiet, newwindow, input: input);
+  public CommandResults Lambda(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("dotnet-lambda", args, cwd, quiet, newwindow, input: input);
+  public CommandResults Aws(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("aws", args, cwd, quiet, newwindow, input: input);
+  public CommandResults Docker(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("docker", args, cwd, quiet, newwindow, input: input);
+
+  public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true, string? input = null) {
     if (checktool && !CheckInstalled(command)) return new CommandResults(command, args, cwd ?? String.Empty, String.Empty, String.Empty, newwindow);
     
     var cmdname = new FileInfo(command).Name.Split('.').First();
@@ -51,6 +56,7 @@ public class CommandRunner : ICommandRunner {
       StartInfo = {
         FileName = command, 
         Arguments = args, 
+        RedirectStandardInput = input != null,
         RedirectStandardOutput = !newwindow, 
         RedirectStandardError = !newwindow,
         UseShellExecute = newwindow,
@@ -60,8 +66,8 @@ public class CommandRunner : ICommandRunner {
     p.OutputDataReceived += (_, o) => OnString(o.Data ?? String.Empty, output, quiet, false);
     p.ErrorDataReceived += (_, o) => OnString(o.Data ?? String.Empty, error, quiet, true);
     
-    if (newwindow) RunProcessNewWindow(p);
-    else RunProcess(p);
+    if (newwindow) RunProcessNewWindow(p, input);
+    else RunProcess(p, input);
     
     var code = p.ExitCode;
     var err = error.ToString().Trim();
@@ -84,15 +90,25 @@ public class CommandRunner : ICommandRunner {
     return (installed[tool] = isinstalled);
   }
 
-  private void RunProcess(Process p) {
+  private void RunProcess(Process p, string? input) {
     p.Start();
+    if (input != null)
+    {
+      p.StandardInput.WriteLine(input);
+      p.StandardInput.Close();
+    }
     p.BeginOutputReadLine();
     p.BeginErrorReadLine();
     p.WaitForExit();
   }
 
-  private void RunProcessNewWindow(Process p) { 
+  private void RunProcessNewWindow(Process p, string? input) { 
     p.Start();
+    if (input != null)
+    {
+      p.StandardInput.WriteLine(input);
+      p.StandardInput.Close();
+    }
     p.WaitForExit();
     // does not read output/error streams
   }

@@ -1,6 +1,8 @@
 ﻿using Amazon;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
+using Amazon.ECR;
+using Amazon.ECR.Model;
 using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
 using Amazon.IdentityManagement;
@@ -8,9 +10,12 @@ using Amazon.IdentityManagement.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
 namespace Centazio.Cli.Infra.Aws;
@@ -27,53 +32,140 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
   class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project) {
 
     private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
+    private readonly ICommandRunner cmd = new CommandRunner();
     
     public async Task DeployImpl() {
       if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
       if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
+      
+      var projectName = project.ProjectName.ToLower();
+      
+      await SetUpLogging();
+
+      using var ecrClient = new AmazonECRClient(credentials, region);
+
+      var accountId = await GetAccountId();
+
+      await CheckAndCreateEcrRepository(ecrClient, projectName);
+
+      var ecrUri = $"{accountId}.dkr.ecr.{region.SystemName}.amazonaws.com";
+      
+      BuildAndPushDockerImage(ecrUri, projectName);
 
       using var lambda = new AmazonLambdaClient(credentials, region);
-      var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], []);
-      var funcarn = await GetOrCreateLambdaFunction();
-      await SetUpTimer(lambda, funcarn);
-      await SetUpLogging();
-      
-      Log.Information("Deployment completed successfully!");
+      var funcArn = await UpdateOrCreateLambdaFunction(lambda, ecrUri, projectName, ecrClient, accountId);
+      await SetUpTimer(lambda, funcArn);
+    }
 
-      async Task<string> GetOrCreateLambdaFunction() {
-        if (await FunctionExists(lambda, project.AwsFunctionName)) {
-          Log.Information($"Function {project.AwsFunctionName} exists. Updating...");
-          return await UpdateFunctionCodeAsync(lambda, zipbytes);
-        }
+    private async Task<string> UpdateOrCreateLambdaFunction(AmazonLambdaClient lambda, string ecrUri, string projectName,
+        AmazonECRClient ecrClient, string accountId)
+    {
+      var imageUri = $"{ecrUri}/{projectName}@{await GetLatestImageDigest(ecrClient, projectName)}";
+      return await FunctionExists(lambda, project.AwsFunctionName) ? await UpdateFunction(lambda, imageUri) : await CreateFunction(lambda, imageUri, accountId);
+    }
 
-        Log.Information($"Function {project.AwsFunctionName} does not exist. Creating...");
-        return await CreateFunctionAsync(lambda, zipbytes);
+    private void BuildAndPushDockerImage(string ecrUri, string projectName)
+    {
+      // FIX the following docker command return an error even if the image is built successfully
+      try {
+        cmd.Docker($"build -t {ecrUri}/{projectName} .", project.ProjectDirPath, quiet: true);
       }
+      catch (Exception e) {
+        Console.WriteLine(e);
+      }
+
+      cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: GetEcrInputPassword());
+      cmd.Docker(@$"push {ecrUri}/{projectName}", project.ProjectDirPath);
+    }
+
+    private async Task<string> GetAccountId()
+    {
+      using var stsClient = new AmazonSecurityTokenServiceClient(credentials, region);
+      var identityResponse = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
+      var accountId = identityResponse.Account;
+      return accountId;
+    }
+
+    private string GetEcrInputPassword()
+    {
+      Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
+      Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
+      
+      var results1 =  cmd.Aws(@$"ecr get-login-password --region {region.SystemName}", project.ProjectDirPath);
+      if (!results1.Success) { throw new Exception(results1.Err); }
+      var inputPassword = results1.Out;
+      return inputPassword;
+    }
+
+    private static async Task<string> GetLatestImageDigest(AmazonECRClient ecrClient, string projectName)
+    {
+      var imageDetails = await ecrClient.DescribeImagesAsync(new DescribeImagesRequest
+      {
+        RepositoryName = projectName
+      });
+
+      var latestImage = imageDetails.ImageDetails
+          .Where(img => img.ImageSizeInBytes > 1_048_576 && img.ArtifactMediaType != null)
+          .OrderByDescending(img => img.ImagePushedAt)
+          .FirstOrDefault();
+
+      if (latestImage == null) throw new Exception("No image found");
+
+      var latestImageDigest = latestImage.ImageDigest;
+      return latestImageDigest;
+    }
+
+    private static async Task CheckAndCreateEcrRepository(AmazonECRClient ecrClient, string projectName)
+    {
+      try
+      {
+        await ecrClient.DescribeRepositoriesAsync(new DescribeRepositoriesRequest
+        {
+          RepositoryNames = new List<string> { projectName }
+        });
+        Console.WriteLine("Repository exists.");
+      }
+      catch (RepositoryNotFoundException)
+      {
+        Console.WriteLine("Creating repository...");
+        await ecrClient.CreateRepositoryAsync(new CreateRepositoryRequest
+        {
+          RepositoryName = projectName
+        });
+      }
+    }
+
+    private async Task<string> UpdateFunction(AmazonLambdaClient lambda, string imageUri)
+    {
+      await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = project.AwsFunctionName });
+      var res = await lambda.UpdateFunctionCodeAsync(new UpdateFunctionCodeRequest { FunctionName = project.AwsFunctionName, ImageUri = imageUri });
+      return res.FunctionArn;
+    }
+
+    private async Task<string> CreateFunction(AmazonLambdaClient lambda, string imageUri, string accountId)
+    {
+      var res = await lambda.CreateFunctionAsync(new CreateFunctionRequest
+      {
+        FunctionName = project.AwsFunctionName,
+        PackageType = PackageType.Image,
+        Code = new FunctionCode
+        {
+          ImageUri = imageUri
+        },
+        Role = await GetOrCreateRole(project.RoleName, accountId),
+        MemorySize = 256,
+        Timeout = 30
+      });
+      return res.FunctionArn;
     }
 
     private async Task<bool> FunctionExists(IAmazonLambda client, string function) {
       try { return await client.GetFunctionAsync(new GetFunctionRequest { FunctionName = function }) is not null; }
       catch (ResourceNotFoundException) { return false; }
     }
-
-    private async Task<string> CreateFunctionAsync(IAmazonLambda client, byte[] zipbytes) {
-      var req = new CreateFunctionRequest {
-        FunctionName = project.AwsFunctionName,
-        Runtime = "dotnet8",
-        Role = await GetOrCreateRole(project.RoleName),
-        Handler = project.HandlerName,
-        Code = new FunctionCode { ZipFile = new MemoryStream(zipbytes) },
-        Timeout = 30, // 30 seconds timeout
-        MemorySize = 256 // 256 MB memory allocation
-      };
-
-      var response = await client.CreateFunctionAsync(req);
-      Log.Information($"Created function: {response.FunctionArn}");
-      return response.FunctionArn;
-    }
-
-    private async Task<string> GetOrCreateRole(string rolenm) {
-      using var aim = new AmazonIdentityManagementServiceClient(credentials, region);
+    
+    private async Task<string> GetOrCreateRole(string rolenm, string accountId) {
+      using var aim = new AmazonIdentityManagementServiceClient(credentials);
 
       try {
         return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn;
@@ -100,6 +192,32 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
         };
 
         await aim.AttachRolePolicyAsync(permission);
+        
+        var policyName = "LambdaECRAccess" + rolenm;
+
+        var ecrPolicyJson = $@"{{
+  ""Version"": ""2012-10-17"",
+  ""Statement"": [
+    {{
+      ""Effect"": ""Allow"",
+      ""Action"": [
+        ""ecr:GetDownloadUrlForLayer"",
+        ""ecr:BatchGetImage"",
+        ""ecr:BatchCheckLayerAvailability""
+      ],
+      ""Resource"": ""arn:aws:ecr:{region.SystemName}:{accountId}:repository/{project.ProjectName.ToLower()}""
+    }}
+  ]
+}}";
+
+        var putPolicyRequest = new PutRolePolicyRequest
+        {
+          RoleName = rolenm,
+          PolicyName = policyName,
+          PolicyDocument = ecrPolicyJson
+        };
+        
+        await aim.PutRolePolicyAsync(putPolicyRequest);
 
         // Wait for role to propagate (IAM changes can take time to propagate)
         Log.Information("Waiting for IAM role to propagate...");
@@ -110,12 +228,6 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       }
     }
 
-    private async Task<string> UpdateFunctionCodeAsync(IAmazonLambda client, byte[] zipbytes) {
-      var response = await client.UpdateFunctionCodeAsync(new UpdateFunctionCodeRequest { FunctionName = project.AwsFunctionName, ZipFile = new MemoryStream(zipbytes) });
-      Log.Information($"Updated function: {response.FunctionArn}");
-      return response.FunctionArn;
-    }
-    
     private async Task SetUpTimer(AmazonLambdaClient lambda, string funcarn) {
       using var evbridge = new AmazonEventBridgeClient(credentials, region);
       var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
