@@ -85,6 +85,6 @@
   "Aws": {
     "Region": { "type": "string", "required": true },
     "AccountName": { "type": "string", "required": true },
-    "SecretsManagerStoreIdTemplate": { "type": "string", "required": false }
+    "SecretsManagerStoreIdTemplate": { "type": "string", "required": false, "description": "This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment" }
   }
 }

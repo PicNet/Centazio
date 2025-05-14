@@ -34,6 +34,7 @@ namespace Centazio.Core.Settings;
     private readonly string RECORD_TEMPLATE = @"
 public record {{ it.ClassName }} {
 {{ for field in it.Fields }}
+  {{ field.PropertyDescriptionAsComment }}
   {{ field.PropertyDefenition }}{{ end }}
 
   public Dto ToDto() => new() { {{ for field in it.Fields }}
@@ -76,6 +77,7 @@ public record {{ it.ClassName }} {
     
     public bool Required { get; }
     public string Type { get; }
+    public string? Description { get; }
     
     public FieldSpec(KeyValuePair<string, JsonNode?> prop, string classnm) {
       (ClassName, Name, Value) = (classnm, prop.Key, prop.Value ?? throw new Exception());
@@ -85,6 +87,7 @@ public record {{ it.ClassName }} {
         if (IsFieldSpec(obj)) {
           Type = obj["type"]?.GetValue<string>() ?? "string";
           Required = obj["required"]?.GetValue<bool>() ?? true;
+          Description = obj["description"]?.GetValue<string>();
         } else {
           Type = "object";
           Required = true;
@@ -110,7 +113,11 @@ public record {{ it.ClassName }} {
       return first?.GetValueKind() == JsonValueKind.Object ? first.AsObject().ToList() : [];
     } }
 
-  
+    public string PropertyDescriptionAsComment => Description is null ? String.Empty : $@"
+/// <summary>
+/// {Description}
+/// </summary>";
+
     public string PropertyDefenition { get {
       var requiredmod = Required ? "required " : string.Empty;
       var opt = Required ? String.Empty : "?";

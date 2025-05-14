@@ -9,10 +9,15 @@ namespace Centazio.Core.Settings;
 
 public record AzSettings {
 
+  
   public required string ListFunctionApps { get; init; }
+  
   public required string ListFunctions { get; init; }
+  
   public required string DeleteFunctionApp { get; init; }
+  
   public required string StartFunctionApp { get; init; }
+  
   public required string StopFunctionApp { get; init; }
 
   public Dto ToDto() => new() { 
@@ -42,7 +47,9 @@ public record AzSettings {
 
 public record FuncSettings {
 
+  
   public required string LocalSimulateFunction { get; init; }
+  
   public required string ShowLogStream { get; init; }
 
   public Dto ToDto() => new() { 
@@ -63,8 +70,11 @@ public record FuncSettings {
 
 public record DotNetSettings {
 
+  
   public required string CleanProject { get; init; }
+  
   public required string BuildProject { get; init; }
+  
   public required string PublishProject { get; init; }
 
   public Dto ToDto() => new() { 
@@ -88,6 +98,7 @@ public record DotNetSettings {
 
 public record LambdaSettings {
 
+  
   public required string ShowLogStream { get; init; }
 
   public Dto ToDto() => new() { 
@@ -105,9 +116,13 @@ public record LambdaSettings {
 
 public record ConsoleCommandsSettings {
 
+  
   public required AzSettings Az { get; init; }
+  
   public required FuncSettings Func { get; init; }
+  
   public required DotNetSettings DotNet { get; init; }
+  
   public required LambdaSettings Lambda { get; init; }
 
   public Dto ToDto() => new() { 
@@ -134,10 +149,15 @@ public record ConsoleCommandsSettings {
 
 public record AzureDefaultValuesSettings {
 
+  
   public required string FunctionAppNameTemplate { get; init; }
+  
   public required string AppServicePlanNameTemplate { get; init; }
+  
   public required string WebSiteNameTemplate { get; init; }
+  
   public required string AppServiceSkuName { get; init; }
+  
   public required string AppServiceSkuTier { get; init; }
 
   public Dto ToDto() => new() { 
@@ -167,13 +187,21 @@ public record AzureDefaultValuesSettings {
 
 public record DefaultsSettings {
 
+  
   public required string GeneratedCodeFolder { get; init; }
+  
   public required int FunctionMaxAllowedRunningMinutes { get; init; }
+  
   public required string ReadFunctionPollExpression { get; init; }
+  
   public required string PromoteFunctionPollExpression { get; init; }
+  
   public required string WriteFunctionPollExpression { get; init; }
+  
   public required string OtherFunctionPollExpression { get; init; }
+  
   public required ConsoleCommandsSettings ConsoleCommands { get; init; }
+  
   public required AzureDefaultValuesSettings AzureDefaultValues { get; init; }
 
   public Dto ToDto() => new() { 
@@ -212,11 +240,17 @@ public record DefaultsSettings {
 
 public record StagedEntityRepositorySettings {
 
+  
   public required string Provider { get; init; }
+  
   public required string ConnectionString { get; init; }
+  
   public required string SchemaName { get; init; }
+  
   public required string TableName { get; init; }
+  
   public required bool CreateSchema { get; init; }
+  
   public required int Limit { get; init; }
 
   public Dto ToDto() => new() { 
@@ -249,12 +283,19 @@ public record StagedEntityRepositorySettings {
 
 public record CtlRepositorySettings {
 
+  
   public required string Provider { get; init; }
+  
   public required string ConnectionString { get; init; }
+  
   public required string SchemaName { get; init; }
+  
   public required string SystemStateTableName { get; init; }
+  
   public required string ObjectStateTableName { get; init; }
+  
   public required string CoreToSysMapTableName { get; init; }
+  
   public required bool CreateSchema { get; init; }
 
   public Dto ToDto() => new() { 
@@ -290,10 +331,15 @@ public record CtlRepositorySettings {
 
 public record CoreStorageSettings {
 
+  
   public required string Provider { get; init; }
+  
   public required string ConnectionString { get; init; }
+  
   public required string SchemaName { get; init; }
+  
   public required string CtlSchemaName { get; init; }
+  
   public required bool CreateSchema { get; init; }
 
   public Dto ToDto() => new() { 
@@ -323,13 +369,21 @@ public record CoreStorageSettings {
 
 public record AzFunctionsSettings {
 
+  
   public string? Assembly { get; init; }
+  
   public string? Region { get; init; }
+  
   public string? ResourceGroup { get; init; }
+  
   public string? FunctionAppName { get; init; }
+  
   public string? AppServicePlanName { get; init; }
+  
   public string? WebSiteName { get; init; }
+  
   public string? AppServiceSkuName { get; init; }
+  
   public string? AppServiceSkuTier { get; init; }
 
   public Dto ToDto() => new() { 
@@ -368,11 +422,17 @@ public record AzFunctionsSettings {
 
 public record AzureSettings {
 
+  
   public required string Region { get; init; }
+  
   public required string ResourceGroup { get; init; }
+  
   public string? FunctionAppName { get; init; }
+  
   public string? AppServicePlanName { get; init; }
+  
   public string? WebSiteName { get; init; }
+  
   public required List<AzFunctionsSettings> AzFunctions { get; init; }
 
   public Dto ToDto() => new() { 
@@ -405,8 +465,14 @@ public record AzureSettings {
 
 public record AwsSettings {
 
+  
   public required string Region { get; init; }
+  
   public required string AccountName { get; init; }
+  
+  /// <summary>
+  /// This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment
+  /// </summary>
   public string? SecretsManagerStoreIdTemplate { get; init; }
 
   public Dto ToDto() => new() { 
