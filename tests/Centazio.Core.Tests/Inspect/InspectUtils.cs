@@ -31,7 +31,7 @@ internal static class InspectUtils {
   
   public static List<string> GetSolnFiles(string? dir, string extension) {
     var include = new List<string> { "src", "tests" };
-    return Directory.GetFiles(dir ?? FsUtils.GetDevPath(), extension, SearchOption.AllDirectories)
+    return Directory.GetFiles(dir ?? FsUtils.GetCentazioPath(), extension, SearchOption.AllDirectories)
         .Where(f => include.Any(d => f.Contains($"{Path.DirectorySeparatorChar}{d}{Path.DirectorySeparatorChar}")))
         .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
         .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))

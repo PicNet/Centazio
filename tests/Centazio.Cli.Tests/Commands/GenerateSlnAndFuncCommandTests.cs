@@ -8,13 +8,14 @@ using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Sett
 
 namespace Centazio.Cli.Tests.Commands;
 
+// todo: not working with new test FsUtil mechanics
 public class GenerateSlnAndFuncCommandTests {
 
-  private readonly string properroot = FsUtils.GetDevPath();
+  private readonly string properroot = FsUtils.GetCentazioPath();
   private readonly CommandRunner runner = new();
   private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
   private readonly string slnfile = nameof(GenerateSlnAndFuncCommandTests) + ".sln";
-  private readonly string testdir = Path.GetFullPath(Path.Combine(FsUtils.GetDevPath(), "..", "test-generator"));
+  private readonly string testdir = FsUtils.GetCentazioPath("..", "test-generator");
   private readonly string SYSTEM_NAME = "Acme";
   
   private CentazioCodeGenerator nugetgen;

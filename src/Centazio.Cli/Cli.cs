@@ -31,7 +31,7 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
   
   private void ShowSplash() {
     UiHelpers.Log("\n\n");
-    AnsiConsole.Write(new CanvasImage(FsUtils.GetCliPath("swirl.png")).MaxWidth(32));
+    AnsiConsole.Write(new CanvasImage(FsUtils.GetCentazioPath("swirl.png")).MaxWidth(32));
     AnsiConsole.Write(new FigletText("Centazio").LeftJustified().Color(Color.Blue));
     UiHelpers.Log("[link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }

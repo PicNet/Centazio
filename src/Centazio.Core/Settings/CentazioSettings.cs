@@ -40,7 +40,7 @@ public record CentazioSettings {
           : Environment.CurrentDirectory;
   
   public static string FindFirstValidDirectory(List<string> directories) => 
-      directories.Select(dir => Path.IsPathFullyQualified(dir) ? dir : FsUtils.GetDevPath(dir)).First(Directory.Exists) 
+      directories.Select(dir => Path.IsPathFullyQualified(dir) ? dir : FsUtils.GetCentazioPath(dir)).First(Directory.Exists) 
       ?? throw new Exception($"Could not find a valid directory");
 
   public virtual Dto ToDto() => new() {

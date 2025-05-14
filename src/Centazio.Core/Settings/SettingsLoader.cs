@@ -17,8 +17,7 @@ public enum EDefaultSettingsMode {
 }
 
 public record SettingsLoaderConfig(string? RootDirectory = null, EDefaultSettingsMode Defaults = EDefaultSettingsMode.BOTH) {
-  
-  public readonly string RootDirectory = RootDirectory ?? (Env.IsInDev() ? FsUtils.GetDevPath() : Environment.CurrentDirectory);
+  public readonly string RootDirectory = RootDirectory ?? FsUtils.GetCentazioPath();
 }
 
 public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader {
@@ -40,7 +39,7 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
           environments.Where(env => !String.IsNullOrWhiteSpace(env)).Select(env => spec.FileName.Replace("<environment>", env, StringComparison.Ordinal)) : 
           [spec.FileName];
       return files.Select(f => {
-        var path = spec.IsDefaultsFile ? FsUtils.GetCliPath("defaults", f) : Path.Combine(conf.RootDirectory, f);
+        var path = spec.IsDefaultsFile ? FsUtils.GetDefaultsDir(f) : Path.Combine(conf.RootDirectory, f);
         return File.Exists(path) ? path : !spec.Required ? null : Throw();
 
         string Throw() {

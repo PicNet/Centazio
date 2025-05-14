@@ -11,6 +11,7 @@ public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
   public override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
   public override async Task ExecuteImpl(CommonSettings cmdsetts) {
+    if (!Env.IsInDev()) throw new Exception(nameof(UiTestsCommand) + " should not be accessible outside of the Centazio dev environment");
     UiHelpers.Log($"[underline bold white]Running Ui Tests[/]\n\n");
     
     Title("UiHelpers.Log - Arguments Parsed");

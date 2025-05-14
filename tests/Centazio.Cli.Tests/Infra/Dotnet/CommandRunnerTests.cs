@@ -14,7 +14,7 @@ public class CommandRunnerTests {
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("az"));
-    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetDevPath()));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
     Assert.That(!results.NewWindow);
@@ -25,7 +25,7 @@ public class CommandRunnerTests {
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("func"));
-    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetDevPath()));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
     Assert.That(!results.NewWindow);
@@ -36,7 +36,7 @@ public class CommandRunnerTests {
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("dotnet"));
-    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetDevPath()));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
     Assert.That(!results.NewWindow);

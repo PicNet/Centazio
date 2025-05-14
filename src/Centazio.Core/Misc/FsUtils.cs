@@ -3,8 +3,7 @@ namespace Centazio.Core.Misc;
 public static class FsUtils {
   
   internal static string TestingCliRootDir = String.Empty;
-  
-  private static readonly string TEST_DEV_FILE = "centazio3.sln";
+  internal static readonly string TEST_DEV_FILE = "centazio3.sln";
   
   private static string? devroot;
   private static string? cliinstall;
@@ -24,12 +23,12 @@ public static class FsUtils {
     return GetPathFromRootAndSteps(Environment.CurrentDirectory, steps);
   }
   
-  public static string GetDevPath(params List<string> steps) {
+  private static string GetDevPath(params List<string> steps) {
     devroot ??= TryToFindDirectoryOfFile(TEST_DEV_FILE) ?? throw new Exception($"failed to find the root dev directory"); 
     return GetPathFromRootAndSteps(devroot, steps);
   }
 
-  public static string GetCliPath(params List<string> steps) {
+  private static string GetCliPath(params List<string> steps) {
     return GetPathFromRootAndSteps(cliinstall ??= GetCliRootDir(), steps);
     
     string GetCliRootDir() {

@@ -10,7 +10,7 @@ public class SettingsLoaderTests {
   private const string test_settings_env_json = @"{ ""OverridableSetting"": ""Overriden"", ""EmptySetting"": ""No longer empty"", ""MissingSetting"": ""No longer missing"" }";
 
   // run tests outside of the dev environment to ensure we dont interfere with real settings file
-  private static readonly string root = Path.GetFullPath(FsUtils.GetDevPath("..", nameof(SettingsLoaderTests)));
+  private static readonly string root = Path.GetFullPath(FsUtils.GetCentazioPath("..", nameof(SettingsLoaderTests)));
   private static readonly string deeper = Path.Combine(root, "1", "2", "3", "4");
   
   [SetUp] public void SetUp() => 

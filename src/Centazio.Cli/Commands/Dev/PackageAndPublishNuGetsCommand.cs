@@ -11,7 +11,8 @@ public class PackageAndPublishNuGetsCommand(CentazioSecrets secrets, ICommandRun
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings());
   
   public override Task ExecuteImpl(Settings settings) {
-    var cwd = FsUtils.GetDevPath();
+    if (!Env.IsInDev()) throw new Exception(nameof(PackageAndPublishNuGetsCommand) + " should not be accessible outside of the Centazio dev environment");
+    var cwd = FsUtils.GetCentazioPath();
     // package
     FsUtils.EmptyDirectory(Path.Combine(cwd, packagesdir));
     if (!settings.NoBump) BumpVersionBuildNumber();
@@ -26,7 +27,7 @@ public class PackageAndPublishNuGetsCommand(CentazioSecrets secrets, ICommandRun
   }
 
   private void BumpVersionBuildNumber() {
-    var path = FsUtils.GetDevPath("Directory.Build.props");
+    var path = FsUtils.GetCentazioPath("Directory.Build.props");
     var content = File.ReadAllText(path);
     var pattern = @"<Version>(\d+)\.(\d+)\.(\d+)((-[a-zA-Z0-9]+)?)</Version>";
 

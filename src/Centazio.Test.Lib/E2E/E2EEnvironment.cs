@@ -73,7 +73,7 @@ public class E2EEnvironment(
         CrmDb = crmdb,
         FinDb = findb
       };
-      await File.WriteAllTextAsync(FsUtils.GetDevPath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
+      await File.WriteAllTextAsync(FsUtils.GetCentazioPath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
     }
   }
 
