@@ -55,7 +55,7 @@ internal class CliBootstrapper {
     return svcs.BuildServiceProvider();
 
     async Task<bool> LoadDevSettingsIfAvailableOtherwiseDefaults() {
-      var devdir = FsUtils.TryToFindDirectoryOfFile(CentazioConstants.SETTINGS_FILE_NAME);
+      var devdir = FsUtils.FindFileDirectory(CentazioConstants.SETTINGS_FILE_NAME);
       var isindev = devdir is not null;
       
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");

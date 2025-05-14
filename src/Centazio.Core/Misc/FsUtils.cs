@@ -5,8 +5,8 @@ public static class FsUtils {
   internal static string TestingCliRootDir = String.Empty;
   internal static readonly string TEST_DEV_FILE = "centazio3.sln";
   
-  private static string? devroot;
-  private static string? cliinstall;
+  private static readonly Lazy<string> devroot = new(GetDevRootImpl);
+  private static readonly Lazy<string> cliroot = new(GetCliRootImpl);
   
   /// <summary>
   /// This method returns the path of the specified file (in steps) from a root determined on the application running context.
@@ -17,37 +17,22 @@ public static class FsUtils {
   /// </summary>
   /// <param name="steps">The steps from the root to the file/directory</param>
   /// <returns>The absolute path to the specified file/directory</returns>
-  public static string GetCentazioPath(params List<string> steps) {
-    if (Env.IsInDev()) return GetDevPath(steps);
-    if (Env.IsCli()) return GetCliPath(steps);
-    return GetPathFromRootAndSteps(Environment.CurrentDirectory, steps);
-  }
-  
-  private static string GetDevPath(params List<string> steps) {
-    devroot ??= TryToFindDirectoryOfFile(TEST_DEV_FILE) ?? throw new Exception($"failed to find the root dev directory"); 
-    return GetPathFromRootAndSteps(devroot, steps);
-  }
+  public static string GetCentazioPath(params List<string> steps) => 
+      Env.IsInDev() ? GetDevPath(steps) : 
+      Env.IsCli() ? GetCliPath(steps) : 
+      GetPathFromRootAndSteps(Environment.CurrentDirectory, steps);
 
-  private static string GetCliPath(params List<string> steps) {
-    return GetPathFromRootAndSteps(cliinstall ??= GetCliRootDir(), steps);
-    
-    string GetCliRootDir() {
-      if (!String.IsNullOrWhiteSpace(TestingCliRootDir)) return TestingCliRootDir;
-      var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
-      if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliPath)} to be called from Centazio.Cli context");
-      var clidir = Path.GetDirectoryName(exe.Location) ?? throw new Exception("Could not find a valid templates directory");
-      // if the current Cli assembly is actually inside the dev directory,
-      //    then just use the dev root directory, otherwise use the embedded 'content' directory
-      var cliindev = TryToFindDirectoryOfFile(TEST_DEV_FILE, clidir);
-      return Path.GetFullPath(cliindev ?? Path.Combine(clidir, "..", "..", "..", "content"));
-    }
-  }
+  public static string GetDefaultsDir(params List<string> steps) => 
+      GetPathFromRootAndSteps(GetCentazioPath("defaults"), steps);
   
-  public static string GetDefaultsDir(params List<string> steps) => GetPathFromRootAndSteps(GetCentazioPath("defaults"), steps);
-  
-  public static string GetTemplateDir(params List<string> steps) => GetPathFromRootAndSteps(GetDefaultsDir("templates"), steps);
+  public static string GetTemplateDir(params List<string> steps) => 
+      GetPathFromRootAndSteps(GetDefaultsDir("templates"), steps);
 
-  // use this as a replacement to Directory.Delete(dir, true); as it will allow open directories to still be deleted
+  /// <summary>
+  /// Use this as a replacement to Directory.Delete(dir, true); as it will allow open
+  ///     directories (in explorer for instance) to still be deleted 
+  /// </summary>
+  /// <param name="dir">Directory to empty</param>
   public static void EmptyDirectory(string dir) {
     if (!Directory.Exists(dir)) {
       Directory.CreateDirectory(dir);
@@ -57,12 +42,39 @@ public static class FsUtils {
     Directory.GetFiles(dir).ForEach(File.Delete);
   }
 
-  public static string? TryToFindDirectoryOfFile(string file, string? from = null) {
+  /// <summary>
+  /// Attempts to find the directory of the provided file, from the specified root (from), or the CWD.  This
+  ///   method will check the entire directory hierarchy from the root up all its parents.
+  /// </summary>
+  /// <param name="file">The file to find in the root's path parent hierarchy</param>
+  /// <param name="from">The starting root, if not specified then CWD is used</param>
+  /// <returns>The directory containing the specified file, or null if the file is not found.</returns>
+  public static string? FindFileDirectory(string file, string? from = null) {
     var path = Path.Combine(from ?? Environment.CurrentDirectory, file);
     if (File.Exists(path)) return from ?? Environment.CurrentDirectory;
 
     var parent = Directory.GetParent(from ?? Environment.CurrentDirectory)?.FullName;
-    return parent is null ? null : TryToFindDirectoryOfFile(file, parent);
+    return parent is null ? null : FindFileDirectory(file, parent);
+  }
+  
+  private static string GetDevPath(params List<string> steps) => 
+      GetPathFromRootAndSteps(devroot.Value, steps);
+  
+  private static string GetDevRootImpl() => 
+      FindFileDirectory(TEST_DEV_FILE) ?? throw new Exception($"failed to find the root dev directory"); 
+
+  private static string GetCliPath(params List<string> steps) => 
+      GetPathFromRootAndSteps(cliroot.Value, steps);
+
+  private static string GetCliRootImpl() {
+    if (!String.IsNullOrWhiteSpace(TestingCliRootDir)) return TestingCliRootDir;
+    var exe = Assembly.GetEntryAssembly() ?? throw new Exception();
+    if (exe.GetName().Name != "Centazio.Cli") throw new Exception($"expected {nameof(GetCliPath)} to be called from Centazio.Cli context");
+    var clidir = Path.GetDirectoryName(exe.Location) ?? throw new Exception("Could not find a valid templates directory");
+    // if the current Cli assembly is actually inside the dev directory,
+    //    then just use the dev root directory, otherwise use the embedded 'content' directory
+    var cliindev = FindFileDirectory(TEST_DEV_FILE, clidir);
+    return Path.GetFullPath(cliindev ?? Path.Combine(clidir, "..", "..", "..", "content"));
   }
 
   private static string GetPathFromRootAndSteps(string root, params List<string> steps) => 
