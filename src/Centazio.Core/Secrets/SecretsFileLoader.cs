@@ -9,8 +9,8 @@ public class SecretsFileLoader(string dir) : AbstractSecretsLoader {
     if (String.IsNullOrWhiteSpace(path)) return Task.FromResult(new Dictionary<string, string>());
     
     return Task.FromResult(File.ReadAllLines(path)
-        .Select(l => l.Split("#")[0].Trim())
-        .Where(l => !String.IsNullOrEmpty(l))
+        .Select(l => l.Trim())
+        .Where(l => !String.IsNullOrEmpty(l) && !l.StartsWith('#'))
         .Select(l => {
           var (Key, Value) = l.Split('=');
           return (key: Key.Trim(), value: String.Join('=', Value).Trim());
