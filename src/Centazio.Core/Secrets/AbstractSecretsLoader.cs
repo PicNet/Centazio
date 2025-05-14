@@ -3,9 +3,13 @@
 public abstract class AbstractSecretsLoader : ISecretsLoader {
 
   public async Task<T> Load<T>(params List<string> environments) {
-    var dict = await LoadSecretsAsDictionary(environments);
+    var envs = FilterRedundantEnvironments(environments); 
+    var dict = await LoadSecretsAsDictionary(envs);
     return ValidateAndConvertSecretsToDto<T>(dict);
   }
+
+  // override if some environments can be ignored for performance
+  protected virtual List<string> FilterRedundantEnvironments(List<string> environments) { return environments; }
 
   private async Task<Dictionary<string, string>> LoadSecretsAsDictionary(List<string> environments) {
     if (!environments.Any()) throw new ArgumentNullException(nameof(environments));

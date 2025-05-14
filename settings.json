@@ -39,6 +39,7 @@
   },
   "AwsSettings": {
     "Region": "ap-southeast-2",
-    "AccountName": "PicNet"
+    "AccountName": "PicNet",
+    "SecretsManagerStoreIdTemplate": "picnet/centazio/<environment>"
   }
 }

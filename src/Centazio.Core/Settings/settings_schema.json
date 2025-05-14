@@ -84,6 +84,7 @@
   },
   "Aws": {
     "Region": { "type": "string", "required": true },
-    "AccountName": { "type": "string", "required": true }
+    "AccountName": { "type": "string", "required": true },
+    "SecretsManagerStoreIdTemplate": { "type": "string", "required": false }
   }
 }

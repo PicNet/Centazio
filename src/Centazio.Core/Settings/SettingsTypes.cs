@@ -407,19 +407,23 @@ public record AwsSettings {
 
   public required string Region { get; init; }
   public required string AccountName { get; init; }
+  public string? SecretsManagerStoreIdTemplate { get; init; }
 
   public Dto ToDto() => new() { 
     Region = Region,
     AccountName = AccountName,
+    SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate,
   };
 
   public record Dto : IDto<AwsSettings> { 
     public string? Region { get; init; }
     public string? AccountName { get; init; }
+    public string? SecretsManagerStoreIdTemplate { get; init; }
 
     public AwsSettings ToBase() => new() { 
       Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
       AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
+            SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
     };
   }
 }
