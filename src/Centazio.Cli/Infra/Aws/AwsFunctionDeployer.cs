@@ -42,13 +42,81 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       
       await SetUpLogging();
 
-      using var lambda = new AmazonLambdaClient(credentials, region);
-      using var stsClient = new AmazonSecurityTokenServiceClient(credentials, region);
       using var ecrClient = new AmazonECRClient(credentials, region);
 
+      var accountId = await GetAccountId();
+
+      await CheckAndCreateEcrRepository(ecrClient, projectName);
+
+      var ecrUri = $"{accountId}.dkr.ecr.{region.SystemName}.amazonaws.com";
+      
+      BuildAndPushDockerImage(ecrUri, projectName);
+
+      using var lambda = new AmazonLambdaClient(credentials, region);
+      var funcArn = await UpdateOrCreateLambdaFunction(lambda, ecrUri, projectName, ecrClient, accountId);
+      await SetUpTimer(lambda, funcArn);
+    }
+
+    private async Task<string> UpdateOrCreateLambdaFunction(AmazonLambdaClient lambda, string ecrUri, string projectName,
+        AmazonECRClient ecrClient, string accountId)
+    {
+      var imageUri = $"{ecrUri}/{projectName}@{await GetLatestImageDigest(ecrClient, projectName)}";
+      return await FunctionExists(lambda, project.AwsFunctionName) ? await UpdateFunction(lambda, imageUri) : await CreateFunction(lambda, imageUri, accountId);
+    }
+
+    private void BuildAndPushDockerImage(string ecrUri, string projectName)
+    {
+      // FIX the following docker command return an error even if the image is built successfully
+      try {
+        cmd.Docker($"build -t {ecrUri}/{projectName} .", project.ProjectDirPath, quiet: true);
+      }
+      catch (Exception e) {
+        Console.WriteLine(e);
+      }
+
+      cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: GetEcrInputPassword());
+      cmd.Docker(@$"push {ecrUri}/{projectName}", project.ProjectDirPath);
+    }
+
+    private async Task<string> GetAccountId()
+    {
+      using var stsClient = new AmazonSecurityTokenServiceClient(credentials, region);
       var identityResponse = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
       var accountId = identityResponse.Account;
+      return accountId;
+    }
+
+    private string GetEcrInputPassword()
+    {
+      Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
+      Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
       
+      var results1 =  cmd.Aws(@$"ecr get-login-password --region {region.SystemName}", project.ProjectDirPath);
+      if (!results1.Success) { throw new Exception(results1.Err); }
+      var inputPassword = results1.Out;
+      return inputPassword;
+    }
+
+    private static async Task<string> GetLatestImageDigest(AmazonECRClient ecrClient, string projectName)
+    {
+      var imageDetails = await ecrClient.DescribeImagesAsync(new DescribeImagesRequest
+      {
+        RepositoryName = projectName
+      });
+
+      var latestImage = imageDetails.ImageDetails
+          .Where(img => img.ImageSizeInBytes > 1_048_576 && img.ArtifactMediaType != null)
+          .OrderByDescending(img => img.ImagePushedAt)
+          .FirstOrDefault();
+
+      if (latestImage == null) throw new Exception("No image found");
+
+      var latestImageDigest = latestImage.ImageDigest;
+      return latestImageDigest;
+    }
+
+    private static async Task CheckAndCreateEcrRepository(AmazonECRClient ecrClient, string projectName)
+    {
       try
       {
         await ecrClient.DescribeRepositoriesAsync(new DescribeRepositoriesRequest
@@ -65,45 +133,6 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
           RepositoryName = projectName
         });
       }
-
-      var ecrUri = $"{accountId}.dkr.ecr.{region.SystemName}.amazonaws.com";
-      try {
-        cmd.Docker($"build -t {ecrUri}/{projectName} .", project.ProjectDirPath, quiet: true);
-      }
-      catch (Exception e) {
-        Console.WriteLine(e);
-      }
-      
-      Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
-      Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
-      
-      var results1 =  cmd.Aws(@$"ecr get-login-password --region {region.SystemName}", project.ProjectDirPath);
-      if (!results1.Success) { throw new Exception(results1.Err); }
-
-      cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: results1.Out);
-      cmd.Docker(@$"push {ecrUri}/{projectName}", project.ProjectDirPath);
-      
-      
-      var imageDetails = await ecrClient.DescribeImagesAsync(new DescribeImagesRequest
-      {
-        RepositoryName = projectName
-      });
-
-      var latestImage = imageDetails.ImageDetails
-          .Where(img => img.ImageSizeInBytes > 1_048_576 && img.ArtifactMediaType != null)
-          .OrderByDescending(img => img.ImagePushedAt)
-          .FirstOrDefault();
-
-      if (latestImage == null) throw new Exception("No image found");
-
-      var latestImageDigest = latestImage.ImageDigest;
-      
-      var funcExists = await FunctionExists(lambda, project.AwsFunctionName);
-
-      var imageUri = $"{ecrUri}/{projectName}@{latestImageDigest}";
-      
-      var funcArn = funcExists ? await UpdateFunction(lambda, imageUri) : await CreateFunction(lambda, imageUri, accountId);
-      await SetUpTimer(lambda, funcArn);
     }
 
     private async Task<string> UpdateFunction(AmazonLambdaClient lambda, string imageUri)
