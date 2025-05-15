@@ -64,8 +64,7 @@ public static class MiscHelpers {
         var region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
         lambda = new AmazonLambdaClient(new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), region);
         return lambda;
-      }
-      catch {
+      } catch {
         lambda?.Dispose();
         throw;
       }

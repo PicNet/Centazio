@@ -116,8 +116,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
           RepositoryNames = [projectName]
         });
         Log.Information("Repository exists.");
-      }
-      catch (RepositoryNotFoundException) {
+      } catch (RepositoryNotFoundException) {
         Log.Information("Creating repository...");
         await ecrClient.CreateRepositoryAsync(new CreateRepositoryRequest {
           RepositoryName = projectName
@@ -155,8 +154,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
 
       try {
         return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn;
-      }
-      catch (NoSuchEntityException) {
+      } catch (NoSuchEntityException) {
         Log.Information($"IAM Role {rolenm} does not exist. Creating...");
         var policy = @"{ ""Version"": ""2012-10-17"", ""Statement"": [ {
     ""Effect"": ""Allow"",
@@ -237,8 +235,7 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
           SourceArn = rulearn
         });
         Log.Information("Added permission for EventBridge to invoke Lambda function");
-      }
-      catch (ResourceConflictException) {
+      } catch (ResourceConflictException) {
         // Permission already exists - this is fine
         Log.Information("Permission already exists for EventBridge to invoke Lambda function");
       }
