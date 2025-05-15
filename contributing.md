@@ -56,5 +56,5 @@ To work with a local version of the Centazio.Cli NuGet tool use:
 - `dotnet centazio [args]` -- run centazio cli
 - `dotnet tool uninstall --local Centazio.Cli` -- uninstall
 
-For a more seamless local development copy `src/devcli.sh` into your testing directory and run this each time you want to
+For a more seamless local development copy `src/devcli` into your testing directory and run this each time you want to
 rebuild the cli. Consider reverting all the minor version updates before commiting in `Directory.Build.props`.

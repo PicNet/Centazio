@@ -59,8 +59,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5
 		defaults\settings.azure.json = defaults\settings.azure.json
 		defaults\settings.centaziohost.json = defaults\settings.centaziohost.json
 		defaults\settings.defaults.json = defaults\settings.defaults.json
-		src\devcli.sh = src\devcli.sh
-		centazio.sh = centazio.sh
+		src\devcli = src\devcli
+		centazio = centazio
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.TestFunctions", "tests\Centazio.TestFunctions\Centazio.TestFunctions.csproj", "{16243103-CE9F-46A1-94D6-2ECA60FCA696}"
