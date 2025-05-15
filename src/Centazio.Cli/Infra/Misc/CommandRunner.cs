@@ -57,7 +57,7 @@ public class CommandRunner : ICommandRunner {
       StartInfo = {
         FileName = command, 
         Arguments = args, 
-        RedirectStandardInput = input != null,
+        RedirectStandardInput = input is not null,
         RedirectStandardOutput = !newwindow, 
         RedirectStandardError = !newwindow,
         UseShellExecute = newwindow,
@@ -93,7 +93,7 @@ public class CommandRunner : ICommandRunner {
 
   private void RunProcess(Process p, string? input) {
     p.Start();
-    if (input != null) {
+    if (input is not null) {
       p.StandardInput.WriteLine(input);
       p.StandardInput.Close();
     }
@@ -104,7 +104,7 @@ public class CommandRunner : ICommandRunner {
 
   private void RunProcessNewWindow(Process p, string? input) { 
     p.Start();
-    if (input != null) {
+    if (input is not null) {
       p.StandardInput.WriteLine(input);
       p.StandardInput.Close();
     }

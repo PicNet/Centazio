@@ -94,16 +94,16 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   private void AddSettingsFilesToProject() {
     var files = new SettingsLoader().GetSettingsFilePathList(environments.AddIfNotExists(project.CloudName.ToLower()));
     AddCopyFilesToProject(files.Where(f => f.Contains("defaults")).ToList(), "defaults");
-    AddCopyFilesToProject(files.Where(f => !f.Contains("defaults")).ToList());
+    AddCopyFilesToProject(files.Where(f => !f.Contains("defaults")).ToList(), String.Empty);
   }
 
   private void AddSecretsFilesToProject() {
     var loader = new SecretsFileLoader(settings.GetSecretsFolder());
     var paths = environments.AddIfNotExists(project.CloudName.ToLower()).Select((env, idx) => loader.GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
-    AddCopyFilesToProject(paths);
+    AddCopyFilesToProject(paths, String.Empty);
   }
   
-  private void AddCopyFilesToProject(List<string> files, string subdir = "") {
+  private void AddCopyFilesToProject(List<string> files, string subdir) {
     var targetDir = Path.Combine(project.ProjectDirPath, subdir);
     if (!File.Exists(targetDir)) { Directory.CreateDirectory(targetDir); }
 

@@ -68,9 +68,8 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       // FIX the following docker command return an error even if the image is built successfully
       try {
         cmd.Docker($"build -t {ecrUri}/{projectName} .", project.ProjectDirPath, true);
-      }
-      catch (Exception e) {
-        Console.WriteLine(e);
+      } catch (Exception e) {
+        Log.Warning(e, "Error running docker command");
       }
 
       cmd.Docker(@$"login --username AWS --password-stdin {ecrUri}", project.ProjectDirPath, input: GetEcrInputPassword());
@@ -101,11 +100,11 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       });
 
       var latestImage = imageDetails.ImageDetails
-          .Where(img => img.ImageSizeInBytes > 1_048_576 && img.ArtifactMediaType != null)
+          .Where(img => img.ImageSizeInBytes > 1_048_576 && img.ArtifactMediaType is not null)
           .OrderByDescending(img => img.ImagePushedAt)
           .FirstOrDefault();
 
-      if (latestImage == null) throw new Exception("No image found");
+      if (latestImage is null) throw new Exception("No image found");
 
       var latestImageDigest = latestImage.ImageDigest;
       return latestImageDigest;
@@ -114,12 +113,12 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
     private static async Task CheckAndCreateEcrRepository(AmazonECRClient ecrClient, string projectName) {
       try {
         await ecrClient.DescribeRepositoriesAsync(new DescribeRepositoriesRequest {
-          RepositoryNames = new List<string> { projectName }
+          RepositoryNames = [projectName]
         });
-        Console.WriteLine("Repository exists.");
+        Log.Information("Repository exists.");
       }
       catch (RepositoryNotFoundException) {
-        Console.WriteLine("Creating repository...");
+        Log.Information("Creating repository...");
         await ecrClient.CreateRepositoryAsync(new CreateRepositoryRequest {
           RepositoryName = projectName
         });
