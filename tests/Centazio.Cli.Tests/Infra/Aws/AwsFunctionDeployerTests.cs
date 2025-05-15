@@ -30,7 +30,7 @@ public class AwsFunctionDeployerTests {
     
     await new AwsCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
-    await new AwsFunctionDeployer(settings, secrets).Deploy(project);
+    await new AwsFunctionDeployer(settings, secrets, templater).Deploy(project);
     
     var after = await MiscHelpers.Aws.ListFunctionApps();
     var funcs = await MiscHelpers.Aws.ListFunctionsInApp(appname);

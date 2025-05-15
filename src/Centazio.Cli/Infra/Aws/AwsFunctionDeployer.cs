@@ -26,12 +26,12 @@ public interface IAwsFunctionDeployer {
 
 }
 
-public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : IAwsFunctionDeployer {
+public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
 
   public async Task Deploy(AwsFunctionProjectMeta project) =>
-      await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project).DeployImpl();
+      await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();
 
-  private class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project) {
+  private class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project, ITemplater templater) {
 
     private readonly ICommandRunner cmd = new CommandRunner();
     private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
@@ -136,16 +136,11 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
       try { return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn; } 
       catch (NoSuchEntityException) {
         Log.Information($"IAM Role {rolenm} does not exist. Creating...");
-        // todo: change to use ITemplater.ParseFromPath(<filename>, model);
-        var policy = @"{ ""Version"": ""2012-10-17"", ""Statement"": [ {
-    ""Effect"": ""Allow"",
-    ""Principal"": { ""Service"": ""lambda.amazonaws.com"" },
-    ""Action"": ""sts:AssumeRole"" } ] }";
 
         // Create the role with the trust policy
         var createreq = new CreateRoleRequest {
           RoleName = rolenm,
-          AssumeRolePolicyDocument = policy,
+          AssumeRolePolicyDocument = templater.ParseFromPath("aws/lambda_policy.json", new { }),
           Description = "Role for AWS Lambda execution"
         };
 
@@ -158,31 +153,15 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
 
         await aim.AttachRolePolicyAsync(permission);
 
-        var policyName = "LambdaECRAccess" + rolenm;
-
-        // todo: change to use ITemplater.ParseFromPath(<filename>, model);
-        var ecrPolicyJson = $@"{{
-  ""Version"": ""2012-10-17"",
-  ""Statement"": [
-    {{
-      ""Effect"": ""Allow"",
-      ""Action"": [
-        ""ecr:GetDownloadUrlForLayer"",
-        ""ecr:BatchGetImage"",
-        ""ecr:BatchCheckLayerAvailability""
-      ],
-      ""Resource"": ""arn:aws:ecr:{region.SystemName}:{accountId}:repository/{project.ProjectName.ToLower()}""
-    }}
-  ]
-}}";
-
-        var putPolicyRequest = new PutRolePolicyRequest {
+        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
           RoleName = rolenm,
-          PolicyName = policyName,
-          PolicyDocument = ecrPolicyJson
-        };
-
-        await aim.PutRolePolicyAsync(putPolicyRequest);
+          PolicyName = "LambdaECRAccess" + rolenm,
+          PolicyDocument = templater.ParseFromPath("aws/ecr_policy.json", new {
+            Region = region.SystemName,
+            AccountId = accountId,
+            ProjectName = project.ProjectName.ToLower()
+          })
+        });
 
         // Wait for role to propagate (IAM changes can take time to propagate)
         Log.Information("Waiting for IAM role to propagate...");
