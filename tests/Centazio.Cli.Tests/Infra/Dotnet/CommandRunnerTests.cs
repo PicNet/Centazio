@@ -64,4 +64,14 @@ public class CommandRunnerTests {
     Assert.That(!results.NewWindow);
   }
   
+  [Test] public void Test_new_window() {
+    var results = cmd.Run("dotnet", "--version", newwindow: true);
+    Assert.That(results.Args, Is.EqualTo(VERSION));
+    Assert.That(results.Command, Is.EqualTo("dotnet"));
+    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
+    Assert.That(results.Err, Is.Not.Null);
+    Assert.That(results.Out, Is.Not.Null);
+    Assert.That(results.NewWindow);
+  }
+  
 }

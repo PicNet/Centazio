@@ -11,14 +11,11 @@ using Serilog;
 namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler {
-  private static readonly ServiceCollection services = new();
-  private static readonly CentazioServicesRegistrar registrar = new(services);
+  private static readonly CentazioServicesRegistrar registrar = new(new ServiceCollection());
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
   static {{it.ClassName}}Handler() {
-    // Register the IFunctionRunner
-    services.AddScoped<IFunctionRunner, FunctionRunner>();
-    
+    registrar.Register<IFunctionRunner, FunctionRunner>();
     impl = new(async () => (await new FunctionsInitialiser({{it.Environments}}, registrar)
         .Init([typeof({{it.ClassName}})])).Single(), LazyThreadSafetyMode.ExecutionAndPublication);
   }

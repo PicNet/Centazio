@@ -18,8 +18,8 @@ public static class FsUtils {
   /// <param name="steps">The steps from the root to the file/directory</param>
   /// <returns>The absolute path to the specified file/directory</returns>
   public static string GetCentazioPath(params List<string> steps) => 
-      Env.IsInDev() ? GetDevPath(steps) : 
-      Env.IsCli() ? GetCliPath(steps) : 
+      Env.IsInDev ? GetDevPath(steps) : 
+      Env.IsCli ? GetCliPath(steps) : 
       GetPathFromRootAndSteps(Environment.CurrentDirectory, steps);
 
   public static string GetDefaultsDir(params List<string> steps) => 

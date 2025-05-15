@@ -47,7 +47,7 @@ public class E2EEnvironment(
     Log.Logger = LogInitialiser
           .GetConsoleConfig(template: "{Message}{NewLine}", filters: SimulationConstants.LOGGING_FILTERS)
           .CreateLogger();
-    if (!Env.IsGitHubActions() && !SimulationConstants.SILENCE_LOGGING) return;
+    if (!Env.IsGitHubActions && !SimulationConstants.SILENCE_LOGGING) return;
 
     SimulationConstants.SILENCE_SIMULATION = true;
     LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;

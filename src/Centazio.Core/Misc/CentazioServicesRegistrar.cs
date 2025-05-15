@@ -5,6 +5,7 @@ namespace Centazio.Core.Misc;
 
 public class CentazioServicesRegistrar(IServiceCollection svcs) {
   public void Register<T>() where T : class => svcs.TryAddSingleton<T>();
+  public void Register<I, T>() where T : class, I where I : class => svcs.TryAddSingleton<I, T>();
   public void Register(Type t) => svcs.TryAddSingleton(t);
   public void Register<T>(T instance) where T : class => svcs.TryAddSingleton(instance);
   public void Register<T>(Func<IServiceProvider, T> factory) where T : class => svcs.TryAddSingleton(factory);

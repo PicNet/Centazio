@@ -10,7 +10,8 @@ public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
   private static readonly CentazioServicesRegistrar registrar = new(new ServiceCollection());
   private static readonly Lazy<Task<IRunnableFunction>> impl;
 
-  static {{it.ClassName}}Azure() {    
+  static {{it.ClassName}}Azure() {
+    registrar.Register<IFunctionRunner, FunctionRunner>();
     impl = new(async () => (await new FunctionsInitialiser({{it.Environments}}, registrar)
         .Init([typeof({{it.ClassName}})])).Single(), LazyThreadSafetyMode.ExecutionAndPublication);
   }

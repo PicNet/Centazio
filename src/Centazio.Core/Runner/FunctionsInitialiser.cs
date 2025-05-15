@@ -28,7 +28,7 @@ public class FunctionsInitialiser(List<string> environments, CentazioServicesReg
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
-    
+
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     

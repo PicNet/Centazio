@@ -92,7 +92,7 @@ public static class ReflectionUtils {
   public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";
     var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
-    var assfile = Env.IsHostedEnv() ? 
+    var assfile = Env.IsHostedEnv ? 
         dlls.FirstOrDefault(path => path.EndsWith(assembly + ".dll")) 
         : dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
             ?? dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0);

@@ -35,7 +35,7 @@ public record CentazioSettings {
   }
   
   public string GetSecretsFolder() => 
-      Env.IsInDev() 
+      Env.IsInDev 
           ? FindFirstValidDirectory(SecretsFolders) 
           : Environment.CurrentDirectory;
   

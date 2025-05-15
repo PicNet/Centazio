@@ -11,7 +11,7 @@ public class PackageAndPublishNuGetsCommand(CentazioSecrets secrets, ICommandRun
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings());
   
   public override Task ExecuteImpl(Settings settings) {
-    if (!Env.IsInDev()) throw new Exception(nameof(PackageAndPublishNuGetsCommand) + " should not be accessible outside of the Centazio dev environment");
+    if (!Env.IsInDev) throw new Exception(nameof(PackageAndPublishNuGetsCommand) + " should not be accessible outside of the Centazio dev environment");
     var cwd = FsUtils.GetCentazioPath();
     // package
     FsUtils.EmptyDirectory(Path.Combine(cwd, packagesdir));
