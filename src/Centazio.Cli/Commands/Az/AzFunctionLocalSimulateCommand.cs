@@ -25,6 +25,7 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
     // todo: do we need newwindow in Windows?  We dont in Linux so removed here, but may need to change to `newwindow: !Env.IsLinux`
+    // todo: make this a hidden window, does not need to pop up.  The CommandRunner should accept an Options object instead of adding more and more params
     cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), cwd: project.PublishPath);
   }
   

@@ -5,9 +5,51 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Runner;
 
+public class NoFunctionToFunctionTriggerLazyFunctionInitialiser(List<string> environments, Type function) : AbstractLazyFunctionInitialiser(environments, function) {
+
+  protected override Task RegisterEnvironmentDependencies(CentazioServicesRegistrar registrar)  {
+    // todo: this should be a specific FunctionRunner that support function-to-function triggers for the specific cloud environment.
+    registrar.Register<IFunctionRunner, FunctionRunner>();
+    return Task.CompletedTask;
+  }
+
+}
+
+public interface ILazyFunctionInitialiser {
+  Task<IRunnableFunction> GetFunction();
+  Task<IFunctionRunner> GetRunner();
+}
+
+// todo: implement this for each 'cloud' to support function-to-function triggers
+public abstract class AbstractLazyFunctionInitialiser : ILazyFunctionInitialiser {
+  
+  private readonly CentazioServicesRegistrar registrar;
+  private readonly Lazy<Task<IRunnableFunction>> impl;
+
+  protected AbstractLazyFunctionInitialiser(List<string> environments, Type function) {
+    registrar = new CentazioServicesRegistrar(new ServiceCollection());
+    impl = new(async () => {
+          var initialiser = new FunctionsInitialiser(environments, registrar);
+          await initialiser.Init([function]);
+          await RegisterEnvironmentDependencies(registrar);
+          return registrar.Get<IRunnableFunction>(function);
+        },
+        LazyThreadSafetyMode.ExecutionAndPublication);
+  }
+
+  public async Task<IRunnableFunction> GetFunction() => await impl.Value;
+  public async Task<IFunctionRunner> GetRunner() {
+    _ = await impl.Value;
+    return registrar.Get<IFunctionRunner>();
+  }
+
+  // Register FunctionRunner and other cloud specific dependencies
+  protected abstract Task RegisterEnvironmentDependencies(CentazioServicesRegistrar registrar); 
+}
+
 public class FunctionsInitialiser(List<string> environments, CentazioServicesRegistrar registrar) {
 
-  public async Task<List<IRunnableFunction>> Init(List<Type> functions) {
+  public async Task Init(List<Type> functions) {
     var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader().Load<CentazioSettings>(environments), registrar);
     
     RegisterCoreServices(settings);
@@ -19,16 +61,16 @@ public class FunctionsInitialiser(List<string> environments, CentazioServicesReg
     
     await InitialiseCoreServices(prov);
     await Task.WhenAll(integrations.Select(integration => integration.Initialise(prov)));
-    
-    return functions.Select(func => (IRunnableFunction) prov.GetRequiredService(func)).ToList();
   }
   
-
   private void RegisterCoreServices(CentazioSettings settings) {
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
 
+    // todo: this should be removed as each environment should create its own
+    //    FunctionRunner depending on how function-to-function triggers will work
+    registrar.Register<IFunctionRunner, FunctionRunner>();
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     

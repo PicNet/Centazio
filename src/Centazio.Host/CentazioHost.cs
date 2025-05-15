@@ -42,13 +42,14 @@ public class CentazioHost {
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    var functions = await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()), registrar).Init(functypes);
+    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()), registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier();
     var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
     var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
     
+    var functions = functypes.Select(t => registrar.Get<IRunnableFunction>(t)).ToList();
     StartTimerBasedTriggers(settings, functions, runner);
     notifier.Init(functions);
     _ = notifier.Run(runner);

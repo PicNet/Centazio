@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Centazio.Core.Misc;
@@ -12,6 +13,11 @@ public class CentazioServicesRegistrar(IServiceCollection svcs) {
   public void Register(Type type, object instance) => svcs.TryAdd(ServiceDescriptor.Singleton(type, instance));
   public void RegisterServiceTypeFactory(Type type, Type factorytype) => svcs.TryAddSingleton(type, factorytype);
   
+  public T Get<T>() where T : notnull => ServiceProvider.GetRequiredService<T>();
+  public T Get<T>(Type t) => (T) ServiceProvider.GetRequiredService(t);
+  public T? Optional<T>() => ServiceProvider.GetService<T>();
+  
+  // todo: make this private since Get/Optional have been added
   private ServiceProvider? prov;
   public ServiceProvider ServiceProvider => prov ?? throw new Exception("BuildServiceProvider has not been called");
   public ServiceProvider BuildServiceProvider() {

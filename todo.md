@@ -1,4 +1,5 @@
 # Todo
+- test centazio host run
 - better secrets management
 - better cloud settings management (env vars?) - including cron timers
 - aws/azure wrappers:
