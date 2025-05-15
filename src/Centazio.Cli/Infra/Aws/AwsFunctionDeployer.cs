@@ -138,20 +138,16 @@ public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secr
         Log.Information($"IAM Role {rolenm} does not exist. Creating...");
 
         // Create the role with the trust policy
-        var createreq = new CreateRoleRequest {
+        var response = await aim.CreateRoleAsync(new CreateRoleRequest {
           RoleName = rolenm,
           AssumeRolePolicyDocument = templater.ParseFromPath("aws/lambda_policy.json", new { }),
           Description = "Role for AWS Lambda execution"
-        };
+        });
 
-        var response = await aim.CreateRoleAsync(createreq);
-
-        var permission = new AttachRolePolicyRequest {
+        await aim.AttachRolePolicyAsync(new AttachRolePolicyRequest {
           RoleName = rolenm,
           PolicyArn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        };
-
-        await aim.AttachRolePolicyAsync(permission);
+        });
 
         await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
           RoleName = rolenm,
