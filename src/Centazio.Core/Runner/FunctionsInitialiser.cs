@@ -29,12 +29,11 @@ public abstract class AbstractLazyFunctionInitialiser : ILazyFunctionInitialiser
   protected AbstractLazyFunctionInitialiser(List<string> environments, Type function) {
     registrar = new CentazioServicesRegistrar(new ServiceCollection());
     impl = new(async () => {
-          var initialiser = new FunctionsInitialiser(environments, registrar);
-          await initialiser.Init([function]);
-          await RegisterEnvironmentDependencies(registrar);
-          return registrar.Get<IRunnableFunction>(function);
-        },
-        LazyThreadSafetyMode.ExecutionAndPublication);
+      var initialiser = new FunctionsInitialiser(environments, registrar);
+      await initialiser.Init([function]);
+      await RegisterEnvironmentDependencies(registrar);
+      return registrar.Get<IRunnableFunction>(function);
+    }, LazyThreadSafetyMode.ExecutionAndPublication);
   }
 
   public async Task<IRunnableFunction> GetFunction() => await impl.Value;

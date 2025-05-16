@@ -4,6 +4,8 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Amazon.Lambda.Core" Version="2.5.1" />
+    <PackageVersion Include="Amazon.Lambda.RuntimeSupport" Version="1.13.0" />
     <PackageVersion Include="AWSSDK.CloudWatchLogs" Version="4.0.0-preview.13" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.0-preview.13" />
     <PackageVersion Include="AWSSDK.ECR" Version="4.0.1.1" />
@@ -20,6 +22,9 @@
     <PackageVersion Include="Azure.ResourceManager.Storage" Version="1.4.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Cronos" Version="0.10.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
@@ -41,6 +46,8 @@
     <PackageVersion Include="NUnit.Analyzers" Version="4.7.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
     <PackageVersion Include="Serilog" Version="4.2.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageVersion Include="Spectre.Console" Version="0.50.0" />

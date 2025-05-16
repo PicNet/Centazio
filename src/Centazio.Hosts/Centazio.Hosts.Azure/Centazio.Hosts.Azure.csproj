@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Centazio.Hosts.Aws</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+        <HintPath>..\..\..\..\..\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\9.0.4\lib\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" />
+      <PackageReference Include="Microsoft.Azure.Functions.Worker" />
+      <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" />
+      <PackageReference Include="Serilog.Extensions.Hosting" />
+      <PackageReference Include="Serilog.Sinks.ApplicationInsights" />
+    </ItemGroup>
+
+</Project>

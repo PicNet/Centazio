@@ -62,15 +62,17 @@ public static class DtoHelpers {
     return origval;
   }
 
-  private static readonly Dictionary<Type, Type?> dto_cache = new();
+  private static readonly Dictionary<Type, Type?> dto_cache = [];
   public static Type? GetDtoTypeFromTypeHierarchy(Type baset) {
-    if (dto_cache.TryGetValue(baset, out var dtot)) return dtot;
-    var tmp = baset; 
-    while(tmp is not null) {
-      var t = tmp.Assembly.GetType(tmp.FullName + "+Dto");
-      if (t is not null) return dto_cache[baset] = t;
-      tmp = tmp.BaseType;
+    lock (dto_cache) {
+      if (dto_cache.TryGetValue(baset, out var dtot)) return dtot;
+      var tmp = baset; 
+      while(tmp is not null) {
+        var t = tmp.Assembly.GetType(tmp.FullName + "+Dto");
+        if (t is not null) return dto_cache[baset] = t;
+        tmp = tmp.BaseType;
+      }
+      return dto_cache[baset] = null;
     }
-    return dto_cache[baset] = null;
   }
 }

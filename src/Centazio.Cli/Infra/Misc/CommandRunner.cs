@@ -1,21 +1,10 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Centazio.Cli.Infra.Misc;
 
-public class CommandResults(Process? process, string command, string args, string dir, string @out, string err, bool newwindow) {
-  
-  public Process? Process { get; } = process;
-  public string Command { get; } = command.Trim();
-  public string Args { get; } = args.Trim();
-  public string Dir { get; } = dir.Trim();
-  public string Out { get; } = @out.Trim();
-  public string Err { get; } = err.Trim();
-  public bool NewWindow { get; } = newwindow;
-
+public record CommandResults(Process? Process, string Command, string Args, string Dir, string Out, string Err, bool NewWindow) {
   public bool Success => String.IsNullOrWhiteSpace(Err);
-  
   public override string ToString() => $"{Command} {Args}";
 
 }
@@ -47,10 +36,11 @@ public class CommandRunner : ICommandRunner {
 
   public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true, string? input = null) {
     cwd ??= Env.IsUnitTest ? FsUtils.GetCentazioPath() : Environment.CurrentDirectory;
+    var results = new CommandResults(null, command, args, cwd, String.Empty, String.Empty, newwindow);
     (command, args) = GetPlatformSpecificCommmandAndArgs();
     
     if (!quiet) Log.Information($"running[{command}] args[{args}] cwd[{cwd}]");
-    if (checktool && !CheckInstalled(command)) return new CommandResults(null, command, args, cwd, String.Empty, String.Empty, newwindow);
+    if (checktool && !CheckInstalled(command)) return results;
     
     var output = new StringBuilder();
     var error = new StringBuilder();
@@ -70,7 +60,7 @@ public class CommandRunner : ICommandRunner {
     
     if (newwindow) {
       RunProcessNewWindow(p, input);
-      return new CommandResults(p, command, args, cwd, String.Empty, String.Empty, newwindow);
+      return results;
     }
 
     RunProcess(p, input);
@@ -81,7 +71,7 @@ public class CommandRunner : ICommandRunner {
     // -1073741510 is CTRL+C so can be ignored
     if (code != -1073741510 && (code != 0 || err.Length > 0)) 
       throw new Exception($"cmd[{command}] args[{args}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
-    return new CommandResults(p, command, args, cwd, outp, err, newwindow);
+    return results with { Process = p, Out = outp, Err = err };
     
     (string cmd, string arg) GetPlatformSpecificCommmandAndArgs() {
       return Env.IsLinux && newwindow ? ("x-terminal-emulator", $"-e \"bash -c '{command} {args}'\"") : (command, args);

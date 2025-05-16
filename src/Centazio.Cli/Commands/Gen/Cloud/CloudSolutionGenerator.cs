@@ -8,7 +8,12 @@ using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AbstractFunctionProjectMeta project, List<string> environments) {
+public abstract class CloudSolutionGenerator(
+    CentazioSettings settings, 
+    ITemplater templater, 
+    AbstractFunctionProjectMeta project,
+    Assembly hostass,
+    List<string> environments) {
 
   protected CsProjModel model = null!;
   protected readonly ITemplater templater = templater;
@@ -55,6 +60,7 @@ public abstract class CloudSolutionGenerator(CentazioSettings settings, ITemplat
   private void AddCentazioProjectReferencesToProject(Dictionary<string, bool> added) {
     AddReferenceIfRequired(typeof(AbstractFunction<>).Assembly, added); // Add Centazio.Core
     AddReferenceIfRequired(project.Assembly, added); // Add this function's assemply
+    AddReferenceIfRequired(hostass, added); // Add the hosting assembly (from Centazio.Hosts)
   }
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {

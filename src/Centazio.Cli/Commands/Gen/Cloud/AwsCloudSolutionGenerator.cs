@@ -3,7 +3,8 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
+internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments) : 
+    CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Aws.Host).Assembly, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAwsNuGetReferencesToProject(added);
@@ -11,7 +12,8 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
     await AddAwsFunctionsToProject(functions);
   }
 
-  private Task AddAwsNuGetReferencesToProject(Dictionary<string, bool> added) => 
+  private Task AddAwsNuGetReferencesToProject(Dictionary<string, bool> added) =>
+      // todo: review these as now that we use Centazio.Host.Aws some of these will not be needed
     AddLatestNuGetReferencesToProject([
       "Amazon.Lambda.Core",
       "Amazon.Lambda.Serialization.SystemTextJson",

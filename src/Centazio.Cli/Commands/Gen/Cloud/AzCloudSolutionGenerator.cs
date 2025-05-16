@@ -3,7 +3,8 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : CloudSolutionGenerator(settings, templater, project, environments) {
+internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
+    CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Azure.Host).Assembly, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAzNuGetReferencesToProject(added);
@@ -11,7 +12,8 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater te
     await AddAzFunctionsToProject(functions);
   }
 
-  private Task AddAzNuGetReferencesToProject(Dictionary<string, bool> added) => 
+  private Task AddAzNuGetReferencesToProject(Dictionary<string, bool> added) =>
+      // todo: review these as now that we use Centazio.Host.Azure many of these will not be needed
       AddLatestNuGetReferencesToProject([
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Azure.Functions.Worker.Extensions.Timer",
