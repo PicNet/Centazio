@@ -48,7 +48,7 @@ internal class CliBootstrapper {
         .AddSingleton<ICommandRunner, CommandRunner>()
         .AddSingleton<ITemplater, Templater>()
         .AddSingleton<ICentazioCodeGenerator, CentazioCodeGenerator>()
-        .AddSingleton<Centazio.Hosts.Self.Host>();
+        .AddSingleton<Centazio.Hosts.Self.SelfHost>();
     if (indev) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
     RegisterCliCommands();
     return svcs.BuildServiceProvider();

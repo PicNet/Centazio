@@ -30,23 +30,23 @@ public interface IHostConfiguration {
 }
 
 // todo: see if we can use ILazyFunctionInitialiser for consistency with other 'clouds'
-public class Host {
+public class SelfHost {
   
-  public async Task Run(IHostConfiguration cmdsetts) {
+  public async Task Run(CentazioSettings settings, IHostConfiguration cmdsetts) {
     Environment.SetEnvironmentVariable("CENTAZIO_HOST", "true");
     
     Log.Logger = LogInitialiser.GetConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
-    
-    Console.WriteLine("\nPress 'Enter' to exit\n\n");
+    Log.Information("\nPress 'Enter' to exit\n\n");
     
     FunctionConfigDefaults.ThrowExceptions = true;
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(GetType().Name.ToLower()), registrar).Init(functypes);
-    var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
-    var settings = registrar.Get<CentazioSettings>();
-    var notifier = new InProcessChangesNotifier();
+    
+    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(GetType().Name.ToLower()), registrar)
+        .Init(functypes);
+    
+    using var notifier = new InProcessChangesNotifier();
     var inner = new FunctionRunner(registrar.Get<ICtlRepository>(), settings);
     var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
     
@@ -55,8 +55,7 @@ public class Host {
     notifier.Init(functions);
     _ = notifier.Run(runner);
     
-    await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
-    pubsub.Writer.Complete();
+    await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter' 
   }
 
   private void StartTimerBasedTriggers(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {

@@ -7,14 +7,14 @@ public class InspectUtilsTests {
     var exp = new List<string> {
       "Centazio.Cli.csproj",
       "Centazio.Core.csproj",
-      "Centazio.Host.csproj",
+      "Centazio.Hosts.Self.csproj",
       "Centazio.Test.Lib.csproj",
       "Centazio.Cli.Tests.csproj",
       "Centazio.Core.Tests.csproj",
       "Centazio.Providers.Sqlite.Tests.csproj",
       "Centazio.Providers.Sqlite.csproj",
     };
-    Assert.That(exp.All(e => csprojs.Contains(e)));
+    Assert.That(exp.All(e => csprojs.Contains(e)), $"Actual:\n\t{String.Join("\n\t", csprojs)}");
   }
 
 }

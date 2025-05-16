@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Runner;
 
-public class InProcessChangesNotifier : IChangesNotifier {
+public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
 
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   private List<IRunnableFunction> functions = null!;
@@ -25,6 +25,10 @@ public class InProcessChangesNotifier : IChangesNotifier {
   public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
     await pubsub.Writer.WriteAsync(triggers);
+  }
+
+  public void Dispose() {
+    pubsub.Writer.Complete();
   }
 
 }

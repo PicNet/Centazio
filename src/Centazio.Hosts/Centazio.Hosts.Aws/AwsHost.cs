@@ -5,7 +5,7 @@ using Serilog;
 
 namespace Centazio.Hosts.Aws;
 
-public class Host {
+public class AwsHost {
   public async Task Init(IAwsFunctionHandler handler) {
     Log.Logger = LogInitialiser.GetConsoleConfig().CreateLogger();
     

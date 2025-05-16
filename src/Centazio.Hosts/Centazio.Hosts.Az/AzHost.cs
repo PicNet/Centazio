@@ -7,7 +7,7 @@ using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 namespace Centazio.Hosts.Az;
 
-public class Host {
+public class AzHost {
 
   public void Init() {
     var connstr = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");

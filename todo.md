@@ -1,4 +1,5 @@
 # Todo
+- Host, HostInitialiser, LazyHostInitialiser, etc is a mess, clean up
 - better secrets management
 - better cloud settings management (env vars?) - including cron timers
 - aws/azure wrappers:

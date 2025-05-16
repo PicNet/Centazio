@@ -4,5 +4,5 @@ namespace {{it.FunctionNamespace}}.Aws;
 
 public class Program {
   public static async Task Main() => 
-      await new Host().Init(new {{it.ClassName}}Handler());
+      await new AwsHost().Init(new {{it.ClassName}}Handler());
 }

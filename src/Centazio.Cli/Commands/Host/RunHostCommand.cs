@@ -1,18 +1,19 @@
 ﻿using System.ComponentModel;
 using Centazio.Cli.Infra.Ui;
+using Centazio.Core.Settings;
 using Centazio.Hosts.Self;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
 
-public class RunHostCommand(Centazio.Hosts.Self.Host host) : AbstractCentazioCommand<RunHostCommand.Settings>{
+public class RunHostCommand(CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<RunHostCommand.Settings>{
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),
     FunctionFilter = UiHelpers.Ask("Function Filter", "All") 
   });
 
-  public override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(cmdsetts);
+  public override async Task ExecuteImpl(Settings cmdsetts) => await host.Run(settings, cmdsetts);
 
   public class Settings : CommonSettings, IHostConfiguration {
     [CommandArgument(0, "[ASSEMBLY_NAME]")] public required string AssemblyNames { get; init; }
