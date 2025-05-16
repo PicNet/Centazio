@@ -5,22 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Runner;
 
-public class NoFunctionToFunctionTriggerLazyFunctionInitialiser(List<string> environments, Type function) : AbstractLazyFunctionInitialiser(environments, function) {
 
-  protected override Task RegisterEnvironmentDependencies(CentazioServicesRegistrar registrar)  {
-    // todo: this should be a specific FunctionRunner that support function-to-function triggers for the specific cloud environment.
-    registrar.Register<IFunctionRunner, FunctionRunner>();
-    return Task.CompletedTask;
-  }
-
-}
-
+// this needs to be implemented and used by the hosting environment for each cloud provider 
 public interface ILazyFunctionInitialiser {
   Task<IRunnableFunction> GetFunction();
   Task<IFunctionRunner> GetRunner();
 }
 
-// todo: implement this for each 'cloud' to support function-to-function triggers
 public abstract class AbstractLazyFunctionInitialiser : ILazyFunctionInitialiser {
   
   private readonly CentazioServicesRegistrar registrar;

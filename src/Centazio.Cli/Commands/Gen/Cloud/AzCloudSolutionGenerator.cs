@@ -13,7 +13,6 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater te
   }
 
   private Task AddAzNuGetReferencesToProject(Dictionary<string, bool> added) =>
-      // todo: review these as now that we use Centazio.Host.Azure many of these will not be needed
       AddLatestNuGetReferencesToProject([
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Azure.Functions.Worker.Extensions.Timer",

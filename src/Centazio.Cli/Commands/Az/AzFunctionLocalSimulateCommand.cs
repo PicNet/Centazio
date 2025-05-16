@@ -9,7 +9,6 @@ namespace Centazio.Cli.Commands.Az;
 
 // todo: support simulating multiple functions
 // todo: support simulating only a single function in an assembly
-// todo: simulator is loading aws secrets
 public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 

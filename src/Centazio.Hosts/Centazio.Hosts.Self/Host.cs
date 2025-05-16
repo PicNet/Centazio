@@ -29,6 +29,7 @@ public interface IHostConfiguration {
 
 }
 
+// todo: see if we can use ILazyFunctionInitialiser for consistency with other 'clouds'
 public class Host {
   
   public async Task Run(IHostConfiguration cmdsetts) {
@@ -44,9 +45,9 @@ public class Host {
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
     await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(GetType().Name.ToLower()), registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
-    var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
+    var settings = registrar.Get<CentazioSettings>();
     var notifier = new InProcessChangesNotifier();
-    var inner = new FunctionRunner(registrar.ServiceProvider.GetRequiredService<ICtlRepository>(), settings);
+    var inner = new FunctionRunner(registrar.Get<ICtlRepository>(), settings);
     var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
     
     var functions = functypes.Select(t => registrar.Get<IRunnableFunction>(t)).ToList();

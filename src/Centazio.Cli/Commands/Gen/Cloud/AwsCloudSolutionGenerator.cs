@@ -13,7 +13,6 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
   }
 
   private Task AddAwsNuGetReferencesToProject(Dictionary<string, bool> added) =>
-      // todo: review these as now that we use Centazio.Host.Aws some of these will not be needed
     AddLatestNuGetReferencesToProject([
       "Amazon.Lambda.Core",
       "Amazon.Lambda.Serialization.SystemTextJson",
