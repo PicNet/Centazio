@@ -5,7 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Serilog;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
-namespace Centazio.Hosts.Azure;
+namespace Centazio.Hosts.Az;
 
 public class Host {
 

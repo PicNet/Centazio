@@ -4,7 +4,7 @@ using Centazio.Core.Settings;
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
 internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
-    CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Azure.Host).Assembly, environments) {
+    CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Az.Host).Assembly, environments) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
     await AddAzNuGetReferencesToProject(added);

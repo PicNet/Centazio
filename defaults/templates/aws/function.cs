@@ -12,7 +12,7 @@ using Serilog;
 namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler : IAwsFunctionHandler {
-  private static readonly ILazyFunctionInitialiser impl = new NoFunctionToFunctionTriggerLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
+  private static readonly ILazyFunctionInitialiser impl = new AwsLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
 
   public async Task<string> Handle(ILambdaContext context) {
     var start = UtcDate.UtcNow;

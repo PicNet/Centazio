@@ -1,3 +1,3 @@
-﻿using Centazio.Hosts.Azure;
+﻿using Centazio.Hosts.Az;
 
 new Host().Init();

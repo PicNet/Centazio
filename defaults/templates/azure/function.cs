@@ -3,11 +3,12 @@ using Centazio.Core.Runner;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Centazio.Hosts.Az;
 
 namespace {{it.NewAssemblyName}};
 
 public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
-  private static readonly ILazyFunctionInitialiser impl = new NoFunctionToFunctionTriggerLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
+  private static readonly ILazyFunctionInitialiser impl = new AzLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
 
   [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("{{ it.FunctionTimerCronExpr }}")] TimerInfo timer) {    
     var start = UtcDate.UtcNow;

@@ -75,7 +75,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Providers.Postgres
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Centazio.Hosts", "Centazio.Hosts", "{814683E1-F7DA-4BEF-AABC-783974C75537}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Azure", "src\Centazio.Hosts\Centazio.Hosts.Azure\Centazio.Hosts.Azure.csproj", "{9E8EF246-8369-4E04-9C11-2344AA18410A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Az", "src\Centazio.Hosts\Centazio.Hosts.Az\Centazio.Hosts.Az.csproj", "{9E8EF246-8369-4E04-9C11-2344AA18410A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Aws", "src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj", "{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}"
 EndProject
