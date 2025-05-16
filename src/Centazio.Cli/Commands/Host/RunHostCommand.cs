@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel;
 using Centazio.Cli.Infra.Ui;
-using Centazio.Host;
+using Centazio.Hosts.Self;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
 
-public class RunHostCommand(CentazioHost host) : AbstractCentazioCommand<RunHostCommand.Settings>{
+public class RunHostCommand(Centazio.Hosts.Self.Host host) : AbstractCentazioCommand<RunHostCommand.Settings>{
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),

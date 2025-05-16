@@ -9,7 +9,7 @@ using Serilog;
 using Serilog.Events;
 using Timer = System.Threading.Timer;
 
-namespace Centazio.Host;
+namespace Centazio.Hosts.Self;
 
 public interface IHostConfiguration {
   public List<string> EnvironmentsList { get; }
@@ -29,7 +29,7 @@ public interface IHostConfiguration {
 
 }
 
-public class CentazioHost {
+public class Host {
   
   public async Task Run(IHostConfiguration cmdsetts) {
     Environment.SetEnvironmentVariable("CENTAZIO_HOST", "true");
@@ -42,7 +42,7 @@ public class CentazioHost {
     var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
     var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
     var registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(nameof(CentazioHost).ToLower()), registrar).Init(functypes);
+    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(GetType().Name.ToLower()), registrar).Init(functypes);
     var pubsub = Channel.CreateUnbounded<ObjectChangeTrigger>();
     var settings = registrar.ServiceProvider.GetRequiredService<CentazioSettings>();
     var notifier = new InProcessChangesNotifier();

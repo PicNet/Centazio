@@ -1,5 +1,4 @@
 # Todo
-- move Centazio.Host to Centazio.Hosts directory and test that it works
 - better secrets management
 - better cloud settings management (env vars?) - including cron timers
 - aws/azure wrappers:

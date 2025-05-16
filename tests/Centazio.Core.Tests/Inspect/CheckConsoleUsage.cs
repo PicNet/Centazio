@@ -5,7 +5,7 @@ public class CheckConsoleUsage {
   [Test] public void Test_no_use_of_Console_Write() {
     var errors = new List<string>();
     var NOT_ALLOWED = new [] { "Console.Write", "DevelDebug.Write" };
-    InspectUtils.CsFiles(null, "DevelDebug.cs", "DevelDebugTests.cs", "CheckConsoleUsage.cs", "SimulationCtx.cs", "CentazioHost.cs", "ClickUpApiTests.cs", "CommandRunner.cs").ForEach(file => {
+    InspectUtils.CsFiles(null, "DevelDebug.cs", "DevelDebugTests.cs", "CheckConsoleUsage.cs", "SimulationCtx.cs", "Host.cs", "ClickUpApiTests.cs", "CommandRunner.cs").ForEach(file => {
       var contents = File.ReadAllText(file).Replace("AnsiConsole.Write", String.Empty);
       NOT_ALLOWED.ForEach(na => {
         if (contents.IndexOf(na, StringComparison.Ordinal) >= 0) {

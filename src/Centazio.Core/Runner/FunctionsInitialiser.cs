@@ -29,9 +29,10 @@ public abstract class AbstractLazyFunctionInitialiser : ILazyFunctionInitialiser
   protected AbstractLazyFunctionInitialiser(List<string> environments, Type function) {
     registrar = new CentazioServicesRegistrar(new ServiceCollection());
     impl = new(async () => {
+      await RegisterEnvironmentDependencies(registrar);
+      
       var initialiser = new FunctionsInitialiser(environments, registrar);
       await initialiser.Init([function]);
-      await RegisterEnvironmentDependencies(registrar);
       return registrar.Get<IRunnableFunction>(function);
     }, LazyThreadSafetyMode.ExecutionAndPublication);
   }
@@ -66,10 +67,7 @@ public class FunctionsInitialiser(List<string> environments, CentazioServicesReg
     Log.Debug($"HostBootstrapper registering core services:" +
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
-
-    // todo: this should be removed as each environment should create its own
-    //    FunctionRunner depending on how function-to-function triggers will work
-    registrar.Register<IFunctionRunner, FunctionRunner>();
+    
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     

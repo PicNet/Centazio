@@ -6,7 +6,6 @@ using Centazio.Cli.Infra.Gen;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -49,7 +48,7 @@ internal class CliBootstrapper {
         .AddSingleton<ICommandRunner, CommandRunner>()
         .AddSingleton<ITemplater, Templater>()
         .AddSingleton<ICentazioCodeGenerator, CentazioCodeGenerator>()
-        .AddSingleton<CentazioHost>();
+        .AddSingleton<Centazio.Hosts.Self.Host>();
     if (indev) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
     RegisterCliCommands();
     return svcs.BuildServiceProvider();

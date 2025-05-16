@@ -53,6 +53,7 @@
       <ProjectReference Include="..\Centazio.Core\Centazio.Core.csproj" />
       <ProjectReference Include="..\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj" />
       <ProjectReference Include="..\Centazio.Hosts\Centazio.Hosts.Azure\Centazio.Hosts.Azure.csproj" />
-      <ProjectReference Include="..\Centazio.Host\Centazio.Host.csproj" />
+      <ProjectReference Include="..\Centazio.Hosts.Self\Centazio.Hosts.Self.csproj" />
+      <ProjectReference Include="..\Centazio.Hosts\Centazio.Hosts.Self\Centazio.Hosts.Self.csproj" />
     </ItemGroup>
 </Project>
