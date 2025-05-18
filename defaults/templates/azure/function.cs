@@ -8,14 +8,11 @@ using Centazio.Hosts.Az;
 namespace {{it.NewAssemblyName}};
 
 public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
-  private static readonly ILazyFunctionInitialiser impl = new AzLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
-
   [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("{{ it.FunctionTimerCronExpr }}")] TimerInfo timer) {    
     var start = UtcDate.UtcNow;
     log.LogInformation("{{it.ClassName}} running");
     try { 
-      var (function, runner) = (await impl.GetFunction(), await impl.GetRunner());
-      await runner.RunFunction(function, [new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]); 
+      await AzHost.RunFunction(typeof({{it.ClassName}}), [new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]); 
     } finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }
 }

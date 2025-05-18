@@ -1,3 +1,3 @@
 ﻿using Centazio.Hosts.Az;
 
-new AzHost().Init();
+await AzHost.Init({{it.Environments}}, {{it.FunctionTypesListStr}});

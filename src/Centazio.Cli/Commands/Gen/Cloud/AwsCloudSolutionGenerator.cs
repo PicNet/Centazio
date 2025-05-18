@@ -30,17 +30,19 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
   }
 
   private async Task AddAwsFunctionsToProject(List<Type> functions) {
+    var environments = GetEnvironmentsArrayString(); 
     await functions.ForEachSequentialAsync(async func => {
       var impl = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(func);
       var handlerContent = templater.ParseFromPath("aws/function.cs", new {
         ClassName = func.Name,
         ClassFullName = func.FullName,
         FunctionNamespace = func.Namespace,
-        Environments = GetEnvironmentsArrayString(),
+        Environments = environments,
         FunctionTimerCronExpr = impl.GetFunctionPollCronExpression(settings.Defaults)
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Handler.cs"), handlerContent);
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new { 
+      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, "Program.cs"), templater.ParseFromPath("aws/lambda_program.cs", new {
+        Environments = environments,
         ClassName = func.Name, 
         FunctionNamespace = func.Namespace,
       }));

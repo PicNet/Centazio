@@ -1,8 +1,5 @@
 using Centazio.Hosts.Aws;
+using {{it.FunctionNamespace}};
+using {{it.FunctionNamespace}}.Aws;
 
-namespace {{it.FunctionNamespace}}.Aws;
-
-public class Program {
-  public static async Task Main() => 
-      await new AwsHost().Init(new {{it.ClassName}}Handler());
-}
+await AwsHost.Init({{it.Environments}}, new {{it.ClassName}}Handler(), typeof({{it.ClassName}}));

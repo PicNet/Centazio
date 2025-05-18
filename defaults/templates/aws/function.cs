@@ -12,14 +12,12 @@ using Serilog;
 namespace {{it.FunctionNamespace}}.Aws;
 
 public class {{it.ClassName}}Handler : IAwsFunctionHandler {
-  private static readonly ILazyFunctionInitialiser impl = new AwsLazyFunctionInitialiser({{it.Environments}}, typeof({{it.ClassName}}));
 
   public async Task<string> Handle(ILambdaContext context) {
     var start = UtcDate.UtcNow;
     Log.Information("{{it.ClassName}} running");
     try { 
-      var (function, runner) = (await impl.GetFunction(), await impl.GetRunner());
-      await runner.RunFunction(function, [new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]);
+      await AwsHost.RunFunction([new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]);
       return $"{{it.ClassName}} executed successfully";
     } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
   }

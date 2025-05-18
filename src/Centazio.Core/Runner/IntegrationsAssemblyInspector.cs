@@ -12,7 +12,7 @@ public static class IntegrationsAssemblyInspector {
       if (integrations.Count > 1) throw new Exception($"Found {integrations.Count} Centazio Integrations in assembly[{assembly.GetName().FullName}].  There should only ever be one Integration per deployment unit");
       var integration = integrations.Single();
       var ctors = integration.GetConstructors(); 
-      if (ctors.Length != 1) throw new Exception($"Integration in assembly[{assembly.GetName().FullName}] must have a single constructor");
+      if (ctors.Length != 1) throw new Exception($"Integration[{integration.Name}] in assembly[{assembly.GetName().FullName}] must have a single constructor");
       return (IIntegrationBase) (ctors.Single().Invoke([environments]) ?? throw new Exception());
     }
   }

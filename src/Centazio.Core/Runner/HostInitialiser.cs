@@ -7,35 +7,23 @@ namespace Centazio.Core.Runner;
 
 
 // this needs to be implemented and used by the hosting environment for each cloud provider 
-public interface ILazyFunctionInitialiser {
-  Task<IRunnableFunction> GetFunction();
-  Task<IFunctionRunner> GetRunner();
+public interface IHostInitialiser {
+  IRunnableFunction GetFunction(Type type);
+  IFunctionRunner GetRunner();
 }
 
-public abstract class AbstractLazyFunctionInitialiser : ILazyFunctionInitialiser {
+public abstract class AbstractHostInitialiser(List<string> environments) : IHostInitialiser {
+
+  protected CentazioServicesRegistrar Registrar { get; } = new(new ServiceCollection());
   
-  private readonly CentazioServicesRegistrar registrar;
-  private readonly Lazy<Task<IRunnableFunction>> impl;
-
-  protected AbstractLazyFunctionInitialiser(List<string> environments, Type function) {
-    registrar = new CentazioServicesRegistrar(new ServiceCollection());
-    impl = new(async () => {
-      await RegisterEnvironmentDependencies(registrar);
-      
-      var initialiser = new FunctionsInitialiser(environments, registrar);
-      await initialiser.Init([function]);
-      return registrar.Get<IRunnableFunction>(function);
-    }, LazyThreadSafetyMode.ExecutionAndPublication);
+  public async Task Init(List<Type> functions) {
+    await RegisterEnvironmentDependencies();
+    await new FunctionsInitialiser(environments, Registrar).Init(functions);
   }
 
-  public async Task<IRunnableFunction> GetFunction() => await impl.Value;
-  public async Task<IFunctionRunner> GetRunner() {
-    _ = await impl.Value;
-    return registrar.Get<IFunctionRunner>();
-  }
-
-  // Register FunctionRunner and other cloud specific dependencies
-  protected abstract Task RegisterEnvironmentDependencies(CentazioServicesRegistrar registrar); 
+  public IRunnableFunction GetFunction(Type type) => Registrar.Get<IRunnableFunction>(type);
+  public IFunctionRunner GetRunner() => Registrar.Get<IFunctionRunner>();
+  protected abstract Task RegisterEnvironmentDependencies(); 
 }
 
 public class FunctionsInitialiser(List<string> environments, CentazioServicesRegistrar registrar) {

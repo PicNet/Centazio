@@ -35,6 +35,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater te
   }
   
   private async Task AddAzFunctionsToProject(List<Type> functions) {
+    var environments = GetEnvironmentsArrayString();
     await functions.ForEachSequentialAsync(async func => {
       var impl = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(func);
       var clcontent = templater.ParseFromPath("azure/function.cs", new {
@@ -42,11 +43,14 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater te
         ClassFullName = func.FullName,
         FunctionNamespace = func.Namespace, 
         NewAssemblyName = project.ProjectName,
-        Environments = GetEnvironmentsArrayString(),
+        Environments = environments,
         FunctionTimerCronExpr = impl.GetFunctionPollCronExpression(settings.Defaults)
       });
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"{func.Name}Azure.cs"), clcontent);
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs"));
+      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Program.cs"), templater.ParseFromPath("azure/function_app_program.cs", new { 
+        Environments = environments,
+        FunctionTypesListStr = $"new List<Type> {{{String.Join(", ", functions.Select(t => $"typeof({t})"))} }}"
+      }));
     });
   }
 
