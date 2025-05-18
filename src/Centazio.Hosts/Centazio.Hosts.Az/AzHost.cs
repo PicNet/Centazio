@@ -9,31 +9,36 @@ namespace Centazio.Hosts.Az;
 
 public class AzHost {
 
+  private string? APP_INSIGHTS_CONN_STR => Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")?.Trim();
+  
   public void Init() {
-    var connstr = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-    InitLogger(connstr);
-    InitHost(connstr);
+    InitLogger();
+    InitHost();
   }
 
-  private void InitLogger(string? connstr) {
-    var logconfig = LogInitialiser.GetConsoleConfig();
-    if (!String.IsNullOrWhiteSpace(connstr)) logconfig = logconfig.WriteTo.ApplicationInsights(connstr, new TraceTelemetryConverter(), Serilog.Events.LogEventLevel.Information);
-    Log.Logger = logconfig.CreateLogger();
-  }
+  private void InitLogger() => Log.Logger = 
+      LogInitialiser.GetConsoleConfig().InitialiseAppInsightsLogger(APP_INSIGHTS_CONN_STR).CreateLogger();
 
-  private void InitHost(string? connstr) {
-    new HostBuilder()
+  private void InitHost() => new HostBuilder()
       .UseSerilog()
       .ConfigureFunctionsWorkerDefaults()
-      .ConfigureServices((_, services) => {
-        if (!String.IsNullOrWhiteSpace(connstr)) InitialiseApplicationInsights(services);
-        services.AddLogging(builder => { builder.AddSerilog(dispose: true); });
-      })
+      .ConfigureServices((_, svcs) => svcs
+          .InitialiseAppInsights(APP_INSIGHTS_CONN_STR)
+          .AddLogging(builder => builder.AddSerilog(dispose: true)))
       .Build().Run();
 
-    void InitialiseApplicationInsights(IServiceCollection services) {
-      services.AddApplicationInsightsTelemetryWorkerService(options => options.ConnectionString = connstr);
-      services.ConfigureFunctionsApplicationInsights();
-    }
+}
+
+public static class AzHostHelperExtensionMethods {
+  public static LoggerConfiguration InitialiseAppInsightsLogger(this LoggerConfiguration cfg, string? connstr) {
+    if (String.IsNullOrWhiteSpace(connstr)) return cfg;
+    return cfg.WriteTo.ApplicationInsights(connstr, new TraceTelemetryConverter(), Serilog.Events.LogEventLevel.Information);
+  }
+  
+  public static IServiceCollection InitialiseAppInsights(this IServiceCollection svcs, string? connstr) {
+    if (String.IsNullOrWhiteSpace(connstr)) return svcs;
+    svcs.AddApplicationInsightsTelemetryWorkerService(options => options.ConnectionString = connstr);
+    svcs.ConfigureFunctionsApplicationInsights();
+    return svcs;
   }
 }
