@@ -29,10 +29,6 @@
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
     
-    <ItemGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
-        <None Include="$(MSBuildThisFileDirectory)readme.md" Pack="true" PackagePath="\" />
-    </ItemGroup>
-    
     <!-- Unit Test Projects -->
     
     <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">

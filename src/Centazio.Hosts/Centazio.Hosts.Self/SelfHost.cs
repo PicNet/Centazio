@@ -28,7 +28,7 @@ public interface IHostConfiguration {
 
 }
 
-// todo: see if we can use IHostInitialiser for consistency with other 'clouds'
+// todo: see if we can use SelfHostInitialiser for consistency with other 'clouds'
 public class SelfHost {
   
   public async Task Run(CentazioSettings settings, IHostConfiguration cmdsetts) {
