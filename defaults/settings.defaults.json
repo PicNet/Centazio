@@ -28,6 +28,11 @@
       },
       "Lambda": {
         "ShowLogStream": "azure functionapp logstream {{it.AppName}}" 
+      },
+      "Docker": {
+        "Build": "build -t {{it.EcrUri}}/{{ProjectName}} .",
+        "LogIn": "login --username AWS --password-stdin {{it.EcrUri}}",
+        "Push": "push {{it.EcrUri}}/{{ProjectName}} ." 
       }
     },
     "AzureDefaultValues": {

@@ -3,8 +3,7 @@ using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
 
-// todo: rename to `Centazio.Core.Engine`? 
-namespace Centazio.Core.Runner;
+namespace Centazio.Core.Engine;
 
 /// <summary>
 /// The CentazioEngine is the entry point into the Centazio core processor.  And has logic to initialise the

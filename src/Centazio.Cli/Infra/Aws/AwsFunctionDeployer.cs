@@ -60,13 +60,17 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   }
 
   private void BuildAndPushDockerImage(string ecruri, string projnm) {
-    // FIX the following docker command return an error even if the image is built successfully
-    // todo: consider using cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Docker.XXX)); avoids hard coding commands
-    try { cmd.Docker($"build -t {ecruri}/{projnm} .", project.ProjectDirPath, true); } 
+    var dockercmds = settings.Defaults.ConsoleCommands.Docker;
+
+    // todo: FIX the following docker command return an error even if the image is built successfully
+    try { Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
     catch (Exception e) { Log.Warning(e, "Error running docker command"); }
 
-    cmd.Docker(@$"login --username AWS --password-stdin {ecruri}", project.ProjectDirPath, input: GetEcrInputPassword());
-    cmd.Docker(@$"push {ecruri}/{projnm}", project.ProjectDirPath);
+    Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: GetEcrInputPassword());
+    Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
+    
+    void Run(string command, object model, bool quiet = false, string? input = null) => 
+        cmd.Docker(templater.ParseFromContent(command, model), project.ProjectDirPath, quiet: quiet, input: input);
   }
 
   private async Task<string> GetAccountId() {

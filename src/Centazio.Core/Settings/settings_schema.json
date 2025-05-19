@@ -27,6 +27,11 @@
       },
       "Lambda": {
         "ShowLogStream": { "type": "string", "required": true }
+      },
+      "Docker": {
+        "Build": { "type": "string", "required": true },
+        "LogIn": { "type": "string", "required": true },
+        "Push": { "type": "string", "required": true }
       }
     },
     "AzureDefaultValues": {
