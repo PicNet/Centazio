@@ -9,6 +9,7 @@
     - function-to-function triggers
   - Aws:
     - function-to-function triggers
+    - aws simulate (sam cli local function simulator)
 - a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
