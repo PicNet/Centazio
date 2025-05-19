@@ -1,4 +1,5 @@
 # Todo
+- secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
 - better secrets management
 - better cloud settings management (env vars?) - including cron timers
 - aws/azure wrappers:

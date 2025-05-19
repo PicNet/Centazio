@@ -14,7 +14,8 @@
         "ListFunctions": { "type": "string", "required": true },
         "DeleteFunctionApp": { "type": "string", "required": true },
         "StartFunctionApp": { "type": "string", "required": true },
-        "StopFunctionApp": { "type": "string", "required": true }
+        "StopFunctionApp": { "type": "string", "required": true },
+        "RunAzuriteArgs": { "type": "string", "required": true }
       },
       "Func": {
         "LocalSimulateFunction": { "type": "string", "required": true },
@@ -24,6 +25,9 @@
         "CleanProject": { "type": "string", "required": true },
         "BuildProject": { "type": "string", "required": true },
         "PublishProject": { "type": "string", "required": true }
+      },
+      "AwsCmds": {
+        "GetEcrPass": { "type": "string", "required": true }
       },
       "Lambda": {
         "ShowLogStream": { "type": "string", "required": true }

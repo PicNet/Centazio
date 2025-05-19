@@ -19,6 +19,8 @@ public record AzSettings {
   public required string StartFunctionApp { get; init; }
   
   public required string StopFunctionApp { get; init; }
+  
+  public required string RunAzuriteArgs { get; init; }
 
   public Dto ToDto() => new() { 
     ListFunctionApps = ListFunctionApps,
@@ -26,6 +28,7 @@ public record AzSettings {
     DeleteFunctionApp = DeleteFunctionApp,
     StartFunctionApp = StartFunctionApp,
     StopFunctionApp = StopFunctionApp,
+    RunAzuriteArgs = RunAzuriteArgs,
   };
 
   public record Dto : IDto<AzSettings> { 
@@ -34,6 +37,7 @@ public record AzSettings {
     public string? DeleteFunctionApp { get; init; }
     public string? StartFunctionApp { get; init; }
     public string? StopFunctionApp { get; init; }
+    public string? RunAzuriteArgs { get; init; }
 
     public AzSettings ToBase() => new() { 
 ListFunctionApps = String.IsNullOrWhiteSpace(ListFunctionApps) ? throw new ArgumentNullException(nameof(ListFunctionApps)) : ListFunctionApps.Trim(),
@@ -41,6 +45,7 @@ ListFunctions = String.IsNullOrWhiteSpace(ListFunctions) ? throw new ArgumentNul
 DeleteFunctionApp = String.IsNullOrWhiteSpace(DeleteFunctionApp) ? throw new ArgumentNullException(nameof(DeleteFunctionApp)) : DeleteFunctionApp.Trim(),
 StartFunctionApp = String.IsNullOrWhiteSpace(StartFunctionApp) ? throw new ArgumentNullException(nameof(StartFunctionApp)) : StartFunctionApp.Trim(),
 StopFunctionApp = String.IsNullOrWhiteSpace(StopFunctionApp) ? throw new ArgumentNullException(nameof(StopFunctionApp)) : StopFunctionApp.Trim(),
+RunAzuriteArgs = String.IsNullOrWhiteSpace(RunAzuriteArgs) ? throw new ArgumentNullException(nameof(RunAzuriteArgs)) : RunAzuriteArgs.Trim(),
     };
   }
 }
@@ -92,6 +97,24 @@ public record DotNetSettings {
 CleanProject = String.IsNullOrWhiteSpace(CleanProject) ? throw new ArgumentNullException(nameof(CleanProject)) : CleanProject.Trim(),
 BuildProject = String.IsNullOrWhiteSpace(BuildProject) ? throw new ArgumentNullException(nameof(BuildProject)) : BuildProject.Trim(),
 PublishProject = String.IsNullOrWhiteSpace(PublishProject) ? throw new ArgumentNullException(nameof(PublishProject)) : PublishProject.Trim(),
+    };
+  }
+}
+
+public record AwsCmdsSettings {
+
+  
+  public required string GetEcrPass { get; init; }
+
+  public Dto ToDto() => new() { 
+    GetEcrPass = GetEcrPass,
+  };
+
+  public record Dto : IDto<AwsCmdsSettings> { 
+    public string? GetEcrPass { get; init; }
+
+    public AwsCmdsSettings ToBase() => new() { 
+GetEcrPass = String.IsNullOrWhiteSpace(GetEcrPass) ? throw new ArgumentNullException(nameof(GetEcrPass)) : GetEcrPass.Trim(),
     };
   }
 }
@@ -151,6 +174,8 @@ public record ConsoleCommandsSettings {
   
   public required DotNetSettings DotNet { get; init; }
   
+  public required AwsCmdsSettings AwsCmds { get; init; }
+  
   public required LambdaSettings Lambda { get; init; }
   
   public required DockerSettings Docker { get; init; }
@@ -159,6 +184,7 @@ public record ConsoleCommandsSettings {
     Az = Az.ToDto(),
     Func = Func.ToDto(),
     DotNet = DotNet.ToDto(),
+    AwsCmds = AwsCmds.ToDto(),
     Lambda = Lambda.ToDto(),
     Docker = Docker.ToDto(),
   };
@@ -167,6 +193,7 @@ public record ConsoleCommandsSettings {
     public AzSettings.Dto? Az { get; init; }
     public FuncSettings.Dto? Func { get; init; }
     public DotNetSettings.Dto? DotNet { get; init; }
+    public AwsCmdsSettings.Dto? AwsCmds { get; init; }
     public LambdaSettings.Dto? Lambda { get; init; }
     public DockerSettings.Dto? Docker { get; init; }
 
@@ -174,6 +201,7 @@ public record ConsoleCommandsSettings {
 Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
 Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
 DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
+AwsCmds = AwsCmds?.ToBase() ?? throw new ArgumentNullException(nameof(AwsCmds)),
 Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
 Docker = Docker?.ToBase() ?? throw new ArgumentNullException(nameof(Docker)),
     };

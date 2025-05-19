@@ -82,8 +82,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
     Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
 
-    // todo: consider using cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Docker.XXX)); avoids hard coding commands
-    var results = cmd.Aws(@$"ecr get-login-password --region {region.SystemName}", project.ProjectDirPath);
+    var results = cmd.Aws(templater.ParseFromContent(settings.Defaults.ConsoleCommands.AwsCmds.GetEcrPass, new { Region = region.SystemName }), project.ProjectDirPath);
     if (!results.Success) throw new Exception(results.Err);
 
     return results.Out;
