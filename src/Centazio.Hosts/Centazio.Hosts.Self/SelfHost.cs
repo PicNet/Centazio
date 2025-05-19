@@ -26,35 +26,55 @@ public interface IHostConfiguration {
     return [DataFlowLogger.PREFIX];
   }
 
+  public List<Type> GetFunctions() {
+    var assemblies = AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
+    return assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, ParseFunctionFilters())).ToList();
+  }
+  
 }
 
-// todo: see if we can use SelfHostInitialiser for consistency with other 'clouds'
+public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
+  protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
+    using var notifier = new InProcessChangesNotifier();
+    
+    registrar.Register<IChangesNotifier>(notifier);
+    registrar.Register<IFunctionRunner>(prov => {
+      var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings);
+      return new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
+    });
+  }
+}
+
 public class SelfHost {
-  
-  public async Task Run(CentazioSettings settings, IHostConfiguration cmdsetts) {
+  public async Task RunHost(CentazioSettings settings, IHostConfiguration cmdsetts) {
+    GlobalHostInit(cmdsetts);
+
+    var functypes = cmdsetts.GetFunctions();
+    
+    var centazio = new SelfHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList);
+    var prov = await centazio.Init(functypes);
+    
+    await StartHost(settings, functypes, prov);
+  }
+
+  private static void GlobalHostInit(IHostConfiguration cmdsetts) {
     Environment.SetEnvironmentVariable("CENTAZIO_HOST", "true");
     
     Log.Logger = LogInitialiser.GetConsoleConfig(cmdsetts.GetLogLevel(), cmdsetts.GetLogFilters()).CreateLogger();
     Log.Information("\nPress 'Enter' to exit\n\n");
     
     FunctionConfigDefaults.ThrowExceptions = true;
-    var assemblies = cmdsetts.AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
-    var functypes = assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, cmdsetts.ParseFunctionFilters())).ToList();
-    var registrar = new CentazioServicesRegistrar(new ServiceCollection());
+  }
+
+  private async Task StartHost(CentazioSettings settings, List<Type> functypes, ServiceProvider prov) {
+    var (runner, notifier) = (prov.GetRequiredService<IFunctionRunner>(), prov.GetRequiredService<IChangesNotifier>());
+    var functions = functypes.Select(prov.GetRequiredService).Cast<IRunnableFunction>().ToList();
     
-    await new FunctionsInitialiser(cmdsetts.EnvironmentsList.AddIfNotExists(GetType().Name.ToLower()), registrar)
-        .Init(functypes);
-    
-    using var notifier = new InProcessChangesNotifier();
-    var inner = new FunctionRunner(registrar.Get<ICtlRepository>(), settings);
-    var runner = new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
-    
-    var functions = functypes.Select(t => registrar.Get<IRunnableFunction>(t)).ToList();
     StartTimerBasedTriggers(settings, functions, runner);
     notifier.Init(functions);
-    _ = notifier.Run(runner);
     
-    await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter' 
+    _ = notifier.Run(runner);
+    await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
   }
 
   private void StartTimerBasedTriggers(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
