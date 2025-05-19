@@ -5,14 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Core.Runner;
 
-
 // this needs to be implemented and used by the hosting environment for each cloud provider 
-public interface IHostInitialiser {
-  IRunnableFunction GetFunction(Type type);
-  IFunctionRunner GetRunner();
-}
 
-public abstract class AbstractHostInitialiser(List<string> environments) : IHostInitialiser {
+public abstract class AbstractHostInitialiser(List<string> environments)  {
 
   protected CentazioServicesRegistrar Registrar { get; } = new(new ServiceCollection());
   
@@ -20,9 +15,12 @@ public abstract class AbstractHostInitialiser(List<string> environments) : IHost
     await RegisterEnvironmentDependencies();
     await new FunctionsInitialiser(environments, Registrar).Init(functions);
   }
+  
+  public async Task<FunctionRunResults> RunFunction(Type func, List<FunctionTrigger> triggers) {
+    var (runner, function) = (Registrar.Get<IFunctionRunner>(), Registrar.Get<IRunnableFunction>(func));
+    return await runner.RunFunction(function, triggers);
+  }
 
-  public IRunnableFunction GetFunction(Type type) => Registrar.Get<IRunnableFunction>(type);
-  public IFunctionRunner GetRunner() => Registrar.Get<IFunctionRunner>();
   protected abstract Task RegisterEnvironmentDependencies(); 
 }
 

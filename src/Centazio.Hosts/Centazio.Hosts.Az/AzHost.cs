@@ -34,14 +34,14 @@ public class AzHostImpl(List<string> environments, List<Type> functions) {
     InitLogger();
     await centazio.Init(functions);
     
-    InitAzureHost();
+    InitAzureFunctionAppHost();
     
   }
 
   private void InitLogger() => Log.Logger = 
       LogInitialiser.GetConsoleConfig().InitialiseAppInsightsLogger(APP_INSIGHTS_CONN_STR).CreateLogger();
 
-  private void InitAzureHost() => new HostBuilder()
+  private void InitAzureFunctionAppHost() => new HostBuilder()
       .UseSerilog()
       .ConfigureFunctionsWorkerDefaults()
       .ConfigureServices((_, svcs) => svcs
@@ -51,8 +51,7 @@ public class AzHostImpl(List<string> environments, List<Type> functions) {
       .Run();
   
 
-  public async Task RunFunction(Type type, List<FunctionTrigger> triggers) => 
-      await centazio.GetRunner().RunFunction(centazio.GetFunction(type), triggers);
+  public async Task RunFunction(Type type, List<FunctionTrigger> triggers) => await centazio.RunFunction(type, triggers);
 
 }
 

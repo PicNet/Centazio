@@ -27,7 +27,7 @@ public class AwsHostImpl(List<string> environments, Type func) {
   public async Task Init(IAwsFunctionHandler handler) {
     InitLogger();
     await centazio.Init([func]);
-    await InitAwsHost(handler);
+    await InitAwsLambdaFunctionHost(handler);
     
   }
 
@@ -40,13 +40,13 @@ public class AwsHostImpl(List<string> environments, Type func) {
     svcs.AddLogging(builder => builder.AddSerilog(Log.Logger));
   }
 
-  private async Task InitAwsHost(IAwsFunctionHandler handler) {
+  private async Task InitAwsLambdaFunctionHost(IAwsFunctionHandler handler) {
     using var wrapper = HandlerWrapper.GetHandlerWrapper(handler.Handle);
     using var bootstrap = new LambdaBootstrap(wrapper);
     await bootstrap.RunAsync();
   }
 
-  public async Task RunFunction(List<FunctionTrigger> triggers) => 
-      await centazio.GetRunner().RunFunction(centazio.GetFunction(func), triggers);
+  public async Task<FunctionRunResults> RunFunction(List<FunctionTrigger> triggers) => 
+      await centazio.RunFunction(func, triggers);
 
 }

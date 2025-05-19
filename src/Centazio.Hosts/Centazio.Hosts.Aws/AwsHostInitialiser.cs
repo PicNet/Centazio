@@ -9,5 +9,4 @@ public class AwsHostInitialiser(List<string> environments) : AbstractHostInitial
     Registrar.Register<IFunctionRunner, FunctionRunner>();
     return Task.CompletedTask;
   }
-
 }
