@@ -52,7 +52,9 @@ public class CommandRunner : ICommandRunner {
         RedirectStandardOutput = !newwindow, 
         RedirectStandardError = !newwindow,
         UseShellExecute = newwindow,
-        WorkingDirectory = cwd
+        WorkingDirectory = cwd,
+        // ProcessWindowStyle.Hidden does not work on Linux, but nothing we can do about that.
+        WindowStyle = newwindow && quiet ? ProcessWindowStyle.Hidden : ProcessWindowStyle.Normal
       }
     };
     p.OutputDataReceived += (_, o) => OnString(o.Data ?? String.Empty, output, quiet, false);
@@ -101,7 +103,6 @@ public class CommandRunner : ICommandRunner {
   private void RunProcessNewWindow(Process p, string? input) {
     p.Start();
     InjectInput(p, input);
-    if (!Env.IsLinux) p.WaitForExit();
   }
 
   private void InjectInput(Process p, string? input) {

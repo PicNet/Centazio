@@ -18,12 +18,10 @@ public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, IComm
   public override async Task ExecuteImpl(Settings settings) {
     var project = new AzFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
 
-    // todo: move command to ConsoleCommands
-    cmd.Run("azurite", "--silent --inMemoryPersistence", newwindow: true);
+    cmd.Run("azurite", "--silent --inMemoryPersistence", quiet: true, newwindow: true);
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
     
-    // todo: do we need newwindow in Windows?  We dont in Linux so removed here, but may need to change to `newwindow: !Env.IsLinux`
     cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), cwd: project.PublishPath);
   }
   
