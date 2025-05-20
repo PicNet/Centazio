@@ -5,6 +5,7 @@ using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Core.Write;
+using Centazio.Providers.Aws.Secrets;
 using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Test.Lib;
@@ -15,7 +16,7 @@ public static class TestingFactories {
   public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
   
   public static async Task<CentazioSecrets> Secrets() => await Secrets<CentazioSecrets>();
-  public static async Task<E> Secrets<E>() => await new SecretsFileLoader((await Settings()).GetSecretsFolder()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
+  public static async Task<E> Secrets<E>() => await new AwsSecretsLoaderFactory((await Settings()).AwsSettings).GetService().Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

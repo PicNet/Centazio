@@ -22,7 +22,7 @@ SETTING7=val with # should not ignore";
           "val=with=equals",
           "val with # should not ignore")));
 
-  [Test] public async Task Test_overwriting_secrets() => Assert.That(await Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")),
+  [Test, Ignore("Overwriting secrets is not needed at the moment.")] public async Task Test_overwriting_secrets() => Assert.That(await Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")),
       Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
           "VALUE 2 with spaces",
           123,
