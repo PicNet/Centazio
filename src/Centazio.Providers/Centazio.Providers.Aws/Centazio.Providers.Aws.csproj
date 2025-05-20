@@ -8,6 +8,11 @@
       <PackageReference Include="AWSSDK.DynamoDBv2" />
       <PackageReference Include="AWSSDK.S3" />
       <PackageReference Include="AWSSDK.SecretsManager" />
+        <PackageReference Include="AWSSDK.SecretsManager.Caching" />
+        <PackageReference Include="AWSSDK.Core" />
+        <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" />
+      <PackageReference Include="AWSSDK.SSO" />
+      <PackageReference Include="AWSSDK.SSOOIDC" />
     </ItemGroup>
 
 </Project>
