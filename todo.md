@@ -15,6 +15,9 @@
   - good tutorial
   
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
+- GT: need a change-log to be able to do workflows when specific changes to an entity happen. Eg:
+  to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
+  not the property that changed.  This should be part of the promote step.
 - GT: a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
@@ -26,6 +29,8 @@
   - test func worked
   - test func in azure that works
   - test func in aws that works
+- GT: settings objects should have extension methods for helpers such as AwsSettings.GetRegionAsEndpoint to
+    replace duplicate code throughout such as AwsSecretsLoader.cs
 - GT: the readme/tutorial should automatically insert code samples from the real codebase, instead of duplicating it
 - GT: a good simulation tester, using excel to simulate data flows perhaps?
 - GT: create a good set of architectural policies that can be validated using NetArchTest, 

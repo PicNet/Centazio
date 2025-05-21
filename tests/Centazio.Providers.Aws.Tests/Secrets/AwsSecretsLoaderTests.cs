@@ -9,6 +9,7 @@ public class AwsSecretsLoaderTests : AbstractSecretsLoaderTests {
   private ISecretsLoader loader;
 
   [SetUp] public void Setup() {
+    // todo: why do we not use the standard TestingFactories.Settings() here?
     var settings = new AwsSettings {
       Region = "ap-southeast-2",
       AccountName = "PicNet",

@@ -38,6 +38,7 @@ public class AwsSecretsLoader(EvaluateSecretIdForEnvironment eval, AwsSettings a
     if (!res.SecretString.Trim().StartsWith("{")) return new Dictionary<string, string> { { id, res.SecretString } };
 
     var json = Json.Deserialize<Dictionary<string, object>>(res.SecretString);
+    // todo: why the `?? String.Empty`
     return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? String.Empty);
   }
 
@@ -52,6 +53,7 @@ public class AwsSecretsLoader(EvaluateSecretIdForEnvironment eval, AwsSettings a
 public class AwsSecretsLoaderFactory(AwsSettings aws) : IServiceFactory<ISecretsLoader> {
   public ISecretsLoader GetService() => new AwsSecretsLoader(GetSecretsStoreIdForEnvironment, aws);
   
+  // todo: move this to extension methods of AwsSettings
   private string GetSecretsStoreIdForEnvironment(string environment) {
     var template = aws.SecretsManagerStoreIdTemplate;
     if (String.IsNullOrWhiteSpace(template)) throw new Exception($"AwsSettings.SecretsManagerStoreIdTemplate is missing from settings.json file");
