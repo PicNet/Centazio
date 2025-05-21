@@ -14,9 +14,9 @@ public class DynamoAwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
   
   [OneTimeSetUp] public async Task Init() {
     container = new DynamoDbBuilder().Build();
-    Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", "x");
-    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "x");
-    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "x");
+    // env-vars required by Testcontainers
+    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
+    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");
     await container.StartAsync();
   }
 
@@ -28,7 +28,6 @@ public class DynamoAwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
     return await new TestingDynamoAwsStagedEntityRepository(client, limit, checksum).Initalise();
-    
   }
 
   class TestingDynamoAwsStagedEntityRepository(IAmazonDynamoDB client, int limit, Func<string, StagedEntityChecksum> checksum) : DynamoAwsStagedEntityRepository(client, TABLE_NAME, limit, checksum) {
