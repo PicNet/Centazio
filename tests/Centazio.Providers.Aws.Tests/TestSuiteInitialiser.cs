@@ -7,10 +7,6 @@ using Centazio.Test.Lib;
 [SetUpFixture] public class TestSuiteInitialiser {
 #pragma warning restore CA1050
   [OneTimeSetUp] public void GlobalSetUp() {
-    Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", "x");
-    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "x");
-    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "x");
-    
     GlobalTestSuiteInitialiser.Init();
   }
 

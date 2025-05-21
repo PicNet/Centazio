@@ -15,6 +15,11 @@
     <PackageVersion Include="AWSSDK.Organizations" Version="4.0.0.3" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.0.4" />
     <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.0.3" />
+    <PackageVersion Include="AWSSDK.SecretsManager.Caching" Version="2.0.0" />
+    <PackageVersion Include="Amazon.Extensions.Configuration.SystemsManager" Version="7.0.0" />
+    <PackageVersion Include="AWSSDK.SSO" Version="4.0.0.4" />
+    <PackageVersion Include="AWSSDK.SSOOIDC" Version="4.0.0.4" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.0.5" />
     <PackageVersion Include="AWSSDK.SecurityToken" Version="4.0.0.3" />
     <PackageVersion Include="Azure.Identity" Version="1.14.0" />
     <PackageVersion Include="Azure.ResourceManager" Version="1.13.1" />

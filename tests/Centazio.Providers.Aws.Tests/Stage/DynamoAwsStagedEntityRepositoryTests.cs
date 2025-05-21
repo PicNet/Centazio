@@ -14,6 +14,9 @@ public class DynamoAwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
   
   [OneTimeSetUp] public async Task Init() {
     container = new DynamoDbBuilder().Build();
+    Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", "x");
+    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "x");
+    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "x");
     await container.StartAsync();
   }
 
