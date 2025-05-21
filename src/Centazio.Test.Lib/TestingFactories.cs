@@ -16,8 +16,7 @@ public static class TestingFactories {
   public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
   
   public static async Task<CentazioSecrets> Secrets() => await Secrets<CentazioSecrets>();
-  // todo: why are we gettting the AwsSecretsLoaderFactory and not the Loader directly
-  public static async Task<E> Secrets<E>() => await new AwsSecretsLoaderFactory((await Settings()).AwsSettings).GetService().Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
+  public static async Task<E> Secrets<E>() => await new AwsSecretsLoader((await Settings()).AwsSettings).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();

@@ -3,6 +3,7 @@ using Amazon.Organizations;
 using Amazon.Organizations.Model;
 using Amazon.Runtime;
 using Centazio.Core.Secrets;
+using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra.Aws;
 
@@ -13,11 +14,11 @@ public interface IAwsAccounts {
 
 }
 
-public class AwsAccounts(CentazioSecrets secrets) : IAwsAccounts {
+public class AwsAccounts(CentazioSecrets secrets, AwsSettings settings) : IAwsAccounts {
 
   private readonly IAmazonOrganizations client = new AmazonOrganizationsClient(
       new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET),
-      new AmazonOrganizationsConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(secrets.AWS_REGION) });
+      new AmazonOrganizationsConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(settings.Region) });
 
   public async Task<List<(string Id, string Name, string Arn, string Status, string Email)>> ListAccounts() =>
       (await client.ListAccountsAsync(new ListAccountsRequest()))

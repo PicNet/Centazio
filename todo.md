@@ -1,5 +1,6 @@
 # Todo
 - WT: better secrets management
+- WT: does CLI aws command work with new secrets manager?
 - CP/WT: aws/azure wrappers:
   - WT: Azure:
     - fix Log.Logger, currently only injected ILogger<> works

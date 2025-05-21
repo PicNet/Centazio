@@ -8,29 +8,27 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Providers.Aws.Secrets;
 
-public delegate string EvaluateSecretIdForEnvironment(string environment);
-
-public class AwsSecretsLoader(EvaluateSecretIdForEnvironment eval, AwsSettings aws) : AbstractSecretsLoader {
+public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
   
   private readonly IAmazonSecretsManager client = InitializeClient(aws);
   
   private static IAmazonSecretsManager InitializeClient(AwsSettings aws) {
-    var region = RegionEndpoint.GetBySystemName(aws.Region);
-        
-    if (!string.IsNullOrEmpty(aws.AccountName)) {
+    // todo: shouldnt we throw an error if AccountName is missing?  Note: this
+    //    is a required field so should never be null or empty 
+    if (!String.IsNullOrEmpty(aws.AccountName)) {
       Environment.SetEnvironmentVariable("AWS_PROFILE", aws.AccountName);
       Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
     }
         
-    return new AmazonSecretsManagerClient(region);
+    return new AmazonSecretsManagerClient(aws.GetRegionEndpoint());
   }
   
   // remove redundant environments, i.e. environments that result in the same Secret Store Id 
   protected override List<string> FilterRedundantEnvironments(List<string> environments) => 
-      environments.DistinctBy(env => eval(env)).ToList();
+      environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
-    var id = eval(environment); 
+    var id = aws.GetSecretsStoreIdForEnvironment(environment); 
     var res = await client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = id });
     if (String.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : new Dictionary<string, string>();
     
@@ -51,13 +49,5 @@ public class AwsSecretsLoader(EvaluateSecretIdForEnvironment eval, AwsSettings a
 /// </summary>
 /// <param name="aws">The `AwsSettings` section of the `settings.json` file.</param>
 public class AwsSecretsLoaderFactory(AwsSettings aws) : IServiceFactory<ISecretsLoader> {
-  public ISecretsLoader GetService() => new AwsSecretsLoader(GetSecretsStoreIdForEnvironment, aws);
-  
-  // todo: move this to extension methods of AwsSettings
-  private string GetSecretsStoreIdForEnvironment(string environment) {
-    var template = aws.SecretsManagerStoreIdTemplate;
-    if (String.IsNullOrWhiteSpace(template)) throw new Exception($"AwsSettings.SecretsManagerStoreIdTemplate is missing from settings.json file");
-    return template.Replace($"<{nameof(environment)}>", environment);
-  }
-
+  public ISecretsLoader GetService() => new AwsSecretsLoader(aws);
 }

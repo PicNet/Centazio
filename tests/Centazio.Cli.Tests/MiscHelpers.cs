@@ -3,6 +3,7 @@ using Amazon.Lambda;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
+using Centazio.Providers.Aws;
 using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests;
@@ -61,7 +62,7 @@ public static class MiscHelpers {
       var secrets = await TestingFactories.Secrets();
       AmazonLambdaClient? lambda = null;
       try {
-        var region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
+        var region = settings.AwsSettings.GetRegionEndpoint();
         lambda = new AmazonLambdaClient(new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET), region);
         return lambda;
       } catch {
