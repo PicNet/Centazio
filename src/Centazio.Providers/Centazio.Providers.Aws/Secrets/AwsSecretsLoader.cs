@@ -36,7 +36,6 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
     if (!res.SecretString.Trim().StartsWith("{")) return new Dictionary<string, string> { { id, res.SecretString } };
 
     var json = Json.Deserialize<Dictionary<string, object>>(res.SecretString);
-    // todo: why the `?? String.Empty`
     return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? String.Empty);
   }
 
