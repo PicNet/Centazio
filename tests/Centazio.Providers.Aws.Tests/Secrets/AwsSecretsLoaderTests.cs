@@ -9,13 +9,13 @@ public class AwsSecretsLoaderTests : AbstractSecretsLoaderTests {
   private ISecretsLoader loader;
 
   [SetUp] public void Setup() {
-    var awsSettings = new AwsSettings {
+    var settings = new AwsSettings {
       Region = "ap-southeast-2",
       AccountName = "PicNet",
       SecretsManagerStoreIdTemplate = "picnet/centazio/<environment>"
     };
     
-    loader = new AwsSecretsLoaderFactory(awsSettings).GetService();
+    loader = new AwsSecretsLoaderFactory(settings).GetService();
   }
 
   protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
