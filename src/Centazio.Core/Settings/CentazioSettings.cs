@@ -4,6 +4,8 @@ public class SettingsSectionMissingException(string section) : Exception($"{sect
 
 public record CentazioSettings {
   public required List<string> SecretsFolders { get; init; }
+  private SecretsLoaderSettings? _SecretsLoaderSettings;
+  public SecretsLoaderSettings SecretsLoaderSettings => _SecretsLoaderSettings?? throw new SettingsSectionMissingException(nameof(SecretsLoaderSettings));
   
   private DefaultsSettings? _Defaults;
   public DefaultsSettings Defaults => _Defaults ?? throw new SettingsSectionMissingException(nameof(Defaults));
@@ -25,6 +27,7 @@ public record CentazioSettings {
   
   protected CentazioSettings(CentazioSettings other) {
     SecretsFolders = other.SecretsFolders;
+    _SecretsLoaderSettings = other._SecretsLoaderSettings;
     
     _Defaults = other._Defaults;
     _AwsSettings = other._AwsSettings;
@@ -45,6 +48,7 @@ public record CentazioSettings {
 
   public virtual Dto ToDto() => new() {
     SecretsFolders = SecretsFolders,
+    SecretsLoaderSettings = SecretsLoaderSettings?.ToDto(),
     Defaults = _Defaults?.ToDto(),
     AwsSettings = _AwsSettings?.ToDto(),
     AzureSettings = _AzureSettings?.ToDto(),
@@ -55,7 +59,7 @@ public record CentazioSettings {
   
   public record Dto : IDto<CentazioSettings> {
     public List<string>? SecretsFolders { get; init; }
-    
+    public SecretsLoaderSettings.Dto? SecretsLoaderSettings { get; init; }
     public DefaultsSettings.Dto? Defaults { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
     public AzureSettings.Dto? AzureSettings { get; init; }
@@ -65,6 +69,7 @@ public record CentazioSettings {
     
     public CentazioSettings ToBase() => new() {
       SecretsFolders = SecretsFolders ?? throw new ArgumentNullException(nameof(SecretsFolders) + " wtf"),
+      _SecretsLoaderSettings = SecretsLoaderSettings?.ToBase(),
       _Defaults = Defaults?.ToBase(),
       _AwsSettings = AwsSettings?.ToBase(),
       _AzureSettings = AzureSettings?.ToBase(),

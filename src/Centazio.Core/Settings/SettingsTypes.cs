@@ -299,6 +299,24 @@ AzureDefaultValues = AzureDefaultValues?.ToBase() ?? throw new ArgumentNullExcep
   }
 }
 
+public record SecretsLoaderSettings {
+
+  
+  public required string Provider { get; init; }
+
+  public Dto ToDto() => new() { 
+    Provider = Provider,
+  };
+
+  public record Dto : IDto<SecretsLoaderSettings> { 
+    public string? Provider { get; init; }
+
+    public SecretsLoaderSettings ToBase() => new() { 
+Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
+    };
+  }
+}
+
 public record StagedEntityRepositorySettings {
 
   
