@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.CoreRepo;
 
-public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId OriginalSystemId, CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, CoreEntityChecksum CoreEntityChecksum, DateTime DateCreated, DateTime DateUpdated, SystemName? LastUpdateSystem) {
+public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId OriginalSystemId, CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, CoreEntityChecksum CoreEntityChecksum, DateTime DateCreated, DateTime DateUpdated, SystemName LastUpdateSystem, SystemEntityId LastUpdateSystemId) {
   public record Dto : IDto<CoreStorageMeta> {
     public required string CoreId { get; init; }
     
@@ -12,6 +12,7 @@ public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId Original
     public DateTime? DateCreated { get; init; }
     public DateTime? DateUpdated { get; init; }
     public string? LastUpdateSystem { get; init; }
+    public string? LastUpdateSystemId { get; init; }
     
     public string? CoreEntityChecksum { get; init; }
     
@@ -23,7 +24,8 @@ public record CoreStorageMeta(SystemName OriginalSystem, SystemEntityId Original
       new (CoreEntityChecksum ?? throw new ArgumentNullException(nameof(CoreEntityChecksum))),
       DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
-      new (LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem)))
+      new (LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem))),
+      new (LastUpdateSystemId ?? throw new ArgumentNullException(nameof(LastUpdateSystemId)))
     );
   }
 }
@@ -34,7 +36,7 @@ public record CoreEntityAndMetaDtos<D>(D CoreEntityDto, CoreStorageMeta.Dto Meta
 public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
   public E As<E>() => (E) CoreEntity;
   public static CoreEntityAndMeta Create(SystemName system, SystemEntityId sysentid, ICoreEntity coreent, CoreEntityChecksum checksum) => 
-      new(coreent, new CoreStorageMeta(system, sysentid, new(coreent.GetType().Name), coreent.CoreId, checksum, UtcDate.UtcNow, UtcDate.UtcNow, system));
+      new(coreent, new CoreStorageMeta(system, sysentid, new(coreent.GetType().Name), coreent.CoreId, checksum, UtcDate.UtcNow, UtcDate.UtcNow, system, sysentid));
   
   public static CoreEntityAndMeta Create(SystemName system, SystemEntityId sysentid, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg) => 
       Create(system, sysentid, coreent, checksumalg(coreent));

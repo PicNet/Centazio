@@ -15,7 +15,8 @@ public class PostgresSqlCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTe
             nameof(Core.Ctl).ToLower(), 
             nameof(SystemState).ToLower(), 
             nameof(ObjectState).ToLower(), 
-            nameof(Map.CoreToSysMap).ToLower()), 
+            nameof(Map.CoreToSysMap).ToLower(),
+            nameof(EntityChange).ToLower()), 
         new PostgresSqlDbFieldsHelper()).Initialise();
   }
 

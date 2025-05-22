@@ -1,5 +1,4 @@
-﻿using Amazon;
-using Amazon.Lambda;
+﻿using Amazon.Lambda;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;

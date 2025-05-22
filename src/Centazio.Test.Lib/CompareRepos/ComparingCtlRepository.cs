@@ -47,6 +47,8 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
+  protected override Task SaveEntityChangesImpl(List<EntityChange> batch) => Task.CompletedTask;
+
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
     var result1 = await (Task<List<Map.CoreToSysMap>>) repo1.GetType().GetMethod(nameof(GetExistingMapsByIds), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(V)).Invoke(repo1, [system, coretype, ids])!;
     var result2 = await (Task<List<Map.CoreToSysMap>>) repo2.GetType().GetMethod(nameof(GetExistingMapsByIds), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(V)).Invoke(repo2, [system, coretype, ids])!;

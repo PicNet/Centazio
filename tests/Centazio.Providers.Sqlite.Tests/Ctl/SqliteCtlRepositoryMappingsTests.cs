@@ -14,7 +14,8 @@ public class SqliteCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
             nameof(Core.Ctl).ToLower(), 
             nameof(SystemState).ToLower(), 
             nameof(ObjectState).ToLower(), 
-            nameof(Map.CoreToSysMap).ToLower()), 
+            nameof(Map.CoreToSysMap).ToLower(),
+            nameof(EntityChange).ToLower()), 
         new SqliteDbFieldsHelper()).Initialise();
   }
 

@@ -34,7 +34,8 @@ public class SqliteSimulationStorage : ISimulationStorage {
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 
         nameof(ObjectState).ToLower(), 
-        nameof(Map.CoreToSysMap).ToLower()), dbf).Initialise();
+        nameof(Map.CoreToSysMap).ToLower(),
+        nameof(EntityChange).ToLower()), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(staging_db)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SqliteSimulationDbContext(core_db), 

@@ -136,6 +136,11 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
         ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()));
   }
   
+  public async Task WriteEntityChangesToCoreStorage() {
+    if (IsEmpty()) return;
+    await ctl.SaveEntityChanges(ToPromote().Select(EntityChange.Create).ToList());
+  }
+  
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) => 
       await stagestore.UpdateImpl(op.State.System, op.OpConfig.SystemEntityTypeName, bags.Select(bag => bag.IsIgnore ? bag.StagedEntity.Ignore(bag.IgnoreReason) : bag.StagedEntity.Promote(start)).ToList());
 
@@ -158,4 +163,6 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public List<PromotionBag> ToUpdate() => ToPromote().Where(bag => bag.Map is not null).ToList();
   public List<PromotionBag> ToIgnore() => bags.Where(bag => bag.IsIgnore).ToList();
   public CoreEntityChecksum CoreChecksum(ICoreEntity coreent) => op.FuncConfig.ChecksumAlgorithm.Checksum(coreent);
+  
+
 }

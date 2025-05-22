@@ -16,6 +16,11 @@
   - good tutorial
   
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
+- Centazio func-func trigger test: 
+  - all hosts
+  - func reads csv with instructions 
+  - test confirms only correct triggers received 
+  - confirm only required operations run
 - GT: need a change-log to be able to do workflows when specific changes to an entity happen. Eg:
   to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
   not the property that changed.  This should be part of the promote step.

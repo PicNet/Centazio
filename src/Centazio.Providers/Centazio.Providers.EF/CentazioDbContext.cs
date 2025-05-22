@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Misc;
+﻿using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Misc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Serilog;

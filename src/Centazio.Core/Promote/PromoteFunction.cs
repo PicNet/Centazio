@@ -19,6 +19,7 @@ public abstract class PromoteFunction(SystemName system, IStagedEntityRepository
     
     steps.IgnoreNonMeaninfulChanges();
     await steps.WriteEntitiesToCoreStorageAndUpdateMaps();
+    // await steps.WriteEntityChangesToCoreStorage();
     await steps.UpdateAllStagedEntitiesWithNewState(stage);
     steps.LogPromotionSteps();
     

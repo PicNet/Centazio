@@ -35,7 +35,7 @@ public abstract class CentazioEngine(List<string> environments) {
     }
 
     async Task InitialiseServices() {
-      await InitialiseCoreServices(prov);
+      await InitialiseCoreServices();
       await Task.WhenAll(integrations.Select(integration => integration.Initialise(prov)));
     }
     
@@ -58,7 +58,7 @@ public abstract class CentazioEngine(List<string> environments) {
     
     void AddCoreService<SF, I>(string provider) where SF : IServiceFactory<I> where I : class {
       registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));
-      registrar.Register<I>(prov => prov.GetRequiredService<SF>().GetService());
+      registrar.Register<I>(svcs => svcs.GetRequiredService<SF>().GetService());
     }
   }
 
@@ -70,7 +70,8 @@ public abstract class CentazioEngine(List<string> environments) {
     return integrations;
   }
 
-  private async Task InitialiseCoreServices(ServiceProvider prov) {
+  private async Task InitialiseCoreServices() {
+    if (prov is null) throw new Exception("CentazioEngine.Init has not been called");
     await prov.GetRequiredService<IStagedEntityRepository>().Initialise();
     await prov.GetRequiredService<ICtlRepository>().Initialise();
   }

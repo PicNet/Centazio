@@ -13,6 +13,7 @@ public class SqliteCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
           nameof(Core.Ctl).ToLower(), 
           nameof(SystemState).ToLower(), 
           nameof(ObjectState).ToLower(), 
-          nameof(Map.CoreToSysMap).ToLower()), new SqliteDbFieldsHelper()).Initialise();
+          nameof(Map.CoreToSysMap).ToLower(),
+          nameof(EntityChange).ToLower()), new SqliteDbFieldsHelper()).Initialise();
 
 }

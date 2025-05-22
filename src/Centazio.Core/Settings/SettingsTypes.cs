@@ -357,6 +357,8 @@ public record CtlRepositorySettings {
   
   public required string CoreToSysMapTableName { get; init; }
   
+  public required string EntityChangeTableName { get; init; }
+  
   public required bool CreateSchema { get; init; }
 
   public Dto ToDto() => new() { 
@@ -366,6 +368,7 @@ public record CtlRepositorySettings {
     SystemStateTableName = SystemStateTableName,
     ObjectStateTableName = ObjectStateTableName,
     CoreToSysMapTableName = CoreToSysMapTableName,
+    EntityChangeTableName = EntityChangeTableName,
     CreateSchema = CreateSchema,
   };
 
@@ -376,6 +379,7 @@ public record CtlRepositorySettings {
     public string? SystemStateTableName { get; init; }
     public string? ObjectStateTableName { get; init; }
     public string? CoreToSysMapTableName { get; init; }
+    public string? EntityChangeTableName { get; init; }
     public bool? CreateSchema { get; init; }
 
     public CtlRepositorySettings ToBase() => new() { 
@@ -385,6 +389,7 @@ SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullExcep
 SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? throw new ArgumentNullException(nameof(SystemStateTableName)) : SystemStateTableName.Trim(),
 ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? throw new ArgumentNullException(nameof(ObjectStateTableName)) : ObjectStateTableName.Trim(),
 CoreToSysMapTableName = String.IsNullOrWhiteSpace(CoreToSysMapTableName) ? throw new ArgumentNullException(nameof(CoreToSysMapTableName)) : CoreToSysMapTableName.Trim(),
+EntityChangeTableName = String.IsNullOrWhiteSpace(EntityChangeTableName) ? throw new ArgumentNullException(nameof(EntityChangeTableName)) : EntityChangeTableName.Trim(),
 CreateSchema = CreateSchema ?? false,
     };
   }

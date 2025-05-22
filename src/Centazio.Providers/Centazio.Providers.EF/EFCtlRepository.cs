@@ -68,6 +68,12 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
     return toupdate;
   }
 
+  protected override async Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> changes) {
+    await using var db = getdb();
+    await db.ToDtoAttachAndUpdate<EntityChange, EntityChange.Dto>(changes);
+    return changes;
+  }
+
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
     var issysent = typeof(V) == typeof(SystemEntityId);
     var idvals = ids.Select(id => id.Value);
@@ -80,5 +86,23 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
         .Select(dto => dto.ToBase())
         .OrderBy(e => issysent ? e.SystemId.Value : e.CoreId.Value)
         .ToList();
+  }
+  
+  protected async Task CreateSchema(IDbFieldsHelper dbf, AbstractCtlRepositoryDbContext db) {
+    await db.ExecSql(dbf.GenerateCreateTableScript(db.SchemaName, db.SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript(db.SchemaName, db.ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)],
+        [],
+        [new ForeignKey([nameof(SystemState.System), nameof(SystemState.Stage)], db.SchemaName, db.SystemStateTableName)]));
+    await db.ExecSql(dbf.GenerateCreateTableScript(db.SchemaName, db.CoreToSystemMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
+        [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)],
+        [[nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.SystemId)]]));
+    await db.ExecSql(dbf.GenerateCreateTableScript(db.SchemaName, db.EntityChangeTableName, dbf.GetDbFields<EntityChange>(), [nameof(EntityChange.CoreEntityTypeName), nameof(EntityChange.CoreId), nameof(EntityChange.ChangeDate)]));
+  }
+  
+  protected async Task DropTablesImpl(IDbFieldsHelper dbf, AbstractCtlRepositoryDbContext db) { 
+    await db.ExecSql(dbf.GenerateDropTableScript(db.SchemaName, db.CoreToSystemMapTableName));
+    await db.ExecSql(dbf.GenerateDropTableScript(db.SchemaName, db.ObjectStateTableName));
+    await db.ExecSql(dbf.GenerateDropTableScript(db.SchemaName, db.SystemStateTableName));
+    await db.ExecSql(dbf.GenerateDropTableScript(db.SchemaName, db.EntityChangeTableName));
   }
 }

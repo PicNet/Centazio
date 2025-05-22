@@ -13,6 +13,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(ValidCron), [nameof(ValidCron.Expression)] },
     { nameof(DbFieldType), ["*"] },
     { nameof(ForeignKey), ["*"] },
+    { nameof(EntityChange), ["*"] },
     { nameof(FunctionConfig), [nameof(FunctionConfig.FunctionPollExpression)] },
     { nameof(TimerChangeTrigger), [nameof(TimerChangeTrigger.Expression)]},
     { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }
@@ -34,8 +35,9 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     Assert.That(errors, Is.Empty, String.Join("\n", errors));
     
     List<string> Allowed(Type t) {
-      var lst = ALLOWED.TryGetValue(t.Name, out var value) ? value : [];
-      return lst.Concat(ALLOWED["*"]).ToList();
+      var match = ALLOWED.Keys.FirstOrDefault(k => t.Name == k || t.FullName!.Split('.').Last().StartsWith(k + '+'));
+      if (match is null) return ALLOWED["*"];
+      return ALLOWED[match].Concat(ALLOWED["*"]).ToList();
     }
   }
 }

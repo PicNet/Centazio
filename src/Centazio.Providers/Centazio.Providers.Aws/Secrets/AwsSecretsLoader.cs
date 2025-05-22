@@ -1,5 +1,4 @@
-﻿using Amazon;
-using Amazon.SecretsManager;
+﻿using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Centazio.Core;
 using Centazio.Core.Misc;

@@ -15,6 +15,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
   protected readonly Dictionary<SystemStateKey, SystemState> systems = new();
   protected readonly Dictionary<ObjectStateKey, ObjectState> objects = new();
   protected readonly Dictionary<Map.Key, string> maps = new();
+  protected readonly List<EntityChange> changes = new();
   
   public override Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) 
       => Task.FromResult(systems.GetValueOrDefault(new (system, stage)));
@@ -68,6 +69,11 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
       return map;
     }).Where(m => m is not null).Cast<Map.Updated>().ToList();
     return Task.FromResult(results);
+  }
+
+  protected override Task SaveEntityChangesImpl(List<EntityChange> batch) {
+    changes.AddRange(batch);
+    return Task.CompletedTask;
   }
 
   protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
