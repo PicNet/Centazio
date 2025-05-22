@@ -1,6 +1,7 @@
-﻿namespace Centazio.Core.Tests.Secrets;
+﻿using NUnit.Framework;
 
-public abstract class AbstractSecretsLoaderTests {
+namespace Centazio.Test.Lib.BaseProviderTests;
+public abstract class BaseSecretsLoaderTests {
 
   protected const string FULL_CONTENT = @"SETTING1=VALUE1;
 SETTING2=VALUE 2 with spaces 

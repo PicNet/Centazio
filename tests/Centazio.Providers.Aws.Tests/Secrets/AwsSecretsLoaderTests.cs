@@ -1,11 +1,10 @@
 ﻿using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
-using Centazio.Core.Tests.Secrets;
 using Centazio.Providers.Aws.Secrets;
 using Centazio.Test.Lib;
+using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Aws.Tests.Secrets;
-public class AwsSecretsLoaderTests : AbstractSecretsLoaderTests {
+public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
 
   private ISecretsLoader loader;
 

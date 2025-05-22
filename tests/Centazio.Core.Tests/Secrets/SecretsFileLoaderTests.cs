@@ -1,8 +1,9 @@
 ﻿using Centazio.Core.Secrets;
+using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Core.Tests.Secrets;
 
-public class SecretsFileLoaderTests : AbstractSecretsLoaderTests {
+public class SecretsFileLoaderTests : BaseSecretsLoaderTests {
 
   [SetUp] public void Setup() { }
   protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
