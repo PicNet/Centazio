@@ -32,6 +32,9 @@
     "CtlSchemaName": "ctl",
     "CreateSchema": true
   },
+  "SecretsLoaderSettings": {
+    "Provider": "Aws"
+  },
   "AzureSettings": {
     "Region": "Australia East",
     "ResourceGroup": "Centazio_3_Testing",
