@@ -13,13 +13,10 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
   private readonly IAmazonSecretsManager client = InitializeClient(aws);
   
   private static IAmazonSecretsManager InitializeClient(AwsSettings aws) {
-    // todo: shouldnt we throw an error if AccountName is missing?  Note: this
-    //    is a required field so should never be null or empty 
-    if (!String.IsNullOrEmpty(aws.AccountName)) {
-      Environment.SetEnvironmentVariable("AWS_PROFILE", aws.AccountName);
-      Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
-    }
-        
+    
+    Environment.SetEnvironmentVariable("AWS_PROFILE", aws.AccountName);
+    Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
+    
     return new AmazonSecretsManagerClient(aws.GetRegionEndpoint());
   }
   

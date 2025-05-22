@@ -2,6 +2,7 @@
 using Centazio.Core.Settings;
 using Centazio.Core.Tests.Secrets;
 using Centazio.Providers.Aws.Secrets;
+using Centazio.Test.Lib;
 
 namespace Centazio.Providers.Aws.Tests.Secrets;
 public class AwsSecretsLoaderTests : AbstractSecretsLoaderTests {
@@ -9,12 +10,7 @@ public class AwsSecretsLoaderTests : AbstractSecretsLoaderTests {
   private ISecretsLoader loader;
 
   [SetUp] public void Setup() {
-    // todo: why do we not use the standard TestingFactories.Settings() here?
-    var settings = new AwsSettings {
-      Region = "ap-southeast-2",
-      AccountName = "PicNet",
-      SecretsManagerStoreIdTemplate = "picnet/centazio/<environment>"
-    };
+    var settings = TestingFactories.Settings().Result.AwsSettings;
     
     loader = new AwsSecretsLoaderFactory(settings).GetService();
   }
