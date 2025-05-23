@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Centazio.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CentazioTesting.Shared\CentazioTesting.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
