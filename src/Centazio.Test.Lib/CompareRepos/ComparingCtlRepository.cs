@@ -36,22 +36,26 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
   }
 
   protected override async Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
-    var result1 = await (Task<List<Map.Created>>) repo1.GetType().GetMethod(nameof(CreateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo1, [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
-    var result2 = await (Task<List<Map.Created>>) repo2.GetType().GetMethod(nameof(CreateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo2, [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
+    var result1 = await Invoke<List<Map.Created>>(repo1, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
+    var result2 = await Invoke<List<Map.Created>>(repo2, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
     return ValidateAndReturn(result1, result2);
   }
 
   protected override async Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
-    var result1 = await (Task<List<Map.Updated>>) repo1.GetType().GetMethod(nameof(UpdateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo1, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
-    var result2 = await (Task<List<Map.Updated>>) repo2.GetType().GetMethod(nameof(UpdateMapImpl), BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(repo2, [system, coretype, toupdate.Select(m => m with {}).ToList()])!;
+    var result1 = await Invoke<List<Map.Updated>>(repo1, nameof(UpdateMapImpl), [system, coretype, toupdate.Select(m => m with {}).ToList()]);
+    var result2 = await Invoke<List<Map.Updated>>(repo2, nameof(UpdateMapImpl), [system, coretype, toupdate.Select(m => m with {}).ToList()]);
     return ValidateAndReturn(result1, result2);
   }
 
-  protected override Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) => Task.FromResult(new List<EntityChange>());
+  protected override async Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
+    var result1 = await Invoke<List<EntityChange>>(repo1, nameof(SaveEntityChangesImpl), [batch])!;
+    var result2 = await Invoke<List<EntityChange>>(repo2, nameof(SaveEntityChangesImpl), [batch])!;
+    return ValidateAndReturn(result1, result2);
+  }
 
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
-    var result1 = await (Task<List<Map.CoreToSysMap>>) repo1.GetType().GetMethod(nameof(GetExistingMapsByIds), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(V)).Invoke(repo1, [system, coretype, ids])!;
-    var result2 = await (Task<List<Map.CoreToSysMap>>) repo2.GetType().GetMethod(nameof(GetExistingMapsByIds), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(V)).Invoke(repo2, [system, coretype, ids])!;
+    var result1 = await Invoke<List<Map.CoreToSysMap>>(repo1, nameof(GetExistingMapsByIds), [system, coretype, ids], typeof(V));
+    var result2 = await Invoke<List<Map.CoreToSysMap>>(repo2, nameof(GetExistingMapsByIds), [system, coretype, ids], typeof(V));
     return ValidateAndReturn(result1, result2);
   }
 
@@ -60,6 +64,12 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
   public override async ValueTask DisposeAsync() {
     await repo1.DisposeAsync();
     await repo2.DisposeAsync();
+  }
+  
+  private async Task<T> Invoke<T>(AbstractCtlRepository repo, string method, object[] args, Type? generictype = null) {
+    var m = repo.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new Exception();
+    if (generictype is not null) m = m.MakeGenericMethod(generictype);
+    return await (Task<T>) (m.Invoke(repo1, args) ?? throw new Exception());
   }
   
   private List<T> ValidateAndReturn<T>(List<T> a, List<T> b) {
