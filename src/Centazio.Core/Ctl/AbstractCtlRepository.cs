@@ -85,7 +85,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   }
   
   public async Task<Dictionary<CoreEntityId, SystemEntityId>> GetRelatedSystemIdsFromCores(SystemName system, CoreEntityTypeName coretype, List<ICoreEntity> coreents, string foreignkey) {
-    if (!coreents.Any()) return new();
+    if (!coreents.Any()) return [];
     ValidateCoreEntitiesForQuery(coretype, coreents, false);
     
     var fks = coreents.Select(e => new CoreEntityId(ReflectionUtils.GetPropValAsString(e, foreignkey))).Distinct().ToList();
@@ -98,7 +98,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
     return dict;
   }
   public async Task<Dictionary<SystemEntityId, CoreEntityId>> GetRelatedCoreIdsFromSystemIds(SystemName system, CoreEntityTypeName coretype, List<ISystemEntity> sysents, string foreignkey, bool mandatory) {
-    if (!sysents.Any()) return new();
+    if (!sysents.Any()) return [];
     if (sysents.Any(e => SystemEntityTypeName.From(e) != SystemEntityTypeName.From(sysents.First()))) throw new ArgumentException($"All system entities should be of the same SystemEntityTypeName[{system}]");
     if (sysents.GroupBy(e => e.SystemId).Any(g => g.Count() > 1)) throw new ArgumentException("found duplicate system entities (by SystemId)");
     

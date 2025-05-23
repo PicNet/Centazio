@@ -3,7 +3,7 @@
 namespace Centazio.Test.Lib.E2E;
 
 public class InMemorySimulationCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorageRepository {
-  private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = new();
+  private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = [];
   
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (coretype.Value == nameof(CoreMembershipType)) return (await GetEntitiesToWrite<CoreMembershipType, CoreMembershipType.Dto>(exclude, after)).ToList();
@@ -28,7 +28,7 @@ public class InMemorySimulationCoreStorageRepository(IEpochTracker tracker, Func
   public async Task<CoreMembershipType> GetMembershipType(CoreEntityId coreid) => await GetSingle<CoreMembershipType, CoreMembershipType.Dto>(coreid);
 
   public Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
-    if (!db.ContainsKey(coretype)) db[coretype] = new();
+    if (!db.ContainsKey(coretype)) db[coretype] = [];
     var target = db[coretype];
     var updated = entities.Count(e => target.ContainsKey(e.CoreEntity.CoreId));
     var upserted = entities.Select(e => {
@@ -75,7 +75,7 @@ public class InMemorySimulationCoreStorageRepository(IEpochTracker tracker, Func
 
   private Task<List<CoreEntityAndMetaDtos<D>>> ListImpl<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> {
     var coretype = CoreEntityTypeName.From<E>();
-    if (!db.ContainsKey(coretype)) db[coretype] = new();
+    if (!db.ContainsKey(coretype)) db[coretype] = [];
     return Task.FromResult(db[coretype].Values.Select(Json.Deserialize<CoreEntityAndMetaDtos<D>>).ToList());
   }
 }

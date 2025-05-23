@@ -3,8 +3,8 @@
 public class EntityConverter(ICtlRepository ctl) {
   
   private int ceidcounter;
-  private readonly Dictionary<SystemEntityId, CoreEntityId> systocoreids = new();
-  private readonly Dictionary<CoreEntityId, SystemEntityId> coretosysids = new();
+  private readonly Dictionary<SystemEntityId, CoreEntityId> systocoreids = [];
+  private readonly Dictionary<CoreEntityId, SystemEntityId> coretosysids = [];
   
   public CoreEntityId NewCoreEntityId<T>(SystemName system, SystemEntityId systemid) where T : ICoreEntity {
     var coreid = new CoreEntityId($"{system}/{typeof(T).Name}[{++ceidcounter}]");

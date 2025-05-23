@@ -2,7 +2,7 @@
 
 public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   
-  private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, CoreEntityAndMeta>> db = new();
+  private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, CoreEntityAndMeta>> db = [];
   
   public Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<CoreEntityAndMeta>());
@@ -36,7 +36,7 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   }
 
   public Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
-    if (!db.ContainsKey(coretype)) db[coretype] = new Dictionary<ValidString, CoreEntityAndMeta>();
+    if (!db.ContainsKey(coretype)) db[coretype] = [];
     var upserted = entities.Select(e => {
       return db[coretype][e.CoreEntity.CoreId] = e;
     }).ToList();

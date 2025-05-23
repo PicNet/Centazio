@@ -26,7 +26,7 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
     var id = aws.GetSecretsStoreIdForEnvironment(environment); 
     var res = await client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = id });
-    if (String.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : new Dictionary<string, string>();
+    if (String.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : [];
     
     
     if (!res.SecretString.Trim().StartsWith("{")) return new Dictionary<string, string> { { id, res.SecretString } };

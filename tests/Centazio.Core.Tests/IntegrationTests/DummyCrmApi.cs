@@ -6,7 +6,7 @@ internal class DummyCrmApi {
 
   // this list mantains a list of customers in the dummy database.   A new customer is added
   //    each second (utc.Now - TEST_START_DT) with the LastUpdate date being utc.Now 
-  private readonly List<System1Entity> customers = new();
+  private readonly List<System1Entity> customers = [];
 
   internal Task<List<string>> GetCustomersUpdatedSince(DateTime after) {
     UpdateCustomerList();

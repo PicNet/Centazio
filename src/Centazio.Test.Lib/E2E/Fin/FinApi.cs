@@ -1,8 +1,8 @@
 ﻿namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinDb {
-  public List<FinAccount> Accounts { get; } = new();
-  public List<FinInvoice> Invoices { get; } = new();
+  public List<FinAccount> Accounts { get; } = [];
+  public List<FinInvoice> Invoices { get; } = [];
 }
 
 public class FinApi(FinDb db) {

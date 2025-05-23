@@ -1,9 +1,9 @@
 ﻿namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmDb {
-  internal List<CrmMembershipType> MembershipTypes { get; } = new();
-  internal List<CrmCustomer> Customers { get; } = new();
-  internal List<CrmInvoice> Invoices { get; } = new();
+  internal List<CrmMembershipType> MembershipTypes { get; } = [];
+  internal List<CrmCustomer> Customers { get; } = [];
+  internal List<CrmInvoice> Invoices { get; } = [];
 }
 
 public class CrmApi(CrmDb db) {

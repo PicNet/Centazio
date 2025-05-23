@@ -4,7 +4,7 @@ namespace Centazio.Test.Lib.InMemRepos;
 
 public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
 
-  private readonly Dictionary<StagedEntityChecksum, bool> checksums = new();
+  private readonly Dictionary<StagedEntityChecksum, bool> checksums = [];
   protected readonly List<StagedEntity> saved = [];
 
   public override Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {

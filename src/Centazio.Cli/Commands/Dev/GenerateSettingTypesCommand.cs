@@ -54,7 +54,7 @@ public record {{ it.ClassName }} {
       sb.Append(HEADER);
       schema.Select(p => new FieldSpec(p, String.Empty))
           .Where(n => n.Value.GetValueKind() == JsonValueKind.Object)
-          .ForEach(prop => GenerateClassAndNestedTypes(prop.SettingsName, prop.Value.AsObject().ToList(), new HashSet<string>()));
+          .ForEach(prop => GenerateClassAndNestedTypes(prop.SettingsName, prop.Value.AsObject().ToList(), []));
     }
 
     private void GenerateClassAndNestedTypes(string classnm, List<KeyValuePair<string, JsonNode?>> props, HashSet<string> generated) {

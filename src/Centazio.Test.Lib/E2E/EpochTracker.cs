@@ -11,14 +11,15 @@ public interface IEpochTracker {
 [IgnoreNamingConventions] public class EpochTracker(SimulationCtx ctx) : IEpochTracker {
   public int Epoch { get; private set; }
   
-  private Dictionary<(Type, string), CoreEntityAndMeta> added = new();
-  private Dictionary<(Type, string), CoreEntityAndMeta> updated = new();
+  private Dictionary<(Type, string), CoreEntityAndMeta> added = [];
+  private Dictionary<(Type, string), CoreEntityAndMeta> updated = [];
   
-  public void SetEpoch(int epoch) => (Epoch, added, updated) = (epoch, new(), new());
+  public void SetEpoch(int epoch) => (Epoch, added, updated) = (epoch, [], []);
 
   public async Task ValidateAdded<T>(params (SystemName, IEnumerable<ISystemEntity>)[] expected) where T : ICoreEntity {
     var ascore = await SysEntsToCore(CoreEntityTypeName.From<T>(), expected);
     var actual = added.Values.Where(e => e.CoreEntity.GetType() == typeof(T)).ToList();
+    
     if (actual.Count != ascore.Count) throw new E2ETestFailedException($"Expected {typeof(T).Name} Created({ascore.Count})" + ctx.DetailsToString(ascore.Select(e => $"{e.GetShortDisplayName()}").ToList()) + 
         $"\nActual {typeof(T).Name} Created({actual.Count})" + ctx.DetailsToString(actual.Select(e => $"{e.CoreEntity.GetShortDisplayName()}").ToList()));    
   }

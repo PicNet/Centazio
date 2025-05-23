@@ -12,10 +12,10 @@ public record ObjectStateKey(SystemName System, LifecycleStage Stage, ObjectName
 
 public class InMemoryBaseCtlRepository : AbstractCtlRepository {
 
-  protected readonly Dictionary<SystemStateKey, SystemState> systems = new();
-  protected readonly Dictionary<ObjectStateKey, ObjectState> objects = new();
-  protected readonly Dictionary<Map.Key, string> maps = new();
-  protected readonly List<EntityChange> changes = new();
+  protected readonly Dictionary<SystemStateKey, SystemState> systems = [];
+  protected readonly Dictionary<ObjectStateKey, ObjectState> objects = [];
+  protected readonly Dictionary<Map.Key, string> maps = [];
+  protected readonly List<EntityChange> changes = [];
   
   public override Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) 
       => Task.FromResult(systems.GetValueOrDefault(new (system, stage)));

@@ -524,7 +524,7 @@ ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNul
       FunctionAppName = FunctionAppName?.Trim(),
       AppServicePlanName = AppServicePlanName?.Trim(),
       WebSiteName = WebSiteName?.Trim(),
-AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
+AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? [],
     };
   }
 }

@@ -25,7 +25,7 @@ public class CommandRunner : ICommandRunner {
           ? @"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd" 
           : @"C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin\az.cmd";
 
-  private readonly Dictionary<string, bool> installed = new();
+  private readonly Dictionary<string, bool> installed = [];
   
   public CommandResults DotNet(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("dotnet", args, cwd, quiet, newwindow, input: input);
   public CommandResults Az(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run(AzCommand, args, cwd, quiet, newwindow, input: input);
