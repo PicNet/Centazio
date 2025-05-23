@@ -412,8 +412,8 @@ Centazio will manage this serialisation/deserialisation, deployment to cloud env
   your function 
 - Generate AWS Lambda Function:`centazio aws func generate YourFunctionName` - Generate an AWS Lambda Function 
   wrapper for your function
-- Deploy Azure Function: `centazio aws func deploy YourFunctionName` - Package and deploy your function to Azure
-- Deploy AWS Lambda Function: `centazio az func deploy YourFunctionName` - Package and deploy your function to AWS
+- Deploy Azure Function: `centazio az func deploy YourFunctionName` - Package and deploy your function to Azure
+- Deploy AWS Lambda Function: `centazio aws func deploy YourFunctionName` - Package and deploy your function to AWS
 
 For full details of the supported Centazio CLI commands, simply run `centazio --help`
 
