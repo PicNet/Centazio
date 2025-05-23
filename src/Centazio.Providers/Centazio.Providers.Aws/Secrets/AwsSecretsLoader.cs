@@ -46,15 +46,3 @@ public class AwsSecretsLoaderFactory(AwsSettings aws) : IServiceFactory<ISecrets
   public ISecretsLoader GetService() => new AwsSecretsLoader(aws);
 
 }
-
-public static class AwsSecretsLoaderExtensions {
-
-  public static ISecretsLoaderFactory RegisterAwsProvider(this ISecretsLoaderFactory factory) {
-    factory.RegisterProvider(Provider.Aws, settings => {
-          if (settings.AwsSettings == null) throw new ArgumentNullException(nameof(settings.AwsSettings));
-          return new AwsSecretsLoader(settings.AwsSettings);
-        });
-    return factory;
-  }
-
-}
