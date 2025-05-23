@@ -63,29 +63,10 @@ internal class CliBootstrapper {
       var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
       
       if (isindev) {
-        var factory = new SecretsLoaderFactory();
-        
-        // Register providers based on configuration
-        var provider = Enum.Parse<Provider>(settings.SecretsLoaderSettings.Provider ?? "File");
-        
-        // Register appropriate provider
-        switch (provider) {
-          case Provider.Aws:
-            factory.RegisterAwsProvider();
-            break;
-          case Provider.File:
-          default:
-            // Fall back to file loader if no provider specified or using file
-            factory.RegisterProvider(Provider.File, s => new SecretsFileLoader(s.GetSecretsFolder()));
-            break;
-        }
-
-        svcs.AddSingleton<ISecretsLoaderFactory>(factory);
-        var loader = factory.CreateSecretsLoader(provider, settings);
-        var secrets = await loader.Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT);
+        var secrets = await SecretsManager.LoadSecrets<CentazioSecrets>(settings, CentazioConstants.DEFAULT_ENVIRONMENT);
         svcs.AddSingleton(secrets);
       }
-
+      
       return isindev;
     }
     
