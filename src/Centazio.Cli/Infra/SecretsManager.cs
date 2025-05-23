@@ -4,24 +4,24 @@ using Centazio.Providers.Aws.Secrets;
 
 namespace Centazio.Cli.Infra;
 
-public static class SecretsManager {
-
-  private static readonly Dictionary<ESecretsProviderType, ISecretsFactory> Providers = new() {
-    [ESecretsProviderType.File] = new FileSecretsFactory(),
-    [ESecretsProviderType.Aws] = new AwsSecretsFactory()
+public static class SecretsManager 
+{
+  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() 
+  {
+    [ESecretsProviderType.File] = settings => 
+        new FileSecretsLoaderFactory(settings.SecretsFolders.ToString() ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
+    [ESecretsProviderType.Aws] = settings => 
+        new AwsSecretsLoaderFactory(settings.AwsSettings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService()
   };
 
   public static async Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments)
   {
     var providerString = settings.SecretsLoaderSettings.Provider ?? "File";
-    if (!Enum.TryParse<ESecretsProviderType>(providerString, out var provider))
-      throw new ArgumentException($"Unknown secrets provider: {providerString}");
+    if (!Enum.TryParse<ESecretsProviderType>(providerString, out var provider)) throw new ArgumentException($"Unknown secrets provider: {providerString}");
 
-    if (!Providers.TryGetValue(provider, out var factory))
-      throw new ArgumentException($"Provider {provider} is not implemented");
+    if (!Providers.TryGetValue(provider, out var factory)) throw new ArgumentException($"Provider {provider} is not implemented");
 
-    return await factory.LoadSecrets<T>(settings, environments);
+    var loader = factory(settings);
+    return await loader.Load<T>(environments.ToList());
   }
-
-
 }
