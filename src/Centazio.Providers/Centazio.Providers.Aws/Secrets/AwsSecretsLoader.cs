@@ -41,8 +41,14 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
 ///   with the required environment.
 /// </summary>
 /// <param name="aws">The `AwsSettings` section of the `settings.json` file.</param>
-public class AwsSecretsLoaderFactory(AwsSettings aws) : IServiceFactory<ISecretsLoader> {
+public class AwsSecretsLoaderFactory(AwsSettings aws) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new AwsSecretsLoader(aws);
+  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments)
+  {
+    if (settings.AwsSettings == null) throw new ArgumentNullException(nameof(settings.AwsSettings));
+    return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());
+  }
 
+  private static AwsSecretsLoader CreateLoader(AwsSettings settings) => new(settings);
 }
