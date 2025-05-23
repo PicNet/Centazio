@@ -24,6 +24,8 @@ public abstract class CentazioDbContext : DbContext {
   protected abstract void CreateCentazioModel(ModelBuilder builder);
   protected abstract void ConfigureDbSpecificOptions(DbContextOptionsBuilder options);
   
+  // note: if you get a DbUpdateConcurrencyException from EF, check that the entities do exist
+  //    in the DB.  You may need to call  ToDtoAttachAndCreate instead
   public async Task<int> ToDtoAttachAndUpdate<E, D>(IEnumerable<E> entities) 
       where E : class 
       where D : class, IDto<E> {

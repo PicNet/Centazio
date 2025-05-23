@@ -17,7 +17,7 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   
   protected abstract Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
   protected abstract Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
-  protected abstract Task SaveEntityChangesImpl(List<EntityChange> batch);
+  protected abstract Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch);
   
   protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
   
@@ -39,9 +39,9 @@ public abstract class AbstractCtlRepository : ICtlRepository {
     return updated;
   }
 
-  public async Task SaveEntityChanges(List<EntityChange> changes) {
-    if (!changes.Any()) return;
-    await SaveEntityChangesImpl(changes);
+  public async Task<List<EntityChange>> SaveEntityChanges(List<EntityChange> changes) {
+    if (!changes.Any()) return [];
+    return await SaveEntityChangesImpl(changes);
   }
 
   private static void ValidateMapsToUpsert<M>(SystemName system, CoreEntityTypeName coretype, List<M> maps, bool iscreate) where M : Map.CoreToSysMap {

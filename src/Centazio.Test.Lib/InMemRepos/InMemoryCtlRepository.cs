@@ -71,9 +71,9 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
     return Task.FromResult(results);
   }
 
-  protected override Task SaveEntityChangesImpl(List<EntityChange> batch) {
+  protected override Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
     changes.AddRange(batch);
-    return Task.CompletedTask;
+    return Task.FromResult(new List<EntityChange>());
   }
 
   protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {

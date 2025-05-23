@@ -70,7 +70,7 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
 
   protected override async Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> changes) {
     await using var db = getdb();
-    await db.ToDtoAttachAndUpdate<EntityChange, EntityChange.Dto>(changes);
+    await db.ToDtoAttachAndCreate<EntityChange, EntityChange.Dto>(changes);
     return changes;
   }
 

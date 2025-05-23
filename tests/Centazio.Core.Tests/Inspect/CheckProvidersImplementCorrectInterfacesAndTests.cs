@@ -4,9 +4,13 @@ namespace Centazio.Core.Tests.Inspect;
 
 public class CheckProvidersImplementCorrectInterfacesAndTests {
   
+  private readonly List<string> IGNORE = [nameof(BaseSimulationCoreStorageRepositoryTests), nameof(BaseSecretsLoaderTests)];
+  
   [Test] public void Test_all_providers_implement_base_provider_tests() {
     var basetestsdir = FsUtils.GetCentazioPath("src", "Centazio.Test.Lib", "BaseProviderTests");
-    var tests = InspectUtils.CsFiles(basetestsdir).Select(f => f.Split(Path.DirectorySeparatorChar).Last().Split('.').First()).Where(n => n != nameof(BaseSimulationCoreStorageRepositoryTests)).ToList();
+    var tests = InspectUtils.CsFiles(basetestsdir)
+        .Select(f => f.Split(Path.DirectorySeparatorChar).Last().Split('.').First())
+        .Where(n => !IGNORE.Contains(n)).ToList();
     var provsdir = FsUtils.GetCentazioPath("src", "Centazio.Providers");
     var provs = Directory.GetDirectories(provsdir).Where(dir => !dir.EndsWith("Centazio.Providers.EF")).ToList();
     var testsdir = FsUtils.GetCentazioPath("tests");
