@@ -22,7 +22,7 @@ public static class AwsHost {
 
 public class AwsHostImpl(List<string> environments, Type func) {
 
-  private readonly AwsHostCentazioEngineAdapter centazio = new(environments);
+  private readonly AwsHostCentazioEngineAdapter centazio = new(environments, false);
 
   public async Task Init(IAwsFunctionHandler handler) {
     InitLogger();

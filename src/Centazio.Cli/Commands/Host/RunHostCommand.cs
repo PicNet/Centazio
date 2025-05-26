@@ -18,8 +18,7 @@ public class RunHostCommand(CentazioSettings settings, SelfHost host, SelfAwsHos
     // todo: remove, aws has nothing to do with SelfHost
     if (cmdsetts.UseAws) {
       cmdsetts.EnvironmentsList.AddIfNotExists("aws");
-      var types = ((IHostConfiguration)cmdsetts).GetFunctions();
-      await awsHost.RunAwsHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(cmdsetts.EnvironmentsList), cmdsetts.UseLocalAws);
+      await awsHost.RunAwsHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(cmdsetts.EnvironmentsList, cmdsetts.UseLocalAws));
     }
     else {
       cmdsetts.EnvironmentsList.AddIfNotExists(nameof(SelfHost).ToLower());
