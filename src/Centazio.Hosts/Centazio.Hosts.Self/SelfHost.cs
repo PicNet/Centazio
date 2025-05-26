@@ -47,12 +47,10 @@ public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<strin
 }
 
 public class SelfHost {
-  public async Task RunHost(CentazioSettings settings, IHostConfiguration cmdsetts) {
+  public async Task RunHost(CentazioSettings settings, IHostConfiguration cmdsetts, CentazioEngine centazio) {
     GlobalHostInit(cmdsetts);
 
     var functypes = cmdsetts.GetFunctions();
-    
-    var centazio = new SelfHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList);
     var prov = await centazio.Init(functypes);
     
     await StartHost(settings, functypes, prov);
