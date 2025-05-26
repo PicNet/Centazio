@@ -93,9 +93,7 @@ public interface IEpochTracker {
   }
   
   
-  public void EntityChangesUpdated(List<EntityChange> batch) {
-    changes.AddRange(batch);
-    Console.WriteLine($"\n\n!!!!!!!!!!!!!!!!!!!!!!!!\nEntityChangesUpdated batch[{batch.Count}] changes[{changes.Count}]");
-  }
+  public void EntityChangesUpdated(List<EntityChange> batch) => 
+      changes.AddRange(batch);
 
 }

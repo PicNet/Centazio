@@ -2,7 +2,7 @@
 using Centazio.Core.Stage;
 using Serilog;
 using Serilog.Events;
-using C = Centazio.Test.Lib.E2E.SimulationConstants;
+using SC = Centazio.Test.Lib.E2E.SimulationConstants;
 
 namespace Centazio.Test.Lib.E2E;
 
@@ -39,7 +39,7 @@ public class SimulationCtx : IAsyncDisposable {
   
  
   public void Debug(string message, List<string>? details = null) {
-    if (C.SILENCE_SIMULATION) return;
+    if (SC.SILENCE_SIMULATION) return;
     if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message + DetailsToString(details));
     else DevelDebug.WriteLine(message);
   }

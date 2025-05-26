@@ -26,6 +26,7 @@
   to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
   not the property that changed.  This should be part of the promote step.
 - GT: a correlation id would be great to track changes to a specific entity through the logs
+- GT: is it possible to use EntityChange as a function trigger? 
 - GT: a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)

@@ -139,7 +139,7 @@ public class AbstractFunctionTests {
     var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc(ctl: repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
-    var readopcfg = new ReadOperationConfig(new(EOperationResult.Error.ToString()), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
+    var readopcfg = new ReadOperationConfig(new(nameof(EOperationResult.Error)), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception());
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
       new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
@@ -156,7 +156,7 @@ public class AbstractFunctionTests {
     var (startingcp, runner) = (UtcDate.UtcNow.AddMinutes(1), F.ReadFunc(ctl: repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
-    var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
+    var readopcfg = new ReadOperationConfig(new(nameof(EOperationResult.Success)), TestingDefaults.CRON_EVERY_SECOND, F.GetEmptyResult);
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
       new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };
@@ -173,7 +173,7 @@ public class AbstractFunctionTests {
     var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), TestingFactories.SeRepo(), repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
-    var readopcfg = new ReadOperationConfig(new(EOperationResult.Success.ToString()), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
+    var readopcfg = new ReadOperationConfig(new(nameof(EOperationResult.Success)), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));
     var opconfigs = new List<OperationStateAndConfig<ReadOperationConfig>> {
       new(objstate, F.EmptyFunctionConfig(), readopcfg, objstate.NextCheckpoint)
     };

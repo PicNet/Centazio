@@ -30,16 +30,16 @@ public class PromotionStepsTests {
   [Test] public void Test_IgnoreEntitiesBouncingBack() {
     var (steps1, steps2) = (GetSteps(C.System1Name), GetSteps(C.System2Name));
     steps1.bags = [
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
     ];
     steps2.bags = [
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
     ];
     
     steps1.IgnoreEntitiesBouncingBack(); steps2.IgnoreEntitiesBouncingBack();

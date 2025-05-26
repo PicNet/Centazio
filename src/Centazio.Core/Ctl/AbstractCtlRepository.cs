@@ -17,9 +17,11 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   
   protected abstract Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate);
   protected abstract Task<List<Map.Updated>> UpdateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate);
-  protected abstract Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch);
-  
   protected abstract Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) where V : ValidString;
+  
+  protected abstract Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch);
+  public abstract Task<List<EntityChange>> GetEntityChanges(CoreEntityTypeName coretype, DateTime after);
+  public abstract Task<List<EntityChange>> GetEntityChanges(SystemName system, SystemEntityTypeName systype, DateTime after);
   
   public abstract ValueTask DisposeAsync();
   

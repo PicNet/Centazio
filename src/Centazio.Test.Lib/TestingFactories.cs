@@ -21,7 +21,7 @@ public static class TestingFactories {
   public static TestingStagedEntityRepository SeRepo() => new(); 
   public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static async Task<FunctionRunResults> RunFunc<C>(AbstractFunction<C> func, ICtlRepository ctl) where C : OperationConfig => 
+  public static async Task<FunctionRunResults> RunFunc<OC>(AbstractFunction<OC> func, ICtlRepository ctl) where OC : OperationConfig => 
       await (await FuncRunner(ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
   public static async Task<FunctionRunner> FuncRunner(ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), await Settings()); 
   public static ReadFunction ReadFunc(
@@ -45,11 +45,11 @@ public static class TestingFactories {
     id ??= new(Guid.NewGuid().ToString());
     var dob = DateOnly.MinValue;
     var core = new CoreEntity(id, first, last, dob);
-    return CoreEntityAndMeta.Create(Constants.System1Name, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
+    return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
   }
 
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(ICtlRepository repo) {
-    var success = EOperationResult.Success.ToString();
+    var success = nameof(EOperationResult.Success);
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), UtcDate.UtcNow),
         EmptyFunctionConfig(),
         new(new SystemEntityTypeName(success), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResult),
@@ -57,7 +57,7 @@ public static class TestingFactories {
   }
 
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateErroringOpStateAndConf(ICtlRepository repo) {
-    var error = EOperationResult.Error.ToString();
+    var error = nameof(EOperationResult.Error);
     return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(error), new(error)), new SystemEntityTypeName(error), UtcDate.UtcNow),
         EmptyFunctionConfig() with { ThrowExceptions = false },
         new(new SystemEntityTypeName(error), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception(error)),
@@ -82,7 +82,7 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
 public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new ReadOperationConfig(Constants.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
+    new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
   ]);
 
   private Task<ReadOperationResult> GetUpdatesAfterCheckpoint(OperationStateAndConfig<ReadOperationConfig> config) => 
@@ -93,7 +93,7 @@ public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepo
 public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : PromoteFunction(system, stage, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new PromoteOperationConfig(System, typeof(System1Entity), Constants.SystemEntityName, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
+    new PromoteOperationConfig(System, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
   ]);
 
   public Task<List<EntityEvaluationResult>> BuildCoreEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) => 
@@ -104,7 +104,7 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
 public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : WriteFunction(system, core, ctl) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
-    new WriteOperationConfig(System, Constants.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
+    new WriteOperationConfig(System, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
   ]);
 }
 

@@ -76,6 +76,12 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
     return Task.FromResult(new List<EntityChange>());
   }
 
+  public override Task<List<EntityChange>> GetEntityChanges(CoreEntityTypeName coretype, DateTime after) => 
+      Task.FromResult(changes.Where(c => c.CoreEntityTypeName == coretype && c.ChangeDate > after).ToList());
+  
+  public override Task<List<EntityChange>> GetEntityChanges(SystemName system, SystemEntityTypeName systype, DateTime after) => 
+      Task.FromResult(changes.Where(c => c.System == system && c.SystemEntityTypeName == systype && c.ChangeDate > after).ToList());
+
   protected override Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
     var issysent = typeof(V) == typeof(SystemEntityId);
     var results = ids.Distinct()

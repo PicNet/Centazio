@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel;
 using Centazio.Cli.Infra.Ui;
-using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
 using Centazio.Hosts.Self;
-using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
@@ -17,6 +15,7 @@ public class RunHostCommand(CentazioSettings settings, SelfHost host, SelfAwsHos
   });
 
   public override async Task ExecuteImpl(Settings cmdsetts) {
+    // todo: remove, aws has nothing to do with SelfHost
     if (cmdsetts.UseAws) {
       cmdsetts.EnvironmentsList.AddIfNotExists("aws");
       var types = ((IHostConfiguration)cmdsetts).GetFunctions();

@@ -7,6 +7,7 @@ global using Centazio.Core.Ctl.Entities;
 global using Centazio.Test.Lib.E2E;
 global using Centazio.Test.Lib.E2E.Crm;
 global using Centazio.Test.Lib.E2E.Fin;
+global using C = Centazio.Test.Lib.Constants;
     
 using System.Runtime.CompilerServices;
 

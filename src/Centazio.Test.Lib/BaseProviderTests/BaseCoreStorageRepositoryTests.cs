@@ -12,9 +12,9 @@ public abstract class BaseCoreStorageRepositoryTests {
   protected abstract Task<ITestingCoreStorage> GetRepository();
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
-    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(Constants.CoreEntityName, [new("invalid")]));
+    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(C.CoreEntityName, [new("invalid")]));
     await DoUpsert(TestingFactories.NewCoreEntity(String.Empty, String.Empty));
-    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(Constants.CoreEntityName, [new("invalid")]));
+    Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(C.CoreEntityName, [new("invalid")]));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
@@ -65,13 +65,13 @@ public abstract class BaseCoreStorageRepositoryTests {
     Assert.That(all, Is.EquivalentTo(data.Select(e => e.CoreEntity)));
   }
   
-  private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (CoreEntity) (await repo.GetExistingEntities(Constants.CoreEntityName, [coreid])).Single().CoreEntity;
+  private async Task<CoreEntity> GetSingle(CoreEntityId coreid) => (CoreEntity) (await repo.GetExistingEntities(C.CoreEntityName, [coreid])).Single().CoreEntity;
   
   private Task DoUpsert(CoreEntityAndMeta coreent) => DoUpsert([coreent]);
   
   private Task DoUpsert(List<CoreEntityAndMeta> coreents) {
     coreents.ForEach(ValidateEntityPreUpsert);
-    return repo.Upsert(Constants.CoreEntityName, coreents);
+    return repo.Upsert(C.CoreEntityName, coreents);
   }
 
   private void ValidateEntityPreUpsert(CoreEntityAndMeta coreent) {

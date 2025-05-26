@@ -13,7 +13,7 @@ public class PostgresSqlCtlRepositoryFactory(CtlRepositorySettings settings) : I
       new PostgresSqlCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName, settings.EntityChangeTableName);
 }
 
-public class PostgresSqlCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : EFCtlRepository(getdb) {
+public class PostgresSqlCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : AbstractEFCtlRepository(getdb) {
   
   public override async Task<ICtlRepository> Initialise() {
     if (!createschema) return this;

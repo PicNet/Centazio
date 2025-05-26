@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
+public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
   
   protected readonly Func<AbstractCtlRepositoryDbContext> getdb = getdb;
 
@@ -72,6 +72,20 @@ public class EFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : Abstr
     await using var db = getdb();
     await db.ToDtoAttachAndCreate<EntityChange, EntityChange.Dto>(changes);
     return changes;
+  }
+  
+  public override async Task<List<EntityChange>> GetEntityChanges(CoreEntityTypeName coretype, DateTime after) {
+    await using var db = getdb();
+    return (await db.EntityChanges.Where(c => c.CoreEntityTypeName == coretype && c.ChangeDate > after).ToListAsync())
+        .Select(dto => dto.ToBase())
+        .ToList();
+  }
+  
+  public override async Task<List<EntityChange>> GetEntityChanges(SystemName system, SystemEntityTypeName systype, DateTime after) {
+    await using var db = getdb();
+    return (await db.EntityChanges.Where(c => c.System == system && c.SystemEntityTypeName == systype && c.ChangeDate > after).ToListAsync())
+        .Select(dto => dto.ToBase())
+        .ToList();
   }
 
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {

@@ -36,8 +36,8 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
   }
 
   protected override async Task<List<Map.Created>> CreateMapImpl(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
-    var result1 = await Invoke<List<Map.Created>>(repo1, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
-    var result2 = await Invoke<List<Map.Created>>(repo2, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()])!;
+    var result1 = await Invoke<List<Map.Created>>(repo1, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()]);
+    var result2 = await Invoke<List<Map.Created>>(repo2, nameof(CreateMapImpl), [system, coretype, tocreate.Select(m => m with {}).ToList()]);
     return ValidateAndReturn(result1, result2);
   }
 
@@ -47,15 +47,27 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
-  protected override async Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
-    var result1 = await Invoke<List<EntityChange>>(repo1, nameof(SaveEntityChangesImpl), [batch])!;
-    var result2 = await Invoke<List<EntityChange>>(repo2, nameof(SaveEntityChangesImpl), [batch])!;
-    return ValidateAndReturn(result1, result2);
-  }
-
   protected override async Task<List<Map.CoreToSysMap>> GetExistingMapsByIds<V>(SystemName system, CoreEntityTypeName coretype, List<V> ids) {
     var result1 = await Invoke<List<Map.CoreToSysMap>>(repo1, nameof(GetExistingMapsByIds), [system, coretype, ids], typeof(V));
     var result2 = await Invoke<List<Map.CoreToSysMap>>(repo2, nameof(GetExistingMapsByIds), [system, coretype, ids], typeof(V));
+    return ValidateAndReturn(result1, result2);
+  }
+
+  protected override async Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
+    var result1 = await Invoke<List<EntityChange>>(repo1, nameof(SaveEntityChangesImpl), [batch]);
+    var result2 = await Invoke<List<EntityChange>>(repo2, nameof(SaveEntityChangesImpl), [batch]);
+    return ValidateAndReturn(result1, result2);
+  }
+
+  public override async Task<List<EntityChange>> GetEntityChanges(CoreEntityTypeName coretype, DateTime after) {
+    var result1 = await Invoke<List<EntityChange>>(repo1, nameof(GetEntityChanges), [coretype, after]);
+    var result2 = await Invoke<List<EntityChange>>(repo2, nameof(GetEntityChanges), [coretype, after]);
+    return ValidateAndReturn(result1, result2);
+  }
+
+  public override async Task<List<EntityChange>> GetEntityChanges(SystemName system, SystemEntityTypeName systype, DateTime after) {
+    var result1 = await Invoke<List<EntityChange>>(repo1, nameof(GetEntityChanges), [system, systype, after]);
+    var result2 = await Invoke<List<EntityChange>>(repo2, nameof(GetEntityChanges), [system, systype, after]);
     return ValidateAndReturn(result1, result2);
   }
 

@@ -21,37 +21,37 @@ public abstract class BaseStagedEntityRepositoryTests {
   [TearDown] public async Task TearDown() => await repo.DisposeAsync();
 
   [Test] public async Task Test_saving_single_entity() {
-    await repo.Stage(Constants.System1Name, Constants.SystemEntityName, MOCK_DATA);
-    var fromnow = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now);
-    var minus1 =  await GetSingle(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1));
+    await repo.Stage(C.System1Name, C.SystemEntityName, MOCK_DATA);
+    var fromnow = await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now);
+    var minus1 =  await GetSingle(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1));
     
     Assert.That(fromnow, Is.Empty);
-    Assert.That(minus1, Is.EqualTo(new StagedEntity(minus1.Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(MOCK_DATA), Hash(MOCK_DATA))));
+    Assert.That(minus1, Is.EqualTo(new StagedEntity(minus1.Id, C.System1Name, C.SystemEntityName, dt.Now, new(MOCK_DATA), Hash(MOCK_DATA))));
   }
   
   [Test] public async Task Test_updating_single_entity() {
-    await repo.Stage(Constants.System1Name, Constants.SystemEntityName, MOCK_DATA);
-    var created = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1))).Single();
+    await repo.Stage(C.System1Name, C.SystemEntityName, MOCK_DATA);
+    var created = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1))).Single();
     var updated = created.Promote(dt.Now.AddYears(1));
     await repo.Update(updated);
-    var updated2 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1))).Single();
+    var updated2 = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1))).Single();
     
     Assert.That(updated2, Is.EqualTo(updated));
   }
 
   [Test] public async Task Test_saving_multiple_entities() {
-    var staged = (await repo.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception()).
+    var staged = (await repo.Stage(C.System1Name, C.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception()).
         OrderBy(e => Int32.Parse(e.Data)).
         ToList();
-    var fromnow = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now)).ToList();
-    var minus1 =  (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1)))
+    var fromnow = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now)).ToList();
+    var minus1 =  (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1)))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     
     Assert.That(fromnow, Is.Empty);
     Assert.That(staged.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, C.System1Name, C.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
   
   [Test] public async Task Test_get_returns_in_sorted_order() {
@@ -59,9 +59,9 @@ public abstract class BaseStagedEntityRepositoryTests {
     var random = ordered.OrderBy(_ => Guid.NewGuid()).ToList();
     await random.Select((rand, idx) => {
       using var _ = new ShortLivedUtcDateOverride(rand);
-      return repo.Stage(Constants.System1Name, Constants.SystemEntityName, idx.ToString()) ?? throw new Exception();
+      return repo.Stage(C.System1Name, C.SystemEntityName, idx.ToString()) ?? throw new Exception();
     }).Synchronous();
-    var retreived = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, TestingDefaults.DefaultStartDt);
+    var retreived = await repo.GetAll(C.System1Name, C.SystemEntityName, TestingDefaults.DefaultStartDt);
     var expdates = String.Join(",", ordered);
     var actdates = String.Join(",", retreived.Select(e => e.DateStaged));
     Assert.That(actdates, Is.EqualTo(expdates));
@@ -74,11 +74,11 @@ public abstract class BaseStagedEntityRepositoryTests {
     var random = ordered.OrderBy(_ => Guid.NewGuid()).ToList();
     await random.Select((rand, idx) => {
       using var _ = new ShortLivedUtcDateOverride(rand);
-      return repo.Stage(Constants.System1Name, Constants.SystemEntityName, idx.ToString()) ?? throw new Exception();
+      return repo.Stage(C.System1Name, C.SystemEntityName, idx.ToString()) ?? throw new Exception();
     }).Synchronous();
     var start = TestingDefaults.DefaultStartDt;
     for (var pgstart = 0; pgstart < LARGE_BATCH_SIZE; pgstart+=pgsz) {
-      var page = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, start);
+      var page = await repo.GetAll(C.System1Name, C.SystemEntityName, start);
       start = page.Last().DateStaged;
       var (actual, exp) = (StrSes(page), StrDts(ordered.Skip(pgstart).Take(pgsz).ToList()));
       Assert.That(actual, Is.EqualTo(exp)); 
@@ -89,11 +89,11 @@ public abstract class BaseStagedEntityRepositoryTests {
   }
   
   [Test] public async Task Test_updating_multiple_entities() {
-    var staged = (await repo.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception())
+    var staged = (await repo.Stage(C.System1Name, C.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => idx.ToString()).ToList()) ?? throw new Exception())
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
-    var fromnow = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now)).ToList();
-    var minus1 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1)))
+    var fromnow = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now)).ToList();
+    var minus1 = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1)))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
     
@@ -101,22 +101,22 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(staged.GroupBy(e => e.StagedEntityChecksum).Count(), Is.EqualTo(LARGE_BATCH_SIZE), "has duplicate checksums");
     Assert.That(staged, Has.Count.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Has.Count.EqualTo(LARGE_BATCH_SIZE));
-    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
+    Assert.That(minus1, Is.EquivalentTo(Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, C.System1Name, C.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
 
   [Test] public async Task Test_saving_multiple_large_entities() {
     var sz = 10000;
     var str = new String('*', sz) + "_";
     
-    var staged = (await repo.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx).ToList()) ?? throw new Exception())
+    var staged = (await repo.Stage(C.System1Name, C.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => str + idx).ToList()) ?? throw new Exception())
         .Select(e => SetData(e, e.Data.Value.Split('_')[1])) // make it easier to debug without all the noise
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
-    var fromnow = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now))
+    var fromnow = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now))
         .Select(e => SetData(e, e.Data.Value.Split('_')[1]))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
-    var minus1 =  (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddMilliseconds(-1)))
+    var minus1 =  (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddMilliseconds(-1)))
         .Select(e => SetData(e, e.Data.Value.Split('_')[1]))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -126,7 +126,7 @@ public abstract class BaseStagedEntityRepositoryTests {
     Assert.That(staged.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1.Count, Is.EqualTo(LARGE_BATCH_SIZE));
     Assert.That(minus1, Is.EquivalentTo(staged));
-    var exp = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(str + idx), Hash(str + idx)))
+    var exp = Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => new StagedEntity(minus1[idx].Id, C.System1Name, C.SystemEntityName, dt.Now, new(str + idx), Hash(str + idx)))
         .Select(e => SetData(e, e.Data.Value.Split('_')[1]))
         .OrderBy(e => Int32.Parse(e.Data))
         .ToList();
@@ -135,7 +135,7 @@ public abstract class BaseStagedEntityRepositoryTests {
   
   [Test] public async Task Test_get_returns_expected() {
     var (start, staged1) = (dt.Now, dt.Tick());
-    var basenm = Constants.System1Name;
+    var basenm = C.System1Name;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
     
     await repo.Stage(new(name1), new(name1), name1);
@@ -161,15 +161,15 @@ public abstract class BaseStagedEntityRepositoryTests {
   }
   
   [Test] public async Task Test_single_ignore_update() {
-    var staged = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, nameof(StagedEntity.Data)) ?? throw new Exception();
-    await repo.UpdateImpl(Constants.System1Name, Constants.SystemEntityName, [staged with { IgnoreReason = nameof(StagedEntity.IgnoreReason) }]);
-    var all = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, DateTime.MinValue);
+    var staged = await repo.Stage(C.System1Name, C.SystemEntityName, nameof(StagedEntity.Data)) ?? throw new Exception();
+    await repo.UpdateImpl(C.System1Name, C.SystemEntityName, [staged with { IgnoreReason = nameof(StagedEntity.IgnoreReason) }]);
+    var all = await repo.GetAll(C.System1Name, C.SystemEntityName, DateTime.MinValue);
     Assert.That(all, Is.Empty);
   }
   
   [Test] public async Task Test_get_returns_expected_with_ignores() {
     var (start, staged1) = (dt.Now, dt.Tick());
-    var name = Constants.System1Name.Value;
+    var name = C.System1Name.Value;
     var (name1, name2, name3) = (name + 1, name + 2 , name + 3);
     
     await Create(new(name1), "not ignore: 1.1", String.Empty);
@@ -217,19 +217,19 @@ public abstract class BaseStagedEntityRepositoryTests {
     var created = new List<StagedEntity>();
     foreach (var idx in Enumerable.Range(0, 25)) { 
       dt.Tick();
-      created.Add(await repo.Stage(Constants.System1Name, Constants.SystemEntityName, idx.ToString()) ?? throw new Exception());
+      created.Add(await repo.Stage(C.System1Name, C.SystemEntityName, idx.ToString()) ?? throw new Exception());
     }
     
     var exppage1 = created.Take(pgsz).ToList();
-    var page1 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, start)).ToList();
+    var page1 = (await repo.GetAll(C.System1Name, C.SystemEntityName, start)).ToList();
     
     var exppage2 = created.Skip(pgsz).Take(pgsz).ToList();
-    var page2 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, exppage1.Last().DateStaged)).ToList();
+    var page2 = (await repo.GetAll(C.System1Name, C.SystemEntityName, exppage1.Last().DateStaged)).ToList();
     
     var exppage3 = created.Skip(pgsz * 2).Take(pgsz).ToList();
-    var page3 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, exppage2.Last().DateStaged)).ToList();
+    var page3 = (await repo.GetAll(C.System1Name, C.SystemEntityName, exppage2.Last().DateStaged)).ToList();
     
-    var page4 = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, exppage3.Last().DateStaged)).ToList();
+    var page4 = (await repo.GetAll(C.System1Name, C.SystemEntityName, exppage3.Last().DateStaged)).ToList();
     
     Assert.That(page1, Is.EquivalentTo(exppage1));
     Assert.That(page2, Is.EquivalentTo(exppage2));
@@ -239,7 +239,7 @@ public abstract class BaseStagedEntityRepositoryTests {
   
   [Test] public async Task Test_delete_staged_before() {
     var (get_all, delete_all) = (dt.Today, dt.Now.AddHours(1));
-    var basenm = Constants.System1Name.Value;
+    var basenm = C.System1Name.Value;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
     await repo.Stage(new(name1), new(name1), name1);
     var staged2 = dt.Tick();
@@ -265,14 +265,14 @@ public abstract class BaseStagedEntityRepositoryTests {
   }
   
   [Test] public async Task Test_delete_large_batch() {
-    await repo.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => MOCK_DATA).ToList());
-    await repo.DeleteStagedBefore(Constants.System1Name, Constants.SystemEntityName, dt.Tick()); 
-    await Assert.ThatAsync(async () => await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddHours(-1)), Is.Empty);
+    await repo.Stage(C.System1Name, C.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(_ => MOCK_DATA).ToList());
+    await repo.DeleteStagedBefore(C.System1Name, C.SystemEntityName, dt.Tick()); 
+    await Assert.ThatAsync(async () => await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddHours(-1)), Is.Empty);
   }
     
   [Test] public async Task Test_delete_promoted_before() {
     var (get_all, delete_all) = (dt.Now.AddHours(-1), dt.Now.AddHours(1));
-    var basenm = Constants.System1Name;
+    var basenm = C.System1Name;
     var (name1, name2, name3, data2) = (basenm + 1, basenm + 2 , basenm + 3, Guid.NewGuid().ToString());
     await repo.Stage(new(name1), new(name1), name1);
     var (staged2, promoted2) = (dt.Tick(), dt.Now.AddDays(1));
@@ -305,12 +305,12 @@ public abstract class BaseStagedEntityRepositoryTests {
   
   [Test] public async Task Test_stage_single_ignores_duplicates() {
     var (data, stageddt) = (Guid.NewGuid().ToString(), dt.Tick());
-    var staged = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, data) ?? throw new Exception();
+    var staged = await repo.Stage(C.System1Name, C.SystemEntityName, data) ?? throw new Exception();
     dt.Tick();
-    var duplicate = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, data);
+    var duplicate = await repo.Stage(C.System1Name, C.SystemEntityName, data);
     
-    var expected = new StagedEntity(staged.Id, Constants.System1Name, Constants.SystemEntityName, stageddt, new(data), Hash(data));
-    var ses = (await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Today)).ToList();
+    var expected = new StagedEntity(staged.Id, C.System1Name, C.SystemEntityName, stageddt, new(data), Hash(data));
+    var ses = (await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Today)).ToList();
     
     Assert.That(duplicate, Is.Null);
     Assert.That(staged, Is.EqualTo(expected));
@@ -319,22 +319,22 @@ public abstract class BaseStagedEntityRepositoryTests {
   
   [Test] public async Task Test_staging_multiple_entities_ignores_duplicates() {
     var half = LARGE_BATCH_SIZE;
-    var staged = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString()).ToList());
-    var staged2 = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Now.AddYears(-1));
+    var staged = await repo.Stage(C.System1Name, C.SystemEntityName, Enumerable.Range(0, LARGE_BATCH_SIZE).Select(idx => (idx % half).ToString()).ToList());
+    var staged2 = await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Now.AddYears(-1));
     
     Assert.That(staged, Has.Count.EqualTo(half));
     Assert.That(staged, Is.EquivalentTo(staged2));
-    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, Constants.System1Name, Constants.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
+    Assert.That(staged, Is.EquivalentTo(Enumerable.Range(0, half).Select(idx => new StagedEntity(staged[idx].Id, C.System1Name, C.SystemEntityName, dt.Now, new(idx.ToString()), Hash(idx)))));
   }
   
   [Test] public async Task Test_GetAll_GetUnpromoted_respect_DatePromoted_state() {
-    var s1 = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, "1") ?? throw new Exception();
-    var s2 = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, "2") ?? throw new Exception();
-    var s3 = await repo.Stage(Constants.System1Name, Constants.SystemEntityName, "3") ?? throw new Exception();
+    var s1 = await repo.Stage(C.System1Name, C.SystemEntityName, "1") ?? throw new Exception();
+    var s2 = await repo.Stage(C.System1Name, C.SystemEntityName, "2") ?? throw new Exception();
+    var s3 = await repo.Stage(C.System1Name, C.SystemEntityName, "3") ?? throw new Exception();
     
     await repo.Update(s2 = s2.Promote(dt.Now));
-    var all = await repo.GetAll(Constants.System1Name, Constants.SystemEntityName, dt.Today);
-    var unpromoted = await repo.GetUnpromoted(Constants.System1Name, Constants.SystemEntityName, dt.Today);
+    var all = await repo.GetAll(C.System1Name, C.SystemEntityName, dt.Today);
+    var unpromoted = await repo.GetUnpromoted(C.System1Name, C.SystemEntityName, dt.Today);
 
     Assert.That(all, Is.EquivalentTo([s1, s2, s3]));
     Assert.That(unpromoted, Is.EquivalentTo([s1, s3]));
