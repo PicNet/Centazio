@@ -7,7 +7,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;
 
-public class RunHostCommand(CentazioSettings settings, SelfHost host, SelfAwsHost awsHost) : AbstractCentazioCommand<RunHostCommand.Settings> {
+public class RunHostCommand(CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<RunHostCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),
@@ -18,7 +18,7 @@ public class RunHostCommand(CentazioSettings settings, SelfHost host, SelfAwsHos
     // todo: remove, aws has nothing to do with SelfHost
     if (cmdsetts.UseAws) {
       cmdsetts.EnvironmentsList.AddIfNotExists("aws");
-      await awsHost.RunAwsHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(cmdsetts.EnvironmentsList, cmdsetts.UseLocalAws));
+      await host.RunHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(cmdsetts.EnvironmentsList, cmdsetts.UseLocalAws));
     }
     else {
       cmdsetts.EnvironmentsList.AddIfNotExists(nameof(SelfHost).ToLower());
