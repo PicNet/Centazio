@@ -14,7 +14,7 @@ public class InMemorySimulationStorage : ISimulationStorage {
   public int PostEpochDelayMs => 50;
 
   public Task Initialise(SimulationCtx ctx) {
-    CtlRepo = new InMemoryBaseCtlRepository();
+    CtlRepo = new InMemorySimulationCtlRepository(ctx.Epoch);
     StageRepository = new InMemoryStagedEntityRepository(0, ctx.ChecksumAlg.Checksum);
     CoreStore = new InMemorySimulationCoreStorageRepository(ctx.Epoch, ctx.ChecksumAlg.Checksum);
     
@@ -25,5 +25,12 @@ public class InMemorySimulationStorage : ISimulationStorage {
     await CoreStore.DisposeAsync();
     await StageRepository.DisposeAsync();
     await CtlRepo.DisposeAsync();
+  }
+}
+
+public class InMemorySimulationCtlRepository(EpochTracker epoch) : InMemoryBaseCtlRepository {
+  protected override Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
+    epoch.EntityChangesUpdated(batch);
+    return base.SaveEntityChangesImpl(batch);
   }
 }

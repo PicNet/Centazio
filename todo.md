@@ -1,6 +1,7 @@
 # Todo
 - WT: better secrets management
 - WT: does CLI aws command work with new secrets manager?
+- WT: Add staging entities providers to the Azure package, and remove ignore from `CheckProvidersImplementCorrectInterfacesAndTests`
 - CP/WT: aws/azure wrappers:
   - WT: Azure:
     - fix Log.Logger, currently only injected ILogger<> works
@@ -24,6 +25,7 @@
 - GT: need a change-log to be able to do workflows when specific changes to an entity happen. Eg:
   to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
   not the property that changed.  This should be part of the promote step.
+- GT: a correlation id would be great to track changes to a specific entity through the logs
 - GT: a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)

@@ -29,7 +29,7 @@ public class PostgresSqlSimulationStorage(string connstr) : ISimulationStorage {
     var dbf = new PostgresSqlDbFieldsHelper();
     // todo: can we just pass in the CtlSettings here instead of all table names?
     // todo: ensure that StageEntityRepo also allows setting the table names using same pattern
-    CtlRepo = await new TestingEfCtlRepository(() => new PostgresSqlCtlRepositoryDbContext(
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(
         connstr,
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 

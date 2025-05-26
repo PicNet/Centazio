@@ -29,7 +29,7 @@ public class SqliteSimulationStorage : ISimulationStorage {
   public async Task Initialise(SimulationCtx ctx) {
     var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));  
     var dbf = new SqliteDbFieldsHelper();
-    CtlRepo = await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(
         ctl_db,
         nameof(Core.Ctl).ToLower(), 
         nameof(SystemState).ToLower(), 
