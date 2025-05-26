@@ -34,7 +34,7 @@
     "CreateSchema": true
   },
   "SecretsLoaderSettings": {
-    "Provider": "Aws"
+    "Provider": "File"
   },
   "AzureSettings": {
     "Region": "Australia East",

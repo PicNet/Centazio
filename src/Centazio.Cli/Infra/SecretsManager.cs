@@ -9,7 +9,7 @@ public static class SecretsManager
   private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() 
   {
     [ESecretsProviderType.File] = settings => 
-        new FileSecretsLoaderFactory(settings.SecretsFolders.ToString() ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
+        new FileSecretsLoaderFactory(settings.GetSecretsFolder() ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
     [ESecretsProviderType.Aws] = settings => 
         new AwsSecretsLoaderFactory(settings.AwsSettings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService()
   };
