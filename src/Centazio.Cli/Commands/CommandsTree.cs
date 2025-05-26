@@ -55,6 +55,7 @@ public class CommandsTree {
         new BranchNode("func", [
           CreateCommandNode<GenerateAwsFunctionsCommand>("generate"),
           CreateCommandNode<DeployAwsLambdaFunctionCommand>("deploy"),
+          CreateCommandNode<AwsFunctionLocalTestCommand>("test"),
         ])
       ]),
       ///////////////////////////////////////////////
