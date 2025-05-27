@@ -6,11 +6,47 @@ using System.Text.RegularExpressions;
 
 namespace Centazio.Core.Misc;
 
+public class ValueObjectConverter<T> : JsonConverter<T> where T : class
+{
+  public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+  {
+    if (reader.TokenType != JsonTokenType.StartObject)
+      throw new JsonException("Expected StartObject token");
+    
+    var value = String.Empty;
+    while (reader.Read())
+    {
+      if (reader.TokenType == JsonTokenType.EndObject)
+        break;
+
+      if (reader.TokenType != JsonTokenType.PropertyName)
+        continue;
+
+      var propertyName = reader.GetString()!;
+      if (propertyName == "Value") {
+        reader.Read();
+        value = reader.GetString()!;
+      }
+      reader.Skip(); // ignore unknown fields
+    }
+    return (T)Activator.CreateInstance(typeToConvert, value)!;
+  }
+
+  public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+  {
+    writer.WriteStartObject();
+    writer.WriteString("Value", value?.ToString());
+    writer.WriteEndObject();
+  }
+}
+
+
 public static class Json {
   
   internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
     RespectNullableAnnotations = true,
-    PropertyNamingPolicy = null
+    PropertyNamingPolicy = null,
+    Converters = { new ValueObjectConverter<SystemName>(), new ValueObjectConverter<LifecycleStage>(), new ValueObjectConverter<ObjectName>() }
   };
   
   internal static readonly JsonSerializerOptions HTTP_CONTENT_WRITE_OPTS = new(DEFAULT_OPTS) {

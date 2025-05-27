@@ -13,7 +13,7 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
 
   public void Init(List<IRunnableFunction> functions) {
     funcs = functions;
-    msgbus = new SqsMessageBus(localaws);
+    msgbus = new SqsMessageBus("centazio-function-triggers", localaws);
     cts = new CancellationTokenSource();
   }
 

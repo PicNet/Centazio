@@ -31,9 +31,8 @@ public record SystemEntityId(string Value) : EntityId(Value) {
 
 [MaxLength2(32)] public record SystemName(string Value) : ValidString(Value);
 
-[MaxLength2(32)] public record ObjectName : ValidString {
-  internal ObjectName(string Value) : base(Value) {}
-  
+[MaxLength2(32)] public record ObjectName(string Value) : ValidString(Value) {
+
   internal SystemEntityTypeName ToSystemEntityTypeName => this as SystemEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityTypeName)}'");
   internal CoreEntityTypeName ToCoreEntityTypeName => this as CoreEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityTypeName)}'");
 }

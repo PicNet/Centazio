@@ -1,12 +1,12 @@
-using System.Text.Json;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Serilog;
 
 namespace Centazio.Hosts.Aws;
 
-public class SqsMessageBus(bool useLocalStack = false) {
+public class SqsMessageBus(string name, bool useLocalStack = false) {
 
   private readonly IAmazonSQS sqs = new AmazonSQSClient(new AmazonSQSConfig {
     ServiceURL = useLocalStack ? "http://localhost:4566" : null
@@ -22,7 +22,7 @@ public class SqsMessageBus(bool useLocalStack = false) {
     }
 
     var res = await sqs.CreateQueueAsync(new CreateQueueRequest {
-      QueueName = "centazio-function-triggers",
+      QueueName = name,
       Attributes = new Dictionary<string, string> {
         [QueueAttributeName.ReceiveMessageWaitTimeSeconds] = "20",
         [QueueAttributeName.MessageRetentionPeriod] = "1209600",
@@ -36,7 +36,7 @@ public class SqsMessageBus(bool useLocalStack = false) {
     Log.Information("Triggering function: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
     await sqs.SendMessageAsync(new SendMessageRequest {
       QueueUrl = queueurl,
-      MessageBody = JsonSerializer.Serialize(oct)
+      MessageBody = Json.Serialize(oct)
     });
   }
 
