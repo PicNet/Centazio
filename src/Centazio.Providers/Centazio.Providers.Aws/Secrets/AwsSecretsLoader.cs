@@ -19,8 +19,7 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
   }
 
   // remove redundant environments, i.e. environments that result in the same Secret Store Id 
-  protected override List<string> FilterRedundantEnvironments(List<string> environments) =>
-      environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
+  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
     var id = aws.GetSecretsStoreIdForEnvironment(environment);
@@ -44,9 +43,8 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
 public class AwsSecretsLoaderFactory(AwsSettings aws) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new AwsSecretsLoader(aws);
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments)
-  {
-    if (settings.AwsSettings == null) throw new ArgumentNullException(nameof(settings.AwsSettings));
+  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
+    if (settings.AwsSettings is null) throw new ArgumentNullException(nameof(settings.AwsSettings));
     return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());
   }
 

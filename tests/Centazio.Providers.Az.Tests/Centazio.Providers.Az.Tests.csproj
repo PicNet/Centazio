@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Minio" />
+        <PackageReference Include="Testcontainers.DynamoDb" />
+        <PackageReference Include="Testcontainers.Minio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Centazio.Providers\Centazio.Providers.Az\Centazio.Providers.Az.csproj" />
+        <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+    </ItemGroup>
+
+</Project>

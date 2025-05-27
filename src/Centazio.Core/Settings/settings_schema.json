@@ -82,6 +82,10 @@
     "FunctionAppName": { "type": "string", "required": false },
     "AppServicePlanName": { "type": "string", "required": false },
     "WebSiteName": { "type": "string", "required": false },
+
+    "TenantId": { "type": "string", "required": false },
+    "KeyVaultName": { "type": "string", "required": false },
+    "KeySecretNameTemplate": { "type": "string", "required": false },
     
     "AzFunctions": [{
       "Assembly": { "type": "string", "required": false },

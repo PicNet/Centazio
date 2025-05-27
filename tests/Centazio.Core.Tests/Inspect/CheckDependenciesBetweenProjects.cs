@@ -2,7 +2,10 @@
 
 public class CheckDependenciesBetweenProjects {
   
-  private readonly Dictionary<string, List<string>> ADDITIONAL_ALLOWS = new() { { "Centazio.Cli", ["Centazio.Hosts.Self", "Centazio.Hosts.Aws" , "Centazio.Hosts.Az"] } };
+  private readonly Dictionary<string, List<string>> ADDITIONAL_ALLOWS = new() { { "Centazio.Cli", ["Centazio.Hosts.Self", "Centazio.Hosts.Aws" , "Centazio.Hosts.Az", "Centazio.Providers.Aws" , "Centazio.Providers.Az"] },
+    { "Centazio.Test.Lib", ["Centazio.Providers.Aws"] },
+    { "Centazio.Hosts.Aws", ["Centazio.Hosts.Self"]}
+    };
   private readonly List<string> TEST_PROJ_DEFAULT_ALLOWS = ["Centazio.Core", "Centazio.Test.Lib"];
   private readonly List<string> SRC_PROJ_DEFAULT_ALLOWS = ["Centazio.Core"];
 

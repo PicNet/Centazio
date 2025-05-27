@@ -30,9 +30,8 @@ public class SecretsFileLoader(string dir) : AbstractSecretsLoader {
 public class FileSecretsLoaderFactory(string dir) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new SecretsFileLoader(dir);
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments)
-  {
-    if (settings.SecretsFolders == null) throw new ArgumentNullException(nameof(settings.SecretsFolders));
+  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
+    if (settings.SecretsFolders is null) throw new ArgumentNullException(nameof(settings.SecretsFolders));
     return await CreateLoader(settings.GetSecretsFolder()).Load<T>(environments.ToList());
   }
 

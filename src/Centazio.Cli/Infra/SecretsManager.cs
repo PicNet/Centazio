@@ -1,21 +1,22 @@
 ﻿using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Providers.Aws.Secrets;
+using Centazio.Providers.Az.Secrets;
 
 namespace Centazio.Cli.Infra;
 
 public static class SecretsManager 
 {
-  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() 
-  {
+  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() {
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings.GetSecretsFolder() ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
     [ESecretsProviderType.Aws] = settings => 
-        new AwsSecretsLoaderFactory(settings.AwsSettings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService()
+        new AwsSecretsLoaderFactory(settings.AwsSettings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
+    [ESecretsProviderType.Az] = settings => new AzureSecretsLoaderFactory(settings.AzureSettings!).GetService()
+        
   };
 
-  public static async Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments)
-  {
+  public static async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     var providerString = settings.SecretsLoaderSettings.Provider ?? "File";
     if (!Enum.TryParse<ESecretsProviderType>(providerString, out var provider)) throw new ArgumentException($"Unknown secrets provider: {providerString}");
 

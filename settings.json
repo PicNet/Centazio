@@ -39,7 +39,10 @@
   "AzureSettings": {
     "Region": "Australia East",
     "ResourceGroup": "Centazio_3_Testing",
-    "AppServicePlanName": "Centazio-TestFunctions-Azure-Plan"
+    "AppServicePlanName": "Centazio-TestFunctions-Azure-Plan",
+    "KeyVaultName": "CentazioDevKeyVault",
+    "KeySecretNameTemplate": "picnet/centazio/<environment>",
+    "TenantId": "17a2fc9b-cb91-423f-b8f5-c734d0c82f7d"
   },
   "AwsSettings": {
     "Region": "ap-southeast-2",

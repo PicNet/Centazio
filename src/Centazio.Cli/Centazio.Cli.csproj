@@ -55,5 +55,6 @@
       <ProjectReference Include="..\Centazio.Hosts\Centazio.Hosts.Az\Centazio.Hosts.Az.csproj" />
       <ProjectReference Include="..\Centazio.Hosts\Centazio.Hosts.Self\Centazio.Hosts.Self.csproj" />
       <ProjectReference Include="..\Centazio.Providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
+      <ProjectReference Include="..\Centazio.Providers\Centazio.Providers.Az\Centazio.Providers.Az.csproj" />
     </ItemGroup>
 </Project>

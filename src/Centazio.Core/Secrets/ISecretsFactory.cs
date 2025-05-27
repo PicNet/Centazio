@@ -5,9 +5,10 @@ namespace Centazio.Core.Secrets;
 public enum ESecretsProviderType
 {
   File,
-  Aws
+  Aws,
+  Az
 }
 
 public interface ISecretsFactory {
-  Task<T> LoadSecrets<T>(CentazioSettings settings, params string[] environments);
+  Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments);
 }

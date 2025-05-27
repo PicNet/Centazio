@@ -517,6 +517,12 @@ public record AzureSettings {
   
   public string? WebSiteName { get; init; }
   
+  public string? TenantId { get; init; }
+  
+  public string? KeyVaultName { get; init; }
+  
+  public string? KeySecretNameTemplate { get; init; }
+  
   public required List<AzFunctionsSettings> AzFunctions { get; init; }
 
   public Dto ToDto() => new() { 
@@ -525,6 +531,9 @@ public record AzureSettings {
     FunctionAppName = FunctionAppName,
     AppServicePlanName = AppServicePlanName,
     WebSiteName = WebSiteName,
+    TenantId = TenantId,
+    KeyVaultName = KeyVaultName,
+    KeySecretNameTemplate = KeySecretNameTemplate,
     AzFunctions = AzFunctions.Select(item => item.ToDto()).ToList(),
   };
 
@@ -534,6 +543,9 @@ public record AzureSettings {
     public string? FunctionAppName { get; init; }
     public string? AppServicePlanName { get; init; }
     public string? WebSiteName { get; init; }
+    public string? TenantId { get; init; }
+    public string? KeyVaultName { get; init; }
+    public string? KeySecretNameTemplate { get; init; }
     public List<AzFunctionsSettings.Dto>? AzFunctions { get; init; }
 
     public AzureSettings ToBase() => new() { 
@@ -542,7 +554,10 @@ ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNul
       FunctionAppName = FunctionAppName?.Trim(),
       AppServicePlanName = AppServicePlanName?.Trim(),
       WebSiteName = WebSiteName?.Trim(),
-AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? [],
+      TenantId = TenantId?.Trim(),
+      KeyVaultName = KeyVaultName?.Trim(),
+      KeySecretNameTemplate = KeySecretNameTemplate?.Trim(),
+AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
     };
   }
 }
