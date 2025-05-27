@@ -15,6 +15,12 @@ public class SqsMessageBus(bool useLocalStack = false) {
   private string queueurl = null!;
 
   public async Task Initialize() {
+    if (useLocalStack) {
+      Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "test");
+      Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "test");
+      Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", "ap-southeast-2");
+    }
+
     var res = await sqs.CreateQueueAsync(new CreateQueueRequest {
       QueueName = "centazio-function-triggers",
       Attributes = new Dictionary<string, string> {
@@ -35,25 +41,28 @@ public class SqsMessageBus(bool useLocalStack = false) {
   }
 
   public async Task StartListening(CancellationToken cancellationToken, Func<Message, Task<bool>> processMessage) {
-    while (!cancellationToken.IsCancellationRequested) {
-      var response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest {
-            QueueUrl = queueurl,
-            MaxNumberOfMessages = 10,
-            WaitTimeSeconds = 20
-          },
-          cancellationToken);
+    while (!cancellationToken.IsCancellationRequested) { await ReceiveAndProcessMessages(cancellationToken, processMessage); }
+  }
 
-      foreach (var message in response.Messages) {
-        try {
-          Log.Information("Processing message: {MessageId}", message.MessageId);
-          var success = await processMessage.Invoke(message);
-          if (success) await sqs.DeleteMessageAsync(queueurl, message.ReceiptHandle, cancellationToken);
-        }
-        catch (Exception ex) {
-          // If processing fails, the message will become visible again after visibility timeout
-          Log.Error(ex, "Error processing message: {MessageId}", message.MessageId);
-        }
+  public async Task ReceiveAndProcessMessages(CancellationToken cancellationToken, Func<Message, Task<bool>> processMessage) {
+    var response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest {
+          QueueUrl = queueurl,
+          MaxNumberOfMessages = 10,
+          WaitTimeSeconds = 20
+        },
+        cancellationToken);
+
+    foreach (var message in response.Messages) {
+      try {
+        Log.Information("Processing message: {MessageId}", message.MessageId);
+        var success = await processMessage.Invoke(message);
+        if (success) await sqs.DeleteMessageAsync(queueurl, message.ReceiptHandle, cancellationToken);
+      }
+      catch (Exception ex) {
+        // If processing fails, the message will become visible again after visibility timeout
+        Log.Error(ex, "Error processing message: {MessageId}", message.MessageId);
       }
     }
   }
+
 }

@@ -26,5 +26,6 @@ and automated workflow management.  This tutorial show you how to do the followi
 - Go to Settings -> Integrations -> Enable (and copy App ID) 
 - Create Application Access Key (and copy key)
 - Create a *Task* table in the Data tab
+- Add a *Task* text column in the new *Task* table
 - Save App (CTRL S)
 

@@ -2,6 +2,7 @@
     
     <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Core\Centazio.Core.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj" />
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
     </ItemGroup>
     
