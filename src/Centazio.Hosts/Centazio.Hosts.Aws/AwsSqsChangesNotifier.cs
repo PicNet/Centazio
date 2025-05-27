@@ -1,10 +1,11 @@
 using System.Text.Json;
 using Centazio.Core;
 using Centazio.Core.Runner;
+using Serilog;
 
 namespace Centazio.Hosts.Aws;
 
-public class AwsSqlChangesNotifier(bool localaws) : IChangesNotifier, IDisposable {
+public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposable {
 
   private SqsMessageBus msgbus = null!;
   private CancellationTokenSource cts = null!;
@@ -23,9 +24,11 @@ public class AwsSqlChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
           async message => {
             var oct = JsonSerializer.Deserialize<ObjectChangeTrigger>(message.Body);
             if (oct == null) return false;
-
+            
+            Log.Information("Received message: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
             var func = funcs.FirstOrDefault(func => func.IsTriggeredBy(oct));
             if (func == null) return false;
+            Log.Information("Running function: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
             await runner.RunFunction(func, [oct]);
             return true;
           });

@@ -22,7 +22,9 @@ and automated workflow management.  This tutorial show you how to do the followi
 
 ## Set up AppSheet
 - https://www.appsheet.com/ -> Get Started
-- Create an app -> Settings -> Integrations -> Enable (and copy App ID) 
+- Create an app
+- Go to Settings -> Integrations -> Enable (and copy App ID) 
 - Create Application Access Key (and copy key)
+- Create a *Task* table in the Data tab
 - Save App (CTRL S)
 

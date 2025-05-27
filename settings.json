@@ -6,7 +6,7 @@
   },
   "AppSheet": {
     "BaseUrl": "https://www.appsheet.com/api/v2/apps",
-    "AppId": "bc20a1f4-782a-4fd8-8b57-a1d4add2e7ae",
+    "AppId": "174b3625-cee4-4607-9650-6266604ff6fc",
     "TableName": "Task"
   },
   "StagedEntityRepository": {

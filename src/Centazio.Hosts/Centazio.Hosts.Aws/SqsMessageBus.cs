@@ -27,6 +27,7 @@ public class SqsMessageBus(bool useLocalStack = false) {
   }
 
   public async Task TriggerFunction(ObjectChangeTrigger oct) {
+    Log.Information("Triggering function: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
     await sqs.SendMessageAsync(new SendMessageRequest {
       QueueUrl = queueurl,
       MessageBody = JsonSerializer.Serialize(oct)
@@ -44,6 +45,7 @@ public class SqsMessageBus(bool useLocalStack = false) {
 
       foreach (var message in response.Messages) {
         try {
+          Log.Information("Processing message: {MessageId}", message.MessageId);
           var success = await processMessage.Invoke(message);
           if (success) await sqs.DeleteMessageAsync(queueurl, message.ReceiptHandle, cancellationToken);
         }
