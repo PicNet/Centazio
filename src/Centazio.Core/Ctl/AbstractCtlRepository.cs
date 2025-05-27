@@ -2,6 +2,8 @@
 
 public abstract class AbstractCtlRepository : ICtlRepository {
 
+  public abstract Task<IDbTransactionWrapper> BeginTransaction();
+  
   public abstract Task<ICtlRepository> Initialise();
   
   public abstract Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage);

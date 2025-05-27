@@ -8,7 +8,8 @@ public static class Constants {
   public static readonly SystemName System2Name = new("FIN");
   public static readonly SystemEntityId Sys1Id1 = new("S1.1");
   public static readonly SystemEntityId Sys1Id2 = new("S1.2");
-  public static readonly SystemEntityTypeName SystemEntityName = new(nameof(SystemEntityTypeName));
+  public static readonly SystemEntityTypeName SystemEntityName = new("SE1");
+  public static readonly SystemEntityTypeName SystemEntityName2 = new("SE2");
   public static readonly CoreEntityTypeName CoreEntityName = CoreEntityTypeName.From<CoreEntity>();
   public static readonly CoreEntityTypeName CoreEntityName2 = CoreEntityTypeName.From<CoreEntity2>();
   public static readonly CoreEntityId CoreE1Id1 = new("C1.1");

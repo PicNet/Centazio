@@ -2,6 +2,8 @@
 
 public interface ICtlRepository : IAsyncDisposable {
 
+  Task<IDbTransactionWrapper> BeginTransaction();
+  
   Task<ICtlRepository> Initialise();
   
   Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage);

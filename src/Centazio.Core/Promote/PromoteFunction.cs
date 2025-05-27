@@ -18,9 +18,7 @@ public abstract class PromoteFunction(SystemName system, IStagedEntityRepository
     else steps.IgnoreEntitiesBouncingBack();
     
     steps.IgnoreNonMeaninfulChanges();
-    // todo: entity changes and core storage should be in a transaction
-    await steps.WriteEntitiesToCoreStorageAndUpdateMaps();
-    await steps.WriteEntityChangesToCoreStorage();
+    await steps.UpdateCoreAndCtlTables();
     await steps.UpdateAllStagedEntitiesWithNewState(stage);
     steps.LogPromotionSteps();
     

@@ -100,7 +100,47 @@ public abstract class BaseCtlRepositoryStateTests {
     Assert.That(current, Is.EqualTo(updated2));
   }
   
-  [Test] public void Test_EntityChanges() {
-    // todo: implement
+  [Test] public async Task Test_EntityChanges_with_CoreEntity_Queries() {
+    var start = UtcDate.UtcNow;
+    await repo.SaveEntityChanges([
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName2, C.CoreE1Id1, C.System1Name, C.SystemEntityName2, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id2, C.System2Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName2, C.CoreE1Id2, C.System2Name, C.SystemEntityName2, C.Sys1Id1, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System2Name, C.SystemEntityName, C.Sys1Id1, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+    ]);
+    
+    Assert.That(await repo.GetEntityChanges(C.CoreEntityName, start), Has.Count.EqualTo(3));
+    Assert.That(await repo.GetEntityChanges(C.CoreEntityName2, start), Has.Count.EqualTo(2));
+    Assert.That(await repo.GetEntityChanges(C.CoreEntityName, start.AddSeconds(2)), Has.Count.EqualTo(2));
+    Assert.That(await repo.GetEntityChanges(C.CoreEntityName2, start.AddSeconds(2)), Has.Count.EqualTo(1));
+  }
+  
+  [Test] public async Task Test_EntityChanges_with_SystemEntity_Queries() {
+    var start = UtcDate.UtcNow;
+    await repo.SaveEntityChanges([
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName2, C.CoreE1Id1, C.System1Name, C.SystemEntityName2, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id2, C.System2Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName2, C.CoreE1Id2, C.System2Name, C.SystemEntityName2, C.Sys1Id1, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+      EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System2Name, C.SystemEntityName, C.Sys1Id1, null, new EmptyCoreEntity(TestingUtcDate.DoTick())),
+    ]);
+    
+    Assert.That(await repo.GetEntityChanges(C.System1Name, C.SystemEntityName, start), Has.Count.EqualTo(1));
+    Assert.That(await repo.GetEntityChanges(C.System2Name, C.SystemEntityName, start), Has.Count.EqualTo(2));
+    Assert.That(await repo.GetEntityChanges(C.System1Name, C.SystemEntityName2, start), Has.Count.EqualTo(1));
+    Assert.That(await repo.GetEntityChanges(C.System2Name, C.SystemEntityName2, start), Has.Count.EqualTo(1));
+    Assert.That(await repo.GetEntityChanges(C.System1Name, C.SystemEntityName, start.AddSeconds(2)), Has.Count.EqualTo(0));
+    Assert.That(await repo.GetEntityChanges(C.System2Name, C.SystemEntityName, start.AddSeconds(2)), Has.Count.EqualTo(2));
+    Assert.That(await repo.GetEntityChanges(C.System1Name, C.SystemEntityName2, start.AddSeconds(2)), Has.Count.EqualTo(0));
+    Assert.That(await repo.GetEntityChanges(C.System2Name, C.SystemEntityName2, start.AddSeconds(2)), Has.Count.EqualTo(1));
+  }
+  
+  record EmptyCoreEntity(DateTime LastUpdated) : ICoreEntity {
+
+    public string DisplayName { get; } = nameof(EmptyCoreEntity);
+    public object GetChecksumSubset() => String.Empty;
+    public CoreEntityId CoreId { get; set; } = new(nameof(EmptyCoreEntity));
+
   }
 }

@@ -1,14 +1,24 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
 using Centazio.Core.CoreRepo;
+using Centazio.Core.Misc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace Centazio.Providers.EF;
 
 public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> getdb) : ICoreStorage {
-  public Func<CentazioDbContext> Db => getdb;
   
+  // todo: remove ugly hack
+  private CentazioDbContext? running;
+  public Func<CentazioDbContext> Db => () => running ?? getdb();
+  
+  public async Task<IDbTransactionWrapper> BeginTransaction() {
+    await using var db = Db();
+    running = db;
+    return new EfTransactionWrapper(await db.Database.BeginTransactionAsync(), () => running = null);
+  }
+
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     await using var db = Db();
     var metas = (await db.Set<CoreStorageMeta.Dto>()

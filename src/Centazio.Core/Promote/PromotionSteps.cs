@@ -127,18 +127,21 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     toignore.ForEach(bag => bag.MarkIgnore(new("no meaningful change detected on entity")));
   } 
   
-  public async Task WriteEntitiesToCoreStorageAndUpdateMaps() {
+  public async Task UpdateCoreAndCtlTables() {
     if (IsEmpty()) return;
 
+    // todo: implement transactions
+    // using var t1 = await core.BeginTransaction();
+    // using var t2 = await ctl.BeginTransaction();
+    
     await Task.WhenAll(
         core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
         ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-        ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()));
-  }
-  
-  public async Task WriteEntityChangesToCoreStorage() {
-    if (IsEmpty()) return;
-    await ctl.SaveEntityChanges(ToPromote().Select(EntityChange.Create).ToList());
+        ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
+        ctl.SaveEntityChanges(ToPromote().Select(EntityChange.Create).ToList()));
+    
+    // await t2.Commit();
+    // await t1.Commit();
   }
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) => 

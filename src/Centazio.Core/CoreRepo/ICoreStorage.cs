@@ -70,6 +70,8 @@ public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) {
 
 public interface ICoreStorage : IAsyncDisposable {
 
+  Task<IDbTransactionWrapper> BeginTransaction();
+  
   /// <summary>
   /// Gets all core entities that have been created/updated after the given `after` parameter.
   /// Also exclude all entities where `LastUpdateSystem` is `exclude`.  This prevents
