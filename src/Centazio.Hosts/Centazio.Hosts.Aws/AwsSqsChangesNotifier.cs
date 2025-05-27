@@ -25,10 +25,10 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
             var oct = JsonSerializer.Deserialize<ObjectChangeTrigger>(message.Body);
             if (oct == null) return false;
             
-            Log.Information("Received message: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
+            Log.Information("Received message: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
             var func = funcs.FirstOrDefault(func => func.IsTriggeredBy(oct));
             if (func == null) return false;
-            Log.Information("Running function: {System} {Stage} {Object}", oct.System, oct.Stage, oct.Object);
+            Log.Information("Running function: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
             await runner.RunFunction(func, [oct]);
             return true;
           });

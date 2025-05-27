@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.RuntimeSupport;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -22,10 +23,13 @@ public static class AwsHost {
 
 public class AwsHostImpl(List<string> environments, Type func) {
 
-  private readonly AwsHostCentazioEngineAdapter centazio = new(environments, false);
+  private AwsHostCentazioEngineAdapter centazio = null!;
 
   public async Task Init(IAwsFunctionHandler handler) {
     InitLogger();
+    
+    var settings = await new SettingsLoader().Load<CentazioSettings>(environments);  // TODO need to check this is a proper way to get the settings
+    centazio = new(settings, environments, false);
     await centazio.Init([func]);
     await InitAwsLambdaFunctionHost(handler);
     
