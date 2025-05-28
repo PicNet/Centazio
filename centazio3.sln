@@ -48,7 +48,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{27B6B1AD-5
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
-		settings.in-mem.json = settings.in-mem.json		
+		settings.in-mem.json = settings.in-mem.json
 		readme.md = readme.md
 		tutorial.md = tutorial.md
 		todo.md = todo.md
@@ -77,6 +77,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Az", "src\Centazio.Hosts\Centazio.Hosts.Az\Centazio.Hosts.Az.csproj", "{9E8EF246-8369-4E04-9C11-2344AA18410A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Aws", "src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj", "{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Tests", "tests\Centazio.Hosts.Tests\Centazio.Hosts.Tests.csproj", "{21B1CF86-296D-4206-823D-74D90FC27460}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -176,6 +178,10 @@ Global
 		{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21B1CF86-296D-4206-823D-74D90FC27460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21B1CF86-296D-4206-823D-74D90FC27460}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21B1CF86-296D-4206-823D-74D90FC27460}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21B1CF86-296D-4206-823D-74D90FC27460}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1653C645-36BD-429C-A737-1F73144E6D58} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
@@ -204,5 +210,6 @@ Global
 		{9E8EF246-8369-4E04-9C11-2344AA18410A} = {814683E1-F7DA-4BEF-AABC-783974C75537}
 		{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812} = {814683E1-F7DA-4BEF-AABC-783974C75537}
 		{00E9AA93-78A0-46FA-AEB3-16F0689C2FA1} = {814683E1-F7DA-4BEF-AABC-783974C75537}
+		{21B1CF86-296D-4206-823D-74D90FC27460} = {FCF48D59-CFEF-4D5C-839F-7AB6E63C3694}
 	EndGlobalSection
 EndGlobal

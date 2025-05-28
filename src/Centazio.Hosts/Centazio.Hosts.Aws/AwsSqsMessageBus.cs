@@ -7,10 +7,11 @@ using Serilog;
 namespace Centazio.Hosts.Aws;
 
 public class AwsSqsMessageBus(string name, bool useLocalStack = false) {
-  public const string DEFAULT_QUEUE_NAME = "centazio-function-triggers"; 
-      
+
+  public const string DEFAULT_QUEUE_NAME = "centazio-function-triggers";
   private readonly IAmazonSQS sqs = new AmazonSQSClient(new AmazonSQSConfig { ServiceURL = useLocalStack ? "http://localhost:4566" : null });
   private string queueurl = null!;
+  public delegate Task<bool> MessageProcessor(Message message);
 
   public async Task Initialize() {
     if (useLocalStack) {
@@ -34,19 +35,18 @@ public class AwsSqsMessageBus(string name, bool useLocalStack = false) {
     await sqs.SendMessageAsync(new SendMessageRequest { QueueUrl = queueurl, MessageBody = Json.Serialize(oct) });
   }
 
-  public async Task StartListening(CancellationToken cancellationToken, Func<Message, Task<bool>> processMessage) {
+  public async Task StartListening(CancellationToken cancellationToken, MessageProcessor processMessage) {
     while (!cancellationToken.IsCancellationRequested) { await ReceiveAndProcessMessages(cancellationToken, processMessage); }
   }
 
-  public async Task ReceiveAndProcessMessages(CancellationToken cancellationToken, Func<Message, Task<bool>> processMessage) {
+  public async Task ReceiveAndProcessMessages(CancellationToken cancellationToken, MessageProcessor processMessage) {
     var response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest { QueueUrl = queueurl, MaxNumberOfMessages = 10, WaitTimeSeconds = 20 }, cancellationToken);
-    
+
     response.Messages.ForEach(async void (message) => {
       try {
         Log.Information("Processing message: {MessageId}", message.MessageId);
         if (await processMessage.Invoke(message)) await sqs.DeleteMessageAsync(queueurl, message.ReceiptHandle, cancellationToken);
-      }
-      catch (Exception ex) {
+      } catch (Exception ex) {
         Log.Error(ex, "Error processing message: message id[{MessageId}] message[{Message}] ", message.MessageId, ex.Message);
       }
     });

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj" />
+      <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NetArchTest.Rules" />
+    </ItemGroup>
+
+</Project>
