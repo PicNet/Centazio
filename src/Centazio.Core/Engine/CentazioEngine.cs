@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Ctl;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +54,7 @@ public abstract class CentazioEngine(List<string> environments) {
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
     
+    AddCoreService<IServiceFactory<ISecretsLoader>, ISecretsLoader>(settings.SecretsLoaderSettings.Provider);
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     

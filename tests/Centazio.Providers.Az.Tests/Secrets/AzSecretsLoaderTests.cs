@@ -10,9 +10,9 @@ public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
   private ISecretsLoader loader;
 
   [SetUp] public void Setup() {
-    var settings = TestingFactories.Settings().Result.AzureSettings;
+    var settings = TestingFactories.Settings().Result;
     
-    loader = new AzureSecretsLoaderFactory(settings).GetService();
+    loader = new AzSecretsLoaderFactory(settings).GetService();
   }
 
   protected override async Task<BaseSecretsLoaderTests.TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {

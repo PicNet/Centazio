@@ -8,12 +8,18 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Providers.Az.Secrets;
 
-public class AzureSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
+public class AzSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
 
   private readonly SecretClient client = InitializeClient(azure);
 
   private static SecretClient InitializeClient(AzureSettings azure) {
-    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = azure.TenantId });
+    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions {
+      TenantId = azure.TenantId,
+      ExcludeSharedTokenCacheCredential = true, 
+      ExcludeManagedIdentityCredential = true, 
+      ExcludeVisualStudioCredential = true
+
+    });
 
     return new SecretClient(new Uri($"https://{azure.KeyVaultName}.vault.azure.net/"), credential);
   }
@@ -28,13 +34,11 @@ public class AzureSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
       var secret = response?.Value;
 
       if (secret?.Value is null) return required ? throw new Exception($"Required secret '{name}' not found in Key Vault") : new Dictionary<string, string>();
-
-      if (secret.Value.Trim().StartsWith("{")) {
-        var json = Json.Deserialize<Dictionary<string, object>>(secret.Value);
-        return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? string.Empty);
-      }
-
-      return new Dictionary<string, string> { { name, secret.Value } };
+      if (!secret.Value.Trim().StartsWith("{")) throw new Exception($"Secret value is not a JSON object");
+      
+      var json = Json.Deserialize<Dictionary<string, object>>(secret.Value);
+      return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? string.Empty);
+        
     } catch (RequestFailedException ex) when (ex.Status == 404) {
       return required ? throw new Exception($"Required secret '{name}' not found in Key Vault") : new Dictionary<string, string>();
     }
@@ -42,9 +46,9 @@ public class AzureSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
 
 }
 
-public class AzureSecretsLoaderFactory(AzureSettings azure) : IServiceFactory<ISecretsLoader> {
+public class AzSecretsLoaderFactory(CentazioSettings settings) : IServiceFactory<ISecretsLoader> {
 
-  public ISecretsLoader GetService() => new AzureSecretsLoader(azure);
+  public ISecretsLoader GetService() => new AzSecretsLoader(settings.AzureSettings);
 
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     if (settings.AzureSettings is null) throw new ArgumentNullException(nameof(settings.AzureSettings));
@@ -52,6 +56,6 @@ public class AzureSecretsLoaderFactory(AzureSettings azure) : IServiceFactory<IS
     return await CreateLoader(settings.AzureSettings).Load<T>(environments.ToList());
   }
 
-  private static AzureSecretsLoader CreateLoader(AzureSettings settings) => new(settings);
+  private static AzSecretsLoader CreateLoader(AzureSettings settings) => new(settings);
 
 }

@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Secrets;
 
-public class SecretsFileLoader(string dir) : AbstractSecretsLoader {
+public class FileSecretsLoader(string dir) : AbstractSecretsLoader {
 
   
   
@@ -27,13 +27,13 @@ public class SecretsFileLoader(string dir) : AbstractSecretsLoader {
   }
 }
 
-public class FileSecretsLoaderFactory(string dir) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
+public class FileSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
-  public ISecretsLoader GetService() => new SecretsFileLoader(dir);
+  public ISecretsLoader GetService() => new FileSecretsLoader(settings.GetSecretsFolder());
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     if (settings.SecretsFolders is null) throw new ArgumentNullException(nameof(settings.SecretsFolders));
     return await CreateLoader(settings.GetSecretsFolder()).Load<T>(environments.ToList());
   }
 
-  private static SecretsFileLoader CreateLoader(string dir) => new(dir);
+  private static FileSecretsLoader CreateLoader(string dir) => new(dir);
 }

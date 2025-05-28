@@ -9,10 +9,10 @@ public static class SecretsManager
 {
   private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() {
     [ESecretsProviderType.File] = settings => 
-        new FileSecretsLoaderFactory(settings.GetSecretsFolder() ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
+        new FileSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.SecretsFolders))).GetService(),
     [ESecretsProviderType.Aws] = settings => 
-        new AwsSecretsLoaderFactory(settings.AwsSettings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
-    [ESecretsProviderType.Az] = settings => new AzureSecretsLoaderFactory(settings.AzureSettings!).GetService()
+        new AwsSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
+    [ESecretsProviderType.Az] = settings => new AzSecretsLoaderFactory(settings  ?? throw new ArgumentNullException(nameof(settings.AzureSettings))).GetService() 
         
   };
 
