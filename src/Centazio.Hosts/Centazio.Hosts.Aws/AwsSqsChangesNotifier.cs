@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Amazon.SQS.Model;
 using Centazio.Core;
 using Centazio.Core.Runner;
 using Serilog;
@@ -13,7 +14,7 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
 
   public void Init(List<IRunnableFunction> functions) {
     funcs = functions;
-    msgbus = new SqsMessageBus("centazio-function-triggers", localaws);
+    msgbus = new SqsMessageBus(SqsMessageBus.DEFAULT_QUEUE_NAME, localaws);
     cts = new CancellationTokenSource();
   }
 
@@ -22,17 +23,22 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
     _ = Task.Run(async () => {
       await msgbus.StartListening(cts.Token,
           async message => {
-            var oct = JsonSerializer.Deserialize<ObjectChangeTrigger>(message.Body);
-            if (oct == null) return false;
-            
-            Log.Information("Received message: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
-            var func = funcs.FirstOrDefault(func => func.IsTriggeredBy(oct));
-            if (func == null) return false;
-            Log.Information("Running function: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
-            await runner.RunFunction(func, [oct]);
-            return true;
+            // TODO skip old messages
+            return await ProcessMessage(runner, message);
           });
     });
+  }
+
+  private async Task<bool> ProcessMessage(IFunctionRunner runner, Message message) {
+    var oct = JsonSerializer.Deserialize<ObjectChangeTrigger>(message.Body);
+    if (oct == null) return false;
+            
+    Log.Information("Received message: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
+    var func = funcs.FirstOrDefault(func => func.IsTriggeredBy(oct));
+    if (func == null) return false;
+    Log.Information("Running function: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
+    await runner.RunFunction(func, [oct]);
+    return true;
   }
 
   public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {

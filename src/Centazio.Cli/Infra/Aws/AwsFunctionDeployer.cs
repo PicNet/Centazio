@@ -15,6 +15,7 @@ using Amazon.SecurityToken.Model;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Centazio.Hosts.Aws;
 using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
@@ -52,6 +53,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
+    // TODO create a SQS queue if not existed - SqsMessageBus.DEFAULT_QUEUE_NAME
+    // TODO create a mapping to the SQS and the lambda
   }
 
   private async Task<string> UpdateOrCreateLambdaFunction(AmazonLambdaClient lambda, string ecruri, string projnm, AmazonECRClient ecr, string accid) {
@@ -158,6 +161,16 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
           Region = region.SystemName,
           AccountId = accountId,
           ProjectName = project.ProjectName.ToLower()
+        })
+      });
+      
+      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+        RoleName = rolenm,
+        PolicyName = "LambdaSQSAccess" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/sqs_policy.json", new {
+          Region = region.SystemName,
+          AccountId = accountId,
+          QueueName = SqsMessageBus.DEFAULT_QUEUE_NAME
         })
       });
 
