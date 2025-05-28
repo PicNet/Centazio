@@ -65,7 +65,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME,
       Attributes = new Dictionary<string, string> {
         [QueueAttributeName.ReceiveMessageWaitTimeSeconds] = "20",
-        [QueueAttributeName.MessageRetentionPeriod] = "1209600",
+        [QueueAttributeName.MessageRetentionPeriod] = "60",
         [QueueAttributeName.VisibilityTimeout] = "30"
       }
     });

@@ -24,7 +24,7 @@ public class AwsSqsMessageBus(string name, bool useLocalStack = false) {
       QueueName = name,
       Attributes = new Dictionary<string, string> {
         [QueueAttributeName.ReceiveMessageWaitTimeSeconds] = "20",
-        [QueueAttributeName.MessageRetentionPeriod] = "1209600",
+        [QueueAttributeName.MessageRetentionPeriod] = "60",
         [QueueAttributeName.VisibilityTimeout] = "30"
       }
     })).QueueUrl;
