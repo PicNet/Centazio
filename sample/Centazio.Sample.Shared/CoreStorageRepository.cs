@@ -6,15 +6,15 @@ namespace Centazio.Sample.Shared;
 public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
   
   public async Task<CoreStorageRepository> Initialise() {
-    await using var db = Db();
-    
-    await db.ExecSql(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-    await db.ExecSql(dbf.GenerateCreateTableScript("dbo", nameof(CoreTask).ToLower(), dbf.GetDbFields<CoreTask>(), [nameof(ICoreEntity.CoreId)]));
-    
-    return this;
+    return await UseDb(async db => {
+      await db.ExecSql(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
+      await db.ExecSql(dbf.GenerateCreateTableScript("dbo", nameof(CoreTask).ToLower(), dbf.GetDbFields<CoreTask>(), [nameof(ICoreEntity.CoreId)]));
+
+      return this;
+    });
   }
   
-  public DbSet<CoreTask.Dto> Tasks(CentazioDbContext db) => db.Set<CoreTask.Dto>();
+  public async Task<DbSet<CoreTask.Dto>> Tasks() => await UseDb(db => Task.FromResult(db.Set<CoreTask.Dto>()));
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
     var strids = coreids.Select(id => id.Value).ToList();

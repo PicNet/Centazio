@@ -14,22 +14,25 @@ public class TestingEfCoreStorageRepository(Func<CentazioDbContext> getdb, IDbFi
   private static string CoreStorageMetaName => nameof(CoreStorageMeta).ToLower();
 
   public async Task<ITestingCoreStorage> Initalise() {
-    await using var db = Db();
-    await db.ExecSql(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreEntityName, dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
-    return this;
+    return await UseDb(async db => {
+      await db.ExecSql(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreId)]));
+      await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreEntityName, dbf.GetDbFields<CoreEntity>(), [nameof(CoreEntity.CoreId)]));
+      return this;
+    });
   }
 
   public override async ValueTask DisposeAsync() {
-    await using var db = Db();
-    await db.ExecSql(dbf.GenerateDropTableScript(CoreSchemaName, CoreEntityName));
-    await db.ExecSql(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
-    await base.DisposeAsync();
+    await UseDb(async db => {
+      await db.ExecSql(dbf.GenerateDropTableScript(CoreSchemaName, CoreEntityName));
+      await db.ExecSql(dbf.GenerateDropTableScript(CtlSchemaName, CoreStorageMetaName));
+      await base.DisposeAsync();
+      return Task.CompletedTask;
+    });
   }
 
   public async Task<List<CoreEntity>> GetAllCoreEntities() {
-    await using var db = Db();
-    return (await db.Set<CoreEntity.Dto>().ToListAsync()).Select(dto => dto.ToBase()).ToList();
+    return await UseDb(async db => 
+        (await db.Set<CoreEntity.Dto>().ToListAsync()).Select(dto => dto.ToBase()).ToList());
   }
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {

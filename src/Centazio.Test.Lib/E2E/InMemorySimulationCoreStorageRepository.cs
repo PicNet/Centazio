@@ -4,9 +4,10 @@ using Serilog;
 namespace Centazio.Test.Lib.E2E;
 
 public class InMemorySimulationCoreStorageRepository(IEpochTracker tracker, Func<ICoreEntity, CoreEntityChecksum> checksum) : ISimulationCoreStorageRepository {
-  private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = [];
   
-  public Task<IDbTransactionWrapper> BeginTransaction() => Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
+  private readonly Dictionary<CoreEntityTypeName, Dictionary<CoreEntityId, string>> db = [];
+  public Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null) => 
+      Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
 
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (coretype.Value == nameof(CoreMembershipType)) return (await GetEntitiesToWrite<CoreMembershipType, CoreMembershipType.Dto>(exclude, after)).ToList();

@@ -136,6 +136,43 @@ public abstract class BaseCtlRepositoryStateTests {
     Assert.That(await repo.GetEntityChanges(C.System2Name, C.SystemEntityName2, start.AddSeconds(2)), Has.Count.EqualTo(1));
   }
   
+  [Test] public async Task Test_Transactions_With_EntityChanges() {
+    var start = UtcDate.UtcNow;
+    
+    // implicit transaction
+    var initial = await GetList();
+    await Add1(); 
+    var test1 = await GetList();
+    
+    // commit transaction
+    var trans = await repo.BeginTransaction();
+    await Add1();
+    await trans.Commit();
+    var test2 = await GetList();
+    
+    // rollback transaction
+    var trans2 = await repo.BeginTransaction();
+    await Add1();
+    await trans2.Rollback();
+    var test3 = await GetList();
+    
+    // implicit rollback (no commit)
+    var trans3 = await repo.BeginTransaction();
+    await Add1();
+    trans3.Dispose();
+    var test4 = await GetList();
+    
+    Assert.That(initial, Has.Count.EqualTo(0));
+    Assert.That(test1, Has.Count.EqualTo(1));
+    Assert.That(test2, Has.Count.EqualTo(2));
+    Assert.That(test3, Has.Count.EqualTo(2));
+    Assert.That(test4, Has.Count.EqualTo(2));
+    
+    Task Add1() => repo.SaveEntityChanges([EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick()))]);
+    Task<List<EntityChange>> GetList() => repo.GetEntityChanges(C.CoreEntityName, start);
+  }
+  
+  // ReSharper disable once NotAccessedPositionalProperty.Local
   record EmptyCoreEntity(DateTime LastUpdated) : ICoreEntity {
 
     public string DisplayName { get; } = nameof(EmptyCoreEntity);

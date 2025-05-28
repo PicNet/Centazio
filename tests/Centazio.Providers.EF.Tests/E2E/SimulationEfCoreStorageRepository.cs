@@ -36,18 +36,20 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
       });
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
-    await using var db = Db();
-    await DropTablesImpl(db);
-    
-    await db.ExecSql(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-    
-    await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)],
-        [], [new ForeignKey([nameof(CoreCustomer.MembershipCoreId)], CoreSchemaName, CoreMembershipTypeName, [nameof(ICoreEntity.CoreId)])]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)],
-        [], [new ForeignKey([nameof(CoreInvoice.CustomerCoreId)], CoreSchemaName, CoreCustomerName, [nameof(ICoreEntity.CoreId)])]));
-    return this;
+    return await UseDb(async db => {
+      await DropTablesImpl(db);
+      
+      await db.ExecSql(dbf.GenerateCreateTableScript(CtlSchemaName, CoreStorageMetaName, dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
+      
+      await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreMembershipTypeName, dbf.GetDbFields<CoreMembershipType>(), [nameof(ICoreEntity.CoreId)]));
+      await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreCustomerName, dbf.GetDbFields<CoreCustomer>(), [nameof(ICoreEntity.CoreId)],
+          [], [new ForeignKey([nameof(CoreCustomer.MembershipCoreId)], CoreSchemaName, CoreMembershipTypeName, [nameof(ICoreEntity.CoreId)])]));
+      await db.ExecSql(dbf.GenerateCreateTableScript(CoreSchemaName, CoreInvoiceName, dbf.GetDbFields<CoreInvoice>(), [nameof(ICoreEntity.CoreId)],
+          [], [new ForeignKey([nameof(CoreInvoice.CustomerCoreId)], CoreSchemaName, CoreCustomerName, [nameof(ICoreEntity.CoreId)])]));
+      return this;
+    });
   }
+  
 
   protected override void UpsertEntity(CoreEntityAndMeta entity, EntityState state, CentazioDbContext db) {
     if (state == EntityState.Added) tracker.Add(entity);
@@ -57,9 +59,11 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
   }
 
   public override async ValueTask DisposeAsync() {
-    await using var db = Db();
-    await DropTablesImpl(db);
-    await base.DisposeAsync();
+    await UseDb(async db => {
+      await DropTablesImpl(db);
+      await base.DisposeAsync();
+      return Task.CompletedTask;
+    });
   }
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
@@ -83,13 +87,13 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
   }
 
   protected async Task<E> GetSingle<E, D>(CoreEntityId coreid) where E : CoreEntityBase where D : class, ICoreEntityDto<E> {
-    await using var db = Db();
-    return (await db.Set<D>().SingleAsync(dto => dto.CoreId == coreid.Value)).ToBase();
+    return await UseDb(async db => 
+        (await db.Set<D>().SingleAsync(dto => dto.CoreId == coreid.Value)).ToBase());
   }
 
   protected async Task<List<E>> GetAll<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> {
-    await using var db = Db();
-    return (await db.Set<D>().ToListAsync()).Select(e => e.ToBase()).ToList();
+    return await UseDb(async db => 
+        (await db.Set<D>().ToListAsync()).Select(e => e.ToBase()).ToList());
   }
 
   // ISimulationCoreStorageRepository

@@ -70,7 +70,7 @@ public record EntityChange {
     public FieldPairJson ToPair() => new(OldValue, NewValue);
   }
 
+  // ReSharper disable NotAccessedPositionalProperty.Local
   record FieldPairJson(string old, string @new);
-
 }
 

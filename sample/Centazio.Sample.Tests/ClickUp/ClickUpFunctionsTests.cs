@@ -30,8 +30,7 @@ public class ClickUpFunctionsTests {
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
     
-    await using var db = core.Db();
-    var coretasks = await core.Tasks(db).ToListAsync();
+    var coretasks = await (await core.Tasks()).ToListAsync();
     
     Assert.That(results.Result.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));

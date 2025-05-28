@@ -31,8 +31,7 @@ public class AppSheetFunctionsTests {
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTask>().Task).ToList();
     
-    await using var db = core.Db();
-    var coretasks = await core.Tasks(db).ToListAsync();
+    var coretasks = await (await core.Tasks()).ToListAsync();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));

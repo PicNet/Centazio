@@ -2,7 +2,7 @@
 
 public interface ICtlRepository : IAsyncDisposable {
 
-  Task<IDbTransactionWrapper> BeginTransaction();
+  Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null);
   
   Task<ICtlRepository> Initialise();
   

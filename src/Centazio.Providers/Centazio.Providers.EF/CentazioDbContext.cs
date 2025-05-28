@@ -46,5 +46,4 @@ public abstract class CentazioDbContext : DbContext {
     try { await Database.ExecuteSqlRawAsync(sql); }
     catch (Exception e) { Log.Error($"error [{e.Message}] executing sql:\n\t" + sql); throw; }
   }
-
 }

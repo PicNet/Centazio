@@ -2,7 +2,7 @@
 
 public abstract class AbstractCtlRepository : ICtlRepository {
 
-  public abstract Task<IDbTransactionWrapper> BeginTransaction();
+  public abstract Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null);
   
   public abstract Task<ICtlRepository> Initialise();
   

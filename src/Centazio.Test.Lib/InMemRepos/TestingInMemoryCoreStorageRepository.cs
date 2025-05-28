@@ -3,7 +3,8 @@
 public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
   
   private readonly Dictionary<CoreEntityTypeName, Dictionary<ValidString, CoreEntityAndMeta>> db = [];
-  public Task<IDbTransactionWrapper> BeginTransaction() => Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
+  public Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null) => 
+      Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
 
   public Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) {
     if (!db.TryGetValue(coretype, out var fulllst)) return Task.FromResult(new List<CoreEntityAndMeta>());
@@ -59,4 +60,6 @@ public class EmptyTransactionWrapper : IDbTransactionWrapper {
   public void Dispose() {}
   public Task Commit() => Task.CompletedTask;
   public Task Rollback() => Task.CompletedTask;
+  public object GetTransactionImpl() => new EmptyTransactionWrapper();
+
 }

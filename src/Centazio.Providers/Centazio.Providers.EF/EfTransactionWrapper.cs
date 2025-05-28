@@ -1,28 +1,32 @@
-﻿using Centazio.Core.Misc;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using System.Data.Common;
+using Centazio.Core.Misc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public class EfTransactionWrapper(IDbContextTransaction impl, Action onend) : IDbTransactionWrapper, IAsyncDisposable {
-
+public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : IDbTransactionWrapper, IAsyncDisposable
+    where T : DbContext {
+  public T Db => db;
+  
   public void Dispose() {
-    onend();
+    db.Dispose();
     impl.Dispose();
+    onend();
   }
   
   public async ValueTask DisposeAsync() {
+    await db.DisposeAsync();
+    await impl.DisposeAsync();
     onend();
-    await impl.DisposeAsync(); 
   }
   
   public async Task Commit() {
-    onend();
     await impl.CommitAsync();
+    onend();
   }
   
   public async Task Rollback() {
-    onend();
     await impl.RollbackAsync();
+    onend();
   }
-
 }

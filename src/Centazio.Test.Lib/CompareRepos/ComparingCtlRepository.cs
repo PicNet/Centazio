@@ -72,7 +72,7 @@ public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepo
     return ValidateAndReturn(result1, result2);
   }
 
-  public override Task<IDbTransactionWrapper> BeginTransaction() => Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
+  public override Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null) => Task.FromResult<IDbTransactionWrapper>(new EmptyTransactionWrapper());
   public override Task<ICtlRepository> Initialise() => Task.FromResult<ICtlRepository>(this);
 
   public override async ValueTask DisposeAsync() {

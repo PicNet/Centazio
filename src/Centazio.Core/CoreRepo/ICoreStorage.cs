@@ -70,7 +70,7 @@ public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) {
 
 public interface ICoreStorage : IAsyncDisposable {
 
-  Task<IDbTransactionWrapper> BeginTransaction();
+  Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null);
   
   /// <summary>
   /// Gets all core entities that have been created/updated after the given `after` parameter.

@@ -18,9 +18,10 @@ public class PostgresSqlCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb
   public override async Task<ICtlRepository> Initialise() {
     if (!createschema) return this;
     
-    await using var db = Db();
-    await CreateSchema(dbf, db);
-    return this;
+    return await UseDb(async db => {
+      await CreateSchema(dbf, db);
+      return this;
+    });
   }
 
 }
