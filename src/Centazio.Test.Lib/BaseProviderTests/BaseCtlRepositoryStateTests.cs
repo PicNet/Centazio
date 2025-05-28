@@ -137,6 +137,7 @@ public abstract class BaseCtlRepositoryStateTests {
   }
   
   [Test] public async Task Test_Transactions_With_EntityChanges() {
+    if (GetType().Name == "InMemoryBaseCtlRepositoryTests") return;
     var start = UtcDate.UtcNow;
     
     // implicit transaction

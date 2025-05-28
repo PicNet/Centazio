@@ -5,7 +5,6 @@ using Centazio.Core.Runner;
 using Centazio.Sample.ClickUp;
 using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample.Tests.ClickUp;
 
@@ -30,7 +29,7 @@ public class ClickUpFunctionsTests {
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<ClickUpTask>().name).ToList();
     
-    var coretasks = await (await core.Tasks()).ToListAsync();
+    var coretasks = await core.Tasks();
     
     Assert.That(results.Result.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));

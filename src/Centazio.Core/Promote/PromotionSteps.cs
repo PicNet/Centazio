@@ -131,6 +131,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (IsEmpty()) return;
 
     using var coretrans = await core.BeginTransaction();
+    // todo: add transaction to CtlRepo
     // using var ctltrans = await ctl.BeginTransaction(); 
     
     await Task.WhenAll(

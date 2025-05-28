@@ -5,7 +5,6 @@ using Centazio.Core.Runner;
 using Centazio.Sample.AppSheet;
 using Centazio.Sample.Shared;
 using Centazio.Test.Lib;
-using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample.Tests.AppSheet;
 
@@ -31,7 +30,7 @@ public class AppSheetFunctionsTests {
     var os = await ctl.GetObjectState(ss, CoreEntityTypes.Task) ?? throw new Exception();
     var stagedtasks = stager.Contents.Select(se => se.Deserialise<AppSheetTask>().Task).ToList();
     
-    var coretasks = await (await core.Tasks()).ToListAsync();
+    var coretasks = await core.Tasks();
     
     Assert.That(results.Result, Is.EqualTo(EOperationResult.Success));
     Assert.That(os.LastSuccessCompleted, Is.EqualTo(UtcDate.UtcNow));
