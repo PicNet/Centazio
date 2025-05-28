@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <PropertyGroup>
+      <RootNamespace>Centazio.Hosts.Tests</RootNamespace>
+    </PropertyGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\..\src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj" />
       <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />

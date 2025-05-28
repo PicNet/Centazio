@@ -78,7 +78,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Az", "src\Ce
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Aws", "src\Centazio.Hosts\Centazio.Hosts.Aws\Centazio.Hosts.Aws.csproj", "{B72E78DA-DC71-4B12-BEDE-9D99A4B6A812}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Tests", "tests\Centazio.Hosts.Tests\Centazio.Hosts.Tests.csproj", "{21B1CF86-296D-4206-823D-74D90FC27460}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Centazio.Hosts.Aws.Tests", "tests\Centazio.Hosts.Aws.Tests\Centazio.Hosts.Aws.Tests.csproj", "{21B1CF86-296D-4206-823D-74D90FC27460}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,9 +1,8 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Centazio.Hosts.Aws;
 
-namespace Centazio.Hosts.Tests.Aws;
+namespace Centazio.Hosts.Aws.Tests;
 
 public class AwsSqsMessageBusTests {
   private readonly LifecycleStage stage1 = new("stage1");
