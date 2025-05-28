@@ -6,8 +6,8 @@ namespace Centazio.Core.Tests.Aws;
 public class AwsSqsMessageBusTests {
   private readonly LifecycleStage stage1 = new("stage1");
   
-  [Test, Ignore("LocalStack is required")] public async Task Test_send_receive_message() {
-    var sms = new SqsMessageBus($"centazio-test-send_receive_message-{DateTime.Now:yyyyMMddhhmmss}", true);
+  [Test] public async Task Test_send_receive_message() {
+    var sms = new AwsSqsMessageBus($"centazio-test-send_receive_message-{DateTime.Now:yyyyMMddhhmmss}", true);
     await sms.Initialize();
     var oct = new ObjectChangeTrigger(C.System1Name, stage1, C.SystemEntityName);
     await sms.TriggerFunction(oct);

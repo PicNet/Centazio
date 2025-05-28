@@ -12,10 +12,13 @@ using Amazon.Lambda.Model;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
+using AddPermissionRequest = Amazon.Lambda.Model.AddPermissionRequest;
 using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
@@ -53,8 +56,19 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
-    // TODO create a SQS queue if not existed - SqsMessageBus.DEFAULT_QUEUE_NAME
-    // TODO create a mapping to the SQS and the lambda
+    await CreateSqsQueue();
+  }
+
+  private static async Task CreateSqsQueue() {
+    var sqs = new AmazonSQSClient(new AmazonSQSConfig { ServiceURL = null });
+    await sqs.CreateQueueAsync(new CreateQueueRequest {
+      QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME,
+      Attributes = new Dictionary<string, string> {
+        [QueueAttributeName.ReceiveMessageWaitTimeSeconds] = "20",
+        [QueueAttributeName.MessageRetentionPeriod] = "1209600",
+        [QueueAttributeName.VisibilityTimeout] = "30"
+      }
+    });
   }
 
   private async Task<string> UpdateOrCreateLambdaFunction(AmazonLambdaClient lambda, string ecruri, string projnm, AmazonECRClient ecr, string accid) {
@@ -127,6 +141,13 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       MemorySize = 256,
       Timeout = 30
     });
+    await lambda.CreateEventSourceMappingAsync(new CreateEventSourceMappingRequest
+    {
+      FunctionName = project.AwsFunctionName,
+      EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountId}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
+      BatchSize = 10,
+      Enabled = true
+    });
     return res.FunctionArn;
   }
 
@@ -170,7 +191,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         PolicyDocument = templater.ParseFromPath("aws/sqs_policy.json", new {
           Region = region.SystemName,
           AccountId = accountId,
-          QueueName = SqsMessageBus.DEFAULT_QUEUE_NAME
+          QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
         })
       });
 

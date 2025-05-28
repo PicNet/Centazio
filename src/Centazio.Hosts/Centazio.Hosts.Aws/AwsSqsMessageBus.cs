@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Centazio.Hosts.Aws;
 
-public class SqsMessageBus(string name, bool useLocalStack = false) {
+public class AwsSqsMessageBus(string name, bool useLocalStack = false) {
   public const string DEFAULT_QUEUE_NAME = "centazio-function-triggers"; 
       
   private readonly IAmazonSQS sqs = new AmazonSQSClient(new AmazonSQSConfig { ServiceURL = useLocalStack ? "http://localhost:4566" : null });

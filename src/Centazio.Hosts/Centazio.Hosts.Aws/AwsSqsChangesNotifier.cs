@@ -8,13 +8,13 @@ namespace Centazio.Hosts.Aws;
 
 public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposable {
 
-  private SqsMessageBus msgbus = null!;
+  private AwsSqsMessageBus msgbus = null!;
   private CancellationTokenSource cts = null!;
   private List<IRunnableFunction> funcs = null!;
 
   public void Init(List<IRunnableFunction> functions) {
     funcs = functions;
-    msgbus = new SqsMessageBus(SqsMessageBus.DEFAULT_QUEUE_NAME, localaws);
+    msgbus = new AwsSqsMessageBus(AwsSqsMessageBus.DEFAULT_QUEUE_NAME, localaws);
     cts = new CancellationTokenSource();
   }
 
