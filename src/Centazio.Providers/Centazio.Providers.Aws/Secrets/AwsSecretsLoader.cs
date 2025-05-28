@@ -8,41 +8,45 @@ using Centazio.Core.Settings;
 namespace Centazio.Providers.Aws.Secrets;
 
 public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
-  
+
   private readonly IAmazonSecretsManager client = InitializeClient(aws);
-  
+
   private static IAmazonSecretsManager InitializeClient(AwsSettings aws) {
-    
     Environment.SetEnvironmentVariable("AWS_PROFILE", aws.AccountName);
     Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
-    
+
     return new AmazonSecretsManagerClient(aws.GetRegionEndpoint());
   }
-  
+
   // remove redundant environments, i.e. environments that result in the same Secret Store Id 
-  protected override List<string> FilterRedundantEnvironments(List<string> environments) => 
-      environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
+  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
-    var id = aws.GetSecretsStoreIdForEnvironment(environment); 
+    var id = aws.GetSecretsStoreIdForEnvironment(environment);
     var res = await client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = id });
-    if (String.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : [];
-    
-    
-    if (!res.SecretString.Trim().StartsWith("{")) return new Dictionary<string, string> { { id, res.SecretString } };
+    if (string.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : new Dictionary<string, string>();
+
+    if (!res.SecretString.Trim().StartsWith("{")) throw new Exception($"Secret value is not a JSON object");
 
     var json = Json.Deserialize<Dictionary<string, object>>(res.SecretString);
-    return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? String.Empty);
+    return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? string.Empty);
   }
 
 }
 
 /// <summary>
-/// When using Aws Secrets Manager the AwsSettings.SecretsManagerStoreIdTemplate section is required in
-/// the `settings.json` file.  This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;`
-/// with the required environment.
+///   When using Aws Secrets Manager the AwsSettings.SecretsManagerStoreIdTemplate section is required in
+///   the `settings.json` file.  This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;`
+///   with the required environment.
 /// </summary>
-/// <param name="aws">The `AwsSettings` section of the `settings.json` file.</param>
-public class AwsSecretsLoaderFactory(AwsSettings aws) : IServiceFactory<ISecretsLoader> {
-  public ISecretsLoader GetService() => new AwsSecretsLoader(aws);
+/// <param name="settings">The `AwsSettings` section of the `settings.json` file.</param>
+public class AwsSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
+
+  public ISecretsLoader GetService() => new AwsSecretsLoader(settings.AwsSettings);
+  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
+    if (settings.AwsSettings is null) throw new ArgumentNullException(nameof(settings.AwsSettings));
+    return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());
+  }
+
+  private static AwsSecretsLoader CreateLoader(AwsSettings settings) => new(settings);
 }

@@ -17,9 +17,9 @@ public abstract class IntegrationBase<TSettings, TSecrets>(params List<string> e
   protected TSettings Settings { get; private set; } = null!;
   protected TSecrets Secrets { get; private set; } = null!;
 
-  public async Task RegisterServices(CentazioServicesRegistrar registrar) {
+  public virtual async Task RegisterServices(CentazioServicesRegistrar registrar) {
     Settings = await new SettingsLoader().Load<TSettings>(environments);
-    Secrets = await new SecretsFileLoader(Settings.GetSecretsFolder()).Load<TSecrets>(environments);
+    Secrets = await new FileSecretsLoader(Settings.GetSecretsFolder()).Load<TSecrets>(environments);
     
     SettingsLoader.RegisterSettingsHierarchy(Settings, registrar);
     registrar.Register(Secrets);

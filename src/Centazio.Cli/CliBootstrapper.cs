@@ -6,6 +6,7 @@ using Centazio.Cli.Infra.Gen;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Centazio.Providers.Aws.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -60,7 +61,12 @@ internal class CliBootstrapper {
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
       var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);  
       var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
-      if (isindev) svcs.AddSingleton(await new SecretsFileLoader(settings.GetSecretsFolder()).Load<CentazioSecrets>(CentazioConstants.DEFAULT_ENVIRONMENT));
+      
+      if (isindev) {
+        var secrets = await SecretsManager.LoadSecrets<CentazioSecrets>(settings, CentazioConstants.DEFAULT_ENVIRONMENT);
+        svcs.AddSingleton(secrets);
+      }
+      
       return isindev;
     }
     

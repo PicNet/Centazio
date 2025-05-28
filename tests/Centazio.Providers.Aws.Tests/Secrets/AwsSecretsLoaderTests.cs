@@ -9,7 +9,7 @@ public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
   private ISecretsLoader loader;
 
   [SetUp] public void Setup() {
-    var settings = TestingFactories.Settings().Result.AwsSettings;
+    var settings = TestingFactories.Settings().Result;
     
     loader = new AwsSecretsLoaderFactory(settings).GetService();
   }

@@ -47,7 +47,9 @@
     }
   },
   "SecretsFolders": [{ "type": "string", "required": true }],
-  
+  "SecretsLoader": {
+    "Provider": { "type": "string", "required": true }
+  },
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },
     "ConnectionString": { "type": "string", "required": true },
@@ -80,6 +82,10 @@
     "FunctionAppName": { "type": "string", "required": false },
     "AppServicePlanName": { "type": "string", "required": false },
     "WebSiteName": { "type": "string", "required": false },
+
+    "TenantId": { "type": "string", "required": false },
+    "KeyVaultName": { "type": "string", "required": false },
+    "KeySecretNameTemplate": { "type": "string", "required": false },
     
     "AzFunctions": [{
       "Assembly": { "type": "string", "required": false },

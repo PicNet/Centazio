@@ -104,7 +104,7 @@ public abstract class CloudSolutionGenerator(
   }
 
   private void AddSecretsFilesToProject() {
-    var loader = new SecretsFileLoader(settings.GetSecretsFolder());
+    var loader = new FileSecretsLoader(settings.GetSecretsFolder());
     var paths = environments.AddIfNotExists(project.CloudName.ToLower()).Select((env, idx) => loader.GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
     AddCopyFilesToProject(paths, String.Empty);
   }
