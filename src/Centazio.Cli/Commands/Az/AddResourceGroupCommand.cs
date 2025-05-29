@@ -1,11 +1,12 @@
 ﻿using Centazio.Cli.Infra.Az;
+using Centazio.Core;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class AddResourceGroupCommand([FromKeyedServices("az")] CentazioSettings clisetts, IAzResourceGroups impl) : AbstractCentazioCommand<AddResourceGroupCommand.Settings> {
+public class AddResourceGroupCommand([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings clisetts, IAzResourceGroups impl) : AbstractCentazioCommand<AddResourceGroupCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     ResourceGroupName = UiHelpers.Ask("Resource Group Name", clisetts.AzureSettings.ResourceGroup) 

@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Settings;
+﻿using Centazio.Core;
+using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
 using Centazio.Hosts.Self;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,14 +7,14 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class AwsFunctionLocalTestCommand([FromKeyedServices("aws")] CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<AwsFunctionLocalTestCommand.Settings> {
+public class AwsFunctionLocalTestCommand([FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<AwsFunctionLocalTestCommand.Settings> {
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),
     FunctionFilter = UiHelpers.Ask("Function Filter", "All")
   });
 
   public override async Task ExecuteImpl(Settings cmdsetts) {
-    cmdsetts.EnvironmentsList.AddIfNotExists("aws");
+    cmdsetts.EnvironmentsList.AddIfNotExists(CentazioConstants.Hosts.Aws);
     cmdsetts.EnvironmentsList.AddIfNotExists(nameof(SelfHost).ToLower());
     await host.RunHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList, cmdsetts.UseLocalAws));
   }

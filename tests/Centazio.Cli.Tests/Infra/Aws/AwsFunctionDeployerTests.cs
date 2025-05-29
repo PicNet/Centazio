@@ -15,7 +15,7 @@ public class AwsFunctionDeployerTests {
   private AwsFunctionProjectMeta project;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, "aws");
+    settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws);
     secrets = await TestingFactories.Secrets();
     templater = new Templater(settings);
     project = await MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");

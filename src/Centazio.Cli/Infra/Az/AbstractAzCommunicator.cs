@@ -1,11 +1,12 @@
 ﻿using Azure.Identity;
 using Azure.ResourceManager;
+using Centazio.Core;
 using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Az;
 
-public abstract class AbstractAzCommunicator([FromKeyedServices("az")] CentazioSecrets secrets) {
+public abstract class AbstractAzCommunicator([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets) {
   
   protected CentazioSecrets Secrets => secrets;
 

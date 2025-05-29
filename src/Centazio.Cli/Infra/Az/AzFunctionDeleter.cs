@@ -1,4 +1,5 @@
-﻿using Centazio.Core.Secrets;
+﻿using Centazio.Core;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,7 @@ public interface IAzFunctionDeleter {
 }
 
 // try to replicate command: az functionapp deployment source config-zip -g <resource group name> -n <function app name> --src <zip file path>
-public class AzFunctionDeleter([FromKeyedServices("az")] CentazioSettings settings, [FromKeyedServices("az")] CentazioSecrets secrets, ITemplater templater, ICommandRunner cmd) : AbstractAzCommunicator(secrets), IAzFunctionDeleter {
+public class AzFunctionDeleter([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings settings, [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, ITemplater templater, ICommandRunner cmd) : AbstractAzCommunicator(secrets), IAzFunctionDeleter {
 
   
   public async Task Delete(AzFunctionProjectMeta project) {

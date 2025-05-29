@@ -1,4 +1,5 @@
 ﻿using Centazio.Cli.Infra.Az;
+using Centazio.Core;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog.Events;
@@ -6,7 +7,7 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class DeleteAzFunctionsCommand([FromKeyedServices("az")] CentazioSettings coresettings,  IAzFunctionDeleter impl, ITemplater templater) : AbstractCentazioCommand<DeleteAzFunctionsCommand.Settings> {
+public class DeleteAzFunctionsCommand([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings,  IAzFunctionDeleter impl, ITemplater templater) : AbstractCentazioCommand<DeleteAzFunctionsCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

@@ -12,6 +12,7 @@ using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Centazio.Core;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -27,7 +28,7 @@ public interface IAwsFunctionDeployer {
   Task Deploy(AwsFunctionProjectMeta project);
 }
 
-public class AwsFunctionDeployer([FromKeyedServices("aws")] CentazioSettings settings, [FromKeyedServices("aws")] CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
+public class AwsFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSettings settings, [FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
 
   public async Task Deploy(AwsFunctionProjectMeta project) =>
       await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();

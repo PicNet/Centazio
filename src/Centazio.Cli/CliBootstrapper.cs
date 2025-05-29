@@ -59,15 +59,14 @@ internal class CliBootstrapper {
       
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
       var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);
-      // todo: these keys 'aws', 'azure' should be in a Constants file
       var defsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs, String.Empty);
-      var awssettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws"), svcs, "aws");
-      var azsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "az"), svcs, "az");
+      var awssettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws), svcs, CentazioConstants.Hosts.Aws);
+      var azsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az), svcs, CentazioConstants.Hosts.Az);
       
       if (isindev) {
         svcs.AddSingleton(await SecretsManager.LoadSecrets<CentazioSecrets>(defsettings, CentazioConstants.DEFAULT_ENVIRONMENT));
-        svcs.AddKeyedSingleton("aws", await SecretsManager.LoadSecrets<CentazioSecrets>(awssettings, CentazioConstants.DEFAULT_ENVIRONMENT, "aws"));
-        svcs.AddKeyedSingleton("az", await SecretsManager.LoadSecrets<CentazioSecrets>(azsettings, CentazioConstants.DEFAULT_ENVIRONMENT, "az"));
+        svcs.AddKeyedSingleton(CentazioConstants.Hosts.Aws, await SecretsManager.LoadSecrets<CentazioSecrets>(awssettings, CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws));
+        svcs.AddKeyedSingleton(CentazioConstants.Hosts.Az, await SecretsManager.LoadSecrets<CentazioSecrets>(azsettings, CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az));
       }
       
       return isindev;

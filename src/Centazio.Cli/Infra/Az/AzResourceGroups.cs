@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Core;
 using Azure.ResourceManager.Resources;
+using Centazio.Core;
 using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +14,7 @@ public interface IAzResourceGroups {
 
 }
 
-public class AzResourceGroups([FromKeyedServices("az")] CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzResourceGroups {
+public class AzResourceGroups([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzResourceGroups {
 
   public Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
     var subscription = GetClient().GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{Secrets.AZ_SUBSCRIPTION_ID}"));

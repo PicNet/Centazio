@@ -1,13 +1,14 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
+using Centazio.Core;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class DeployAzFunctionsCommand([FromKeyedServices("az")] CentazioSettings coresettings,  IAzFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
+public class DeployAzFunctionsCommand([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings,  IAzFunctionDeployer impl, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")
