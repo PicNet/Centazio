@@ -9,11 +9,12 @@ using ReflectionUtils = Centazio.Core.Misc.ReflectionUtils;
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
 public abstract class CloudSolutionGenerator(
-    CentazioSettings settings, 
-    ITemplater templater, 
+    CentazioSettings settings,
+    ITemplater templater,
     AbstractFunctionProjectMeta project,
     Assembly hostass,
-    List<string> environments) {
+    List<string> environments,
+    string? funcname) {
 
   protected CsProjModel model = null!;
   protected readonly ITemplater templater = templater;
@@ -50,7 +51,7 @@ public abstract class CloudSolutionGenerator(
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
     await AddCentazioNuGetReferencesToProject(added);
       
-    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, []);
+    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, funcname == null ? [] :[funcname]);
     await AddCloudSpecificContentToProject(functions, added);
     
     var contents = templater.ParseFromPath("Project.csproj", model);

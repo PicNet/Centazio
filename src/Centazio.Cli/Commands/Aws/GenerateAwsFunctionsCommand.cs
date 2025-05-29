@@ -20,7 +20,7 @@ public class GenerateAwsFunctionsCommand(CentazioSettings coresettings, ITemplat
   public override async Task ExecuteImpl(Settings settings) {
     var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, settings.FunctionName);
     
-    await UiHelpers.Progress("Generating AWS Lambda Function project", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList).GenerateSolution());
+    await UiHelpers.Progress("Generating AWS Lambda Function project", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList, settings.FunctionName).GenerateSolution());
     await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
   }
 
