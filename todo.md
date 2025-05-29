@@ -7,9 +7,12 @@
     - fix Log.Logger, currently only injected ILogger<> works
     - application insights (is this completed?) 
     - function-to-function triggers
+    - `centazio az func logs Centazio.Sample.AppSheet` did not show logs 
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
+    - generator is including all functions in assembly, even tho we specify a single function
+    - centazio aws func deploy throwing docker error
 
 - JB: cli:
   - generators needs a bit of work, comments, etc. Do tutorial
