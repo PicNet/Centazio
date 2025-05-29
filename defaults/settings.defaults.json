@@ -34,9 +34,9 @@
         "ShowLogStream": "azure functionapp logstream {{it.AppName}}" 
       },
       "Docker": {
-        "Build": "build -t {{it.EcrUri}}/{{ProjectName}} .",
+        "Build": "build -t {{it.EcrUri}}/{{it.ProjectName}} .",
         "LogIn": "login --username AWS --password-stdin {{it.EcrUri}}",
-        "Push": "push {{it.EcrUri}}/{{ProjectName}} ." 
+        "Push": "push {{it.EcrUri}}/{{it.ProjectName}}" 
       }
     },
     "AzureDefaultValues": {

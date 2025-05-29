@@ -40,6 +40,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   public async Task DeployImpl() {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
+    
+    Log.Information($"project [{project.ProjectName}] start building and deploying");
 
     var projnm = project.ProjectName.ToLower();
     using var ecr = new AmazonECRClient(credentials, region);
