@@ -16,6 +16,7 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
+using Microsoft.Extensions.DependencyInjection;
 using AddPermissionRequest = Amazon.Lambda.Model.AddPermissionRequest;
 using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
@@ -26,7 +27,7 @@ public interface IAwsFunctionDeployer {
   Task Deploy(AwsFunctionProjectMeta project);
 }
 
-public class AwsFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
+public class AwsFunctionDeployer([FromKeyedServices("aws")] CentazioSettings settings, [FromKeyedServices("aws")] CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
 
   public async Task Deploy(AwsFunctionProjectMeta project) =>
       await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();

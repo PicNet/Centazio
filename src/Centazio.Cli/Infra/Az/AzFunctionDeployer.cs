@@ -7,6 +7,7 @@ using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Az;
 
@@ -15,7 +16,7 @@ public interface IAzFunctionDeployer {
 }
 
 // try to replicate command: az functionapp deployment source config-zip -g <resource group name> -n <function app name> --src <zip file path>
-public class AzFunctionDeployer(CentazioSettings settings, CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
+public class AzFunctionDeployer([FromKeyedServices("az")] CentazioSettings settings, [FromKeyedServices("az")] CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
 
   
   public async Task Deploy(AzFunctionProjectMeta project) {

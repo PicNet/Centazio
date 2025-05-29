@@ -1,10 +1,11 @@
 ﻿using Centazio.Cli.Infra.Aws;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class AddAccountCommand(CentazioSettings clisetts, IAwsAccounts impl) 
+public class AddAccountCommand([FromKeyedServices("aws")] CentazioSettings clisetts, IAwsAccounts impl) 
     : AbstractCentazioCommand<AddAccountCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {

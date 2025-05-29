@@ -4,6 +4,7 @@ using Amazon.Organizations.Model;
 using Amazon.Runtime;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Aws;
 
@@ -14,7 +15,7 @@ public interface IAwsAccounts {
 
 }
 
-public class AwsAccounts(CentazioSecrets secrets, AwsSettings settings) : IAwsAccounts {
+public class AwsAccounts([FromKeyedServices("az")] CentazioSecrets secrets, [FromKeyedServices("az")] AwsSettings settings) : IAwsAccounts {
 
   private readonly IAmazonOrganizations client = new AmazonOrganizationsClient(
       new BasicAWSCredentials(secrets.AWS_KEY, secrets.AWS_SECRET),

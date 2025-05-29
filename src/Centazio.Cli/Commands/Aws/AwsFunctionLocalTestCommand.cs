@@ -1,11 +1,12 @@
 ﻿using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
 using Centazio.Hosts.Self;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class AwsFunctionLocalTestCommand(CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<AwsFunctionLocalTestCommand.Settings> {
+public class AwsFunctionLocalTestCommand([FromKeyedServices("aws")] CentazioSettings settings, SelfHost host) : AbstractCentazioCommand<AwsFunctionLocalTestCommand.Settings> {
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings {
     AssemblyNames = UiHelpers.Ask("Assembly Names (comma separated)"),
     FunctionFilter = UiHelpers.Ask("Function Filter", "All")

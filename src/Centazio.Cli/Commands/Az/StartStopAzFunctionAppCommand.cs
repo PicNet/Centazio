@@ -1,10 +1,11 @@
 ﻿using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog.Events;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class StartStopAzFunctionAppCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<StartStopAzFunctionAppCommand.Settings> {
+public class StartStopAzFunctionAppCommand([FromKeyedServices("az")] CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<StartStopAzFunctionAppCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

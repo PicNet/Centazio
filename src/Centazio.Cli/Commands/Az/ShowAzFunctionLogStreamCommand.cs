@@ -1,9 +1,11 @@
-﻿using Centazio.Core.Settings;
+﻿
+using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class ShowAzFunctionLogStreamCommand(CentazioSettings coresettings,  ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<ShowAzFunctionLogStreamCommand.Settings> {
+public class ShowAzFunctionLogStreamCommand([FromKeyedServices("az")] CentazioSettings coresettings,  ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<ShowAzFunctionLogStreamCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

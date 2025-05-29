@@ -1,13 +1,14 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
 // todo: support simulating multiple functions
 // todo: support simulating only a single function in an assembly
-public class AzFunctionLocalSimulateCommand(CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
+public class AzFunctionLocalSimulateCommand([FromKeyedServices("az")] CentazioSettings coresettings, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

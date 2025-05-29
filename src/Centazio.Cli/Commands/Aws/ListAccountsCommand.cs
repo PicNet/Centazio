@@ -7,9 +7,11 @@ public class ListAccountsCommand(IAwsAccounts impl) : AbstractCentazioCommand<Co
   public override Task<CommonSettings> GetInteractiveSettings() => Task.FromResult(new CommonSettings());
 
   public override async Task ExecuteImpl(CommonSettings settings) => 
-      await UiHelpers.Progress("Loading account list", async () => 
-          UiHelpers.Table(["Name", "Id", "Arn", "Status", "Email"], 
-              (await impl.ListAccounts())
+      await UiHelpers.Progress("Loading account list",
+          async () =>
+              UiHelpers.Table(["Name", "Id", "Arn", "Status", "Email"],
+                  (await impl.ListAccounts())
                   .Select(a => new List<string> { a.Name, a.Id, a.Arn, a.Status, a.Email })
                   .ToList()));
+
 }

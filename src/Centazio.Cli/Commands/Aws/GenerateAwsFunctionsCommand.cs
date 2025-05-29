@@ -1,11 +1,13 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Aws;
 
-public class GenerateAwsFunctionsCommand(CentazioSettings coresettings, ITemplater templater) : AbstractCentazioCommand<GenerateAwsFunctionsCommand.Settings> {
+// todo: add test that all commands in Aws/Az use appropriate KeyedService
+public class GenerateAwsFunctionsCommand([FromKeyedServices("aws")] CentazioSettings coresettings, ITemplater templater) : AbstractCentazioCommand<GenerateAwsFunctionsCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() {
     var assembly = UiHelpers.Ask("Assembly Name");

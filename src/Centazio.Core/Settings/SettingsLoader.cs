@@ -66,8 +66,9 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 
       RegisterSettingsHierarchyImpl(settings, registrar.Register);
 
-  public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, IServiceCollection svcs) where TSettings : CentazioSettings => 
-      RegisterSettingsHierarchyImpl(settings, (type, instance) => svcs.TryAdd(ServiceDescriptor.Singleton(type, instance)));
+  public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, IServiceCollection svcs, string key) where TSettings : CentazioSettings => 
+      RegisterSettingsHierarchyImpl(settings, (type, instance) => 
+          svcs.TryAdd(String.IsNullOrWhiteSpace(key) ? ServiceDescriptor.Singleton(type, instance) : ServiceDescriptor.KeyedSingleton(type, key, instance)));
 
   private static TSettings RegisterSettingsHierarchyImpl<TSettings>(TSettings settings, Action<Type, object> adder) where TSettings : CentazioSettings {
     adder(typeof(TSettings), settings);

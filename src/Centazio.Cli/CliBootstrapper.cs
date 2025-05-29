@@ -58,12 +58,16 @@ internal class CliBootstrapper {
       var isindev = devdir is not null;
       
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
-      var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);  
-      var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws", "azure"), svcs);
+      var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);
+      // todo: these keys 'aws', 'azure' should be in a Constants file
+      var defsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs, String.Empty);
+      var awssettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "aws"), svcs, "aws");
+      var azsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, "az"), svcs, "az");
       
       if (isindev) {
-        var secrets = await SecretsManager.LoadSecrets<CentazioSecrets>(settings, CentazioConstants.DEFAULT_ENVIRONMENT);
-        svcs.AddSingleton(secrets);
+        svcs.AddSingleton(await SecretsManager.LoadSecrets<CentazioSecrets>(defsettings, CentazioConstants.DEFAULT_ENVIRONMENT));
+        svcs.AddKeyedSingleton("aws", await SecretsManager.LoadSecrets<CentazioSecrets>(awssettings, CentazioConstants.DEFAULT_ENVIRONMENT, "aws"));
+        svcs.AddKeyedSingleton("az", await SecretsManager.LoadSecrets<CentazioSecrets>(azsettings, CentazioConstants.DEFAULT_ENVIRONMENT, "az"));
       }
       
       return isindev;
