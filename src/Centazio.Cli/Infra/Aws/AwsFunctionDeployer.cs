@@ -52,14 +52,14 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
     BuildAndPushDockerImage(ecruri, projnm);
 
+    await CreateSqsQueue();
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
-    await CreateSqsQueue();
   }
 
-  private static async Task CreateSqsQueue() {
-    var sqs = new AmazonSQSClient(new AmazonSQSConfig { ServiceURL = null });
+  private async Task CreateSqsQueue() {
+    var sqs = new AmazonSQSClient(credentials, region);
     await sqs.CreateQueueAsync(new CreateQueueRequest {
       QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME,
       Attributes = new Dictionary<string, string> {
