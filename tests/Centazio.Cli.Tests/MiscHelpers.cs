@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda;
+using Amazon.Lambda.Model;
 using Amazon.Runtime;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
@@ -53,6 +54,11 @@ public static class MiscHelpers {
     
     public static async Task DeleteFunctionApp(string appname) {
       using var lambda = await GetAmazonLambdaClient();
+      
+      var esm = await lambda.ListEventSourceMappingsAsync(new ListEventSourceMappingsRequest() { FunctionName = appname });
+      if (esm.EventSourceMappings.Any()) {
+        esm.EventSourceMappings.ForEach(async void (e) => { await lambda.DeleteEventSourceMappingAsync(new DeleteEventSourceMappingRequest { UUID = e.UUID }); });
+      }
       await lambda.DeleteFunctionAsync(appname);
     }
 
