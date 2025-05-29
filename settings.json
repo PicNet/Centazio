@@ -34,7 +34,7 @@
     "CreateSchema": true
   },
   "SecretsLoaderSettings": {
-    "Provider": "File"
+    "Provider": "Aws"
   },
   "AzureSettings": {
     "Region": "Australia East",
@@ -46,7 +46,7 @@
   },
   "AwsSettings": {
     "Region": "ap-southeast-2",
-    "AccountName": "PicNet",
+    "AccountName": "picnet-centazio",
     "SecretsManagerStoreIdTemplate": "picnet/centazio/<environment>"
   }
 }

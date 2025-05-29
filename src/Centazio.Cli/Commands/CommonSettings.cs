@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using Centazio.Cli.Infra.Ui;
-using Centazio.Core;
+﻿using Centazio.Core;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands;

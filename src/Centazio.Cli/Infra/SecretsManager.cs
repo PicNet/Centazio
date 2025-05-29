@@ -7,7 +7,9 @@ namespace Centazio.Cli.Infra;
 
 public static class SecretsManager 
 {
-  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() {
+  public delegate ISecretsLoader SecretsLoaderFactory(CentazioSettings settings);
+  
+  private static readonly Dictionary<ESecretsProviderType, SecretsLoaderFactory> Providers = new() {
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.SecretsFolders))).GetService(),
     [ESecretsProviderType.Aws] = settings => 

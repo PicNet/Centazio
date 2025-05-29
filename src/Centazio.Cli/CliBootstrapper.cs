@@ -6,7 +6,6 @@ using Centazio.Cli.Infra.Gen;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Providers.Aws.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 

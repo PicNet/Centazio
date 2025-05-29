@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Aws;
-using Centazio.Cli.Infra.Ui;
 
 namespace Centazio.Cli.Commands.Aws;
 

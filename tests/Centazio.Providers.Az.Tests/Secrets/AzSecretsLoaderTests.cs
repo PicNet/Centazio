@@ -15,8 +15,8 @@ public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
     loader = new AzSecretsLoaderFactory(settings).GetService();
   }
 
-  protected override async Task<BaseSecretsLoaderTests.TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
-    return (BaseSecretsLoaderTests.TestSettingsTargetObj) await loader.Load<BaseSecretsLoaderTests.TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
+  protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
+    return (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
   }
   
 }

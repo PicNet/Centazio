@@ -35,6 +35,6 @@ public class CheckProvidersImplementCorrectInterfacesAndTests {
     
     Assert.That(errors, Is.Empty, String.Join('\n', errors));
     
-    bool IsStageEntityOnly(string prov) => prov == "Aws";
+    bool IsStageEntityOnly(string prov) => prov is "Aws" or "Az" ;
   }
 }

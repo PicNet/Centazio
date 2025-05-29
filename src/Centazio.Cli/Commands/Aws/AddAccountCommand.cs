@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Aws;
-using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 

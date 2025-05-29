@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Commands;
-using Centazio.Cli.Infra.Ui;
 using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;

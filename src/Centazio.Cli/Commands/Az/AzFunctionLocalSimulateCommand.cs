@@ -1,7 +1,5 @@
-﻿using System.ComponentModel;
-using Centazio.Cli.Commands.Gen.Cloud;
+﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Cli.Infra.Ui;
 using Centazio.Core.Settings;
 using Spectre.Console.Cli;
 

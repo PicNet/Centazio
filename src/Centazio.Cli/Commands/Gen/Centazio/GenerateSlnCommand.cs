@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Gen;
-using Centazio.Cli.Infra.Ui;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Gen.Centazio;
