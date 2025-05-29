@@ -55,8 +55,9 @@ public interface IEpochTracker {
       var (system, sysentlst) = (sysents.Item1, sysents.Item2.ToList());
       if (!sysentlst.Any()) return;
 
-      var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentlst.Select(e => e.SystemId).ToList())).ToDictionary(m => m.SystemId, m => m.CoreId);
-      if (!idmap.Any()) throw new Exception($"Expected[{sysentlst.Count}] Entities[{coretype}] but none found");
+      var sysentids = sysentlst.Select(e => e.SystemId).ToList();
+      var idmap = (await ctx.CtlRepo.GetMapsFromSystemIds(system, coretype, sysentids)).ToDictionary(m => m.SystemId, m => m.CoreId);
+      if (!idmap.Any()) throw new Exception($"Expected[{sysentlst.Count}] Entities[{coretype}] but no matching CoreToSysMap entities found in CtlRepo with SystemIds[{String.Join(", ", sysentids)}]");
       var existings = await ctx.CoreStore.GetExistingEntities(coretype, idmap.Values.ToList());
       var syscores = await sysentlst.Select(e => ToCore(e, existings.Single(e2 => e2.CoreEntity.CoreId == idmap[e.SystemId]).CoreEntity)).Synchronous();
       var sums = syscores.Select(c => ctx.ChecksumAlg.Checksum(c)).Distinct().ToList();

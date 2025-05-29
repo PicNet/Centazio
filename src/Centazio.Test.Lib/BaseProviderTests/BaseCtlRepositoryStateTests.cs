@@ -173,6 +173,27 @@ public abstract class BaseCtlRepositoryStateTests {
     Task<List<EntityChange>> GetList() => repo.GetEntityChanges(C.CoreEntityName, start);
   }
   
+  [Test] public async Task Test_transactions_with_multiple_methods() {
+    if (GetType().Name == "InMemoryBaseCtlRepositoryTests") return;
+    
+    var created1 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("1"), "n1", "n1", DateOnly.MaxValue), C.System1Name), new("1"), new(Guid.NewGuid().ToString()));
+    var created2 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("2"), "n2", "n2", DateOnly.MaxValue), C.System1Name), new("2"), new(Guid.NewGuid().ToString()));
+    var result1 = (await repo.CreateSysMap(C.System1Name, C.CoreEntityName, [created1])).Single();
+    
+    var trans = await repo.BeginTransaction();
+    var result2 = (await repo.CreateSysMap(C.System1Name, C.CoreEntityName, [created2])).Single();
+    var updated1 = (await repo.UpdateSysMap(C.System1Name, C.CoreEntityName, [new Map.Updated(result1)])).Single();
+    await repo.SaveEntityChanges([EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick()))]);
+    await trans.Commit();
+    
+    var all = await repo.GetMapsFromSystemIds(C.System1Name, C.CoreEntityName, [new("1"), new("2")]);
+    
+    Assert.That(result1.CoreId, Is.EqualTo(created1.CoreId));
+    Assert.That(updated1.CoreId, Is.EqualTo(created1.CoreId));
+    Assert.That(result2.CoreId, Is.EqualTo(created2.CoreId));
+    Assert.That(all, Has.Count.EqualTo(2));
+  }
+  
   // ReSharper disable once NotAccessedPositionalProperty.Local
   record EmptyCoreEntity(DateTime LastUpdated) : ICoreEntity {
 

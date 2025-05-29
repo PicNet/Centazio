@@ -52,9 +52,8 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
         var existing = await db.Set<CoreStorageMeta.Dto>()
             .Where(m => m.CoreEntityTypeName == coretype.Value && strids.Contains(m.CoreId)).ToDictionaryAsync(m => m.CoreId);
         entities.ForEach(entity => UpsertEntity(entity, existing.ContainsKey(entity.CoreEntity.CoreId) ? EntityState.Modified : EntityState.Added, db));
-        await db.SaveChangesAsync();
-
-        Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}]");
+        var dbresult = await db.SaveChangesAsync();
+        Log.Debug($"CoreStorage.Upsert[{coretype}] - Entities({entities.Count})[" + String.Join(",", entities.Select(e => $"{e.CoreEntity.GetShortDisplayName()}")) + $"] Created[{entities.Count - existing.Count}] Updated[{existing.Count}] DbResult[{dbresult}]");
         return entities;
       });
 
