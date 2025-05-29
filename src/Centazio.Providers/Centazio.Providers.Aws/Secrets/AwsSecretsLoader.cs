@@ -23,19 +23,30 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
     var id = aws.GetSecretsStoreIdForEnvironment(environment);
-    var res = await client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = id });
-    if (string.IsNullOrEmpty(res.SecretString)) return required ? throw new Exception() : new Dictionary<string, string>();
-
-    if (!res.SecretString.Trim().StartsWith("{")) throw new Exception($"Secret value is not a JSON object");
-
-    var json = Json.Deserialize<Dictionary<string, object>>(res.SecretString);
+    var secretsstr = await GetSecretsValueString();
+    if (secretsstr is null) return [];
+    
+    var json = Json.Deserialize<Dictionary<string, object>>(secretsstr);
     return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? string.Empty);
+
+    async Task<string?> GetSecretsValueString() {
+      try {
+        var str = (await client.GetSecretValueAsync(new GetSecretValueRequest { SecretId = id })).SecretString?.Trim();
+        if (String.IsNullOrWhiteSpace(str) && required) throw new Exception($"secrets value in store [{id}] is empty.  This secrets store is required and should be available.");
+        if (str is not null && !str.StartsWith("{")) throw new Exception($"secrets value is not a JSON object");
+        return str;
+      }
+      catch (ResourceNotFoundException) {
+        if (required) throw new Exception($"could not find the specified secrets store id [{id}] in the current aws account.  This secrets store is required and should be available.");
+        return null;
+      }
+    }
   }
 
 }
 
 /// <summary>
-///   When using Aws Secrets Manager the AwsSettings.SecretsManagerStoreIdTemplate section is required in
+///   When using Aws Secrets Manager the AwsSettings.SecretsMa.AwsSecretsLoader.LonagerStoreIdTemplate section is required in
 ///   the `settings.json` file.  This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;`
 ///   with the required environment.
 /// </summary>
