@@ -19,9 +19,11 @@
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.Core" />
       <PackageReference Include="Amazon.Lambda.RuntimeSupport" />
+      <PackageReference Include="AWSSDK.CloudWatchLogs" />
       <PackageReference Include="AWSSDK.EventBridge" />
       <PackageReference Include="AWSSDK.SQS" />
       <PackageReference Include="Serilog.Extensions.Hosting" />
+      <PackageReference Include="Serilog.Sinks.AwsCloudWatch" />
     </ItemGroup>
 
 </Project>

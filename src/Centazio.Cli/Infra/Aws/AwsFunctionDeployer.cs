@@ -1,6 +1,4 @@
 ﻿using Amazon;
-using Amazon.CloudWatchLogs;
-using Amazon.CloudWatchLogs.Model;
 using Amazon.ECR;
 using Amazon.ECR.Model;
 using Amazon.EventBridge;
@@ -44,7 +42,6 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
 
     var projnm = project.ProjectName.ToLower();
-    await SetUpLogging();
     using var ecr = new AmazonECRClient(credentials, region);
     var accid = await GetAccountId();
 
@@ -194,6 +191,16 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
           QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
         })
       });
+      
+      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+        RoleName = rolenm,
+        PolicyName = "LambdaCloudWatchAccess" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_policy.json", new {
+          Region = region.SystemName,
+          AccountId = accountId,
+          FunctionName = project.AwsFunctionName.ToLower()
+        })
+      });
 
       // Wait for role to propagate (IAM changes can take time to propagate)
       Log.Information("Waiting for IAM role to propagate...");
@@ -238,22 +245,6 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     if (failed.Any()) throw new Exception($"failed to set Lambda as target for EventBridge rule:\n\t" + string.Join("\n\t", failed.Select(f => f.ErrorMessage)));
 
     Log.Information("Successfully configured 1-minute trigger for Lambda function");
-  }
-
-  private async Task SetUpLogging() {
-    using var cloudwatch = new AmazonCloudWatchLogsClient(credentials, region);
-    var loggrpnm = $"/aws/lambda/{project.AwsFunctionName}";
-
-    var exists = (await cloudwatch.DescribeLogGroupsAsync(new DescribeLogGroupsRequest { LogGroupNamePrefix = loggrpnm })).LogGroups.Exists(lg => lg.LogGroupName == loggrpnm);
-    if (exists) {
-      Log.Information($"CloudWatch Logs group already exists: {loggrpnm}");
-      return;
-    }
-
-    await cloudwatch.CreateLogGroupAsync(new CreateLogGroupRequest { LogGroupName = loggrpnm });
-    await cloudwatch.PutRetentionPolicyAsync(new PutRetentionPolicyRequest { LogGroupName = loggrpnm, RetentionInDays = 14 });
-
-    Log.Information($"Created CloudWatch Logs group: {loggrpnm} with 30-day retention");
   }
 
 }
