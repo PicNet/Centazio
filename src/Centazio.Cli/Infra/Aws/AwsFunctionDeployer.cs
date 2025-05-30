@@ -264,13 +264,13 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
   private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn) {
     var octs = project.Config()?.Operations.SelectMany(op => op.Triggers).ToList();
-    if (octs != null) {
-      await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, funcarn, trigger)));
-    }
+    if (octs != null) { await Task.WhenAll(octs.Select(trigger => {
+      var evbridge = new AmazonEventBridgeClient(credentials, region);
+      return CreateEventBridgeRule(lambda, evbridge, funcarn, trigger);
+    })); }
   }
 
-  private async Task CreateEventBridgeRule(AmazonLambdaClient lambda, string funcarn, ObjectChangeTrigger trigger) {
-    using var evbridge = new AmazonEventBridgeClient(credentials, region);
+  private async Task CreateEventBridgeRule(AmazonLambdaClient lambda, AmazonEventBridgeClient evbridge, string funcarn, ObjectChangeTrigger trigger) {
     var rulenm = $"ebr-{project.AwsFunctionName}-{trigger.System}-{trigger.Stage}-{trigger.Object}";
     var putRuleRequest = new PutRuleRequest {
       Name = rulenm,
