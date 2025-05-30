@@ -22,7 +22,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     // todo CP: this should support function-to-function triggers
     
     var notifier = (IChangesNotifier)(settings.AwsSettings.EventBridge ? new AwsEventBridgeChangesNotifier() :  new AwsSqsChangesNotifier(localaws));
-    var providersetting = settings.SecretsLoaderSettings.Provider ?? nameof(ESecretsProviderType.File);
+    var providersetting = settings.SecretsLoaderSettings.Provider;
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");
 

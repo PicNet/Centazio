@@ -38,6 +38,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
   private readonly ICommandRunner cmd = new CommandRunner();
   private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
+  private readonly string eventBusName = AwsEventBridgeChangesNotifier.EVENT_BUS_NAME;
 
   public async Task DeployImpl() {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
@@ -182,7 +183,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
-        PolicyName = "LambdaECRAccess" + rolenm,
+        PolicyName = "lambda-ecr-access-" + rolenm,
         PolicyDocument = templater.ParseFromPath("aws/ecr_policy.json", new {
           Region = region.SystemName,
           AccountId = accountId,
@@ -193,7 +194,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       if (!settings.AwsSettings.EventBridge) {
         await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
           RoleName = rolenm,
-          PolicyName = "LambdaSQSAccess" + rolenm,
+          PolicyName = "lambda-sqs-access-" + rolenm,
           PolicyDocument = templater.ParseFromPath("aws/sqs_policy.json",
               new {
                 Region = region.SystemName,
@@ -201,14 +202,21 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
                 QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
               })
         });
-      }
-      else {
-        // TODO policy for event bridge ??
+      } else {
+        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+          RoleName = rolenm,
+          PolicyName = "lambda-eventbridge-access-" + rolenm,
+          PolicyDocument = templater.ParseFromPath("aws/eventbridge_policy.json", new {
+            Region = region.SystemName,
+            AccountId = accountId,
+            EventBusName = eventBusName,
+          })
+        });
       }
 
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
-        PolicyName = "LambdaCloudWatchAccess" + rolenm,
+        PolicyName = "lambda-cloudwatch-access-" + rolenm,
         PolicyDocument = templater.ParseFromPath("aws/cloudwatch_policy.json",
             new {
               Region = region.SystemName,
@@ -264,42 +272,44 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
   private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn) {
     var octs = project.Config()?.Operations.SelectMany(op => op.Triggers).ToList();
-    if (octs != null) { await Task.WhenAll(octs.Select(trigger => {
+    if (octs != null) { await Task.WhenAll(octs.Select(async trigger => {
       var evbridge = new AmazonEventBridgeClient(credentials, region);
+      try {
+        await evbridge.DescribeEventBusAsync(new DescribeEventBusRequest { Name = eventBusName });
+        Log.Information($"Event bus {eventBusName} already exists.");
+      }
+      catch (ResourceNotFoundException) {
+        Log.Information($"Creating event bus {eventBusName}...");
+        await evbridge.CreateEventBusAsync(new CreateEventBusRequest { Name = eventBusName });
+      }
       return CreateEventBridgeRule(lambda, evbridge, funcarn, trigger);
     })); }
   }
 
   private async Task CreateEventBridgeRule(AmazonLambdaClient lambda, AmazonEventBridgeClient evbridge, string funcarn, ObjectChangeTrigger trigger) {
-    var rulenm = $"ebr-{project.AwsFunctionName}-{trigger.System}-{trigger.Stage}-{trigger.Object}";
+    var rulenm = $"ebr-{project.AwsFunctionName}-{trigger.System}-{trigger.Stage}-{trigger.Object}".ToLower();
     var putRuleRequest = new PutRuleRequest {
       Name = rulenm,
       EventPattern = templater.ParseFromPath("aws/eventbridge_rule.json",
           new {
-            System = trigger.System.Value,
-            Stage = trigger.Stage.Value,
-            Object = trigger.Object.Value
+            Source = AwsEventBridgeChangesNotifier.SOURCE_NAME,
+            DetailType = nameof(ObjectChangeTrigger),
+            System = trigger.System.Value.ToLower(),
+            Stage = trigger.Stage.Value.ToLower(),
+            Object = trigger.Object.Value.ToLower()
           }),
       State = RuleState.ENABLED,
       Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
-      EventBusName = "default" // Or your custom event bus
+      EventBusName = eventBusName
     };
 
-    var putRuleResponse = await evbridge.PutRuleAsync(putRuleRequest);
-    var rulearn = putRuleResponse.RuleArn;
+    var res = await evbridge.PutRuleAsync(putRuleRequest);
 
-    var putTargetsRequest = new PutTargetsRequest {
+    await evbridge.PutTargetsAsync(new PutTargetsRequest {
       Rule = rulenm,
-      EventBusName = "default",
-      Targets = new List<Target> {
-        new() {
-          Id = $"ebr-tgt-{rulenm}",
-          Arn = funcarn
-        }
-      }
-    };
-
-    await evbridge.PutTargetsAsync(putTargetsRequest);
+      EventBusName = eventBusName,
+      Targets = [ new() { Id = $"ebr-tgt-{rulenm}", Arn = funcarn }]
+    });
 
     try {
       await lambda.AddPermissionAsync(new AddPermissionRequest {
@@ -307,7 +317,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         StatementId = $"{rulenm}-permission",
         Action = "lambda:InvokeFunction",
         Principal = "events.amazonaws.com",
-        SourceArn = rulearn
+        SourceArn = res.RuleArn
       });
       Log.Information("Added permission for EventBridge to invoke Lambda function");
     }
