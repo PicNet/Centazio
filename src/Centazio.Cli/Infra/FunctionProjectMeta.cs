@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using Azure.ResourceManager.AppService.Models;
+using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra;
@@ -47,6 +48,8 @@ public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings
   
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
   public string RoleName => $"{DashedProjectName}-{AwsFunctionName}-role".ToLower();
+  
+  public FunctionConfig? Config() => ((IRunnableFunction?)Activator.CreateInstance(Assembly.GetTypes().First(t => t.Name == AwsFunctionName)))?.Config;
 
 }
 
