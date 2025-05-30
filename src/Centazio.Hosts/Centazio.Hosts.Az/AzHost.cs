@@ -1,5 +1,6 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker;
@@ -28,9 +29,11 @@ public static class AzHost {
 public class AzHostImpl(List<string> environments, List<Type> functions) {
 
   private readonly string? APP_INSIGHTS_CONN_STR = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")?.Trim();
-  private readonly AzHostCentazioEngineAdapter centazio = new(environments);
+  private AzHostCentazioEngineAdapter centazio = null!;
 
   public async Task Init() {
+    var settings = await new SettingsLoader().Load<CentazioSettings>(environments); // TODO need to check this is a proper way to get the settings
+    centazio = new(settings, environments);
     InitLogger();
     await centazio.Init(functions);
     

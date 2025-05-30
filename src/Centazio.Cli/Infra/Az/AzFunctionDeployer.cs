@@ -67,7 +67,7 @@ public class AzFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Az)] 
   }
 
   private async Task PublishFunctionApp(WebSiteResource appres, AzFunctionProjectMeta project) {
-    var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], [".azurefunctions", "runtimes"]);
+    var zipbytes = await Zip.ZipDir(project.PublishPath, [".exe", ".dll", ".json", ".env", "*.metadata", ".pdb"], [".azurefunctions", "runtimes", "defaults"]);
     var cred = await GetPublishCredentials(appres);
     
     var endpoint = $"https://{appres.Data.DefaultHostName.Replace("azurewebsites.net", "scm.azurewebsites.net")}/api/zipdeploy";
