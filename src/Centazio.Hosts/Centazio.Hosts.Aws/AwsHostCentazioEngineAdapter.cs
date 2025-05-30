@@ -20,8 +20,9 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
   };
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     // todo CP: this should support function-to-function triggers
-    var notifier = new AwsSqsChangesNotifier(localaws);
-    var providersetting = settings.SecretsLoaderSettings.Provider;
+    
+    var notifier = (IChangesNotifier)(settings.AwsSettings.EventBridge ? new AwsEventBridgeChangesNotifier() :  new AwsSqsChangesNotifier(localaws));
+    var providersetting = settings.SecretsLoaderSettings.Provider ?? nameof(ESecretsProviderType.File);
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");
 
@@ -33,7 +34,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     
     registrar.Register(secrets);
     registrar.Register<ISecretsLoader>(_ => loader);
-    registrar.Register<IChangesNotifier>(notifier);
+    registrar.Register(notifier);
     registrar.Register<IFunctionRunner>(prov => {
       var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings);
       return new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});

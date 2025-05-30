@@ -569,6 +569,8 @@ public record AwsSettings {
   
   public required string AccountName { get; init; }
   
+  public required bool EventBridge { get; init; }
+  
   /// <summary>
   /// This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment
   /// </summary>
