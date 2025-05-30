@@ -2,6 +2,7 @@
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 using AzCmd = Centazio.Cli.Tests.MiscHelpers.Az;
@@ -11,23 +12,24 @@ namespace Centazio.Cli.Tests.Infra.Az;
 public class AzFunctionDeployerTests {
 
   private CentazioSettings settings;
+  private CentazioSecrets secrets;
   private ITemplater templater;
   private AzFunctionProjectMeta project;
   
   [SetUp] public async Task SetUp() {
     settings = await TestingFactories.Settings();
+    secrets = await TestingFactories.Secrets();
     templater = new Templater(settings);
     project = await MiscHelpers.AzEmptyFunctionProject();
   }
   
   
   [Test, Ignore("slow")] public async Task Test_Full_Pipeline_Deployment_to_Az() {
-    var secrets = await TestingFactories.Secrets();
     var appname = project.DashedProjectName;
     await AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await new AzCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
+    await new AzCloudSolutionGenerator(settings, secrets, templater, project, ["in-mem"]).GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     await new AzFunctionDeployer(settings, secrets).Deploy(project);
     
@@ -42,7 +44,7 @@ public class AzFunctionDeployerTests {
   
   [Test] public async Task Test_CreateFunctionAppZip() {
     if (!Directory.Exists(project.PublishPath)) {
-      await new AzCloudSolutionGenerator(settings, templater, project, ["in-mem"]).GenerateSolution();
+      await new AzCloudSolutionGenerator(settings, secrets, templater, project, ["in-mem"]).GenerateSolution();
       await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     }
     

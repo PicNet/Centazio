@@ -1,9 +1,10 @@
 ﻿using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
+internal class AzCloudSolutionGenerator(CentazioSettings settings, CentazioSecrets secrets, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
     CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Az.AzHost).Assembly, environments, null) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
@@ -29,10 +30,15 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ITemplater te
   private async Task AddAzConfigJsonFilesToProject() {
     await AddTemplateFileToProject("host.json");
     await AddTemplateFileToProject("local.settings.json");
+    await AddTemplateFileToProject("local.settings.json", new { ApplicationInsightsConnectionString = secrets.AZ_APP_INSIGHT_CONNECTION_STRING ?? Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"),
+    });
     
-    async Task AddTemplateFileToProject(string fname) {
-      model.Files.Add(fname);
-      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), templater.ParseFromPath($"azure/{fname}" ));
+    async Task AddTemplateFileToProject(string fname , object? data = null) {
+      var content = data != null 
+          ? templater.ParseFromPath($"azure/{fname}", data)
+          : templater.ParseFromPath($"azure/{fname}");
+
+      await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), content);
     }
   }
   

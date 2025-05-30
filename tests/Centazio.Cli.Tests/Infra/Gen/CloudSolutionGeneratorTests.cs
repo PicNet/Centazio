@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Centazio.Test.Lib;
 
@@ -11,10 +12,12 @@ public class CloudSolutionGeneratorTests {
   private readonly ICommandRunner cmd = new CommandRunner();
   
   private CentazioSettings settings;
+  private CentazioSecrets secrets;
   private ITemplater templater;
   
   [SetUp] public async Task SetUp() {
     settings = await TestingFactories.Settings();
+    secrets = await TestingFactories.Secrets();
     templater = new Templater(settings);
   }
 
@@ -22,7 +25,7 @@ public class CloudSolutionGeneratorTests {
     var project = await MiscHelpers.AzEmptyFunctionProject();
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
-    await new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
+    await new AzCloudSolutionGenerator(settings, secrets, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
     var results = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
@@ -42,7 +45,7 @@ public class CloudSolutionGeneratorTests {
   
   [Test, Ignore("This test is quite slow and we have already verified that it works")] public async Task Test_that_generating_solution_twice_works() {
     var project = await MiscHelpers.AzEmptyFunctionProject();
-    var generator = new AzCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]);
+    var generator = new AzCloudSolutionGenerator(settings, secrets, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]);
     
     await generator.GenerateSolution();
     await generator.GenerateSolution();
