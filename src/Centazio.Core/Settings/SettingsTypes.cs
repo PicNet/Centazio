@@ -588,9 +588,10 @@ public record AwsSettings {
     public string? SecretsManagerStoreIdTemplate { get; init; }
 
     public AwsSettings ToBase() => new() { 
-Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
+      Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
+      AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
       SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
+      EventBridge = true
     };
   }
 }
