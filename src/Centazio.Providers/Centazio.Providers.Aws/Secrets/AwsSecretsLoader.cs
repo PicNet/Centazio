@@ -35,8 +35,7 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
         if (String.IsNullOrWhiteSpace(str) && required) throw new Exception($"secrets value in store [{id}] is empty.  This secrets store is required and should be available.");
         if (str is not null && !str.StartsWith("{")) throw new Exception($"secrets value is not a JSON object");
         return str;
-      }
-      catch (ResourceNotFoundException) {
+      } catch (ResourceNotFoundException) {
         if (required) throw new Exception($"could not find the specified secrets store id [{id}] in the current aws account.  This secrets store is required and should be available.");
         return null;
       }
@@ -54,6 +53,8 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
 public class AwsSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new AwsSecretsLoader(settings.AwsSettings);
+  
+  // todo: why do we have two `CentazioSettings`?
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     if (settings.AwsSettings is null) throw new ArgumentNullException(nameof(settings.AwsSettings));
     return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());

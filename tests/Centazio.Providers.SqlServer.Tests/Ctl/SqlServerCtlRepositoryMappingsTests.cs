@@ -8,7 +8,8 @@ namespace Centazio.Providers.SqlServer.Tests.Ctl;
 public class SqlServerCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
   protected override async Task<ITestingCtlRepository> GetRepository() {
     var connstr = (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).ConnStr;
-    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(connstr), new SqlServerDbFieldsHelper()).Initialise();
+    var settings = (await TestingFactories.Settings()).CtlRepository with { ConnectionString = connstr };
+    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings), new SqlServerDbFieldsHelper()).Initialise();
   }
 
 }

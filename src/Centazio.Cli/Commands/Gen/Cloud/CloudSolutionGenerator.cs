@@ -51,7 +51,7 @@ public abstract class CloudSolutionGenerator(
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
     await AddCentazioNuGetReferencesToProject(added);
       
-    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, funcname == null ? [] :[funcname]);
+    var functions = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, funcname is null ? [] :[funcname]);
     await AddCloudSpecificContentToProject(functions, added);
     
     var contents = templater.ParseFromPath("Project.csproj", model);

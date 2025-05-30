@@ -9,8 +9,7 @@ namespace Centazio.Providers.Sqlite.Ctl;
 public class SqliteCtlRepositoryFactory(CtlRepositorySettings settings) : IServiceFactory<ICtlRepository> {
   public ICtlRepository GetService() => new SqliteCtlRepository(Getdb, new SqliteDbFieldsHelper(), settings.CreateSchema);
 
-  private AbstractCtlRepositoryDbContext Getdb() => 
-      new SqliteCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName, settings.EntityChangeTableName);
+  private AbstractCtlRepositoryDbContext Getdb() => new SqliteCtlRepositoryDbContext(settings);
 }
 
 public class SqliteCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : AbstractEFCtlRepository(getdb) {

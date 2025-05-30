@@ -130,6 +130,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public async Task UpdateCoreAndCtlTables() {
     if (IsEmpty()) return;
 
+    // todo: transaction should use disposable pattern to auto-commit, and remove these Begin/Commit methods
     using var coretrans = await core.BeginTransaction();
     // todo: add transaction to CtlRepo
     // using var ctltrans = await ctl.BeginTransaction(); 

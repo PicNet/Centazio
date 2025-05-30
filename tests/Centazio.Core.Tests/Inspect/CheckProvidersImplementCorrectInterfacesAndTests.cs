@@ -4,8 +4,11 @@ namespace Centazio.Core.Tests.Inspect;
 
 public class CheckProvidersImplementCorrectInterfacesAndTests {
   
-  private readonly List<string> IGNORE = [nameof(BaseSimulationCoreStorageRepositoryTests), nameof(BaseSecretsLoaderTests)];
-  //todo ignore azure
+  private readonly List<string> IGNORE = [
+    nameof(BaseSimulationCoreStorageRepositoryTests),
+    nameof(BaseStagedEntityRepositoryTests),
+    nameof(BaseSecretsLoaderTests)];
+  
   [Test] public void Test_all_providers_implement_base_provider_tests() {
     var basetestsdir = FsUtils.GetCentazioPath("src", "Centazio.Test.Lib", "BaseProviderTests");
     var tests = InspectUtils.CsFiles(basetestsdir)

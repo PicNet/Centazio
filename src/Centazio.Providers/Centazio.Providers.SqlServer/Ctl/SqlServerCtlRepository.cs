@@ -10,8 +10,7 @@ public class SqlServerCtlRepositoryFactory(CtlRepositorySettings settings) : ISe
   public ICtlRepository GetService() => 
       new SqlServerCtlRepository(Getdb, new SqlServerDbFieldsHelper(), settings.CreateSchema);
   
-  private AbstractCtlRepositoryDbContext Getdb() 
-    => new SqlServerCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName, settings.EntityChangeTableName);
+  private AbstractCtlRepositoryDbContext Getdb() => new SqlServerCtlRepositoryDbContext(settings);
 }
 
 public class SqlServerCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : AbstractEFCtlRepository(getdb) {

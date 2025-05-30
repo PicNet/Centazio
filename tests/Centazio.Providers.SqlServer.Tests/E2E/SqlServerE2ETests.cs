@@ -24,7 +24,9 @@ public class SqlServerSimulationStorage : ISimulationStorage {
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqlServerDbFieldsHelper();
     var connstr = (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).ConnStr;
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(connstr), dbf).Initialise();
+    var settings = (await TestingFactories.Settings()).CtlRepository with { ConnectionString = connstr };
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(settings), dbf).Initialise();
+    // todo: replace this with settings also (all the table names)
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(connstr, nameof(Ctl).ToLower(), nameof(StagedEntity).ToLower())), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SimulationSqlServerDbContext(connstr), 

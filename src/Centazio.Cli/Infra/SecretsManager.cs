@@ -9,6 +9,7 @@ public static class SecretsManager
 {
   public delegate ISecretsLoader SecretsLoaderFactory(CentazioSettings settings);
   
+  // todo: why all these nullability checks when CentazioSettings in ctor is not nullable?
   private static readonly Dictionary<ESecretsProviderType, SecretsLoaderFactory> Providers = new() {
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.SecretsFolders))).GetService(),
@@ -19,9 +20,8 @@ public static class SecretsManager
   };
 
   public static async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    var providerString = settings.SecretsLoaderSettings.Provider ?? "File";
-    if (!Enum.TryParse<ESecretsProviderType>(providerString, out var provider)) throw new ArgumentException($"Unknown secrets provider: {providerString}");
-
+    var provname = settings.SecretsLoaderSettings.Provider;
+    if (!Enum.TryParse<ESecretsProviderType>(provname, out var provider)) throw new ArgumentException($"Unknown secrets provider: {provname}");
     if (!Providers.TryGetValue(provider, out var factory)) throw new ArgumentException($"Provider {provider} is not implemented");
 
     var loader = factory(settings);

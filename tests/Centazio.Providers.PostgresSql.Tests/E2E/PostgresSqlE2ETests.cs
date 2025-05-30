@@ -1,11 +1,12 @@
 ﻿using Centazio.Core.Ctl;
-using Centazio.Core.Ctl.Entities;
+using Centazio.Core.Settings;
 using Centazio.Core.Stage;
 using Centazio.Providers.EF;
 using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.PostgresSql.Ctl;
 using Centazio.Providers.PostgresSql.Stage;
+using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +14,14 @@ namespace Centazio.Providers.PostgresSql.Tests.E2E;
 
 public class PostgresSqlE2ETests : BaseE2ETests {
   private string? connstr;
-  protected override async Task<ISimulationStorage> GetStorage() => 
-      new PostgresSqlSimulationStorage(connstr ??= await new PostgresSqlConnection().Init());
+  protected override async Task<ISimulationStorage> GetStorage() {
+    var settings = (await TestingFactories.Settings()).CtlRepository;
+    return new PostgresSqlSimulationStorage(connstr ??= await new PostgresSqlConnection().Init(), settings);
+  }
+
 }
 
-public class PostgresSqlSimulationStorage(string connstr) : ISimulationStorage {
+public class PostgresSqlSimulationStorage(string connstr, CtlRepositorySettings settings) : ISimulationStorage {
   
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
@@ -29,13 +33,7 @@ public class PostgresSqlSimulationStorage(string connstr) : ISimulationStorage {
     var dbf = new PostgresSqlDbFieldsHelper();
     // todo: can we just pass in the CtlSettings here instead of all table names?
     // todo: ensure that StageEntityRepo also allows setting the table names using same pattern
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(
-        connstr,
-        nameof(Core.Ctl).ToLower(), 
-        nameof(SystemState).ToLower(), 
-        nameof(ObjectState).ToLower(), 
-        nameof(Map.CoreToSysMap).ToLower(),
-        nameof(EntityChange).ToLower()), dbf).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(settings), dbf).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new PostgresSqlStagedEntityContext(connstr)), dbf).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new PostgresSqlSimulationDbContext(connstr), 

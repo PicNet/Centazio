@@ -9,8 +9,7 @@ namespace Centazio.Providers.PostgresSql.Ctl;
 public class PostgresSqlCtlRepositoryFactory(CtlRepositorySettings settings) : IServiceFactory<ICtlRepository> {
   public ICtlRepository GetService() => new PostgresSqlCtlRepository(Getdb, new PostgresSqlDbFieldsHelper(), settings.CreateSchema);
 
-  private AbstractCtlRepositoryDbContext Getdb() => 
-      new PostgresSqlCtlRepositoryDbContext(settings.ConnectionString, settings.SchemaName, settings.SystemStateTableName, settings.ObjectStateTableName, settings.CoreToSysMapTableName, settings.EntityChangeTableName);
+  private AbstractCtlRepositoryDbContext Getdb() => new PostgresSqlCtlRepositoryDbContext(settings);
 }
 
 public class PostgresSqlCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, IDbFieldsHelper dbf, bool createschema) : AbstractEFCtlRepository(getdb) {

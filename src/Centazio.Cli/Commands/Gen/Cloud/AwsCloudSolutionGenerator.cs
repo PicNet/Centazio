@@ -3,7 +3,7 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments, string funcname = "") : 
+internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater templater, AwsFunctionProjectMeta project, List<string> environments, string funcname) : 
     CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Aws.AwsHost).Assembly, environments, funcname) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {

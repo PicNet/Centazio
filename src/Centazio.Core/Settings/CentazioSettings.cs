@@ -48,7 +48,7 @@ public record CentazioSettings {
 
   public virtual Dto ToDto() => new() {
     SecretsFolders = SecretsFolders,
-    SecretsLoaderSettings = SecretsLoaderSettings?.ToDto(),
+    SecretsLoaderSettings = SecretsLoaderSettings.ToDto(),
     Defaults = _Defaults?.ToDto(),
     AwsSettings = _AwsSettings?.ToDto(),
     AzureSettings = _AzureSettings?.ToDto(),

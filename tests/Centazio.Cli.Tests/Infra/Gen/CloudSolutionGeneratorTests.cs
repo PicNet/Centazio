@@ -33,7 +33,7 @@ public class CloudSolutionGeneratorTests {
     var project = await MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
     if (Directory.Exists(project.SolutionDirPath)) Directory.Delete(project.SolutionDirPath, true);
     
-    await new AwsCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
+    await new AwsCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT], String.Empty).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
     var results = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);

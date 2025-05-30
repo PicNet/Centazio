@@ -6,8 +6,6 @@ using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.Promote;
 
-// todo: add SaveEntityChanges tests
-// todo: add EntityChange functionality in E2E tests
 public class PromotionStepsTests {
 
   private readonly StagedEntity DUMMY = new(Guid.Empty, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new("{}"), new("{}"));

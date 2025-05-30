@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Centazio.Providers.EF;
 
+public delegate Task<T> TransactionOps<T>(T ctx) where T : DbContext;
+
 public class EfTransactionManager<T>(Func<T> getdb) : IAsyncDisposable 
     where T : DbContext {
   private EfTransactionWrapper<T>? transaction;
