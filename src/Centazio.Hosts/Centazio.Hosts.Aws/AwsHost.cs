@@ -21,7 +21,7 @@ public static class AwsHost {
   }
 
   public static async Task RunFunction(List<FunctionTrigger> triggers) {
-    if (impl is null) throw new Exception("AzHost.Init has not been called");
+    if (impl is null) throw new Exception("AwsHost.Init has not been called");
 
     await impl.RunFunction(triggers);
   }
