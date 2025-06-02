@@ -1,21 +1,26 @@
 ﻿using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
+using Amazon.Lambda;
+using Amazon.Lambda.Model;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Serilog;
+using Environment = System.Environment;
+using ResourceNotFoundException = Amazon.EventBridge.Model.ResourceNotFoundException;
 
 namespace Centazio.Hosts.Aws;
 
 public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
 
+  private string? funcnm;
+  private bool setup;
   public const string SOURCE_NAME = "centazio";
   public const string EVENT_BUS_NAME = "centazio-event-bus";
 
   public void Dispose() { }
 
   public void Init(List<IRunnableFunction> functions) { }
-
   public Task Run(IFunctionRunner runner) => throw new NotImplementedException();
 
   public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
@@ -40,5 +45,89 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   }
 
   public bool IsAsync => true;
+  public async Task Setup(IRunnableFunction func, List<FunctionTrigger> triggers) {
+    if (setup) return;
+    
+    funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
+    if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
+
+    using var lambda = new AmazonLambdaClient();
+    var res = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
+    await SetupEventBridge(lambda, res.Configuration.FunctionArn, triggers);
+    setup = true;
+  }
+
+  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<FunctionTrigger> triggers) {
+    var evbridge = new AmazonEventBridgeClient();
+    var octs = triggers.OfType<ObjectChangeTrigger>().ToList();
+    if (octs.Count <= 0) return;
+    
+    await CreateOrUpdateEventBusAsync(evbridge);
+    await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, evbridge, funcarn, trigger)));
+  }
+
+  private static async Task CreateOrUpdateEventBusAsync(AmazonEventBridgeClient evbridge)
+  {
+    try {
+      await evbridge.DescribeEventBusAsync(new DescribeEventBusRequest { Name = EVENT_BUS_NAME });
+      Log.Information($"Event bus {EVENT_BUS_NAME} already exists.");
+    }
+    catch (ResourceNotFoundException) {
+      Log.Information($"Creating event bus {EVENT_BUS_NAME}...");
+      await evbridge.CreateEventBusAsync(new CreateEventBusRequest { Name = EVENT_BUS_NAME });
+    }
+  }
+
+  private async Task CreateEventBridgeRule(AmazonLambdaClient lambda, AmazonEventBridgeClient evbridge, string funcarn, ObjectChangeTrigger trigger) {
+    var rulenm = $"ebr-{funcnm}-{trigger.System}-{trigger.Stage}-{trigger.Object}".ToLower();
+    
+    try {
+      await evbridge.DescribeRuleAsync(new DescribeRuleRequest { Name = rulenm, EventBusName = EVENT_BUS_NAME });
+      Log.Information($"Rule '{rulenm}' already exists on EventBus '{EVENT_BUS_NAME}'");
+      return;
+    }
+    catch (ResourceNotFoundException) {
+      Log.Information($"Rule '{rulenm}' does not exist. Proceeding to create it.");
+    }
+    
+    var putRuleRequest = new PutRuleRequest {
+      Name = rulenm,
+      EventPattern = Json.Serialize(new {
+        source = SOURCE_NAME,
+        detailType = nameof(ObjectChangeTrigger),
+        detail = new {
+          System = trigger.System.Value.ToLower(),
+          Stage = trigger.Stage.Value.ToLower(),
+          Object = trigger.Object.Value.ToLower()
+        }
+      }),
+      State = RuleState.ENABLED,
+      Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
+      EventBusName = EVENT_BUS_NAME
+    };
+
+    var res = await evbridge.PutRuleAsync(putRuleRequest);
+
+    await evbridge.PutTargetsAsync(new PutTargetsRequest {
+      Rule = rulenm,
+      EventBusName = EVENT_BUS_NAME,
+      Targets = [ new() { Id = $"ebr-tgt-{rulenm}", Arn = funcarn }]
+    });
+    
+    try {
+      await lambda.AddPermissionAsync(new AddPermissionRequest {
+        FunctionName = funcnm,
+        StatementId = $"{rulenm}-permission",
+        Action = "lambda:InvokeFunction",
+        Principal = "events.amazonaws.com",
+        SourceArn = res.RuleArn
+      });
+      Log.Information("Added permission for EventBridge to invoke Lambda function");
+    }
+    catch (ResourceConflictException) {
+      // Permission already exists - this is fine
+      Log.Information("Permission already exists for EventBridge to invoke Lambda function");
+    }
+  }
 
 }

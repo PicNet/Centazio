@@ -22,6 +22,7 @@
       <PackageReference Include="Amazon.Lambda.RuntimeSupport" />
       <PackageReference Include="AWSSDK.CloudWatchLogs" />
       <PackageReference Include="AWSSDK.EventBridge" />
+      <PackageReference Include="AWSSDK.Lambda" />
       <PackageReference Include="AWSSDK.SQS" />
       <PackageReference Include="Serilog.Extensions.Hosting" />
       <PackageReference Include="Serilog.Sinks.AwsCloudWatch" />

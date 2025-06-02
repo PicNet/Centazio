@@ -1,9 +1,0 @@
-{
-  "source": "{{it.Source}}",
-  "detail-type": "{{it.DetailType}}",
-  "detail": {
-    "System": "{{it.System}}",
-    "Stage": "{{it.Stage}}",
-    "Object": "{{it.Object}}"
-  }
-}

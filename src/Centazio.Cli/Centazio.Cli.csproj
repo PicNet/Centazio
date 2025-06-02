@@ -33,9 +33,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\..\defaults\templates\aws\eventbridge_rule.json">
-        <Link>defaults\templates\aws\eventbridge_rule.json</Link>
-      </Content>
       <None Remove="..\..\defaults\**\*.cs" />
       <Content Include="..\..\defaults\**\*">
         <Link>defaults\%(RecursiveDir)%(Filename)%(Extension)</Link>

@@ -48,9 +48,6 @@ public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings
   
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
   public string RoleName => $"{DashedProjectName}-{AwsFunctionName}-role".ToLower();
-  
-  public FunctionConfig? Config() => ((IRunnableFunction?)Activator.CreateInstance(Assembly.GetTypes().First(t => t.Name == AwsFunctionName)))?.Config;
-
 }
 
 public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSettings settings) {

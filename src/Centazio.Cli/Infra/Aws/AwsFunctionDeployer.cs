@@ -60,7 +60,6 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
-    if (settings.AwsSettings.EventBridge) { await SetupEventBridge(lambda, funcarn); }
   }
 
   private async Task CreateSqsQueue() {
@@ -269,62 +268,4 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
     Log.Information("Successfully configured 1-minute trigger for Lambda function");
   }
-
-  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn) {
-    var octs = project.Config()?.Operations.SelectMany(op => op.Triggers).ToList();
-    if (octs != null) { await Task.WhenAll(octs.Select(async trigger => {
-      var evbridge = new AmazonEventBridgeClient(credentials, region);
-      try {
-        await evbridge.DescribeEventBusAsync(new DescribeEventBusRequest { Name = eventBusName });
-        Log.Information($"Event bus {eventBusName} already exists.");
-      }
-      catch (ResourceNotFoundException) {
-        Log.Information($"Creating event bus {eventBusName}...");
-        await evbridge.CreateEventBusAsync(new CreateEventBusRequest { Name = eventBusName });
-      }
-      return CreateEventBridgeRule(lambda, evbridge, funcarn, trigger);
-    })); }
-  }
-
-  private async Task CreateEventBridgeRule(AmazonLambdaClient lambda, AmazonEventBridgeClient evbridge, string funcarn, ObjectChangeTrigger trigger) {
-    var rulenm = $"ebr-{project.AwsFunctionName}-{trigger.System}-{trigger.Stage}-{trigger.Object}".ToLower();
-    var putRuleRequest = new PutRuleRequest {
-      Name = rulenm,
-      EventPattern = templater.ParseFromPath("aws/eventbridge_rule.json",
-          new {
-            Source = AwsEventBridgeChangesNotifier.SOURCE_NAME,
-            DetailType = nameof(ObjectChangeTrigger),
-            System = trigger.System.Value.ToLower(),
-            Stage = trigger.Stage.Value.ToLower(),
-            Object = trigger.Object.Value.ToLower()
-          }),
-      State = RuleState.ENABLED,
-      Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
-      EventBusName = eventBusName
-    };
-
-    var res = await evbridge.PutRuleAsync(putRuleRequest);
-
-    await evbridge.PutTargetsAsync(new PutTargetsRequest {
-      Rule = rulenm,
-      EventBusName = eventBusName,
-      Targets = [ new() { Id = $"ebr-tgt-{rulenm}", Arn = funcarn }]
-    });
-
-    try {
-      await lambda.AddPermissionAsync(new AddPermissionRequest {
-        FunctionName = project.AwsFunctionName,
-        StatementId = $"{rulenm}-permission",
-        Action = "lambda:InvokeFunction",
-        Principal = "events.amazonaws.com",
-        SourceArn = res.RuleArn
-      });
-      Log.Information("Added permission for EventBridge to invoke Lambda function");
-    }
-    catch (ResourceConflictException) {
-      // Permission already exists - this is fine
-      Log.Information("Permission already exists for EventBridge to invoke Lambda function");
-    }
-  }
-
 }
