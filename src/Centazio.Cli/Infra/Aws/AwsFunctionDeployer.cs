@@ -220,7 +220,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
             new {
               Region = region.SystemName,
               AccountId = accountId,
-              FunctionName = project.AwsFunctionName.ToLower()
+              FunctionName = project.AwsFunctionName
             })
       });
 
@@ -231,7 +231,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
             new {
               Region = region.SystemName,
               AccountId = accountId,
-              FunctionName = project.AwsFunctionName.ToLower()
+              FunctionName = project.AwsFunctionName
             })
       });
 

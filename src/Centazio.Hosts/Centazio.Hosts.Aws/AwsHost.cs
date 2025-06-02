@@ -14,16 +14,23 @@ public static class AwsHost {
   private static AwsHostImpl? impl;
 
   public static async Task Init(List<string> environments, IAwsFunctionHandler handler, Type func) {
-    if (impl is not null) throw new Exception("AwsHost.Init already called");
-
+    if (impl is not null) {
+      Log.Information("AwsHost.Init already called");
+      return;
+    }
+    
     impl = new(environments, func);
+    Log.Information("impl initialised");
     await impl.Init(handler);
+    Log.Information("impl.Init called");
   }
 
   public static async Task RunFunction(List<FunctionTrigger> triggers) {
+    Log.Information("AwsHost RunFunction called");
     if (impl is null) throw new Exception("AwsHost.Init has not been called");
 
     await impl.RunFunction(triggers);
+    Log.Information("impl.RunFunction called");
   }
 
 }
@@ -38,21 +45,16 @@ public class AwsHostImpl(List<string> environments, Type func) {
     var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
     centazio = new(settings, environments, false);
     await centazio.Init([func]);
+    Log.Information("Init CentazioEngineAdapter called");
     await InitAwsLambdaFunctionHost(handler);
+    Log.Information("InitAwsLambdaFunctionHost called");
   }
 
   private void InitLogger() {
-    var options = new CloudWatchSinkOptions {
-      LogGroupName = $"/aws/lambda/{func.Name.ToLower()}",
-      TextFormatter = new JsonFormatter(),
-      MinimumLogEventLevel = Serilog.Events.LogEventLevel.Information,
-      CreateLogGroup = true,
-      LogStreamNameProvider = new DefaultLogStreamProvider()
-    };
-
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
-        .WriteTo.AmazonCloudWatch(options, new AmazonCloudWatchLogsClient())
+        .Enrich.WithProperty("FunctionName", func.Name)
+        .WriteTo.Console()
         .CreateLogger();
   }
 
