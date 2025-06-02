@@ -13,13 +13,7 @@ public class AzSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
   private readonly SecretClient client = InitializeClient(azure);
 
   private static SecretClient InitializeClient(AzureSettings azure) {
-    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions {
-      TenantId = azure.TenantId,
-      ExcludeSharedTokenCacheCredential = true, 
-      ExcludeManagedIdentityCredential = true, 
-      ExcludeVisualStudioCredential = true
-
-    });
+    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = azure.TenantId });
 
     return new SecretClient(new Uri($"https://{azure.KeyVaultName}.vault.azure.net/"), credential);
   }

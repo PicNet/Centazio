@@ -399,6 +399,28 @@ Your projects should define their own Secrets type for serialisation.  Your main
 
 Centazio will manage this serialisation/deserialisation, deployment to cloud environments, dependency injection, etc.
 
+### Configuring Azure Secrets KeyVault Access
+
+To enable KeyVault access for your Azure Function, follow these steps:
+
+1. **Enable Managed Identity**
+    - Navigate to the Azure Portal
+    - Go to your Function App settings
+    - Select "Identity" from the left menu
+    - Under the "System assigned" tab, switch the Status to "On"
+    - Click "Save" to confirm
+    - Click on Azure Role Assignment
+    - Then Add the KeyVaultSecretUser Role or any role with read list and value for secrets.
+
+2. **Configure KeyVault Access**
+    - Go to your Azure KeyVault resource
+    - Select "Access control (IAM)" from the left menu
+    - Click "+ Add" and select "Add role assignment"
+    - Choose "Key Vault Secrets User" role
+    - Under "Members", select "Managed identity"
+    - Select your function app from the list of managed identities
+    - Click "Review + assign" to save the changes
+
 ## Common CLI Commands
 
 - Install: `dotnet tool install --prerelease --global Centazio.Cli`
