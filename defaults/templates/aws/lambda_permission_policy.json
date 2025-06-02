@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:AddPermission",
+        "lambda:GetFunction"
+      ],
+      "Resource": "arn:aws:lambda:{{it.Region}}:{{it.AccountId}}:function:{{it.FunctionName}}"
+    }
+  ]
+}

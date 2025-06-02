@@ -4,7 +4,12 @@
     {
       "Effect": "Allow",
       "Action": [
-        "events:PutEvents"
+        "events:PutEvents",
+        "events:DescribeRule",
+        "events:DescribeEventBus",
+        "events:CreateEventBus",
+        "events:PutRule",
+        "events:PutTargets"
       ],
       "Resource": "arn:aws:events:{{it.Region}}:{{it.AccountId}}:event-bus/{{it.EventBusName}}"
     }

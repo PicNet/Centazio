@@ -183,7 +183,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
         PolicyName = "lambda-ecr-access-" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/ecr_policy.json", new {
+        PolicyDocument = templater.ParseFromPath("aws/ecr_permission_policy.json", new {
           Region = region.SystemName,
           AccountId = accountId,
           ProjectName = project.ProjectName.ToLower()
@@ -194,7 +194,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
           RoleName = rolenm,
           PolicyName = "lambda-sqs-access-" + rolenm,
-          PolicyDocument = templater.ParseFromPath("aws/sqs_policy.json",
+          PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json",
               new {
                 Region = region.SystemName,
                 AccountId = accountId,
@@ -205,7 +205,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
           RoleName = rolenm,
           PolicyName = "lambda-eventbridge-access-" + rolenm,
-          PolicyDocument = templater.ParseFromPath("aws/eventbridge_policy.json", new {
+          PolicyDocument = templater.ParseFromPath("aws/eventbridge_permission_policy.json", new {
             Region = region.SystemName,
             AccountId = accountId,
             EventBusName = eventBusName,
@@ -216,7 +216,18 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
         PolicyName = "lambda-cloudwatch-access-" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_policy.json",
+        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_permission_policy.json",
+            new {
+              Region = region.SystemName,
+              AccountId = accountId,
+              FunctionName = project.AwsFunctionName.ToLower()
+            })
+      });
+
+      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+        RoleName = rolenm,
+        PolicyName = "lambda-access-" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/lambda_permission_policy.json",
             new {
               Region = region.SystemName,
               AccountId = accountId,
