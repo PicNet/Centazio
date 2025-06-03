@@ -45,7 +45,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   public bool IsAsync => true;
 
   public async Task Setup(IRunnableFunction func) {
-    if (setup) return;
+    if (setup) return; // TODO CP - it will be called on every cold start. Need to find a way to run once after the first invocation.
 
     funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
     if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
