@@ -59,7 +59,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
     setup = true;
   }
 
-  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, IList<ObjectChangeTrigger> octs) {
+  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<ObjectChangeTrigger> octs) {
     var evbridge = new AmazonEventBridgeClient();
     await CreateOrUpdateEventBusAsync(evbridge);
     await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, evbridge, funcarn, trigger)));
