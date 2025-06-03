@@ -10,7 +10,7 @@ public class EnvironmentSecretsLoader : AbstractSecretsLoader {
       var lscrts = new Dictionary<string, string>();
       foreach (var key in vars.Keys) {
         var k = key.ToString();
-        if (k == null || !k.StartsWith(environment.ToUpper() + "_")) continue;
+        if (k is null || !k.StartsWith(environment.ToUpper() + "_")) continue;
 
         var fieldName = k.Substring(environment.Length + 1);
         lscrts[fieldName] = vars[key]?.ToString() ?? string.Empty;
