@@ -10,8 +10,7 @@ namespace Centazio.Hosts.Az;
 public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
 
   private readonly List<string> environments = environments;
-  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new()
-  {
+  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() {
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings).GetService(),
     [ESecretsProviderType.Az] = settings => 

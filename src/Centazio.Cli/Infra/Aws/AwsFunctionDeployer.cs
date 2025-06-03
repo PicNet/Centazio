@@ -137,9 +137,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     var res = await lambda.CreateFunctionAsync(new CreateFunctionRequest {
       FunctionName = project.AwsFunctionName,
       PackageType = PackageType.Image,
-      Code = new FunctionCode {
-        ImageUri = imageUri
-      },
+      Code = new FunctionCode { ImageUri = imageUri },
       Role = await GetOrCreateRole(project.RoleName, accountId),
       MemorySize = 256,
       Timeout = 30
@@ -165,83 +163,98 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     using var aim = new AmazonIdentityManagementServiceClient(credentials);
 
     try { return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn; }
-    catch (NoSuchEntityException) {
-      Log.Information($"IAM Role {rolenm} does not exist. Creating...");
+    catch (NoSuchEntityException) { return await CreateRole(rolenm, accountId, aim); }
+  }
 
-      // Create the role with the trust policy
-      var response = await aim.CreateRoleAsync(new CreateRoleRequest {
-        RoleName = rolenm,
-        AssumeRolePolicyDocument = templater.ParseFromPath("aws/lambda_policy.json", new { }),
-        Description = "Role for AWS Lambda execution"
-      });
+  private async Task<string> CreateRole(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    Log.Information($"IAM Role {rolenm} does not exist. Creating...");
 
-      await aim.AttachRolePolicyAsync(new AttachRolePolicyRequest {
-        RoleName = rolenm,
-        PolicyArn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-      });
+    // Create the role with the trust policy
+    var response = await aim.CreateRoleAsync(new CreateRoleRequest {
+      RoleName = rolenm,
+      AssumeRolePolicyDocument = templater.ParseFromPath("aws/lambda_policy.json", new { }),
+      Description = "Role for AWS Lambda execution"
+    });
 
-      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-        RoleName = rolenm,
-        PolicyName = "lambda-ecr-access-" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/ecr_permission_policy.json", new {
-          Region = region.SystemName,
-          AccountId = accountId,
-          ProjectName = project.ProjectName.ToLower()
-        })
-      });
+    await aim.AttachRolePolicyAsync(new AttachRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyArn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    });
 
-      if (!settings.AwsSettings.EventBridge) {
-        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-          RoleName = rolenm,
-          PolicyName = "lambda-sqs-access-" + rolenm,
-          PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json",
-              new {
-                Region = region.SystemName,
-                AccountId = accountId,
-                QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
-              })
-        });
-      } else {
-        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-          RoleName = rolenm,
-          PolicyName = "lambda-eventbridge-access-" + rolenm,
-          PolicyDocument = templater.ParseFromPath("aws/eventbridge_permission_policy.json", new {
-            Region = region.SystemName,
-            AccountId = accountId,
-            EventBusName = eventBusName,
-          })
-        });
-      }
+    await AddEcrAccessPolicyToRole(rolenm, accountId, aim);
 
-      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-        RoleName = rolenm,
-        PolicyName = "lambda-cloudwatch-access-" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_permission_policy.json",
-            new {
-              Region = region.SystemName,
-              AccountId = accountId,
-              FunctionName = project.AwsFunctionName
-            })
-      });
+    if (!settings.AwsSettings.EventBridge) { await AddSqsAccessPolicy(rolenm, accountId, aim); } else { await AddEventBridgePolicy(rolenm, accountId, aim); }
 
-      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-        RoleName = rolenm,
-        PolicyName = "lambda-access-" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/lambda_permission_policy.json",
-            new {
-              Region = region.SystemName,
-              AccountId = accountId,
-              FunctionName = project.AwsFunctionName
-            })
-      });
+    await CreateCloudWatchRolePolicy(rolenm, accountId, aim);
 
-      // Wait for role to propagate (IAM changes can take time to propagate)
-      Log.Information("Waiting for IAM role to propagate...");
-      await Task.Delay(10000); // 10 seconds delay
+    await CreateLambdaAccessPolicy(rolenm, accountId, aim);
 
-      Log.Information($"Created IAM Role: {response.Role.Arn}");
-      return response.Role.Arn;
-    }
+    // Wait for role to propagate (IAM changes can take time to propagate)
+    Log.Information("Waiting for IAM role to propagate...");
+    await Task.Delay(10000); // 10 seconds delay
+
+    Log.Information($"Created IAM Role: {response.Role.Arn}");
+    return response.Role.Arn;
+  }
+
+  private async Task AddEcrAccessPolicyToRole(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyName = "lambda-ecr-access-" + rolenm,
+      PolicyDocument = templater.ParseFromPath("aws/ecr_permission_policy.json", new {
+        Region = region.SystemName,
+        AccountId = accountId,
+        ProjectName = project.ProjectName.ToLower()
+      })
+    });
+  }
+
+  private async Task CreateLambdaAccessPolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyName = "lambda-access-" + rolenm,
+      PolicyDocument = templater.ParseFromPath("aws/lambda_permission_policy.json", new {
+        Region = region.SystemName,
+        AccountId = accountId,
+        FunctionName = project.AwsFunctionName
+      })
+    });
+  }
+
+  private async Task CreateCloudWatchRolePolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyName = "lambda-cloudwatch-access-" + rolenm,
+      PolicyDocument = templater.ParseFromPath("aws/cloudwatch_permission_policy.json", new {
+        Region = region.SystemName,
+        AccountId = accountId,
+        FunctionName = project.AwsFunctionName
+      })
+    });
+  }
+
+  private async Task AddEventBridgePolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyName = "lambda-eventbridge-access-" + rolenm,
+      PolicyDocument = templater.ParseFromPath("aws/eventbridge_permission_policy.json", new {
+        Region = region.SystemName,
+        AccountId = accountId,
+        EventBusName = eventBusName,
+      })
+    });
+  }
+
+  private async Task AddSqsAccessPolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+      RoleName = rolenm,
+      PolicyName = "lambda-sqs-access-" + rolenm,
+      PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json", new {
+        Region = region.SystemName,
+        AccountId = accountId,
+        QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
+      })
+    });
   }
 
   private async Task SetUpTimer(AmazonLambdaClient lambda, string funcarn) {

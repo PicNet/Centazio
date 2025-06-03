@@ -17,8 +17,7 @@ public class EnvironmentSecretsLoader : AbstractSecretsLoader {
       }
 
       return await Task.FromResult(lscrts);
-    }
-    catch (Exception ex) {
+    } catch (Exception ex) {
       throw new Exception($"Error loading secrets as dictionary for environment '{environment}': {ex.Message}", ex);
     }
   }
