@@ -45,7 +45,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   }
 
   public bool IsAsync => true;
-  public async Task Setup(IRunnableFunction func, List<FunctionTrigger> triggers) {
+  public async Task Setup(IRunnableFunction func) {
     if (setup) return;
     
     funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");

@@ -8,7 +8,7 @@ public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
   private List<IRunnableFunction> functions = null!;
   
   public bool IsAsync => true;
-  public Task Setup(IRunnableFunction func, List<FunctionTrigger> triggers) => Task.CompletedTask;
+  public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> funcs) { functions = funcs; }
   
   public Task Run(IFunctionRunner runner) {
