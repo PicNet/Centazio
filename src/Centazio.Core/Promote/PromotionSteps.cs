@@ -139,10 +139,15 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
         core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
         ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
         ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-        ctl.SaveEntityChanges(ToPromote().Select(EntityChange.Create).ToList()));
+        ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList()));
 
     await coretrans.Commit();
     // await ctltrans.Commit();
+    
+    EntityChange BagToEntityChange(PromotionBag bag) {
+      var (meta, old, @new) = (bag.CoreEntityAndMeta.Meta, bag.PreExistingCoreEntityAndMeta?.CoreEntity, bag.CoreEntityAndMeta.CoreEntity);
+      return EntityChange.Create(bag.CoreEntityAndMeta.Meta.CoreEntityTypeName, meta.CoreId, meta.LastUpdateSystem, meta.OriginalSystemType, meta.LastUpdateSystemId, old, @new);
+    }
   }
   
   public async Task UpdateAllStagedEntitiesWithNewState(IStagedEntityRepository stagestore) => 

@@ -2,7 +2,7 @@
     <!-- General Properties for all Projects -->
     <PropertyGroup>
         <Description>PicNet's Systems Integration, Workflow and Master Data Platform</Description>
-        <Version>0.1.21-beta</Version>
+        <Version>0.1.22-beta</Version>
         <Authors>PicNet Pty Ltd</Authors>
         <Company>PicNet Pty Ltd</Company>
         <RepositoryUrl>https://github.com/yourusername/centazio</RepositoryUrl>
@@ -17,6 +17,7 @@
     </PropertyGroup>
     
     
+    
     <!-- NuGet Properties -->
     <PropertyGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
         <PackageId>$(MSBuildProjectName)</PackageId>
@@ -28,9 +29,11 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
+     <ItemGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
+         <None Include="$(MSBuildThisFileDirectory)readme.md" Pack="true" PackagePath="\" />
+     </ItemGroup>
     
     <!-- Unit Test Projects -->
-    
     <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
         <IsTestProject>true</IsTestProject>
         <IsPackable>false</IsPackable>

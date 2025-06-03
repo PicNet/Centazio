@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Centazio.Cli.Commands;
+using Centazio.Cli.Commands.Dev;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
@@ -34,7 +35,7 @@ public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
           if (key is not CentazioConstants.Hosts.Aws) errors.Add($"type[{type.FullName}] ctor arg[{arg.Name}] should have [FromKeyedServices(CentazioConstants.Hosts.Aws)]");
         } else if (type.Namespace.ToLower().Contains($".{CentazioConstants.Hosts.Az}", StringComparison.OrdinalIgnoreCase)) {
           if (key is not CentazioConstants.Hosts.Az) errors.Add($"type[{type.FullName}] ctor arg[{arg.Name}] should have [FromKeyedServices(CentazioConstants.Hosts.Az)]");
-        } else {
+        } else if (type.Namespace != typeof(PackageAndPublishNuGetsCommand).Namespace) { // alow Dev namespace to have any required `FromKeyedServices`
           if (attribute is not null) errors.Add($"type[{type.FullName}] ctor arg[{arg.Name}] should NOT have [FromKeyedServices]");
         }
       };

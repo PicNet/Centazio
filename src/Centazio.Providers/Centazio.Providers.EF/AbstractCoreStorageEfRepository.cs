@@ -12,7 +12,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   private readonly EfTransactionManager<CentazioDbContext> mgr = new(getdb);
   
   public Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null) => mgr.BeginTransaction(reuse);
-  protected Task<T> UseDb<T>(Func<CentazioDbContext, Task<T>> func) => mgr.UseDb(func);
+  protected Task<T> UseDb<T>(DbOperation<CentazioDbContext, T> func) => mgr.UseDb(func);
 
   public virtual ValueTask DisposeAsync() => mgr.DisposeAsync();
   

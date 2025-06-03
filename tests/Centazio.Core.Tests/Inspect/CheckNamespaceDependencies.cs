@@ -22,12 +22,20 @@ public class CheckNamespaceDependencies {
 
   [Test] public void Test_namespace_dependencies() {
     BIDI_DISALLOWED.ForEach(pair => {
-      Assert.That(InspectUtils.CentazioTypes.That().ResideInNamespace(pair.Namespace1).ShouldNot().HaveDependencyOn(pair.Namespace2).GetResult().IsSuccessful);
-      Assert.That(InspectUtils.CentazioTypes.That().ResideInNamespace(pair.Namespace2).ShouldNot().HaveDependencyOn(pair.Namespace1).GetResult().IsSuccessful);
+      TestDisallowedDependency(pair.Namespace1, pair.Namespace2);
+      TestDisallowedDependency(pair.Namespace2, pair.Namespace1);
     });
     ONE_WAY_DISALLOWED.ForEach(pair => {
-      Assert.That(InspectUtils.CentazioTypes.That().ResideInNamespace(pair.Namespace1).ShouldNot().HaveDependencyOn(pair.Namespace2).GetResult().IsSuccessful);
+      TestDisallowedDependency(pair.Namespace1, pair.Namespace2);
     });
+    
+    void TestDisallowedDependency(string namespace1, string notallowed) {
+      var result = InspectUtils.CentazioTypes.That().ResideInNamespace(namespace1).ShouldNot().HaveDependencyOn(notallowed).GetResult();
+      if (result.IsSuccessful) return;
+      var message = $"[{namespace1}] should not depend on [{notallowed}]" + 
+          $"\nFailing Types:\n\t" + String.Join($"\n\t", result.FailingTypeNames);
+      Assert.That(result.IsSuccessful, message);
+    }
   }
 
 }

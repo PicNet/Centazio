@@ -9,10 +9,7 @@ namespace Centazio.Providers.Sqlite.Stage;
 
 public class SqliteStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
-    var opts = new EFStagedEntityRepositoryOptions(
-        settings.Limit, 
-        new Sha256ChecksumAlgorithm().Checksum, 
-        () => new SqliteStagedEntityContext(settings.ConnectionString));
+    var opts = new EFStagedEntityRepositoryOptions(settings.Limit, new Sha256ChecksumAlgorithm().Checksum, () => new SqliteStagedEntityContext(settings));
     return new SqliteStagedEntityRepository(opts, new SqliteDbFieldsHelper(), settings.CreateSchema);
   }
 }

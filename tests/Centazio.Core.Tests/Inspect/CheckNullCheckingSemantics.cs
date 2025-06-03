@@ -19,5 +19,4 @@ public class CheckNullCheckingSemantics {
     });
     Assert.That(errors, Is.Empty, String.Join("\n", errors));
   }
-
 }

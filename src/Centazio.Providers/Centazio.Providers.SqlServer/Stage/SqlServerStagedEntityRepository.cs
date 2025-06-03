@@ -9,10 +9,7 @@ namespace Centazio.Providers.SqlServer.Stage;
 
 public class SqlServerStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings, IChecksumAlgorithm checksum) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
-    var opts = new EFStagedEntityRepositoryOptions(
-        settings.Limit,
-        checksum.Checksum, 
-        () => new SqlServerStagedEntityContext(settings.ConnectionString, settings.SchemaName, settings.TableName));
+    var opts = new EFStagedEntityRepositoryOptions(settings.Limit, checksum.Checksum, () => new SqlServerStagedEntityContext(settings));
     return new SqlServerStagedEntityRepository(opts, new SqlServerDbFieldsHelper(), settings.CreateSchema);
   }
 }

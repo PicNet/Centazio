@@ -1,11 +1,14 @@
-﻿using Centazio.Core.Stage;
+﻿using Centazio.Core.Settings;
+using Centazio.Core.Stage;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public abstract class AbstractStagedEntityRepositoryDbContext(string schema, string table) : CentazioDbContext {
-  public string SchemaName { get; } = schema;
-  public string StagedEntityTableName { get; } = table;
+public abstract class AbstractStagedEntityRepositoryDbContext(StagedEntityRepositorySettings settings) : CentazioDbContext {
+  protected StagedEntityRepositorySettings Settings => settings;
+  
+  public string SchemaName { get; } = settings.SchemaName;
+  public string StagedEntityTableName { get; } = settings.TableName;
   
   public DbSet<StagedEntity.Dto> Staged { get; set; }
   

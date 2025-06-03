@@ -1,10 +1,14 @@
 ﻿using System.Text.RegularExpressions;
+using Centazio.Core;
 using Centazio.Core.Secrets;
+using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Dev;
 
-public class PackageAndPublishNuGetsCommand(CentazioSecrets secrets, ICommandRunner runner) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
+public class PackageAndPublishNuGetsCommand(
+    [FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSecrets secrets, 
+    ICommandRunner runner) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
 
   private readonly string packagesdir = "packages";
   

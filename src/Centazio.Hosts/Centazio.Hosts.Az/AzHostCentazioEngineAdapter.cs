@@ -10,23 +10,21 @@ namespace Centazio.Hosts.Az;
 public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
 
   private readonly List<string> environments = environments;
-  private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new() {
-    [ESecretsProviderType.File] = settings => 
-        new FileSecretsLoaderFactory(settings).GetService(),
-    [ESecretsProviderType.Az] = settings => 
-        new AzSecretsLoaderFactory(settings).GetService()
+  private readonly Dictionary<ESecretsProviderType, Func<ISecretsLoader>> Providers = new() {
+    [ESecretsProviderType.File] = () => new FileSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.Az] = () => new AzSecretsLoaderFactory(settings).GetService()
   };
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     // todo WT: this should support function-to-function triggers
-    var providersetting = settings.SecretsLoaderSettings.Provider ?? nameof(ESecretsProviderType.File);
+    var providersetting = settings.SecretsLoaderSettings.Provider;
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");
 
     if (!Providers.TryGetValue(provider, out var factory))
       throw new ArgumentException($"Provider {provider} is not implemented");
 
-    var loader = factory(settings);
+    var loader = factory();
     var secrets = loader.Load<CentazioSecrets>(environments).Result;
 
         

@@ -11,7 +11,7 @@ public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContex
   private readonly EfTransactionManager<AbstractCtlRepositoryDbContext> mgr = new(getdb);
   
   public override Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null) => mgr.BeginTransaction(reuse);
-  protected Task<T> UseDb<T>(Func<AbstractCtlRepositoryDbContext, Task<T>> func) => mgr.UseDb(func);
+  protected Task<T> UseDb<T>(DbOperation<AbstractCtlRepositoryDbContext, T> func) => mgr.UseDb(func);
   
   public override Task<ICtlRepository> Initialise() => Task.FromResult<ICtlRepository>(this);
   public override ValueTask DisposeAsync() => mgr.DisposeAsync();
