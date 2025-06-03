@@ -16,7 +16,9 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings).GetService(),
     [ESecretsProviderType.Aws] = settings => 
-        new AwsSecretsLoaderFactory(settings).GetService()
+        new AwsSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.EnvironmentVariable] = _ => 
+        new EnvironmentVariableSecretsLoaderFactory().GetService()
   };
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     // todo CP: this should support function-to-function triggers
