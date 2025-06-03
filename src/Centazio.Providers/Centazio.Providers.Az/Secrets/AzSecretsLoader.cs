@@ -31,8 +31,7 @@ public class AzSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
       if (!secret.Value.Trim().StartsWith("{")) throw new Exception($"Secret value is not a JSON object");
       
       var json = Json.Deserialize<Dictionary<string, object>>(secret.Value);
-      // todo: is this `?` required
-      return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? string.Empty);
+      return json.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString() ?? string.Empty);
         
     } catch (RequestFailedException ex) when (ex.Status == 404) {
       return required ? throw new Exception($"Required secret '{name}' not found in Key Vault") : new Dictionary<string, string>();
@@ -45,7 +44,7 @@ public class AzSecretsLoaderFactory(CentazioSettings settings) : IServiceFactory
 
   public ISecretsLoader GetService() => new AzSecretsLoader(settings.AzureSettings);
 
-  // todo: why do we have two `CentazioSettings`?
+  // todo WT: why do we have two `CentazioSettings`?
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     if (settings.AzureSettings is null) throw new ArgumentNullException(nameof(settings.AzureSettings));
 

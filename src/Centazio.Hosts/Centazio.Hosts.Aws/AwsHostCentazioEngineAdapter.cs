@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centazio.Hosts.Aws;
 
 public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments, bool localaws) : CentazioEngine(environments) {
-  private List<string> environments = environments;
+  private readonly List<string> environments = environments;
   private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new()
   {
     [ESecretsProviderType.File] = settings => 
@@ -19,9 +19,9 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
         new AwsSecretsLoaderFactory(settings).GetService()
   };
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
-    // todo: this should support function-to-function triggers
+    // todo CP: this should support function-to-function triggers
     var notifier = new AwsSqsChangesNotifier(localaws);
-    var providersetting = settings.SecretsLoaderSettings.Provider ?? nameof(ESecretsProviderType.File);
+    var providersetting = settings.SecretsLoaderSettings.Provider;
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");
 

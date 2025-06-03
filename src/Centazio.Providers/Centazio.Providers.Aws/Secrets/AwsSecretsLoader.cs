@@ -54,7 +54,7 @@ public class AwsSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory
 
   public ISecretsLoader GetService() => new AwsSecretsLoader(settings.AwsSettings);
   
-  // todo: why do we have two `CentazioSettings`?
+  // todo WT: why do we have two `CentazioSettings`?
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
     if (settings.AwsSettings is null) throw new ArgumentNullException(nameof(settings.AwsSettings));
     return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());

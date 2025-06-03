@@ -9,7 +9,7 @@ namespace Centazio.Hosts.Az;
 
 public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
 
-  private List<string> environments = environments;
+  private readonly List<string> environments = environments;
   private static readonly Dictionary<ESecretsProviderType, Func<CentazioSettings, ISecretsLoader>> Providers = new()
   {
     [ESecretsProviderType.File] = settings => 
@@ -19,7 +19,7 @@ public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string>
   };
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
-    // todo: this should support function-to-function triggers
+    // todo WT: this should support function-to-function triggers
     var providersetting = settings.SecretsLoaderSettings.Provider ?? nameof(ESecretsProviderType.File);
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");

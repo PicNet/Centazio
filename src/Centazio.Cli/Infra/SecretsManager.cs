@@ -9,7 +9,7 @@ public static class SecretsManager
 {
   public delegate ISecretsLoader SecretsLoaderFactory(CentazioSettings settings);
   
-  // todo: why all these nullability checks when CentazioSettings in ctor is not nullable?
+  // todo WT: why all these nullability checks when CentazioSettings in ctor is not nullable?
   private static readonly Dictionary<ESecretsProviderType, SecretsLoaderFactory> Providers = new() {
     [ESecretsProviderType.File] = settings => 
         new FileSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.SecretsFolders))).GetService(),

@@ -63,7 +63,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
     db.Attach(dtos.MetaDto).State = state;
   }
   
-  // todo: can we replace these args `CentazioDbContext db` with a transaction which would achieve the same?
+  // todo GT: can we replace these args `CentazioDbContext db` with a transaction which would achieve the same?
   private async Task<List<CoreEntityAndMeta>> GetCoresForMetas(CoreEntityTypeName coretype, List<CoreStorageMeta> metas, CentazioDbContext db) {
     var tasks = await GetCoreEntitiesWithIds(coretype, metas.Select(m => m.CoreId).ToList(), db);
     return metas.Select(meta => {
@@ -72,7 +72,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
     }).ToList();
   }
   
-  // todo: can we replace these args `CentazioDbContext db` with a transaction which would achieve the same?
+  // todo GT: can we replace these args `CentazioDbContext db` with a transaction which would achieve the same?
   protected abstract Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db);
 
 }

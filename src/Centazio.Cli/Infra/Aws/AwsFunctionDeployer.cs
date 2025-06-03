@@ -80,7 +80,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   private void BuildAndPushDockerImage(string ecruri, string projnm) {
     var dockercmds = settings.Defaults.ConsoleCommands.Docker;
 
-    // todo: FIX the following docker command return an error even if the image is built successfully
+    // todo CP: FIX the following docker command return an error even if the image is built successfully
     try { Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
     catch (Exception e) { Log.Warning(e, "Error running docker command"); }
 

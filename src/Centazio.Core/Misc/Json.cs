@@ -34,8 +34,7 @@ public class ValueObjectConverter<T> : JsonConverter<T> where T : class {
 
   public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
     writer.WriteStartObject();
-    // todo: test if this `?` is required
-    writer.WriteString("Value", value?.ToString());
+    writer.WriteString("Value", value.ToString());
     writer.WriteEndObject();
   }
 }

@@ -32,7 +32,7 @@ public class AzHostImpl(List<string> environments, List<Type> functions) {
   private AzHostCentazioEngineAdapter centazio = null!;
 
   public async Task Init() {
-    var settings = await new SettingsLoader().Load<CentazioSettings>(environments); // TODO need to check this is a proper way to get the settings
+    var settings = await new SettingsLoader().Load<CentazioSettings>(environments); 
     centazio = new(settings, environments);
     InitLogger();
     await centazio.Init(functions);

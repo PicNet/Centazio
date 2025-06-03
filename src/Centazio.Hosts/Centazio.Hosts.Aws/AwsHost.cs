@@ -35,7 +35,7 @@ public class AwsHostImpl(List<string> environments, Type func) {
   public async Task Init(IAwsFunctionHandler handler) {
     InitLogger();
 
-    var settings = await new SettingsLoader().Load<CentazioSettings>(environments); // TODO need to check this is a proper way to get the settings
+    var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
     centazio = new(settings, environments, false);
     await centazio.Init([func]);
     await InitAwsLambdaFunctionHost(handler);

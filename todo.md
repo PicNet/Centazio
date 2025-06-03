@@ -7,7 +7,8 @@
     - fix Log.Logger, currently only injected ILogger<> works
     - application insights (is this completed?) 
     - function-to-function triggers
-    - `centazio az func logs Centazio.Sample.AppSheet` did not show logs 
+    - `centazio az func logs Centazio.Sample.AppSheet` did not show logs
+    - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included 
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
