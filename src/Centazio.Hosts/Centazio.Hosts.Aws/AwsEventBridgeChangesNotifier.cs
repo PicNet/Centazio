@@ -52,16 +52,16 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
     if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
 
     using var lambda = new AmazonLambdaClient();
+    var octs = func.Config.Operations.SelectMany(o => o.Triggers).ToList();
+    if (octs.Count <= 0) return;
+    
     var res = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
-    await SetupEventBridge(lambda, res.Configuration.FunctionArn, triggers);
+    await SetupEventBridge(lambda, res.Configuration.FunctionArn, octs);
     setup = true;
   }
 
-  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<FunctionTrigger> triggers) {
+  private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, IList<ObjectChangeTrigger> octs) {
     var evbridge = new AmazonEventBridgeClient();
-    var octs = triggers.OfType<ObjectChangeTrigger>().ToList();
-    if (octs.Count <= 0) return;
-    
     await CreateOrUpdateEventBusAsync(evbridge);
     await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, evbridge, funcarn, trigger)));
   }
@@ -93,14 +93,14 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
     var putRuleRequest = new PutRuleRequest {
       Name = rulenm,
       EventPattern = Json.Serialize(new {
-        source = SOURCE_NAME,
-        detailType = nameof(ObjectChangeTrigger),
+        source = new[] { SOURCE_NAME },
+        detailType = new[] { nameof(ObjectChangeTrigger) },
         detail = new {
-          System = trigger.System.Value.ToLower(),
-          Stage = trigger.Stage.Value.ToLower(),
-          Object = trigger.Object.Value.ToLower()
+          System = new[] { trigger.System.Value.ToLower() },
+          Stage = new[] { trigger.Stage.Value.ToLower() },
+          Object = new[] { trigger.Object.Value.ToLower() }
         }
-      }),
+      }).Replace("detailType", "detail-type"), // TODO use template
       State = RuleState.ENABLED,
       Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
       EventBusName = EVENT_BUS_NAME

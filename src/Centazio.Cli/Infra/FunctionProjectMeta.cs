@@ -47,7 +47,7 @@ public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings
   public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{CloudName}";
   
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
-  public string RoleName => $"{DashedProjectName}-{AwsFunctionName}-role".ToLower();
+  public string RoleName => $"{Assembly.GetName().Name}-{AwsFunctionName}-role".ToLower();
 }
 
 public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSettings settings) {
