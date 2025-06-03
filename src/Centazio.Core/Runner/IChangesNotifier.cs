@@ -5,6 +5,7 @@ public interface IChangesNotifier {
   Task Run(IFunctionRunner runner);
   Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs);
   bool IsAsync { get; }
+  Task Setup(IRunnableFunction func);
 
 }
 

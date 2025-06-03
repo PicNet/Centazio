@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "events:DescribeRule",
+        "events:PutRule",
+        "events:PutTargets"
+      ],
+      "Resource": "arn:aws:events:{{it.Region}}:{{it.AccountId}}:rule/{{it.EventBusName}}/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "events:PutEvents",
+        "events:DescribeEventBus",
+        "events:CreateEventBus"
+      ],
+      "Resource": "arn:aws:events:{{it.Region}}:{{it.AccountId}}:event-bus/{{it.EventBusName}}"
+    }
+  ]
+}

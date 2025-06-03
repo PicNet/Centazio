@@ -38,6 +38,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
   private readonly ICommandRunner cmd = new CommandRunner();
   private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
+  private readonly string eventBusName = AwsEventBridgeChangesNotifier.EVENT_BUS_NAME;
 
   public async Task DeployImpl() {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
@@ -54,7 +55,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
     BuildAndPushDockerImage(ecruri, projnm);
 
-    await CreateSqsQueue();
+    if (!settings.AwsSettings.EventBridge) { await CreateSqsQueue(); }
+
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
@@ -86,8 +88,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
     Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: GetEcrInputPassword());
     Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
-    
-    void Run(string command, object model, bool quiet = false, string? input = null) => 
+
+    void Run(string command, object model, bool quiet = false, string? input = null) =>
         cmd.Docker(templater.ParseFromContent(command, model), project.ProjectDirPath, quiet: quiet, input: input);
   }
 
@@ -142,13 +144,15 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       MemorySize = 256,
       Timeout = 30
     });
-    await lambda.CreateEventSourceMappingAsync(new CreateEventSourceMappingRequest
-    {
-      FunctionName = project.AwsFunctionName,
-      EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountId}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
-      BatchSize = 10,
-      Enabled = true
-    });
+    if (!settings.AwsSettings.EventBridge) {
+      await lambda.CreateEventSourceMappingAsync(new CreateEventSourceMappingRequest {
+        FunctionName = project.AwsFunctionName,
+        EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountId}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
+        BatchSize = 10,
+        Enabled = true
+      });
+    }
+
     return res.FunctionArn;
   }
 
@@ -160,7 +164,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   private async Task<string> GetOrCreateRole(string rolenm, string accountId) {
     using var aim = new AmazonIdentityManagementServiceClient(credentials);
 
-    try { return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn; } 
+    try { return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn; }
     catch (NoSuchEntityException) {
       Log.Information($"IAM Role {rolenm} does not exist. Creating...");
 
@@ -178,32 +182,57 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
-        PolicyName = "LambdaECRAccess" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/ecr_policy.json", new {
+        PolicyName = "lambda-ecr-access-" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/ecr_permission_policy.json", new {
           Region = region.SystemName,
           AccountId = accountId,
           ProjectName = project.ProjectName.ToLower()
         })
       });
-      
+
+      if (!settings.AwsSettings.EventBridge) {
+        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+          RoleName = rolenm,
+          PolicyName = "lambda-sqs-access-" + rolenm,
+          PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json",
+              new {
+                Region = region.SystemName,
+                AccountId = accountId,
+                QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
+              })
+        });
+      } else {
+        await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+          RoleName = rolenm,
+          PolicyName = "lambda-eventbridge-access-" + rolenm,
+          PolicyDocument = templater.ParseFromPath("aws/eventbridge_permission_policy.json", new {
+            Region = region.SystemName,
+            AccountId = accountId,
+            EventBusName = eventBusName,
+          })
+        });
+      }
+
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
-        PolicyName = "LambdaSQSAccess" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/sqs_policy.json", new {
-          Region = region.SystemName,
-          AccountId = accountId,
-          QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
-        })
+        PolicyName = "lambda-cloudwatch-access-" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_permission_policy.json",
+            new {
+              Region = region.SystemName,
+              AccountId = accountId,
+              FunctionName = project.AwsFunctionName
+            })
       });
-      
+
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
-        PolicyName = "LambdaCloudWatchAccess" + rolenm,
-        PolicyDocument = templater.ParseFromPath("aws/cloudwatch_policy.json", new {
-          Region = region.SystemName,
-          AccountId = accountId,
-          FunctionName = project.AwsFunctionName.ToLower()
-        })
+        PolicyName = "lambda-access-" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/lambda_permission_policy.json",
+            new {
+              Region = region.SystemName,
+              AccountId = accountId,
+              FunctionName = project.AwsFunctionName
+            })
       });
 
       // Wait for role to propagate (IAM changes can take time to propagate)
@@ -250,6 +279,4 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
     Log.Information("Successfully configured 1-minute trigger for Lambda function");
   }
-
 }
-

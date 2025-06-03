@@ -5,6 +5,8 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
   public bool Running => runner.Running;
 
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
+    await notifier.Setup(func);
+    
     runningfunc(); // notify that we are running a function
     
     var results = await runner.RunFunction(func, triggers);

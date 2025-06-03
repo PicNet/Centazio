@@ -17,12 +17,7 @@ public class {{it.ClassName}}Handler : IAwsFunctionHandler {
     var start = UtcDate.UtcNow;
     Log.Information("{{it.ClassName}} running");
     try {
-      
-      // TODO process sqs message
-      //    if the message for this lambda function
-      //    if this is triggered for the timer
-      //    otherwise skip
-      
+      await AwsHost.Init({{it.Environments}}, this, typeof({{it.ClassName}}));
       await AwsHost.RunFunction([new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]);
       return $"{{it.ClassName}} executed successfully";
     } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }

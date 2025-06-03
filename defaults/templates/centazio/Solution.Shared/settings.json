@@ -35,6 +35,7 @@
   },
   "AwsSettings": {
     "Region": "<aws region>",
-    "AccountName": "<aws account name>"
+    "AccountName": "<aws account name>",
+    "EventBridge": true
   }
 }

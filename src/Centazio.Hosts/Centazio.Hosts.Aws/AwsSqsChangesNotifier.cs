@@ -47,6 +47,7 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
   }
 
   public bool IsAsync => true;
+  public Task Setup(IRunnableFunction func) => throw new NotImplementedException();
 
   public async void Dispose() {
     await cts.CancelAsync();

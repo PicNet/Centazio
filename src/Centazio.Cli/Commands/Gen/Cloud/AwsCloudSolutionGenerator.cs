@@ -24,7 +24,8 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
       model.Files.Add($"Dockerfile");
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, $"Dockerfile"), templater.ParseFromPath("aws/Dockerfile", new {
         ClassName = func.Name,
-        AssemblyName = func.Namespace 
+        AssemblyName = func.Namespace,
+        FileName = $"{func.Namespace}.{func.Name.Replace("Function", String.Empty)}.Aws" // TODO CP get the file name properly without replace
       }));
     });
   }

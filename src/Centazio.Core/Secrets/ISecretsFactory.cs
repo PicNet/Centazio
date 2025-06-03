@@ -6,7 +6,8 @@ public enum ESecretsProviderType
 {
   File,
   Aws,
-  Az
+  Az,
+  EnvironmentVariable
 }
 
 public interface ISecretsFactory {
