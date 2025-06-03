@@ -112,7 +112,7 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
   public List<ObjectChangeTrigger> Notifications { get; set; } = [];
   public bool IsAsync => false;
-  public Task Setup(IRunnableFunction func) { return Task.CompletedTask; }
+  public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> functions) {}
   public Task Run(IFunctionRunner runner) => Task.CompletedTask;
   public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
@@ -127,7 +127,7 @@ public class NoOpChangeNotifier : IChangesNotifier {
 public class InstantChangesNotifier : IChangesNotifier {
 
   public bool IsAsync => false;
-  public Task Setup(IRunnableFunction func) { return Task.CompletedTask; }
+  public Task Setup(IRunnableFunction func) => Task.CompletedTask;
 
   private IFunctionRunner? runner;
   private List<IRunnableFunction> functions = null!;

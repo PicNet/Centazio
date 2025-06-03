@@ -34,11 +34,11 @@ public class AwsFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Aws)
       await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();
 }
 
+// todo CP: use `Centazio.Cli.Infra.AzFunctionProjectMeta` pattern to replace hardcoded values below (names, timeouts, attributes, etc)
 internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project, ITemplater templater) {
 
   private readonly ICommandRunner cmd = new CommandRunner();
   private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
-  private readonly string eventBusName = AwsEventBridgeChangesNotifier.EVENT_BUS_NAME;
 
   public async Task DeployImpl() {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
@@ -55,6 +55,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
     BuildAndPushDockerImage(ecruri, projnm);
 
+    // todo CP: please rename `EventBridge` to something a bit clearer, perhaps something like `UseDynamicFunctionPropegation` or even `UseEventBridge` 
     if (!settings.AwsSettings.EventBridge) { await CreateSqsQueue(); }
 
     using var lambda = new AmazonLambdaClient(credentials, region);
@@ -133,19 +134,19 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return res.FunctionArn;
   }
 
-  private async Task<string> CreateFunction(AmazonLambdaClient lambda, string imageUri, string accountId) {
+  private async Task<string> CreateFunction(AmazonLambdaClient lambda, string imageuri, string accountid) {
     var res = await lambda.CreateFunctionAsync(new CreateFunctionRequest {
       FunctionName = project.AwsFunctionName,
       PackageType = PackageType.Image,
-      Code = new FunctionCode { ImageUri = imageUri },
-      Role = await GetOrCreateRole(project.RoleName, accountId),
+      Code = new FunctionCode { ImageUri = imageuri },
+      Role = await GetOrCreateRole(project.RoleName, accountid),
       MemorySize = 256,
       Timeout = 30
     });
     if (!settings.AwsSettings.EventBridge) {
       await lambda.CreateEventSourceMappingAsync(new CreateEventSourceMappingRequest {
         FunctionName = project.AwsFunctionName,
-        EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountId}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
+        EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountid}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
         BatchSize = 10,
         Enabled = true
       });
@@ -159,14 +160,14 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     catch (ResourceNotFoundException) { return false; }
   }
 
-  private async Task<string> GetOrCreateRole(string rolenm, string accountId) {
+  private async Task<string> GetOrCreateRole(string rolenm, string accountid) {
     using var aim = new AmazonIdentityManagementServiceClient(credentials);
 
     try { return (await aim.GetRoleAsync(new GetRoleRequest { RoleName = rolenm })).Role.Arn; }
-    catch (NoSuchEntityException) { return await CreateRole(rolenm, accountId, aim); }
+    catch (NoSuchEntityException) { return await CreateRole(rolenm, accountid, aim); }
   }
 
-  private async Task<string> CreateRole(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task<string> CreateRole(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     Log.Information($"IAM Role {rolenm} does not exist. Creating...");
 
     // Create the role with the trust policy
@@ -181,13 +182,13 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       PolicyArn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
     });
 
-    await AddEcrAccessPolicyToRole(rolenm, accountId, aim);
+    await AddEcrAccessPolicyToRole(rolenm, accountid, aim);
 
-    if (!settings.AwsSettings.EventBridge) { await AddSqsAccessPolicy(rolenm, accountId, aim); } else { await AddEventBridgePolicy(rolenm, accountId, aim); }
+    if (!settings.AwsSettings.EventBridge) { await AddSqsAccessPolicy(rolenm, accountid, aim); } else { await AddEventBridgePolicy(rolenm, accountid, aim); }
 
-    await CreateCloudWatchRolePolicy(rolenm, accountId, aim);
+    await CreateCloudWatchRolePolicy(rolenm, accountid, aim);
 
-    await CreateLambdaAccessPolicy(rolenm, accountId, aim);
+    await CreateLambdaAccessPolicy(rolenm, accountid, aim);
 
     // Wait for role to propagate (IAM changes can take time to propagate)
     Log.Information("Waiting for IAM role to propagate...");
@@ -197,61 +198,61 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return response.Role.Arn;
   }
 
-  private async Task AddEcrAccessPolicyToRole(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task AddEcrAccessPolicyToRole(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-ecr-access-" + rolenm,
       PolicyDocument = templater.ParseFromPath("aws/ecr_permission_policy.json", new {
         Region = region.SystemName,
-        AccountId = accountId,
+        AccountId = accountid,
         ProjectName = project.ProjectName.ToLower()
       })
     });
   }
 
-  private async Task CreateLambdaAccessPolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task CreateLambdaAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-access-" + rolenm,
       PolicyDocument = templater.ParseFromPath("aws/lambda_permission_policy.json", new {
         Region = region.SystemName,
-        AccountId = accountId,
+        AccountId = accountid,
         FunctionName = project.AwsFunctionName
       })
     });
   }
 
-  private async Task CreateCloudWatchRolePolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task CreateCloudWatchRolePolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-cloudwatch-access-" + rolenm,
       PolicyDocument = templater.ParseFromPath("aws/cloudwatch_permission_policy.json", new {
         Region = region.SystemName,
-        AccountId = accountId,
+        AccountId = accountid,
         FunctionName = project.AwsFunctionName
       })
     });
   }
 
-  private async Task AddEventBridgePolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task AddEventBridgePolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-eventbridge-access-" + rolenm,
       PolicyDocument = templater.ParseFromPath("aws/eventbridge_permission_policy.json", new {
         Region = region.SystemName,
-        AccountId = accountId,
-        EventBusName = eventBusName,
+        AccountId = accountid,
+        EventBusName = AwsEventBridgeChangesNotifier.EVENT_BUS_NAME
       })
     });
   }
 
-  private async Task AddSqsAccessPolicy(string rolenm, string accountId, AmazonIdentityManagementServiceClient aim) {
+  private async Task AddSqsAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-sqs-access-" + rolenm,
       PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json", new {
         Region = region.SystemName,
-        AccountId = accountId,
+        AccountId = accountid,
         QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
       })
     });

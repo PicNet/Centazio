@@ -96,7 +96,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
           Stage = new[] { trigger.Stage.Value.ToLower() },
           Object = new[] { trigger.Object.Value.ToLower() }
         }
-      }).Replace("detailType", "detail-type"), // TODO use template
+      }).Replace("detailType", "detail-type"), // todo CP: use template
       State = RuleState.ENABLED,
       Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
       EventBusName = EVENT_BUS_NAME
