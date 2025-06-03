@@ -34,10 +34,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, CentazioSecre
     });
     
     async Task AddTemplateFileToProject(string fname , object? data = null) {
-      var content = data != null 
-          ? templater.ParseFromPath($"azure/{fname}", data)
-          : templater.ParseFromPath($"azure/{fname}");
-
+      var content = templater.ParseFromPath($"azure/{fname}", data);
       await File.WriteAllTextAsync(Path.Combine(project.ProjectDirPath, fname), content);
     }
   }

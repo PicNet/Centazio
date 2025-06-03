@@ -10,7 +10,11 @@ namespace Centazio.Cli.Commands.Az;
 
 // todo GT: support simulating multiple functions
 // todo GT: support simulating only a single function in an assembly
-public class AzFunctionLocalSimulateCommand([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, CentazioSecrets secrets, ICommandRunner cmd, ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
+public class AzFunctionLocalSimulateCommand(
+    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
+    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, 
+    ICommandRunner cmd, 
+    ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

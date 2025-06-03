@@ -9,10 +9,7 @@ namespace Centazio.Providers.PostgresSql.Stage;
 
 public class PostgresSqlStagedEntityRepositoryFactory(StagedEntityRepositorySettings settings) : IServiceFactory<IStagedEntityRepository> {
   public IStagedEntityRepository GetService() {
-    var opts = new EFStagedEntityRepositoryOptions(
-        settings.Limit, 
-        new Sha256ChecksumAlgorithm().Checksum, 
-        () => new PostgresSqlStagedEntityContext(settings.ConnectionString));
+    var opts = new EFStagedEntityRepositoryOptions(settings.Limit, new Sha256ChecksumAlgorithm().Checksum, () => new PostgresSqlStagedEntityContext(settings));
     return new PostgresSqlStagedEntityRepository(opts, new PostgresSqlDbFieldsHelper(), settings.CreateSchema);
   }
 }

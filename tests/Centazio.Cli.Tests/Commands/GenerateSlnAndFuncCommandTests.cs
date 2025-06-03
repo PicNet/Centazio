@@ -8,6 +8,12 @@ using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Sett
 
 namespace Centazio.Cli.Tests.Commands;
 
+/// <summary>
+/// Not: Generated functions use the latest Centazio nuget packages, so this test can fail if the
+/// NuGet packages are out of sync with current version of the generated code.  To generate
+/// new versions of NuGets run `./centazio dev publish`.  After publishing new versions of NuGets, it
+/// is possible for the register to take up to 30 minutes to be ready. 
+/// </summary>
 public class GenerateSlnAndFuncCommandTests {
 
   private readonly string properroot = Environment.CurrentDirectory;
@@ -44,17 +50,13 @@ public class GenerateSlnAndFuncCommandTests {
   
   [Test] public async Task Test_generate_solution_with_references() => 
       await GenerateSlnTestImpl(false);
-
-  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
-  //    NuGet packages are out of sync with current version of the generated code.
+  
   [Test] public async Task Test_generate_project_for_each_lifecycle_stage_using_nugets() => 
       await GenerateFuncInOwnDirImpl(true);
 
   [Test] public async Task Test_generate_project_for_each_lifecycle_stage_using_refs() => 
       await GenerateFuncInOwnDirImpl(false);
-
-  // note: funcs generated use the latest Centazio nuget packages, so this test can fail if the
-  //    NuGet packages are out of sync with current version of the generated code.
+  
   [Test] public async Task Test_generate_project_in_existing_assembly_using_nugets() => 
       await GenerateProjInExistingAssemblyImpl(true);
 

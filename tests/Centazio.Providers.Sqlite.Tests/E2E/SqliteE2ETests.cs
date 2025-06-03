@@ -28,13 +28,14 @@ public class SqliteSimulationStorage : ISimulationStorage {
 
   public async Task Initialise(SimulationCtx ctx) {
     var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));
-    var settings = (await TestingFactories.Settings()).CtlRepository with { ConnectionString = ctl_db };
+    
+    var settings = await TestingFactories.Settings(); 
+    var ctlsetts = settings.CtlRepository with { ConnectionString = ctl_db };
+    var stgsetts = settings.StagedEntityRepository with { ConnectionString = staging_db };
     var dbf = new SqliteDbFieldsHelper();
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(settings), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(staging_db)), dbf).Initialise();
-    CoreStore = await new SimulationEfCoreStorageRepository(
-        () => new SqliteSimulationDbContext(core_db), 
-        ctx.Epoch, dbf).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(ctlsetts), dbf).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(stgsetts)), dbf).Initialise();
+    CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationDbContext(core_db), ctx.Epoch, dbf).Initialise();
     
     string GetNewDbFileConnStr(string repo) {
       var dbfile = $"{TestContext.CurrentContext.Test.Name}_{repo}.db";

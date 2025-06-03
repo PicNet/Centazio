@@ -1,10 +1,10 @@
-﻿using Centazio.Core.Stage;
+﻿using Centazio.Core.Settings;
 using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.PostgresSql.Stage;
 
-public class PostgresSqlStagedEntityContext(string connstr) : AbstractStagedEntityRepositoryDbContext(nameof(Core.Ctl).ToLower(), nameof(StagedEntity).ToLower()) {
+public class PostgresSqlStagedEntityContext(StagedEntityRepositorySettings settings) : AbstractStagedEntityRepositoryDbContext(settings) {
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => 
-      options.UseNpgsql(connstr);
+      options.UseNpgsql(Settings.ConnectionString);
 }

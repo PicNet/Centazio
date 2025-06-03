@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Centazio.Providers.EF;
 
-public delegate Task<T> TransactionOps<T>(T ctx) where T : DbContext;
+public delegate Task<R> DbOperation<in T, R>(T context) where T : DbContext;
 
 public class EfTransactionManager<T>(Func<T> getdb) : IAsyncDisposable 
     where T : DbContext {
@@ -19,7 +19,7 @@ public class EfTransactionManager<T>(Func<T> getdb) : IAsyncDisposable
         db, (await db.Database.BeginTransactionAsync()).GetDbTransaction(), () => transaction = null);
   }
   
-  public async Task<R> UseDb<R>(Func<T, Task<R>> func) {
+  public async Task<R> UseDb<R>(DbOperation<T, R> func) {
     // if using a transaction do not dispose it after usage, let the transaction (EfTransactionWrapper)
     //    handle disposing of the Context and internal Transaction
     if (transaction is not null) { return await func(transaction.Db); }

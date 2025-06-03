@@ -8,7 +8,10 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-public class GenerateAzFunctionsCommand([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, CentazioSecrets secrets, ITemplater templater) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
+public class GenerateAzFunctionsCommand(
+    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
+    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, 
+    ITemplater templater) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
     AssemblyName = UiHelpers.Ask("Assembly Name")

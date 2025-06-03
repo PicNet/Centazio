@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Centazio.Core.Promote;
 
 namespace Centazio.Core.Ctl.Entities;
 
@@ -25,11 +24,6 @@ public record EntityChange {
     ChangeDate = changedate;
     ChangeType = changetype;
     ChangeDetails = changedetails;
-  }
-
-  public static EntityChange Create(PromotionBag bag) {
-    var (meta, old, @new) = (bag.CoreEntityAndMeta.Meta, bag.PreExistingCoreEntityAndMeta?.CoreEntity, bag.CoreEntityAndMeta.CoreEntity);
-    return Create(bag.CoreEntityAndMeta.Meta.CoreEntityTypeName, meta.CoreId, meta.LastUpdateSystem, meta.OriginalSystemType, meta.LastUpdateSystemId, old, @new);
   }
 
   public static EntityChange Create(CoreEntityTypeName coretype, CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid, ICoreEntity? old, ICoreEntity @new) =>

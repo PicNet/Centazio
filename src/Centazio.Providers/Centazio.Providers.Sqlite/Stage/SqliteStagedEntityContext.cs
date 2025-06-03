@@ -1,9 +1,9 @@
-﻿using Centazio.Core.Stage;
+﻿using Centazio.Core.Settings;
 using Centazio.Providers.EF;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Stage;
 
-public class SqliteStagedEntityContext(string connstr) : AbstractStagedEntityRepositoryDbContext(nameof(Core.Ctl).ToLower(), nameof(StagedEntity).ToLower()) {
-  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => SqliteDbContext.SetSqliteOnDbContextOpts(options, connstr);
+public class SqliteStagedEntityContext(StagedEntityRepositorySettings settings) : AbstractStagedEntityRepositoryDbContext(settings) {
+  protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => SqliteDbContext.SetSqliteOnDbContextOpts(options, Settings.ConnectionString);
 }
