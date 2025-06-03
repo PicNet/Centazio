@@ -1,5 +1,6 @@
 ﻿namespace Centazio.Core.Runner;
 
+// TODO CP consider Setup and Init usages, init is using for the in-process notifier but setup using for the cloud notifier 
 public interface IChangesNotifier {
   void Init(List<IRunnableFunction> functions);
   Task Run(IFunctionRunner runner);

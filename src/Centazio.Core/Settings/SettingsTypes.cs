@@ -579,12 +579,14 @@ public record AwsSettings {
   public Dto ToDto() => new() { 
     Region = Region,
     AccountName = AccountName,
+    EventBridge = EventBridge,
     SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate,
   };
 
   public record Dto : IDto<AwsSettings> { 
     public string? Region { get; init; }
     public string? AccountName { get; init; }
+    public bool? EventBridge { get; init; }
     public string? SecretsManagerStoreIdTemplate { get; init; }
 
     public AwsSettings ToBase() => new() { 
