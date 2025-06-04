@@ -19,7 +19,7 @@
         "RunAzuriteArgs": "--silent --inMemoryPersistence"
       },
       "Func": {
-        "LocalSimulateFunction": "start -g {{it.settings.AzureSettings.ResourceGroup}}",
+        "LocalSimulateFunction": "start -g {{it.settings.AzureSettings.ResourceGroup}} {{if it.Functions}}--functions {{it.Functions}}{{end}}",
         "ShowLogStream": "azure functionapp logstream {{it.AppName}}"
       },
       "DotNet": {

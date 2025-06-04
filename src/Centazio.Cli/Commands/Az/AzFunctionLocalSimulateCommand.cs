@@ -9,7 +9,6 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-// todo GT: support simulating only a single function in an assembly
 public class AzFunctionLocalSimulateCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, 
@@ -17,7 +16,8 @@ public class AzFunctionLocalSimulateCommand(
     ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
-    AssemblyNames = UiHelpers.Ask("Assembly Name")
+    AssemblyNames = UiHelpers.Ask("Assembly Name (csv, pattern)"),
+    FunctionNames = UiHelpers.Ask("Function Names (csv)"),
   });
 
   public override async Task ExecuteImpl(Settings settings) {
@@ -43,19 +43,27 @@ public class AzFunctionLocalSimulateCommand(
     // run the commands in new windows if we have more than 1 function.  However, in this case
     //    the user will manaully have to select the 'dotnet-isolated' model as inserting inputs is not supported
     //    in new window mode.
-    // todo: multiple functions is not working well
-    projects.ForEach(project => 
-        cmd.Func(
-            templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), 
-            cwd: project.PublishPath, 
-            newwindow: projects.Count > 1, 
-            input: projects.Count > 1 ? null : "1"));
+    // todo: multiple functions (projects) is not working well
+    projects.ForEach(project => {
+      var functions = settings.FunctionNames is null ? null : String.Join(" ", settings.FunctionNames.Split(','));
+      var funcstart = templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction, new { Functions = functions });
+      Console.WriteLine($"\n\n!!!!!ASS[{settings.AssemblyNames}] FUNC [{functions}] TEMPLATE: [{coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction}] COMMAND:" + funcstart);
+      cmd.Func(funcstart,
+          cwd: project.PublishPath,
+          newwindow: projects.Count > 1,
+          input: projects.Count > 1 ? null : "1");
+    });
   }
   
   public class Settings : CommonSettings {
     [CommandArgument(0, "<ASSEMBLY_NAMES>")]
-    [Description("This argument supports comma/space separated assembly names, or wildcards (*)")]
+    [Description("This argument supports comma separated assembly names, or wildcards (*)")]
     public required string AssemblyNames { get; init; }
+    
+    [CommandArgument(1, "[FUNCTION_NAMES]")]
+    [Description("This argument supports comma separated function names")]
+    public string? FunctionNames { get; init; }
+    
     [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
     [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
   }
