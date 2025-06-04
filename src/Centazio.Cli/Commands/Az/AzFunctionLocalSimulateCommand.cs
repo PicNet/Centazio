@@ -24,9 +24,8 @@ public class AzFunctionLocalSimulateCommand(
     var projects = ReflectionUtils.LoadAssembliesFuzzy(settings.AssemblyNames, [coresettings.Defaults.GeneratedCodeFolder])
         .Where(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any())
         .Select(ass => new AzFunctionProjectMeta(ass, coresettings, templater)).ToList();
-
-    // todo: add custom CentazioException that can be used for pretty error messages instead of stack traces
-    if (!projects.Any()) throw new Exception($"The <ASSEMBLY_NAMES> pattern(s) did not match any valid function assemblies.");
+    
+    if (!projects.Any()) throw new CentazioCommandNiceException($"The <ASSEMBLY_NAMES> pattern(s) did not match any valid function assemblies. Please check pattern used '{settings.AssemblyNames}'");
     
     cmd.Run("azurite", coresettings.Defaults.ConsoleCommands.Az.RunAzuriteArgs, quiet: true, newwindow: true);
     

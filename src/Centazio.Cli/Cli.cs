@@ -21,7 +21,9 @@ public class Cli(CommandsTree commands, InteractiveMenu menu, ITypeRegistrar ser
     });
     try { return app.Run(args); }
     catch (Exception e) { 
-      if (e is CommandParseException or CommandRuntimeException) { UiHelpers.Log(e.Message, LogEventLevel.Error); }
+      if (e is CommandParseException or CommandRuntimeException or CentazioCommandNiceException) { 
+        UiHelpers.Log(e.Message + "\n", LogEventLevel.Error); 
+      }
       else throw;
     }
     
