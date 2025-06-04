@@ -261,7 +261,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   private async Task SetUpTimer(AmazonLambdaClient lambda, string funcarn) {
     using var evbridge = new AmazonEventBridgeClient(credentials, region);
     var rulenm = $"{project.AwsFunctionName}-TimerTrigger";
-    var functype = IntegrationsAssemblyInspector.GetCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
+    var functype = IntegrationsAssemblyInspector.GetRequiredCentazioFunctions(project.Assembly, [project.AwsFunctionName]).Single();
     var func = IntegrationsAssemblyInspector.CreateFuncWithNullCtorArgs(functype);
 
     var rulearn = (await evbridge.PutRuleAsync(new PutRuleRequest {

@@ -29,7 +29,7 @@ public interface IHostConfiguration {
 
   public List<Type> GetFunctions() {
     var assemblies = AssemblyNames.Split(',').Select(ReflectionUtils.LoadAssembly).ToList();
-    return assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, ParseFunctionFilters())).ToList();
+    return assemblies.SelectMany(ass => IntegrationsAssemblyInspector.GetRequiredCentazioFunctions(ass, ParseFunctionFilters())).ToList();
   }
   
 }

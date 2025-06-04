@@ -1,10 +1,7 @@
-﻿using Amazon.CloudWatchLogs;
-using Amazon.Lambda.RuntimeSupport;
+﻿using Amazon.Lambda.RuntimeSupport;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Serilog;
-using Serilog.Formatting.Json;
-using Serilog.Sinks.AwsCloudWatch;
 using Type = System.Type;
 
 namespace Centazio.Hosts.Aws;

@@ -1,6 +1,7 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
+using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +9,6 @@ using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Az;
 
-// todo GT: support simulating multiple functions
 // todo GT: support simulating only a single function in an assembly
 public class AzFunctionLocalSimulateCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
@@ -17,21 +17,46 @@ public class AzFunctionLocalSimulateCommand(
     ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 
-    AssemblyName = UiHelpers.Ask("Assembly Name")
+    AssemblyNames = UiHelpers.Ask("Assembly Name")
   });
 
   public override async Task ExecuteImpl(Settings settings) {
-    var project = new AzFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
+    var projects = ReflectionUtils.LoadAssembliesFuzzy(settings.AssemblyNames, [coresettings.Defaults.GeneratedCodeFolder])
+        .Where(ass => IntegrationsAssemblyInspector.GetCentazioFunctions(ass, []).Any())
+        .Select(ass => new AzFunctionProjectMeta(ass, coresettings, templater)).ToList();
 
-    cmd.Run("azurite", coresettings.Defaults.ConsoleCommands.Az.RunAzuriteArgs, quiet: true, newwindow: true);
-    if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzCloudSolutionGenerator(coresettings, secrets, templater, project, settings.EnvironmentsList).GenerateSolution());
-    if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));
+    // todo: add custom CentazioException that can be used for pretty error messages instead of stack traces
+    if (!projects.Any()) throw new Exception($"The <ASSEMBLY_NAMES> pattern(s) did not match any valid function assemblies.");
     
-    cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), cwd: project.PublishPath);
+    cmd.Run("azurite", coresettings.Defaults.ConsoleCommands.Az.RunAzuriteArgs, quiet: true, newwindow: true);
+    
+    if (!settings.NoGenerate) {
+      await projects.Select(project => 
+          UiHelpers.Progress($"Generating Azure Function project '{project.DashedProjectName}'", async () => await new AzCloudSolutionGenerator(coresettings, secrets, templater, project, settings.EnvironmentsList).GenerateSolution()))
+          .Synchronous();
+    }
+    if (!settings.NoBuild) {
+      await projects.Select(project => 
+          UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project)))
+          .Synchronous();
+    }
+    
+    // run the commands in new windows if we have more than 1 function.  However, in this case
+    //    the user will manaully have to select the 'dotnet-isolated' model as inserting inputs is not supported
+    //    in new window mode.
+    // todo: multiple functions is not working well
+    projects.ForEach(project => 
+        cmd.Func(
+            templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction), 
+            cwd: project.PublishPath, 
+            newwindow: projects.Count > 1, 
+            input: projects.Count > 1 ? null : "1"));
   }
   
   public class Settings : CommonSettings {
-    [CommandArgument(0, "<ASSEMBLY_NAME>")] public required string AssemblyName { get; init; }
+    [CommandArgument(0, "<ASSEMBLY_NAMES>")]
+    [Description("This argument supports comma/space separated assembly names, or wildcards (*)")]
+    public required string AssemblyNames { get; init; }
     [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
     [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
   }

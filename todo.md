@@ -8,7 +8,8 @@
     - application insights (is this completed?) 
     - function-to-function triggers
     - `centazio az func logs Centazio.Sample.AppSheet` did not show logs
-    - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included 
+    - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
+    - `centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.ArgumentException: Provider Aws is not implemented.`
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)

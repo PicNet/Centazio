@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using Azure.ResourceManager.AppService.Models;
-using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Infra;
@@ -10,7 +9,7 @@ public enum ECloudEnv { Az = 1, Aws = 2 }
 
 public class AzFunctionProjectMeta(Assembly assembly, CentazioSettings settings, ITemplater templater) :  AbstractFunctionProjectMeta(assembly, settings) {
   
-  public override string CloudName => ECloudEnv.Az.ToString();
+  public override string CloudName => nameof(ECloudEnv.Az);
   public override string ProjectName => $"{Assembly.GetName().Name}.{CloudName}";
   
   private readonly AzureSettings azsett = settings.AzureSettings;
@@ -43,7 +42,7 @@ public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings
   
   public readonly string AwsFunctionName = function;
   
-  public override string CloudName => ECloudEnv.Aws.ToString();
+  public override string CloudName => nameof(ECloudEnv.Aws);
   public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{CloudName}";
   
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
