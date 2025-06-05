@@ -14,9 +14,9 @@ namespace Centazio.Hosts.Aws;
 public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
 
   private string? funcnm;
-  private bool setup;
   public const string SOURCE_NAME = "centazio";
   public const string EVENT_BUS_NAME = "centazio-event-bus";
+  public const string ENV_SETUP = "ENV_SETUP";
   public void Dispose() { }
   public void Init(List<IRunnableFunction> functions) { }
   public Task Run(IFunctionRunner runner) => throw new NotImplementedException();
@@ -45,18 +45,32 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   public bool IsAsync => true;
 
   public async Task Setup(IRunnableFunction func) {
-    if (setup) return; // TODO CP - it will be called on every cold start. Need to find a way to run once after the first invocation.
+    if (Environment.GetEnvironmentVariable(ENV_SETUP) is not "1") return;
 
     funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
     if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
 
     using var lambda = new AmazonLambdaClient();
+    
     var octs = func.Config.Operations.SelectMany(o => o.Triggers).ToList();
     if (octs.Count <= 0) return;
 
     var res = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
     await SetupEventBridge(lambda, res.Configuration.FunctionArn, octs);
-    setup = true;
+    await SetEnvironmentVariable(lambda, ENV_SETUP, "1");
+  }
+
+  private async Task SetEnvironmentVariable(AmazonLambdaClient lambda, string ekey, string evar) {
+    try {
+      var cres = await lambda.GetFunctionConfigurationAsync(new GetFunctionConfigurationRequest { FunctionName = funcnm });
+      var evars = cres.Environment?.Variables ?? new Dictionary<string, string>();
+      evars[ekey] = evar;
+
+      await lambda.UpdateFunctionConfigurationAsync(new UpdateFunctionConfigurationRequest { FunctionName = funcnm, Environment = new Amazon.Lambda.Model.Environment { Variables = evars } });
+      Log.Information("Environment variables updated successfully.");
+    } catch (Exception ex) {
+      Log.Error($"Failed to update environment variables: {ex.Message}");
+    }
   }
 
   private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<ObjectChangeTrigger> octs) {

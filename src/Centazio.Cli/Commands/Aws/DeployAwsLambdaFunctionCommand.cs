@@ -20,7 +20,7 @@ public class DeployAwsLambdaFunctionCommand([FromKeyedServices(CentazioConstants
   }
 
   public override async Task ExecuteImpl(Settings settings) {
-    var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, settings.FunctionName);
+    var project = new AwsFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, settings.FunctionName, settings.EnvironmentsList);
     
     if (!settings.NoGenerate) await UiHelpers.Progress($"Generating Lambda Function project '{project.DashedProjectName}'", async () => await new AwsCloudSolutionGenerator(coresettings, templater, project, settings.EnvironmentsList, settings.FunctionName).GenerateSolution());
     if (!settings.NoBuild) await UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project));

@@ -186,9 +186,11 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
     if (!settings.AwsSettings.EventBridge) { await AddSqsAccessPolicy(rolenm, accountid, aim); } else { await AddEventBridgePolicy(rolenm, accountid, aim); }
 
-    await CreateCloudWatchRolePolicy(rolenm, accountid, aim);
+    await AddCloudWatchRolePolicy(rolenm, accountid, aim);
 
-    await CreateLambdaAccessPolicy(rolenm, accountid, aim);
+    await AddLambdaAccessPolicy(rolenm, accountid, aim);
+    
+    await AddSecretsManagerAccessPolicy(rolenm, accountid, aim);
 
     // Wait for role to propagate (IAM changes can take time to propagate)
     Log.Information("Waiting for IAM role to propagate...");
@@ -210,7 +212,22 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     });
   }
 
-  private async Task CreateLambdaAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
+  private Task AddSecretsManagerAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
+    project.Environments.ForEach(async e => {
+      await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
+        RoleName = rolenm,
+        PolicyName = "secretsmanager-access-" + rolenm,
+        PolicyDocument = templater.ParseFromPath("aws/secretsmanager_permission_policy.json", new {
+          Region = region.SystemName,
+          AccountId = accountid,
+          SecretsStoreId = settings.AwsSettings.GetSecretsStoreIdForEnvironment(e)
+        })
+      });
+    });
+    return Task.CompletedTask;
+  }
+
+  private async Task AddLambdaAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-access-" + rolenm,
@@ -222,7 +239,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     });
   }
 
-  private async Task CreateCloudWatchRolePolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
+  private async Task AddCloudWatchRolePolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
     await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
       RoleName = rolenm,
       PolicyName = "lambda-cloudwatch-access-" + rolenm,

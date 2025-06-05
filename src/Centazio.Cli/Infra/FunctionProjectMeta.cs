@@ -39,9 +39,10 @@ public class AzFunctionProjectMeta(Assembly assembly, CentazioSettings settings,
 
 }
 
-public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings, string function) :  AbstractFunctionProjectMeta(assembly, settings) {
+public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings, string function, List<string> environments) :  AbstractFunctionProjectMeta(assembly, settings) {
   
   public readonly string AwsFunctionName = function;
+  public readonly List<string> Environments = environments;
   
   public override string CloudName => ECloudEnv.Aws.ToString();
   public override string ProjectName => $"{Assembly.GetName().Name}.{AwsFunctionName}.{CloudName}";

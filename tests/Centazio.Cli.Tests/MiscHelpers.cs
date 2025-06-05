@@ -14,7 +14,7 @@ public static class MiscHelpers {
       new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), await TestingFactories.Settings(), new Templater(await TestingFactories.Settings()));
   
   public static async Task<AwsFunctionProjectMeta> AwsEmptyFunctionProject(string function) => 
-      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), await TestingFactories.Settings(), function);
+      new (ReflectionUtils.LoadAssembly("Centazio.TestFunctions"), await TestingFactories.Settings(), function, new List<string> { "testing" });
 
   public static class Az {
     public static async Task<List<string>> ListFunctionApps() {
