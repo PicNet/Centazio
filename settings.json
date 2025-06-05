@@ -1,6 +1,4 @@
 {
-  // todo: this should move to SecretsLoaderSettings 
-  "SecretsFolders": ["../centazio3_secrets"],
   "ClickUp": {
     "BaseUrl": "https://api.clickup.com/api/v2/",
     "ListId": "901606000172"
@@ -35,7 +33,8 @@
     "CreateSchema": true
   },
   "SecretsLoaderSettings": {
-    "Provider": "Aws"
+    "Provider": "Aws",
+    "SecretsFolders": "../centazio3_secrets"
   },
   "AzureSettings": {
     "Region": "Australia East",

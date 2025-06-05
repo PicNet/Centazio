@@ -32,7 +32,7 @@ public class FileSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactor
   public ISecretsLoader GetService() => new FileSecretsLoader(settings.GetSecretsFolder());
   // todo WT: why do we have two `CentazioSettings`?
   public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    if (settings.SecretsFolders is null) throw new ArgumentNullException(nameof(settings.SecretsFolders));
+    if (settings.SecretsLoaderSettings.SecretsFolders is null) throw new ArgumentNullException(nameof(settings.SecretsLoaderSettings.SecretsFolders));
     return await CreateLoader(settings.GetSecretsFolder()).Load<T>(environments.ToList());
   }
 

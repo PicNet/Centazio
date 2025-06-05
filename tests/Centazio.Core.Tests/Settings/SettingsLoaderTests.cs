@@ -49,7 +49,6 @@ public class SettingsLoaderTests {
     
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));
     
-    Assert.That(settings.SecretsFolders, Has.Count.GreaterThan(0));
     Assert.That(settings.Defaults, Is.Not.Null);
   }
   

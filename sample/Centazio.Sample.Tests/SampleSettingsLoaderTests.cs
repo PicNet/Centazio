@@ -16,7 +16,6 @@ public class SettingsLoaderTests {
     var expected = new List<Type> { typeof(Settings), typeof(CustomSettingSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
     
     Assert.That(expected.All(t => svcs.Registered.Contains(t)));
-    Assert.That(settings.SecretsFolders, Has.Count.GreaterThan(0));
     Assert.That(settings.Defaults, Is.Not.Null);
     Assert.That(settings.CustomSetting, Is.Not.Null);
     Assert.That(settings.AppSheet, Is.Not.Null);

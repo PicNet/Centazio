@@ -46,9 +46,10 @@
       "AppServiceSkuTier": { "type": "string", "required": true }
     }
   },
-  "SecretsFolders": [{ "type": "string", "required": true }],
+  
   "SecretsLoader": {
-    "Provider": { "type": "string", "required": true }
+    "Provider": { "type": "string", "required": true },
+    "SecretsFolders": { "type": "string", "required": true }
   },
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },

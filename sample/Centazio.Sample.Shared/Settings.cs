@@ -27,7 +27,6 @@ public record Settings : CentazioSettings {
       var centazio = base.ToBase();
       return new Settings(centazio) {
         // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
-        SecretsFolders = centazio.SecretsFolders,  
         CustomSetting = ClickUp?.ToBase() ?? throw new SettingsSectionMissingException(nameof(ClickUp)),
         AppSheet = AppSheet?.ToBase() ?? throw new SettingsSectionMissingException(nameof(AppSheet)) 
       };

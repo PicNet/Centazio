@@ -3,7 +3,6 @@
 public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 
 public record CentazioSettings {
-  public required List<string> SecretsFolders { get; init; }
   private SecretsLoaderSettings? _SecretsLoaderSettings;
   public SecretsLoaderSettings SecretsLoaderSettings => _SecretsLoaderSettings?? throw new SettingsSectionMissingException(nameof(SecretsLoaderSettings));
   
@@ -26,7 +25,6 @@ public record CentazioSettings {
   public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
   
   protected CentazioSettings(CentazioSettings other) {
-    SecretsFolders = other.SecretsFolders;
     _SecretsLoaderSettings = other._SecretsLoaderSettings;
     
     _Defaults = other._Defaults;
@@ -39,15 +37,18 @@ public record CentazioSettings {
   
   public string GetSecretsFolder() => 
       Env.IsInDev 
-          ? FindFirstValidDirectory(SecretsFolders) 
+          ? ValidateDirectory(SecretsLoaderSettings.SecretsFolders)
           : Environment.CurrentDirectory;
   
-  public static string FindFirstValidDirectory(List<string> directories) => 
-      directories.Select(dir => Path.IsPathFullyQualified(dir) ? dir : FsUtils.GetCentazioPath(dir)).First(Directory.Exists) 
-      ?? throw new Exception($"Could not find a valid directory");
+  public static string ValidateDirectory(string directory) {
+    var path = Path.IsPathFullyQualified(directory) ? directory : FsUtils.GetCentazioPath(directory);
+    return Directory.Exists(path) 
+        ? path 
+        : throw new Exception($"Could not find a valid directory at path: {path}");
+  }
+
 
   public virtual Dto ToDto() => new() {
-    SecretsFolders = SecretsFolders,
     SecretsLoaderSettings = SecretsLoaderSettings.ToDto(),
     Defaults = _Defaults?.ToDto(),
     AwsSettings = _AwsSettings?.ToDto(),
@@ -58,7 +59,6 @@ public record CentazioSettings {
   };
   
   public record Dto : IDto<CentazioSettings> {
-    public List<string>? SecretsFolders { get; init; }
     public SecretsLoaderSettings.Dto? SecretsLoaderSettings { get; init; }
     public DefaultsSettings.Dto? Defaults { get; init; }
     public AwsSettings.Dto? AwsSettings { get; init; }
@@ -68,7 +68,6 @@ public record CentazioSettings {
     public CoreStorageSettings.Dto? CoreStorage { get; init; }
     
     public CentazioSettings ToBase() => new() {
-      SecretsFolders = SecretsFolders ?? throw new ArgumentNullException(nameof(SecretsFolders) + " wtf"),
       _SecretsLoaderSettings = SecretsLoaderSettings?.ToBase(),
       _Defaults = Defaults?.ToBase(),
       _AwsSettings = AwsSettings?.ToBase(),
