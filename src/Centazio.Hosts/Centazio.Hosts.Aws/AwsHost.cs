@@ -42,7 +42,6 @@ public class AwsHostImpl(List<string> environments, Type func) {
     var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
     centazio = new(settings, environments, false);
     await centazio.Init([func]);
-    Log.Information("Init CentazioEngineAdapter called");
     await InitAwsLambdaFunctionHost(handler);
     Log.Information("InitAwsLambdaFunctionHost called");
   }
