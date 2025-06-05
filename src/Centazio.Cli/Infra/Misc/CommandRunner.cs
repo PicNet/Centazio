@@ -35,6 +35,8 @@ public class CommandRunner : ICommandRunner {
   public CommandResults Docker(string args, string? cwd = null, bool quiet = false, bool newwindow = false, string? input = null) => Run("docker", args, cwd, quiet, newwindow, input: input);
 
   public CommandResults Run(string command, string args, string? cwd = null, bool quiet = false, bool newwindow = false, bool checktool = true, string? input = null) {
+    // if (newwindow && input is not null) throw new ArgumentException($"CommandRunner does not support `input` when `newwindow=true`"); // at least on linux
+    
     cwd ??= Env.IsUnitTest ? FsUtils.GetCentazioPath() : Environment.CurrentDirectory;
     var results = new CommandResults(null, command, args, cwd, String.Empty, String.Empty, newwindow);
     (command, args) = GetPlatformSpecificCommmandAndArgs();

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Centazio.Core.Misc;
 
@@ -75,6 +76,23 @@ public static class ReflectionUtils {
     }).ToList(); 
   }
   
+  public static List<Assembly> LoadAssembliesFuzzy(string pattern, List<string>? ignore = null) {
+    ignore ??= [];
+    var patterns = pattern.Split(' ', ',', ';', '|').Select(p => p.Trim()).Where(p => !String.IsNullOrEmpty(p)).ToList();
+    var options = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories)
+        .Where(MatchesPatterns)
+        .ToList();
+    var names = options.Select(dll => dll.Split(Path.DirectorySeparatorChar).Last().Replace(".dll", String.Empty)).Distinct().ToList();
+    var suitables = names.Select(name => GetMostSuitableAssemblyToLoad(name, options)).ToList();
+    return suitables.Select(Assembly.LoadFrom).ToList();
+    
+    bool MatchesPatterns(string dll) {
+      if (ignore.Any(i => dll.IndexOf($"{Path.DirectorySeparatorChar}{i}{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) >= 0)) return false;
+      var name = dll.Split(Path.DirectorySeparatorChar).Last().Replace(".dll", String.Empty);
+      return patterns.Any(p => name.EndsWith(p) || Regex.IsMatch(name, Regex.Escape(p).Replace("\\*", ".*")));
+    }
+  }
+  
   public static Assembly LoadAssembly(string assembly) => 
       Assembly.LoadFrom(GetAssemblyPath(assembly));
 
@@ -92,11 +110,17 @@ public static class ReflectionUtils {
   public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";
     var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
+    return GetMostSuitableAssemblyToLoad(assembly, dlls);
+  }
+
+  private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
+    var filenm = assemblynm + ".dll";
+    var filtered = options.Where(f => f.EndsWith(filenm)).ToList();
     var assfile = Env.IsHostedEnv ? 
-        dlls.FirstOrDefault(path => path.EndsWith(assembly + ".dll")) 
-        : dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
-            ?? dlls.FirstOrDefault(path => path.IndexOf($"{assembly}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0);
-    return assfile ?? throw new FileNotFoundException($"File for assembly [{assembly}] could not be found in directory (recursively) [{FsUtils.GetCentazioPath()}]");
+        filtered.FirstOrDefault(path => path.EndsWith(filenm)) 
+        : filtered.FirstOrDefault(path => path.IndexOf($"{assemblynm}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+        ?? filtered.FirstOrDefault(path => path.IndexOf($"{assemblynm}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0);
+    return assfile ?? throw new FileNotFoundException($"File for assembly [{assemblynm}] could not be found in directory (recursively) [{FsUtils.GetCentazioPath()}]");
   }
 
   public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {

@@ -1,10 +1,7 @@
-﻿using Amazon.CloudWatchLogs;
-using Amazon.Lambda.RuntimeSupport;
+﻿using Amazon.Lambda.RuntimeSupport;
 using Centazio.Core.Runner;
 using Centazio.Core.Settings;
 using Serilog;
-using Serilog.Formatting.Json;
-using Serilog.Sinks.AwsCloudWatch;
 using Type = System.Type;
 
 namespace Centazio.Hosts.Aws;
@@ -45,7 +42,6 @@ public class AwsHostImpl(List<string> environments, Type func) {
     var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
     centazio = new(settings, environments, false);
     await centazio.Init([func]);
-    Log.Information("Init CentazioEngineAdapter called");
     await InitAwsLambdaFunctionHost(handler);
     Log.Information("InitAwsLambdaFunctionHost called");
   }

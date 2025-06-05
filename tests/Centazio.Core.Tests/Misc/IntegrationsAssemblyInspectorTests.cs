@@ -6,7 +6,7 @@ namespace Centazio.Core.Tests.Misc;
 public class IntegrationsAssemblyInspectorTests {
 
   [Test] public void Test_GetCentazioFunctions() {
-    var funcs = IntegrationsAssemblyInspector.GetCentazioFunctions(typeof(EmptyReadFunction).Assembly, []);
+    var funcs = IntegrationsAssemblyInspector.GetRequiredCentazioFunctions(typeof(EmptyReadFunction).Assembly, []);
     
     Assert.That(funcs, Does.Contain(typeof(EmptyReadFunction)));
     Assert.That(funcs, Does.Contain(typeof(EmptyPromoteFunction)));

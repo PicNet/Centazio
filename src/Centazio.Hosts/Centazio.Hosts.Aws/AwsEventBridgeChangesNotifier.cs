@@ -2,6 +2,7 @@
 using Amazon.EventBridge.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using Amazon.Runtime;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -17,12 +18,16 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   public const string SOURCE_NAME = "centazio";
   public const string EVENT_BUS_NAME = "centazio-event-bus";
   public const string ENV_SETUP = "ENV_SETUP";
+  public bool useLocalStack = false;
+
+  public AwsEventBridgeChangesNotifier(bool useLocalStack) { this.useLocalStack = useLocalStack; }
+
   public void Dispose() { }
   public void Init(List<IRunnableFunction> functions) { }
   public Task Run(IFunctionRunner runner) => throw new NotImplementedException();
 
   public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
-    var client = new AmazonEventBridgeClient();
+    var client = useLocalStack ? new AmazonEventBridgeClient(new BasicAWSCredentials("test", "test"), new AmazonEventBridgeConfig { ServiceURL = "http://localhost:4566" }) : new AmazonEventBridgeClient();
     var putEventsRequest = new PutEventsRequest {
       Entries = objs.Select(obj => new PutEventsRequestEntry {
         Source = SOURCE_NAME,
@@ -50,8 +55,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
     funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
     if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
 
-    using var lambda = new AmazonLambdaClient();
-    
+    using var lambda = useLocalStack ? new AmazonLambdaClient(new BasicAWSCredentials("test", "test"), new AmazonLambdaConfig { ServiceURL = "http://localhost:4566" })  : new AmazonLambdaClient();
     var octs = func.Config.Operations.SelectMany(o => o.Triggers).ToList();
     if (octs.Count <= 0) return;
 
@@ -74,7 +78,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   }
 
   private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<ObjectChangeTrigger> octs) {
-    var evbridge = new AmazonEventBridgeClient();
+    var evbridge = useLocalStack ? new AmazonEventBridgeClient(new BasicAWSCredentials("test", "test"), new AmazonEventBridgeConfig { ServiceURL = "http://localhost:4566" }) : new AmazonEventBridgeClient();
     await CreateOrUpdateEventBusAsync(evbridge);
     await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, evbridge, funcarn, trigger)));
   }

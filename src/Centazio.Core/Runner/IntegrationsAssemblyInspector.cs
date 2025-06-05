@@ -27,10 +27,14 @@ public static class IntegrationsAssemblyInspector {
       potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
           ?? throw new Exception($"Could not find {provider} provider for service {typeof(F).Name}.  Available provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
 
-  public static List<Type> GetCentazioFunctions(Assembly assembly, List<string> filters) {
-    var functions = U.GetAllTypesThatImplement(typeof(AbstractFunction<>), assembly).Where(DoesTypeMatchFilter).ToList();
+  public static List<Type> GetRequiredCentazioFunctions(Assembly assembly, List<string> filters) {
+    var functions = GetCentazioFunctions(assembly, filters);
     if (!functions.Any()) throw new Exception($"Could not find any Centazio Functions in assembly[{assembly.GetName().Name}] matching filters[{String.Join(',', filters)}]");
     return functions;
+  }
+  
+  public static List<Type> GetCentazioFunctions(Assembly assembly, List<string> filters) {
+    return U.GetAllTypesThatImplement(typeof(AbstractFunction<>), assembly).Where(DoesTypeMatchFilter).ToList();
     
     bool DoesTypeMatchFilter(Type type) => !filters.Any() || filters.Contains("All", StringComparer.OrdinalIgnoreCase) 
         || filters.Any(filter => (type.FullName ?? String.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase));
