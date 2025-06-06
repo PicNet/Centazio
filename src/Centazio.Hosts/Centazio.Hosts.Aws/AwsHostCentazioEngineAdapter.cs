@@ -1,4 +1,6 @@
-﻿using Centazio.Core.Ctl;
+﻿using Amazon.EventBridge;
+using Amazon.Lambda;
+using Centazio.Core.Ctl;
 using Centazio.Core.Engine;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -17,7 +19,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     [ESecretsProviderType.EnvironmentVariable] = () => new EnvironmentVariableSecretsLoaderFactory().GetService()
   };
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
-    var notifier = (IChangesNotifier)(settings.AwsSettings.EventBridge ? new AwsEventBridgeChangesNotifier(false) :  new AwsSqsChangesNotifier(localaws));
+    var notifier = (IChangesNotifier)(settings.AwsSettings.EventBridge ? new AwsEventBridgeChangesNotifier(new AmazonLambdaClient(), new AmazonEventBridgeClient()) :  new AwsSqsChangesNotifier(localaws));
     var providersetting = settings.SecretsLoaderSettings.Provider;
     if (!Enum.TryParse<ESecretsProviderType>(providersetting, out var provider))
       throw new ArgumentException($"Unknown secrets provider: {providersetting}");

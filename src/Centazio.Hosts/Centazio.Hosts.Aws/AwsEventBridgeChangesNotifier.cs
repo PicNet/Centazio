@@ -2,7 +2,6 @@
 using Amazon.EventBridge.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
-using Amazon.Runtime;
 using Centazio.Core;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
@@ -12,23 +11,17 @@ using ResourceNotFoundException = Amazon.EventBridge.Model.ResourceNotFoundExcep
 
 namespace Centazio.Hosts.Aws;
 
-public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
+public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, AmazonEventBridgeClient eventbridge) : IChangesNotifier {
 
   private string? funcnm;
   public const string SOURCE_NAME = "centazio";
   public const string EVENT_BUS_NAME = "centazio-event-bus";
   public const string ENV_SETUP = "ENV_SETUP";
-  public bool useLocalStack = false;
-
-  public AwsEventBridgeChangesNotifier(bool useLocalStack) { this.useLocalStack = useLocalStack; }
-
-  public void Dispose() { }
   public void Init(List<IRunnableFunction> functions) { }
   public Task Run(IFunctionRunner runner) => throw new NotImplementedException();
 
   public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
-    var client = useLocalStack ? new AmazonEventBridgeClient(new BasicAWSCredentials("test", "test"), new AmazonEventBridgeConfig { ServiceURL = "http://localhost:4566" }) : new AmazonEventBridgeClient();
-    var putEventsRequest = new PutEventsRequest {
+    var req = new PutEventsRequest {
       Entries = objs.Select(obj => new PutEventsRequestEntry {
         Source = SOURCE_NAME,
         DetailType = nameof(ObjectChangeTrigger),
@@ -41,8 +34,8 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
       }).ToList()
     };
 
-    var response = await client.PutEventsAsync(putEventsRequest);
-    response.Entries.ForEach(result => {
+    var res = await eventbridge.PutEventsAsync(req);
+    res.Entries.ForEach(result => {
       Log.Information(!string.IsNullOrEmpty(result.EventId) ? $"Event published successfully. Event ID: {result.EventId}" : $"Failed to publish event. Error: {result.ErrorMessage}");
     });
   }
@@ -50,18 +43,17 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   public bool IsAsync => true;
 
   public async Task Setup(IRunnableFunction func) {
-    if (Environment.GetEnvironmentVariable(ENV_SETUP) is not "1") return;
+    if (Environment.GetEnvironmentVariable(ENV_SETUP) is "1") return;
 
     funcnm = Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
     if (string.IsNullOrEmpty(funcnm)) throw new InvalidOperationException("Function name not found in environment variables.");
-
-    using var lambda = useLocalStack ? new AmazonLambdaClient(new BasicAWSCredentials("test", "test"), new AmazonLambdaConfig { ServiceURL = "http://localhost:4566" })  : new AmazonLambdaClient();
+    
     var octs = func.Config.Operations.SelectMany(o => o.Triggers).ToList();
     if (octs.Count <= 0) return;
 
-    var res = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
-    await SetupEventBridge(lambda, res.Configuration.FunctionArn, octs);
-    await SetEnvironmentVariable(lambda, ENV_SETUP, "1");
+    var res = await lambdaclient.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
+    await SetupEventBridge(lambdaclient, res.Configuration.FunctionArn, octs);
+    await SetEnvironmentVariable(lambdaclient, ENV_SETUP, "1");
   }
 
   private async Task SetEnvironmentVariable(AmazonLambdaClient lambda, string ekey, string evar) {
@@ -78,9 +70,8 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
   }
 
   private async Task SetupEventBridge(AmazonLambdaClient lambda, string funcarn, List<ObjectChangeTrigger> octs) {
-    var evbridge = useLocalStack ? new AmazonEventBridgeClient(new BasicAWSCredentials("test", "test"), new AmazonEventBridgeConfig { ServiceURL = "http://localhost:4566" }) : new AmazonEventBridgeClient();
-    await CreateOrUpdateEventBusAsync(evbridge);
-    await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, evbridge, funcarn, trigger)));
+    await CreateOrUpdateEventBusAsync(eventbridge);
+    await Task.WhenAll(octs.Select(trigger => CreateEventBridgeRule(lambda, eventbridge, funcarn, trigger)));
   }
 
   private static async Task CreateOrUpdateEventBusAsync(AmazonEventBridgeClient evbridge) {
@@ -104,7 +95,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
       Log.Information($"Rule '{rulenm}' does not exist. Proceeding to create it.");
     }
 
-    var putRuleRequest = new PutRuleRequest {
+    var req = new PutRuleRequest {
       Name = rulenm,
       EventPattern = Json.Serialize(new {
         source = new[] { SOURCE_NAME },
@@ -120,7 +111,7 @@ public class AwsEventBridgeChangesNotifier : IChangesNotifier, IDisposable {
       EventBusName = EVENT_BUS_NAME
     };
 
-    var res = await evbridge.PutRuleAsync(putRuleRequest);
+    var res = await evbridge.PutRuleAsync(req);
 
     await evbridge.PutTargetsAsync(new PutTargetsRequest {
       Rule = rulenm,

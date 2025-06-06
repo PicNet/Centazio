@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <PackageReference Include="NetArchTest.Rules" />
+      <PackageReference Include="Testcontainers.LocalStack" />
     </ItemGroup>
 
 </Project>

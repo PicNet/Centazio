@@ -62,6 +62,7 @@
     <PackageVersion Include="Spectre.Console.Cli" Version="0.50.0" />
     <PackageVersion Include="Spectre.Console.ImageSharp" Version="0.50.0" />
     <PackageVersion Include="Testcontainers.DynamoDb" Version="4.4.0" />
+    <PackageVersion Include="Testcontainers.LocalStack" Version="4.5.0" />
     <PackageVersion Include="Testcontainers.Minio" Version="4.4.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.4.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.4.0" />
