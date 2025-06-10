@@ -1,5 +1,8 @@
 {
-  "SecretsFolders": [""],
+  "SecretsLoaderSettings": {
+    "Provider": "File",
+    "SecretsFolders": ""
+  },
   "Defaults": {
     "GeneratedCodeFolder": "generated",
     

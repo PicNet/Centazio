@@ -44,7 +44,7 @@ public abstract class CloudSolutionGenerator(
       new("EnforceCodeStyleInBuild", "true"),
       new("ManagePackageVersionsCentrally", "false")]);
     AddSettingsFilesToProject();
-    AddSecretsFilesToProject();
+    if (Enum.TryParse<ESecretsProviderType>(settings.SecretsLoaderSettings.Provider, out var provider) && provider is ESecretsProviderType.File) AddSecretsFilesToProject();
     
     var added = new Dictionary<string, bool>();
     AddCentazioProjectReferencesToProject(added);

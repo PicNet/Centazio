@@ -304,7 +304,7 @@ public record SecretsLoaderSettings {
   
   public required string Provider { get; init; }
   
-  public required string SecretsFolders { get; init; }
+  public string? SecretsFolders { get; init; }
 
   public Dto ToDto() => new() { 
     Provider = Provider,
@@ -317,7 +317,7 @@ public record SecretsLoaderSettings {
 
     public SecretsLoaderSettings ToBase() => new() { 
 Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-SecretsFolders = String.IsNullOrWhiteSpace(SecretsFolders) ? throw new ArgumentNullException(nameof(SecretsFolders)) : SecretsFolders.Trim(),
+      SecretsFolders = SecretsFolders?.Trim(),
     };
   }
 }
@@ -572,7 +572,7 @@ public record AwsSettings {
   
   public required string Region { get; init; }
   
-  public required string AccountName { get; init; }
+  public string? AccountName { get; init; }
   
   public required bool EventBridge { get; init; }
   
@@ -596,7 +596,7 @@ public record AwsSettings {
 
     public AwsSettings ToBase() => new() { 
 Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-AccountName = String.IsNullOrWhiteSpace(AccountName) ? throw new ArgumentNullException(nameof(AccountName)) : AccountName.Trim(),
+      AccountName = AccountName?.Trim(),
 EventBridge = EventBridge ?? false,
       SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
     };
