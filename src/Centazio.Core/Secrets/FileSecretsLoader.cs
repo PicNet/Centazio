@@ -2,9 +2,7 @@
 
 namespace Centazio.Core.Secrets;
 
-public class FileSecretsLoader(string dir) : AbstractSecretsLoader {
-
-  
+public class FileSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader {
   
   protected override Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
     var path = GetSecretsFilePath(environment, required);
@@ -22,19 +20,12 @@ public class FileSecretsLoader(string dir) : AbstractSecretsLoader {
   }
 
   public string? GetSecretsFilePath(string environment, bool required) {
-    var path = Path.Combine(dir, $"{environment}.env");
+    var path = Path.Combine(settings.GetSecretsFolder(), $"{environment}.env");
     return File.Exists(path) ? path : !required ? null : throw new FileNotFoundException(path);
   }
 }
 
 public class FileSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
-  public ISecretsLoader GetService() => new FileSecretsLoader(settings.GetSecretsFolder());
-  // todo WT: why do we have two `CentazioSettings`?
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    if (settings.SecretsLoaderSettings.SecretsFolders is null) throw new ArgumentNullException(nameof(settings.SecretsLoaderSettings.SecretsFolders));
-    return await CreateLoader(settings.GetSecretsFolder()).Load<T>(environments.ToList());
-  }
-
-  private static FileSecretsLoader CreateLoader(string dir) => new(dir);
+  public ISecretsLoader GetService() => new FileSecretsLoader(settings);
 }

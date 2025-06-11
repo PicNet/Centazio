@@ -48,6 +48,7 @@ public abstract class CloudSolutionGenerator(
     
     var added = new Dictionary<string, bool>();
     AddCentazioProjectReferencesToProject(added);
+    AddSecretsLoaderProjectReferencesToProject(added);
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
     await AddCentazioNuGetReferencesToProject(added);
       
@@ -62,6 +63,12 @@ public abstract class CloudSolutionGenerator(
     AddReferenceIfRequired(typeof(AbstractFunction<>).Assembly, added); // Add Centazio.Core
     AddReferenceIfRequired(project.Assembly, added); // Add this function's assemply
     AddReferenceIfRequired(hostass, added); // Add the hosting assembly (from Centazio.Hosts)
+    
+  }
+
+  private void AddSecretsLoaderProjectReferencesToProject(Dictionary<string, bool> added) {
+      if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Aws)) AddReferenceIfRequired(typeof(Providers.Aws.Secrets.AwsSecretsLoader).Assembly, added);
+      if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Az)) AddReferenceIfRequired(typeof(Providers.Az.Secrets.AzSecretsLoader).Assembly, added);
   }
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {
@@ -105,7 +112,7 @@ public abstract class CloudSolutionGenerator(
   }
 
   private void AddSecretsFilesToProject() {
-    var loader = new FileSecretsLoader(settings.GetSecretsFolder());
+    var loader = new FileSecretsLoader(settings);
     var paths = environments.AddIfNotExists(project.CloudName.ToLower()).Select((env, idx) => loader.GetSecretsFilePath(env, idx == 0)).OfType<string>().ToList();
     AddCopyFilesToProject(paths, String.Empty);
   }

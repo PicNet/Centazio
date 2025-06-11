@@ -1,4 +1,5 @@
-﻿using Amazon.SecretsManager;
+﻿using Amazon.Runtime;
+using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Centazio.Core;
 using Centazio.Core.Misc;
@@ -7,22 +8,26 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Providers.Aws.Secrets;
 
-public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
+public class AwsSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader {
 
-  private readonly IAmazonSecretsManager client = InitializeClient(aws);
+  private readonly IAmazonSecretsManager client = InitializeClient(settings);
 
-  private static IAmazonSecretsManager InitializeClient(AwsSettings aws) {
-    Environment.SetEnvironmentVariable("AWS_PROFILE", aws.AccountName);
+  private static IAmazonSecretsManager InitializeClient(CentazioSettings settings) {
+    if (settings.SecretsLoaderSettings.ProviderKey is not null && settings.SecretsLoaderSettings.ProviderSecret is not null) {
+      var credentials = new BasicAWSCredentials( settings.SecretsLoaderSettings.ProviderKey, settings.SecretsLoaderSettings.ProviderSecret );
+      return new AmazonSecretsManagerClient(credentials, settings.AwsSettings.GetRegionEndpoint());
+    }
+    Environment.SetEnvironmentVariable("AWS_PROFILE", settings.AwsSettings.AccountName);
     Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
 
-    return new AmazonSecretsManagerClient(aws.GetRegionEndpoint());
+    return new AmazonSecretsManagerClient(settings.AwsSettings.GetRegionEndpoint());
   }
 
   // remove redundant environments, i.e. environments that result in the same Secret Store Id 
-  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(aws.GetSecretsStoreIdForEnvironment).ToList();
+  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(settings.AwsSettings.GetSecretsStoreIdForEnvironment).ToList();
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
-    var id = aws.GetSecretsStoreIdForEnvironment(environment);
+    var id = settings.AwsSettings.GetSecretsStoreIdForEnvironment(environment);
     var secretsstr = await GetSecretsValueString();
     if (secretsstr is null) return [];
     
@@ -52,13 +57,5 @@ public class AwsSecretsLoader(AwsSettings aws) : AbstractSecretsLoader {
 /// <param name="settings">The `AwsSettings` section of the `settings.json` file.</param>
 public class AwsSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
 
-  public ISecretsLoader GetService() => new AwsSecretsLoader(settings.AwsSettings);
-  
-  // todo WT: why do we have two `CentazioSettings`?
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    if (settings.AwsSettings is null) throw new ArgumentNullException(nameof(settings.AwsSettings));
-    return await CreateLoader(settings.AwsSettings).Load<T>(environments.ToList());
-  }
-
-  private static AwsSecretsLoader CreateLoader(AwsSettings settings) => new(settings);
+  public ISecretsLoader GetService() => new AwsSecretsLoader(settings);
 }

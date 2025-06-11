@@ -49,7 +49,9 @@
   
   "SecretsLoader": {
     "Provider": { "type": "string", "required": true },
-    "SecretsFolders": { "type": "string", "required": false }
+    "SecretsFolders": { "type": "string", "required": false },
+    "ProviderKey": { "type": "string", "required": false },
+    "ProviderSecret": { "type": "string", "required": false }
   },
   "StagedEntityRepository": {
     "Provider": { "type": "string", "required": true },

@@ -8,20 +8,28 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Providers.Az.Secrets;
 
-public class AzSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
+public class AzSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader {
 
-  private readonly SecretClient client = InitializeClient(azure);
+  private readonly SecretClient client = InitializeClient(settings);
 
-  private static SecretClient InitializeClient(AzureSettings azure) {
-    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = azure.TenantId });
-
-    return new SecretClient(new Uri($"https://{azure.KeyVaultName}.vault.azure.net/"), credential);
+  private static SecretClient InitializeClient(CentazioSettings settings) 
+  {
+    var vaultUri = new Uri($"https://{settings.AzureSettings.KeyVaultName}.vault.azure.net/");
+        
+    return settings.SecretsLoaderSettings is { ProviderKey: not null, ProviderSecret: not null }
+        ? new SecretClient(vaultUri, new ClientSecretCredential(
+            settings.AzureSettings.TenantId,
+            settings.SecretsLoaderSettings.ProviderKey,
+            settings.SecretsLoaderSettings.ProviderSecret))
+        : new SecretClient(vaultUri, new DefaultAzureCredential(
+            new DefaultAzureCredentialOptions { TenantId = settings.AzureSettings.TenantId }));
   }
 
-  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(azure.GetKeySecretNameForEnvironment).ToList();
+
+  protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(settings.AzureSettings.GetKeySecretNameForEnvironment).ToList();
 
   protected override async Task<Dictionary<string, string>> LoadSecretsAsDictionaryForEnvironment(string environment, bool required) {
-    var name = azure.GetKeySecretNameForEnvironment(environment);
+    var name = settings.AzureSettings.GetKeySecretNameForEnvironment(environment);
 
     try {
       var response = await client.GetSecretAsync(name);
@@ -42,15 +50,5 @@ public class AzSecretsLoader(AzureSettings azure) : AbstractSecretsLoader {
 
 public class AzSecretsLoaderFactory(CentazioSettings settings) : IServiceFactory<ISecretsLoader> {
 
-  public ISecretsLoader GetService() => new AzSecretsLoader(settings.AzureSettings);
-
-  // todo WT: why do we have two `CentazioSettings`?
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    if (settings.AzureSettings is null) throw new ArgumentNullException(nameof(settings.AzureSettings));
-
-    return await CreateLoader(settings.AzureSettings).Load<T>(environments.ToList());
-  }
-
-  private static AzSecretsLoader CreateLoader(AzureSettings settings) => new(settings);
-
+  public ISecretsLoader GetService() => new AzSecretsLoader(settings);
 }
