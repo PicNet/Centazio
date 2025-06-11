@@ -14,8 +14,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
-      <ProjectReference Include="..\..\Centazio.Providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
-      <ProjectReference Include="..\..\Centazio.Providers\Centazio.Providers.Az\Centazio.Providers.Az.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -22,9 +22,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, CentazioSecre
         "Microsoft.Azure.Functions.Worker.ApplicationInsights",
         "Serilog.Sinks.ApplicationInsights",
         "Microsoft.Extensions.Logging",
-        "Serilog.Extensions.Hosting",
-        "Azure.Identity",
-        "Azure.Security.KeyVault.Secrets"
+        "Serilog.Extensions.Hosting"
       ], added);
   
   private async Task AddAzConfigJsonFilesToProject() {

@@ -11,5 +11,5 @@ public enum ESecretsProviderType
 }
 
 public interface ISecretsFactory {
-  Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments);
+
 }

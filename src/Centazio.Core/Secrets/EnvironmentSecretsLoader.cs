@@ -24,10 +24,6 @@ public class EnvironmentSecretsLoader : AbstractSecretsLoader {
 
 }
 
-public class EnvironmentVariableSecretsLoaderFactory : ISecretsFactory, IServiceFactory<ISecretsLoader> {
+public class EnvironmentSecretsLoaderFactory : ISecretsFactory, IServiceFactory<ISecretsLoader> {
   public ISecretsLoader GetService() => new EnvironmentSecretsLoader();
-  
-  public async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {
-    return await new EnvironmentSecretsLoader().Load<T>(environments.ToList());
-  }
 }

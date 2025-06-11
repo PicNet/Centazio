@@ -16,13 +16,7 @@ internal class AwsCloudSolutionGenerator(CentazioSettings settings, ITemplater t
     AddLatestNuGetReferencesToProject([
       "Amazon.Lambda.Core",
       "Amazon.Lambda.Serialization.SystemTextJson",
-      "Amazon.Lambda.RuntimeSupport",
-      "AWSSDK.SecretsManager",
-      "AWSSDK.SecretsManager.Caching",
-      "AWSSDK.Core",
-      "Amazon.Extensions.Configuration.SystemsManager",
-      "AWSSDK.SSO",
-      "AWSSDK.SSOOIDC",
+      "Amazon.Lambda.RuntimeSupport"
     ], added);
   
   private async Task AddAwsConfigFilesToProject(List<Type> functions) {
