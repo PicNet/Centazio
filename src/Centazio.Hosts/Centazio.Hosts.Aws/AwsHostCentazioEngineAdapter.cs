@@ -16,6 +16,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
   private readonly Dictionary<ESecretsProviderType, Func<ISecretsLoader>> Providers = new() {
     [ESecretsProviderType.File] = () => new FileSecretsLoaderFactory(settings).GetService(),
     [ESecretsProviderType.Aws] = () => new AwsSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.Az] = () => new AwsSecretsLoaderFactory(settings).GetService(),
     [ESecretsProviderType.EnvironmentVariable] = () => new EnvironmentVariableSecretsLoaderFactory().GetService()
   };
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {

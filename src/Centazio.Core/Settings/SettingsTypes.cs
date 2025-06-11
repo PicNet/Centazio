@@ -305,19 +305,29 @@ public record SecretsLoaderSettings {
   public required string Provider { get; init; }
   
   public string? SecretsFolders { get; init; }
+  
+  public string? ProviderKey { get; init; }
+  
+  public string? ProviderSecret { get; init; }
 
   public Dto ToDto() => new() { 
     Provider = Provider,
     SecretsFolders = SecretsFolders,
+    ProviderKey = ProviderKey,
+    ProviderSecret = ProviderSecret,
   };
 
   public record Dto : IDto<SecretsLoaderSettings> { 
     public string? Provider { get; init; }
     public string? SecretsFolders { get; init; }
+    public string? ProviderKey { get; init; }
+    public string? ProviderSecret { get; init; }
 
     public SecretsLoaderSettings ToBase() => new() { 
 Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
       SecretsFolders = SecretsFolders?.Trim(),
+      ProviderKey = ProviderKey?.Trim(),
+      ProviderSecret = ProviderSecret?.Trim(),
     };
   }
 }

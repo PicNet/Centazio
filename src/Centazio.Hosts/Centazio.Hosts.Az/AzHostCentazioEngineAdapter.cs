@@ -3,6 +3,7 @@ using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
+using Centazio.Providers.Aws.Secrets;
 using Centazio.Providers.Az.Secrets;
 
 namespace Centazio.Hosts.Az;
@@ -12,7 +13,8 @@ public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string>
   private readonly List<string> environments = environments;
   private readonly Dictionary<ESecretsProviderType, Func<ISecretsLoader>> Providers = new() {
     [ESecretsProviderType.File] = () => new FileSecretsLoaderFactory(settings).GetService(),
-    [ESecretsProviderType.Az] = () => new AzSecretsLoaderFactory(settings).GetService()
+    [ESecretsProviderType.Az] = () => new AzSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.Aws] = () => new AwsSecretsLoaderFactory(settings).GetService()
   };
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
