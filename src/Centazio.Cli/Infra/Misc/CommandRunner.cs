@@ -78,8 +78,7 @@ public class CommandRunner : ICommandRunner {
     return results with { Process = p, Out = outp, Err = err };
     
     (string cmd, string arg) GetPlatformSpecificCommmandAndArgs() {
-      // GH Actions is Linux but does not support the x-terminal-emulator command, so just use regular command
-      return Env.IsLinux && !Env.IsGitHubActions && newwindow ? ("x-terminal-emulator", $"-e \"bash -c '{command} {args}'\"") : (command, args);
+      return Env.IsLinux && newwindow ? ("x-terminal-emulator", $"-e \"bash -c '{command} {args}'\"") : (command, args);
     }
   }
 

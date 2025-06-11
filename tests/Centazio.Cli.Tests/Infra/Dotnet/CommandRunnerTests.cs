@@ -65,6 +65,9 @@ public class CommandRunnerTests {
   }
   
   [Test] public void Test_new_window() {
+    // GH Actions is Linux but does not support the x-terminal-emulator command
+    if (Env.IsGitHubActions) return;
+    
     var results = cmd.Run("dotnet", "--version", newwindow: true);
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("dotnet"));
