@@ -47,7 +47,6 @@ public class AzFunctionLocalSimulateCommand(
     projects.ForEach(project => {
       var functions = settings.FunctionNames is null ? null : String.Join(" ", settings.FunctionNames.Split(','));
       var funcstart = templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction, new { Functions = functions });
-      Console.WriteLine($"\n\n!!!!!ASS[{settings.AssemblyNames}] FUNC [{functions}] TEMPLATE: [{coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction}] COMMAND:" + funcstart);
       cmd.Func(funcstart,
           cwd: project.PublishPath,
           newwindow: projects.Count > 1,
