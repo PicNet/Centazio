@@ -54,12 +54,7 @@ public abstract class CentazioEngine(List<string> environments) {
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
     
-    if (Enum.TryParse<ESecretsProviderType>(settings.SecretsLoaderSettings.Provider, out var provider)) {
-      if (provider is ESecretsProviderType.Aws or ESecretsProviderType.Az) AddCoreService<IServiceFactory<ISecretsLoader>, ISecretsLoader>(settings.SecretsLoaderSettings.Provider);
-      if (provider is ESecretsProviderType.File) registrar.RegisterServiceTypeFactory(typeof(IServiceFactory<ISecretsLoader>), typeof(FileSecretsLoaderFactory));
-      if (provider is ESecretsProviderType.EnvironmentVariable) registrar.RegisterServiceTypeFactory(typeof(IServiceFactory<ISecretsLoader>), typeof(EnvironmentSecretsLoaderFactory));
-      registrar.Register<ISecretsLoader>(svcs => svcs.GetRequiredService<IServiceFactory<ISecretsLoader>>().GetService());
-    }
+    AddCoreService<IServiceFactory<ISecretsLoader>, ISecretsLoader>(settings.SecretsLoaderSettings.Provider);
     
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
