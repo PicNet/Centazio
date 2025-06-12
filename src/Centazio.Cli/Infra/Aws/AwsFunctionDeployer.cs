@@ -213,6 +213,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   }
 
   private Task AddSecretsManagerAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
+    // todo CP: do not use ForEach with asyncs not safe 
     project.Environments.ForEach(async e => {
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,

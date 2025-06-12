@@ -22,6 +22,6 @@ public class EnvironmentSecretsLoader : AbstractSecretsLoader {
 
 }
 
-public class EnvironmentSecretsLoaderFactory : ISecretsFactory, IServiceFactory<ISecretsLoader> {
+public class EnvironmentSecretsLoaderFactory : IServiceFactory<ISecretsLoader> {
   public ISecretsLoader GetService() => new EnvironmentSecretsLoader();
 }

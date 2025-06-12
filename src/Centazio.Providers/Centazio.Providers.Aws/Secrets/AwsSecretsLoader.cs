@@ -55,7 +55,7 @@ public class AwsSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader
 ///   with the required environment.
 /// </summary>
 /// <param name="settings">The `AwsSettings` section of the `settings.json` file.</param>
-public class AwsSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
+public class AwsSecretsLoaderFactory(CentazioSettings settings) : IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new AwsSecretsLoader(settings);
 }

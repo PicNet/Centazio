@@ -7,7 +7,3 @@ public enum ESecretsProviderType
   Az,
   EnvironmentVariable
 }
-
-public interface ISecretsFactory {
-
-}

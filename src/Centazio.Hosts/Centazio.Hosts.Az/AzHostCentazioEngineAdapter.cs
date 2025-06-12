@@ -14,6 +14,7 @@ public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string>
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     // todo WT: this should support function-to-function triggers
+    // todo WT: what is this `set`?
     var set = settings.AzureSettings;
     registrar.Register(provider => {
       var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();
