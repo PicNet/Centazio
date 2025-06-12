@@ -25,7 +25,7 @@ public static class IntegrationsAssemblyInspector {
 
   private static Type ValidateCoreServiceFound<F>(string provider, List<Type> potentials) => 
       potentials.SingleOrDefault(type => type.Name.StartsWith(provider, StringComparison.OrdinalIgnoreCase)) 
-          ?? throw new Exception($"Could not find {provider} provider for service {typeof(F).Name}.  Available provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
+          ?? throw new Exception($"Could not find [{provider}] provider for service [{typeof(F).Name}].  Available provider types [{String.Join(",", potentials.Select(t => t.Name))}]");
 
   public static List<Type> GetRequiredCentazioFunctions(Assembly assembly, List<string> filters) {
     var functions = GetCentazioFunctions(assembly, filters);

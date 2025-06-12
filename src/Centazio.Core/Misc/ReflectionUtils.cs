@@ -104,7 +104,7 @@ public static class ReflectionUtils {
         .Select(LoadAssembly)
         .ToList();
     
-    bool ProviderAssemblyFilter(string? name) => name is not null && name.StartsWith("Centazio.Providers.") && !name.EndsWith("Tests");
+    bool ProviderAssemblyFilter(string? name) => name is not null && !name.EndsWith("Tests") && (name == $"{nameof(Centazio)}.{nameof(Core)}" || name.StartsWith($"{nameof(Centazio)}.Providers"));
   }
 
   public static string GetAssemblyPath(string assembly) {
@@ -115,12 +115,16 @@ public static class ReflectionUtils {
 
   private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
     var filenm = assemblynm + ".dll";
+    var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
     var filtered = options.Where(f => f.EndsWith(filenm)).ToList();
-    var assfile = Env.IsHostedEnv ? 
-        filtered.FirstOrDefault(path => path.EndsWith(filenm)) 
-        : filtered.FirstOrDefault(path => path.IndexOf($"{assemblynm}{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
-        ?? filtered.FirstOrDefault(path => path.IndexOf($"{assemblynm}{Path.DirectorySeparatorChar}", StringComparison.Ordinal) >= 0);
-    return assfile ?? throw new FileNotFoundException($"File for assembly [{assemblynm}] could not be found in directory (recursively) [{FsUtils.GetCentazioPath()}]");
+    
+    return Env.IsCloudHost ?
+        // todo GT: test in Cloud environment, should only have 1 real matching option and that should be in the root directory
+        filtered.FirstOrDefault(path => path.Contains(projdirnm)) 
+            ?? filtered.First()
+        : filtered.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+            ?? filtered.FirstOrDefault(path => path.IndexOf(projdirnm, StringComparison.Ordinal) >= 0)
+            ?? filtered.First();
   }
 
   public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {

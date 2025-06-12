@@ -2,16 +2,19 @@
 
 namespace Centazio.Core.Misc;
 
-public class Env {
+public static class Env {
 
-  public static bool IsHostedEnv => 
-      Environment.GetEnvironmentVariable("CENTAZIO_HOST") == "true" 
-      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("FUNCTIONS_WORKER_RUNTIME")) 
-      || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
+  public static bool IsSelfHost => VarIsTrue("CENTAZIO_HOST");
+  public static bool IsCloudHost => ContainsVar("FUNCTIONS_WORKER_RUNTIME") || ContainsVar("AWS_LAMBDA_FUNCTION_NAME"); 
+  public static bool IsHostedEnv => IsSelfHost || IsCloudHost;
   
-  public static bool IsGitHubActions => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
-  public static bool IsUnitTest => Environment.GetEnvironmentVariable("IS_UNIT_TEST") == "true";
-  public static bool IsCli => Environment.GetEnvironmentVariable("IS_CLI") == "true";
+  public static bool IsGitHubActions => VarIsTrue("GITHUB_ACTIONS");
+  public static bool IsUnitTest => VarIsTrue("IS_UNIT_TEST");
+  public static bool IsCli => VarIsTrue("IS_CLI");
   public static bool IsInDev => FsUtils.FindFileDirectory(FsUtils.TEST_DEV_FILE) is not null;
   public static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+  
+  private static string Var(string varname) => Environment.GetEnvironmentVariable(varname)?.Trim() ?? String.Empty;
+  private static bool ContainsVar(string varname) => Var(varname) != String.Empty;
+  private static bool VarIsTrue(string varname) => Var(varname) == "true";
 }
