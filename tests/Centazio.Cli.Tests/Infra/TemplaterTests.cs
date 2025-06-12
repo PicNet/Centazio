@@ -43,22 +43,22 @@ Arr2[1]:{{ it.Arr2[1] }}
 
   [Test] public void Test_parse_with_no_object_and_settings() {
     var contents = @"
-settings.SecretsLoaderSettings.SecretsFolders:{{ it.settings.SecretsLoaderSettings.SecretsFolders }}
+settings.SecretsLoaderSettings.SecretsFolder:{{ it.settings.SecretsLoaderSettings.SecretsFolder }}
 ";
     var results = templater.ParseFromContent(contents);
-    Assert.That(results.Trim(), Is.EqualTo($"settings.SecretsLoaderSettings.SecretsFolders:{settings.SecretsLoaderSettings.SecretsFolders}"));
+    Assert.That(results.Trim(), Is.EqualTo($"settings.SecretsLoaderSettings.SecretsFolder:{settings.SecretsLoaderSettings.SecretsFolder}"));
   }
 
   
   [Test] public void Test_parse_with_object_and_settings() {
     var contents = @"
 Prop1:{{it.Prop1}}
-settings.SecretsLoaderSettings.SecretsFolders:{{ it.settings.SecretsLoaderSettings.SecretsFolders }}
+settings.SecretsLoaderSettings.SecretsFolder:{{ it.settings.SecretsLoaderSettings.SecretsFolder }}
 "
         ;
     var results = templater.ParseFromContent(contents, new { 
       Prop1 = "P1", 
     });
-    Assert.That(results.Replace("\r", String.Empty).Trim(), Is.EqualTo(String.Join('\n', new [] {"Prop1:P1", $"settings.SecretsLoaderSettings.SecretsFolders:{settings.SecretsLoaderSettings.SecretsFolders}"})));
+    Assert.That(results.Replace("\r", String.Empty).Trim(), Is.EqualTo(String.Join('\n', new [] {"Prop1:P1", $"settings.SecretsLoaderSettings.SecretsFolder:{settings.SecretsLoaderSettings.SecretsFolder}"})));
   }
 }

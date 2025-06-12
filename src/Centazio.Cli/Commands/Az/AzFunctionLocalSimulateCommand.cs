@@ -43,7 +43,7 @@ public class AzFunctionLocalSimulateCommand(
     // run the commands in new windows if we have more than 1 function.  However, in this case
     //    the user will manaully have to select the 'dotnet-isolated' model as inserting inputs is not supported
     //    in new window mode.
-    // todo: multiple functions (projects) is not working well
+    // todo GT: multiple functions (projects) is not working well
     projects.ForEach(project => {
       var functions = settings.FunctionNames is null ? null : String.Join(" ", settings.FunctionNames.Split(','));
       var funcstart = templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction, new { Functions = functions });

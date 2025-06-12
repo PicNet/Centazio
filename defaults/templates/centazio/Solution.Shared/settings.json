@@ -1,7 +1,7 @@
 {
   "SecretsLoaderSettings": {
     "Provider": "File",
-    "SecretsFolders": ".."
+    "SecretsFolder": ".."
   },
   "CustomSetting": {
     "ExampleProperty": "example value"

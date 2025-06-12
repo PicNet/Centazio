@@ -35,19 +35,19 @@ public record CentazioSettings {
     _CoreStorage = other._CoreStorage;
   }
   
-  public string GetSecretsFolder() => 
-      Env.IsInDev 
-          ? ValidateDirectory(SecretsLoaderSettings.SecretsFolders)
-          : Environment.CurrentDirectory;
-  
-  public static string ValidateDirectory(string? directory) {
-    //todo find better way to validate empty directory when no value is added to secretfolders
-    var path = Path.IsPathFullyQualified(directory ?? string.Empty) ? directory : FsUtils.GetCentazioPath(directory ?? string.Empty);
-    return Directory.Exists(path) 
-        ? path 
-        : throw new Exception($"Could not find a valid directory at path: {path}");
+  public string GetSecretsFolder() {
+    return Env.IsInDev ? 
+        ValidateDirectory(SecretsLoaderSettings.SecretsFolder) : 
+        Environment.CurrentDirectory;
+    
+    string ValidateDirectory(string? directory) {
+      // todo WT: find better way to validate empty directory when no value is added to secretfolders
+      var path = Path.IsPathFullyQualified(directory ?? string.Empty) ? directory : FsUtils.GetCentazioPath(directory ?? string.Empty);
+      return Directory.Exists(path) 
+          ? path 
+          : throw new Exception($"Could not find a valid directory at path: {path}");
+    }
   }
-
 
   public virtual Dto ToDto() => new() {
     SecretsLoaderSettings = SecretsLoaderSettings.ToDto(),

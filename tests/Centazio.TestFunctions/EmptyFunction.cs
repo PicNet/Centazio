@@ -27,7 +27,7 @@ public record TestSettings : CentazioSettings {
     public new TestSettings ToBase() {
       var centazio = base.ToBase();
       return new TestSettings(centazio) {
-        // compiler does not know that `base.ToBase()` has already set `SecretsFolders`
+        // compiler does not know that `base.ToBase()` has already set `SecretsFolder`
         NewProperty = NewProperty 
       };
     }

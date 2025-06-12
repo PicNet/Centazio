@@ -26,6 +26,5 @@ public class FileSecretsLoader(CentazioSettings settings) : AbstractSecretsLoade
 }
 
 public class FileSecretsLoaderFactory(CentazioSettings settings) :ISecretsFactory, IServiceFactory<ISecretsLoader> {
-
   public ISecretsLoader GetService() => new FileSecretsLoader(settings);
 }

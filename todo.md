@@ -10,6 +10,10 @@
     - `centazio az func logs Centazio.Sample.AppSheet` did not show logs
     - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
     - `centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.ArgumentException: Provider Aws is not implemented.`
+    - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
+        The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
+            Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
+    - `centazio az func logs` not working
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
