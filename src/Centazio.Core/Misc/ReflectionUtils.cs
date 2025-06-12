@@ -115,14 +115,11 @@ public static class ReflectionUtils {
 
   private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
     var filenm = assemblynm + ".dll";
-    var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
-    var filtered = options.Where(f => f.EndsWith(filenm)).ToList();
+    var filtered = options.Where(f => f.EndsWith($"{Path.DirectorySeparatorChar}{filenm}")).ToList();
+    if (Env.IsCloudHost) return filtered.Single(); // cloud hosts will only have 1 copy of each dll
     
-    return Env.IsCloudHost ?
-        // todo GT: test in Cloud environment, should only have 1 real matching option and that should be in the root directory
-        filtered.FirstOrDefault(path => path.Contains(projdirnm)) 
-            ?? filtered.First()
-        : filtered.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+    var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
+    return filtered.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
             ?? filtered.FirstOrDefault(path => path.IndexOf(projdirnm, StringComparison.Ordinal) >= 0)
             ?? filtered.First();
   }
