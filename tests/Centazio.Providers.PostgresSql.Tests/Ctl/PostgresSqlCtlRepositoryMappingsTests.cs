@@ -7,7 +7,7 @@ namespace Centazio.Providers.PostgresSql.Tests.Ctl;
 
 public class PostgresSqlCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
   protected override async Task<ITestingCtlRepository> GetRepository() {
-    var settings = (await TestingFactories.Settings()).CtlRepository with { ConnectionString = await new PostgresSqlConnection().Init() };
+    var settings = (await F.Settings()).CtlRepository with { ConnectionString = await new PostgresSqlConnection().Init() };
     return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new PostgresSqlCtlRepositoryDbContext(settings), new PostgresSqlDbFieldsHelper()).Initialise();
   }
 }

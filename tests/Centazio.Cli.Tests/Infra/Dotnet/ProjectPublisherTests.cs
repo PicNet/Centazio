@@ -3,7 +3,6 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Dotnet;
 
@@ -14,8 +13,8 @@ public class ProjectPublisherTests {
   private ITemplater templater;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings();
-    secrets = await TestingFactories.Secrets();
+    settings = await F.Settings();
+    secrets = await F.Secrets();
     templater = new Templater(settings);
   }
 

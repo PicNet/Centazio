@@ -13,12 +13,12 @@ public abstract class BaseCoreStorageRepositoryTests {
   
   [Test] public async Task Test_get_missing_entity_throws_exception() {
     Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(C.CoreEntityName, [new("invalid")]));
-    await DoUpsert(TestingFactories.NewCoreEntity(String.Empty, String.Empty));
+    await DoUpsert(F.NewCoreEntity(String.Empty, String.Empty));
     Assert.ThrowsAsync<Exception>(() => repo.GetExistingEntities(C.CoreEntityName, [new("invalid")]));
   }
 
   [Test] public async Task Test_insert_get_update_get() {
-    var created = TestingFactories.NewCoreEntity("N1", "N1");
+    var created = F.NewCoreEntity("N1", "N1");
     await DoUpsert(created);
     var retreived1 = await GetSingle(created.CoreEntity.CoreId);
     var list1 = await repo.GetAllCoreEntities();
@@ -37,7 +37,7 @@ public abstract class BaseCoreStorageRepositoryTests {
   }
   
   [Test] public async Task Test_batch_upsert() {
-    var batch1 = new List<CoreEntityAndMeta> { TestingFactories.NewCoreEntity("N1", "N1"), TestingFactories.NewCoreEntity("N2", "N2") };
+    var batch1 = new List<CoreEntityAndMeta> { F.NewCoreEntity("N1", "N1"), F.NewCoreEntity("N2", "N2") };
     await DoUpsert(batch1);
     var list1 = await repo.GetAllCoreEntities();
     
@@ -47,7 +47,7 @@ public abstract class BaseCoreStorageRepositoryTests {
           FirstName = "Updated entity" 
         }
       }, 
-      TestingFactories.NewCoreEntity("N3", "N3") };
+      F.NewCoreEntity("N3", "N3") };
     await DoUpsert(batch2);
     var list2 = await repo.GetAllCoreEntities();
     
@@ -57,7 +57,7 @@ public abstract class BaseCoreStorageRepositoryTests {
   
   [Test] public async Task Test_query() {
     var data = Enumerable.Range(0, 100)
-        .Select(idx => TestingFactories.NewCoreEntity($"{idx}", $"{idx}"))
+        .Select(idx => F.NewCoreEntity($"{idx}", $"{idx}"))
         .ToList();
     await DoUpsert(data);
     

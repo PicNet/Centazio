@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Settings;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra;
 
@@ -9,7 +8,7 @@ public class TemplaterTests {
   private ITemplater templater;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings();
+    settings = await F.Settings();
     templater = new Templater(settings);
   }
   

@@ -8,6 +8,7 @@ global using Centazio.Test.Lib.E2E;
 global using Centazio.Test.Lib.E2E.Crm;
 global using Centazio.Test.Lib.E2E.Fin;
 global using C = Centazio.Test.Lib.Constants;
+global using F = Centazio.Test.Lib.TestingFactories;
     
 using System.Runtime.CompilerServices;
 

@@ -5,7 +5,6 @@ using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
-using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +28,7 @@ public class SqliteSimulationStorage : ISimulationStorage {
   public async Task Initialise(SimulationCtx ctx) {
     var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));
     
-    var settings = await TestingFactories.Settings(); 
+    var settings = await F.Settings(); 
     var ctlsetts = settings.CtlRepository with { ConnectionString = ctl_db };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = staging_db };
     var dbf = new SqliteDbFieldsHelper();

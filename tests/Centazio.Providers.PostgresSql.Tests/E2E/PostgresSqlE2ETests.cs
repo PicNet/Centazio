@@ -6,7 +6,6 @@ using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.PostgresSql.Ctl;
 using Centazio.Providers.PostgresSql.Stage;
-using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +13,7 @@ namespace Centazio.Providers.PostgresSql.Tests.E2E;
 
 public class PostgresSqlE2ETests : BaseE2ETests {
   protected override async Task<ISimulationStorage> GetStorage() {
-    var settings = await TestingFactories.Settings();
+    var settings = await F.Settings();
     var connstr = await new PostgresSqlConnection().Init();
     var ctlsetts = settings.CtlRepository with { ConnectionString = connstr };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = connstr };

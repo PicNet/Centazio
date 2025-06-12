@@ -4,7 +4,6 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Test.Lib;
 using AzCmd = Centazio.Cli.Tests.MiscHelpers.Az;
 
 namespace Centazio.Cli.Tests.Infra.Az;
@@ -17,8 +16,8 @@ public class AzFunctionDeployerTests {
   private AzFunctionProjectMeta project;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings();
-    secrets = await TestingFactories.Secrets();
+    settings = await F.Settings();
+    secrets = await F.Secrets();
     templater = new Templater(settings);
     project = await MiscHelpers.AzEmptyFunctionProject();
   }

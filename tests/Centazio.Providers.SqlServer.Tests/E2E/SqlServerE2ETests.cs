@@ -5,7 +5,6 @@ using Centazio.Providers.EF.Tests;
 using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.SqlServer.Ctl;
 using Centazio.Providers.SqlServer.Stage;
-using Centazio.Test.Lib;
 using Centazio.Test.Lib.E2E;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,8 +22,8 @@ public class SqlServerSimulationStorage : ISimulationStorage {
 
   public async Task Initialise(SimulationCtx ctx) {
     var dbf = new SqlServerDbFieldsHelper();
-    var connstr = (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).ConnStr;
-    var settings = await TestingFactories.Settings();
+    var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
+    var settings = await F.Settings();
     var ctlsetts = settings.CtlRepository with { ConnectionString = connstr };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = connstr };
     CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(ctlsetts), dbf).Initialise();

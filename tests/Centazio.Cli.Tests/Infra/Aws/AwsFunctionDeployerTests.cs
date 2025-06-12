@@ -4,7 +4,6 @@ using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Aws;
 
@@ -15,8 +14,8 @@ public class AwsFunctionDeployerTests {
   private AwsFunctionProjectMeta project;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws);
-    secrets = await TestingFactories.Secrets();
+    settings = await F.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws);
+    secrets = await F.Secrets();
     templater = new Templater(settings);
     project = await MiscHelpers.AwsEmptyFunctionProject("EmptyFunction");
   }

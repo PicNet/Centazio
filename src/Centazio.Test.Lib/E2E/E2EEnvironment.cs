@@ -30,7 +30,7 @@ public class E2EEnvironment(
 
   public async Task Initialise() {
     InitLogger();
-    ctx = new (storage, await TestingFactories.Settings());
+    ctx = new (storage, await F.Settings());
     await ctx.Initialise();
     
     (crm, fin) = (new CrmApi(crmdb), new FinApi(findb));

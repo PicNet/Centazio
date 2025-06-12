@@ -1,6 +1,8 @@
 ﻿// this class purposefully omits the namespace to ensure that the initialisation below
 //  occurs for all tests, reagardless of namespace
 
+global using F = Centazio.Test.Lib.TestingFactories;
+
 using Centazio.Test.Lib;
 
 #pragma warning disable CA1050

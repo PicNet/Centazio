@@ -170,7 +170,7 @@ public class AbstractFunctionTests {
   }
   
   [Test] public async Task Test_RunOperations_sets_NextCheckpoint_to_result_when_non_empty_success() {
-    var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), TestingFactories.SeRepo(), repo));
+    var (startingcp, successcp, runner) = (UtcDate.UtcNow.AddMinutes(1), UtcDate.UtcNow.AddMinutes(2), new EmptyReadFunction(new(name), F.SeRepo(), repo));
     var sysstate = await repo.CreateSystemState(new(name), LifecycleStage.Defaults.Read);
     var objstate = await repo.CreateObjectState(sysstate, new(name), startingcp);
     var readopcfg = new ReadOperationConfig(new(nameof(EOperationResult.Success)), TestingDefaults.CRON_EVERY_SECOND, config => GetListResult(config, successcp));

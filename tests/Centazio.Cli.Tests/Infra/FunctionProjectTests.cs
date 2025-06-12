@@ -1,13 +1,12 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Misc;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra;
 
 public class FunctionProjectTests {
 
   [Test] public async Task Test_propery_values_are_as_expected() {
-    var settings = await TestingFactories.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az);
+    var settings = await F.Settings(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az);
     var proj = new AzFunctionProjectMeta(GetType().Assembly, settings, new Templater(settings));
 
     Assert.That(proj.ProjectName, Is.EqualTo("Centazio.Cli.Tests.Az"));

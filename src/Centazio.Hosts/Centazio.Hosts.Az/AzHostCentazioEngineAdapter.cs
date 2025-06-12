@@ -5,7 +5,6 @@ using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 
 namespace Centazio.Hosts.Az;
 

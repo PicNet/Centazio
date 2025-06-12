@@ -7,7 +7,7 @@ namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
 public class SqliteCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
   protected override async Task<ITestingCtlRepository> GetRepository() {
-    var settings = (await TestingFactories.Settings()).CtlRepository with { ConnectionString = SqliteTestConstants.DEFAULT_CONNSTR };
+    var settings = (await F.Settings()).CtlRepository with { ConnectionString = SqliteTestConstants.DEFAULT_CONNSTR };
     return (ITestingCtlRepository)await new TestingEfCtlRepository(() => 
         new SqliteCtlRepositoryDbContext(settings), new SqliteDbFieldsHelper()).Initialise();
   }

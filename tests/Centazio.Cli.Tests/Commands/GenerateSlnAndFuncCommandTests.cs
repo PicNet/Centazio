@@ -3,7 +3,6 @@ using Centazio.Cli.Commands.Gen.Centazio;
 using Centazio.Cli.Infra.Gen;
 using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
-using Centazio.Test.Lib;
 using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Settings;
 
 namespace Centazio.Cli.Tests.Commands;
@@ -28,7 +27,7 @@ public class GenerateSlnAndFuncCommandTests {
   
 
   [SetUp] public async Task SetUp() {
-    var settings = await TestingFactories.Settings();
+    var settings = await F.Settings();
     nugetgen = new(new CommandRunner(), new Templater(settings));
     refgen = new(new CommandRunner(), new Templater(settings), false);
     Environment.SetEnvironmentVariable("IS_CLI", "true");

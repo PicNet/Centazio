@@ -1,6 +1,8 @@
 ﻿// this class purposefully omits the namespace to ensure that the initialisation below
 //  occurs for all tests, reagardless of namespace
 
+global using F = Centazio.Test.Lib.TestingFactories;
+
 using Centazio.Test.Lib;
 
 #pragma warning disable CA1050
@@ -14,7 +16,7 @@ namespace Centazio.Providers.SqlServer.Tests;
   }
   
   [OneTimeTearDown] public async Task GlobalTearDown() {
-    await (await SqlConn.GetInstance(false, await TestingFactories.Secrets())).Dispose();
+    await (await SqlConn.GetInstance(false, await F.Secrets())).Dispose();
   }
 
 }

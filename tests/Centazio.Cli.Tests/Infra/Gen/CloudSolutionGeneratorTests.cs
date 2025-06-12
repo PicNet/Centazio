@@ -3,7 +3,6 @@ using Centazio.Cli.Infra.Misc;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Gen;
 
@@ -16,8 +15,8 @@ public class CloudSolutionGeneratorTests {
   private ITemplater templater;
   
   [SetUp] public async Task SetUp() {
-    settings = await TestingFactories.Settings();
-    secrets = await TestingFactories.Secrets();
+    settings = await F.Settings();
+    secrets = await F.Secrets();
     templater = new Templater(settings);
   }
 

@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Settings;
-
-namespace Centazio.Core.Secrets;
+﻿namespace Centazio.Core.Secrets;
 
 public enum ESecretsProviderType
 {

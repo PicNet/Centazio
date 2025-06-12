@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Aws;
-using Centazio.Test.Lib;
 
 namespace Centazio.Cli.Tests.Infra.Aws;
 
@@ -7,7 +6,7 @@ namespace Centazio.Cli.Tests.Infra.Aws;
 public class AwsAccountsTests {
   
  [Test, Ignore("additional permissions required for token which is not worth adding for this test")] public async Task Test_ListAccounts() {
-   var impl = new AwsAccounts(await TestingFactories.Secrets(), (await TestingFactories.Settings()).AwsSettings);
+   var impl = new AwsAccounts(await F.Secrets(), (await F.Settings()).AwsSettings);
    var accounts = await impl.ListAccounts();
    Assert.That(accounts, Is.Not.Empty);
  } 

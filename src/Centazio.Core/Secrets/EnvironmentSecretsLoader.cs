@@ -1,5 +1,3 @@
-using Centazio.Core.Settings;
-
 namespace Centazio.Core.Secrets;
 
 public class EnvironmentSecretsLoader : AbstractSecretsLoader {
