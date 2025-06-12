@@ -2,7 +2,7 @@
     <!-- General Properties for all Projects -->
     <PropertyGroup>
         <Description>PicNet's Systems Integration, Workflow and Master Data Platform</Description>
-        <Version>0.1.23-beta</Version>
+        <Version>0.1.26-beta</Version>
         <Authors>PicNet Pty Ltd</Authors>
         <Company>PicNet Pty Ltd</Company>
         <RepositoryUrl>https://github.com/yourusername/centazio</RepositoryUrl>
