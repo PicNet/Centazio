@@ -33,8 +33,7 @@
     "CreateSchema": true
   },
   "SecretsLoaderSettings": {
-    "Provider": "File",
-    "SecretsFolder": "../centazio3_secrets"
+    "Provider": "Aws"
   },
   "AzureSettings": {
     "Region": "Australia East",
