@@ -12,19 +12,16 @@ public class AzSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader 
 
   private readonly SecretClient client = InitializeClient(settings);
 
-  private static SecretClient InitializeClient(CentazioSettings settings) 
-  {
+  private static SecretClient InitializeClient(CentazioSettings settings) {
     var vaultUri = new Uri($"https://{settings.AzureSettings.KeyVaultName}.vault.azure.net/");
-        
-    return settings.SecretsLoaderSettings is { ProviderKey: not null, ProviderSecret: not null }
-        ? new SecretClient(vaultUri, new ClientSecretCredential(
-            settings.AzureSettings.TenantId,
-            settings.SecretsLoaderSettings.ProviderKey,
-            settings.SecretsLoaderSettings.ProviderSecret))
-        : new SecretClient(vaultUri, new DefaultAzureCredential(
-            new DefaultAzureCredentialOptions { TenantId = settings.AzureSettings.TenantId }));
-  }
 
+    return settings.SecretsLoaderSettings is { ProviderKey: not null, ProviderSecret: not null } ?
+        new SecretClient(vaultUri,
+            new ClientSecretCredential(settings.AzureSettings.TenantId,
+                settings.SecretsLoaderSettings.ProviderKey,
+                settings.SecretsLoaderSettings.ProviderSecret)) :
+        new SecretClient(vaultUri, new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = settings.AzureSettings.TenantId }));
+  }
 
   protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(settings.AzureSettings.GetKeySecretNameForEnvironment).ToList();
 
@@ -51,4 +48,5 @@ public class AzSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader 
 public class AzSecretsLoaderFactory(CentazioSettings settings) : IServiceFactory<ISecretsLoader> {
 
   public ISecretsLoader GetService() => new AzSecretsLoader(settings);
+
 }

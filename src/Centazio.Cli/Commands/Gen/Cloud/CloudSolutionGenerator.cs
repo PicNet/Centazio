@@ -51,7 +51,7 @@ public abstract class CloudSolutionGenerator(
     AddSecretsLoaderProjectReferencesToProject(added);
     await AddCentazioProvidersAndRelatedNugetsToProject(added);
     await AddCentazioNuGetReferencesToProject(added);
-      
+    
     var functions = IntegrationsAssemblyInspector.GetRequiredCentazioFunctions(project.Assembly, funcname is null ? [] :[funcname]);
     await AddCloudSpecificContentToProject(functions, added);
     
@@ -67,8 +67,8 @@ public abstract class CloudSolutionGenerator(
   }
 
   private void AddSecretsLoaderProjectReferencesToProject(Dictionary<string, bool> added) {
-      if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Aws)) AddReferenceIfRequired(typeof(Providers.Aws.Secrets.AwsSecretsLoader).Assembly, added);
-      if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Az)) AddReferenceIfRequired(typeof(Providers.Az.Secrets.AzSecretsLoader).Assembly, added);
+    if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Aws)) AddReferenceIfRequired(typeof(Providers.Aws.Secrets.AwsSecretsLoader).Assembly, added);
+    if(settings.SecretsLoaderSettings.Provider is nameof(ESecretsProviderType.Az)) AddReferenceIfRequired(typeof(Providers.Az.Secrets.AzSecretsLoader).Assembly, added);
   }
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {
