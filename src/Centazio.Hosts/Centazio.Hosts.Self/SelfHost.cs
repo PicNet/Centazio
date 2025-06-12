@@ -46,7 +46,7 @@ public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<strin
   }
 }
 
-public class SelfHost {
+public class SelfHost(CancellationToken? cancel = null) {
   public async Task RunHost(CentazioSettings settings, IHostConfiguration cmdsetts, CentazioEngine centazio) {
     GlobalHostInit(cmdsetts);
 
@@ -73,7 +73,10 @@ public class SelfHost {
     notifier.Init(functions);
     
     _ = notifier.Run(runner);
-    await Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
+    
+    var maxtime = Task.Delay(Timeout.Infinite, cancel ?? CancellationToken.None);
+    var runnning = Task.Run(() => { Console.ReadLine(); }); // exit on 'Enter'
+    await Task.WhenAny(maxtime, runnning);
   }
 
   private void StartTimerBasedTriggers(CentazioSettings settings, List<IRunnableFunction> functions, IFunctionRunner runner) {
