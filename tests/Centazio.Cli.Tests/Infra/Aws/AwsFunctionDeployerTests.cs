@@ -23,7 +23,7 @@ public class AwsFunctionDeployerTests {
   
   [Test] public async Task Test_Full_Pipeline_Deployment_to_Aws() {
     // todo GT: check if this works now with background CommandRunner
-    // if (Env.IsGitHubActions) return; // todo GT: CommandRunner issue in GH Actions
+    if (Env.IsGitHubActions) return; // todo GT: CommandRunner issue in GH Actions
     var appname = project.AwsFunctionName;
     
     if ((await MiscHelpers.Aws.ListFunctionsInApp(appname)).Count > 0) await MiscHelpers.Aws.DeleteFunctionApp(appname);
