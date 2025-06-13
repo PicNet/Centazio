@@ -13,8 +13,8 @@ public interface IAzFunctionDeleter {
 public class AzFunctionDeleter([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings settings, [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, ITemplater templater, ICommandRunner cmd) : AbstractAzCommunicator(secrets), IAzFunctionDeleter {
 
   
-  public async Task Delete(AzFunctionProjectMeta project) {
-    await Task.Run(() => cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.DeleteFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
-  }
+  public Task Delete(AzFunctionProjectMeta project) => 
+      cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.DeleteFunctionApp, new { AppName = project.DashedProjectName }), quiet: true);
+
 }
 

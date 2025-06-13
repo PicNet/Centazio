@@ -12,10 +12,9 @@ public class ShowAzFunctionLogStreamCommand([FromKeyedServices(CentazioConstants
     AssemblyName = UiHelpers.Ask("Assembly Name")
   });
 
-  public override Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     var project = new AzFunctionProjectMeta(ReflectionUtils.LoadAssembly(settings.AssemblyName), coresettings, templater);
-    cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
-    return Task.CompletedTask;
+    await cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
   }
 
   public class Settings : CommonSettings {

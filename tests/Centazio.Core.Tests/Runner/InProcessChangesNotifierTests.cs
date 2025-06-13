@@ -23,9 +23,10 @@ public class InProcessChangesNotifierTests {
     await Enumerable.Range(0, notifications).Select(async _ => {
       await notif.Notify(C.System1Name, stage1, [C.SystemEntityName]);
       TestingUtcDate.DoTick();
-      await Task.Delay(Env.IsGitHubActions ? 100 : 50);
+      await Task.Delay(Env.IsGitHubActions ? 100 : 50); // todo GT: remove IsGitHubActions if it does not fix test
     }).Synchronous();
     
+    if (Env.IsGitHubActions) await Task.Delay(250); // todo GT: remove if it does not fix test 
     Assert.That(func.RunCount, Is.EqualTo(notifications));
   }
   

@@ -19,21 +19,21 @@ public static class MiscHelpers {
     public static async Task<List<string>> ListFunctionApps() {
       var settings = await F.Settings();
       var templater = new Templater(settings);
-      var outstr = cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctionApps)).Out;
-      return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
+      var result = await cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctionApps));
+      return String.IsNullOrWhiteSpace(result.Out) ? [] : Json.Deserialize<List<NameObj>>(result.Out).Select(r => r.Name).ToList();
     }
     
     public static async Task<List<string>> ListFunctionsInApp(string appname) {
       var settings = await F.Settings();
       var templater = new Templater(settings);
-      var outstr = cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctions, new { AppName = appname })).Out;
-      return String.IsNullOrWhiteSpace(outstr) ? [] : Json.Deserialize<List<NameObj>>(outstr).Select(r => r.Name).ToList();
+      var result = await cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.ListFunctions, new { AppName = appname })); 
+      return String.IsNullOrWhiteSpace(result.Out) ? [] : Json.Deserialize<List<NameObj>>(result.Out).Select(r => r.Name).ToList();
     }
     
     public static async Task DeleteFunctionApp(string appname) {
       var settings = await F.Settings();
       var templater = new Templater(settings);
-      cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.DeleteFunctionApp, new { AppName = appname }));
+      await cmd.Az(templater.ParseFromContent(settings.Defaults.ConsoleCommands.Az.DeleteFunctionApp, new { AppName = appname }));
     }
     
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -56,6 +56,7 @@ public static class MiscHelpers {
       
       var esm = await lambda.ListEventSourceMappingsAsync(new ListEventSourceMappingsRequest() { FunctionName = appname });
       if (esm.EventSourceMappings.Any()) {
+        // todo CP: do not use async void with ForEach use Synchronous or Task.WhenAll
         esm.EventSourceMappings.ForEach(async void (e) => { await lambda.DeleteEventSourceMappingAsync(new DeleteEventSourceMappingRequest { UUID = e.UUID }); });
       }
       await lambda.DeleteFunctionAsync(appname);

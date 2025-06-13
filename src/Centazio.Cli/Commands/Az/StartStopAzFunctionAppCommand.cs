@@ -18,7 +18,7 @@ public class StartStopAzFunctionAppCommand([FromKeyedServices(CentazioConstants.
     
     if (CommandName == "start") {
       await UiHelpers.Progress($"Starting Azure Function App '{project.DashedProjectName}'", async () => {
-        await Task.Run(() => cmd.Az(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true));
+        await cmd.Az(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Az.StartFunctionApp, new { AppName = project.DashedProjectName }), quiet: true);
         UiHelpers.Log($"Azure Function App '{project.DashedProjectName}' successfully started.");
       });
     } else if (CommandName == "stop") {

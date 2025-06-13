@@ -53,7 +53,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     await CheckAndCreateEcrRepository(ecr, projnm);
     
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
-    BuildAndPushDockerImage(ecruri, projnm);
+    await BuildAndPushDockerImage(ecruri, projnm);
 
     // todo CP: please rename `EventBridge` to something a bit clearer, perhaps something like `UseDynamicFunctionPropegation` or even `UseEventBridge` 
     if (!settings.AwsSettings.EventBridge) { await CreateSqsQueue(); }
@@ -80,18 +80,18 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return await FunctionExists(lambda, project.AwsFunctionName) ? await UpdateFunction(lambda, imguri) : await CreateFunction(lambda, imguri, accid);
   }
 
-  private void BuildAndPushDockerImage(string ecruri, string projnm) {
+  private async Task BuildAndPushDockerImage(string ecruri, string projnm) {
     var dockercmds = settings.Defaults.ConsoleCommands.Docker;
 
     // todo CP: FIX the following docker command return an error even if the image is built successfully
-    try { Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
+    try { await Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
     catch (Exception e) { Log.Warning(e, "Error running docker command"); }
 
-    Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: GetEcrInputPassword());
-    Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
+    await Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: await GetEcrInputPassword());
+    await Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
 
-    void Run(string command, object model, bool quiet = false, string? input = null) =>
-        cmd.Docker(templater.ParseFromContent(command, model), project.ProjectDirPath, quiet: quiet, input: input);
+    async Task Run(string command, object model, bool quiet = false, string? input = null) =>
+        await cmd.Docker(templater.ParseFromContent(command, model), project.ProjectDirPath, quiet: quiet, input: input);
   }
 
   private async Task<string> GetAccountId() {
@@ -99,11 +99,11 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return (await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest())).Account;
   }
 
-  private string GetEcrInputPassword() {
+  private async Task<string> GetEcrInputPassword() {
     Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
     Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
 
-    var results = cmd.Aws(templater.ParseFromContent(settings.Defaults.ConsoleCommands.AwsCmds.GetEcrPass, new { Region = region.SystemName }), project.ProjectDirPath);
+    var results = await cmd.Aws(templater.ParseFromContent(settings.Defaults.ConsoleCommands.AwsCmds.GetEcrPass, new { Region = region.SystemName }), project.ProjectDirPath);
     if (!results.Success) throw new Exception(results.Err);
 
     return results.Out;

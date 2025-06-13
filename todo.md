@@ -13,13 +13,15 @@
     - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
         The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
             Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
-    - `centazio az func logs` not working
+    - Local simulate now showing logs
+    - `centazio az func logs` not working 
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
     - generator is including all functions in assembly, even tho we specify a single function
     - centazio aws func deploy throwing docker error
 
+- `centazio host run` Unhandled exception. System.InvalidOperationException: Sequence contains more than one element
 - JB: cli:
   - generators needs a bit of work, comments, etc. Do tutorial
   - dotnet tool install testing

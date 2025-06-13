@@ -27,7 +27,8 @@ public class AzFunctionLocalSimulateCommand(
     
     if (!projects.Any()) throw new CentazioCommandNiceException($"The <ASSEMBLY_NAMES> pattern(s) did not match any valid function assemblies. Please check pattern used '{settings.AssemblyNames}'");
     
-    cmd.Run("azurite", coresettings.Defaults.ConsoleCommands.Az.RunAzuriteArgs, quiet: true, newwindow: true);
+    // no need to await, as it will just run in the background
+    _ = cmd.Run("azurite", coresettings.Defaults.ConsoleCommands.Az.RunAzuriteArgs, quiet: true);
     
     if (!settings.NoGenerate) {
       await projects.Select(project => 
@@ -39,19 +40,11 @@ public class AzFunctionLocalSimulateCommand(
           UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project)))
           .Synchronous();
     }
-    
-    // run the commands in new windows if we have more than 1 function.  However, in this case
-    //    the user will manaully have to select the 'dotnet-isolated' model as inserting inputs is not supported
-    //    in new window mode.
-    // todo GT: multiple functions (projects) is not working well
-    projects.ForEach(project => {
+    await Task.WhenAll(projects.Select(project => {
       var functions = settings.FunctionNames is null ? null : String.Join(" ", settings.FunctionNames.Split(','));
       var funcstart = templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction, new { Functions = functions });
-      cmd.Func(funcstart,
-          cwd: project.PublishPath,
-          newwindow: projects.Count > 1,
-          input: projects.Count > 1 ? null : "1");
-    });
+      return cmd.Func(funcstart, cwd: project.PublishPath, input: "1");
+    }));
   }
   
   public class Settings : CommonSettings {

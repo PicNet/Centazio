@@ -31,7 +31,7 @@ public class DeployAzFunctionsCommand(
     
     if (settings.ShowLogs) {
       UiHelpers.Log($"Attempting to connect to function log stream.");
-      cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
+      await cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.ShowLogStream, new { AppName = project.DashedProjectName }));
     }
   }
 

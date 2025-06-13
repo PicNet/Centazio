@@ -74,7 +74,7 @@ public class GenerateSlnAndFuncCommandTests {
     Assert.That(File.Exists(slnfile), Is.True);
     await ValidateProjectExistsInSln($"{sln}.Shared");
 
-    runner.DotNet("build", Environment.CurrentDirectory);
+    await runner.DotNet("build", Environment.CurrentDirectory);
   }
   
   private async Task GenerateFuncInOwnDirImpl(bool usenuget) {
@@ -99,7 +99,7 @@ public class GenerateSlnAndFuncCommandTests {
       Assert.That(File.Exists(Path.Combine(func, $"{func}.csproj")), Is.True);
       Assert.That(File.Exists(Path.Combine(func, $"{func}.cs")), Is.True);
       await ValidateProjectExistsInSln(func);
-      runner.DotNet("build", func); // build only the project
+      await runner.DotNet("build", func); // build only the project
 
       await Directory.GetFiles(func, "*.cs")
           .Select(async file => {
@@ -111,7 +111,7 @@ public class GenerateSlnAndFuncCommandTests {
           })
           .Synchronous();
 
-      runner.DotNet("build", Environment.CurrentDirectory); // build solution
+      await runner.DotNet("build", Environment.CurrentDirectory); // build solution
     }
   }
   
@@ -130,8 +130,8 @@ public class GenerateSlnAndFuncCommandTests {
     Assert.That(Directory.Exists($"{SYSTEM_NAME}WriteFunction"), Is.False);
     Assert.That(File.Exists(Path.Combine($"{SYSTEM_NAME}ReadFunction", $"{SYSTEM_NAME}WriteFunction.cs")), Is.True);
 
-    runner.DotNet("build", $"{SYSTEM_NAME}ReadFunction"); // build only the project
-    runner.DotNet("build", Environment.CurrentDirectory); // build the whole solution
+    await runner.DotNet("build", $"{SYSTEM_NAME}ReadFunction"); // build only the project
+    await runner.DotNet("build", Environment.CurrentDirectory); // build the whole solution
   }
 
   private CentazioCodeGenerator GetGen(bool usenuget) => usenuget ? nugetgen : refgen;

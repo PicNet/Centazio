@@ -27,7 +27,7 @@ public class CloudSolutionGeneratorTests {
     await new AzCloudSolutionGenerator(settings, secrets, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT]).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
-    var results = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
+    var results = await cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
   
@@ -38,7 +38,7 @@ public class CloudSolutionGeneratorTests {
     await new AwsCloudSolutionGenerator(settings, templater, project, [CentazioConstants.DEFAULT_ENVIRONMENT], String.Empty).GenerateSolution();
     Assert.That(Directory.Exists(project.SolutionDirPath));
 
-    var results = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
+    var results = await cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
     Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
   
@@ -48,7 +48,7 @@ public class CloudSolutionGeneratorTests {
     
     await generator.GenerateSolution();
     await generator.GenerateSolution();
-    var results2 = cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
-    Assert.That(String.IsNullOrWhiteSpace(results2.Err));
+    var results = await cmd.DotNet(templater.ParseFromContent(settings.Defaults.ConsoleCommands.DotNet.BuildProject), project.ProjectDirPath);
+    Assert.That(String.IsNullOrWhiteSpace(results.Err));
   }
 }

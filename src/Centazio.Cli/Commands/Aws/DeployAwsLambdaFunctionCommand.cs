@@ -30,7 +30,7 @@ public class DeployAwsLambdaFunctionCommand([FromKeyedServices(CentazioConstants
     
     if (settings.ShowLogs) {
       UiHelpers.Log($"Attempting to connect to function log stream.");
-      cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Lambda.ShowLogStream, new { AppName = project.DashedProjectName }));
+      await cmd.Func(templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Lambda.ShowLogStream, new { AppName = project.DashedProjectName }));
     }
   }
 

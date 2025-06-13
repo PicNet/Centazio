@@ -9,72 +9,53 @@ public class CommandRunnerTests {
   
   private readonly ICommandRunner cmd = new CommandRunner();
   
-  [Test] public void Test_az() {
-    var results = cmd.Az(VERSION);
+  [Test] public async Task Test_az() {
+    var results = await cmd.Az(VERSION);
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("az"));
     Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
-    Assert.That(!results.NewWindow);
   }
   
-  [Test] public void Test_func() {
-    var results = cmd.Func(VERSION);
+  [Test] public async Task Test_func() {
+    var results = await cmd.Func(VERSION);
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("func"));
     Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
-    Assert.That(!results.NewWindow);
   }
   
-  [Test] public void Test_dotnet() {
-    var results = cmd.DotNet(VERSION);
+  [Test] public async Task Test_dotnet() {
+    var results = await cmd.DotNet(VERSION);
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("dotnet"));
     Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
-    Assert.That(!results.NewWindow);
   }
   
-  [Test] public void Test_aws() {
-    var results = cmd.Aws(VERSION);
+  [Test] public async Task Test_aws() {
+    var results = await cmd.Aws(VERSION);
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("aws"));
     Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
-    Assert.That(!results.NewWindow);
   }
   
-  [Test] public void Test_docker() {
-    var results = cmd.Docker(VERSION);
+  [Test] public async Task Test_docker() {
+    var results = await cmd.Docker(VERSION);
     
     Assert.That(results.Args, Is.EqualTo(VERSION));
     Assert.That(results.Command, Is.EqualTo("docker"));
     Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
-    Assert.That(!results.NewWindow);
   }
-  
-  [Test] public void Test_new_window() {
-    // GH Actions is Linux but does not support the x-terminal-emulator command
-    if (Env.IsGitHubActions) return;
-    
-    var results = cmd.Run("dotnet", "--version", newwindow: true);
-    Assert.That(results.Args, Is.EqualTo(VERSION));
-    Assert.That(results.Command, Is.EqualTo("dotnet"));
-    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
-    Assert.That(results.Err, Is.Not.Null);
-    Assert.That(results.Out, Is.Not.Null);
-    Assert.That(results.NewWindow);
-  }
-  
 }

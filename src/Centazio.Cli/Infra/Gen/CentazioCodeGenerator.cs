@@ -11,19 +11,19 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     var (sln, shared, slndir) = (slnname, $"{slnname}.Shared", Directory.CreateDirectory(slnname).FullName);
     var shareddir = Path.Combine(slndir, shared);
     
-    CreateSlnFile();
-    CreateEmptySharedProj();
+    await CreateSlnFile();
+    await CreateEmptySharedProj();
     CopySampleProjSharedProjFiles();
     await AdjustCopiedFiles();
-    InstallCentazioNuGetsOrRefs(Path.Combine(slndir, shared), provider);
+    await InstallCentazioNuGetsOrRefs(Path.Combine(slndir, shared), provider);
     return sln;
-    
-    void CreateSlnFile() { cmd.DotNet($"new sln --name {sln}", slndir); }
 
-    void CreateEmptySharedProj() {
+    async Task CreateSlnFile() { await cmd.DotNet($"new sln --name {sln}", slndir); }
+
+    async Task CreateEmptySharedProj() {
       var csproj = Path.Combine(shared, $"{shared}.csproj");
-      cmd.DotNet($"new classlib --name {shared}", slndir);
-      cmd.DotNet($"sln {sln}.sln add {csproj}", slndir);
+      await cmd.DotNet($"new classlib --name {shared}", slndir);
+      await cmd.DotNet($"sln {sln}.sln add {csproj}", slndir);
       File.Delete(Path.Combine(slndir, shared, "Class1.cs"));
     }
     
@@ -44,12 +44,12 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     var sln = slnfile.Split('.').First();
     
     if (String.IsNullOrWhiteSpace(settings.AssemblyName)) {
-      cmd.DotNet($"new classlib --name {settings.FunctionName}", Environment.CurrentDirectory);
+      await cmd.DotNet($"new classlib --name {settings.FunctionName}", Environment.CurrentDirectory);
       File.Delete(Path.Combine(settings.FunctionName, "Class1.cs"));
-      cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
+      await cmd.DotNet($"sln {slnfile} add {settings.FunctionName}/{settings.FunctionName}.csproj", Environment.CurrentDirectory);
       
-      InstallCentazioNuGetsOrRefs(settings.FunctionName, null);
-      cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
+      await InstallCentazioNuGetsOrRefs(settings.FunctionName, null);
+      await cmd.DotNet($"add reference ../{sln}.Shared", settings.FunctionName);
     }
     
     var from = FsUtils.GetTemplateDir("centazio", "Functions");
@@ -68,17 +68,17 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     }).Synchronous();
   }
   
-  private void InstallCentazioNuGetsOrRefs(string projdir, string? provider) {
-    if (usenuget) InstallNuGets(); else InstallRefs();
+  private async Task InstallCentazioNuGetsOrRefs(string projdir, string? provider) {
+    if (usenuget) await InstallNuGets(); else await InstallRefs();
 
-    void InstallNuGets() {
-      cmd.DotNet("add package --prerelease Centazio.Core", projdir);
-      if (provider is not null) cmd.DotNet($"add package --prerelease Centazio.Providers.{provider}", projdir);
+    async Task InstallNuGets() {
+      await cmd.DotNet("add package --prerelease Centazio.Core", projdir);
+      if (provider is not null) await cmd.DotNet($"add package --prerelease Centazio.Providers.{provider}", projdir);
     }
-    
-    void InstallRefs() {
-      cmd.DotNet($"add reference {FsUtils.GetCentazioPath("src", "Centazio.Core")}", projdir);
-      if (provider is not null) cmd.DotNet($"add reference {FsUtils.GetCentazioPath("src", "Centazio.Providers", $"Centazio.Providers.{provider}")}", projdir);
+
+    async Task InstallRefs() {
+      await cmd.DotNet($"add reference {FsUtils.GetCentazioPath("src", "Centazio.Core")}", projdir);
+      if (provider is not null) await cmd.DotNet($"add reference {FsUtils.GetCentazioPath("src", "Centazio.Providers", $"Centazio.Providers.{provider}")}", projdir);
     }
   }
 }
