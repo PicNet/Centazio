@@ -9,14 +9,10 @@ public static class SecretsManager
 {
   public delegate ISecretsLoader SecretsLoaderFactory(CentazioSettings settings);
   
-  // todo WT: why all these nullability checks when CentazioSettings in ctor is not nullable?
   private static readonly Dictionary<ESecretsProviderType, SecretsLoaderFactory> Providers = new() {
-    [ESecretsProviderType.File] = settings => 
-        new FileSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.SecretsLoaderSettings.SecretsFolder))).GetService(),
-    [ESecretsProviderType.Aws] = settings => 
-        new AwsSecretsLoaderFactory(settings ?? throw new ArgumentNullException(nameof(settings.AwsSettings))).GetService(),
-    [ESecretsProviderType.Az] = settings => new AzSecretsLoaderFactory(settings  ?? throw new ArgumentNullException(nameof(settings.AzureSettings))).GetService() 
-        
+    [ESecretsProviderType.File] = settings => new FileSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.Aws] = settings => new AwsSecretsLoaderFactory(settings).GetService(),
+    [ESecretsProviderType.Az] = settings => new AzSecretsLoaderFactory(settings).GetService() 
   };
 
   public static async Task<T> LoadSecrets<T>(CentazioSettings settings, params List<string> environments) {

@@ -8,14 +8,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Hosts.Az;
 
-public class AzHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
+public class AzHostCentazioEngineAdapter(List<string> environments) : CentazioEngine(environments) {
 
   private readonly List<string> environments = environments;
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     // todo WT: this should support function-to-function triggers
-    // todo WT: what is this `set`?
-    var set = settings.AzureSettings;
     registrar.Register(provider => {
       var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();
       var loader = factory.GetService();

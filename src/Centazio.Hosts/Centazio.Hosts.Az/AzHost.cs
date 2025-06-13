@@ -29,11 +29,9 @@ public static class AzHost {
 public class AzHostImpl(List<string> environments, List<Type> functions) {
 
   private readonly string? APP_INSIGHTS_CONN_STR = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")?.Trim();
-  private AzHostCentazioEngineAdapter centazio = null!;
+  private AzHostCentazioEngineAdapter centazio = new(environments);
 
   public async Task Init() {
-    var settings = await new SettingsLoader().Load<CentazioSettings>(environments); 
-    centazio = new(settings, environments);
     InitLogger();
     await centazio.Init(functions);
     
