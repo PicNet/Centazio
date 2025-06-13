@@ -2,7 +2,6 @@
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
-using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 
@@ -23,9 +22,7 @@ public class AwsFunctionDeployerTests {
   
   [Test] public async Task Test_Full_Pipeline_Deployment_to_Aws() {
     // todo GT: check if this works now with background CommandRunner
-    Console.WriteLine("Test_Full_Pipeline_Deployment_to_Aws - Env.IsGitHubActions: " + Env.IsGitHubActions);
-    if (!Env.IsGitHubActions) throw new Exception("Test_Full_Pipeline_Deployment_to_Aws - Env.IsGitHubActions: " + Env.IsGitHubActions);
-    if (Env.IsGitHubActions) return; // todo GT: CommandRunner issue in GH Actions
+    // if (Env.IsGitHubActions) return; // todo GT: CommandRunner issue in GH Actions
     var appname = project.AwsFunctionName;
     
     if ((await MiscHelpers.Aws.ListFunctionsInApp(appname)).Count > 0) await MiscHelpers.Aws.DeleteFunctionApp(appname);

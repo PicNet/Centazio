@@ -116,7 +116,8 @@ public static class ReflectionUtils {
   private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
     var filenm = assemblynm + ".dll";
     var filtered = options.Where(f => f.EndsWith($"{Path.DirectorySeparatorChar}{filenm}")).ToList();
-    if (Env.IsCloudHost) throw new Exception("Shjould not Env.IsCloudHost");
+    if (!filtered.Any()) throw new Exception($"could not find any matching assemblies matching the name [{filenm}] in options:\n\t{String.Join("\n\t", options)}");
+    
     if (Env.IsCloudHost) return filtered.Single(); // cloud hosts will only have 1 copy of each dll
     
     var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
