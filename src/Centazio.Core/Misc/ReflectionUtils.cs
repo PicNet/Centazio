@@ -109,8 +109,10 @@ public static class ReflectionUtils {
 
   public static string GetAssemblyPath(string assembly) {
     var fname = $"{assembly}.dll";
-    var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
-    return GetMostSuitableAssemblyToLoad(assembly, dlls);
+    var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories);
+    var options = dlls.Where(dll => dll.EndsWith(fname)).ToList();
+    if (!options.Any()) throw new Exception($"could not find any valid options for dll [{fname}] all dlls:\n\t{String.Join("\n\t", dlls)}");
+    return GetMostSuitableAssemblyToLoad(assembly, options);
   }
 
   private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
