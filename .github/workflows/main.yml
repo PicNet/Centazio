@@ -45,4 +45,4 @@ jobs:
       run: dotnet build --configuration ${{ env.buildcfg }} --verbosity normal --no-restore
 
     - name: dotnet test 
-      run: dotnet test tests/Centazio.Cli.Tests/ --no-restore --no-build --filter Test_Full_Pipeline_Deployment_to_Aws
+      run: dotnet test tests/Centazio.Cli.Tests/ --no-restore --no-build
