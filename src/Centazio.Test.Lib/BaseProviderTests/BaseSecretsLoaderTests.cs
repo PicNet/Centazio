@@ -13,7 +13,7 @@ SETTING6=val=with=equals
 SETTING7=val with # should not ignore";
 
   protected abstract Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs);
-
+  
   [Test] public async Task Test_loading_from_local() => Assert.That(await Load(("testing", FULL_CONTENT)),
       Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
           "VALUE 2 with spaces",

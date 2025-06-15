@@ -108,20 +108,20 @@ public static class ReflectionUtils {
   }
 
   public static string GetAssemblyPath(string assembly) {
-    var fname = $"{assembly}.dll";
-    var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories).Where(dll => dll.EndsWith(fname)).ToList();
+    var dlls = Directory.GetFiles(FsUtils.GetCentazioPath(), "*.dll", SearchOption.AllDirectories).ToList();
     return GetMostSuitableAssemblyToLoad(assembly, dlls);
   }
 
-  private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> options) {
-    var filenm = assemblynm + ".dll";
-    var filtered = options.Where(f => f.EndsWith($"{Path.DirectorySeparatorChar}{filenm}")).ToList();
-    if (Env.IsCloudHost) return filtered.Single(); // cloud hosts will only have 1 copy of each dll
+  private static string GetMostSuitableAssemblyToLoad(string assemblynm, List<string> dlls) {
+    var matching = dlls.Where(f => f.EndsWith($"{Path.DirectorySeparatorChar}{assemblynm}.dll")).ToList();
+    if (!matching.Any()) throw new Exception($"could not find any matching assemblies matching the name [{assemblynm}.dll] in options:\n\t{String.Join("\n\t", dlls)}");
+    
+    if (Env.IsCloudHost) return matching.Single(); // cloud hosts will only have 1 copy of each dll
     
     var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
-    return filtered.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
-            ?? filtered.FirstOrDefault(path => path.IndexOf(projdirnm, StringComparison.Ordinal) >= 0)
-            ?? filtered.First();
+    return matching.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
+            ?? matching.FirstOrDefault(path => path.IndexOf(projdirnm, StringComparison.Ordinal) >= 0)
+            ?? matching.First();
   }
 
   public static List<Type> GetAllTypesThatImplement(Type t, Assembly assembly) {

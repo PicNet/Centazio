@@ -4,6 +4,7 @@ using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Core.Tests.Secrets;
 
+// todo WT: failing test
 public class FileSecretsLoaderTests : BaseSecretsLoaderTests {
 
   [SetUp] public void Setup() { }
