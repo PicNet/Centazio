@@ -20,7 +20,7 @@ public class AwsEventBridgeChangesNotifierTests {
 
   [Test, Ignore("set the test localstack")] public async Task Test_setup_event_bridge() {
     
-    // TODO CP somehow when using the following test local stack is not working. Need to fix
+    // todo CP: somehow when using the following test local stack is not working. Need to fix
     // var localStackContainer = new LocalStackBuilder().Build();
     // await localStackContainer.StartAsync().ConfigureAwait(false);
     // var serverurl = localStackContainer.GetConnectionString();

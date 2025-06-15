@@ -74,7 +74,6 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 
   internal static List<OperationStateAndConfig<C>> GetReadyOperations(List<OperationStateAndConfig<C>> states, List<FunctionTrigger> triggeredby) {
     bool IsOperationReady(OperationStateAndConfig<C> op) {
-      // todo GT: ensure we have a test that checks any operation that was skipped because of `RunOperationBasedOnTriggers` does not get its checkpoint updated
       var objtriggers = triggeredby.OfType<ObjectChangeTrigger>().ToList();
       if (objtriggers.Any() && !op.OpConfig.ShouldRunBasedOnTriggers(objtriggers)) return false;
       var next = op.OpConfig.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
