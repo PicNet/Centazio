@@ -3,7 +3,6 @@ using Centazio.Core.Engine;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Hosts.Az;

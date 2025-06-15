@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Runner;
-using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker;
