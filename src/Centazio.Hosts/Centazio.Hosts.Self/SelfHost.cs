@@ -3,6 +3,7 @@ using Centazio.Core.Ctl;
 using Centazio.Core.Engine;
 using Centazio.Core.Misc;
 using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -35,8 +36,16 @@ public interface IHostConfiguration {
 }
 
 public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
+  private readonly List<string> environments = environments;
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     using var notifier = new InProcessChangesNotifier();
+    
+    registrar.Register(provider => {
+      var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();
+      var loader = factory.GetService();
+      var secrets = loader.Load<CentazioSecrets>(environments).Result;
+      return secrets;
+    });
     
     registrar.Register<IChangesNotifier>(notifier);
     registrar.Register<IFunctionRunner>(prov => {
