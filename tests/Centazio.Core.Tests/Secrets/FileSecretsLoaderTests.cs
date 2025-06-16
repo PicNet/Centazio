@@ -6,13 +6,13 @@ namespace Centazio.Core.Tests.Secrets;
 
 // todo WT: failing test
 public class FileSecretsLoaderTests : BaseSecretsLoaderTests {
-
-  [SetUp] public void Setup() { }
+  private ISecretsLoader loader;
+  [SetUp] public void Setup() {
+    var settings = new CentazioSettings.Dto { SecretsLoaderSettings = new SecretsLoaderSettings.Dto { Provider = "File", SecretsFolder = "../centazio3_secrets" } }.ToBase();
+    loader = new FileSecretsLoaderFactory(settings).GetService();
+  }
   protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
-    envs.ToList().ForEach(f => File.WriteAllText($"{f.env}.env", f.contents));
-    var settings = new CentazioSettings.Dto { SecretsLoaderSettings = new SecretsLoaderSettings.Dto { Provider = "File", SecretsFolder = "." } }.ToBase();
-    try { return (TestSettingsTargetObj) await new FileSecretsLoader(settings).Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList()); } 
-    finally { envs.ToList().ForEach(f => File.Delete($"{f.env}.env")); }
+    return (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
   }
 
 }

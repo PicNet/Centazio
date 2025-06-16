@@ -4,7 +4,6 @@ using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Az.Tests.Secrets;
 
-[Ignore("Defaulted to aws secretloader for build agent")]
 public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
 
   private ISecretsLoader loader;

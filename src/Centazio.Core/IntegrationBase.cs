@@ -7,6 +7,7 @@ namespace Centazio.Core;
 public interface IIntegrationBase {
   Task RegisterServices(CentazioServicesRegistrar registrar);
   Task Initialise(ServiceProvider prov);
+
 }
 
 
@@ -19,10 +20,12 @@ public abstract class IntegrationBase<TSettings, TSecrets>(params List<string> e
 
   public virtual async Task RegisterServices(CentazioServicesRegistrar registrar) {
     Settings = await new SettingsLoader().Load<TSettings>(environments);
-    Secrets = await new FileSecretsLoader(Settings).Load<TSecrets>(environments);
-    
     SettingsLoader.RegisterSettingsHierarchy(Settings, registrar);
-    registrar.Register(Secrets);
+    
+    registrar.Register(prov => {
+      var loader = prov.GetRequiredService<IServiceFactory<ISecretsLoader>>().GetService();
+      return Secrets = loader.Load<TSecrets>(environments).Result;
+    });
     
     RegisterIntegrationSpecificServices(registrar);
   }
