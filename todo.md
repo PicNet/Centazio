@@ -7,14 +7,13 @@
     - fix Log.Logger, currently only injected ILogger<> works
     - application insights (is this completed?) 
     - function-to-function triggers
-    - `centazio az func logs Centazio.Sample.AppSheet` did not show logs
     - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
     - `centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.ArgumentException: Provider Aws is not implemented.`
     - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
         The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
             Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
     - Local simulate now showing logs
-    - `centazio az func logs` not working 
+    - `centazio az func logs` not working - * fixed update func core tool to the latest https://go.microsoft.com/fwlink/?linkid=2174087
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
