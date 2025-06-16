@@ -40,11 +40,9 @@ public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<strin
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
     using var notifier = new InProcessChangesNotifier();
     
-    registrar.Register(provider => {
-      var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();
-      var loader = factory.GetService();
-      var secrets = loader.Load<CentazioSecrets>(environments).Result;
-      return secrets;
+    registrar.Register(prov => {
+      var loader = prov.GetRequiredService<IServiceFactory<ISecretsLoader>>().GetService();
+      return loader.Load<CentazioSecrets>(environments).Result;
     });
     
     registrar.Register<IChangesNotifier>(notifier);
