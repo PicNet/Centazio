@@ -12,6 +12,7 @@ public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
   protected override async Task<ISecretsLoader> GetSecretsLoader() =>
     new AwsSecretsLoaderFactory(await F.Settings()).GetService();
   
+  // todo: refactor
   protected override async Task PrepareTestEnvironment(string environment, string contents) {
     var secrets = new Dictionary<string, object>();
     var settings = await F.Settings();
@@ -21,9 +22,7 @@ public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
       if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#')) continue;
         
       var parts = trimmed.Split('=', 2);
-      if (parts.Length == 2) {
-        secrets[parts[0]] = parts[1];
-      }
+      if (parts.Length == 2) secrets[parts[0]] = parts[1];
     }
     
     var id = settings.AwsSettings.GetSecretsStoreIdForEnvironment(environment);

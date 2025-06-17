@@ -14,7 +14,7 @@ public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
   protected override async Task<ISecretsLoader> GetSecretsLoader() => 
       new AzSecretsLoaderFactory(await F.Settings()).GetService();
 
-  // todo: assign iam user write permssion, test and refactor
+  // todo: refactor
   protected override async Task PrepareTestEnvironment(string environment, string contents) {
     var secrets = ParseSecretContents(contents);
     var settings = await F.Settings();
@@ -37,9 +37,7 @@ public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
       if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#')) continue;
     
       var parts = trimmed.Split('=', 2);
-      if (parts.Length == 2) {
-        secrets[parts[0]] = parts[1];
-      }
+      if (parts.Length == 2) secrets[parts[0]] = parts[1];
     }
   
     return secrets;
