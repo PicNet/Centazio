@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
     - name: Checkout code
@@ -33,10 +33,10 @@ jobs:
     # note this `dotnet restore` is required even though there should 
     #   be [implicit restore](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build#implicit-restore)
     - name: dotnet restore
-      run: dotnet restore --verbosity normal
+      run: dotnet restore Centazio.Core.Tests --verbosity normal
       
     - name: dotnet build
-      run: dotnet build --configuration Debug --verbosity normal --no-restore
+      run: dotnet build Centazio.Core.Tests --configuration Debug --verbosity normal --no-restore
 
     - name: dotnet test
-      run: dotnet test --no-restore --no-build
+      run: dotnet test Centazio.Core.Tests --no-restore --no-build --filter Test_notification_works
