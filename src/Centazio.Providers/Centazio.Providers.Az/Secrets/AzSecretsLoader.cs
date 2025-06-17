@@ -20,7 +20,7 @@ public class AzSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader 
             new ClientSecretCredential(settings.AzureSettings.TenantId,
                 settings.SecretsLoaderSettings.ProviderKey,
                 settings.SecretsLoaderSettings.ProviderSecret)) :
-        new SecretClient(vaultUri, new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = settings.AzureSettings.TenantId }));
+        new SecretClient(vaultUri, new DefaultAzureCredential());
   }
 
   protected override List<string> FilterRedundantEnvironments(List<string> environments) => environments.DistinctBy(settings.AzureSettings.GetKeySecretNameForEnvironment).ToList();
