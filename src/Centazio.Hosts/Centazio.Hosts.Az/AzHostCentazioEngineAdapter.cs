@@ -12,7 +12,6 @@ public class AzHostCentazioEngineAdapter(List<string> environments) : CentazioEn
   private readonly List<string> environments = environments;
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
-    // todo WT: this should support function-to-function triggers
     registrar.Register(provider => {
       var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();
       var loader = factory.GetService();

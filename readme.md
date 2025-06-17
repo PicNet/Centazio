@@ -96,6 +96,10 @@ integrations.  All supporting infrastructure such as logging, alerting, queues, 
 providers, networking, etc. can also be managed by Centazio or you can use your own cloud management and DevOps 
 pipelines to control.
 
+# Prerequisites
+- [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- todo GT: fill in
+
 # Getting Started
 
 This simple getting started guide will guide you in creating a simple one-way integration between two systems:

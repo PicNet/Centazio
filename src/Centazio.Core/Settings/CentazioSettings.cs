@@ -36,13 +36,15 @@ public record CentazioSettings {
   }
   
   public string GetSecretsFolder() {
+    // todo GT: test this is not called with Provider is not 'File'
+    if (SecretsLoaderSettings.Provider != "File") throw new Exception("GetSecretsFolder() should not be called when the Secrets.Provider is not 'File'");
     return Env.IsInDev ? 
         ValidateDirectory(SecretsLoaderSettings.SecretsFolder) : 
         Environment.CurrentDirectory;
     
     string ValidateDirectory(string? directory) {
-      // todo WT: find better way to validate empty directory when no value is added to secretfolders
-      var path = Path.IsPathFullyQualified(directory ?? string.Empty) ? directory : FsUtils.GetCentazioPath(directory ?? string.Empty);
+      if (String.IsNullOrWhiteSpace(directory)) throw new Exception($"When Secrets.Provider is 'File' then `SecretsFolder` is required");
+      var path = Path.IsPathFullyQualified(directory) ? directory : FsUtils.GetCentazioPath(directory);
       return Directory.Exists(path) 
           ? path 
           : throw new Exception($"Could not find a valid directory at path: {path}");

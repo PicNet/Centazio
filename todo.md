@@ -1,27 +1,23 @@
 # Todo
-- WT: better secrets management
-- WT: does CLI aws command work with new secrets manager?
-- WT: Add staging entities providers to the Azure package, and remove ignore from `CheckProvidersImplementCorrectInterfacesAndTests`
-- CP/WT: aws/azure wrappers:
-  - WT: Azure:
-    - fix Log.Logger, currently only injected ILogger<> works
-    - application insights (is this completed?) 
+- aws/azure wrappers:
+  - Azure:
+    - staging entity providers 
+    - fix Log.Logger, currently only injected ILogger<> works 
     - function-to-function triggers
     - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
     - `centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.ArgumentException: Provider Aws is not implemented.`
     - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
         The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
             Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
-    - Local simulate now showing logs
+    - Local simulate not showing logs
     - `centazio az func logs` not working - * fixed update func core tool to the latest https://go.microsoft.com/fwlink/?linkid=2174087
-    - GHA: Unexpected input(s) 'include-prerelease', valid inputs are ['dotnet-version', 'dotnet-quality', 'global-json-file', 'source-url', 'owner', 'config-file', 'cache', 'cache-dependency-path']
+      - WT: consider a unit test that checks that core tools is up to date
+    - WT: GHA: Unexpected input(s) 'include-prerelease', valid inputs are ['dotnet-version', 'dotnet-quality', 'global-json-file', 'source-url', 'owner', 'config-file', 'cache', 'cache-dependency-path']
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
     - generator is including all functions in assembly, even tho we specify a single function
     - centazio aws func deploy throwing docker error
-
-- `centazio host run` Unhandled exception. System.InvalidOperationException: Sequence contains more than one element
 - JB: cli:
   - generators needs a bit of work, comments, etc. Do tutorial
   - dotnet tool install testing
