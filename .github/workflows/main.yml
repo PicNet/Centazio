@@ -18,8 +18,8 @@ jobs:
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.x
-        include-prerelease: true
+        dotnet-version: 9.0.x
+        dotnet-quality: preview
 
     - name: Check Docker version
       run: docker version
