@@ -5,16 +5,9 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Providers.Aws.Tests.Secrets;
 public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
 
-  private ISecretsLoader loader;
+  protected override async Task<ISecretsLoader> GetSecretsLoader() =>
+    new AwsSecretsLoaderFactory(await F.Settings()).GetService();
 
-  [SetUp] public void Setup() {
-    var settings = F.Settings().Result;
-    
-    loader = new AwsSecretsLoaderFactory(settings).GetService();
-  }
-
-  protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
-    return (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
-  }
-
+  // todo: implement
+  protected override Task PrepareTestEnvironment(string environment, string contents) => Task.CompletedTask;
 }

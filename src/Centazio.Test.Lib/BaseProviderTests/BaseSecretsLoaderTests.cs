@@ -1,6 +1,10 @@
-﻿using NUnit.Framework;
+﻿using Centazio.Core.Secrets;
+using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
+
+// todo GT: all of these tests should set themselves up and not expect the
+//    environments (local, az, aws) to have these testing secrets set up just for the tests 
 public abstract class BaseSecretsLoaderTests {
 
   protected const string FULL_CONTENT = @"SETTING1=VALUE1;
@@ -12,25 +16,38 @@ SETTING5=val;with;semmis;
 SETTING6=val=with=equals
 SETTING7=val with # should not ignore";
 
-  protected abstract Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs);
+  protected abstract Task PrepareTestEnvironment(string environment, string contents);
+  protected abstract Task<ISecretsLoader> GetSecretsLoader();
   
-  [Test] public async Task Test_loading_from_local() => Assert.That(await Load(("testing", FULL_CONTENT)),
-      Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
-          "VALUE 2 with spaces",
-          123,
-          "trailing space with semmi ;",
-          "val;with;semmis;",
-          "val=with=equals",
-          "val with # should not ignore")));
+  private ISecretsLoader loader = null!;
+  
+  [SetUp] public async Task SetUp() => 
+      loader = await GetSecretsLoader();
 
-  [Test, Ignore("Overwriting secrets is not needed.")] public async Task Test_overwriting_secrets() => Assert.That(await Load(("testing", FULL_CONTENT), ("overwrite", "SETTING4=overwritten")),
-      Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
+  [Test] public async Task Test_loading_secrets_from_provider() {
+    await PrepareTestEnvironment("testing", FULL_CONTENT);
+    var loaded = (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>("testing"); 
+    Assert.That(loaded, Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
+            "VALUE 2 with spaces",
+            123,
+            "trailing space with semmi ;",
+            "val;with;semmis;",
+            "val=with=equals",
+            "val with # should not ignore")));
+  }
+
+  [Test] public async Task Test_overwriting_secrets() {
+    await PrepareTestEnvironment("testing", FULL_CONTENT);
+    await PrepareTestEnvironment("overwrite", "SETTING4=overwritten");
+    var loaded = (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>("testing", "overwrite"); 
+    Assert.That(loaded, Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
           "VALUE 2 with spaces",
           123,
           "overwritten",
           "val;with;semmis;",
           "val=with=equals",
           "val with # should not ignore")));
+  }
 
   // ReSharper disable once ClassNeverInstantiated.Local
   protected record TestSettingsTargetObjRaw {

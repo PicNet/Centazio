@@ -6,16 +6,10 @@ namespace Centazio.Providers.Az.Tests.Secrets;
 
 public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
 
-  private ISecretsLoader loader;
+  protected override async Task<ISecretsLoader> GetSecretsLoader() => 
+      new AzSecretsLoaderFactory(await F.Settings()).GetService();
 
-  [SetUp] public void Setup() {
-    var settings = F.Settings().Result;
-    
-    loader = new AzSecretsLoaderFactory(settings).GetService();
-  }
+  // todo: implement
+  protected override Task PrepareTestEnvironment(string environment, string contents) => Task.CompletedTask;
 
-  protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
-    return (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
-  }
-  
 }

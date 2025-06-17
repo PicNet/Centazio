@@ -5,13 +5,13 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Core.Tests.Secrets;
 
 public class FileSecretsLoaderTests : BaseSecretsLoaderTests {
-  private ISecretsLoader loader;
-  [SetUp] public void Setup() {
-    var settings = new CentazioSettings.Dto { SecretsLoaderSettings = new SecretsLoaderSettings.Dto { Provider = "File", SecretsFolder = "../centazio3_secrets" } }.ToBase();
-    loader = new FileSecretsLoaderFactory(settings).GetService();
-  }
-  protected override async Task<TestSettingsTargetObj> Load(params (string env, string contents)[] envs) {
-    return (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>(envs.Select(e => e.env).ToList());
-  }
+  private readonly CentazioSettings settings = 
+      new CentazioSettings.Dto { SecretsLoaderSettings = new SecretsLoaderSettings.Dto { Provider = "File", SecretsFolder = "../centazio3_secrets" } }.ToBase();
+  
+  protected override Task<ISecretsLoader> GetSecretsLoader() => 
+      Task.FromResult(new FileSecretsLoaderFactory(settings).GetService());
 
+  protected override async Task PrepareTestEnvironment(string environment, string contents) {
+    await File.WriteAllTextAsync(Path.Join(settings.GetSecretsFolder(), environment + ".env"), contents);
+  }
 }

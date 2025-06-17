@@ -36,7 +36,6 @@ public record CentazioSettings {
   }
   
   public string GetSecretsFolder() {
-    // todo GT: test this is not called with Provider is not 'File'
     if (SecretsLoaderSettings.Provider != "File") throw new Exception("GetSecretsFolder() should not be called when the Secrets.Provider is not 'File'");
     return Env.IsInDev ? 
         ValidateDirectory(SecretsLoaderSettings.SecretsFolder) : 
