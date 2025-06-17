@@ -11,7 +11,8 @@ public class FileSecretsLoaderTests : BaseSecretsLoaderTests {
   protected override Task<ISecretsLoader> GetSecretsLoader() => 
       Task.FromResult(new FileSecretsLoaderFactory(settings).GetService());
 
-  protected override async Task PrepareTestEnvironment(string environment, string contents) {
+  protected override async Task PrepareTestEnvironment(string environment, Dictionary<string, string> secrets) {
+    var contents = String.Join("\n", secrets.Select(kvp => $"{kvp.Key}={kvp.Value}"));
     await File.WriteAllTextAsync(Path.Join(settings.GetSecretsFolder(), environment + ".env"), contents);
   }
 }

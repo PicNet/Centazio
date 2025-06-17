@@ -5,16 +5,9 @@ namespace Centazio.Core.Tests.Secrets;
 
 public class EnvironmentVariableSecretsLoaderTests : BaseSecretsLoaderTests {
 
-  protected override Task PrepareTestEnvironment(string environment, string contents) {
+  protected override Task PrepareTestEnvironment(string environment, Dictionary<string, string> secrets) {
     var prefix = $"{environment.ToUpper()}_";
-    contents.Split('\n').ForEach(l => {
-      var index = l.Trim().IndexOf('=');
-      if (index < 0) return;
-
-      var key = l.Trim()[..index];
-      var value = l.Trim()[(index + 1)..];
-      Environment.SetEnvironmentVariable(prefix + key, value);
-    });
+    secrets.ForEach(kvp => Environment.SetEnvironmentVariable(prefix + kvp.Key, kvp.Value));
     return Task.CompletedTask;
   }
 

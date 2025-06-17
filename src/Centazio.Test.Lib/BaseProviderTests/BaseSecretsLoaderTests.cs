@@ -14,7 +14,7 @@ SETTING5=val;with;semmis;
 SETTING6=val=with=equals
 SETTING7=val with # should not ignore";
 
-  protected abstract Task PrepareTestEnvironment(string environment, string contents);
+  protected abstract Task PrepareTestEnvironment(string environment, Dictionary<string, string> contents);
   protected abstract Task<ISecretsLoader> GetSecretsLoader();
   
   private ISecretsLoader loader = null!;
@@ -23,7 +23,7 @@ SETTING7=val with # should not ignore";
       loader = await GetSecretsLoader();
 
   [Test] public async Task Test_loading_secrets_from_provider() {
-    await PrepareTestEnvironment("testing", FULL_CONTENT);
+    await PrepareTestEnvironment("testing", SecretsLoaderUtils.SplitFlatContentIntoSecretsDict(FULL_CONTENT));
     var loaded = await loader.Load<TestSettingsTargetObjRaw>("testing"); 
     Assert.That(loaded.ToBase(), Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
             "VALUE 2 with spaces",
@@ -35,8 +35,8 @@ SETTING7=val with # should not ignore";
   }
 
   [Test] public virtual async Task Test_overwriting_secrets() {
-    await PrepareTestEnvironment("testing", FULL_CONTENT);
-    await PrepareTestEnvironment("overwrite", "SETTING4=overwritten");
+    await PrepareTestEnvironment("testing", SecretsLoaderUtils.SplitFlatContentIntoSecretsDict(FULL_CONTENT));
+    await PrepareTestEnvironment("overwrite", SecretsLoaderUtils.SplitFlatContentIntoSecretsDict("SETTING4=overwritten"));
     var loaded = await loader.Load<TestSettingsTargetObjRaw>("testing", "overwrite"); 
     Assert.That(loaded.ToBase(), Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
           "VALUE 2 with spaces",

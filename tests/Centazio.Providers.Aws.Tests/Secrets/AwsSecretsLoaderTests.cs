@@ -12,33 +12,14 @@ public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
   protected override async Task<ISecretsLoader> GetSecretsLoader() =>
     new AwsSecretsLoaderFactory(await F.Settings()).GetService();
   
-  // todo: refactor
-  protected override async Task PrepareTestEnvironment(string environment, string contents) {
-    var secrets = new Dictionary<string, object>();
-    var settings = await F.Settings();
-    
-    foreach (var line in contents.Split('\n')) {
-      var trimmed = line.Trim();
-      if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#')) continue;
-        
-      var parts = trimmed.Split('=', 2);
-      if (parts.Length == 2) secrets[parts[0]] = parts[1];
-    }
-    
-    var id = settings.AwsSettings.GetSecretsStoreIdForEnvironment(environment);
-    var json = Json.Serialize(secrets);
-    var client = new AmazonSecretsManagerClient(settings.AwsSettings.GetRegionEndpoint());
+  protected override async Task PrepareTestEnvironment(string environment, Dictionary<string, string> secrets) {
+    var (settings, json) = (await F.Settings(), Json.Serialize(secrets));
+    var (id, client) = (settings.AwsSettings.GetSecretsStoreIdForEnvironment(environment), new AmazonSecretsManagerClient(settings.AwsSettings.GetRegionEndpoint()));
     
     try {
-      await client.CreateSecretAsync(new CreateSecretRequest {
-        Name = id,
-        SecretString = json
-      });
+      await client.CreateSecretAsync(new CreateSecretRequest { Name = id, SecretString = json });
     } catch (ResourceExistsException) {
-      await client.PutSecretValueAsync(new PutSecretValueRequest {
-        SecretId = id,
-        SecretString = json
-      });
+      await client.PutSecretValueAsync(new PutSecretValueRequest { SecretId = id, SecretString = json });
     }
   }
 
