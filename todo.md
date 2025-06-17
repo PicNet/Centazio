@@ -23,6 +23,7 @@
   - dotnet tool install testing
   - good tutorial
   
+- GT: implement `centazio dev az/aws login` that reads file secrets provider and logs in for testing
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
 - GT: add `az func logs -w` option to watch for more log changes?
 - Centazio func-func trigger test: 

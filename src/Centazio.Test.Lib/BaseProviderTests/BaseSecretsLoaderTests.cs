@@ -36,7 +36,7 @@ SETTING7=val with # should not ignore";
             "val with # should not ignore")));
   }
 
-  [Test] public async Task Test_overwriting_secrets() {
+  [Test] public virtual async Task Test_overwriting_secrets() {
     await PrepareTestEnvironment("testing", FULL_CONTENT);
     await PrepareTestEnvironment("overwrite", "SETTING4=overwritten");
     var loaded = (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>("testing", "overwrite"); 
