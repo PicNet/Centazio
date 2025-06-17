@@ -111,7 +111,6 @@ public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlReposi
 public class NoOpChangeNotifier : IChangesNotifier {
 
   public List<ObjectChangeTrigger> Notifications { get; set; } = [];
-  public bool IsAsync => false;
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> functions) {}
   public Task Run(IFunctionRunner runner) => Task.CompletedTask;
@@ -126,7 +125,6 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
 public class InstantChangesNotifier : IChangesNotifier {
 
-  public bool IsAsync => false;
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
 
   private IFunctionRunner? runner;

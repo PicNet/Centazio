@@ -8,5 +8,5 @@ public interface ISimulationStorage : IAsyncDisposable {
   IStagedEntityRepository StageRepository { get; }
   ISimulationCoreStorageRepository CoreStore { get; }
   
-  int PostEpochDelayMs { get; }
+  int SimulationPostFunctionRunDelayMs { get; }
 }

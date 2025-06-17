@@ -11,7 +11,7 @@ public class InMemorySimulationStorage : ISimulationStorage {
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
-  public int PostEpochDelayMs => 50;
+  public int SimulationPostFunctionRunDelayMs => 100;
 
   public Task Initialise(SimulationCtx ctx) {
     CtlRepo = new InMemorySimulationCtlRepository(ctx.Epoch);

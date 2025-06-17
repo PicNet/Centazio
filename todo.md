@@ -14,6 +14,7 @@
             Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
     - Local simulate now showing logs
     - `centazio az func logs` not working - * fixed update func core tool to the latest https://go.microsoft.com/fwlink/?linkid=2174087
+    - GHA: Unexpected input(s) 'include-prerelease', valid inputs are ['dotnet-version', 'dotnet-quality', 'global-json-file', 'source-url', 'owner', 'config-file', 'cache', 'cache-dependency-path']
   - CP: Aws:
     - function-to-function triggers
     - aws simulate (sam cli local function simulator)
@@ -27,11 +28,13 @@
   - good tutorial
   
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
+- GT: add `az func logs -w` option to watch for more log changes?
 - Centazio func-func trigger test: 
   - all hosts
   - func reads csv with instructions 
   - test confirms only correct triggers received 
   - confirm only required operations run
+  - GT: need a simple test to test that func-to-func triggers are working and working efficiently
 - GT: need a change-log to be able to do workflows when specific changes to an entity happen. Eg:
   to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
   not the property that changed.  This should be part of the promote step.

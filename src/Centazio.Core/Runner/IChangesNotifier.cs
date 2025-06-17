@@ -5,7 +5,7 @@ public interface IChangesNotifier {
   void Init(List<IRunnableFunction> functions);
   Task Run(IFunctionRunner runner);
   Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs);
-  bool IsAsync { get; }
+  // todo CP: what is this Setup method and why does it have to be called on every function run?
   Task Setup(IRunnableFunction func);
 
 }

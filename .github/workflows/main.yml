@@ -1,23 +1,15 @@
 name: .NET CI
 
 on:
-  push:
-    branches:
-      - master
-      - devops
-      - dev
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.user'
-      - '.git/**'
+  push:    
+    paths:
+      - '**.cs'
+      - '**.json'
 
 jobs:
   build:
     runs-on: self-hosted
-
-    env:
-      dotnetver: '9.x'
-      buildcfg: 'Debug'
+    timeout-minutes: 15
 
     steps:
     - name: Checkout code
@@ -26,7 +18,7 @@ jobs:
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ env.dotnetver }}
+        dotnet-version: 9.x
         include-prerelease: true
 
     - name: Check Docker version
@@ -38,11 +30,13 @@ jobs:
     - name: dotnet info
       run: dotnet --info
 
+    # note this `dotnet restore` is required even though there should 
+    #   be [implicit restore](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build#implicit-restore)
     - name: dotnet restore
       run: dotnet restore --verbosity normal
-
+      
     - name: dotnet build
-      run: dotnet build --configuration ${{ env.buildcfg }} --verbosity normal --no-restore
+      run: dotnet build --configuration Debug --verbosity normal --no-restore
 
     - name: dotnet test
       run: dotnet test --no-restore --no-build

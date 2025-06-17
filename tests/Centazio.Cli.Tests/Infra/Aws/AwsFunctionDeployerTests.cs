@@ -27,7 +27,7 @@ public class AwsFunctionDeployerTests {
     //    Configure a credential helper to remove this warning. See
     //    https://docs.docker.com/go/credential-store/
     if (Env.IsGitHubActions) return; 
-	
+
     var appname = project.AwsFunctionName;
     
     if ((await MiscHelpers.Aws.ListFunctionsInApp(appname)).Count > 0) await MiscHelpers.Aws.DeleteFunctionApp(appname);

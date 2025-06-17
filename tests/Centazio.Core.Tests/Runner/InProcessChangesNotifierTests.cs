@@ -12,7 +12,7 @@ public class InProcessChangesNotifierTests {
   private readonly LifecycleStage stage2 = new("stage2");
 
   [Test] public async Task Test_notification_works() {
-    if (Env.IsGitHubActions) return; // todo GT: flaky test on GHA
+    // todo GT: why is this so flaky on GHA?
     var func = new Func(stage2, [new(C.System1Name, new (stage1), C.SystemEntityName)]);
     
     var notif = new InProcessChangesNotifier();
@@ -24,7 +24,7 @@ public class InProcessChangesNotifierTests {
     await Enumerable.Range(0, notifications).Select(async _ => {
       await notif.Notify(C.System1Name, stage1, [C.SystemEntityName]);
       TestingUtcDate.DoTick();
-      await Task.Delay(50);
+      await Task.Delay(Env.IsGitHubActions ? 1000 : 50);
     }).Synchronous();
     
     Assert.That(func.RunCount, Is.EqualTo(notifications));

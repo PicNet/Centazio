@@ -40,8 +40,6 @@ public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, Amaz
     });
   }
 
-  public bool IsAsync => true;
-
   public async Task Setup(IRunnableFunction func) {
     if (Environment.GetEnvironmentVariable(ENV_SETUP) is "1") return;
 

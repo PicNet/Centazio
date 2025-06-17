@@ -23,7 +23,7 @@ public class SqliteSimulationStorage : ISimulationStorage {
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
   // sqlite is terrible with multithreading and needs a delay during the simulation when using an async notifier
-  public int PostEpochDelayMs => 750;  
+  public int SimulationPostFunctionRunDelayMs => 500;  
 
   public async Task Initialise(SimulationCtx ctx) {
     var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));

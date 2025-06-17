@@ -20,6 +20,7 @@ public class E2EEnvironment(
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
+  private bool asyncnotify = notifier is not NoOpChangeNotifier;
   private IFunctionRunner runner = null!;
   private CrmReadFunction crm_read = null!;
   private CrmPromoteFunction crm_promote = null!;
@@ -89,20 +90,24 @@ public class E2EEnvironment(
     ctx.Debug($"Epoch: [{epoch}] simulation step completed - running functions");
     
     var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
+    
     TestingUtcDate.DoTick();
     await runner.RunFunction(crm_read, trigger);
+    
+    if (asyncnotify) await Task.Delay(storage.SimulationPostFunctionRunDelayMs);
     
     TestingUtcDate.DoTick();
     await runner.RunFunction(fin_read, trigger);
     
-    // async notifiers need to wait for their background
-    //    threads to finnish triggering other functions
-    if (notifier is NoOpChangeNotifier) {
+    if (asyncnotify) {
+      await Task.Delay(storage.SimulationPostFunctionRunDelayMs);
+    } else {
+      // if not using notifier, then manually call promoters and writers
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
       await runner.RunFunction(crm_write, trigger);
       await runner.RunFunction(fin_write, trigger);
-    } else { await Task.Delay(storage.PostEpochDelayMs); }
+    }
     
     ctx.Debug($"Epoch: [{epoch}] functions completed - validating");
     await ValidateEpoch();

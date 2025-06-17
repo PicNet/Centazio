@@ -6,8 +6,6 @@ public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
 
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   private List<IRunnableFunction> functions = null!;
-  
-  public bool IsAsync => true;
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> funcs) { functions = funcs; }
   
