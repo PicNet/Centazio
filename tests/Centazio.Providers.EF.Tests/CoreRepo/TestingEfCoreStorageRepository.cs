@@ -35,14 +35,14 @@ public class TestingEfCoreStorageRepository(Func<CentazioDbContext> getdb, IDbFi
         (await db.Set<CoreEntity.Dto>().ToListAsync()).Select(dto => dto.ToBase()).ToList());
   }
 
-  protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
+  protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     var strids = coreids.Select(id => id.Value).ToList();
-    if (coretype == CoreEntityTypeName.From<CoreEntity>()) return  await Impl<CoreEntity, CoreEntity.Dto>();
+    if (coretype == CoreEntityTypeName.From<CoreEntity>()) return await Impl<CoreEntity, CoreEntity.Dto>();
     
     throw new NotSupportedException(coretype.Value);
 
     async Task<List<ICoreEntity>> Impl<E, D>() where E : ICoreEntity where D : class, ICoreEntityDto<E> => 
-        (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList();
+        await UseDb(async db => (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList());
   }
 
   public static void CreateTestingCoreStorageEfModel(ModelBuilder builder) => builder

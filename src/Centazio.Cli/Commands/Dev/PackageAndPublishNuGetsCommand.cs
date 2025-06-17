@@ -8,26 +8,24 @@ namespace Centazio.Cli.Commands.Dev;
 
 public class PackageAndPublishNuGetsCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSecrets secrets, 
-    ICommandRunner runner) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
+    ICommandRunner cmd) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
 
   private readonly string packagesdir = "packages";
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings());
   
-  public override Task ExecuteImpl(Settings settings) {
+  public override async Task ExecuteImpl(Settings settings) {
     if (!Env.IsInDev) throw new Exception(nameof(PackageAndPublishNuGetsCommand) + " should not be accessible outside of the Centazio dev environment");
     var cwd = FsUtils.GetCentazioPath();
     // package
     FsUtils.EmptyDirectory(Path.Combine(cwd, packagesdir));
     if (!settings.NoBump) BumpVersionBuildNumber();
-    runner.DotNet($"pack -c Release -o {packagesdir}", cwd);
+    await cmd.DotNet($"pack -c Release -o {packagesdir}", cwd);
     
     // publish 
-    if (settings.NoPublish) return Task.CompletedTask; 
+    if (settings.NoPublish) return; 
     var apikey = secrets.NUGET_API_KEY ?? throw new ArgumentNullException(nameof(secrets.NUGET_API_KEY));
-    runner.DotNet($"nuget push ./{packagesdir}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);
-    
-    return Task.CompletedTask;
+    await cmd.DotNet($"nuget push ./{packagesdir}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);
   }
 
   private void BumpVersionBuildNumber() {

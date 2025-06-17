@@ -3,8 +3,6 @@ using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
 
-// todo GT: all of these tests should set themselves up and not expect the
-//    environments (local, az, aws) to have these testing secrets set up just for the tests 
 public abstract class BaseSecretsLoaderTests {
 
   protected const string FULL_CONTENT = @"SETTING1=VALUE1;
@@ -26,8 +24,8 @@ SETTING7=val with # should not ignore";
 
   [Test] public async Task Test_loading_secrets_from_provider() {
     await PrepareTestEnvironment("testing", FULL_CONTENT);
-    var loaded = (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>("testing"); 
-    Assert.That(loaded, Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
+    var loaded = await loader.Load<TestSettingsTargetObjRaw>("testing"); 
+    Assert.That(loaded.ToBase(), Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
             "VALUE 2 with spaces",
             123,
             "trailing space with semmi ;",
@@ -39,8 +37,8 @@ SETTING7=val with # should not ignore";
   [Test] public virtual async Task Test_overwriting_secrets() {
     await PrepareTestEnvironment("testing", FULL_CONTENT);
     await PrepareTestEnvironment("overwrite", "SETTING4=overwritten");
-    var loaded = (TestSettingsTargetObj) await loader.Load<TestSettingsTargetObjRaw>("testing", "overwrite"); 
-    Assert.That(loaded, Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
+    var loaded = await loader.Load<TestSettingsTargetObjRaw>("testing", "overwrite"); 
+    Assert.That(loaded.ToBase(), Is.EqualTo(new TestSettingsTargetObj("VALUE1;",
           "VALUE 2 with spaces",
           123,
           "overwritten",
@@ -60,13 +58,13 @@ SETTING7=val with # should not ignore";
     public string? SETTING6 { get; init; }
     public string? SETTING7 { get; init; }
 
-    public static explicit operator TestSettingsTargetObj(TestSettingsTargetObjRaw raw) => new(raw.SETTING1 ?? throw new ArgumentNullException(nameof(SETTING1)),
-        raw.SETTING2 ?? throw new ArgumentNullException(nameof(SETTING2)),
-        raw.SETTING3_NUMBER ?? throw new ArgumentNullException(nameof(SETTING3_NUMBER)),
-        raw.SETTING4 ?? throw new ArgumentNullException(nameof(SETTING4)),
-        raw.SETTING5 ?? throw new ArgumentNullException(nameof(SETTING5)),
-        raw.SETTING6 ?? throw new ArgumentNullException(nameof(SETTING6)),
-        raw.SETTING7 ?? throw new ArgumentNullException(nameof(SETTING7)));
+    public TestSettingsTargetObj ToBase() => new(SETTING1 ?? throw new ArgumentNullException(nameof(SETTING1)),
+        SETTING2 ?? throw new ArgumentNullException(nameof(SETTING2)),
+        SETTING3_NUMBER ?? throw new ArgumentNullException(nameof(SETTING3_NUMBER)),
+        SETTING4 ?? throw new ArgumentNullException(nameof(SETTING4)),
+        SETTING5 ?? throw new ArgumentNullException(nameof(SETTING5)),
+        SETTING6 ?? throw new ArgumentNullException(nameof(SETTING6)),
+        SETTING7 ?? throw new ArgumentNullException(nameof(SETTING7)));
   }
 
   // ReSharper disable NotAccessedPositionalProperty.Local

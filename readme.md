@@ -97,8 +97,14 @@ providers, networking, etc. can also be managed by Centazio or you can use your 
 pipelines to control.
 
 # Prerequisites
+
+- [dotnet 9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [dotnet cli](https://learn.microsoft.com/en-us/dotnet/core/tools/)
+- [az cli](https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest)
+- [az core tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-csharp)
 - [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-- todo GT: fill in
+- [aws dotnet-lambda cli](https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-cli.html)
+- [docker cli](https://www.docker.com/products/cli/)
 
 # Getting Started
 

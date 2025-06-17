@@ -212,9 +212,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     });
   }
 
-  private Task AddSecretsManagerAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
-    // todo CP: do not use ForEach with asyncs not safe 
-    project.Environments.ForEach(async e => {
+  private async Task AddSecretsManagerAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
+    await Task.WhenAll(project.Environments.Select(async e => {
       await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
         RoleName = rolenm,
         PolicyName = "secretsmanager-access-" + rolenm,
@@ -224,8 +223,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
           SecretsStoreId = settings.AwsSettings.GetSecretsStoreIdForEnvironment(e)
         })
       });
-    });
-    return Task.CompletedTask;
+    }));
   }
 
   private async Task AddLambdaAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {

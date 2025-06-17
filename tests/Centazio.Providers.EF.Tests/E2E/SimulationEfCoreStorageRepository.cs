@@ -36,6 +36,9 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
       });
   
   public async Task<SimulationEfCoreStorageRepository> Initialise() {
+    OnEntityAdd += (_, args) => tracker.Add(args.Entity);
+    OnEntityUpdate += (_, args) => tracker.Update(args.Entity);
+    
     return await UseDb(async db => {
       await DropTablesImpl(db);
       
@@ -50,14 +53,6 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
     });
   }
   
-
-  protected override void UpsertEntity(CoreEntityAndMeta entity, EntityState state, CentazioDbContext db) {
-    if (state == EntityState.Added) tracker.Add(entity);
-    else tracker.Update(entity);
-    
-    base.UpsertEntity(entity, state, db);
-  }
-
   public override async ValueTask DisposeAsync() {
     await UseDb(async db => {
       await DropTablesImpl(db);
@@ -66,7 +61,7 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
     });
   }
 
-  protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids, CentazioDbContext db) {
+  protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     var strids = coreids.Select(id => id.Value).ToList();
     if (coretype == CoreEntityTypeName.From<CoreMembershipType>()) return  await Impl<CoreMembershipType, CoreMembershipType.Dto>();
     if (coretype == CoreEntityTypeName.From<CoreCustomer>()) return  await Impl<CoreCustomer, CoreCustomer.Dto>();
@@ -74,8 +69,8 @@ public class SimulationEfCoreStorageRepository(Func<CentazioDbContext> getdb, IE
     
     throw new NotSupportedException(coretype.Value);
 
-    async Task<List<ICoreEntity>> Impl<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> => 
-        (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList();
+    async Task<List<ICoreEntity>> Impl<E, D>() where E : CoreEntityBase where D : class, ICoreEntityDto<E> =>
+        await UseDb(async db => (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList());
   }
 
   private async Task DropTablesImpl(CentazioDbContext db) {
