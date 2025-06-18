@@ -1,4 +1,5 @@
-﻿using Amazon;
+﻿using System.Text;
+using Amazon;
 using Amazon.ECR;
 using Amazon.ECR.Model;
 using Amazon.EventBridge;
@@ -50,7 +51,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     await CheckAndCreateEcrRepository(ecr, projnm);
     
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
-    await BuildAndPushDockerImage(ecruri, projnm);
+    await BuildAndPushDockerImage(ecr, ecruri, projnm);
     
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
@@ -62,14 +63,14 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return await FunctionExists(lambda, project.AwsFunctionName) ? await UpdateFunction(lambda, imguri) : await CreateFunction(lambda, imguri, accid);
   }
 
-  private async Task BuildAndPushDockerImage(string ecruri, string projnm) {
+  private async Task BuildAndPushDockerImage(AmazonECRClient ecr, string ecruri, string projnm) {
     var dockercmds = settings.Defaults.ConsoleCommands.Docker;
 
     // todo CP: FIX the following docker command return an error even if the image is built successfully
     try { await Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
     catch (Exception e) { Log.Warning(e, "Error running docker command"); }
 
-    await Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: await GetEcrInputPassword());
+    await Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: await GetEcrInputPassword(ecr));
     await Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
 
     async Task Run(string command, object model, bool quiet = false, string? input = null) =>
@@ -81,14 +82,10 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     return (await sts.GetCallerIdentityAsync(new GetCallerIdentityRequest())).Account;
   }
 
-  private async Task<string> GetEcrInputPassword() {
-    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", credentials.GetCredentials().AccessKey);
-    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", credentials.GetCredentials().SecretKey);
-
-    var results = await cmd.Aws(templater.ParseFromContent(settings.Defaults.ConsoleCommands.AwsCmds.GetEcrPass, new { Region = region.SystemName }), project.ProjectDirPath);
-    if (!results.Success) throw new Exception(results.Err);
-
-    return results.Out;
+  private async Task<string> GetEcrInputPassword(AmazonECRClient ecr) {
+    var res = await ecr.GetAuthorizationTokenAsync(new GetAuthorizationTokenRequest());
+    if (res.AuthorizationData == null || res.AuthorizationData.Count == 0) throw new Exception("Failed to retrieve ECR authorization token.");
+    return Encoding.UTF8.GetString(Convert.FromBase64String(res.AuthorizationData[0].AuthorizationToken)).Split(':')[1];
   }
 
   private static async Task<string> GetLatestImageDigest(AmazonECRClient ecr, string projnm) {
