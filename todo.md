@@ -15,6 +15,7 @@
     - WT: GHA: Unexpected input(s) 'include-prerelease', valid inputs are ['dotnet-version', 'dotnet-quality', 'global-json-file', 'source-url', 'owner', 'config-file', 'cache', 'cache-dependency-path']
   - CP: Aws:
     - function-to-function triggers
+      - currently for aws, we are triggering functions once per 'trigger' object.  We are not merging them into a list
     - aws simulate (sam cli local function simulator)
     - generator is including all functions in assembly, even tho we specify a single function
     - centazio aws func deploy throwing docker error
