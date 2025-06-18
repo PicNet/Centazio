@@ -56,8 +56,7 @@ public static class MiscHelpers {
       
       var esm = await lambda.ListEventSourceMappingsAsync(new ListEventSourceMappingsRequest() { FunctionName = appname });
       if (esm.EventSourceMappings.Any()) {
-        // todo CP: do not use async void with ForEach use Synchronous or Task.WhenAll
-        esm.EventSourceMappings.ForEach(async void (e) => { await lambda.DeleteEventSourceMappingAsync(new DeleteEventSourceMappingRequest { UUID = e.UUID }); });
+        await Task.WhenAll(esm.EventSourceMappings.Select(async e => await lambda.DeleteEventSourceMappingAsync(new DeleteEventSourceMappingRequest { UUID = e.UUID })));
       }
       await lambda.DeleteFunctionAsync(appname);
     }

@@ -27,12 +27,7 @@ public class AwsSqsChangesNotifier(bool localaws) : IChangesNotifier, IDisposabl
           Log.Information("Received message: System[{System}] Stage[{Stage}] Object[{Object}]", oct.System, oct.Stage, oct.Object);
 
           // todo CP: skip old messages
-          funcs.Where(func => func.IsTriggeredBy(oct))
-              .ToList()
-              // todo: CP: do not use `async void`, use either `Synchronous` extension method or `Task.WhenAll`
-              .ForEach(async void (func) => {
-                await runner.RunFunction(func, [oct]);
-              });
+          Task.WhenAll(funcs.Where(func => func.IsTriggeredBy(oct)).ToList().Select(async func => await runner.RunFunction(func, [oct])));
           return Task.FromResult(true);
         });
   }
