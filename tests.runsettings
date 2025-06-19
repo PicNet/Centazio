@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <TestSessionTimeout>600000</TestSessionTimeout>
+    <MaxCpuCount>1</MaxCpuCount>
+    <InIsolation>true</InIsolation>
+  </RunConfiguration>
+  
+  <NUnit>
+    <NumberOfTestWorkers>1</NumberOfTestWorkers>    
+    <DefaultTimeout>30000</DefaultTimeout> <!-- ms -->
+    <CaptureStandardOutput>true</CaptureStandardOutput>
+  </NUnit>
+  
+  <MSTest>
+    <TestTimeout>30000</TestTimeout> <!-- ms -->
+    <Parallelize>
+      <Workers>1</Workers>
+      <Scope>none</Scope>
+    </Parallelize>
+  </MSTest>
+  
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <!-- collect console output and debug traces -->
+      <DataCollector friendlyName="blame" enabled="True">
+        <Configuration>
+          <CollectProcessDump>true</CollectProcessDump>
+          <CollectDumpOnExit>true</CollectDumpOnExit>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
