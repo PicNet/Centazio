@@ -10,7 +10,7 @@ using Centazio.Core;
 using Centazio.Core.Ctl.Entities;
 using Centazio.Core.Misc;
 using Centazio.Core.Promote;
-//using Testcontainers.LocalStack;
+using Testcontainers.LocalStack;
 using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
 
@@ -18,23 +18,22 @@ namespace Centazio.Hosts.Aws.Tests;
 
 public class AwsEventBridgeChangesNotifierTests {
 
-  [Test, Ignore("set the test localstack")] public async Task Test_setup_event_bridge() {
-    
-    // todo CP: somehow when using the following test local stack is not working. Need to fix
-    // var localStackContainer = new LocalStackBuilder().Build();
-    // await localStackContainer.StartAsync().ConfigureAwait(false);
-    // var serverurl = localStackContainer.GetConnectionString();
-    
-    var serverurl = "http://localhost:4566";
-    var lambda = new AmazonLambdaClient(new BasicAWSCredentials("test", "test"), new AmazonLambdaConfig { ServiceURL = serverurl });
-    var evbridge = new AmazonEventBridgeClient(new BasicAWSCredentials("test", "test"), new AmazonEventBridgeConfig { ServiceURL = serverurl });
-    
-    AwsEventBridgeChangesNotifier notifier = new(lambda, evbridge);
+  [Test] public async Task Test_setup_event_bridge() {
+    var localstack = new LocalStackBuilder()
+        .WithImage("localstack/localstack:latest")
+        .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock") // Mount Docker
+        .Build();
+    await localstack.StartAsync().ConfigureAwait(false);
+
+    var serverurl = localstack.GetConnectionString();
+    var creds = new BasicAWSCredentials("test", "test");
+    var lambda = new AmazonLambdaClient(creds, new AmazonLambdaConfig { ServiceURL = serverurl });
+    var evbridge = new AmazonEventBridgeClient(creds, new AmazonEventBridgeConfig { ServiceURL = serverurl });
+    var notifier = new AwsEventBridgeChangesNotifier(lambda, evbridge);
 
     var funcnm = "dummy-target-function";
-    try { await DeleteDummyFunction(lambda, funcnm); }
-    catch (ResourceNotFoundException) { }
-
+    await DeleteDummyFunctionIfExists(lambda, funcnm);
+    
     await CreateDummyLambdaFunction(lambda, funcnm);
     var response = await lambda.InvokeAsync(new InvokeRequest {
       FunctionName = funcnm,
@@ -44,17 +43,20 @@ public class AwsEventBridgeChangesNotifierTests {
     Assert.That(response.StatusCode, Is.EqualTo(200));
     
     await DeleteEventBusIfExistsAsync(evbridge, AwsEventBridgeChangesNotifier.EVENT_BUS_NAME);
-
+    
     var func = new DummyRunnableFunction();
+    
     await notifier.Setup(func);
     await notifier.Notify(func.System, LifecycleStage.Defaults.Read, [func.SystemEntityTypeName]);
 
     //TODO CP check if the lambda is called via the event bridge
   }
 
-  private static async Task DeleteDummyFunction(AmazonLambdaClient lambda, string funcnm) {
-    await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
-    await lambda.DeleteFunctionAsync(new DeleteFunctionRequest { FunctionName = funcnm });
+  private static async Task DeleteDummyFunctionIfExists(AmazonLambdaClient lambda, string funcnm) {
+    try {
+      await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
+      await lambda.DeleteFunctionAsync(new DeleteFunctionRequest { FunctionName = funcnm });
+    } catch (ResourceNotFoundException) {}
   }
 
   private static async Task CreateDummyLambdaFunction(AmazonLambdaClient lambda, string funcnm) {
@@ -90,7 +92,11 @@ def lambda_handler(event, context):
     while (true) {
       try {
         var response = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
-        if (response.Configuration.State != "Pending" ) break;
+        if (response.Configuration.State == State.Failed) {
+          Console.WriteLine($"Function failed reason: {response.Configuration.StateReason}");
+          throw new InvalidOperationException($"Function is in failed state: {response.Configuration.StateReason}");
+        }
+        if (response.Configuration.State != State.Pending ) break;
       } catch (ResourceNotFoundException) { await Task.Delay(1000); }
     }
 
@@ -107,7 +113,7 @@ def lambda_handler(event, context):
         await evbridge.DeleteRuleAsync(new DeleteRuleRequest { Name = rule.Name, EventBusName = evtbusname });
       }
       await evbridge.DeleteEventBusAsync(new DeleteEventBusRequest { Name = evtbusname });
-    } catch (ResourceNotFoundException) { }
+    } catch (Amazon.EventBridge.Model.ResourceNotFoundException) { }
   }
 
 }
