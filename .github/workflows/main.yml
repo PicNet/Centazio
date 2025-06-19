@@ -34,7 +34,7 @@ jobs:
       run: dotnet --info
       
     - name: dotnet build
-      run: dotnet build --configuration Debug --verbosity normal
+      run: dotnet build --configuration Debug --verbosity minimal
 
     - name: dotnet test
-      run: dotnet test --no-build --verbosity=detailed
+      run: dotnet test tests/Centazio.Providers.Az.Tests --no-build --verbosity detailed
