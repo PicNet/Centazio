@@ -11,11 +11,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Hosts.Aws;
 
-public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments, bool localaws) : CentazioEngine(environments) {
+public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
   private readonly List<string> environments = environments;
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
-    var notifier = (IChangesNotifier)(settings.AwsSettings.EventBridge ? new AwsEventBridgeChangesNotifier(new AmazonLambdaClient(), new AmazonEventBridgeClient()) :  new AwsSqsChangesNotifier(localaws));
+    var notifier = new AwsEventBridgeChangesNotifier(new AmazonLambdaClient(), new AmazonEventBridgeClient());
     
     registrar.Register(provider => {
       var factory = provider.GetRequiredService<IServiceFactory<ISecretsLoader>>();

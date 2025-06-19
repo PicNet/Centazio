@@ -10,8 +10,6 @@ using Amazon.Lambda.Model;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-using Amazon.SQS;
-using Amazon.SQS.Model;
 using Centazio.Core;
 using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
@@ -54,25 +52,10 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
     
     var ecruri = $"{accid}.dkr.ecr.{region.SystemName}.amazonaws.com";
     await BuildAndPushDockerImage(ecruri, projnm);
-
-    // todo CP: please rename `EventBridge` to something a bit clearer, perhaps something like `UseDynamicFunctionPropegation` or even `UseEventBridge` 
-    if (!settings.AwsSettings.EventBridge) { await CreateSqsQueue(); }
-
+    
     using var lambda = new AmazonLambdaClient(credentials, region);
     var funcarn = await UpdateOrCreateLambdaFunction(lambda, ecruri, projnm, ecr, accid);
     await SetUpTimer(lambda, funcarn);
-  }
-
-  private async Task CreateSqsQueue() {
-    var sqs = new AmazonSQSClient(credentials, region);
-    await sqs.CreateQueueAsync(new CreateQueueRequest {
-      QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME,
-      Attributes = new Dictionary<string, string> {
-        [QueueAttributeName.ReceiveMessageWaitTimeSeconds] = "20",
-        [QueueAttributeName.MessageRetentionPeriod] = "60",
-        [QueueAttributeName.VisibilityTimeout] = "30"
-      }
-    });
   }
 
   private async Task<string> UpdateOrCreateLambdaFunction(AmazonLambdaClient lambda, string ecruri, string projnm, AmazonECRClient ecr, string accid) {
@@ -143,15 +126,6 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       MemorySize = 256,
       Timeout = 30
     });
-    if (!settings.AwsSettings.EventBridge) {
-      await lambda.CreateEventSourceMappingAsync(new CreateEventSourceMappingRequest {
-        FunctionName = project.AwsFunctionName,
-        EventSourceArn = $"arn:aws:sqs:{region.SystemName}:{accountid}:{AwsSqsMessageBus.DEFAULT_QUEUE_NAME}",
-        BatchSize = 10,
-        Enabled = true
-      });
-    }
-
     return res.FunctionArn;
   }
 
@@ -184,7 +158,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
     await AddEcrAccessPolicyToRole(rolenm, accountid, aim);
 
-    if (!settings.AwsSettings.EventBridge) { await AddSqsAccessPolicy(rolenm, accountid, aim); } else { await AddEventBridgePolicy(rolenm, accountid, aim); }
+    await AddEventBridgePolicy(rolenm, accountid, aim);
 
     await AddCloudWatchRolePolicy(rolenm, accountid, aim);
 
@@ -258,18 +232,6 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         Region = region.SystemName,
         AccountId = accountid,
         EventBusName = AwsEventBridgeChangesNotifier.EVENT_BUS_NAME
-      })
-    });
-  }
-
-  private async Task AddSqsAccessPolicy(string rolenm, string accountid, AmazonIdentityManagementServiceClient aim) {
-    await aim.PutRolePolicyAsync(new PutRolePolicyRequest {
-      RoleName = rolenm,
-      PolicyName = "lambda-sqs-access-" + rolenm,
-      PolicyDocument = templater.ParseFromPath("aws/sqs_permission_policy.json", new {
-        Region = region.SystemName,
-        AccountId = accountid,
-        QueueName = AwsSqsMessageBus.DEFAULT_QUEUE_NAME
       })
     });
   }

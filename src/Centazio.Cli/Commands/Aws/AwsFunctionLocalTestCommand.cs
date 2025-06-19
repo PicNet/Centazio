@@ -16,7 +16,7 @@ public class AwsFunctionLocalTestCommand([FromKeyedServices(CentazioConstants.Ho
   public override async Task ExecuteImpl(Settings cmdsetts) {
     cmdsetts.EnvironmentsList.AddIfNotExists(CentazioConstants.Hosts.Aws);
     cmdsetts.EnvironmentsList.AddIfNotExists(nameof(SelfHost).ToLower());
-    await host.RunHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList, cmdsetts.UseLocalAws));
+    await host.RunHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList));
   }
   
   public class Settings : CommonSettings, IHostConfiguration {

@@ -584,8 +584,6 @@ public record AwsSettings {
   
   public string? AccountName { get; init; }
   
-  public required bool EventBridge { get; init; }
-  
   /// <summary>
   /// This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment
   /// </summary>
@@ -594,20 +592,17 @@ public record AwsSettings {
   public Dto ToDto() => new() { 
     Region = Region,
     AccountName = AccountName,
-    EventBridge = EventBridge,
     SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate,
   };
 
   public record Dto : IDto<AwsSettings> { 
     public string? Region { get; init; }
     public string? AccountName { get; init; }
-    public bool? EventBridge { get; init; }
     public string? SecretsManagerStoreIdTemplate { get; init; }
 
     public AwsSettings ToBase() => new() { 
 Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
       AccountName = AccountName?.Trim(),
-EventBridge = EventBridge ?? false,
       SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
     };
   }

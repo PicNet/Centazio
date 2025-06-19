@@ -40,7 +40,7 @@ public class AwsHostImpl(List<string> environments, Type func) {
     InitLogger();
 
     var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
-    centazio = new(settings, environments, false);
+    centazio = new(settings, environments);
     await centazio.Init([func]);
     await InitAwsLambdaFunctionHost(handler);
     Log.Information("InitAwsLambdaFunctionHost called");
