@@ -46,7 +46,6 @@
   "AwsSettings": {
     "Region": "ap-southeast-2",
     "AccountName": "picnet-centazio",
-    "EventBridge": true,
     "SecretsManagerStoreIdTemplate": "picnet/centazio/<environment>"
   }
 }
