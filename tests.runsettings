@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Timeout for the entire test run (in milliseconds) -->
+    <TestSessionTimeout>600000</TestSessionTimeout>
+    <!-- Maximum number of cores to use -->
+    <MaxCpuCount>1</MaxCpuCount>
+    <!-- Run tests in isolation -->
+    <InIsolation>true</InIsolation>
+  </RunConfiguration>
+  
+  <NUnit>
+    <!-- Force single-threaded execution -->
+    <NumberOfTestWorkers>1</NumberOfTestWorkers>
+    <!-- Set test timeout (in milliseconds) -->
+    <DefaultTimeout>30000</DefaultTimeout>
+    <!-- Capture console output -->
+    <CaptureStandardOutput>true</CaptureStandardOutput>
+  </NUnit>
+  
+  <MSTest>
+    <!-- Timeout for individual tests (in milliseconds) -->
+    <TestTimeout>30000</TestTimeout>
+    <!-- Disable parallel execution -->
+    <Parallelize>
+      <Workers>1</Workers>
+      <Scope>none</Scope>
+    </Parallelize>
+  </MSTest>
+  
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <!-- Collect console output and debug traces -->
+      <DataCollector friendlyName="blame" enabled="True">
+        <Configuration>
+          <CollectProcessDump>true</CollectProcessDump>
+          <CollectDumpOnExit>true</CollectDumpOnExit>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
