@@ -5,7 +5,7 @@ on:
     paths:
       - '**.cs'
       - '**.json'
-      - 'main.yml'
+      - '**/main.yml'
 
 jobs:
   build:
