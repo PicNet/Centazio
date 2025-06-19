@@ -35,8 +35,7 @@ public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
     await pubsub.Writer.WriteAsync(triggers); // returns immediately (not async for unbounded channels)
   }
 
-  public void Dispose() {
-    pubsub.Writer.Complete();
-  }
+  public void Dispose() => 
+      pubsub.Writer.Complete();
 
 }

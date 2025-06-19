@@ -37,4 +37,4 @@ jobs:
       run: dotnet build --configuration Debug --verbosity normal
 
     - name: dotnet test
-      run: dotnet test --no-restore --no-build
+      run: dotnet test --no-build --verbosity=detailed

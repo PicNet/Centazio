@@ -20,7 +20,6 @@ public class E2EEnvironment(
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
-  private bool asyncnotify = notifier is not NoOpChangeNotifier;
   private IFunctionRunner runner = null!;
   private CrmReadFunction crm_read = null!;
   private CrmPromoteFunction crm_promote = null!;
@@ -91,17 +90,10 @@ public class E2EEnvironment(
     
     var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
     
-    TestingUtcDate.DoTick();
-    await runner.RunFunction(crm_read, trigger);
+    await RunFuncAndWait(crm_read);
+    await RunFuncAndWait(fin_read);
     
-    if (asyncnotify) await Task.Delay(storage.SimulationPostFunctionRunDelayMs);
-    
-    TestingUtcDate.DoTick();
-    await runner.RunFunction(fin_read, trigger);
-    
-    if (asyncnotify) {
-      await Task.Delay(storage.SimulationPostFunctionRunDelayMs);
-    } else {
+    if (notifier is NoOpChangeNotifier) {
       // if not using notifier, then manually call promoters and writers
       await runner.RunFunction(crm_promote, trigger);
       await runner.RunFunction(fin_promote, trigger);
@@ -111,6 +103,12 @@ public class E2EEnvironment(
     
     ctx.Debug($"Epoch: [{epoch}] functions completed - validating");
     await ValidateEpoch();
+
+    async Task RunFuncAndWait(IRunnableFunction func) {
+      TestingUtcDate.DoTick();
+      await runner.RunFunction(func, trigger);
+      while (runner.Running) { await Task.Delay(25); }
+    }
   }
 
   private void RandomTimeStep() => TestingUtcDate.DoTick(new TimeSpan(Rng.Next(0, 2), Rng.Next(0, 24), Rng.Next(0, 60), Rng.Next(0, 60)));

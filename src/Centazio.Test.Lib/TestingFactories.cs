@@ -132,7 +132,7 @@ public class InstantChangesNotifier : IChangesNotifier {
   private IFunctionRunner? runner;
   private List<IRunnableFunction> functions = null!;
   
-  public bool Running => runner is not null && runner.Running;
+  public bool Running { get; private set; }
 
   public void Init(List<IRunnableFunction> funcs) {
     functions = funcs;
@@ -148,6 +148,8 @@ public class InstantChangesNotifier : IChangesNotifier {
     
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
     var totrigger = NotifierUtils.GetFunctionToTriggersPairs(triggers, functions);
-          foreach (var pair in totrigger) { await runner.RunFunction(pair.Key, pair.Value); }
+    Running = true;
+    try { await totrigger.Select(pair => runner.RunFunction(pair.Key, pair.Value)).Synchronous(); } 
+    finally { Running = false; }
   }
 }
