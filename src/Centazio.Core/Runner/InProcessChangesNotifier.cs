@@ -27,13 +27,12 @@ public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
     });
   }
   
-  public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
-    if (!objs.Any()) return Task.CompletedTask;
+  public async Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
+    if (!objs.Any()) return;
     
     Running = true;
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
     await pubsub.Writer.WriteAsync(triggers); // returns immediately (not async for unbounded channels)
-    return Task.CompletedTask;
   }
 
   public void Dispose() {
