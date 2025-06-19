@@ -22,9 +22,11 @@ public class AwsEventBridgeChangesNotifierTests {
     var localstack = new LocalStackBuilder()
         .WithImage("localstack/localstack:latest")
         .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock") // Mount Docker
+        .WithEnvironment("DEBUG", "1")
         .Build();
     await localstack.StartAsync().ConfigureAwait(false);
-
+    
+    var start =  DateTime.Now;
     var serverurl = localstack.GetConnectionString();
     var creds = new BasicAWSCredentials("test", "test");
     var lambda = new AmazonLambdaClient(creds, new AmazonLambdaConfig { ServiceURL = serverurl });
@@ -45,11 +47,16 @@ public class AwsEventBridgeChangesNotifierTests {
     await DeleteEventBusIfExistsAsync(evbridge, AwsEventBridgeChangesNotifier.EVENT_BUS_NAME);
     
     var func = new DummyRunnableFunction();
-    
     await notifier.Setup(func);
     await notifier.Notify(func.System, LifecycleStage.Defaults.Read, [func.SystemEntityTypeName]);
-
-    //TODO CP check if the lambda is called via the event bridge
+    
+    // Wait for the Lambda function to be invoked and the logs to be available
+    await Task.Delay(70000);
+    
+    var (stdout, _) = await localstack.GetLogsAsync(start, default, false);
+    Assert.That(stdout, Does.Contain("AWS events.PutEvents => 200"));
+    Assert.That(stdout, Does.Contain("Lambda invoked with event"));
+    Assert.That(stdout, Does.Contain("'detail': {'System': 'dummyfunction', 'Stage': 'read', 'Object': 'testsetypnm'}"));
   }
 
   private static async Task DeleteDummyFunctionIfExists(AmazonLambdaClient lambda, string funcnm) {
@@ -93,7 +100,6 @@ def lambda_handler(event, context):
       try {
         var response = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
         if (response.Configuration.State == State.Failed) {
-          Console.WriteLine($"Function failed reason: {response.Configuration.StateReason}");
           throw new InvalidOperationException($"Function is in failed state: {response.Configuration.StateReason}");
         }
         if (response.Configuration.State != State.Pending ) break;
