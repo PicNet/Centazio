@@ -39,4 +39,3 @@ jobs:
 
     - name: dotnet test
       run: dotnet test tests/Centazio.Cli.Tests --no-build --verbosity detailed
-
