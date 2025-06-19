@@ -17,6 +17,10 @@ public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, Amaz
   public const string SOURCE_NAME = "centazio";
   public const string EVENT_BUS_NAME = "centazio-event-bus";
   public const string ENV_SETUP = "ENV_SETUP";
+  
+  // todo CP: implement
+  public bool Running { get; }
+  
   public void Init(List<IRunnableFunction> functions) { }
   public Task Run(IFunctionRunner runner) => throw new NotImplementedException();
 
@@ -103,7 +107,9 @@ public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, Amaz
           Stage = new[] { trigger.Stage.Value.ToLower() },
           Object = new[] { trigger.Object.Value.ToLower() }
         }
-      }).Replace("detailType", "detail-type"), // todo CP: use template
+      }).Replace("detailType", "detail-type"),
+      // todo GT: use ITemplater, but this class is initiated outside of the DI framework, so consider a better factory method for the Notifiers
+      // todo CP: once ITemplater is fixed, CP to implement this using a template
       State = RuleState.ENABLED,
       Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
       EventBusName = EVENT_BUS_NAME

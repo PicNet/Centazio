@@ -2,17 +2,18 @@
 
 public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChangesNotifier notifier, Action runningfunc) : IFunctionRunner {
 
-  public bool Running => runner.Running;
+  public bool Running => runner.Running || notifier.Running;
 
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
     await notifier.Setup(func);
-    
+
+    // todo GT: replace Action runningfunc with events instead?
     runningfunc(); // notify that we are running a function
-    
+  
     var results = await runner.RunFunction(func, triggers);
     var wcounts = results.OpResults.Where(r => r.Result.ChangedCount > 0).ToList();
     if (!wcounts.Any()) return results;
-    
+  
     // notify in bg thread to ensre the current running function completes before new functions start
     _ = Task.Run(async () => {
       await Task.Delay(1);
@@ -20,5 +21,4 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
     });
     return results;
   }
-
 }

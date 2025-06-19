@@ -3,6 +3,7 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
+using Serilog.Events;
 
 namespace Centazio.Core.Tests.Runner;
 
@@ -12,7 +13,6 @@ public class InProcessChangesNotifierTests {
   private readonly LifecycleStage stage2 = new("stage2");
 
   [Test] public async Task Test_notification_works() {
-    // todo GT: why is this so flaky on GHA?
     var func = new Func(stage2, [new(C.System1Name, new (stage1), C.SystemEntityName)]);
     
     var notif = new InProcessChangesNotifier();
@@ -22,9 +22,11 @@ public class InProcessChangesNotifierTests {
     
     var notifications = 10;
     await Enumerable.Range(0, notifications).Select(async _ => {
+      TestingUtcDate.DoTick();
       await notif.Notify(C.System1Name, stage1, [C.SystemEntityName]);
       TestingUtcDate.DoTick();
-      await Task.Delay(Env.IsGitHubActions ? 1000 : 50);
+      while (runner.Running) { await Task.Delay(25); }
+      TestingUtcDate.DoTick();
     }).Synchronous();
     
     Assert.That(func.RunCount, Is.EqualTo(notifications));
@@ -60,12 +62,15 @@ public class InProcessChangesNotifierTests {
     public bool Running { get; private set; }
 
     public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
-      Running = true;
-      var results = new List<OpResultAndObject>();
-      await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), triggers, results);
-      await notif.Notify(func.System, func.Stage, results.Select(c => c.Object).Distinct().ToList());
-      Running = false;
-      return new SuccessFunctionRunResults(results);
+      try {
+        Running = true;
+        var results = new List<OpResultAndObject>();
+        await func.RunFunctionOperations(SystemState.Create(C.System1Name, func.Stage), triggers, results);
+        await notif.Notify(func.System, func.Stage, results.Select(c => c.Object).Distinct().ToList());
+        return new SuccessFunctionRunResults(results);
+      } finally { 
+        Running = false; 
+      }
     }
 
   }

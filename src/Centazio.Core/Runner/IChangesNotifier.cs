@@ -2,15 +2,18 @@
 
 // todo CP: consider Setup and Init usages, init is using for the in-process notifier but setup using for the cloud notifier 
 public interface IChangesNotifier {
+  bool Running { get; }
   void Init(List<IRunnableFunction> functions);
   Task Run(IFunctionRunner runner);
   Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs);
-  // todo CP: what is this Setup method and why does it have to be called on every function run?
+  // todo CP: what is this Setup method and why does it have to be called on every
+  //    function run?  Please get a reproduceable environment and show GT
   Task Setup(IRunnableFunction func);
 
 }
 
 public static class NotifierUtils {
+  // todo GT: change return type from dictionary to List<OfSomethingMeaningful>
   public static Dictionary<IRunnableFunction, List<FunctionTrigger>> GetFunctionToTriggersPairs(List<ObjectChangeTrigger> triggers, List<IRunnableFunction> functions) {
     var totrigger = new Dictionary<IRunnableFunction, List<FunctionTrigger>>();
     triggers.ForEach(trigger => {

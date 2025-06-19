@@ -21,7 +21,7 @@ public class AwsEventBridgeChangesNotifierTests {
   [Test] public async Task Test_setup_event_bridge() {
     var localstack = new LocalStackBuilder()
         .WithImage("localstack/localstack:latest")
-        .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock") // Mount Docker
+        .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
         .WithEnvironment("DEBUG", "1")
         .Build();
     await localstack.StartAsync().ConfigureAwait(false);
@@ -71,15 +71,14 @@ public class AwsEventBridgeChangesNotifierTests {
     using (var memoryStream = new MemoryStream()) {
       using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
         var entry = archive.CreateEntry("lambda_function.py");
-        await using (var entryStream = entry.Open())
-        await using (var streamWriter = new StreamWriter(entryStream, Encoding.UTF8)) {
-          streamWriter.Write(@"
+        await using var entryStream = entry.Open();
+        await using var streamWriter = new StreamWriter(entryStream, Encoding.UTF8);
+        await streamWriter.WriteAsync(@"
 def lambda_handler(event, context):
   print(f""Lambda invoked with event: {event}"")
   message = event.get('message', 'No message provided')
   return { 'statusCode': 200, 'message': f'Received: {message}' }
 ");
-        }
       }
 
       zipFileBytes = memoryStream.ToArray();
