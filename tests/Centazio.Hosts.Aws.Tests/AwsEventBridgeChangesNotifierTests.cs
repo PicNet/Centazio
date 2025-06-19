@@ -21,7 +21,7 @@ public class AwsEventBridgeChangesNotifierTests {
   [Test] public async Task Test_setup_event_bridge() {
     var localstack = new LocalStackBuilder()
         .WithImage("localstack/localstack:latest")
-        .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock") // Mount Docker
+        .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
         .Build();
     await localstack.StartAsync().ConfigureAwait(false);
 
@@ -93,7 +93,6 @@ def lambda_handler(event, context):
       try {
         var response = await lambda.GetFunctionAsync(new GetFunctionRequest { FunctionName = funcnm });
         if (response.Configuration.State == State.Failed) {
-          Console.WriteLine($"Function failed reason: {response.Configuration.StateReason}");
           throw new InvalidOperationException($"Function is in failed state: {response.Configuration.StateReason}");
         }
         if (response.Configuration.State != State.Pending ) break;

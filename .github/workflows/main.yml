@@ -12,31 +12,29 @@ jobs:
     timeout-minutes: 30
 
     steps:
-    - name: Checkout code
+    - name: checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET SDK
+    - name: setup .net sdk
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
         dotnet-quality: preview
 
-    - name: Check Docker version
-      run: docker version
-
-    - name: Upgrade Azure CLI
+    - name: print docker version
+      run: docker version    
+      
+    - name: upgrade azure cli
       run: az upgrade --yes
+      
+    - name: upgrade azure function core tools
+      run: sudo apt-get install azure-functions-core-tools-4
 
     - name: dotnet info
       run: dotnet --info
-
-    # note this `dotnet restore` is required even though there should 
-    #   be [implicit restore](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build#implicit-restore)
-    - name: dotnet restore
-      run: dotnet restore --verbosity normal
       
     - name: dotnet build
-      run: dotnet build --configuration Debug --verbosity normal --no-restore
+      run: dotnet build --configuration Debug --verbosity normal
 
     - name: dotnet test
       run: dotnet test --no-restore --no-build

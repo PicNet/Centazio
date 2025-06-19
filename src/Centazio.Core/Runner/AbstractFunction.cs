@@ -13,6 +13,7 @@ public interface IRunnableFunction : IDisposable {
   bool Running { get; }
   FunctionConfig Config { get; }
   
+  // todo GT: rename trigger -> triggers
   Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults);
   
   bool IsTriggeredBy(ObjectChangeTrigger trigger);
