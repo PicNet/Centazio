@@ -48,12 +48,12 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 
   protected abstract FunctionConfig GetFunctionConfiguration();
 
-  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
       var opstates = await LoadOperationsStates(Config, sys, ctl);
-      var readyops = GetReadyOperations(opstates, triggers);
+      var readyops = GetReadyOperations(opstates, triggeredby);
       await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }

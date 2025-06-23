@@ -18,8 +18,8 @@ public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
         Running = true;
         try {
           while (pubsub.Reader.TryRead(out var triggers)) { // not async, and will read all triggers in the channel
-            var totrigger = NotifierUtils.GetFunctionToTriggersPairs(triggers, functions);
-            await totrigger.Select(pair => runner.RunFunction(pair.Key, pair.Value)).Synchronous();
+            var totrigger = NotifierUtils.GetFunctionsThatAreTriggeredByTriggers(triggers, functions);
+            await totrigger.Select(func => runner.RunFunction(func.Function, func.ResponsibleTriggers)).Synchronous();
           }
         }
         finally { Running = false; }

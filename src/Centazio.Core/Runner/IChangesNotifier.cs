@@ -13,16 +13,18 @@ public interface IChangesNotifier {
 }
 
 public static class NotifierUtils {
-  // todo GT: change return type from dictionary to List<OfSomethingMeaningful>
-  public static Dictionary<IRunnableFunction, List<FunctionTrigger>> GetFunctionToTriggersPairs(List<ObjectChangeTrigger> triggers, List<IRunnableFunction> functions) {
-    var totrigger = new Dictionary<IRunnableFunction, List<FunctionTrigger>>();
+  public static List<FunctionBeingTriggered> GetFunctionsThatAreTriggeredByTriggers(List<ObjectChangeTrigger> triggers, List<IRunnableFunction> functions) {
+    var totrigger = new Dictionary<IRunnableFunction, FunctionBeingTriggered>();
     triggers.ForEach(trigger => {
       var funcs = functions.Where(func => func.IsTriggeredBy(trigger)).ToList();
       funcs.ForEach(func => {
-        if (!totrigger.ContainsKey(func)) totrigger[func] = [];
-        totrigger[func].Add(trigger);
+        var fbt = totrigger.TryGetValue(func, out var value) ? value : new (func, []);
+        fbt.ResponsibleTriggers.Add(trigger);
+        totrigger[func] = fbt;
       });
     });
-    return totrigger;
+    return totrigger.Values.ToList();
   }
 }
+
+public record FunctionBeingTriggered(IRunnableFunction Function, List<FunctionTrigger> ResponsibleTriggers);

@@ -147,9 +147,9 @@ public class InstantChangesNotifier : IChangesNotifier {
     if (runner is null) throw new Exception();
     
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
-    var totrigger = NotifierUtils.GetFunctionToTriggersPairs(triggers, functions);
+    var totrigger = NotifierUtils.GetFunctionsThatAreTriggeredByTriggers(triggers, functions);
     Running = true;
-    try { await totrigger.Select(pair => runner.RunFunction(pair.Key, pair.Value)).Synchronous(); } 
+    try { await totrigger.Select(func => runner.RunFunction(func.Function, func.ResponsibleTriggers)).Synchronous(); } 
     finally { Running = false; }
   }
 }
