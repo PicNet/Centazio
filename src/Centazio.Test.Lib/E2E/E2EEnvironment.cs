@@ -89,17 +89,17 @@ public class E2EEnvironment(
     
     ctx.Debug($"Epoch: [{epoch}] simulation step completed - running functions");
     
-    var trigger = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
+    var triggers = new List<FunctionTrigger> { new TimerChangeTrigger(nameof(E2EEnvironment)) };
     
     await RunFuncAndWait(crm_read);
     await RunFuncAndWait(fin_read);
     
     if (notifier is NoOpChangeNotifier) {
       // if not using notifier, then manually call promoters and writers
-      await runner.RunFunction(crm_promote, trigger);
-      await runner.RunFunction(fin_promote, trigger);
-      await runner.RunFunction(crm_write, trigger);
-      await runner.RunFunction(fin_write, trigger);
+      await runner.RunFunction(crm_promote, triggers);
+      await runner.RunFunction(fin_promote, triggers);
+      await runner.RunFunction(crm_write, triggers);
+      await runner.RunFunction(fin_write, triggers);
     }
     
     ctx.Debug($"Epoch: [{epoch}] functions completed - validating");
@@ -107,7 +107,7 @@ public class E2EEnvironment(
 
     async Task RunFuncAndWait(IRunnableFunction func) {
       TestingUtcDate.DoTick();
-      await runner.RunFunction(func, trigger);
+      await runner.RunFunction(func, triggers);
       while (runner.Running) { await Task.Delay(25); }
     }
   }

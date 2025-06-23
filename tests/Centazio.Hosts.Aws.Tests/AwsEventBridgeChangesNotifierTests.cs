@@ -137,7 +137,7 @@ public class DummyRunnableFunction : IRunnableFunction {
   public LifecycleStage Stage => LifecycleStage.Defaults.Read;
   public bool Running => false;
   public FunctionConfig Config { get; }
-  public Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults) { throw new NotImplementedException(); }
+  public Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults) { throw new NotImplementedException(); }
   public bool IsTriggeredBy(ObjectChangeTrigger trigger) { throw new NotImplementedException(); }
 }
 

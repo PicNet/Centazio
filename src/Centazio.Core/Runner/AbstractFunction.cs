@@ -13,8 +13,7 @@ public interface IRunnableFunction : IDisposable {
   bool Running { get; }
   FunctionConfig Config { get; }
   
-  // todo GT: rename trigger -> triggers
-  Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> trigger, List<OpResultAndObject> runningresults);
+  Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults);
   
   bool IsTriggeredBy(ObjectChangeTrigger trigger);
   
@@ -49,12 +48,12 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
 
   protected abstract FunctionConfig GetFunctionConfiguration();
 
-  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults) {
     if (Running) throw new Exception("function is already running");
     (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
     try {
       var opstates = await LoadOperationsStates(Config, sys, ctl);
-      var readyops = GetReadyOperations(opstates, triggeredby);
+      var readyops = GetReadyOperations(opstates, triggers);
       await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
     } finally { Running = false; }
   }
