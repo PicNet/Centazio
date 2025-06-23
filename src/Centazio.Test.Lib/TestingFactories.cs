@@ -125,7 +125,7 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
 }
 
-public class InstantChangesNotifier : IChangesNotifier {
+public class InstantChangesNotifier : IMonitorableChangesNotifier {
 
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
 

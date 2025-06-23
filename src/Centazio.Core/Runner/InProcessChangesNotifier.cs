@@ -2,7 +2,7 @@
 
 namespace Centazio.Core.Runner;
 
-public class InProcessChangesNotifier : IChangesNotifier, IDisposable {
+public class InProcessChangesNotifier : IMonitorableChangesNotifier, IDisposable {
 
   private readonly Channel<List<ObjectChangeTrigger>> pubsub = Channel.CreateUnbounded<List<ObjectChangeTrigger>>();
   private List<IRunnableFunction> functions = null!;

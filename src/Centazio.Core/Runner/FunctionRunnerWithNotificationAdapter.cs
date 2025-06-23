@@ -4,8 +4,9 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
   
   private int trackerid;
   private bool running;
-  public bool Running => running || notifier.Running || runner.Running;
-  
+  public bool Running => running 
+      || ((notifier as IMonitorableChangesNotifier)?.Running ?? false)
+      || runner.Running;
   public event EventHandler<FunctionRunningEventArgs>? OnFunctionRunning;
   
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
