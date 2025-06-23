@@ -1,18 +1,19 @@
 ﻿namespace Centazio.Core.Runner;
 
-public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChangesNotifier notifier, Action runningfunc) : IFunctionRunner {
+public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChangesNotifier notifier) : IFunctionRunner {
   
+  private int trackerid;
   private bool running;
   public bool Running => running || notifier.Running || runner.Running;
-
-  private int trackerid;
+  
+  public event EventHandler<FunctionRunningEventArgs>? OnFunctionRunning;
+  
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
     var thisid = ++trackerid;
     running = true;
     await notifier.Setup(func);
 
-    // todo GT: replace Action runningfunc with events instead?
-    runningfunc(); // notify that we are running a function
+    OnFunctionRunning?.Invoke(this, new FunctionRunningEventArgs(func.GetType(), triggers));
   
     var results = await runner.RunFunction(func, triggers);
     var wcounts = results.OpResults.Where(r => r.Result.ChangedCount > 0).ToList();
@@ -32,5 +33,10 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
       }
     });
     return results;
+  }
+  
+  public class FunctionRunningEventArgs(Type func, List<FunctionTrigger> triggers) : EventArgs {
+    public Type FunctionType { get; private set; } = func;
+    public IReadOnlyList<FunctionTrigger> Triggers { get; private set; } = triggers.AsReadOnly();
   }
 }

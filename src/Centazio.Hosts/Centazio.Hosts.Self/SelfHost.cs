@@ -48,7 +48,7 @@ public class SelfHostCentazioEngineAdapter(CentazioSettings settings, List<strin
     registrar.Register<IChangesNotifier>(notifier);
     registrar.Register<IFunctionRunner>(prov => {
       var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings);
-      return new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
+      return new FunctionRunnerWithNotificationAdapter(inner, notifier);
     });
   }
 }

@@ -18,7 +18,7 @@ public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, Amaz
   public const string EVENT_BUS_NAME = "centazio-event-bus";
   public const string ENV_SETUP = "ENV_SETUP";
   
-  // todo CP: implement
+  // todo GT: this should not be mandatory as it should only be used for testing, as such should be removed from main interface/absrtact class
   public bool Running { get; }
   
   public void Init(List<IRunnableFunction> functions) { }

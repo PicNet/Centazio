@@ -27,7 +27,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     registrar.Register(notifier);
     registrar.Register<IFunctionRunner>(prov => {
       var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings);
-      return new FunctionRunnerWithNotificationAdapter(inner, notifier, () => {});
+      return new FunctionRunnerWithNotificationAdapter(inner, notifier);
     });
 
   }

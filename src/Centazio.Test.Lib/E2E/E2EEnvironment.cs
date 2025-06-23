@@ -20,7 +20,7 @@ public class E2EEnvironment(
   private CrmApi crm = null!;
   private FinApi fin = null!;
   
-  private IFunctionRunner runner = null!;
+  private FunctionRunnerWithNotificationAdapter runner = null!;
   private CrmReadFunction crm_read = null!;
   private CrmPromoteFunction crm_promote = null!;
   private CrmWriteFunction crm_write = null!;
@@ -39,7 +39,8 @@ public class E2EEnvironment(
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
     notifier.Init([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
-    runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier, () => TestingUtcDate.DoTick());
+    runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
+    runner.OnFunctionRunning += (_, _) => TestingUtcDate.DoTick();
     _ = notifier.Run(runner);
   }
 

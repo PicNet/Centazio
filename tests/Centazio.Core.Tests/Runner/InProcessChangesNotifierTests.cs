@@ -3,7 +3,6 @@ using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Write;
 using Centazio.Test.Lib;
-using Serilog.Events;
 
 namespace Centazio.Core.Tests.Runner;
 
@@ -17,7 +16,7 @@ public class InProcessChangesNotifierTests {
     
     var notif = new InProcessChangesNotifier();
     notif.Init([func]);
-    var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif, () => {});
+    var runner = new FunctionRunnerWithNotificationAdapter(new Runner(notif), notif);
     _ = notif.Run(runner);
     
     var notifications = 10;

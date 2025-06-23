@@ -83,7 +83,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   
   protected abstract Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids);
 
-  public class EntityUpsertEventArgs(CoreEntityAndMeta entity) : EventArgs {
+  protected class EntityUpsertEventArgs(CoreEntityAndMeta entity) : EventArgs {
     public CoreEntityAndMeta Entity { get; private set; } = entity;
   }
 }
