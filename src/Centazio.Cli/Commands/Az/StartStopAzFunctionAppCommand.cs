@@ -1,5 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog.Events;
 using Spectre.Console.Cli;

@@ -11,7 +11,7 @@ public class GenerateSettingTypesCommand(ITemplater templater) : AbstractCentazi
   public override async Task ExecuteImpl(CommonSettings cmdsetts) {
     if (!Env.IsInDev) throw new Exception($"{GetType().Name} should not be accessible outside of the Centazio dev environment");
     var dir = FsUtils.GetCentazioPath("src", "Centazio.Core", "Settings");
-    var schema = JsonNode.Parse(Json.ReadFile(Path.Combine(dir, "settings_schema.json"))) ?? throw new Exception();
+    var schema = JsonNode.Parse(await Json.ReadFile(Path.Combine(dir, "settings_schema.json"))) ?? throw new Exception();
 
     var sb = new StringBuilder();
     new SettingsClassGenerator(schema.AsObject(), sb, templater).GenerateClasses();

@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Aws;
-using Centazio.Core;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;

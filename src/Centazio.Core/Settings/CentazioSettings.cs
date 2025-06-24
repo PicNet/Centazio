@@ -34,21 +34,6 @@ public record CentazioSettings {
     _CtlRepository = other._CtlRepository;
     _CoreStorage = other._CoreStorage;
   }
-  
-  public string GetSecretsFolder() {
-    if (SecretsLoaderSettings.Provider != "File") throw new Exception("GetSecretsFolder() should not be called when the Secrets.Provider is not 'File'");
-    return Env.IsInDev ? 
-        ValidateDirectory(SecretsLoaderSettings.SecretsFolder) : 
-        Environment.CurrentDirectory;
-    
-    string ValidateDirectory(string? directory) {
-      if (String.IsNullOrWhiteSpace(directory)) throw new Exception($"When Secrets.Provider is 'File' then `SecretsFolder` is required");
-      var path = Path.IsPathFullyQualified(directory) ? directory : FsUtils.GetCentazioPath(directory);
-      return Directory.Exists(path) 
-          ? path 
-          : throw new Exception($"Could not find a valid directory at path: {path}");
-    }
-  }
 
   public virtual Dto ToDto() => new() {
     SecretsLoaderSettings = SecretsLoaderSettings.ToDto(),

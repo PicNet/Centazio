@@ -1,6 +1,5 @@
 ﻿using Azure.Identity;
 using Azure.ResourceManager;
-using Centazio.Core;
 using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 

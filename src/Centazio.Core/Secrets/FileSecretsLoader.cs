@@ -12,7 +12,7 @@ public class FileSecretsLoader(CentazioSettings settings) : AbstractSecretsLoade
   }
 
   public string? GetSecretsFilePath(string environment, bool required) {
-    var path = Path.Combine(settings.GetSecretsFolder(), $"{environment}.env");
+    var path = Path.Combine(settings.SecretsLoaderSettings.GetSecretsFolder(), $"{environment}.env");
     return File.Exists(path) ? path : !required ? null : throw new FileNotFoundException(path);
   }
 }

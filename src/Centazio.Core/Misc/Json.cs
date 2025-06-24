@@ -134,8 +134,8 @@ public static class Json {
     throw new Exception($"Expected json representations to be equivalent:\n{aname}: {actualjson}\n{bname}: {expjson}");
   }
 
-  public static string ReadFile(string file) => Regex.Replace(File.ReadAllText(file), "// .*", String.Empty);
-  public static Stream ReadFileAsStream(string file) => new MemoryStream(Encoding.UTF8.GetBytes(ReadFile(file)));
+  public static async Task<string> ReadFile(string file) => Regex.Replace(await File.ReadAllTextAsync(file), "// .*", String.Empty);
+  public static async Task<Stream> ReadFileAsStream(string file) => new MemoryStream(Encoding.UTF8.GetBytes(await ReadFile(file)));
 
   private static List<PropPair> GetPropPairs(Type baset, Type dtot) {
     var dtoprops = dtot.GetProperties();

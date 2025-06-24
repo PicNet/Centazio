@@ -1,5 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Secrets;
+﻿using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Az;

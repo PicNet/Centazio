@@ -1,5 +1,4 @@
-﻿using Centazio.Core;
-using Centazio.Core.Settings;
+﻿using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
 using Centazio.Hosts.Self;
 using Microsoft.Extensions.DependencyInjection;

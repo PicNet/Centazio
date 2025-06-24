@@ -1,5 +1,4 @@
 ﻿using Centazio.Cli.Infra.Az;
-using Centazio.Core;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog.Events;

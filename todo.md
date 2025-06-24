@@ -26,7 +26,6 @@
 
 - `./centazio az func logs Centazio.Sample.AppSheet` not working with `Unable to find the "picnet-centazio" profile` error
 
-- GT: have prettier running before push to standardise coding style
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
 - Centazio func-func trigger test: 
   - all hosts

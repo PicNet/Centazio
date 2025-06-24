@@ -49,18 +49,18 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     }).OfType<string>().ToList();
   }
   
-  public Task<T> Load<T>(params List<string> environments) {
+  public async Task<T> Load<T>(params List<string> environments) {
     var files = GetSettingsFilePathList(environments);
     Log.Information($"loading setting files[{String.Join(',', files.Select(f => f.Split(Path.DirectorySeparatorChar).Last()))}] environments[{String.Join(',', environments)}]");
     
     var builder = new ConfigurationBuilder();
-    files.ForEach(file => builder.AddJsonStream(Json.ReadFileAsStream(file)));
+    await files.Select(async file => builder.AddJsonStream(await Json.ReadFileAsStream(file))).Synchronous();
     
     var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
     var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
-    var settings = builder.Build(); 
-    settings.Bind(obj);
-    return Task.FromResult(dtot is null ? (T) obj : ((IDto<T>)obj).ToBase());
+    var root = builder.Build(); 
+    root.Bind(obj);
+    return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
   }
 
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 

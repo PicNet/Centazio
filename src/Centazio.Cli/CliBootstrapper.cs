@@ -3,7 +3,6 @@ using Centazio.Cli.Commands;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Gen;
-using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;

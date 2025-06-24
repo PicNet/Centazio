@@ -1,11 +1,11 @@
-﻿using Centazio.Core;
-using Centazio.Core.Secrets;
+﻿using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Dev;
 
+// todo GT: this is not working as it requires secrets to be loaded and the point of this is to load the secrets from aws
 public class LoginToAwsAndAzCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets,
     [FromKeyedServices(CentazioConstants.Hosts.Aws)] AwsSettings coresettings,

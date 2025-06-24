@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Centazio.Core;
 using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
