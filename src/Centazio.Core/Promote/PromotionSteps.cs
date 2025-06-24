@@ -130,18 +130,14 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public async Task UpdateCoreAndCtlTables() {
     if (IsEmpty()) return;
 
-    await using var coretrans = await core.BeginTransaction();
-    // todo GT: add transaction to CtlRepo
-    // using var ctltrans = await ctl.BeginTransaction(); 
-    
+    await using var t1 = await core.BeginTransaction();
+    // await using var t2 = await ctl.BeginTransaction(); // todo GT: add transaction 
     await Task.WhenAll(
         core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
         ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
         ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
         ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList()));
 
-    // await ctltrans.Commit();
-    
     EntityChange BagToEntityChange(PromotionBag bag) {
       var (meta, old, @new) = (bag.CoreEntityAndMeta.Meta, bag.PreExistingCoreEntityAndMeta?.CoreEntity, bag.CoreEntityAndMeta.CoreEntity);
       return EntityChange.Create(bag.CoreEntityAndMeta.Meta.CoreEntityTypeName, meta.CoreId, meta.LastUpdateSystem, meta.OriginalSystemType, meta.LastUpdateSystemId, old, @new);

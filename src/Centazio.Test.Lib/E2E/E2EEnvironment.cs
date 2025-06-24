@@ -108,7 +108,7 @@ public class E2EEnvironment(
     async Task RunFuncAndWait(IRunnableFunction func) {
       TestingUtcDate.DoTick();
       await runner.RunFunction(func, triggers);
-      while (runner.Running) { await Task.Delay(25); }
+      await AsyncUtils.ConditionalDelay(() => runner.Running);
     }
   }
 

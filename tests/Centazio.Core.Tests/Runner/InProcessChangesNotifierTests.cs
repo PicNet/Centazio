@@ -24,7 +24,7 @@ public class InProcessChangesNotifierTests {
       TestingUtcDate.DoTick();
       await notif.Notify(C.System1Name, stage1, [C.SystemEntityName]);
       TestingUtcDate.DoTick();
-      while (runner.Running) { await Task.Delay(25); }
+      await AsyncUtils.ConditionalDelay(() => runner.Running);
       TestingUtcDate.DoTick();
     }).Synchronous();
     
