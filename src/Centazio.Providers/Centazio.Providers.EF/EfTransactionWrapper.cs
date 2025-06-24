@@ -4,9 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-// todo GT: onend should be an Event
-public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : IDbTransactionWrapper
+public class EfTransactionWrapper<T>(T db, DbTransaction impl) : IDbTransactionWrapper
     where T : DbContext {
+  public event EventHandler<EventArgs>? OnCommit;
+  public event EventHandler<EventArgs>? OnRollback;
+  public event EventHandler<EventArgs>? OnEnd;
+  
   public T Db => db;
   
   private bool rolledback;
@@ -18,7 +21,9 @@ public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : I
     committed = true;
     await impl.CommitAsync();
     await db.DisposeAsync();
-    onend();
+    
+    OnCommit?.Invoke(this, EventArgs.Empty);
+    OnEnd?.Invoke(this, EventArgs.Empty);
   }
   
   public async Task Rollback() {
@@ -26,6 +31,8 @@ public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : I
     if (rolledback) throw new Exception("transaction has already rolledback");
     rolledback = true;
     await impl.RollbackAsync();
-    onend();
+    
+    OnRollback?.Invoke(this, EventArgs.Empty);
+    OnEnd?.Invoke(this, EventArgs.Empty);
   }
 }

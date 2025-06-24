@@ -15,8 +15,9 @@ public class EfTransactionManager<T>(Func<T> getdb) : IAsyncDisposable
     if (reuse is not null) { return reuse; }
     
     var db = getdb();
-    return transaction = new EfTransactionWrapper<T>(
-        db, (await db.Database.BeginTransactionAsync()).GetDbTransaction(), () => transaction = null);
+    transaction = new EfTransactionWrapper<T>(db, (await db.Database.BeginTransactionAsync()).GetDbTransaction());
+    transaction.OnEnd += (_, _) => transaction = null;
+    return transaction;
   }
   
   public async Task<R> UseDb<R>(DbOperation<T, R> func) {
