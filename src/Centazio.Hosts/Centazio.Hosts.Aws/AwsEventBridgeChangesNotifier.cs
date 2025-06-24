@@ -105,8 +105,6 @@ public class AwsEventBridgeChangesNotifier(AmazonLambdaClient lambdaclient, Amaz
           Object = new[] { trigger.Object.Value.ToLower() }
         }
       }).Replace("detailType", "detail-type"),
-      // todo GT: use ITemplater, but this class is initiated outside of the DI framework, so consider a better factory method for the Notifiers
-      // todo CP: once ITemplater is fixed, CP to implement this using a template
       State = RuleState.ENABLED,
       Description = $"Trigger Lambda on System [{trigger.System}] Stage [{trigger.Stage.Value}] Object [{trigger.Object.Value}]",
       EventBusName = EVENT_BUS_NAME
