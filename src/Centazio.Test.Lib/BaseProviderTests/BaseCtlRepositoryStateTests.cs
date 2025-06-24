@@ -146,28 +146,23 @@ public abstract class BaseCtlRepositoryStateTests {
     var test1 = await GetList();
     
     // commit transaction
-    var trans = await repo.BeginTransaction();
-    await Add1();
-    await trans.Commit();
+    await using (var _ = await repo.BeginTransaction()) {
+      await Add1();
+    }
+    
     var test2 = await GetList();
     
     // rollback transaction
-    var trans2 = await repo.BeginTransaction();
-    await Add1();
-    await trans2.Rollback();
+    await using (var trans2 = await repo.BeginTransaction()) {
+      await Add1();
+      await trans2.Rollback();
+    }
     var test3 = await GetList();
-    
-    // implicit rollback (no commit)
-    var trans3 = await repo.BeginTransaction();
-    await Add1();
-    trans3.Dispose();
-    var test4 = await GetList();
     
     Assert.That(initial, Has.Count.EqualTo(0));
     Assert.That(test1, Has.Count.EqualTo(1));
     Assert.That(test2, Has.Count.EqualTo(2));
     Assert.That(test3, Has.Count.EqualTo(2));
-    Assert.That(test4, Has.Count.EqualTo(2));
     
     Task Add1() => repo.SaveEntityChanges([EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick()))]);
     Task<List<EntityChange>> GetList() => repo.GetEntityChanges(C.CoreEntityName, start);
@@ -180,11 +175,11 @@ public abstract class BaseCtlRepositoryStateTests {
     var created2 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("2"), "n2", "n2", DateOnly.MaxValue), C.System1Name), new("2"), new(Guid.NewGuid().ToString()));
     var result1 = (await repo.CreateSysMap(C.System1Name, C.CoreEntityName, [created1])).Single();
     
-    var trans = await repo.BeginTransaction();
+    await using var trans = await repo.BeginTransaction();
     var result2 = (await repo.CreateSysMap(C.System1Name, C.CoreEntityName, [created2])).Single();
     var updated1 = (await repo.UpdateSysMap(C.System1Name, C.CoreEntityName, [new Map.Updated(result1)])).Single();
     await repo.SaveEntityChanges([EntityChange.Create(C.CoreEntityName, C.CoreE1Id1, C.System1Name, C.SystemEntityName, C.Sys1Id2, null, new EmptyCoreEntity(TestingUtcDate.DoTick()))]);
-    await trans.Commit();
+    
     
     var all = await repo.GetMapsFromSystemIds(C.System1Name, C.CoreEntityName, [new("1"), new("2")]);
     

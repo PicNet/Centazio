@@ -1,6 +1,5 @@
 ﻿namespace Centazio.Core.Misc;
 
-public interface IDbTransactionWrapper : IDisposable {
-  Task Commit();
+public interface IDbTransactionWrapper : IAsyncDisposable {
   Task Rollback();
 }

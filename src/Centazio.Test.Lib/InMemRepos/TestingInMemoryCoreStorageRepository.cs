@@ -57,9 +57,8 @@ public class TestingInMemoryCoreStorageRepository : ITestingCoreStorage {
 }
 
 public class EmptyTransactionWrapper : IDbTransactionWrapper {
-  public void Dispose() {}
   public Task Commit() => Task.CompletedTask;
   public Task Rollback() => Task.CompletedTask;
-  public object GetTransactionImpl() => new EmptyTransactionWrapper();
+  public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
 }

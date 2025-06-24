@@ -130,8 +130,7 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   public async Task UpdateCoreAndCtlTables() {
     if (IsEmpty()) return;
 
-    // todo GT: transaction should use disposable pattern to auto-commit, and remove these Begin/Commit methods
-    using var coretrans = await core.BeginTransaction();
+    await using var coretrans = await core.BeginTransaction();
     // todo GT: add transaction to CtlRepo
     // using var ctltrans = await ctl.BeginTransaction(); 
     
@@ -141,7 +140,6 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
         ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
         ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList()));
 
-    await coretrans.Commit();
     // await ctltrans.Commit();
     
     EntityChange BagToEntityChange(PromotionBag bag) {

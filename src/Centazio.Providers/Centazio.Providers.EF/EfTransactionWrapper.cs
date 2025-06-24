@@ -4,28 +4,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : IDbTransactionWrapper, IAsyncDisposable
+// todo GT: onend should be an Event
+public class EfTransactionWrapper<T>(T db, DbTransaction impl, Action onend) : IDbTransactionWrapper
     where T : DbContext {
   public T Db => db;
   
-  public void Dispose() {
-    db.Dispose();
-    impl.Dispose();
-    onend();
-  }
+  private bool rolledback;
+  private bool committed;
   
   public async ValueTask DisposeAsync() {
-    await db.DisposeAsync();
-    await impl.DisposeAsync();
-    onend();
-  }
-  
-  public async Task Commit() {
+    if (committed) throw new Exception("transaction has already committed");
+    if (rolledback) return;
+    committed = true;
     await impl.CommitAsync();
+    await db.DisposeAsync();
     onend();
   }
   
   public async Task Rollback() {
+    if (committed) throw new Exception("transaction has already committed");
+    if (rolledback) throw new Exception("transaction has already rolledback");
+    rolledback = true;
     await impl.RollbackAsync();
     onend();
   }
