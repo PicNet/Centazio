@@ -131,12 +131,12 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     if (IsEmpty()) return;
 
     await using var t1 = await core.BeginTransaction();
-    // await using var t2 = await ctl.BeginTransaction(); // todo GT: add transaction 
-    await Task.WhenAll(
-        core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList()),
-        ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-        ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList()),
-        ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList()));
+    await using var t2 = await ctl.BeginTransaction(); 
+    
+    await core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList());
+    await ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList());
+    await ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList());
+    await ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList());
 
     EntityChange BagToEntityChange(PromotionBag bag) {
       var (meta, old, @new) = (bag.CoreEntityAndMeta.Meta, bag.PreExistingCoreEntityAndMeta?.CoreEntity, bag.CoreEntityAndMeta.CoreEntity);
