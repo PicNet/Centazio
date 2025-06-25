@@ -48,14 +48,4 @@ public class CommandRunnerTests {
     Assert.That(results.Err, Is.Not.Null);
     Assert.That(results.Out, Is.Not.Null);
   }
-  
-  [Test] public async Task Test_docker() {
-    var results = await cmd.Docker(VERSION);
-    
-    Assert.That(results.Args, Is.EqualTo(VERSION));
-    Assert.That(results.Command, Is.EqualTo("docker"));
-    Assert.That(results.Dir, Is.EqualTo(FsUtils.GetCentazioPath()));
-    Assert.That(results.Err, Is.Not.Null);
-    Assert.That(results.Out, Is.Not.Null);
-  }
 }

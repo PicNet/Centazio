@@ -15,7 +15,6 @@ public interface ICommandRunner {
   Task<CommandResults> Func(string args, string? cwd = null, bool quiet = false, string? input = null);
   Task<CommandResults> Lambda(string args, string? cwd = null, bool quiet = false, string? input = null);
   Task<CommandResults> Aws(string args, string? cwd = null, bool quiet = false, string? input = null);
-  Task<CommandResults> Docker(string args, string? cwd = null, bool quiet = false, string? input = null);
   Task<CommandResults> Run(string cmd, string args, string? cwd = null, bool quiet = false, bool checktool = false, string? input = null);
 }
 
@@ -32,7 +31,6 @@ public class CommandRunner : ICommandRunner {
   public Task<CommandResults> Func(string args, string? cwd = null, bool quiet = false, string? input = null) => Run("func", args, cwd, quiet, input: input);
   public Task<CommandResults> Lambda(string args, string? cwd = null, bool quiet = false, string? input = null) => Run("dotnet-lambda", args, cwd, quiet, input: input);
   public Task<CommandResults> Aws(string args, string? cwd = null, bool quiet = false, string? input = null) => Run("aws", args, cwd, quiet, input: input);
-  public Task<CommandResults> Docker(string args, string? cwd = null, bool quiet = false, string? input = null) => Run("docker", args, cwd, quiet, input: input);
 
   public async Task<CommandResults> Run(string command, string args, string? cwd = null, bool quiet = false, bool checktool = true, string? input = null) {
     // if (newwindow && input is not null) throw new ArgumentException($"CommandRunner does not support `input` when `newwindow=true`"); // at least on linux

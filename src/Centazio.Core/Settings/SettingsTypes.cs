@@ -119,34 +119,6 @@ ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNul
   }
 }
 
-public record DockerSettings {
-
-  
-  public required string Build { get; init; }
-  
-  public required string LogIn { get; init; }
-  
-  public required string Push { get; init; }
-
-  public Dto ToDto() => new() { 
-    Build = Build,
-    LogIn = LogIn,
-    Push = Push,
-  };
-
-  public record Dto : IDto<DockerSettings> { 
-    public string? Build { get; init; }
-    public string? LogIn { get; init; }
-    public string? Push { get; init; }
-
-    public DockerSettings ToBase() => new() { 
-Build = String.IsNullOrWhiteSpace(Build) ? throw new ArgumentNullException(nameof(Build)) : Build.Trim(),
-LogIn = String.IsNullOrWhiteSpace(LogIn) ? throw new ArgumentNullException(nameof(LogIn)) : LogIn.Trim(),
-Push = String.IsNullOrWhiteSpace(Push) ? throw new ArgumentNullException(nameof(Push)) : Push.Trim(),
-    };
-  }
-}
-
 public record ConsoleCommandsSettings {
 
   
@@ -157,15 +129,12 @@ public record ConsoleCommandsSettings {
   public required DotNetSettings DotNet { get; init; }
   
   public required LambdaSettings Lambda { get; init; }
-  
-  public required DockerSettings Docker { get; init; }
 
   public Dto ToDto() => new() { 
     Az = Az.ToDto(),
     Func = Func.ToDto(),
     DotNet = DotNet.ToDto(),
     Lambda = Lambda.ToDto(),
-    Docker = Docker.ToDto(),
   };
 
   public record Dto : IDto<ConsoleCommandsSettings> { 
@@ -173,14 +142,12 @@ public record ConsoleCommandsSettings {
     public FuncSettings.Dto? Func { get; init; }
     public DotNetSettings.Dto? DotNet { get; init; }
     public LambdaSettings.Dto? Lambda { get; init; }
-    public DockerSettings.Dto? Docker { get; init; }
 
     public ConsoleCommandsSettings ToBase() => new() { 
 Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
 Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
 DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
 Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
-Docker = Docker?.ToBase() ?? throw new ArgumentNullException(nameof(Docker)),
     };
   }
 }
