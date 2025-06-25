@@ -30,9 +30,6 @@
         "BuildProject": "build --configuration Release /property:GenerateFullPaths=true",
         "PublishProject": "publish --configuration Release /property:GenerateFullPaths=true"
       },
-      "AwsCmds": {
-        "GetEcrPass": "ecr get-login-password --region {{it.Region}}" 
-      },
       "Lambda": {
         "ShowLogStream": "azure functionapp logstream {{it.AppName}}" 
       },

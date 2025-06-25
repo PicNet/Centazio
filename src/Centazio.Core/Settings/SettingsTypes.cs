@@ -101,24 +101,6 @@ PublishProject = String.IsNullOrWhiteSpace(PublishProject) ? throw new ArgumentN
   }
 }
 
-public record AwsCmdsSettings {
-
-  
-  public required string GetEcrPass { get; init; }
-
-  public Dto ToDto() => new() { 
-    GetEcrPass = GetEcrPass,
-  };
-
-  public record Dto : IDto<AwsCmdsSettings> { 
-    public string? GetEcrPass { get; init; }
-
-    public AwsCmdsSettings ToBase() => new() { 
-GetEcrPass = String.IsNullOrWhiteSpace(GetEcrPass) ? throw new ArgumentNullException(nameof(GetEcrPass)) : GetEcrPass.Trim(),
-    };
-  }
-}
-
 public record LambdaSettings {
 
   
@@ -174,8 +156,6 @@ public record ConsoleCommandsSettings {
   
   public required DotNetSettings DotNet { get; init; }
   
-  public required AwsCmdsSettings AwsCmds { get; init; }
-  
   public required LambdaSettings Lambda { get; init; }
   
   public required DockerSettings Docker { get; init; }
@@ -184,7 +164,6 @@ public record ConsoleCommandsSettings {
     Az = Az.ToDto(),
     Func = Func.ToDto(),
     DotNet = DotNet.ToDto(),
-    AwsCmds = AwsCmds.ToDto(),
     Lambda = Lambda.ToDto(),
     Docker = Docker.ToDto(),
   };
@@ -193,7 +172,6 @@ public record ConsoleCommandsSettings {
     public AzSettings.Dto? Az { get; init; }
     public FuncSettings.Dto? Func { get; init; }
     public DotNetSettings.Dto? DotNet { get; init; }
-    public AwsCmdsSettings.Dto? AwsCmds { get; init; }
     public LambdaSettings.Dto? Lambda { get; init; }
     public DockerSettings.Dto? Docker { get; init; }
 
@@ -201,7 +179,6 @@ public record ConsoleCommandsSettings {
 Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
 Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
 DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
-AwsCmds = AwsCmds?.ToBase() ?? throw new ArgumentNullException(nameof(AwsCmds)),
 Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
 Docker = Docker?.ToBase() ?? throw new ArgumentNullException(nameof(Docker)),
     };
