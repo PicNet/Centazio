@@ -17,8 +17,7 @@
     - function-to-function triggers
       - currently for aws, we are triggering functions once per 'trigger' object.  We are not merging them into a list
     - aws simulate (sam cli local function simulator)
-    - generator is including all functions in assembly, even tho we specify a single function
-    - centazio aws func deploy throwing docker error
+    - generator is including all functions in assembly, even tho we specify a single function    
 - JB: cli:
   - generators needs a bit of work, comments, etc. Do tutorial
   - dotnet tool install testing

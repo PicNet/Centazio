@@ -80,8 +80,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
         new Progress<JSONMessage>(message => {
           if (!string.IsNullOrEmpty(message.Stream)) Log.Information($"Push: {message.Stream}");
           if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.ErrorMessage}");
-        }),
-        CancellationToken.None);
+        }), CancellationToken.None);
 
     Log.Information("Image pushed successfully.");
   }
@@ -123,7 +122,7 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
 
   private async Task<string> GetEcrInputPassword(AmazonECRClient ecr) {
     var res = await ecr.GetAuthorizationTokenAsync(new GetAuthorizationTokenRequest());
-    if (res.AuthorizationData == null || res.AuthorizationData.Count == 0) throw new Exception("Failed to retrieve ECR authorization token.");
+    if (res.AuthorizationData is null || res.AuthorizationData.Count == 0) throw new Exception("Failed to retrieve ECR authorization token.");
     return Encoding.UTF8.GetString(Convert.FromBase64String(res.AuthorizationData[0].AuthorizationToken)).Split(':')[1];
   }
 
