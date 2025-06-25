@@ -68,68 +68,53 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   private async Task BuildAndPushDockerImage(AmazonECRClient ecr, string ecruri, string projnm) {
     var dc = new DockerClientConfiguration(new Uri(OperatingSystem.IsWindows() ? "npipe://./pipe/docker_engine" : "unix:///var/run/docker.sock")).CreateClient();
     
-    var dauth = new AuthConfig {
-      ServerAddress = ecruri,
-      Username = "AWS",
-      Password = await GetEcrInputPassword(ecr)
-    };
+    var dauth = new AuthConfig { ServerAddress = ecruri, Username = "AWS", Password = await GetEcrInputPassword(ecr) };
     var iuri = $"{ecruri}/{projnm}";
 
-    await using var dfstream = CreateDockerContextTarStream(project.SolutionDirPath);
-    await dc.Images.BuildImageFromDockerfileAsync(
-      new ImageBuildParameters { Dockerfile = "Dockerfile", Tags = [iuri] }, 
-      dfstream, [ dauth ], new Dictionary<string, string>(), new Progress<JSONMessage>(message => {
-        if (!string.IsNullOrEmpty(message.Status)) Log.Information($"Build: {message.Status}");
-        if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.Error}");
-      }), CancellationToken.None);
+    await BuildDockerImage(dc, iuri, dauth);
+    await PushDockerImage(dc, iuri, dauth);
+  }
 
-    Log.Information("Image built successfully.");
-    
-    await dc.Images.PushImageAsync(ecruri,
-      new ImagePushParameters(),
-      dauth,
-      new Progress<JSONMessage>(message => {
-        if (!string.IsNullOrEmpty(message.Status)) Log.Information($"Push: {message.Status}");
-        if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.Error}");
-      }),
-      CancellationToken.None);
+  private static async Task PushDockerImage(DockerClient dc, string iuri, AuthConfig dauth) {
+    await dc.Images.PushImageAsync(iuri, new ImagePushParameters(), dauth,
+        new Progress<JSONMessage>(message => {
+          if (!string.IsNullOrEmpty(message.Stream)) Log.Information($"Push: {message.Stream}");
+          if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.ErrorMessage}");
+        }),
+        CancellationToken.None);
 
     Log.Information("Image pushed successfully.");
   }
-  
-  private Stream CreateDockerContextTarStream(string contextPath)
-{
-    var tarStream = new MemoryStream();
-    using (var tarArchive = new TarOutputStream(tarStream, Encoding.UTF8))
-    {
-        tarArchive.IsStreamOwner = false; // Important: Don't dispose the underlying stream
 
-        // Add files from the context directory
-        var filePaths = Directory.GetFiles(contextPath, "*.*", SearchOption.AllDirectories);
-        foreach (var filePath in filePaths)
-        {
-            var relativePath = Path.GetRelativePath(contextPath, filePath)
-                .Replace('\\', '/'); // Use forward slashes for Docker
+  private async Task BuildDockerImage(DockerClient dc, string iuri, AuthConfig dauth) {
+    await using var dfstream = CreateDockerContextTarStream(project.SolutionDirPath);
+    await dc.Images.BuildImageFromDockerfileAsync(
+        new ImageBuildParameters { Dockerfile = "Dockerfile", Tags = [iuri] }, 
+        dfstream, [ dauth ], new Dictionary<string, string>(), new Progress<JSONMessage>(message => {
+          if (!string.IsNullOrEmpty(message.Stream)) Log.Information($"Build: {message.Stream}");
+          if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.ErrorMessage}");
+        }), CancellationToken.None);
 
-            var entry = TarEntry.CreateEntryFromFile(filePath);
-            entry.Name = relativePath;
+    Log.Information("Image built successfully.");
+  }
 
-            // Write the entry header
-            tarArchive.PutNextEntry(entry);
+  private Stream CreateDockerContextTarStream(string cpath) {
+    var stream = new MemoryStream();
+    using (var tarArchive = new TarOutputStream(stream, Encoding.UTF8)) {
+      tarArchive.IsStreamOwner = false;
+      foreach (var path in Directory.GetFiles(cpath, "*.*", SearchOption.AllDirectories).Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))) {
+        var relativePath = Path.GetRelativePath(cpath, path).Replace('\\', '/');
+        var entry = TarEntry.CreateEntryFromFile(path);
+        entry.Name = relativePath;
+        tarArchive.PutNextEntry(entry);
 
-            // Write the file contents
-            using (var fileStream = File.OpenRead(filePath))
-            {
-                fileStream.CopyTo(tarArchive);
-            }
-            tarArchive.CloseEntry();
-        }
+        using (var fileStream = File.OpenRead(path)) { fileStream.CopyTo(tarArchive); }
+        tarArchive.CloseEntry();
+      }
     }
-
-    tarStream.Position = 0; // Reset position to start
-    return tarStream;
-}
-
+    stream.Position = 0;
+    return stream;
+  }
 
   private async Task<string> GetAccountId() {
     using var sts = new AmazonSecurityTokenServiceClient(credentials, region);
