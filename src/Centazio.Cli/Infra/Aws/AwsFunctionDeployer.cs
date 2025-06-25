@@ -17,8 +17,10 @@ using Centazio.Core.Settings;
 using Centazio.Hosts.Aws;
 using Microsoft.Extensions.DependencyInjection;
 using AddPermissionRequest = Amazon.Lambda.Model.AddPermissionRequest;
-using Environment = System.Environment;
 using ResourceNotFoundException = Amazon.Lambda.Model.ResourceNotFoundException;
+using Docker.DotNet;
+using Docker.DotNet.Models;
+using ICSharpCode.SharpZipLib.Tar;
 
 namespace Centazio.Cli.Infra.Aws;
 
@@ -64,18 +66,70 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
   }
 
   private async Task BuildAndPushDockerImage(AmazonECRClient ecr, string ecruri, string projnm) {
-    var dockercmds = settings.Defaults.ConsoleCommands.Docker;
+    var dc = new DockerClientConfiguration(new Uri(OperatingSystem.IsWindows() ? "npipe://./pipe/docker_engine" : "unix:///var/run/docker.sock")).CreateClient();
+    
+    var dauth = new AuthConfig {
+      ServerAddress = ecruri,
+      Username = "AWS",
+      Password = await GetEcrInputPassword(ecr)
+    };
+    var iuri = $"{ecruri}/{projnm}";
 
-    // todo CP: FIX the following docker command return an error even if the image is built successfully
-    try { await Run(dockercmds.Build, new { EcrUri = ecruri, ProjectName = projnm }, quiet: true); } 
-    catch (Exception e) { Log.Warning(e, "Error running docker command"); }
+    await using var dfstream = CreateDockerContextTarStream(project.SolutionDirPath);
+    await dc.Images.BuildImageFromDockerfileAsync(
+      new ImageBuildParameters { Dockerfile = "Dockerfile", Tags = [iuri] }, 
+      dfstream, [ dauth ], new Dictionary<string, string>(), new Progress<JSONMessage>(message => {
+        if (!string.IsNullOrEmpty(message.Status)) Log.Information($"Build: {message.Status}");
+        if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.Error}");
+      }), CancellationToken.None);
 
-    await Run(dockercmds.LogIn, new { EcrUri = ecruri }, input: await GetEcrInputPassword(ecr));
-    await Run(dockercmds.Push, new { EcrUri = ecruri, ProjectName = projnm });
+    Log.Information("Image built successfully.");
+    
+    await dc.Images.PushImageAsync(ecruri,
+      new ImagePushParameters(),
+      dauth,
+      new Progress<JSONMessage>(message => {
+        if (!string.IsNullOrEmpty(message.Status)) Log.Information($"Push: {message.Status}");
+        if (!string.IsNullOrEmpty(message.ErrorMessage)) throw new Exception($"Error: {message.Error}");
+      }),
+      CancellationToken.None);
 
-    async Task Run(string command, object model, bool quiet = false, string? input = null) =>
-        await cmd.Docker(templater.ParseFromContent(command, model), project.ProjectDirPath, quiet: quiet, input: input);
+    Log.Information("Image pushed successfully.");
   }
+  
+  private Stream CreateDockerContextTarStream(string contextPath)
+{
+    var tarStream = new MemoryStream();
+    using (var tarArchive = new TarOutputStream(tarStream, Encoding.UTF8))
+    {
+        tarArchive.IsStreamOwner = false; // Important: Don't dispose the underlying stream
+
+        // Add files from the context directory
+        var filePaths = Directory.GetFiles(contextPath, "*.*", SearchOption.AllDirectories);
+        foreach (var filePath in filePaths)
+        {
+            var relativePath = Path.GetRelativePath(contextPath, filePath)
+                .Replace('\\', '/'); // Use forward slashes for Docker
+
+            var entry = TarEntry.CreateEntryFromFile(filePath);
+            entry.Name = relativePath;
+
+            // Write the entry header
+            tarArchive.PutNextEntry(entry);
+
+            // Write the file contents
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                fileStream.CopyTo(tarArchive);
+            }
+            tarArchive.CloseEntry();
+        }
+    }
+
+    tarStream.Position = 0; // Reset position to start
+    return tarStream;
+}
+
 
   private async Task<string> GetAccountId() {
     using var sts = new AmazonSecurityTokenServiceClient(credentials, region);
