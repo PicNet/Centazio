@@ -1,6 +1,7 @@
 ﻿global using Serilog;
 global using Centazio.Core;
 global using Centazio.Core.Misc;
+global using Centazio.Core.Settings;
 global using Centazio.Cli.Infra;
 global using Centazio.Cli.Infra.Ui;
 global using Centazio.Cli.Infra.Misc;

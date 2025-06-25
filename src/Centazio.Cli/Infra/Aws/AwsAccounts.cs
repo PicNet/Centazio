@@ -3,7 +3,6 @@ using Amazon.Organizations;
 using Amazon.Organizations.Model;
 using Amazon.Runtime;
 using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Aws;
