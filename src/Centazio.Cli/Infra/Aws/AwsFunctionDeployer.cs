@@ -37,7 +37,6 @@ public class AwsFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Aws)
 // todo CP: use `Centazio.Cli.Infra.AzFunctionProjectMeta` pattern to replace hardcoded values below (names, timeouts, attributes, etc)
 internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCredentials credentials, AwsFunctionProjectMeta project, ITemplater templater) {
 
-  private readonly ICommandRunner cmd = new CommandRunner();
   private readonly RegionEndpoint region = RegionEndpoint.GetBySystemName(settings.AwsSettings.Region);
 
   public async Task DeployImpl() {
@@ -157,8 +156,8 @@ internal class AwsFunctionDeployerImpl(CentazioSettings settings, BasicAWSCreden
       PackageType = PackageType.Image,
       Code = new FunctionCode { ImageUri = imageuri },
       Role = await GetOrCreateRole(project.RoleName, accountid),
-      MemorySize = 256,
-      Timeout = 30
+      MemorySize = project.MemorySize,
+      Timeout = project.Timeout
     });
     return res.FunctionArn;
   }

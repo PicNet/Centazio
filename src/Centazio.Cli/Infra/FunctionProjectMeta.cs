@@ -48,6 +48,9 @@ public class AwsFunctionProjectMeta(Assembly assembly, CentazioSettings settings
   
   public string HandlerName => $"{ProjectName}::{ProjectName}::{AwsFunctionName}Handler";
   public string RoleName => $"{Assembly.GetName().Name}-{AwsFunctionName}-role".ToLower();
+  
+  public int MemorySize = settings.AwsSettings.MemorySize;
+  public int Timeout = settings.AwsSettings.Timeout;
 }
 
 public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSettings settings) {

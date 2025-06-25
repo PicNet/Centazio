@@ -532,22 +532,38 @@ public record AwsSettings {
   /// This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment
   /// </summary>
   public string? SecretsManagerStoreIdTemplate { get; init; }
+  
+  /// <summary>
+  /// The amount of time (in seconds) that Lambda allows a function to run before stopping it. The maximum allowed value is 900 seconds.
+  /// </summary>
+  public required int MemorySize { get; init; }
+  
+  /// <summary>
+  /// The amount of memory available to the function at runtime. Increasing the function memory also increases its CPU allocation. The default value is 128 MB. The value can be any multiple of 1 MB.
+  /// </summary>
+  public required int Timeout { get; init; }
 
   public Dto ToDto() => new() { 
     Region = Region,
     AccountName = AccountName,
     SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate,
+    MemorySize = MemorySize,
+    Timeout = Timeout,
   };
 
   public record Dto : IDto<AwsSettings> { 
     public string? Region { get; init; }
     public string? AccountName { get; init; }
     public string? SecretsManagerStoreIdTemplate { get; init; }
+    public int? MemorySize { get; init; }
+    public int? Timeout { get; init; }
 
     public AwsSettings ToBase() => new() { 
 Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
       AccountName = AccountName?.Trim(),
       SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
+MemorySize = MemorySize ?? 0,
+Timeout = Timeout ?? 0,
     };
   }
 }

@@ -96,6 +96,8 @@
   "Aws": {
     "Region": { "type": "string", "required": true },
     "AccountName": { "type": "string", "required": false },
-    "SecretsManagerStoreIdTemplate": { "type": "string", "required": false, "description": "This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment" }
+    "SecretsManagerStoreIdTemplate": { "type": "string", "required": false, "description": "This template string is used to get the Aws Store Id by replacing `&lt;environment&gt;` with the required environment" },
+    "MemorySize": { "type": "int", "required": true, "description": "The amount of time (in seconds) that Lambda allows a function to run before stopping it. The maximum allowed value is 900 seconds." },
+    "Timeout": { "type": "int", "required": true, "description": "The amount of memory available to the function at runtime. Increasing the function memory also increases its CPU allocation. The default value is 128 MB. The value can be any multiple of 1 MB." }
   }
 }

@@ -46,6 +46,8 @@
   "AwsSettings": {
     "Region": "ap-southeast-2",
     "AccountName": "picnet-centazio",
-    "SecretsManagerStoreIdTemplate": "picnet/centazio/<environment>"
+    "SecretsManagerStoreIdTemplate": "picnet/centazio/<environment>",
+    "MemorySize": 256,
+    "Timeout": 30
   }
 }
