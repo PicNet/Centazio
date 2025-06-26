@@ -1,11 +1,14 @@
 # Todo
-- aws/azure wrappers:
+- aws/azure:
+  - running in azure (even simulate) is not working due to aws secrets store:
+    - `./centazio az func logs Centazio.Sample.AppSheet` error: `Unable to find the "picnet-centazio" profile` error
+    - `./centazio az func simulate Centazio.Sample.ClickUp` error: `AmazonClientException: Failed to resolve AWS credentials. The credential providers used to search for credentials returned the following errors`
+  - better cloud settings management (env vars?) - including cron timers
   - Azure:
     - staging entity providers 
-    - fix Log.Logger, currently only injected ILogger<> works 
     - function-to-function triggers
     - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
-    - `centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.ArgumentException: Provider Aws is not implemented.`
+    - `./centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.InvalidOperationException: Sequence contains more than one element.`
     - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
         The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
             Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
@@ -19,12 +22,12 @@
     - aws simulate (sam cli local function simulator)
     - generator is including all functions in assembly, even tho we specify a single function    
 - JB: cli:
-  - generators needs a bit of work, comments, etc. Do tutorial
+  - generators needs a bit of work
   - dotnet tool install testing
   - good tutorial
 
-- `./centazio az func logs Centazio.Sample.AppSheet` not working with `Unable to find the "picnet-centazio" profile` error
 
+- GT: remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - GT: GHA gets stuck sometimes
 - Centazio func-func trigger test: 
   - all hosts
@@ -49,14 +52,14 @@
   - test func worked
   - test func in azure that works
   - test func in aws that works
-- GT: settings objects should have extension methods for helpers such as AwsSettings.GetRegionAsEndpoint to
-    replace duplicate code throughout such as AwsSecretsLoader.cs
 - GT: the readme/tutorial should automatically insert code samples from the real codebase, instead of duplicating it
 - GT: a good simulation tester, using excel to simulate data flows perhaps?
 - GT: create a good set of architectural policies that can be validated using NetArchTest, 
     see: https://dateo-software.de/blog/netarchtest (replace tests in `Centazio.Core.Tests.Inspect`)
 
-- snowflake provider
-- better cloud settings management (env vars?) - including cron timers
-- remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
+- additional providers:
+  - azure blob storage staged entity store
+  - azure cosmos db staged entity store
+  - snowflake providers
+
  

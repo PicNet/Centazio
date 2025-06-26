@@ -116,7 +116,8 @@ public static class ReflectionUtils {
     var matching = dlls.Where(f => f.EndsWith($"{Path.DirectorySeparatorChar}{assemblynm}.dll")).ToList();
     if (!matching.Any()) throw new Exception($"could not find any matching assemblies matching the name [{assemblynm}.dll] in options:\n\t{String.Join("\n\t", dlls)}");
     
-    if (Env.IsCloudHost) return matching.Single(); // cloud hosts will only have 1 copy of each dll
+    // cloud environments (not simulator) will have only one matching assembly.
+    if (Env.IsCloudHost && !Env.IsInDev) return matching.Single(); 
     
     var projdirnm = $"{Path.DirectorySeparatorChar}{assemblynm}{Path.DirectorySeparatorChar}";
     return matching.FirstOrDefault(path => path.IndexOf($"{projdirnm}bin{Path.DirectorySeparatorChar}Debug", StringComparison.Ordinal) >= 0)
