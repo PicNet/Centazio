@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace {{ it.Namespace }};
 
-public class SampleIntegration(params List<string> environments) : IntegrationBase<Settings, Secrets>(environments) {
+public class {{ it.SystemName }}Integration(params List<string> environments) : IntegrationBase<Settings, Secrets>(environments) {
   
   protected override void RegisterIntegrationSpecificServices(CentazioServicesRegistrar registrar) {
     var core = new CoreStorageRepository(() => new CoreStorageDbContext(Settings.CoreStorage.ConnectionString), new SqliteDbFieldsHelper());
