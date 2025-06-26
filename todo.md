@@ -25,6 +25,7 @@
 
 - `./centazio az func logs Centazio.Sample.AppSheet` not working with `Unable to find the "picnet-centazio" profile` error
 
+- GT: flaky test: RunHostCommandTests.Test_command_runs_for_2_seconds_without_errors_AppSheet 
 - GT: review all ignored GHA tests
 - GT: GHA gets stuck
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
