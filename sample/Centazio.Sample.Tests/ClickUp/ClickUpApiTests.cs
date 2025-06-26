@@ -17,7 +17,7 @@ public class ClickUpApiTests {
   }
   
   [Test] public async Task Test_create_task() {
-    if (Env.IsGitHubActions) return; // flaky test, ignore in CI
+    // if (Env.IsGitHubActions) return; // flaky test, ignore in CI
     var api = await GetApi();
     var start = DateTime.UtcNow.AddMinutes(-1); // using DateTime.UtcNow on purpose as we want empty result set
     var first = await api.GetTasksAfter(DateTime.UtcNow);
