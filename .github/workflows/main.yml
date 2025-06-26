@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 30
+    timeout-minutes: 10
 
     steps:
     - name: checkout code

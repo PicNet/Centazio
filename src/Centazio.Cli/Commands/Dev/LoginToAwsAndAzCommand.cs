@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Settings;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Commands.Dev;
 

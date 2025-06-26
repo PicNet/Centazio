@@ -24,6 +24,7 @@ public abstract class IntegrationBase<TSettings, TSecrets>(params List<string> e
     
     registrar.Register(prov => {
       var loader = prov.GetRequiredService<IServiceFactory<ISecretsLoader>>().GetService();
+      // `.Results` is required as a hack as `await` is not supported during DI initialisation
       return Secrets = loader.Load<TSecrets>(environments).Result;
     });
     

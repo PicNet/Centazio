@@ -25,8 +25,9 @@
 
 - `./centazio az func logs Centazio.Sample.AppSheet` not working with `Unable to find the "picnet-centazio" profile` error
 
-- GT: GHA gets stuck
+- GT: GHA gets stuck sometimes
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
+- GT: AppSheetIntegration is called SampleIntegration inside the file
 - Centazio func-func trigger test: 
   - all hosts
   - func reads csv with instructions 

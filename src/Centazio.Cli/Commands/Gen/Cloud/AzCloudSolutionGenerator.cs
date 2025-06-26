@@ -1,6 +1,5 @@
 ﻿using Centazio.Core.Runner;
 using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 

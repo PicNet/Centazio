@@ -1,7 +1,6 @@
 ﻿using System.Dynamic;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using Centazio.Core.Settings;
 using Scriban;
 
 namespace Centazio.Cli.Infra;

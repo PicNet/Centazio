@@ -1,6 +1,4 @@
-﻿using Centazio.Core.Settings;
-
-namespace Centazio.Cli.Infra.Dotnet;
+﻿namespace Centazio.Cli.Infra.Dotnet;
 
 public class DotNetCliProjectPublisher(CentazioSettings settings, ITemplater templater) : IProjectPublisher {
 

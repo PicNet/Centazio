@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Settings;
-using Centazio.Hosts.Self;
+﻿using Centazio.Hosts.Self;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Host;

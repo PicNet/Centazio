@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Secrets;
-using Centazio.Core.Settings;
 using Centazio.Providers.Aws.Secrets;
 using Centazio.Providers.Az.Secrets;
 
