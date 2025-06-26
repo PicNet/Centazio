@@ -38,4 +38,4 @@ jobs:
       run: dotnet build --configuration Debug --verbosity minimal
 
     - name: dotnet test
-      run: dotnet test --no-build --verbosity detailed tests/Centazio.Cli.Tests/
+      run: dotnet test --no-build --verbosity detailed
