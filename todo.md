@@ -29,6 +29,7 @@
 - GT: review all ignored GHA tests
 - GT: GHA gets stuck
 - GT: secrets needs NUGET_API_KEY.  This is a dev only secret so should not be mandatory
+- GT: AppSheetIntegration is called SampleIntegration inside the file
 - Centazio func-func trigger test: 
   - all hosts
   - func reads csv with instructions 
