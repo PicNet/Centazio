@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 30
+    timeout-minutes: 10
 
     steps:
     - name: checkout code
@@ -38,4 +38,4 @@ jobs:
       run: dotnet build --configuration Debug --verbosity minimal
 
     - name: dotnet test
-      run: dotnet test --no-build --verbosity detailed sample/Centazio.Sample.Tests
+      run: dotnet test --no-build --verbosity normal
