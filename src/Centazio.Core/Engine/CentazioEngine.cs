@@ -32,7 +32,7 @@ public abstract class CentazioEngine(List<string> environments) {
       var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader().Load<CentazioSettings>(environments), registrar);
       RegisterCoreServices(settings);
       RegisterHostSpecificServices(registrar);
-      return RegisterAvailableFunctionsAndIntegrations(functions);
+      return await RegisterAvailableFunctionsAndIntegrations(functions);
     }
 
     async Task InitialiseServices() {
@@ -65,10 +65,10 @@ public abstract class CentazioEngine(List<string> environments) {
     }
   }
 
-  private List<IIntegrationBase> RegisterAvailableFunctionsAndIntegrations(List<Type> functypes) {
+  private async Task<List<IIntegrationBase>> RegisterAvailableFunctionsAndIntegrations(List<Type> functypes) {
     var assemblies = functypes.Select(f => f.Assembly).Distinct().ToList();
     var integrations = assemblies.Select(ass => IntegrationsAssemblyInspector.GetCentazioIntegration(ass, environments)).ToList();
-    integrations.ForEach(integration => integration.RegisterServices(registrar));
+    await Task.WhenAll(integrations.Select(async integration => await integration.RegisterServices(registrar)));
     functypes.ForEach(registrar.Register);
     return integrations;
   }
