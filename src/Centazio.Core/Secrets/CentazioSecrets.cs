@@ -59,7 +59,6 @@ public record CentazioSecrets {
   public record Dto : IDto<CentazioSecrets> {
     public string? AWS_KEY { get; set; } 
     public string? AWS_SECRET { get; set; }
-    public string? AWS_REGION { get; set; }
         
     public string? AZ_TENANT_ID { get; set; }
     public string? AZ_CLIENT_ID { get; set; }
