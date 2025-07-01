@@ -1,6 +1,5 @@
-﻿using Centazio.Core.Secrets;
-using Centazio.Providers.Aws.Secrets;
-using Centazio.Providers.Az.Secrets;
+﻿using Centazio.Core.Runner;
+using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra;
@@ -11,17 +10,12 @@ public interface ICliSecretsManager {
 
 public class CliSecretsManager(IServiceProvider prov) : ICliSecretsManager {
 
-  // todo GT: do we need this?  we already have a way of loading appropriate service factories
   private ISecretsLoader GetSecretsLoader(ESecretsProviderType provider, CentazioSettings settings) {
     if (!Env.IsInDev) throw new Exception();
     
-    
-    return provider switch {
-      ESecretsProviderType.File => new FileSecretsLoaderFactory(settings).GetService(),
-      ESecretsProviderType.Aws => new AwsSecretsLoaderFactory(settings).GetService(),
-      ESecretsProviderType.Az => new AzSecretsLoaderFactory(settings).GetService(),
-      _ => throw new Exception($"Provider {provider} is not implemented")
-    };
+    var type = IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<ISecretsLoader>>(provider.ToString());
+    var factory = (IServiceFactory<ISecretsLoader>) (Activator.CreateInstance(type, settings) ?? throw new Exception());
+    return factory.GetService();
   }
 
   public async Task<T> LoadSecrets<T>(string settingskey) {
