@@ -12,7 +12,6 @@ using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Centazio.Core.Runner;
-using Centazio.Core.Secrets;
 using Centazio.Hosts.Aws;
 using Microsoft.Extensions.DependencyInjection;
 using AddPermissionRequest = Amazon.Lambda.Model.AddPermissionRequest;
@@ -27,10 +26,13 @@ public interface IAwsFunctionDeployer {
   Task Deploy(AwsFunctionProjectMeta project);
 }
 
-public class AwsFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSettings settings, [FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSecrets secrets, ITemplater templater) : IAwsFunctionDeployer {
+public class AwsFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSettings settings, ICliSecretsManager loader, ITemplater templater) : AbstractAwsCommunicator(loader, settings.AwsSettings), IAwsFunctionDeployer {
 
-  public async Task Deploy(AwsFunctionProjectMeta project) =>
-      await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();
+  public async Task Deploy(AwsFunctionProjectMeta project) {
+    var secrets = await GetSecrets();
+    await new AwsFunctionDeployerImpl(settings, new(secrets.AWS_KEY, secrets.AWS_SECRET), project, templater).DeployImpl();
+  }
+
 }
 
 // todo CP: use `Centazio.Cli.Infra.AzFunctionProjectMeta` pattern to replace hardcoded values below (names, timeouts, attributes, etc)

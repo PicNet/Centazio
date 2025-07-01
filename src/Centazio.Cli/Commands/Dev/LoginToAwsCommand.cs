@@ -2,8 +2,6 @@
 
 namespace Centazio.Cli.Commands.Dev;
 
-// todo GT: this is not working as the Cli requires secrets to be loaded and the point of
-//    this is to load the secrets from aws.  
 public class LoginToAwsCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Aws)] AwsSettings coresettings,
     ICommandRunner cmd) : AbstractCentazioCommand<CommonSettings> {

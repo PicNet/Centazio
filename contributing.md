@@ -32,7 +32,8 @@
 - Prefer using helpers, such as `ArgumentException.ThrowIf` rather than `if (x is null) throw new ArgumentException`
 
 ## Unit Testing
-- Unit tests use AWS secrets manager, so running `aws sso login --profile picnet-centazio` is required on new sessions.
+- Unit tests use AWS secrets manager, so running `aws sso login --profile picnet-centazio` (or `centazio dev aws login`) 
+    is required on new sessions.
   - Configuration instructions on this profile can be found in internal secrets manager document.
 - All complex logic should be unit tested
 - Simple logic should not be unit tested, this includes records, simple properties, etc

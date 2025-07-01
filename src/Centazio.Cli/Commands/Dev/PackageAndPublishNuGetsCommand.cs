@@ -1,12 +1,11 @@
 ﻿using System.Text.RegularExpressions;
 using Centazio.Core.Secrets;
-using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
 namespace Centazio.Cli.Commands.Dev;
 
 public class PackageAndPublishNuGetsCommand(
-    [FromKeyedServices(CentazioConstants.Hosts.Aws)] CentazioSecrets secrets, 
+    ICliSecretsManager loader, 
     ICommandRunner cmd) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
 
   private readonly string packagesdir = "packages";
@@ -22,7 +21,8 @@ public class PackageAndPublishNuGetsCommand(
     await cmd.DotNet($"pack -c Release -o {packagesdir}", cwd);
     
     // publish 
-    if (settings.NoPublish) return; 
+    if (settings.NoPublish) return;
+    var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty);
     var apikey = secrets.NUGET_API_KEY ?? throw new ArgumentNullException(nameof(secrets.NUGET_API_KEY));
     await cmd.DotNet($"nuget push ./{packagesdir}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);
   }

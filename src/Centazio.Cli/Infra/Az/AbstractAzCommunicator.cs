@@ -1,14 +1,23 @@
 ﻿using Azure.Identity;
 using Azure.ResourceManager;
 using Centazio.Core.Secrets;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Az;
 
-public abstract class AbstractAzCommunicator([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets) {
+public abstract class AbstractAzCommunicator(ICliSecretsManager loader) {
   
-  protected CentazioSecrets Secrets => secrets;
-
-  protected ArmClient GetClient() => new(new ClientSecretCredential(secrets.AZ_TENANT_ID, secrets.AZ_CLIENT_ID, secrets.AZ_SECRET_ID));
+  private CentazioSecrets? secrets;
+  private ArmClient? client;
+  
+  protected async Task<CentazioSecrets> GetSecrets() {
+    if (secrets is not null) return secrets;
+    return secrets = await loader.LoadSecrets<CentazioSecrets>(CentazioConstants.Hosts.Az);
+  }
+  
+  protected async Task<ArmClient> GetClient() {
+    if (client is not null) return client;
+    var sec = await GetSecrets();
+    return client = new(new ClientSecretCredential(sec.AZ_TENANT_ID, sec.AZ_CLIENT_ID, sec.AZ_SECRET_ID));
+  }
 
 }

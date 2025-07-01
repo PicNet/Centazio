@@ -2,7 +2,6 @@
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Cli.Infra.Misc;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 using AzCmd = Centazio.Cli.Tests.MiscHelpers.Az;
 
@@ -11,13 +10,11 @@ namespace Centazio.Cli.Tests.Infra.Az;
 public class AzFunctionDeployerTests {
 
   private CentazioSettings settings;
-  private CentazioSecrets secrets;
   private ITemplater templater;
   private AzFunctionProjectMeta project;
   
   [SetUp] public async Task SetUp() {
     settings = await F.Settings();
-    secrets = await F.Secrets();
     templater = new Templater(settings);
     project = await MiscHelpers.AzEmptyFunctionProject();
   }
@@ -28,9 +25,9 @@ public class AzFunctionDeployerTests {
     await AzCmd.DeleteFunctionApp(appname);
     var before = AzCmd.ListFunctionApps();
     
-    await new AzCloudSolutionGenerator(settings, secrets, templater, project, ["in-mem"]).GenerateSolution();
+    await new AzCloudSolutionGenerator(settings, TestingCliSecretsManager.Instance, templater, project, ["in-mem"]).GenerateSolution();
     await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
-    await new AzFunctionDeployer(settings, secrets).Deploy(project);
+    await new AzFunctionDeployer(settings, TestingCliSecretsManager.Instance).Deploy(project);
     
     var after = AzCmd.ListFunctionApps();
     var funcs = AzCmd.ListFunctionsInApp(appname);
@@ -43,7 +40,7 @@ public class AzFunctionDeployerTests {
   
   [Test] public async Task Test_CreateFunctionAppZip() {
     if (!Directory.Exists(project.PublishPath)) {
-      await new AzCloudSolutionGenerator(settings, secrets, templater, project, ["in-mem"]).GenerateSolution();
+      await new AzCloudSolutionGenerator(settings, TestingCliSecretsManager.Instance, templater, project, ["in-mem"]).GenerateSolution();
       await new DotNetCliProjectPublisher(settings, templater).PublishProject(project);
     }
     

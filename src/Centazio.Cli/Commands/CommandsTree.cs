@@ -95,8 +95,12 @@ public class CommandsTree {
         CreateCommandNode<UiTestsCommand>("ui-test"),
         CreateCommandNode<GenerateSettingTypesCommand>("gen-settings"),
         CreateCommandNode<PackageAndPublishNuGetsCommand>("publish"),
-        CreateCommandNode<LoginToAwsCommand>("aws-login"),
-        CreateCommandNode<LoginToAzCommand>("az-login"),
+        new BranchNode("aws", [
+          CreateCommandNode<LoginToAwsCommand>("login"),
+        ]),
+        new BranchNode("az", [
+          CreateCommandNode<LoginToAzCommand>("login"),
+        ]),
       ]));
     }
     RootNode = new("centazio", children, EXIT_LABEL);

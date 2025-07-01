@@ -3,12 +3,14 @@ using Centazio.Core.Secrets;
 
 namespace Centazio.Cli.Commands.Gen.Cloud;
 
-internal class AzCloudSolutionGenerator(CentazioSettings settings, CentazioSecrets secrets, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
+internal class AzCloudSolutionGenerator(CentazioSettings settings, ICliSecretsManager loader, ITemplater templater, AzFunctionProjectMeta project, List<string> environments) : 
     CloudSolutionGenerator(settings, templater, project, typeof(Hosts.Az.AzHost).Assembly, environments, null) {
 
   protected override async Task AddCloudSpecificContentToProject(List<Type> functions, Dictionary<string, bool> added) {
+    var secrets = await loader.LoadSecrets<CentazioSecrets>(CentazioConstants.Hosts.Az);
+    
     await AddAzNuGetReferencesToProject(added);
-    await AddAzConfigJsonFilesToProject();
+    await AddAzConfigJsonFilesToProject(secrets);
     await AddAzFunctionsToProject(functions);
   }
 
@@ -24,7 +26,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, CentazioSecre
         "Serilog.Extensions.Hosting"
       ], added);
   
-  private async Task AddAzConfigJsonFilesToProject() {
+  private async Task AddAzConfigJsonFilesToProject(CentazioSecrets secrets) {
     await AddTemplateFileToProject("host.json");
     await AddTemplateFileToProject("local.settings.json");
     await AddTemplateFileToProject("local.settings.json", new { ApplicationInsightsConnectionString = secrets.AZ_APP_INSIGHT_CONNECTION_STRING ?? Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"),

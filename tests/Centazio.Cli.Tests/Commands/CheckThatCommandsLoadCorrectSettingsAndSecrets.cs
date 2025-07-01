@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Tests.Commands;
 
+// todo: change to instead check that CentazioSecrets is loaded using `ICliSecretsManager`
 public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
 
   [Test] public void Go() {

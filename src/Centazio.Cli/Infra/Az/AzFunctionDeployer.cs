@@ -15,24 +15,24 @@ public interface IAzFunctionDeployer {
 }
 
 // try to replicate command: az functionapp deployment source config-zip -g <resource group name> -n <function app name> --src <zip file path>
-public class AzFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings settings, [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzFunctionDeployer {
-
+public class AzFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings settings, ICliSecretsManager loader) : AbstractAzCommunicator(loader), IAzFunctionDeployer {
   
   public async Task Deploy(AzFunctionProjectMeta project) {
     if (!Directory.Exists(project.SolutionDirPath)) throw new Exception($"project [{project.ProjectName}] could not be found in the [{settings.Defaults.GeneratedCodeFolder}] folder");
     if (!File.Exists(project.SlnFilePath)) throw new Exception($"project [{project.ProjectName}] does not appear to be a valid as no sln file was found");
-    
-    var rg = GetClient().GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(Secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
-    var appres = await GetOrCreateFunctionApp(rg, project);
+  
+    var (secrets, client) = (await GetSecrets(), await GetClient());
+    var rg = client.GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(secrets.AZ_SUBSCRIPTION_ID, settings.AzureSettings.ResourceGroup));
+    var appres = await GetOrCreateFunctionApp(rg, project, secrets);
 
     await PublishFunctionApp(appres, project);
   }
 
-  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project) {
+  private async Task<WebSiteResource> GetOrCreateFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project, CentazioSecrets secrets) {
     var appres = await GetFunctionAppIfExists(rg, project);
     if (appres is not null) return appres;
 
-    return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region);
+    return await CreateNewFunctionApp(rg, project, settings.AzureSettings.Region, secrets);
   }
 
   private async Task<WebSiteResource?> GetFunctionAppIfExists(ResourceGroupResource rg, AzFunctionProjectMeta project) {
@@ -40,23 +40,23 @@ public class AzFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Az)] 
     catch (RequestFailedException ex) when (ex.Status == 404) { return null; }
   }
 
-  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project, string location) {
+  private async Task<WebSiteResource> CreateNewFunctionApp(ResourceGroupResource rg, AzFunctionProjectMeta project, string location, CentazioSecrets secrets) {
     var plandata = new AppServicePlanData(location) { Kind = "functionapp" , Sku = project.GetAppServiceSku() };
     var name = project.GetAppServicePlanName();
     var appplan = (await rg.GetAppServicePlans().CreateOrUpdateAsync(WaitUntil.Completed, name, plandata)).Value;
-    var appconf = CreateFunctionAppConfiguration(location, appplan.Id); 
+    var appconf = CreateFunctionAppConfiguration(location, appplan.Id, secrets); 
     var op = await rg.GetWebSites().CreateOrUpdateAsync(WaitUntil.Completed, project.GetWebSiteName(), appconf);
     return op.Value;
   }
 
-  private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid) {
+  private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid, CentazioSecrets secrets) {
     var envvars = new List<AppServiceNameValuePair> {
       new() { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
       new() { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
       new() { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
-      new() { Name = "AzureWebJobsStorage", Value = Secrets.AZ_BLOB_STORAGE_ENDPOINT },
+      new() { Name = "AzureWebJobsStorage", Value = secrets.AZ_BLOB_STORAGE_ENDPOINT },
     };
-    if (!String.IsNullOrWhiteSpace(Secrets.AZ_APP_INSIGHT_CONNECTION_STRING)) { envvars.Add(new() { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = Secrets.AZ_APP_INSIGHT_CONNECTION_STRING }); }
+    if (!String.IsNullOrWhiteSpace(secrets.AZ_APP_INSIGHT_CONNECTION_STRING)) { envvars.Add(new() { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = secrets.AZ_APP_INSIGHT_CONNECTION_STRING }); }
     return new WebSiteData(location) {
       Kind = "functionapp",
       SiteConfig = new SiteConfigProperties { NetFrameworkVersion = "v9.0", AppSettings = envvars },

@@ -1,7 +1,6 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -9,7 +8,7 @@ namespace Centazio.Cli.Commands.Az;
 
 public class DeployAzFunctionsCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
-    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets,  
+    ICliSecretsManager secrets,  
     IAzFunctionDeployer impl, 
     ICommandRunner cmd, 
     ITemplater templater) : AbstractCentazioCommand<DeployAzFunctionsCommand.Settings> {

@@ -1,7 +1,6 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core;
-using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
 
 namespace Centazio.Cli.Tests.Infra.Dotnet;
@@ -9,12 +8,12 @@ namespace Centazio.Cli.Tests.Infra.Dotnet;
 public class ProjectPublisherTests {
   
   private CentazioSettings settings;
-  private CentazioSecrets secrets;
+  private ICliSecretsManager secrets;
   private ITemplater templater;
   
   [SetUp] public async Task SetUp() {
     settings = await F.Settings();
-    secrets = await F.Secrets();
+    secrets = TestingCliSecretsManager.Instance;
     templater = new Templater(settings);
   }
 

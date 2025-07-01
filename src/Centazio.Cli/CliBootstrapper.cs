@@ -46,7 +46,8 @@ internal class CliBootstrapper {
         .AddSingleton<ICommandRunner, CommandRunner>()
         .AddSingleton<ITemplater, Templater>()
         .AddSingleton<ICentazioCodeGenerator, CentazioCodeGenerator>()
-        .AddSingleton<Centazio.Hosts.Self.SelfHost>();
+        .AddSingleton<Centazio.Hosts.Self.SelfHost>()
+        .AddSingleton<ICliSecretsManager>(prov => new CliSecretsManager(prov));
     if (indev) { devdeps.ForEach(kvp => svcs.AddSingleton(kvp.Key, kvp.Value)); }
     RegisterCliCommands();
     return svcs.BuildServiceProvider();
@@ -57,15 +58,10 @@ internal class CliBootstrapper {
       
       var dir = devdir ?? FsUtils.GetDefaultsDir() ?? throw new Exception("could not find a dev directory or the cli defaults directory");
       var conf = new SettingsLoaderConfig(dir, isindev ? EDefaultSettingsMode.BOTH : EDefaultSettingsMode.ONLY_DEFAULT_SETTINGS);
-      var defsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs, String.Empty);
-      var awssettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws), svcs, CentazioConstants.Hosts.Aws);
-      var azsettings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az), svcs, CentazioConstants.Hosts.Az);
       
-      if (isindev) {
-        svcs.AddSingleton(await SecretsManager.LoadSecrets<CentazioSecrets>(defsettings, CentazioConstants.DEFAULT_ENVIRONMENT));
-        svcs.AddKeyedSingleton(CentazioConstants.Hosts.Aws, await SecretsManager.LoadSecrets<CentazioSecrets>(awssettings, CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws));
-        svcs.AddKeyedSingleton(CentazioConstants.Hosts.Az, await SecretsManager.LoadSecrets<CentazioSecrets>(azsettings, CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az));
-      }
+      SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT), svcs, String.Empty);
+      SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Aws), svcs, CentazioConstants.Hosts.Aws);
+      SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader(conf).Load<CentazioSettings>(CentazioConstants.DEFAULT_ENVIRONMENT, CentazioConstants.Hosts.Az), svcs, CentazioConstants.Hosts.Az);
       
       return isindev;
     }
@@ -85,6 +81,7 @@ internal class CliBootstrapper {
       var ptypes = cls.GetConstructors()
           .SelectMany(c => c.GetParameters().Select(p => p.ParameterType))
           .ToList();
+      // todo: can we remove secrets from here?
       return ptypes.Any(t => typeof(CentazioSettings).IsAssignableFrom(t) || typeof(CentazioSecrets).IsAssignableFrom(t) || devdeps.ContainsKey(t));
     }
   }

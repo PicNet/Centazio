@@ -1,7 +1,6 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
 using Centazio.Core.Runner;
-using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -9,7 +8,7 @@ namespace Centazio.Cli.Commands.Az;
 
 public class AzFunctionLocalSimulateCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
-    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, 
+    ICliSecretsManager secrets, 
     ICommandRunner cmd, 
     ITemplater templater) : AbstractCentazioCommand<AzFunctionLocalSimulateCommand.Settings> {
   

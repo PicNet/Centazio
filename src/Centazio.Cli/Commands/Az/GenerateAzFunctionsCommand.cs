@@ -1,6 +1,5 @@
 ﻿using Centazio.Cli.Commands.Gen.Cloud;
 using Centazio.Cli.Infra.Dotnet;
-using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -8,7 +7,7 @@ namespace Centazio.Cli.Commands.Az;
 
 public class GenerateAzFunctionsCommand(
     [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSettings coresettings, 
-    [FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets, 
+    ICliSecretsManager secrets, 
     ITemplater templater) : AbstractCentazioCommand<GenerateAzFunctionsCommand.Settings> {
 
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings { 

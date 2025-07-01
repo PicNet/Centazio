@@ -1,8 +1,6 @@
 ﻿using Azure;
 using Azure.Core;
 using Azure.ResourceManager.Resources;
-using Centazio.Core.Secrets;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Infra.Az;
 
@@ -13,16 +11,17 @@ public interface IAzResourceGroups {
 
 }
 
-public class AzResourceGroups([FromKeyedServices(CentazioConstants.Hosts.Az)] CentazioSecrets secrets) : AbstractAzCommunicator(secrets), IAzResourceGroups {
+public class AzResourceGroups(ICliSecretsManager loader) : AbstractAzCommunicator(loader), IAzResourceGroups {
 
-  public Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
-    var subscription = GetClient().GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{Secrets.AZ_SUBSCRIPTION_ID}"));
-    var rgs = subscription.GetResourceGroups().Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? String.Empty)).ToList();
-    return Task.FromResult(rgs);
+  public async Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
+    var (secrets, client) = (await GetSecrets(), await GetClient());
+    var subscription = client.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{secrets.AZ_SUBSCRIPTION_ID}"));
+    return subscription.GetResourceGroups().Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? String.Empty)).ToList();
   }
     
   public async Task<string> AddResourceGroup(string name) {
-    var subscription = GetClient().GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{Secrets.AZ_SUBSCRIPTION_ID}"));
+    var (secrets, client) = (await GetSecrets(), await GetClient());
+    var subscription = client.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{secrets.AZ_SUBSCRIPTION_ID}"));
     var rgs = subscription.GetResourceGroups();
     var result = await rgs.CreateOrUpdateAsync(WaitUntil.Completed, name, new ResourceGroupData(AzureLocation.AustraliaEast));
     return result.HasCompleted ? String.Empty : "Unknown failure";
