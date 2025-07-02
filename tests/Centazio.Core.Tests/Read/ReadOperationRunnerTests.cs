@@ -36,7 +36,7 @@ public class ReadOperationRunnerTests {
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(repository.Contents, Is.Empty);
-    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new EmptyReadOperationResult(), actual);
+    ValidateResult(new SystemState(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new EmptyReadOperationResult(), actual);
   }
 
   [Test] public async Task Test_valid_List_results_are_staged() {
@@ -45,8 +45,8 @@ public class ReadOperationRunnerTests {
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity.Dto(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum).ToBase())));
-    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, UtcDate.UtcNow), actual);
+        staged.Select(s => new StagedEntity(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum))));
+    ValidateResult(new SystemState(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, UtcDate.UtcNow), actual);
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
@@ -55,9 +55,9 @@ public class ReadOperationRunnerTests {
     Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([null!], UtcDate.UtcNow));
   }
   
-  private void ValidateResult(SystemState.Dto expss, OperationResult expected, OperationResult actual) {
+  private void ValidateResult(SystemState expss, OperationResult expected, OperationResult actual) {
     Assert.That(Json.Serialize(actual), Is.EqualTo(Json.Serialize(expected)));
-    Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss.ToBase()));
+    Assert.That(repo.Systems.Single().Value, Is.EqualTo(expss));
   }
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, GetUpdatesAfterCheckpointHandler impl) 

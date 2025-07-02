@@ -16,18 +16,6 @@ public record CoreCustomer : CoreEntityBase {
   }
 
   public override object GetChecksumSubset() => new { CoreId, Name, MembershipId = MembershipCoreId };
-  
-  public record Dto : Dto<CoreCustomer> {
-    public string? Name { get; init; }
-    public string? MembershipCoreId { get; init; }
-    
-    public override CoreCustomer ToBase() => new() {
-      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-      Name = new(Name ?? throw new ArgumentNullException(nameof(Name))),
-      MembershipCoreId = new(MembershipCoreId ?? throw new ArgumentNullException(nameof(MembershipCoreId)))
-    };
-
-  }
 }
 
 public record CoreMembershipType : CoreEntityBase {
@@ -41,16 +29,6 @@ public record CoreMembershipType : CoreEntityBase {
   }
   
   public override object GetChecksumSubset() => new { CoreId, Name };
-  
-  public record Dto : Dto<CoreMembershipType> {
-    public string? Name { get; init; }
-    
-    public override CoreMembershipType ToBase() => new() {
-      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-      Name = new(Name ?? throw new ArgumentNullException(nameof(Name))) 
-    };
-
-  }
 }
 
 public record CoreInvoice : CoreEntityBase {
@@ -70,20 +48,4 @@ public record CoreInvoice : CoreEntityBase {
   }
   
   public override object GetChecksumSubset() => new { CoreId, CustomerId = CustomerCoreId, Cents, DueDate, PaidDate };
-  
-  public record Dto : Dto<CoreInvoice> {
-    public string? CustomerCoreId { get; init; }
-    public int? Cents { get; init; }
-    public DateOnly? DueDate { get; init; }
-    public DateTime? PaidDate { get; init; }
-    
-    public override CoreInvoice ToBase() => new() {
-      CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-      CustomerCoreId = new(CustomerCoreId ?? throw new ArgumentNullException(nameof(CustomerCoreId))),
-      Cents = Cents ?? throw new ArgumentNullException(nameof(Cents)),
-      DueDate = DueDate ?? throw new ArgumentNullException(nameof(DueDate)),
-      PaidDate = PaidDate
-    };
-
-  }
 }

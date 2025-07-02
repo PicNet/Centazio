@@ -3,25 +3,23 @@
 public class SettingsSectionMissingException(string section) : Exception($"{section} section missing from settings file");
 
 public record CentazioSettings {
-  private SecretsLoaderSettings? _SecretsLoaderSettings;
-  public SecretsLoaderSettings SecretsLoaderSettings => _SecretsLoaderSettings?? throw new SettingsSectionMissingException(nameof(SecretsLoaderSettings));
-  
-  private DefaultsSettings? _Defaults;
+  private readonly SecretsLoaderSettings? _SecretsLoaderSettings;
+  public SecretsLoaderSettings SecretsLoaderSettings { get => _SecretsLoaderSettings ?? throw new SettingsSectionMissingException(nameof(SecretsLoaderSettings)); internal init => _SecretsLoaderSettings = value; }
+  private readonly DefaultsSettings? _Defaults;
   public DefaultsSettings Defaults => _Defaults ?? throw new SettingsSectionMissingException(nameof(Defaults));
   
-  private AwsSettings? _AwsSettings;
+  private readonly AwsSettings? _AwsSettings;
   public AwsSettings AwsSettings => _AwsSettings ?? throw new SettingsSectionMissingException(nameof(AwsSettings));
   
-  private AzureSettings? _AzureSettings;
-  public AzureSettings AzureSettings => _AzureSettings ?? throw new SettingsSectionMissingException(nameof(AzureSettings));
-  
-  private StagedEntityRepositorySettings? _StagedEntityRepository;
+  private readonly AzureSettings? _AzureSettings;
+  public AzureSettings AzureSettings { get => _AzureSettings ?? throw new SettingsSectionMissingException(nameof(AzureSettings)); internal init => _AzureSettings = value; }
+  private readonly StagedEntityRepositorySettings? _StagedEntityRepository;
   public StagedEntityRepositorySettings StagedEntityRepository => _StagedEntityRepository ?? throw new SettingsSectionMissingException(nameof(StagedEntityRepository));
   
-  private CtlRepositorySettings? _CtlRepository;
+  private readonly CtlRepositorySettings? _CtlRepository;
   public CtlRepositorySettings CtlRepository => _CtlRepository ?? throw new SettingsSectionMissingException(nameof(CtlRepository));
   
-  private CoreStorageSettings? _CoreStorage;
+  private readonly CoreStorageSettings? _CoreStorage;
   public CoreStorageSettings CoreStorage => _CoreStorage ?? throw new SettingsSectionMissingException(nameof(CoreStorage));
   
   protected CentazioSettings(CentazioSettings other) {
@@ -33,35 +31,5 @@ public record CentazioSettings {
     _StagedEntityRepository = other._StagedEntityRepository;
     _CtlRepository = other._CtlRepository;
     _CoreStorage = other._CoreStorage;
-  }
-
-  public virtual Dto ToDto() => new() {
-    SecretsLoaderSettings = SecretsLoaderSettings.ToDto(),
-    Defaults = _Defaults?.ToDto(),
-    AwsSettings = _AwsSettings?.ToDto(),
-    AzureSettings = _AzureSettings?.ToDto(),
-    StagedEntityRepository = _StagedEntityRepository?.ToDto(),
-    CtlRepository = _CtlRepository?.ToDto(),
-    CoreStorage = _CoreStorage?.ToDto()
-  };
-  
-  public record Dto : IDto<CentazioSettings> {
-    public SecretsLoaderSettings.Dto? SecretsLoaderSettings { get; init; }
-    public DefaultsSettings.Dto? Defaults { get; init; }
-    public AwsSettings.Dto? AwsSettings { get; init; }
-    public AzureSettings.Dto? AzureSettings { get; init; }
-    public StagedEntityRepositorySettings.Dto? StagedEntityRepository { get; init; }
-    public CtlRepositorySettings.Dto? CtlRepository { get; init; }
-    public CoreStorageSettings.Dto? CoreStorage { get; init; }
-    
-    public CentazioSettings ToBase() => new() {
-      _SecretsLoaderSettings = SecretsLoaderSettings?.ToBase(),
-      _Defaults = Defaults?.ToBase(),
-      _AwsSettings = AwsSettings?.ToBase(),
-      _AzureSettings = AzureSettings?.ToBase(),
-      _StagedEntityRepository = StagedEntityRepository?.ToBase(),
-      _CtlRepository = CtlRepository?.ToBase(),
-      _CoreStorage = CoreStorage?.ToBase()
-    };
   }
 }

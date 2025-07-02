@@ -31,27 +31,26 @@ public class TestingEfCoreStorageRepository(Func<CentazioDbContext> getdb, IDbFi
   }
 
   public async Task<List<CoreEntity>> GetAllCoreEntities() {
-    return await UseDb(async db => 
-        (await db.Set<CoreEntity.Dto>().ToListAsync()).Select(dto => dto.ToBase()).ToList());
+    return await UseDb(async db => (await db.Set<CoreEntity>().ToListAsync()).ToList());
   }
 
   protected override async Task<List<ICoreEntity>> GetCoreEntitiesWithIds(CoreEntityTypeName coretype, List<CoreEntityId> coreids) {
     var strids = coreids.Select(id => id.Value).ToList();
-    if (coretype == CoreEntityTypeName.From<CoreEntity>()) return await Impl<CoreEntity, CoreEntity.Dto>();
+    if (coretype == CoreEntityTypeName.From<CoreEntity>()) return await Impl<CoreEntity>();
     
     throw new NotSupportedException(coretype.Value);
 
-    async Task<List<ICoreEntity>> Impl<E, D>() where E : ICoreEntity where D : class, ICoreEntityDto<E> => 
-        await UseDb(async db => (await db.Set<D>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).Select(e => e.ToBase() as ICoreEntity).ToList());
+    // todo GT: without Dtos do we still need ICoreEntity as the List return type?  Why not generics
+    async Task<List<ICoreEntity>> Impl<E>() where E : class, ICoreEntity => await UseDb(async db => (await db.Set<E>().Where(e => strids.Contains(e.CoreId)).ToListAsync()).ToList<ICoreEntity>());
   }
 
   public static void CreateTestingCoreStorageEfModel(ModelBuilder builder) => builder
       .HasDefaultSchema(CoreSchemaName)
-      .Entity<CoreStorageMeta.Dto>(e => {
+      .Entity<CoreStorageMeta>(e => {
         e.ToTable(CoreStorageMetaName, CtlSchemaName);
         e.HasKey(e2 => e2.CoreId);
       })
-      .Entity<CoreEntity.Dto>(e => {
+      .Entity<CoreEntity>(e => {
         e.ToTable(CoreEntityName);
         e.HasKey(e2 => e2.CoreId);
       });

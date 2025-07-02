@@ -56,11 +56,9 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     var builder = new ConfigurationBuilder();
     await files.Select(async file => builder.AddJsonStream(await Json.ReadFileAsStream(file))).Synchronous();
     
-    var dtot = DtoHelpers.GetDtoTypeFromTypeHierarchy(typeof(T));
-    var obj = Activator.CreateInstance(dtot ?? typeof(T)) ?? throw new Exception($"Type {(dtot ?? typeof(T)).FullName} could not be constructed");
-    var root = builder.Build(); 
-    root.Bind(obj);
-    return dtot is null ? (T) obj : ((IDto<T>)obj).ToBase();
+    var obj = Activator.CreateInstance<T>();
+    builder.Build().Bind(obj); 
+    return obj;
   }
 
   public static TSettings RegisterSettingsHierarchy<TSettings>(TSettings settings, CentazioServicesRegistrar registrar) where TSettings : CentazioSettings => 

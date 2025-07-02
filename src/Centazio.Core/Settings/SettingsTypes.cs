@@ -21,33 +21,6 @@ public record AzSettings {
   public required string StopFunctionApp { get; init; }
   
   public required string RunAzuriteArgs { get; init; }
-
-  public Dto ToDto() => new() { 
-    ListFunctionApps = ListFunctionApps,
-    ListFunctions = ListFunctions,
-    DeleteFunctionApp = DeleteFunctionApp,
-    StartFunctionApp = StartFunctionApp,
-    StopFunctionApp = StopFunctionApp,
-    RunAzuriteArgs = RunAzuriteArgs,
-  };
-
-  public record Dto : IDto<AzSettings> { 
-    public string? ListFunctionApps { get; init; }
-    public string? ListFunctions { get; init; }
-    public string? DeleteFunctionApp { get; init; }
-    public string? StartFunctionApp { get; init; }
-    public string? StopFunctionApp { get; init; }
-    public string? RunAzuriteArgs { get; init; }
-
-    public AzSettings ToBase() => new() { 
-ListFunctionApps = String.IsNullOrWhiteSpace(ListFunctionApps) ? throw new ArgumentNullException(nameof(ListFunctionApps)) : ListFunctionApps.Trim(),
-ListFunctions = String.IsNullOrWhiteSpace(ListFunctions) ? throw new ArgumentNullException(nameof(ListFunctions)) : ListFunctions.Trim(),
-DeleteFunctionApp = String.IsNullOrWhiteSpace(DeleteFunctionApp) ? throw new ArgumentNullException(nameof(DeleteFunctionApp)) : DeleteFunctionApp.Trim(),
-StartFunctionApp = String.IsNullOrWhiteSpace(StartFunctionApp) ? throw new ArgumentNullException(nameof(StartFunctionApp)) : StartFunctionApp.Trim(),
-StopFunctionApp = String.IsNullOrWhiteSpace(StopFunctionApp) ? throw new ArgumentNullException(nameof(StopFunctionApp)) : StopFunctionApp.Trim(),
-RunAzuriteArgs = String.IsNullOrWhiteSpace(RunAzuriteArgs) ? throw new ArgumentNullException(nameof(RunAzuriteArgs)) : RunAzuriteArgs.Trim(),
-    };
-  }
 }
 
 public record FuncSettings {
@@ -56,21 +29,6 @@ public record FuncSettings {
   public required string LocalSimulateFunction { get; init; }
   
   public required string ShowLogStream { get; init; }
-
-  public Dto ToDto() => new() { 
-    LocalSimulateFunction = LocalSimulateFunction,
-    ShowLogStream = ShowLogStream,
-  };
-
-  public record Dto : IDto<FuncSettings> { 
-    public string? LocalSimulateFunction { get; init; }
-    public string? ShowLogStream { get; init; }
-
-    public FuncSettings ToBase() => new() { 
-LocalSimulateFunction = String.IsNullOrWhiteSpace(LocalSimulateFunction) ? throw new ArgumentNullException(nameof(LocalSimulateFunction)) : LocalSimulateFunction.Trim(),
-ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
-    };
-  }
 }
 
 public record DotNetSettings {
@@ -81,24 +39,7 @@ public record DotNetSettings {
   public required string BuildProject { get; init; }
   
   public required string PublishProject { get; init; }
-
-  public Dto ToDto() => new() { 
-    CleanProject = CleanProject,
-    BuildProject = BuildProject,
-    PublishProject = PublishProject,
-  };
-
-  public record Dto : IDto<DotNetSettings> { 
-    public string? CleanProject { get; init; }
-    public string? BuildProject { get; init; }
-    public string? PublishProject { get; init; }
-
-    public DotNetSettings ToBase() => new() { 
-CleanProject = String.IsNullOrWhiteSpace(CleanProject) ? throw new ArgumentNullException(nameof(CleanProject)) : CleanProject.Trim(),
-BuildProject = String.IsNullOrWhiteSpace(BuildProject) ? throw new ArgumentNullException(nameof(BuildProject)) : BuildProject.Trim(),
-PublishProject = String.IsNullOrWhiteSpace(PublishProject) ? throw new ArgumentNullException(nameof(PublishProject)) : PublishProject.Trim(),
-    };
-  }
+  
 }
 
 public record LambdaSettings {
@@ -106,17 +47,6 @@ public record LambdaSettings {
   
   public required string ShowLogStream { get; init; }
 
-  public Dto ToDto() => new() { 
-    ShowLogStream = ShowLogStream,
-  };
-
-  public record Dto : IDto<LambdaSettings> { 
-    public string? ShowLogStream { get; init; }
-
-    public LambdaSettings ToBase() => new() { 
-ShowLogStream = String.IsNullOrWhiteSpace(ShowLogStream) ? throw new ArgumentNullException(nameof(ShowLogStream)) : ShowLogStream.Trim(),
-    };
-  }
 }
 
 public record ConsoleCommandsSettings {
@@ -130,26 +60,6 @@ public record ConsoleCommandsSettings {
   
   public required LambdaSettings Lambda { get; init; }
 
-  public Dto ToDto() => new() { 
-    Az = Az.ToDto(),
-    Func = Func.ToDto(),
-    DotNet = DotNet.ToDto(),
-    Lambda = Lambda.ToDto(),
-  };
-
-  public record Dto : IDto<ConsoleCommandsSettings> { 
-    public AzSettings.Dto? Az { get; init; }
-    public FuncSettings.Dto? Func { get; init; }
-    public DotNetSettings.Dto? DotNet { get; init; }
-    public LambdaSettings.Dto? Lambda { get; init; }
-
-    public ConsoleCommandsSettings ToBase() => new() { 
-Az = Az?.ToBase() ?? throw new ArgumentNullException(nameof(Az)),
-Func = Func?.ToBase() ?? throw new ArgumentNullException(nameof(Func)),
-DotNet = DotNet?.ToBase() ?? throw new ArgumentNullException(nameof(DotNet)),
-Lambda = Lambda?.ToBase() ?? throw new ArgumentNullException(nameof(Lambda)),
-    };
-  }
 }
 
 public record AzureDefaultValuesSettings {
@@ -165,29 +75,6 @@ public record AzureDefaultValuesSettings {
   
   public required string AppServiceSkuTier { get; init; }
 
-  public Dto ToDto() => new() { 
-    FunctionAppNameTemplate = FunctionAppNameTemplate,
-    AppServicePlanNameTemplate = AppServicePlanNameTemplate,
-    WebSiteNameTemplate = WebSiteNameTemplate,
-    AppServiceSkuName = AppServiceSkuName,
-    AppServiceSkuTier = AppServiceSkuTier,
-  };
-
-  public record Dto : IDto<AzureDefaultValuesSettings> { 
-    public string? FunctionAppNameTemplate { get; init; }
-    public string? AppServicePlanNameTemplate { get; init; }
-    public string? WebSiteNameTemplate { get; init; }
-    public string? AppServiceSkuName { get; init; }
-    public string? AppServiceSkuTier { get; init; }
-
-    public AzureDefaultValuesSettings ToBase() => new() { 
-FunctionAppNameTemplate = String.IsNullOrWhiteSpace(FunctionAppNameTemplate) ? throw new ArgumentNullException(nameof(FunctionAppNameTemplate)) : FunctionAppNameTemplate.Trim(),
-AppServicePlanNameTemplate = String.IsNullOrWhiteSpace(AppServicePlanNameTemplate) ? throw new ArgumentNullException(nameof(AppServicePlanNameTemplate)) : AppServicePlanNameTemplate.Trim(),
-WebSiteNameTemplate = String.IsNullOrWhiteSpace(WebSiteNameTemplate) ? throw new ArgumentNullException(nameof(WebSiteNameTemplate)) : WebSiteNameTemplate.Trim(),
-AppServiceSkuName = String.IsNullOrWhiteSpace(AppServiceSkuName) ? throw new ArgumentNullException(nameof(AppServiceSkuName)) : AppServiceSkuName.Trim(),
-AppServiceSkuTier = String.IsNullOrWhiteSpace(AppServiceSkuTier) ? throw new ArgumentNullException(nameof(AppServiceSkuTier)) : AppServiceSkuTier.Trim(),
-    };
-  }
 }
 
 public record DefaultsSettings {
@@ -209,38 +96,6 @@ public record DefaultsSettings {
   
   public required AzureDefaultValuesSettings AzureDefaultValues { get; init; }
 
-  public Dto ToDto() => new() { 
-    GeneratedCodeFolder = GeneratedCodeFolder,
-    FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes,
-    ReadFunctionPollExpression = ReadFunctionPollExpression,
-    PromoteFunctionPollExpression = PromoteFunctionPollExpression,
-    WriteFunctionPollExpression = WriteFunctionPollExpression,
-    OtherFunctionPollExpression = OtherFunctionPollExpression,
-    ConsoleCommands = ConsoleCommands.ToDto(),
-    AzureDefaultValues = AzureDefaultValues.ToDto(),
-  };
-
-  public record Dto : IDto<DefaultsSettings> { 
-    public string? GeneratedCodeFolder { get; init; }
-    public int? FunctionMaxAllowedRunningMinutes { get; init; }
-    public string? ReadFunctionPollExpression { get; init; }
-    public string? PromoteFunctionPollExpression { get; init; }
-    public string? WriteFunctionPollExpression { get; init; }
-    public string? OtherFunctionPollExpression { get; init; }
-    public ConsoleCommandsSettings.Dto? ConsoleCommands { get; init; }
-    public AzureDefaultValuesSettings.Dto? AzureDefaultValues { get; init; }
-
-    public DefaultsSettings ToBase() => new() { 
-GeneratedCodeFolder = String.IsNullOrWhiteSpace(GeneratedCodeFolder) ? throw new ArgumentNullException(nameof(GeneratedCodeFolder)) : GeneratedCodeFolder.Trim(),
-FunctionMaxAllowedRunningMinutes = FunctionMaxAllowedRunningMinutes ?? 0,
-ReadFunctionPollExpression = String.IsNullOrWhiteSpace(ReadFunctionPollExpression) ? throw new ArgumentNullException(nameof(ReadFunctionPollExpression)) : ReadFunctionPollExpression.Trim(),
-PromoteFunctionPollExpression = String.IsNullOrWhiteSpace(PromoteFunctionPollExpression) ? throw new ArgumentNullException(nameof(PromoteFunctionPollExpression)) : PromoteFunctionPollExpression.Trim(),
-WriteFunctionPollExpression = String.IsNullOrWhiteSpace(WriteFunctionPollExpression) ? throw new ArgumentNullException(nameof(WriteFunctionPollExpression)) : WriteFunctionPollExpression.Trim(),
-OtherFunctionPollExpression = String.IsNullOrWhiteSpace(OtherFunctionPollExpression) ? throw new ArgumentNullException(nameof(OtherFunctionPollExpression)) : OtherFunctionPollExpression.Trim(),
-ConsoleCommands = ConsoleCommands?.ToBase() ?? throw new ArgumentNullException(nameof(ConsoleCommands)),
-AzureDefaultValues = AzureDefaultValues?.ToBase() ?? throw new ArgumentNullException(nameof(AzureDefaultValues)),
-    };
-  }
 }
 
 public record SecretsLoaderSettings {
@@ -254,26 +109,6 @@ public record SecretsLoaderSettings {
   
   public string? ProviderSecret { get; init; }
 
-  public Dto ToDto() => new() { 
-    Provider = Provider,
-    SecretsFolder = SecretsFolder,
-    ProviderKey = ProviderKey,
-    ProviderSecret = ProviderSecret,
-  };
-
-  public record Dto : IDto<SecretsLoaderSettings> { 
-    public string? Provider { get; init; }
-    public string? SecretsFolder { get; init; }
-    public string? ProviderKey { get; init; }
-    public string? ProviderSecret { get; init; }
-
-    public SecretsLoaderSettings ToBase() => new() { 
-Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-      SecretsFolder = SecretsFolder?.Trim(),
-      ProviderKey = ProviderKey?.Trim(),
-      ProviderSecret = ProviderSecret?.Trim(),
-    };
-  }
 }
 
 public record StagedEntityRepositorySettings {
@@ -290,33 +125,6 @@ public record StagedEntityRepositorySettings {
   public required bool CreateSchema { get; init; }
   
   public required int Limit { get; init; }
-
-  public Dto ToDto() => new() { 
-    Provider = Provider,
-    ConnectionString = ConnectionString,
-    SchemaName = SchemaName,
-    TableName = TableName,
-    CreateSchema = CreateSchema,
-    Limit = Limit,
-  };
-
-  public record Dto : IDto<StagedEntityRepositorySettings> { 
-    public string? Provider { get; init; }
-    public string? ConnectionString { get; init; }
-    public string? SchemaName { get; init; }
-    public string? TableName { get; init; }
-    public bool? CreateSchema { get; init; }
-    public int? Limit { get; init; }
-
-    public StagedEntityRepositorySettings ToBase() => new() { 
-Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-TableName = String.IsNullOrWhiteSpace(TableName) ? throw new ArgumentNullException(nameof(TableName)) : TableName.Trim(),
-CreateSchema = CreateSchema ?? false,
-Limit = Limit ?? 0,
-    };
-  }
 }
 
 public record CtlRepositorySettings {
@@ -338,38 +146,6 @@ public record CtlRepositorySettings {
   
   public required bool CreateSchema { get; init; }
 
-  public Dto ToDto() => new() { 
-    Provider = Provider,
-    ConnectionString = ConnectionString,
-    SchemaName = SchemaName,
-    SystemStateTableName = SystemStateTableName,
-    ObjectStateTableName = ObjectStateTableName,
-    CoreToSysMapTableName = CoreToSysMapTableName,
-    EntityChangeTableName = EntityChangeTableName,
-    CreateSchema = CreateSchema,
-  };
-
-  public record Dto : IDto<CtlRepositorySettings> { 
-    public string? Provider { get; init; }
-    public string? ConnectionString { get; init; }
-    public string? SchemaName { get; init; }
-    public string? SystemStateTableName { get; init; }
-    public string? ObjectStateTableName { get; init; }
-    public string? CoreToSysMapTableName { get; init; }
-    public string? EntityChangeTableName { get; init; }
-    public bool? CreateSchema { get; init; }
-
-    public CtlRepositorySettings ToBase() => new() { 
-Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-SystemStateTableName = String.IsNullOrWhiteSpace(SystemStateTableName) ? throw new ArgumentNullException(nameof(SystemStateTableName)) : SystemStateTableName.Trim(),
-ObjectStateTableName = String.IsNullOrWhiteSpace(ObjectStateTableName) ? throw new ArgumentNullException(nameof(ObjectStateTableName)) : ObjectStateTableName.Trim(),
-CoreToSysMapTableName = String.IsNullOrWhiteSpace(CoreToSysMapTableName) ? throw new ArgumentNullException(nameof(CoreToSysMapTableName)) : CoreToSysMapTableName.Trim(),
-EntityChangeTableName = String.IsNullOrWhiteSpace(EntityChangeTableName) ? throw new ArgumentNullException(nameof(EntityChangeTableName)) : EntityChangeTableName.Trim(),
-CreateSchema = CreateSchema ?? false,
-    };
-  }
 }
 
 public record CoreStorageSettings {
@@ -385,29 +161,6 @@ public record CoreStorageSettings {
   
   public required bool CreateSchema { get; init; }
 
-  public Dto ToDto() => new() { 
-    Provider = Provider,
-    ConnectionString = ConnectionString,
-    SchemaName = SchemaName,
-    CtlSchemaName = CtlSchemaName,
-    CreateSchema = CreateSchema,
-  };
-
-  public record Dto : IDto<CoreStorageSettings> { 
-    public string? Provider { get; init; }
-    public string? ConnectionString { get; init; }
-    public string? SchemaName { get; init; }
-    public string? CtlSchemaName { get; init; }
-    public bool? CreateSchema { get; init; }
-
-    public CoreStorageSettings ToBase() => new() { 
-Provider = String.IsNullOrWhiteSpace(Provider) ? throw new ArgumentNullException(nameof(Provider)) : Provider.Trim(),
-ConnectionString = String.IsNullOrWhiteSpace(ConnectionString) ? throw new ArgumentNullException(nameof(ConnectionString)) : ConnectionString.Trim(),
-SchemaName = String.IsNullOrWhiteSpace(SchemaName) ? throw new ArgumentNullException(nameof(SchemaName)) : SchemaName.Trim(),
-CtlSchemaName = String.IsNullOrWhiteSpace(CtlSchemaName) ? throw new ArgumentNullException(nameof(CtlSchemaName)) : CtlSchemaName.Trim(),
-CreateSchema = CreateSchema ?? false,
-    };
-  }
 }
 
 public record AzFunctionsSettings {
@@ -428,39 +181,6 @@ public record AzFunctionsSettings {
   public string? AppServiceSkuName { get; init; }
   
   public string? AppServiceSkuTier { get; init; }
-
-  public Dto ToDto() => new() { 
-    Assembly = Assembly,
-    Region = Region,
-    ResourceGroup = ResourceGroup,
-    FunctionAppName = FunctionAppName,
-    AppServicePlanName = AppServicePlanName,
-    WebSiteName = WebSiteName,
-    AppServiceSkuName = AppServiceSkuName,
-    AppServiceSkuTier = AppServiceSkuTier,
-  };
-
-  public record Dto : IDto<AzFunctionsSettings> { 
-    public string? Assembly { get; init; }
-    public string? Region { get; init; }
-    public string? ResourceGroup { get; init; }
-    public string? FunctionAppName { get; init; }
-    public string? AppServicePlanName { get; init; }
-    public string? WebSiteName { get; init; }
-    public string? AppServiceSkuName { get; init; }
-    public string? AppServiceSkuTier { get; init; }
-
-    public AzFunctionsSettings ToBase() => new() { 
-      Assembly = Assembly?.Trim(),
-      Region = Region?.Trim(),
-      ResourceGroup = ResourceGroup?.Trim(),
-      FunctionAppName = FunctionAppName?.Trim(),
-      AppServicePlanName = AppServicePlanName?.Trim(),
-      WebSiteName = WebSiteName?.Trim(),
-      AppServiceSkuName = AppServiceSkuName?.Trim(),
-      AppServiceSkuTier = AppServiceSkuTier?.Trim(),
-    };
-  }
 }
 
 public record AzureSettings {
@@ -483,42 +203,6 @@ public record AzureSettings {
   public string? KeySecretNameTemplate { get; init; }
   
   public required List<AzFunctionsSettings> AzFunctions { get; init; }
-
-  public Dto ToDto() => new() { 
-    Region = Region,
-    ResourceGroup = ResourceGroup,
-    FunctionAppName = FunctionAppName,
-    AppServicePlanName = AppServicePlanName,
-    WebSiteName = WebSiteName,
-    TenantId = TenantId,
-    KeyVaultName = KeyVaultName,
-    KeySecretNameTemplate = KeySecretNameTemplate,
-    AzFunctions = AzFunctions.Select(item => item.ToDto()).ToList(),
-  };
-
-  public record Dto : IDto<AzureSettings> { 
-    public string? Region { get; init; }
-    public string? ResourceGroup { get; init; }
-    public string? FunctionAppName { get; init; }
-    public string? AppServicePlanName { get; init; }
-    public string? WebSiteName { get; init; }
-    public string? TenantId { get; init; }
-    public string? KeyVaultName { get; init; }
-    public string? KeySecretNameTemplate { get; init; }
-    public List<AzFunctionsSettings.Dto>? AzFunctions { get; init; }
-
-    public AzureSettings ToBase() => new() { 
-Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-ResourceGroup = String.IsNullOrWhiteSpace(ResourceGroup) ? throw new ArgumentNullException(nameof(ResourceGroup)) : ResourceGroup.Trim(),
-      FunctionAppName = FunctionAppName?.Trim(),
-      AppServicePlanName = AppServicePlanName?.Trim(),
-      WebSiteName = WebSiteName?.Trim(),
-      TenantId = TenantId?.Trim(),
-      KeyVaultName = KeyVaultName?.Trim(),
-      KeySecretNameTemplate = KeySecretNameTemplate?.Trim(),
-AzFunctions = AzFunctions?.Select(dto => dto.ToBase()).ToList() ?? new List<AzFunctionsSettings>(),
-    };
-  }
 }
 
 public record AwsSettings {
@@ -542,28 +226,4 @@ public record AwsSettings {
   /// The amount of memory available to the function at runtime. Increasing the function memory also increases its CPU allocation. The default value is 128 MB. The value can be any multiple of 1 MB.
   /// </summary>
   public required int Timeout { get; init; }
-
-  public Dto ToDto() => new() { 
-    Region = Region,
-    AccountName = AccountName,
-    SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate,
-    MemorySize = MemorySize,
-    Timeout = Timeout,
-  };
-
-  public record Dto : IDto<AwsSettings> { 
-    public string? Region { get; init; }
-    public string? AccountName { get; init; }
-    public string? SecretsManagerStoreIdTemplate { get; init; }
-    public int? MemorySize { get; init; }
-    public int? Timeout { get; init; }
-
-    public AwsSettings ToBase() => new() { 
-Region = String.IsNullOrWhiteSpace(Region) ? throw new ArgumentNullException(nameof(Region)) : Region.Trim(),
-      AccountName = AccountName?.Trim(),
-      SecretsManagerStoreIdTemplate = SecretsManagerStoreIdTemplate?.Trim(),
-MemorySize = MemorySize ?? 0,
-Timeout = Timeout ?? 0,
-    };
-  }
 }

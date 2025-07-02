@@ -23,18 +23,18 @@ public class FunctionRunnerTests {
     Assert.That(repo.Systems, Is.Empty);
     var results = await F.RunFunc(emptufunc, ctl: repo);
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_run_inactive_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase());
     
     var results = await F.RunFunc(emptufunc, ctl: repo);
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase()));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(C.System1Name, LifecycleStage.Defaults.Read, false, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString()).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(InactiveFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
@@ -44,28 +44,28 @@ public class FunctionRunnerTests {
     var count = 10;
     var results = await F.RunFunc(new SimpleFunction(repo, count), ctl: repo);
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults.Select(r => r.Result), Is.EquivalentTo(Enumerable.Range(0, count).Select(_ => new EmptyReadOperationResult())));
   }
   
   [Test] public async Task Test_already_running_function_creates_valid_state_but_does_not_run() {
-    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase());
     
     var results = await F.RunFunc(emptufunc, ctl: repo);
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase()));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(AlreadyRunningFunctionRunResults)));
     Assert.That(results.OpResults, Is.EquivalentTo(Array.Empty<OperationResult>()));
   }
   
   [Test] public async Task Test_stuck_running_function_runs_again() {
-    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
+    repo.Systems.Add(new (C.System1Name, LifecycleStage.Defaults.Read), new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Running.ToString(), laststart: UtcDate.UtcNow.AddHours(-1)).ToBase());
     var results = await F.RunFunc(new SimpleFunction(repo, 1), ctl: repo);
     
-    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState.Dto(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
+    Assert.That(repo.Systems.Values.Single(), Is.EqualTo(new SystemState(C.System1Name, LifecycleStage.Defaults.Read, true, UtcDate.UtcNow, UtcDate.UtcNow, ESystemStateStatus.Idle.ToString(), UtcDate.UtcNow, UtcDate.UtcNow).ToBase()));
     Assert.That(repo.Objects, Is.Empty);
     Assert.That(results.Message, Is.EqualTo(nameof(SuccessFunctionRunResults)));
     Assert.That(results.OpResults.Single().Result, Is.EqualTo(new EmptyReadOperationResult()));

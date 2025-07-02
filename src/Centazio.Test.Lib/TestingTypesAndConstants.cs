@@ -36,19 +36,6 @@ public record CoreEntity(CoreEntityId CoreId, string FirstName, string LastName,
   public override string DisplayName => $"{FirstName} {LastName}";
   
   public override object GetChecksumSubset() => new { CoreId, FirstName, LastName, DateOfBirth };
-
-  public record Dto : ICoreEntityDto<CoreEntity> {
-    public required string CoreId { get; init; }
-    public string? FirstName { get; init; }
-    public string? LastName { get; init; }
-    public DateOnly? DateOfBirth { get; init; }
-    
-    public CoreEntity ToBase() => new(
-        new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-        FirstName ?? throw new ArgumentNullException(nameof(FirstName)),
-        LastName ?? throw new ArgumentNullException(nameof(LastName)),
-        DateOfBirth ?? throw new ArgumentNullException(nameof(DateOfBirth)));
-  }
 }
 
 public record CoreEntity2(CoreEntityId CoreId, DateTime DateUpdated) : ICoreEntity {

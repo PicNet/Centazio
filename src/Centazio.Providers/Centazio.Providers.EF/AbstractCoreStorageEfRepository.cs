@@ -22,10 +22,9 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   
   public async Task<List<CoreEntityAndMeta>> GetEntitiesToWrite(SystemName exclude, CoreEntityTypeName coretype, DateTime after) => 
       await UseDb(async db => {
-        var metas = (await db.Set<CoreStorageMeta.Dto>()
+        var metas = (await db.Set<CoreStorageMeta>()
                 .Where(m => m.CoreEntityTypeName == coretype && m.LastUpdateSystem != exclude.Value && m.DateUpdated > after)
                 .ToListAsync())
-            .Select(m => m.ToBase())
             .ToList(); 
         return await GetCoresForMetas(coretype, metas);
       });
@@ -33,10 +32,9 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   public async Task<List<CoreEntityAndMeta>> GetExistingEntities(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       await UseDb(async db => {
         var strids = coreids.Select(cid => cid.Value).ToList();
-        var metas = (await db.Set<CoreStorageMeta.Dto>()
+        var metas = (await db.Set<CoreStorageMeta>()
                 .Where(m => m.CoreEntityTypeName == coretype.Value && strids.Contains(m.CoreId))
                 .ToListAsync())
-            .Select(m => m.ToBase())
             .ToList();
         if (coreids.Count != metas.Count) throw new Exception("Could not find all specified core entities");
         return await GetCoresForMetas(coretype, metas);
@@ -45,7 +43,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   public async Task<Dictionary<CoreEntityId, CoreEntityChecksum>> GetChecksums(CoreEntityTypeName coretype, List<CoreEntityId> coreids) => 
       await UseDb(async db => {
         var strids = coreids.Select(cid => cid.Value).ToList();
-        return await db.Set<CoreStorageMeta.Dto>()
+        return await db.Set<CoreStorageMeta>()
             .Where(m => m.CoreEntityTypeName == coretype.Value && strids.Contains(m.CoreId))
             .ToDictionaryAsync(m => new CoreEntityId(m.CoreId), m => new CoreEntityChecksum(m.CoreEntityChecksum ?? throw new Exception()));
       });
@@ -53,7 +51,7 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
   public async Task<List<CoreEntityAndMeta>> Upsert(CoreEntityTypeName coretype, List<CoreEntityAndMeta> entities) {
     return await UseDb(async db => {
       var strids = entities.Select(e => e.CoreEntity.CoreId.Value).ToList();
-      var existing = await db.Set<CoreStorageMeta.Dto>()
+      var existing = await db.Set<CoreStorageMeta>()
           .Where(m => m.CoreEntityTypeName == coretype.Value && strids.Contains(m.CoreId))
           .ToDictionaryAsync(m => m.CoreId);
       entities.ForEach(entity => UpsertEntity(entity, existing.ContainsKey(entity.CoreEntity.CoreId) ? EntityState.Modified : EntityState.Added, db));
@@ -64,9 +62,8 @@ public abstract class AbstractCoreStorageEfRepository(Func<CentazioDbContext> ge
     });
     
     void UpsertEntity(CoreEntityAndMeta entity, EntityState state, CentazioDbContext db) {
-      var dtos = entity.ToDtos();
-      db.Attach(dtos.CoreEntityDto).State = state;
-      db.Attach(dtos.MetaDto).State = state;
+      db.Attach(entity.CoreEntity).State = state;
+      db.Attach(entity.Meta).State = state;
       
       if (state == EntityState.Added) OnEntityAdd?.Invoke(this, new EntityUpsertEventArgs(entity));
       else OnEntityUpdate?.Invoke(this, new EntityUpsertEventArgs(entity));

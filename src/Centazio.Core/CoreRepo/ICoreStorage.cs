@@ -12,39 +12,7 @@ public record CoreStorageMeta(
     DateTime DateCreated, 
     DateTime DateUpdated, 
     SystemName LastUpdateSystem, 
-    SystemEntityId LastUpdateSystemId) {
-  
-  public record Dto : IDto<CoreStorageMeta> {
-    public required string CoreId { get; init; }
-    
-    public string? OriginalSystem { get; init; }
-    public string? OriginalSystemType { get; init; }
-    public string? OriginalSystemId { get; init; }
-    public string? CoreEntityTypeName { get; init; }
-    public DateTime? DateCreated { get; init; }
-    public DateTime? DateUpdated { get; init; }
-    public string? LastUpdateSystem { get; init; }
-    public string? LastUpdateSystemId { get; init; }
-    
-    public string? CoreEntityChecksum { get; init; }
-    
-    public CoreStorageMeta ToBase() => new(
-      new (OriginalSystem ?? throw new ArgumentNullException(nameof(OriginalSystem))),
-      new (OriginalSystemType ?? throw new ArgumentNullException(nameof(OriginalSystemType))),
-      new (OriginalSystemId ?? throw new ArgumentNullException(nameof(OriginalSystemId))),
-      new (CoreEntityTypeName ?? throw new ArgumentNullException(nameof(CoreEntityTypeName))),
-      new (CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-      new (CoreEntityChecksum ?? throw new ArgumentNullException(nameof(CoreEntityChecksum))),
-      DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-      DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
-      new (LastUpdateSystem ?? throw new ArgumentNullException(nameof(LastUpdateSystem))),
-      new (LastUpdateSystemId ?? throw new ArgumentNullException(nameof(LastUpdateSystemId)))
-    );
-  }
-}
-
-public record CoreEntityAndMetaDtos(object CoreEntityDto, CoreStorageMeta.Dto MetaDto);
-public record CoreEntityAndMetaDtos<D>(D CoreEntityDto, CoreStorageMeta.Dto MetaDto);
+    SystemEntityId LastUpdateSystemId);
 
 public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
   public E As<E>() => (E) CoreEntity;
@@ -60,12 +28,9 @@ public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) {
   public CoreEntityAndMeta Update(SystemName system, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg) =>
       Update(system, coreent, checksumalg(coreent));
   
-  public CoreEntityAndMetaDtos ToDtos() => new(DtoHelpers.ToDto(CoreEntity), DtoHelpers.ToDto<CoreStorageMeta, CoreStorageMeta.Dto>(Meta));
-  
-  public static CoreEntityAndMeta FromJson<E, D>(string json) where E : ICoreEntity where D : class, ICoreEntityDto<E> {
-    var raw = Json.Deserialize<CoreEntityAndMetaDtos<D>>(json);
-    return new CoreEntityAndMeta(raw.CoreEntityDto.ToBase(), raw.MetaDto.ToBase());
-  }
+  public static CoreEntityAndMeta FromJson(string json) => 
+      Json.Deserialize<CoreEntityAndMeta>(json);
+
 }
 
 public interface ICoreStorage : IAsyncDisposable {

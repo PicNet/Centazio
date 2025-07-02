@@ -10,10 +10,4 @@ public abstract record CoreEntityBase(CoreEntityId CoreId) : ICoreEntity {
   public abstract object GetChecksumSubset();
   
   protected CoreEntityBase() : this(CoreEntityId.DEFAULT_VALUE) { }
-
-  public abstract record Dto<E> : ICoreEntityDto<E> where E : CoreEntityBase {
-    public required string CoreId { get; init; } 
-    
-    public abstract E ToBase();
-  }
 }

@@ -10,10 +10,10 @@ public abstract class AbstractStagedEntityRepositoryDbContext(StagedEntityReposi
   public string SchemaName { get; } = settings.SchemaName;
   public string StagedEntityTableName { get; } = settings.TableName;
   
-  public DbSet<StagedEntity.Dto> Staged { get; set; }
+  public DbSet<StagedEntity> Staged { get; set; }
   
   protected sealed override void CreateCentazioModel(ModelBuilder builder) => 
       builder
           .HasDefaultSchema(SchemaName)
-          .Entity<StagedEntity.Dto>(e => e.ToTable(StagedEntityTableName));
+          .Entity<StagedEntity>(e => e.ToTable(StagedEntityTableName));
 }

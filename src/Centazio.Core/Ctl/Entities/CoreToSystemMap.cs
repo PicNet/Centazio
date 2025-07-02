@@ -45,35 +45,6 @@ public static class Map {
     [MaxLength(1024)] public string? LastError { get; internal init; }
     
     public PendingUpdate Update() => new(this) { DateUpdated = UtcDate.UtcNow };
-    
-    public record Dto : IDto<CoreToSysMap> {
-      public string? CoreEntityTypeName { get; init; }
-      public string? CoreId { get; init; }
-      public string? System { get; init; }
-      public string? SystemId { get; init; }
-      public string? Status { get; init; }
-      public DateTime? DateCreated { get; init; }
-      public DateTime? DateUpdated { get; init; }
-      public DateTime? DateLastSuccess { get; init; }
-      public DateTime? DateLastError { get; init; }
-      public string? LastError { get; init; }
-      public string? SystemEntityChecksum { get; init; }
-      
-      public CoreToSysMap ToBase() => new(
-          new CoreEntityTypeName(CoreEntityTypeName ?? throw new ArgumentNullException(nameof(CoreEntityTypeName))),
-          new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-          new(System ?? throw new ArgumentNullException(nameof(System))),
-          new (SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
-          Enum.Parse<EEntityMappingStatus>(Status ?? throw new ArgumentNullException(nameof(Status))),
-          new (SystemEntityChecksum ?? throw new ArgumentNullException(nameof(SystemEntityChecksum)))) {
-        
-        DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
-        DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
-        DateLastSuccess = DateLastSuccess,
-        DateLastError = DateLastError,
-        LastError = LastError
-      };
-    }
   }
   
   public record PendingCreate : ICoreToSysMap {

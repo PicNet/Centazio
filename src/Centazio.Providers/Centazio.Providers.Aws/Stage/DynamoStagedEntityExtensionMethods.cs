@@ -24,16 +24,16 @@ public static class DynamoStagedEntityExtensionMethods {
     return docs.Select(d => {
       var (system, entity, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
       var (staged, suffix, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
-      return new StagedEntity.Dto {
-        Id = Guid.Parse(suffix),
-        System = system, 
-        SystemEntityTypeName = entity, 
-        DateStaged = DateTime.Parse(staged).ToUniversalTime(), 
-        Data = d[nameof(StagedEntity.Data)].AsString(),
-        StagedEntityChecksum = d[nameof(StagedEntity.StagedEntityChecksum)].AsString(),
-        DatePromoted = d.ContainsKey(nameof(StagedEntity.DatePromoted)) ? DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime() : null,
-        IgnoreReason = d.ContainsKey(nameof(StagedEntity.IgnoreReason)) ? d[nameof(StagedEntity.IgnoreReason)].AsString() : null 
-      }.ToBase();
+      var se = StagedEntity.PrivateCreateWithId(
+        Guid.Parse(suffix),
+        new (system), 
+        new (entity), 
+        DateTime.Parse(staged).ToUniversalTime(), 
+        new (d[nameof(StagedEntity.Data)].AsString()),
+        new (d[nameof(StagedEntity.StagedEntityChecksum)].AsString()));
+      if (d.ContainsKey(nameof(StagedEntity.DatePromoted))) se = se.Promote(DateTime.Parse(d[nameof(StagedEntity.DatePromoted)].AsString()).ToUniversalTime());
+      if (d.ContainsKey(nameof(StagedEntity.IgnoreReason))) se = se.Ignore(new (d[nameof(StagedEntity.IgnoreReason)].AsString()));
+      return se;
     }).ToList();
   }
 }

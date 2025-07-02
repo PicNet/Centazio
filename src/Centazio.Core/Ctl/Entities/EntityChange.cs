@@ -37,27 +37,6 @@ public record EntityChange {
           .Select(p => new FieldChange(p.Name, p.GetValue(old)?.ToString() ?? String.Empty, p.GetValue(@new)?.ToString() ?? String.Empty))
           .Where(c => c.IsChange())
           .ToDictionary(c => c.FieldName, c => c.ToPair());
-
-  public record Dto : IDto<EntityChange> {
-    public string? CoreEntityTypeName { get; init; }
-    public string? CoreId { get; init; }
-    public string? System { get; init; }
-    public string? SystemEntityTypeName { get; init; }
-    public string? SystemId { get; init; }
-    public DateTime? ChangeDate { get; init; }
-    public string? ChangeType { get; init; }
-    public string? ChangeDetails { get; init; }
-    
-    public EntityChange ToBase() => new(
-      new CoreEntityTypeName(CoreEntityTypeName ?? throw new ArgumentNullException(nameof(CoreEntityTypeName))),
-      new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
-      new(System ?? throw new ArgumentNullException(nameof(System))),
-      new(SystemEntityTypeName ?? throw new ArgumentNullException(nameof(SystemEntityTypeName))),
-      new (SystemId ?? throw new ArgumentNullException(nameof(SystemId))),
-      ChangeDate ?? throw new ArgumentNullException(nameof(ChangeDate)),
-      Enum.Parse<EChangeType>(ChangeType ?? throw new ArgumentNullException(nameof(ChangeType))),
-      ChangeDetails ?? throw new ArgumentNullException(nameof(ChangeDetails)));
-  }
   
   record FieldChange(string FieldName, string OldValue, string NewValue) {
     public bool IsChange() => OldValue != NewValue;

@@ -8,11 +8,11 @@ public class CoreStorageDbContext(string connstr) : SqliteDbContext(connstr) {
 
   protected override void CreateCentazioModel(ModelBuilder builder) => builder
       .HasDefaultSchema("dbo")
-      .Entity<CoreStorageMeta.Dto>(e => {
+      .Entity<CoreStorageMeta>(e => {
         e.ToTable(nameof(CoreStorageMeta).ToLower(), "ctl");
         e.HasKey(e2 => new { e2.CoreEntityTypeName, e2.CoreId });
       })
-      .Entity<CoreTask.Dto>(e => {
+      .Entity<CoreTask>(e => {
         e.ToTable(nameof(CoreTask).ToLower());
         e.HasKey(e2 => e2.CoreId);
       });

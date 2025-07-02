@@ -1,6 +1,5 @@
 ﻿using Centazio.Core;
 using Centazio.Core.Checksum;
-using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,15 +18,14 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     await using var db = opts.Db();
     var checksumstrs = newchecksums.Select(cs => cs.Value).ToList();
     return await Query(system, systype, db)
-        .Where(s => checksumstrs.Contains(s.StagedEntityChecksum ?? String.Empty))
-        .Select(s => new StagedEntityChecksum(s.StagedEntityChecksum ?? String.Empty))
+        .Where(s => checksumstrs.Contains(s.StagedEntityChecksum))
+        .Select(s => new StagedEntityChecksum(s.StagedEntityChecksum))
         .ToListAsync();
   }
 
   protected override async Task<List<StagedEntity>> StageImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     await using var db = opts.Db();
-    var dtos = staged.Select(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>);
-    db.Staged.AddRange(dtos);
+    db.Staged.AddRange(staged);
     await db.SaveChangesAsync();
     
     return staged;
@@ -36,7 +34,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
   public override async Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged) {
     if (!staged.Any()) return;
     await using var db = opts.Db();
-    await db.ToDtoAttachAndUpdate<StagedEntity, StagedEntity.Dto>(staged);
+    await db.ToDtoAttachAndUpdate(staged);
   }
 
   protected override async Task<List<StagedEntity>> GetImpl(SystemName system, SystemEntityTypeName systype, DateTime after, bool incpromoted) {
@@ -44,7 +42,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     var query = Query(system, systype, db).Where(e => e.DateStaged > after && String.IsNullOrEmpty(e.IgnoreReason));
     if (!incpromoted) query = query.Where(e => !e.DatePromoted.HasValue);
     if (Limit is > 0 and < Int32.MaxValue) query = query.Take(Limit);
-    return query.OrderBy(e => e.DateStaged).ToList().Select(dto => dto.ToBase()).ToList();
+    return query.OrderBy(e => e.DateStaged).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {
@@ -54,7 +52,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     await query.ExecuteDeleteAsync();
   }
 
-  private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
+  private IQueryable<StagedEntity> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
   public override Task<IStagedEntityRepository> Initialise() => Task.FromResult<IStagedEntityRepository>(this);

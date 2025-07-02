@@ -25,20 +25,16 @@ public abstract class CentazioDbContext : DbContext {
   
   // note: if you get a DbUpdateConcurrencyException from EF, check that the entities do exist
   //    in the DB.  You may need to call  ToDtoAttachAndCreate instead
-  public async Task<int> ToDtoAttachAndUpdate<E, D>(IEnumerable<E> entities) 
-      where E : class 
-      where D : class, IDto<E> {
-    var dtos = entities.Select(DtoHelpers.ToDto<E, D>).ToList();
-    AttachRange(dtos);
-    dtos.ForEach(dto => Entry(dto).State = EntityState.Modified);
+  public async Task<int> ToDtoAttachAndUpdate<E>(IEnumerable<E> entities) 
+      where E : class {
+    var lst = entities.ToList();
+    AttachRange(lst);
+    lst.ForEach(dto => Entry(dto).State = EntityState.Modified);
     return await SaveChangesAsync();
   }
   
-  public async Task<int> ToDtoAttachAndCreate<E, D>(IEnumerable<E> entities) 
-      where E : class 
-      where D : class, IDto<E> {
-    var dtos = entities.Select(DtoHelpers.ToDto<E, D>).ToList();
-    await AddRangeAsync(dtos);
+  public async Task<int> ToDtoAttachAndCreate<E>(IEnumerable<E> entities) where E : class {
+    await AddRangeAsync(entities);
     return await SaveChangesAsync();
   }
   

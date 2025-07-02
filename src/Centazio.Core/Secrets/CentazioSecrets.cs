@@ -55,34 +55,4 @@ public record CentazioSecrets {
     this.SQL_CONN_STR = SQL_CONN_STR;
     this.NUGET_API_KEY = NUGET_API_KEY;
   }
-  
-  public record Dto : IDto<CentazioSecrets> {
-    public string? AWS_KEY { get; set; } 
-    public string? AWS_SECRET { get; set; }
-        
-    public string? AZ_TENANT_ID { get; set; }
-    public string? AZ_CLIENT_ID { get; set; }
-    public string? AZ_SECRET_ID { get; set; }
-    public string? AZ_SUBSCRIPTION_ID { get; set; }
-    public string? AZ_APP_INSIGHT_CONNECTION_STRING { get; set; }
-    public string? AZ_BLOB_STORAGE_ENDPOINT { get; set; }
-    
-    public string? SQL_CONN_STR { get; set; }
-    
-    public string? NUGET_API_KEY { get; set; }
-    
-    public CentazioSecrets ToBase() => new(
-      String.IsNullOrWhiteSpace(AWS_KEY) ? throw new ArgumentNullException(nameof(AWS_KEY)) : AWS_KEY.Trim(),
-      String.IsNullOrWhiteSpace(AWS_SECRET) ? throw new ArgumentNullException(nameof(AWS_SECRET)) : AWS_SECRET.Trim(),
-      
-      String.IsNullOrWhiteSpace(AZ_TENANT_ID) ? throw new ArgumentNullException(nameof(AZ_TENANT_ID)) : AZ_TENANT_ID.Trim(),
-      String.IsNullOrWhiteSpace(AZ_CLIENT_ID) ? throw new ArgumentNullException(nameof(AZ_CLIENT_ID)) : AZ_CLIENT_ID.Trim(),
-      String.IsNullOrWhiteSpace(AZ_SECRET_ID) ? throw new ArgumentNullException(nameof(AZ_SECRET_ID)) : AZ_SECRET_ID.Trim(),
-      String.IsNullOrWhiteSpace(AZ_SUBSCRIPTION_ID) ? throw new ArgumentNullException(nameof(AZ_SUBSCRIPTION_ID)) : AZ_SUBSCRIPTION_ID.Trim(),
-      String.IsNullOrWhiteSpace(AZ_BLOB_STORAGE_ENDPOINT) ? throw new ArgumentNullException(nameof(AZ_BLOB_STORAGE_ENDPOINT)) : AZ_BLOB_STORAGE_ENDPOINT.Trim(),
-      AZ_APP_INSIGHT_CONNECTION_STRING?.Trim(),
-      
-      SQL_CONN_STR?.Trim(),
-      NUGET_API_KEY?.Trim());
-  }
 }

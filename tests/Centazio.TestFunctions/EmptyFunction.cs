@@ -13,26 +13,6 @@ public record TestSettings : CentazioSettings {
   public string? NewProperty { get; init; }
   
   protected TestSettings(CentazioSettings centazio) : base (centazio) {}
-  
-  public override Dto ToDto() {
-    return new(base.ToDto()) { NewProperty = NewProperty };
-  }
-
-  public new record Dto : CentazioSettings.Dto, IDto<TestSettings> {
-    public string? NewProperty { get; init; }
-    
-    public Dto() {} // required for initialisation in `SettingsLoader.cs`
-    internal Dto(CentazioSettings.Dto centazio) : base(centazio) {}
-    
-    public new TestSettings ToBase() {
-      var centazio = base.ToBase();
-      return new TestSettings(centazio) {
-        // compiler does not know that `base.ToBase()` has already set `SecretsFolder`
-        NewProperty = NewProperty 
-      };
-    }
-
-  }
 }
 
 public class TestFunctionIntegration(params List<string> environments) : IntegrationBase<TestSettings, CentazioSecrets>(environments) {
