@@ -8,7 +8,9 @@ namespace Centazio.Core.Misc;
 
 public class ValueObjectConverter<T> : JsonConverter<T> where T : class {
 
-  public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+  public override T Read(ref Utf8JsonReader reader, Type target, JsonSerializerOptions opts) {
+    if (reader.TokenType == JsonTokenType.String) return (T) (Activator.CreateInstance(target, reader.GetString()) ?? throw new Exception());
+    
     if (reader.TokenType != JsonTokenType.StartObject)
       throw new JsonException("Expected StartObject token");
 
@@ -20,8 +22,8 @@ public class ValueObjectConverter<T> : JsonConverter<T> where T : class {
       if (reader.TokenType != JsonTokenType.PropertyName)
         continue;
 
-      var propertyName = reader.GetString()!;
-      if (propertyName == "Value") {
+      var prop = reader.GetString()!;
+      if (prop == "Value") {
         reader.Read();
         value = reader.GetString()!;
       }
@@ -29,7 +31,7 @@ public class ValueObjectConverter<T> : JsonConverter<T> where T : class {
       reader.Skip(); // ignore unknown fields
     }
 
-    return (T)Activator.CreateInstance(typeToConvert, value)!;
+    return (T) (Activator.CreateInstance(target, value) ?? throw new Exception());
   }
 
   public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
@@ -45,7 +47,13 @@ public static class Json {
   internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
     RespectNullableAnnotations = true,
     PropertyNamingPolicy = null,
-    Converters = { new ValueObjectConverter<SystemName>(), new ValueObjectConverter<LifecycleStage>(), new ValueObjectConverter<ObjectName>() }
+    // todo GT: use `ValidString.AllSubclasses()`
+    Converters = {
+      new ValueObjectConverter<SystemName>(), 
+      new ValueObjectConverter<LifecycleStage>(), 
+      new ValueObjectConverter<ObjectName>(),
+      new ValueObjectConverter<ValidString>()
+    }
   };
   
   internal static readonly JsonSerializerOptions HTTP_CONTENT_WRITE_OPTS = new(DEFAULT_OPTS) {

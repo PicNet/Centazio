@@ -100,11 +100,29 @@ public class JsonTests {
     Assert.That(json, Does.Not.Contain("\"IgnoredProp\":"));
   }
   
-  [Test, Ignore("RespectNullableAnnotations does not work with empty object '{}'")] public void Test_RespectNullableAnnotations() {
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NullStr"": ""NullStr"", ""NonNullStr"": null}"));
-    var result = Json.Deserialize<ObjWithNullables>("{}");
-    Validator.ValidateObject(result, new ValidationContext(result), true);
-    // Validator also, does not check field nullability
+  [Test] public void Test_without_Dtos_Nullability() {
+    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");;
+    Assert.That(validstrings, Is.EqualTo(new TestValidStrings {Str1 = new("1"), Str2 = new("2") }));
+    
+    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");;
+    Assert.That(subclasses, Is.EqualTo(new TestValidStringSubclasses { CoreId = new("1"), SystemId = new("2") }));
+    
+    
+    var obj = Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }");
+    Assert.That(obj, Is.EqualTo(new ObjWithNullables { NonNullStr = "str", NonNullDt = new DateTime(2020, 1, 1), NonNullObj = new TestValidStrings  {Str1 = new("1"), Str2 = new("2") }}));
+    
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }"));
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }"));
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01""}"));
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str2"": ""2""} }"));
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1""} }"));
+    
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>("{}"));
+    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { } }"));
+  }
+  
+  [Test] public void Test_without_Dtos_Data_Annotations() {
+    // todo GT: implement
   }
   
   private void TestDtoImpl<T>(T baseobj) {
@@ -116,11 +134,39 @@ public class JsonTests {
     Assert.That(deserialised, Is.EqualTo(baseobj));
   }
   
+  [Test] public void Test_SplitList_on_no_path() {
+    var json = """[{"item":"1"}, {"item":"2"}]""";
+    var list = Json.SplitList(json, String.Empty);
+    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
+  }
+  
+  [Test] public void Test_SplitList_on_shallow_path() {
+    var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
+    var list = Json.SplitList(json, "path");
+    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
+  }
+
+  [Test] public void Test_SplitList_on_deeper_path() {
+    var json = """{"path1": { "path2": [{"item":"1"}, {"item":"2"}]} }""";
+    var list = Json.SplitList(json, "path1.path2");
+    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
+  }
+  
+  [Test] public void Test_strongly_typed_SplitList() {
+    var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
+    var list = Json.SplitList<Row>(json, "path");
+    Assert.That(list, Is.EquivalentTo([new Row("1"), new Row("2")]));
+    Assert.That(list[0].item, Is.EqualTo("1"));
+    Assert.That(list[1].item, Is.EqualTo("2"));
+  } 
+  
+  record Row(string item);
+ 
   public record ObjWithNullables {
     public required string NonNullStr { get; init; }
     public string? NullStr { get; init; }
     
-    public DateTime NonNullDt { get; init; } = DateTime.MinValue;
+    public required DateTime NonNullDt { get; init; } = DateTime.MinValue;
     public DateTime? NullDt { get; init; }
     
     public required TestValidStrings NonNullObj { get; init; }
@@ -191,33 +237,5 @@ public class JsonTests {
     public object GetChecksumSubset() => throw new Exception();
 
   }
-  
-  [Test] public void Test_SplitList_on_no_path() {
-    var json = """[{"item":"1"}, {"item":"2"}]""";
-    var list = Json.SplitList(json, String.Empty);
-    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
-  }
-  
-  [Test] public void Test_SplitList_on_shallow_path() {
-    var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
-    var list = Json.SplitList(json, "path");
-    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
-  }
-
-  [Test] public void Test_SplitList_on_deeper_path() {
-    var json = """{"path1": { "path2": [{"item":"1"}, {"item":"2"}]} }""";
-    var list = Json.SplitList(json, "path1.path2");
-    Assert.That(list, Is.EquivalentTo(["""{"item":"1"}""", """{"item":"2"}"""]));
-  }
-  
-  [Test] public void Test_strongly_typed_SplitList() {
-    var json = """{"path":[{"item":"1"}, {"item":"2"}]}""";
-    var list = Json.SplitList<Row>(json, "path");
-    Assert.That(list, Is.EquivalentTo([new Row("1"), new Row("2")]));
-    Assert.That(list[0].item, Is.EqualTo("1"));
-    Assert.That(list[1].item, Is.EqualTo("2"));
-  } 
-  
-  record Row(string item);
   
 }
