@@ -21,11 +21,11 @@
       - currently for aws, we are triggering functions once per 'trigger' object.  We are not merging them into a list
     - aws simulate (sam cli local function simulator)
     - generator is including all functions in assembly, even tho we specify a single function    
-- JB: cli:
+
+- cli:
   - generators needs a bit of work
   - dotnet tool install testing
   - good tutorial
-
 
 - GT: remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - GT: GHA gets stuck sometimes
