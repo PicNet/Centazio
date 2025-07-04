@@ -11,6 +11,8 @@ public record StagedEntity {
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(ValidString reason) => this with { IgnoreReason = reason };
   
+  private StagedEntity() : this(Guid.Empty, null!, null!, default, null!, null!) {}
+  
   internal StagedEntity(Guid id, SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum, DateTime? promoted = null, string? ignore = null) {
     Id = id;
     System = system;
@@ -23,7 +25,7 @@ public record StagedEntity {
     IgnoreReason = ignore;
   }
   
-  public Guid Id { get; }
+  [Key] public Guid Id { get; }
   public SystemName System { get; }
   public SystemEntityTypeName SystemEntityTypeName { get; }
   public DateTime DateStaged { get; }

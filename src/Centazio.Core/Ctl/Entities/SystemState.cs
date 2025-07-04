@@ -10,6 +10,8 @@ public record SystemState {
 
   public SystemState SetActive(bool active) => this with { Active = active, DateUpdated = UtcDate.UtcNow };
   
+  private SystemState() : this(null!, null!, false, default, default, null!) {}
+  
   internal SystemState(
       string system, 
       string stage, 

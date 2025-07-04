@@ -17,6 +17,9 @@ public static class Map {
   public static PendingCreate Create(SystemName system, ICoreEntity e) => new(e, system);
   
   public record CoreToSysMap : ICoreToSysMap {
+    
+    private CoreToSysMap() : this(null!, null!, null!, null!, default, null!) {}
+    
     internal CoreToSysMap(
         CoreEntityTypeName coreentity, CoreEntityId coreid, 
         SystemName system, SystemEntityId sysid, 

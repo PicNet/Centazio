@@ -15,5 +15,8 @@ public abstract class AbstractStagedEntityRepositoryDbContext(StagedEntityReposi
   protected sealed override void CreateCentazioModel(ModelBuilder builder) => 
       builder
           .HasDefaultSchema(SchemaName)
-          .Entity<StagedEntity>(e => e.ToTable(StagedEntityTableName));
+          .Entity<StagedEntity>(e => {
+            e.ToTable(StagedEntityTableName);
+            e.HasKey(e2 => e2.Id);
+          });
 }

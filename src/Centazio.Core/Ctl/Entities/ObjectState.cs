@@ -60,6 +60,8 @@ public record ObjectState : ILoggable {
   [MaxLength(1024)] public string? LastRunMessage { get; internal init; } 
   [MaxLength(4000)] public string? LastRunException { get; internal init; }
   
+  private ObjectState() : this(null!, null!, null!, default, false) {}
+  
   internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, DateTime nextcheckpoint, bool active) {
     System = system;
     Stage = stage;

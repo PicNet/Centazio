@@ -18,8 +18,8 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
     await using var db = opts.Db();
     var checksumstrs = newchecksums.Select(cs => cs.Value).ToList();
     return await Query(system, systype, db)
-        .Where(s => checksumstrs.Contains(s.StagedEntityChecksum))
-        .Select(s => new StagedEntityChecksum(s.StagedEntityChecksum))
+        .Where(s => checksumstrs.Contains(s.StagedEntityChecksum.Value))
+        .Select(s => s.StagedEntityChecksum)
         .ToListAsync();
   }
 
@@ -53,7 +53,7 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
   }
 
   private IQueryable<StagedEntity> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
-      db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
+      db.Staged.Where(e => e.System == system && e.SystemEntityTypeName == systype); 
   
   public override Task<IStagedEntityRepository> Initialise() => Task.FromResult<IStagedEntityRepository>(this);
   public override ValueTask DisposeAsync() => ValueTask.CompletedTask;

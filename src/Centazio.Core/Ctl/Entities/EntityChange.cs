@@ -15,6 +15,8 @@ public record EntityChange {
   public EChangeType ChangeType { get; }
   [MaxLength(4000)] public string ChangeDetails { get; }
   
+  private EntityChange() : this(null!, null!, null!, null!, null!, default, default, null!) {} // EF serialisation
+  
   private EntityChange(CoreEntityTypeName coretype, CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid, DateTime changedate, EChangeType changetype, string changedetails) {
     CoreEntityTypeName = coretype;
     CoreId = coreid;
