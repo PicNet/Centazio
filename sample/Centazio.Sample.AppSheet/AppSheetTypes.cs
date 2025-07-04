@@ -11,7 +11,11 @@ public static class AppSheetConstants {
 [IgnoreNamingConventions] 
 public record AppSheetTask : ISystemEntity {
   
-  public static AppSheetTask Create(string id, string task, bool completed) => new() { RowId = id, Task = task, Completed = completed };
+  public static AppSheetTask Create(string id, string task, bool completed) => new() { 
+    RowId = id, 
+    Task = task, 
+    Completed = completed 
+  };
   
   [JsonPropertyName("Row ID")] public string? RowId { get; set; }
   public string? Task { get; set; }
@@ -22,6 +26,8 @@ public record AppSheetTask : ISystemEntity {
   [JsonIgnore] public bool Completed { get; set; }
   
   public SystemEntityId SystemId => new(RowId ?? throw new Exception());
+  public CorrelationId CorrelationId => CorrelationId.Build(AppSheetConstants.AppSheetSystemName, SystemId);
+  
   public DateTime LastUpdatedDate => UtcDate.UtcNow;
   public string DisplayName => Task ?? String.Empty;
 

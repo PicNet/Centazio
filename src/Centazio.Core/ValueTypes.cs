@@ -17,6 +17,12 @@ public record ValidString(string Value) {
   }
 }
 
+[MaxLength2(128)] public record CorrelationId(string Value) : ValidString(Value) {
+  public static readonly CorrelationId DEFAULT_VALUE = new("0");
+  
+  public static CorrelationId Build(SystemName system, SystemEntityId id) => new($"{system.Value}[{id.Value}]");
+}
+
 [MaxLength2(64)] public abstract record EntityId(string Value) : ValidString(Value);
 
 public record CoreEntityId(string Value) : EntityId(Value) {

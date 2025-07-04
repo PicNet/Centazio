@@ -41,7 +41,7 @@ public class FinApi(FinDb db) {
   }
 }
 
-public record FinInvoice(SystemEntityId SystemId, SystemEntityId AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
+public record FinInvoice(SystemEntityId SystemId, CorrelationId CorrelationId, SystemEntityId AccountId, decimal Amount, DateTime Updated, DateTime DueDate, DateTime? PaidDate) : ISystemEntity {
 
   public SystemEntityId AccountSystemId => new(AccountId.ToString());
   public DateTime LastUpdatedDate => Updated;
@@ -52,7 +52,7 @@ public record FinInvoice(SystemEntityId SystemId, SystemEntityId AccountId, deci
 
 }
 
-public record FinAccount(SystemEntityId SystemId, string Name, DateTime Updated) : ISystemEntity {
+public record FinAccount(SystemEntityId SystemId, CorrelationId CorrelationId, string Name, DateTime Updated) : ISystemEntity {
 
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;

@@ -10,7 +10,7 @@ public record CoreCustomer : CoreEntityBase {
   public CoreEntityId MembershipCoreId { get; internal init; }
   
   private CoreCustomer() {}
-  internal CoreCustomer(CoreEntityId coreid, string name, CoreEntityId membershipid) : base(coreid) {
+  internal CoreCustomer(CoreEntityId coreid, CorrelationId correlationid, string name, CoreEntityId membershipid) : base(coreid, correlationid) {
     Name = name;
     MembershipCoreId = membershipid;
   }
@@ -36,7 +36,7 @@ public record CoreMembershipType : CoreEntityBase {
   public override string DisplayName => Name;
   
   private CoreMembershipType() {}
-  internal CoreMembershipType(CoreEntityId coreid, string name) : base(coreid) {
+  internal CoreMembershipType(CoreEntityId coreid, CorrelationId correlationid, string name) : base(coreid, correlationid) {
     Name = name;
   }
   
@@ -62,7 +62,7 @@ public record CoreInvoice : CoreEntityBase {
   public DateTime? PaidDate { get; init; }
   
   private CoreInvoice() {}
-  internal CoreInvoice(CoreEntityId coreid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid) {
+  internal CoreInvoice(CoreEntityId coreid, CorrelationId correlationid, CoreEntityId customerid, int cents, DateOnly due, DateTime? paid) : base(coreid, correlationid) {
     CustomerCoreId = customerid;
     Cents = cents;
     DueDate = due;

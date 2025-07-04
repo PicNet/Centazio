@@ -124,11 +124,13 @@ def lambda_handler(event, context):
 }
 
 public class DummyRunnableFunction : IRunnableFunction {
-  private readonly DummySystemType sysentity = new("DummySystemType", new SystemEntityId("DummySystemType"), UtcDate.UtcNow);
+  
   public readonly SystemEntityTypeName SystemEntityTypeName;
 
   public DummyRunnableFunction() {
     SystemEntityTypeName = new SystemEntityTypeName("TestSETypNm");
+    var sysid = new SystemEntityId("DummySystemType");
+    var sysentity = new DummySystemType("DummySystemType", sysid, CorrelationId.Build(System, sysid), UtcDate.UtcNow);
     Config = new FunctionConfig([new PromoteOperationConfig(System, sysentity.GetType(), SystemEntityTypeName, new CoreEntityTypeName("CoreTest"), CronExpressionsHelper.EveryXMinutes(1), (_, _) => Task.FromResult(new List<EntityEvaluationResult>()))]);
   }
 
@@ -141,10 +143,11 @@ public class DummyRunnableFunction : IRunnableFunction {
   public bool IsTriggeredBy(ObjectChangeTrigger trigger) { throw new NotImplementedException(); }
 }
 
-public class DummySystemType(string displayName, SystemEntityId systemId, DateTime lastUpdatedDate) : ISystemEntity {
-  public string DisplayName { get; } = displayName;
+public class DummySystemType(string displaynm, SystemEntityId sysid, CorrelationId correlationid, DateTime lastupdate) : ISystemEntity {
+  public string DisplayName { get; } = displaynm;
   public object GetChecksumSubset() => throw new NotImplementedException();
-  public SystemEntityId SystemId { get; } = systemId;
-  public DateTime LastUpdatedDate { get; } = lastUpdatedDate;
+  public SystemEntityId SystemId { get; } = sysid;
+  public CorrelationId CorrelationId { get; } = correlationid;
+  public DateTime LastUpdatedDate { get; } = lastupdate;
   public ISystemEntity CreatedWithId(SystemEntityId systemid) => throw new NotImplementedException();
 }

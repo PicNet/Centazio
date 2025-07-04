@@ -195,6 +195,6 @@ public abstract class BaseCtlRepositoryStateTests {
     public string DisplayName { get; } = nameof(EmptyCoreEntity);
     public object GetChecksumSubset() => String.Empty;
     public CoreEntityId CoreId { get; set; } = new(nameof(EmptyCoreEntity));
-
+    public CorrelationId CorrelationId { get; set; } = new(Guid.NewGuid().ToString());
   }
 }

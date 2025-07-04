@@ -18,8 +18,13 @@
   - dotnet tool install testing
   - good tutorial
 
+
+
+
 GT: 
 - GHA gets stuck sometimes
+- E2E Core entities and system entities should have strong value type ids, such as CrmMembershipTypeId.  This will test
+  that subclassing CoreEntityId/SystemEntityId works as expected
 - Centazio func-func trigger test: 
   - all hosts
   - func reads csv with instructions 
@@ -28,6 +33,13 @@ GT:
   - need a simple test to test that func-to-func triggers are working and working efficiently
 - a correlation id would be great to track changes to a specific entity through the logs, it would be good to
     store jsons of the object at each stage to be able to reproduce any transformations through the pipeline
+    - entity created in ClickUp
+    - entity staged, given correlation id 1
+    - entity promoted, given correlation id 1
+      - EntityChange also stores correlation id 1
+    - entity written to AppSheet then edited there
+    - entity staged, should it have correlation id 1 or 2
+
 - is it possible to use EntityChange as a function trigger on specific property change? 
 - a good integration test that checks:
   - package nuget

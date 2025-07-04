@@ -38,6 +38,7 @@ public interface IHasDisplayName {
 public interface ICoreEntity : IHasDisplayName, IGetChecksumSubset {
   
   public CoreEntityId CoreId { get; set; }
+  public CorrelationId CorrelationId { get; set; } 
     
   string IHasDisplayName.GetId() => CoreId.Value;
   public E To<E>() where E : ICoreEntity => (E) this;
@@ -47,6 +48,7 @@ public interface ICoreEntity : IHasDisplayName, IGetChecksumSubset {
 public interface ISystemEntity : IHasDisplayName, IGetChecksumSubset {
 
   [JsonIgnore] public SystemEntityId SystemId { get; }
+  [JsonIgnore] public CorrelationId CorrelationId { get; }
   [JsonIgnore] public DateTime LastUpdatedDate { get; }
   
   string IHasDisplayName.GetId() => SystemId.Value;

@@ -231,6 +231,7 @@ public class JsonTests {
     // these three fields should be ignored during serialisation
     public string DisplayName => Prop;
     public SystemEntityId SystemId { get; } = new(Id.ToString());
+    public CorrelationId CorrelationId { get; } = new(nameof(CorrelationId));
     public DateTime LastUpdatedDate { get; } = UtcDate.UtcNow;
     
     public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { Id = Guid.Parse(newid.Value) };

@@ -66,7 +66,8 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
   }
 
   private CoreEntityAndMeta CreateMemTypeCEAM() {
-    var core = new CoreMembershipType(new(Guid.NewGuid().ToString()), nameof(CoreMembershipType));
+    var id = new CoreEntityId(Guid.NewGuid().ToString());
+    var core = new CoreMembershipType(id, CorrelationId.Build(SYS, new (Guid.NewGuid().ToString())), nameof(CoreMembershipType));
     return CoreEntityAndMeta.Create(SYS, SystemEntityTypeName.From<CrmMembershipType>(), new(Guid.NewGuid().ToString()), core, Helpers.TestingCoreEntityChecksum(core));
   }
 

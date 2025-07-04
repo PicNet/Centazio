@@ -13,7 +13,7 @@ public record CoreTask : CoreEntityBase {
   
   private CoreTask() { Name = String.Empty; }
   
-  public CoreTask(CoreEntityId coreid, string name, bool completed) : base(coreid) {
+  public CoreTask(CoreEntityId coreid, CorrelationId correlationid, string name, bool completed) : base(coreid, correlationid) {
     Name = name;
     Completed = completed;
   }

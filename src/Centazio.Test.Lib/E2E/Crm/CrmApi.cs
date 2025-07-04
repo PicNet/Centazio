@@ -48,7 +48,7 @@ public class CrmApi(CrmDb db) {
   }
 }
 
-public record CrmMembershipType(SystemEntityId SystemId, DateTime Updated, string Name) : ISystemEntity {
+public record CrmMembershipType(SystemEntityId SystemId, CorrelationId CorrelationId, DateTime Updated, string Name) : ISystemEntity {
 
   public DateTime LastUpdatedDate => Updated;
   public string DisplayName => Name;
@@ -58,7 +58,7 @@ public record CrmMembershipType(SystemEntityId SystemId, DateTime Updated, strin
 
 }
 
-public record CrmInvoice(SystemEntityId SystemId, DateTime Updated, SystemEntityId CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
+public record CrmInvoice(SystemEntityId SystemId, CorrelationId CorrelationId, DateTime Updated, SystemEntityId CustomerId, int AmountCents, DateOnly DueDate, DateTime? PaidDate = null) : ISystemEntity {
 
   public SystemEntityId CustomerSystemId => new(CustomerId.ToString());
   public DateTime LastUpdatedDate => Updated;
@@ -69,7 +69,7 @@ public record CrmInvoice(SystemEntityId SystemId, DateTime Updated, SystemEntity
 
 }
 
-public record CrmCustomer(SystemEntityId SystemId, DateTime Updated, SystemEntityId MembershipTypeId, string Name) : ISystemEntity {
+public record CrmCustomer(SystemEntityId SystemId, CorrelationId CorrelationId, DateTime Updated, SystemEntityId MembershipTypeId, string Name) : ISystemEntity {
   
   public SystemEntityId MembershipTypeSystemId => new(MembershipTypeId.ToString());
   public DateTime LastUpdatedDate => Updated;

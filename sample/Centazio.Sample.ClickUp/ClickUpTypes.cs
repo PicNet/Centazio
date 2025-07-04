@@ -10,10 +10,9 @@ public static class ClickUpConstants {
 
 [IgnoreNamingConventions] 
 public record ClickUpTask(string id, string name, ClickUpTaskStatus status, string date_updated) : ISystemEntity {
-
-  
   
   public SystemEntityId SystemId { get; } = new(id);
+  public CorrelationId CorrelationId => CorrelationId.Build(ClickUpConstants.ClickUpSystemName, SystemId);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);
   public string DisplayName => name;
   
