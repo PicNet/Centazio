@@ -12,6 +12,12 @@ namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
   
+  public static StagedEntity TestingStagedEntity(Guid id, string system, string systype, DateTime staged, string data, string checksum, DateTime? promoted = null, string? ignore = null) => 
+      TestingStagedEntity(id, new(system), new(systype), staged, new(data), new(checksum), promoted, ignore);
+  
+  public static StagedEntity TestingStagedEntity(Guid id, SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum, DateTime? promoted = null, string? ignore = null) => 
+      new(id, system, systype, staged, data, checksum, promoted, ignore);
+  
   public static async Task<CentazioSettings> Settings(params List<string> environments) => await Settings<CentazioSettings>(environments);
   public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
   

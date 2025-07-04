@@ -24,7 +24,7 @@ public static class DynamoStagedEntityExtensionMethods {
     return docs.Select(d => {
       var (system, entity, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_HASH_KEY].AsString().Split('|');
       var (staged, suffix, _) = d[AwsStagedEntityRepositoryHelpers.DYNAMO_RANGE_KEY].AsString().Split('|');
-      var se = StagedEntity.PrivateCreateWithId(
+      var se = StagedEntity.Create(
         Guid.Parse(suffix),
         new (system), 
         new (entity), 

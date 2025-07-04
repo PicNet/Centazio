@@ -28,6 +28,7 @@
   - good tutorial
 
 - GT: remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
+  - validate Data Annotations
 - GT: GHA gets stuck sometimes
 - Centazio func-func trigger test: 
   - all hosts

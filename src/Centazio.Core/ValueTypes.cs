@@ -21,23 +21,34 @@ public record ValidString(string Value) {
 
 public record CoreEntityId(string Value) : EntityId(Value) {
   public static readonly CoreEntityId DEFAULT_VALUE = new("0");
+  
+  private CoreEntityId() : this(null!) {}
 }
 
 public record SystemEntityId(string Value) : EntityId(Value) {
   public static readonly SystemEntityId DEFAULT_VALUE = new("*");
+  
+  private SystemEntityId() : this(null!) {}
 }
 
 [MaxLength2(32)] public record NotSystem(SystemName System) : SystemName(System.Value);
 
-[MaxLength2(32)] public record SystemName(string Value) : ValidString(Value);
+[MaxLength2(32)] public record SystemName(string Value) : ValidString(Value) {
+  private SystemName() : this(null!) {}
+}
 
 [MaxLength2(32)] public record ObjectName(string Value) : ValidString(Value) {
 
+  private ObjectName() : this(null!) {}
+  
   internal SystemEntityTypeName ToSystemEntityTypeName => this as SystemEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(ToSystemEntityTypeName)}'");
   internal CoreEntityTypeName ToCoreEntityTypeName => this as CoreEntityTypeName ?? throw new Exception($"expected [{this}] to be of type '{nameof(CoreEntityTypeName)}'");
 }
 
 public record SystemEntityTypeName(string Value) : ObjectName(Value) {
+  
+  private SystemEntityTypeName() : this(null!) {}
+  
   public static SystemEntityTypeName From<E>() where E : ISystemEntity => new(typeof(E).Name);
   public static SystemEntityTypeName From<E>(E sysent) where E : ISystemEntity => new(sysent.GetType().Name);
 }

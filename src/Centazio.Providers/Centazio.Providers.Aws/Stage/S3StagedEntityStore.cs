@@ -114,8 +114,7 @@ internal static class S3StagedEntityRepository_StagedEntityExtensions {
     using var reader = new StreamReader(stream);
     var data = await reader.ReadToEndAsync();
  
-    // todo GT: not reading ignored here
-    var created = StagedEntity.PrivateCreateWithId(details.Id, details.System, details.SystemEntityTypeName, details.DateStaged.ToUniversalTime(), new(data), details.StagedEntityChecksum);
+    var created = StagedEntity.Create(details.Id, details.System, details.SystemEntityTypeName, details.DateStaged.ToUniversalTime(), new(data), details.StagedEntityChecksum);
     return promoted is null ? created : created.Promote((DateTime) promoted);
   }
 }

@@ -3,22 +3,24 @@
 public record CentazioSecrets {
   
   // todo GT: aws and azure is required, this should not be the case and should be dependent on usage
-  public string AWS_KEY { get; } 
-  public string AWS_SECRET { get; }
+  public string AWS_KEY { get; set; } 
+  public string AWS_SECRET { get; set; }
   
-  public string AZ_TENANT_ID { get; } 
-  public string AZ_CLIENT_ID { get; }
-  public string AZ_SECRET_ID { get; }
-  public string AZ_SUBSCRIPTION_ID { get; }
-  public string AZ_BLOB_STORAGE_ENDPOINT { get; }
-  public string? AZ_APP_INSIGHT_CONNECTION_STRING { get; }
+  public string AZ_TENANT_ID { get; set; } 
+  public string AZ_CLIENT_ID { get; set; }
+  public string AZ_SECRET_ID { get; set; }
+  public string AZ_SUBSCRIPTION_ID { get; set; }
+  public string AZ_BLOB_STORAGE_ENDPOINT { get; set; }
+  public string? AZ_APP_INSIGHT_CONNECTION_STRING { get; set; }
   
   // todo GT: sql secrets are only required when a provider requires it.  And the settings
   //    should point to the connstr.  In fact connection strings should live in settings and read only
   //    secrets from secrets store, so we need to inject these values into settings
-  public string? SQL_CONN_STR { get; init; }
+  public string? SQL_CONN_STR { get; set; }
   // todo GT: nuget is only for dev cli commands and should not be here
-  public string? NUGET_API_KEY { get; }
+  public string? NUGET_API_KEY { get; set; }
+  
+  public CentazioSecrets() : this (null!, null!, null!, null!, null!, null!, null!, null!, null!, null!) {}
   
   protected CentazioSecrets(CentazioSecrets other) {
     AWS_KEY = other.AWS_KEY;

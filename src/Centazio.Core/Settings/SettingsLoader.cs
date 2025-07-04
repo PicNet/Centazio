@@ -57,7 +57,8 @@ public class SettingsLoader(SettingsLoaderConfig? conf = null) : ISettingsLoader
     await files.Select(async file => builder.AddJsonStream(await Json.ReadFileAsStream(file))).Synchronous();
     
     var obj = Activator.CreateInstance<T>();
-    builder.Build().Bind(obj); 
+    var root = builder.Build();
+    root.Bind(obj); 
     return obj;
   }
 

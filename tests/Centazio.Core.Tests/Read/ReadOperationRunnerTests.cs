@@ -45,7 +45,7 @@ public class ReadOperationRunnerTests {
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum))));
+        staged.Select(s => F.TestingStagedEntity(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum))));
     ValidateResult(new SystemState(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, UtcDate.UtcNow), actual);
   }
   

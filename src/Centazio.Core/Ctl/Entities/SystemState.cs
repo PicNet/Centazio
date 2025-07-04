@@ -9,20 +9,37 @@ public record SystemState {
   }
 
   public SystemState SetActive(bool active) => this with { Active = active, DateUpdated = UtcDate.UtcNow };
+  
+  internal SystemState(
+      string system, 
+      string stage, 
+      bool active, 
+      DateTime created,
+      DateTime updated,
+      string status,
       
-  private SystemState(
+      DateTime? laststarted = null,
+      DateTime? lastcompleted = null) : this(new(system), new(stage), active, created, updated, Enum.Parse<ESystemStateStatus>(status), laststarted, lastcompleted) {}
+  
+  internal SystemState(
       SystemName system, 
       LifecycleStage stage, 
       bool active, 
       DateTime created,
       DateTime updated,
-      ESystemStateStatus status) {
+      ESystemStateStatus status,
+      
+      DateTime? laststarted = null,
+      DateTime? lastcompleted = null) {
     System = system;
     Stage = stage;
     Active = active;
     DateCreated = created;
     DateUpdated = updated;
     Status = status;
+    
+    LastStarted = laststarted;
+    LastCompleted = lastcompleted;
   }
   
   public SystemName System { get; }

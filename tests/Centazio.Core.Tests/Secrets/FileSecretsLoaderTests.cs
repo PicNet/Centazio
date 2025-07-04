@@ -5,8 +5,7 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Core.Tests.Secrets;
 
 public class FileSecretsLoaderTests : BaseSecretsLoaderTests {
-  private readonly CentazioSettings settings = 
-      new CentazioSettings { SecretsLoaderSettings = new SecretsLoaderSettings { Provider = "File", SecretsFolder = "../centazio3_secrets" } };
+  private readonly CentazioSettings settings = new() { SecretsLoaderSettings = new SecretsLoaderSettings { Provider = "File", SecretsFolder = "../centazio3_secrets" } };
   
   protected override Task<ISecretsLoader> GetSecretsLoader() => 
       Task.FromResult(new FileSecretsLoaderFactory(settings).GetService());

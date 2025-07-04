@@ -11,7 +11,7 @@ public class CliSecretsManagerTests {
 
   [Test] public async Task Test_loading_File_secrets_loader() {
     var cm = await LoadSecretsManager();
-    var settings = new CentazioSettings { SecretsLoaderSettings = new SecretsLoaderSettings { Provider = "File", SecretsFolder = "../centazio_3_secrets" } }.ToBase();
+    var settings = new CentazioSettings { SecretsLoaderSettings = new SecretsLoaderSettings { Provider = "File", SecretsFolder = "../centazio_3_secrets" } };
     var loader = cm.GetSecretsLoader(settings);
     Assert.That(loader is FileSecretsLoader);
   }
@@ -29,9 +29,10 @@ public class CliSecretsManagerTests {
     var cm = await LoadSecretsManager();
     var settings = new CentazioSettings {
       AzureSettings = new AzureSettings {
-        Region = nameof(AzureSettings.Dto.Region),
-        ResourceGroup = nameof(AzureSettings.Dto.ResourceGroup),
-        KeyVaultName = nameof(AzureSettings.Dto.KeyVaultName),
+        Region = nameof(AzureSettings.Region),
+        ResourceGroup = nameof(AzureSettings.ResourceGroup),
+        KeyVaultName = nameof(AzureSettings.KeyVaultName),
+        AzFunctions = []
       },
       SecretsLoaderSettings = new SecretsLoaderSettings { Provider = "Az" } 
     };

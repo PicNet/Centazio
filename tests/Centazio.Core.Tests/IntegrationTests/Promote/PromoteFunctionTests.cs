@@ -122,7 +122,7 @@ public class PromoteFunctionTests {
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
   }
   
-  private SystemState SS(DateTime start, DateTime updated) => new SystemState.Dto(system1, stage, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
+  private SystemState SS(DateTime start, DateTime updated) => new SystemState(system1, stage, true, start, updated, ESystemStateStatus.Idle, updated, updated);
   private ObjectState OS(DateTime start, DateTime updated, DateTime nextcheckpoint, int promoted, int ignored) => new(system1, stage, coretype, nextcheckpoint, true) {
     DateCreated = start,
     LastResult = EOperationResult.Success,
@@ -134,7 +134,7 @@ public class PromoteFunctionTests {
     LastCompleted = updated,
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
-  private StagedEntity SE(string json, Guid? id = null) => new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json)).ToBase();
+  private StagedEntity SE(string json, Guid? id = null) => new StagedEntity(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, new(json), Helpers.TestingStagedEntityChecksum(json));
   private CoreEntity ToCore(string json) {
     var sysent = Json.Deserialize<System1Entity>(json).ToCoreEntity();
     return sysent;

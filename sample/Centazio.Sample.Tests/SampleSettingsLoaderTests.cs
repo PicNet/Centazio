@@ -13,11 +13,13 @@ public class SettingsLoaderTests {
     var svcs = new TestServivesCollection();
     var registrar = new CentazioServicesRegistrar(svcs);
     var settings = SettingsLoader.RegisterSettingsHierarchy(await F.Settings<Settings>(), registrar);
-    var expected = new List<Type> { typeof(Settings), typeof(CustomSettingSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
     
-    Assert.That(expected.All(t => svcs.Registered.Contains(t)));
+    var expected = new List<Type> { typeof(Settings), typeof(ClickUpSettings), typeof(AppSheetSettings), typeof(StagedEntityRepositorySettings), typeof(CtlRepositorySettings), typeof(CoreStorageSettings) };
+    var missings = expected.Except(svcs.Registered).ToList();
+    
+    Assert.That(missings, Is.Empty);
     Assert.That(settings.Defaults, Is.Not.Null);
-    Assert.That(settings.CustomSetting, Is.Not.Null);
+    Assert.That(settings.ClickUp, Is.Not.Null);
     Assert.That(settings.AppSheet, Is.Not.Null);
   }
 

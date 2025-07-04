@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Centazio.Core.Checksum;
 
@@ -34,8 +36,14 @@ public abstract class AbstractChecksumAlgorith : IChecksumAlgorithm {
 }
 
 [MaxLength2(MAX_LENGTH)] public abstract record ChecksumValue(string Value) : ValidString(Value) {
-  public const int MAX_LENGTH = 64;
+  [JsonIgnore, NotMapped] public const int MAX_LENGTH = 64;
 }
-public record StagedEntityChecksum(string Value) : ChecksumValue(Value);
-public record SystemEntityChecksum(string Value) : ChecksumValue(Value);
-public record CoreEntityChecksum(string Value) : ChecksumValue(Value);
+public record StagedEntityChecksum(string Value) : ChecksumValue(Value) {
+  private StagedEntityChecksum() : this(null!) {} // for EF deserialisation
+}
+public record SystemEntityChecksum(string Value) : ChecksumValue(Value) {
+  private SystemEntityChecksum() : this(null!) {} // for EF deserialisation
+}
+public record CoreEntityChecksum(string Value) : ChecksumValue(Value) {
+  private CoreEntityChecksum() : this(null!) {} // for EF deserialisation
+}

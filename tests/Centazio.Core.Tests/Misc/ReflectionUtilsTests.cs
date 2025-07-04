@@ -36,7 +36,7 @@ public class ReflectionUtilsTests {
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.LastStarted))), Is.True);
     Assert.That(U.IsNullable(Prop(typeof(SystemState), nameof(SystemState.LastCompleted))), Is.True);
     
-    Assert.That(typeof(SystemState.Dto).GetProperties().All(U.IsNullable), Is.True);
+    Assert.That(typeof(SystemState).GetProperties().All(U.IsNullable), Is.True);
     
     PropertyInfo Prop(Type t, string name) => t.GetProperty(name) ?? throw new Exception();
   }

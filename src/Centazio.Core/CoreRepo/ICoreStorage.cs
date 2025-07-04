@@ -12,7 +12,10 @@ public record CoreStorageMeta(
     DateTime DateCreated, 
     DateTime DateUpdated, 
     SystemName LastUpdateSystem, 
-    SystemEntityId LastUpdateSystemId);
+    SystemEntityId LastUpdateSystemId) {
+  
+  private CoreStorageMeta() : this(null!, null!, null!, null!, null!, null!, DateTime.MinValue, DateTime.MinValue, null!, null!) { } // for serialisation
+}
 
 public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
   public E As<E>() => (E) CoreEntity;
