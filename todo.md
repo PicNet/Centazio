@@ -1,43 +1,35 @@
 # Todo
 - aws/azure:
-  - running in azure (even simulate) is not working due to aws secrets store:
-    - `./centazio az func logs Centazio.Sample.AppSheet` error: `Unable to find the "picnet-centazio" profile` error
-    - `./centazio az func simulate Centazio.Sample.ClickUp` error: `AmazonClientException: Failed to resolve AWS credentials. The credential providers used to search for credentials returned the following errors`
-  - better cloud settings management (env vars?) - including cron timers
+  - HIGH: `./centazio az func simulate Centazio.Sample.ClickUp` error: `AmazonClientException: Failed to resolve AWS credentials. The credential providers used to search for credentials returned the following errors`
+  - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:
-    - staging entity providers 
-    - function-to-function triggers
-    - AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
-    - `./centazio az func simulate Centazio.Sample.ClickUp` fails with error: `System.InvalidOperationException: Sequence contains more than one element.`
-    - Local simulate `./centazio az func simulate Centazio.Sample.AppSheet`: 
-        The listener for function 'Functions.AppSheetPromoteFunction' was unable to start. 
-            Microsoft.Azure.WebJobs.Extensions.Timers.Storage: Could not create BlobContainerClient for ScheduleMonitor.
-    - Local simulate not showing logs
-    - `centazio az func logs` not working - * fixed update func core tool to the latest https://go.microsoft.com/fwlink/?linkid=2174087
-      - WT: consider a unit test that checks that core tools is up to date
-    - WT: GHA: Unexpected input(s) 'include-prerelease', valid inputs are ['dotnet-version', 'dotnet-quality', 'global-json-file', 'source-url', 'owner', 'config-file', 'cache', 'cache-dependency-path']
-  - CP: Aws:
-    - function-to-function triggers
-      - currently for aws, we are triggering functions once per 'trigger' object.  We are not merging them into a list
-    - aws simulate (sam cli local function simulator)
-    - generator is including all functions in assembly, even tho we specify a single function    
+    - MED: function-to-function triggers
+    - HIGH: 
+      - Centazio.Sample.AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
+      - You can check logs with `./centazio az func logs Centazio.Sample.AppSheet`    
+  - Aws: 
+    - HIGH: generator is including all functions in assembly, even though we specify a single function
+    - MED: aws simulate (sam cli local function simulator)
+    - LOW: function-to-function triggers - currently for aws, we are triggering functions once per 'trigger' object.  We are not merging them into a list
+    - LOW: implement `./centazio aws func logs ...`
 
-- cli:
+- LOW: cli:
   - generators needs a bit of work
   - dotnet tool install testing
   - good tutorial
 
-- GT: GHA gets stuck sometimes
+GT: 
+- GHA gets stuck sometimes
 - Centazio func-func trigger test: 
   - all hosts
   - func reads csv with instructions 
   - test confirms only correct triggers received 
   - confirm only required operations run
-  - GT: need a simple test to test that func-to-func triggers are working and working efficiently
-- GT: a correlation id would be great to track changes to a specific entity through the logs, it would be good to
+  - need a simple test to test that func-to-func triggers are working and working efficiently
+- a correlation id would be great to track changes to a specific entity through the logs, it would be good to
     store jsons of the object at each stage to be able to reproduce any transformations through the pipeline
-- GT: is it possible to use EntityChange as a function trigger on specific property change? 
-- GT: a good integration test that checks:
+- is it possible to use EntityChange as a function trigger on specific property change? 
+- a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
   - in a non-dev directory
@@ -48,12 +40,12 @@
   - test func worked
   - test func in azure that works
   - test func in aws that works
-- GT: the readme/tutorial should automatically insert code samples from the real codebase, instead of duplicating it
-- GT: a good simulation tester, using excel to simulate data flows perhaps?
-- GT: create a good set of architectural policies that can be validated using NetArchTest, 
+- the readme/tutorial should automatically insert code samples from the real codebase, instead of duplicating it
+- a good simulation tester, using excel to simulate data flows perhaps?
+- create a good set of architectural policies that can be validated using NetArchTest, 
     see: https://dateo-software.de/blog/netarchtest (replace tests in `Centazio.Core.Tests.Inspect`)
 
-- additional providers:
+- LOW: additional providers:
   - azure blob storage staged entity store
   - azure cosmos db staged entity store
   - snowflake providers
