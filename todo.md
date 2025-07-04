@@ -27,7 +27,6 @@
   - dotnet tool install testing
   - good tutorial
 
-- GT: remove all ugly usage of auto Dto conversions, remove DtoHelpers, use manual mapping only (settings already done)
 - GT: GHA gets stuck sometimes
 - Centazio func-func trigger test: 
   - all hosts
@@ -35,12 +34,9 @@
   - test confirms only correct triggers received 
   - confirm only required operations run
   - GT: need a simple test to test that func-to-func triggers are working and working efficiently
-- GT: need a change-log to be able to do workflows when specific changes to an entity happen. Eg:
-  to notify when Entity property Y changes to 'XXX' do something.  Currently we just know the entity changed
-  not the property that changed.  This should be part of the promote step.
 - GT: a correlation id would be great to track changes to a specific entity through the logs, it would be good to
     store jsons of the object at each stage to be able to reproduce any transformations through the pipeline
-- GT: is it possible to use EntityChange as a function trigger? 
+- GT: is it possible to use EntityChange as a function trigger on specific property change? 
 - GT: a good integration test that checks:
   - package nuget
   - dotnet tool install (from local nuget)
