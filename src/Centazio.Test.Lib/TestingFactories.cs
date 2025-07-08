@@ -111,19 +111,10 @@ public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlReposi
 
 public class NoOpChangeNotifier : IChangesNotifier {
 
-  public bool Running => false;
-  
-  public List<ObjectChangeTrigger> Notifications { get; set; } = [];
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> functions) {}
   public Task Run(IFunctionRunner runner) => Task.CompletedTask;
-  public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) {
-    Notifications = objs.Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
-    return Task.CompletedTask;
-  }
-
-  // todo GT: remove if not used and check why its here
-  public Task Init(IFunctionRunner runner, List<IRunnableFunction> functions) => Task.CompletedTask;
+  public Task Notify(SystemName system, LifecycleStage stage, List<ObjectName> objs) => Task.CompletedTask;
 
 }
 

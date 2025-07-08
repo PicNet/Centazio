@@ -1,7 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Centazio.Core.Stage;
+
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
 
 namespace Centazio.Core.Tests.Misc;
 
@@ -101,10 +103,10 @@ public class JsonTests {
   }
   
   [Test] public void Test_without_Dtos_Nullability() {
-    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");;
+    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");
     Assert.That(validstrings, Is.EqualTo(new TestValidStrings {Str1 = new("1"), Str2 = new("2") }));
     
-    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");;
+    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");
     Assert.That(subclasses, Is.EqualTo(new TestValidStringSubclasses { CoreId = new("1"), SystemId = new("2") }));
     
     
@@ -119,10 +121,6 @@ public class JsonTests {
     
     Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>("{}"));
     Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { } }"));
-  }
-  
-  [Test] public void Test_without_Dtos_Data_Annotations() {
-    // todo GT: implement
   }
   
   private void TestDtoImpl<T>(T baseobj) {
