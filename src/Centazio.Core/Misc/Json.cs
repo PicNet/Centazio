@@ -6,54 +6,11 @@ using System.Text.RegularExpressions;
 
 namespace Centazio.Core.Misc;
 
-public class ValueObjectConverter<T> : JsonConverter<T> where T : class {
-
-  public override T Read(ref Utf8JsonReader reader, Type target, JsonSerializerOptions opts) {
-    if (reader.TokenType == JsonTokenType.String) return (T) (Activator.CreateInstance(target, reader.GetString()) ?? throw new Exception());
-    
-    if (reader.TokenType != JsonTokenType.StartObject)
-      throw new JsonException("Expected StartObject token");
-
-    var value = String.Empty;
-    while (reader.Read()) {
-      if (reader.TokenType == JsonTokenType.EndObject)
-        break;
-
-      if (reader.TokenType != JsonTokenType.PropertyName)
-        continue;
-
-      var prop = reader.GetString()!;
-      if (prop == "Value") {
-        reader.Read();
-        value = reader.GetString()!;
-      }
-
-      reader.Skip(); // ignore unknown fields
-    }
-
-    return (T) (Activator.CreateInstance(target, value) ?? throw new Exception());
-  }
-
-  public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) {
-    writer.WriteStartObject();
-    writer.WriteString("Value", value.ToString());
-    writer.WriteEndObject();
-  }
-}
-
-
 public static class Json {
   
   internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
     RespectNullableAnnotations = true,
-    PropertyNamingPolicy = null,
-    // todo GT: use `ValidString.AllSubclasses()`
-    Converters = {
-      new ValueObjectConverter<SystemName>(), 
-      new ValueObjectConverter<LifecycleStage>(), 
-      new ValueObjectConverter<ObjectName>(),
-      new ValueObjectConverter<ValidString>()
-    }
+    PropertyNamingPolicy = null
   };
   
   internal static readonly JsonSerializerOptions HTTP_CONTENT_WRITE_OPTS = new(DEFAULT_OPTS) {
