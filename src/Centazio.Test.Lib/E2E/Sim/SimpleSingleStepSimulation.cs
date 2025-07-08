@@ -20,11 +20,13 @@ public class SimpleSingleStepSimulation : ISimulationInstructions {
     (AddedCrmCustomers, AddedFinAccounts) = ([], []);
     if (epoch == 0) {
       TestingUtcDate.DoTick();
-      AddedCrmCustomers = [new CrmCustomer(ctx.NewGuidSeid(), UtcDate.UtcNow, Rng.RandomItem(crmdb.MembershipTypes).SystemId, "CrmCustomer1")];
+      var crmsysid = ctx.NewGuidSeid();
+      AddedCrmCustomers = [new CrmCustomer(crmsysid, CorrelationId.Build(SC.CRM_SYSTEM, crmsysid),  UtcDate.UtcNow, Rng.RandomItem(crmdb.MembershipTypes).SystemId, "CrmCustomer1")];
       crmdb.Customers.AddRange(AddedCrmCustomers);
 
       TestingUtcDate.DoTick();
-      AddedFinAccounts = [new FinAccount(ctx.NewIntSeid(), "FinAccount1", UtcDate.UtcNow)];
+      var finsysid = ctx.NewIntSeid();
+      AddedFinAccounts = [new FinAccount(finsysid, CorrelationId.Build(SC.FIN_SYSTEM, finsysid), "FinAccount1", UtcDate.UtcNow)];
       findb.Accounts.AddRange(AddedFinAccounts);
 
       return;
@@ -35,7 +37,7 @@ public class SimpleSingleStepSimulation : ISimulationInstructions {
 
   public void Init(SimulationCtx ctx2, CrmDb crmdb2, FinDb findb2) {
     (ctx, crmdb, findb) = (ctx2, crmdb2, findb2);
-    crmdb.MembershipTypes.Add(new CrmMembershipType(SimulationConstants.PENDING_MEMBERSHIP_TYPE_ID, UtcDate.UtcNow, "Membership"));
+    crmdb.MembershipTypes.Add(new CrmMembershipType(SC.PENDING_MEMBERSHIP_TYPE_ID, CorrelationId.Build(SC.CRM_SYSTEM, SC.PENDING_MEMBERSHIP_TYPE_ID), UtcDate.UtcNow, "Membership"));
   }
 
 }

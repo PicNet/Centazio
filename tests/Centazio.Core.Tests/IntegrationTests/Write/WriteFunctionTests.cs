@@ -12,8 +12,8 @@ public class WriteFunctionTests {
     var (ctl, core) = (F.CtlRepo(), F.CoreRepo());
     var func = new TestingBatchWriteFunction(ctl, core);
     
-    var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
-    var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, "2", "2", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    var customer1 = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, C.IgnoreCorrId, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    var customer2 = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id2, C.IgnoreCorrId, "2", "2", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     var upsert1 = await core.Upsert(C.CoreEntityName, [customer1, customer2]);
     
     // update ids that were set by the write function
@@ -55,7 +55,7 @@ public class WriteFunctionTests {
     func.Throws = true;
 
     // add some data, as the write function will not be called if there is nothing to 'write'
-    var ceam = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
+    var ceam = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id1, new CoreEntity(C.CoreE1Id1, C.IgnoreCorrId, "1", "1", new DateOnly(2000, 1, 1)), Helpers.TestingCoreEntityChecksum);
     await core.Upsert(C.CoreEntityName, [ceam]);
     
     var result = (ErrorOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
@@ -113,6 +113,6 @@ public class TestingBatchWriteFunction(ICtlRepository ctl, ICoreStorage core) : 
   
   private static System1Entity ToSysEnt(ICoreEntity coreent, Guid? sysid = null) {
     var c = coreent.To<CoreEntity>();
-    return new System1Entity(sysid ?? Guid.NewGuid(), c.FirstName, c.LastName, c.DateOfBirth, UtcDate.UtcNow);
+    return new System1Entity(sysid ?? Guid.NewGuid(), C.IgnoreCorrId, c.FirstName, c.LastName, c.DateOfBirth, UtcDate.UtcNow);
   }
 }

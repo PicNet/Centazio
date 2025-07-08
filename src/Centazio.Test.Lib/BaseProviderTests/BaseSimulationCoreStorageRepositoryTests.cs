@@ -5,7 +5,7 @@ namespace Centazio.Test.Lib.BaseProviderTests;
 
 public abstract class BaseSimulationCoreStorageRepositoryTests {
 
-  private static readonly SystemName SYS = SimulationConstants.CRM_SYSTEM;
+  private static readonly SystemName SYS = SC.CRM_SYSTEM;
   private static readonly CoreEntityTypeName CORETYPE = CoreEntityTypeName.From<CoreMembershipType>();
   
   private InMemoryEpochTracker tracker = null!;

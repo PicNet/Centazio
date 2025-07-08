@@ -25,10 +25,14 @@ internal class DummyCrmApi {
         });
   }
 
-  internal static System1Entity NewCust(int idx, DateTime? updated = null) => new(
-      Guid.Parse($"00000000-0000-0000-0000-{idx.ToString().PadLeft(12, '0')}"), 
-      idx.ToString(), 
-      idx.ToString(), 
-      DateOnly.FromDateTime(TestingDefaults.DefaultStartDt.AddYears(-idx)), 
-      updated ?? UtcDate.UtcNow);
+  internal static System1Entity NewCust(int idx, DateTime? updated = null) {
+    var sysid = Guid.Parse($"00000000-0000-0000-0000-{idx.ToString().PadLeft(12, '0')}");
+    return new (sysid,
+        CorrelationId.Build(C.System1Name, new(sysid.ToString())), 
+        idx.ToString(),
+        idx.ToString(),
+        DateOnly.FromDateTime(TestingDefaults.DefaultStartDt.AddYears(-idx)),
+        updated ?? UtcDate.UtcNow);
+  }
+
 }

@@ -26,11 +26,16 @@ public class RandomSimulation : ISimulationInstructions {
     finsim = new FinSimulation(ctx, findb);
     
     crmdb.MembershipTypes.AddRange([
-      new(SimulationConstants.PENDING_MEMBERSHIP_TYPE_ID, UtcDate.UtcNow, "Pending:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Standard:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Silver:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Gold:0")
+      Create("Pending:0", SC.PENDING_MEMBERSHIP_TYPE_ID),
+      Create("Standard:0"),
+      Create("Silver:0"),
+      Create("Gold:0")
     ]);
+    
+    CrmMembershipType Create(string name, SystemEntityId? sysid = null) {
+      sysid ??= ctx.NewGuidSeid(); 
+      return new CrmMembershipType(sysid, CorrelationId.Build(SC.CRM_SYSTEM, sysid),  UtcDate.UtcNow, name);
+    }
   }
 
   public bool HasMoreEpochs(int epoch) => epoch < TOTAL_EPOCHS;

@@ -43,9 +43,10 @@ public static class TestingFactories {
   
   public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
     id ??= new(Guid.NewGuid().ToString());
+    var sysid = new SystemEntityId(id.Value);
     var dob = DateOnly.MinValue;
-    var core = new CoreEntity(id, first, last, dob);
-    return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
+    var core = new CoreEntity(id, CorrelationId.Build(C.System1Name, sysid), first, last, dob);
+    return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, sysid, core, Helpers.TestingCoreEntityChecksum(core));
   }
 
   public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(ICtlRepository repo) {
@@ -121,6 +122,7 @@ public class NoOpChangeNotifier : IChangesNotifier {
     return Task.CompletedTask;
   }
 
+  // todo GT: remove if not used and check why its here
   public Task Init(IFunctionRunner runner, List<IRunnableFunction> functions) => Task.CompletedTask;
 
 }

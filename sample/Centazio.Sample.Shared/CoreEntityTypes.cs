@@ -26,6 +26,7 @@ public record CoreTask : CoreEntityBase {
     
     public override CoreTask ToBase() => new() {
       CoreId = new (CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      CorrelationId = new (CorrelationId ?? throw new ArgumentNullException(nameof(CorrelationId))),
       Name = String.IsNullOrWhiteSpace(Name) ? throw new ArgumentNullException(nameof(Name)) : Name.Trim(),
       Completed = Completed
     };

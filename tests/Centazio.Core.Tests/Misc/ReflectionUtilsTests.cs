@@ -54,7 +54,7 @@ public class ReflectionUtilsTests {
   
   [Test] public void Test_GetAllProperties() {
     var props = U.GetAllProperties<ISystemEntity>().Select(pi => pi.Name);
-    Assert.That(props, Is.EquivalentTo(["DisplayName", "SystemId", "LastUpdatedDate"]));
+    Assert.That(props, Is.EquivalentTo([nameof(ISystemEntity.DisplayName), nameof(ISystemEntity.SystemId), nameof(ISystemEntity.LastUpdatedDate), nameof(ISystemEntity.CorrelationId)]));
   }
   
   [Test] public void Test_GetAssemblyPath() {

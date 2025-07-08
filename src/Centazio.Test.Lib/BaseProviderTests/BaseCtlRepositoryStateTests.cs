@@ -171,8 +171,8 @@ public abstract class BaseCtlRepositoryStateTests {
   [Test] public async Task Test_transactions_with_multiple_methods() {
     if (GetType().Name == "InMemoryBaseCtlRepositoryTests") return;
     
-    var created1 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("1"), "n1", "n1", DateOnly.MaxValue), C.System1Name), new("1"), new(Guid.NewGuid().ToString()));
-    var created2 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("2"), "n2", "n2", DateOnly.MaxValue), C.System1Name), new("2"), new(Guid.NewGuid().ToString()));
+    var created1 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("1"), new("1"), "n1", "n1", DateOnly.MaxValue), C.System1Name), new("1"), new(Guid.NewGuid().ToString()));
+    var created2 = new Map.Created(new Map.PendingCreate(new CoreEntity(new("2"), new("2"), "n2", "n2", DateOnly.MaxValue), C.System1Name), new("2"), new(Guid.NewGuid().ToString()));
     var result1 = (await repo.CreateSysMap(C.System1Name, C.CoreEntityName, [created1])).Single();
     
     await using var trans = await repo.BeginTransaction();

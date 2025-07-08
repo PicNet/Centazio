@@ -2,7 +2,6 @@
 using Centazio.Core.Stage;
 using Serilog;
 using Serilog.Events;
-using SC = Centazio.Test.Lib.E2E.SimulationConstants;
 
 namespace Centazio.Test.Lib.E2E;
 

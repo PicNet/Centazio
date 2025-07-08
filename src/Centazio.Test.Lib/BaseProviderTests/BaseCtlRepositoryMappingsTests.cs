@@ -106,9 +106,9 @@ public abstract class BaseCtlRepositoryMappingsTests {
   }
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
-    List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, String.Empty, String.Empty, DateOnly.MinValue)];
-    var (cid_fin, cid_crm) = (new CoreEntityId("357992994"), new CoreEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20"));
     var sid_crm = new SystemEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20");
+    List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, CorrelationId.Build(SC.CRM_SYSTEM, sid_crm), String.Empty, String.Empty, DateOnly.MinValue)];
+    var (cid_fin, cid_crm) = (new CoreEntityId("357992994"), new CoreEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20"));
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] System[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
     var gfc1 = await ctl.GetNewAndExistingMapsFromCores(C.System1Name, C.CoreEntityName , Create(cid_fin));
@@ -128,7 +128,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid) {
       TestingUtcDate.DoTick();
-      var c = new CoreEntity(coreid, name, name, DateOnly.MinValue);
+      var c = new CoreEntity(coreid, CorrelationId.Build(system, sysid),  name, name, DateOnly.MinValue);
       await corestore.Upsert(C.CoreEntityName, [CoreEntityAndMeta.Create(system, systype, sysid, c, Helpers.TestingCoreEntityChecksum(c))]);
       await ctl.CreateSysMap(system, C.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
       return c;
@@ -158,7 +158,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
-    var c2cem = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id1, name, name, DateOnly.MinValue), Helpers.TestingCoreEntityChecksum);
+    var c2cem = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id1, new("ignore correlation id"), name, name, DateOnly.MinValue), Helpers.TestingCoreEntityChecksum);
     var c2 = await SimulatePromoteOperationRunnerFixed(C.System2Name, C.CoreEntityName, [c2cem]);
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }

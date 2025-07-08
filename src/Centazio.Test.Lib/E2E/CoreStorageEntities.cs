@@ -21,8 +21,10 @@ public record CoreCustomer : CoreEntityBase {
     public string? Name { get; init; }
     public string? MembershipCoreId { get; init; }
     
+    
     public override CoreCustomer ToBase() => new() {
       CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      CorrelationId = new(CorrelationId ?? throw new ArgumentNullException(nameof(CorrelationId))),
       Name = new(Name ?? throw new ArgumentNullException(nameof(Name))),
       MembershipCoreId = new(MembershipCoreId ?? throw new ArgumentNullException(nameof(MembershipCoreId)))
     };
@@ -47,6 +49,7 @@ public record CoreMembershipType : CoreEntityBase {
     
     public override CoreMembershipType ToBase() => new() {
       CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      CorrelationId = new(CorrelationId ?? throw new ArgumentNullException(nameof(CorrelationId))),
       Name = new(Name ?? throw new ArgumentNullException(nameof(Name))) 
     };
 
@@ -79,6 +82,7 @@ public record CoreInvoice : CoreEntityBase {
     
     public override CoreInvoice ToBase() => new() {
       CoreId = new(CoreId ?? throw new ArgumentNullException(nameof(CoreId))),
+      CorrelationId = new(CorrelationId ?? throw new ArgumentNullException(nameof(CorrelationId))),
       CustomerCoreId = new(CustomerCoreId ?? throw new ArgumentNullException(nameof(CustomerCoreId))),
       Cents = Cents ?? throw new ArgumentNullException(nameof(Cents)),
       DueDate = DueDate ?? throw new ArgumentNullException(nameof(DueDate)),

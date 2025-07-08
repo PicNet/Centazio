@@ -24,7 +24,7 @@ public class PromoteFunctionTests {
   }
   
   [Test] public async Task Test_generic_deserialisation() {
-    var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), UtcDate.UtcNow);
+    var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), UtcDate.UtcNow);
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     
@@ -38,7 +38,7 @@ public class PromoteFunctionTests {
     
     // create single entity
     var start = TestingUtcDate.DoTick();
-    var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
+    var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
@@ -57,8 +57,8 @@ public class PromoteFunctionTests {
     Assert.That((await core.GetAllCoreEntities()).Single(), Is.EqualTo(ToCore(json1)));
     
     // create two more entities and also include the previous one (without any changes
-    var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
-    var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
+    var cust2 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN2", "LN2", new DateOnly(2000, 1, 2), start);
+    var cust3 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();
@@ -84,7 +84,7 @@ public class PromoteFunctionTests {
     
     // create single entity
     var start = TestingUtcDate.DoTick();
-    var cust1 = new System1Entity(Guid.NewGuid(), "FN1", "LN1", new DateOnly(2000, 1, 2), start);
+    var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
     var staged1 = await stager.Stage(system1, system, json1) ?? throw new Exception();
     var result1 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
@@ -103,8 +103,8 @@ public class PromoteFunctionTests {
     
     // lets ignore all staged entities from now
     func.IgnoreNext = true;
-    var cust2 = new System1Entity(Guid.NewGuid(), "FN2", "LN2", new DateOnly(2000, 1, 2), start);
-    var cust3 = new System1Entity(Guid.NewGuid(), "FN3", "LN3", new DateOnly(2000, 1, 2), start);
+    var cust2 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN2", "LN2", new DateOnly(2000, 1, 2), start);
+    var cust3 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
     var staged23 = (await stager.Stage(system1, system, [json1, json2, json3])).ToList();

@@ -2,7 +2,7 @@
 
 public static class Rng {
 
-  private static Random rng { get; } = new(SimulationConstants.RANDOM_SEED);
+  private static Random rng { get; } = new(SC.RANDOM_SEED);
   
   public static int Next(int max) => rng.Next(max);
   public static int Next(int min, int max) => rng.Next(min, max);
