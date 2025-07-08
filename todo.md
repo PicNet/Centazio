@@ -22,6 +22,7 @@
 
 
 GT: 
+- Use EF Core migrations to generate SQL DBs rather than `DbFieldsHelper.cs`
 - GHA gets stuck sometimes
 - E2E Core entities and system entities should have strong value type ids, such as CrmMembershipTypeId.  This will test
   that subclassing CoreEntityId/SystemEntityId works as expected
