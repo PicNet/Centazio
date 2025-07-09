@@ -1,10 +1,11 @@
 ﻿using Centazio.Core.Checksum;
+using Centazio.Core.Read;
 
 namespace Centazio.Core.Stage;
 
 public interface IEntityStager : IAsyncDisposable {
-  Task<StagedEntity?> Stage(SystemName system, SystemEntityTypeName systype, string data);
-  Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas);
+  Task<StagedEntity?> StageSingleItem(SystemName system, SystemEntityTypeName systype, RawJsonDataWithCorrelationId data);
+  Task<List<StagedEntity>> StageItems(SystemName system, SystemEntityTypeName systype, List<RawJsonDataWithCorrelationId> datas);
 }
     
 public interface IStagedEntityRepository : IEntityStager {
@@ -23,21 +24,16 @@ public interface IStagedEntityRepository : IEntityStager {
 
 public abstract class AbstractStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityRepository {
 
-  private int lim = limit;
-  
-  public int Limit {
-    get => lim > 0 ? lim : Int32.MaxValue;
-    set => lim = value;
-  }
+  public int Limit { get => field > 0 ? field : Int32.MaxValue; set; } = limit;
 
-  public async Task<StagedEntity?> Stage(SystemName system, SystemEntityTypeName systype, string data) {
-    var results = (await Stage(system, systype, [data])).ToList();
+  public async Task<StagedEntity?> StageSingleItem(SystemName system, SystemEntityTypeName systype, RawJsonDataWithCorrelationId data) {
+    var results = (await StageItems(system, systype, [data])).ToList();
     return results.Any() ? results.Single() : null; 
   }
 
-  public async Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas) {
+  public async Task<List<StagedEntity>> StageItems(SystemName system, SystemEntityTypeName systype, List<RawJsonDataWithCorrelationId> datas) {
     var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
-    var tostage = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data), checksum(data))).ToList();
+    var tostage = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data.Json), data.CorrelationId, checksum(data.Json))).ToList();
     if (!tostage.Any()) return tostage;
     if (tostage.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
     var checksums = tostage.Select(s => s.StagedEntityChecksum).ToList();

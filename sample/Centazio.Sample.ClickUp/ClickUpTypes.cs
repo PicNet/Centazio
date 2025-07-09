@@ -12,7 +12,8 @@ public static class ClickUpConstants {
 public record ClickUpTask(string id, string name, ClickUpTaskStatus status, string date_updated) : ISystemEntity {
   
   public SystemEntityId SystemId { get; } = new(id);
-  public CorrelationId CorrelationId => CorrelationId.Build(ClickUpConstants.ClickUpSystemName, SystemId);
+  // todo: should only build the CorrelationId when its a new entity and not an edit to a known entity 
+  public CorrelationId CorrelationId => CorrelationId.Build(ClickUpConstants.ClickUpSystemName, ClickUpConstants.ClickUpTaskEntityName, SystemId);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);
   public string DisplayName => name;
   

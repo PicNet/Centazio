@@ -1,4 +1,7 @@
-﻿namespace Centazio.Sample.AppSheet;
+﻿using System.Text.RegularExpressions;
+using Centazio.Core.Read;
+
+namespace Centazio.Sample.AppSheet;
 
 // https://support.google.com/appsheet/topic/10105767
 public class AppSheetApi(AppSheetSettings settings, Secrets secrets) {
@@ -10,7 +13,12 @@ public class AppSheetApi(AppSheetSettings settings, Secrets secrets) {
     DefaultRequestHeaders = { { "ApplicationAccessKey", secrets.APPSHEET_KEY } }
   };
 
-  public async Task<List<string>> GetAllTasks() => Json.SplitList(await DoPost(new { Action = "Find" }), String.Empty);
+  public async Task<List<RawJsonData>> GetAllTasks() => Json.SplitList(await DoPost(new { Action = "Find" }), String.Empty)
+      .Select(json => {
+        var id = Regex.Match(json, @"""Row ID"":""([^""]+)""").Groups[1].Value;
+        return new RawJsonData(json, id, null);
+      })
+      .ToList();
 
   public async Task<List<AppSheetTask>> AddTasks(List<string> toadd) {
     if (!toadd.Any()) return [];

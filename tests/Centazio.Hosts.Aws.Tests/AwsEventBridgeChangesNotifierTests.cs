@@ -130,7 +130,7 @@ public class DummyRunnableFunction : IRunnableFunction {
   public DummyRunnableFunction() {
     SystemEntityTypeName = new SystemEntityTypeName("TestSETypNm");
     var sysid = new SystemEntityId("DummySystemType");
-    var sysentity = new DummySystemType("DummySystemType", sysid, CorrelationId.Build(System, sysid), UtcDate.UtcNow);
+    var sysentity = new DummySystemType("DummySystemType", sysid, CorrelationId.Build(System, SystemEntityTypeName, sysid), UtcDate.UtcNow);
     Config = new FunctionConfig([new PromoteOperationConfig(System, sysentity.GetType(), SystemEntityTypeName, new CoreEntityTypeName("CoreTest"), CronExpressionsHelper.EveryXMinutes(1), (_, _) => Task.FromResult(new List<EntityEvaluationResult>()))]);
   }
 

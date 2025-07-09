@@ -26,7 +26,7 @@ public class UtcDate : AbstractUtcDate {
   public static DateTime UtcNow => Utc.Now;
   public static DateTime UtcToday => Utc.Today;
   
-  public static DateTime FromMillis(string millis, string? regex = null) => regex is null ? FromMillis(Int64.Parse(millis)) : FromMillis(Regex.Match(millis, regex).Groups[1].Value);
+  public static DateTime FromMillis(string source, string? regex = null) => regex is null ? FromMillis(Int64.Parse(source)) : FromMillis(Regex.Match(source, regex).Groups[1].Value);
   public static DateTime FromMillis(long millis) => DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeMilliseconds(millis).DateTime, DateTimeKind.Utc);
   public static long ToMillis(DateTime? dt = null) => (long) (dt ?? UtcNow).Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
 }

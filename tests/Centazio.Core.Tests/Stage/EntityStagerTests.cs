@@ -18,7 +18,7 @@ public class EntityStagerTests {
   }
 
   [Test] public async Task Test_staging_a_single_record() {
-    await stager.Stage(C.System1Name, C.SystemEntityName, nameof(EntityStagerTests));
+    await stager.StageSingleItem(C.System1Name, C.SystemEntityName, nameof(EntityStagerTests));
     
     var results1 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow.AddMilliseconds(-1))).ToList();
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();
@@ -30,7 +30,7 @@ public class EntityStagerTests {
 
   [Test] public async Task Test_staging_a_multiple_records() {
     var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
-    await stager.Stage(C.System1Name, C.SystemEntityName, datas.ToList());
+    await stager.StageItems(C.System1Name, C.SystemEntityName, datas.ToList());
     
     var results1 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow.AddMicroseconds(-1))).ToList();
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();

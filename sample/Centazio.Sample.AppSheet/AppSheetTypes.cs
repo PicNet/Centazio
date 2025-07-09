@@ -26,7 +26,10 @@ public record AppSheetTask : ISystemEntity {
   [JsonIgnore] public bool Completed { get; set; }
   
   public SystemEntityId SystemId => new(RowId ?? throw new Exception());
-  public CorrelationId CorrelationId => CorrelationId.Build(AppSheetConstants.AppSheetSystemName, SystemId);
+  // todo GT: review usage of correlation id.  Should only be set when first created in the
+  //    source system, not on target systems like this code implies.  Same applies to ClickUpTypes
+  // todo GT: all log messages should also have the correlation id added 
+  public CorrelationId CorrelationId => CorrelationId.Build(AppSheetConstants.AppSheetSystemName, AppSheetConstants.AppSheetTaskEntityName, SystemId);
   
   public DateTime LastUpdatedDate => UtcDate.UtcNow;
   public string DisplayName => Task ?? String.Empty;

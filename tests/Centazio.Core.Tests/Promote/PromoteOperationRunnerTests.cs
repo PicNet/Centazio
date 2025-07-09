@@ -38,7 +38,7 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
-    await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
+    await stager.StageItems(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
         ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
         F.EmptyFunctionConfig(),
@@ -61,7 +61,7 @@ public class PromoteOperationRunnerTests {
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
     var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
-    await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
+    await stager.StageItems(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     try {
       await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
           ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),

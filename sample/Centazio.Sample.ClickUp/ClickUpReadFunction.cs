@@ -10,9 +10,7 @@ public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository 
     new ReadOperationConfig(ClickUpConstants.ClickUpTaskEntityName, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)
   ]);
 
-  private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) {
-    var tasks = await api.GetTasksAfter(config.Checkpoint);
-    var last = tasks.LastOrDefault()?.LastUpdated;
-    return CreateResult(tasks.Select(t => t.Json).ToList(), last);
-  }
+  private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) => 
+      CreateResult(await api.GetTasksAfter(config.Checkpoint));
+
 }
