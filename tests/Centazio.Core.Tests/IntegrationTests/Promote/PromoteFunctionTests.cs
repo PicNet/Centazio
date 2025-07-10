@@ -26,7 +26,7 @@ public class PromoteFunctionTests {
   [Test] public async Task Test_generic_deserialisation() {
     var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), UtcDate.UtcNow);
     var json1 = Json.Serialize(cust1);
-    var staged1 = await stager.StageSingleItem(system1, system, json1) ?? throw new Exception();
+    var staged1 = await stager.StageSingleItem(system1, system, F.TestingJsonData(json1)) ?? throw new Exception();
     
     var deserialised = (ISystemEntity) Json.Deserialize(staged1.Data, typeof(System1Entity));
     Assert.That(deserialised, Is.EqualTo(cust1));
@@ -40,7 +40,7 @@ public class PromoteFunctionTests {
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
-    var staged1 = await stager.StageSingleItem(system1, system, json1) ?? throw new Exception();
+    var staged1 = await stager.StageSingleItem(system1, system, F.TestingJsonData(json1)) ?? throw new Exception();
     var result1 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -61,7 +61,7 @@ public class PromoteFunctionTests {
     var cust3 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
-    var staged23 = (await stager.StageItems(system1, system, [json1, json2, json3])).ToList();
+    var staged23 = (await stager.StageItems(system1, system, F.TestingJsonDatas(json1, json2, json3))).ToList();
     var result23 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
@@ -86,7 +86,7 @@ public class PromoteFunctionTests {
     var start = TestingUtcDate.DoTick();
     var cust1 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN1", "LN1", new DateOnly(2000, 1, 2), start);
     var json1 = Json.Serialize(cust1);
-    var staged1 = await stager.StageSingleItem(system1, system, json1) ?? throw new Exception();
+    var staged1 = await stager.StageSingleItem(system1, system, F.TestingJsonData(json1)) ?? throw new Exception();
     var result1 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (s1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
     
@@ -107,7 +107,7 @@ public class PromoteFunctionTests {
     var cust3 = new System1Entity(Guid.NewGuid(), C.IgnoreCorrId, "FN3", "LN3", new DateOnly(2000, 1, 2), start);
     var (json2, json3) = (Json.Serialize(cust2), Json.Serialize(cust3));
     TestingUtcDate.DoTick();
-    var staged23 = (await stager.StageItems(system1, system, [json1, json2, json3])).ToList();
+    var staged23 = (await stager.StageItems(system1, system, F.TestingJsonDatas(json1, json2, json3))).ToList();
     var result23 = (SuccessPromoteOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
     var (sys23, obj23) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
 
@@ -134,7 +134,7 @@ public class PromoteFunctionTests {
     LastCompleted = updated,
     LastRunMessage = $"operation [{system1}/{stage}/{coretype}] completed [Success] message: SuccessPromoteOperationResult Promote[{promoted}] Ignore[{ignored}]"
   };
-  private StagedEntity SE(string json, Guid? id = null) => new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, Helpers.TestingStagedEntityChecksum(json)).ToBase();
+  private StagedEntity SE(string json, Guid? id = null) => new StagedEntity.Dto(id ?? Guid.NewGuid(), system1, system, UtcDate.UtcNow, json, C.IgnoreCorrId, Helpers.TestingStagedEntityChecksum(json)).ToBase();
   private CoreEntity ToCore(string json) {
     var sysent = Json.Deserialize<System1Entity>(json).ToCoreEntity();
     return sysent;

@@ -1,4 +1,6 @@
-﻿namespace Centazio.Test.Lib.E2E.Crm;
+﻿using Centazio.Core.Stage;
+
+namespace Centazio.Test.Lib.E2E.Crm;
 
 public class CrmDb {
   internal List<CrmMembershipType> MembershipTypes { get; } = [];
@@ -8,14 +10,20 @@ public class CrmDb {
 
 public class CrmApi(CrmDb db) {
 
-  public Task<List<string>> GetMembershipTypes(DateTime after) => 
-      Task.FromResult(db.MembershipTypes.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
+  public Task<List<RawJsonDataWithCorrelationId>> GetMembershipTypes(DateTime after) => 
+      Task.FromResult(db.MembershipTypes.Where(e => e.Updated > after)
+          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .ToList());
   
-  public Task<List<string>> GetCustomers(DateTime after) => 
-      Task.FromResult(db.Customers.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
+  public Task<List<RawJsonDataWithCorrelationId>> GetCustomers(DateTime after) => 
+      Task.FromResult(db.Customers.Where(e => e.Updated > after)
+          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .ToList());
   
-  public Task<List<string>> GetInvoices(DateTime after) => 
-      Task.FromResult(db.Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
+  public Task<List<RawJsonDataWithCorrelationId>> GetInvoices(DateTime after) => 
+      Task.FromResult(db.Invoices.Where(e => e.Updated > after)
+          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .ToList());
 
   public Task<List<CrmCustomer>> CreateCustomers(SimulationCtx ctx, List<CrmCustomer> news) { 
     var created = news.Select(c => c with { SystemId = ctx.NewGuidSeid(), Updated = UtcDate.UtcNow }).ToList();

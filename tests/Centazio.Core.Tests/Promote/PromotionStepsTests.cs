@@ -8,7 +8,7 @@ namespace Centazio.Core.Tests.Promote;
 
 public class PromotionStepsTests {
 
-  private readonly StagedEntity DUMMY = new(Guid.Empty, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new("{}"), new("{}"));
+  private readonly StagedEntity DUMMY = new(Guid.Empty, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new("{}"), C.IgnoreCorrId, new("{}"));
   
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
     var steps = GetSteps(C.System1Name);

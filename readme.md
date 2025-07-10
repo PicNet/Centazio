@@ -199,11 +199,15 @@ public class ClickUpApi(Settings settings, Secrets secrets) {
   
   private static HttpClient? http; 
   
-  public async Task<List<TaskJsonAndDateUpdated>> GetTasksAfter(DateTime after) {
+  public async Task<List<RawJsonData>> GetTasksAfter(DateTime after) {
     // https://developer.clickup.com/reference/gettasks
     var json = await Query($"list/{settings.ClickUp.ListId}/task?archived=false&order_by=updated&reverse=true&include_closed=true&date_updated_gt={after.ToMillis()}");
     return Json.SplitList(json, "tasks")
-        .Select(taskjson => new TaskJsonAndDateUpdated(taskjson, UtcDate.FromMillis(taskjson, @"""date_updated"":""([^""]+)""")))
+        .Select(taskjson => {
+            var id = Regex.Match(taskjson, @"""id"":""([^""]+)""").Groups[1].Value;
+            var updatedutc = UtcDate.FromMillis(taskjson, @"""date_updated"":""([^""]+)""");
+            return new RawJsonData(taskjson, id, updatedutc);
+        })
         // it is possible for the ClickUp API to include some tasks even though we specify date_updated_gt, so filter manually
         .Where(t => t.LastUpdated > after)
         .OrderBy(t => t.LastUpdated)
@@ -239,8 +243,6 @@ public class ClickUpApi(Settings settings, Secrets secrets) {
   };
 
 }
-
-public record TaskJsonAndDateUpdated(string Json, DateTime LastUpdated);
 ```
 
 #### ClickUp Read Function

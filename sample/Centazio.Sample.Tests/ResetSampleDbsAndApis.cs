@@ -31,7 +31,7 @@ public class ResetSampleDbsAndApis {
   }
 
   private async Task DeleteAppSheetTasks(AppSheetApi appsheet) {
-    var tasks = (await appsheet.GetAllTasks()).Select(Json.Deserialize<AppSheetTask>).ToList();
+    var tasks = (await appsheet.GetAllTasks()).Select(e => e.Deserialise<AppSheetTask>()).ToList();
     await appsheet.DeleteTasks(tasks);
   }
 

@@ -45,7 +45,7 @@ public static class TestingFactories {
     id ??= new(Guid.NewGuid().ToString());
     var sysid = new SystemEntityId(id.Value);
     var dob = DateOnly.MinValue;
-    var core = new CoreEntity(id, CorrelationId.Build(C.System1Name, sysid), first, last, dob);
+    var core = new CoreEntity(id, CorrelationId.Build(C.System1Name, C.SystemEntityName, sysid), first, last, dob);
     return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, sysid, core, Helpers.TestingCoreEntityChecksum(core));
   }
 
@@ -67,6 +67,9 @@ public static class TestingFactories {
 
   public static Task<ReadOperationResult> GetEmptyResult(OperationStateAndConfig<ReadOperationConfig> _) => 
       Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
+  
+  public static RawJsonDataWithCorrelationId TestingJsonData(string data, CorrelationId? corrid = null) => new(data, corrid ?? C.IgnoreCorrId, null, null);
+  public static List<RawJsonDataWithCorrelationId> TestingJsonDatas(params List<string> datas) => datas.Select(d => TestingJsonData(d)).ToList();
 }
 
 public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }

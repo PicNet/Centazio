@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Misc;
-using Centazio.Sample.AppSheet;
+﻿using Centazio.Sample.AppSheet;
 using Centazio.Sample.Shared;
 
 namespace Centazio.Sample.Tests.AppSheet;
@@ -26,7 +25,7 @@ public class AppSheetApiTests {
     var added = await (await GetApi()).AddTasks([val1]);
     var toedit = added.Single() with { Task = val2 };
     var edited = await (await GetApi()).EditTasks([toedit]);
-    var end = (await (await GetApi()).GetAllTasks()).Select(Json.Deserialize<AppSheetTask>).ToList();
+    var end = (await (await GetApi()).GetAllTasks()).Select(e => e.Deserialise<AppSheetTask>()).ToList();
     
     Assert.That(end.Count, Is.EqualTo(start.Count + 1));
     Assert.That(edited.Single().Task, Is.EqualTo(val2));

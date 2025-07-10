@@ -121,6 +121,7 @@ internal static class S3StagedEntityRepository_StagedEntityExtensions {
       DateStaged = details.DateStaged.ToUniversalTime(),
       Data = data, 
       StagedEntityChecksum = details.StagedEntityChecksum,
+      CorrelationId = details.CorrelationId,
       DatePromoted = promoted
     }.ToBase();
   }

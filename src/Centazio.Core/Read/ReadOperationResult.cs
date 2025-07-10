@@ -1,4 +1,6 @@
-﻿namespace Centazio.Core.Read;
+﻿using Centazio.Core.Stage;
+
+namespace Centazio.Core.Read;
 
 public abstract record ReadOperationResult(
     EOperationResult Result,

@@ -5,7 +5,7 @@ namespace Centazio.Test.Lib.BaseProviderTests;
 
 public abstract class BaseSimulationCoreStorageRepositoryTests {
 
-  private static readonly SystemName SYS = SC.CRM_SYSTEM;
+  private static readonly SystemName SYS = SC.Crm.SYSTEM_NAME;
   private static readonly CoreEntityTypeName CORETYPE = CoreEntityTypeName.From<CoreMembershipType>();
   
   private InMemoryEpochTracker tracker = null!;
@@ -67,8 +67,9 @@ public abstract class BaseSimulationCoreStorageRepositoryTests {
 
   private CoreEntityAndMeta CreateMemTypeCEAM() {
     var id = new CoreEntityId(Guid.NewGuid().ToString());
-    var core = new CoreMembershipType(id, CorrelationId.Build(SYS, new (Guid.NewGuid().ToString())), nameof(CoreMembershipType));
-    return CoreEntityAndMeta.Create(SYS, SystemEntityTypeName.From<CrmMembershipType>(), new(Guid.NewGuid().ToString()), core, Helpers.TestingCoreEntityChecksum(core));
+    var sysname = SystemEntityTypeName.From<CrmMembershipType>();
+    var core = new CoreMembershipType(id, CorrelationId.Build(SYS, sysname, new (Guid.NewGuid().ToString())), nameof(CoreMembershipType));
+    return CoreEntityAndMeta.Create(SYS, sysname, new(Guid.NewGuid().ToString()), core, Helpers.TestingCoreEntityChecksum(core));
   }
 
 }

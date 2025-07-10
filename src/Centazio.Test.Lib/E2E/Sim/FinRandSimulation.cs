@@ -24,7 +24,7 @@ public class FinSimulation(SimulationCtx ctx, FinDb db) {
     if (count == 0) return [];
     
     var sysid = ctx.NewIntSeid();
-    var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(sysid, CorrelationId.Build(SC.FIN_SYSTEM, sysid),  ctx.NewName(nameof(FinAccount), db.Accounts, idx), UtcDate.UtcNow)).ToList();
+    var toadd = Enumerable.Range(0, count).Select(idx => new FinAccount(sysid, CorrelationId.Build(SC.Fin.SYSTEM_NAME, SC.Fin.ACCOUNT, sysid),  ctx.NewName(nameof(FinAccount), db.Accounts, idx), UtcDate.UtcNow)).ToList();
     ctx.Debug($"FinSimulation - AddAccounts[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})").ToList());
     db.Accounts.AddRange(toadd);
     return toadd.ToList();
@@ -56,7 +56,7 @@ public class FinSimulation(SimulationCtx ctx, FinDb db) {
     var toadd = new List<FinInvoice>();
     Enumerable.Range(0, count).ForEach(_ => {
       var sysid = ctx.NewIntSeid();
-      toadd.Add(new FinInvoice(sysid, CorrelationId.Build(SC.FIN_SYSTEM, sysid), Rng.RandomItem(db.Accounts).SystemId, Rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)), null));
+      toadd.Add(new FinInvoice(sysid, CorrelationId.Build(SC.Fin.SYSTEM_NAME, SC.Fin.INVOICE, sysid), Rng.RandomItem(db.Accounts).SystemId, Rng.Next(100, 10000) / 100.0m, UtcDate.UtcNow, UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)), null));
     });
     ctx.Debug($"FinSimulation - AddInvoices[{count}]", toadd.Select(i => $"Acc:{i.AccountId}({i.SystemId}) ${i.Amount:N2}").ToList());
     db.Invoices.AddRange(toadd);

@@ -9,11 +9,10 @@ public static class {{ it.SystemName }}Constants {
 }
 
 [IgnoreNamingConventions] 
-public record {{ it.SystemName }}ExampleEntity(string id, string name, string date_updated) : ISystemEntity {
-
-  
+public record {{ it.SystemName }}ExampleEntity(string id, string corrid, string name, string date_updated) : ISystemEntity {
   
   public SystemEntityId SystemId { get; } = new(id);
+  public CorrelationId CorrelationId { get; } = new(corrid);
   public DateTime LastUpdatedDate => UtcDate.FromMillis(date_updated);
   public string DisplayName => name;
   

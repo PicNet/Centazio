@@ -3,7 +3,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Fin;
 
-public class FinPromoteFunction(SimulationCtx ctx) : PromoteFunction(SimulationConstants.FIN_SYSTEM, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
+public class FinPromoteFunction(SimulationCtx ctx) : PromoteFunction(SC.Fin.SYSTEM_NAME, ctx.StageRepository, ctx.CoreStore, ctx.CtlRepo) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new PromoteOperationConfig(System, typeof(FinAccount), new(nameof(FinAccount)), CoreEntityTypeName.From<CoreCustomer>(), TestingDefaults.CRON_EVERY_SECOND, EvaluateAccounts) { IsBidirectional = true },

@@ -14,6 +14,7 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(DbFieldType), ["*"] },
     { nameof(ForeignKey), ["*"] },
     { nameof(EntityChange), ["*"] },
+    { nameof(RawJsonData), ["*"] },
     { nameof(FunctionConfig), [nameof(FunctionConfig.FunctionPollExpression)] },
     { nameof(TimerChangeTrigger), [nameof(TimerChangeTrigger.Expression)]},
     { "*", [nameof(Checksum), nameof(ILoggable.LoggableValue)] }

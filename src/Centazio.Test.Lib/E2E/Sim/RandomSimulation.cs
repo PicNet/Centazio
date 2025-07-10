@@ -26,7 +26,7 @@ public class RandomSimulation : ISimulationInstructions {
     finsim = new FinSimulation(ctx, findb);
     
     crmdb.MembershipTypes.AddRange([
-      Create("Pending:0", SC.PENDING_MEMBERSHIP_TYPE_ID),
+      Create("Pending:0", SC.Crm.PENDING_MEMBERSHIP_TYPE_ID),
       Create("Standard:0"),
       Create("Silver:0"),
       Create("Gold:0")
@@ -34,7 +34,7 @@ public class RandomSimulation : ISimulationInstructions {
     
     CrmMembershipType Create(string name, SystemEntityId? sysid = null) {
       sysid ??= ctx.NewGuidSeid(); 
-      return new CrmMembershipType(sysid, CorrelationId.Build(SC.CRM_SYSTEM, sysid),  UtcDate.UtcNow, name);
+      return new CrmMembershipType(sysid, CorrelationId.Build(SC.Crm.SYSTEM_NAME, SC.Crm.MEMBERSHIP_TYPE, sysid),  UtcDate.UtcNow, name);
     }
   }
 

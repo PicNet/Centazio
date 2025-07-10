@@ -13,7 +13,7 @@ public class {{ it.SystemName }}PromoteFunction(IStagedEntityRepository stager, 
   private Task<List<EntityEvaluationResult>> PromoteEntities(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
     var results  = toeval.Select(eval => {
       var source = eval.SystemEntity.To<{{ it.SystemName }}ExampleEntity>();
-      var target = (eval.ExistingCoreEntityAndMeta?.As<ExampleEntity>() ?? new ExampleEntity(new(Guid.CreateVersion7().ToString()), String.Empty, false)) with { Name = source.name };
+      var target = (eval.ExistingCoreEntityAndMeta?.As<ExampleEntity>() ?? new ExampleEntity(new(Guid.CreateVersion7().ToString()), source.CorrelationId, String.Empty, false)) with { Name = source.name };
       return eval.MarkForPromotion(target);
     }).ToList();
     return Task.FromResult(results);

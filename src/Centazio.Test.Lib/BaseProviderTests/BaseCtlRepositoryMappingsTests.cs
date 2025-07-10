@@ -107,7 +107,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
 
   [Test] public async Task Test_duplicate_mappings_found_in_simulation() {
     var sid_crm = new SystemEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20");
-    List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, CorrelationId.Build(SC.CRM_SYSTEM, sid_crm), String.Empty, String.Empty, DateOnly.MinValue)];
+    List<ICoreEntity> Create(CoreEntityId coreid) => [new CoreEntity(coreid, CorrelationId.Build(C.System1Name, C.SystemEntityName, sid_crm), String.Empty, String.Empty, DateOnly.MinValue)];
     var (cid_fin, cid_crm) = (new CoreEntityId("357992994"), new CoreEntityId("71c5db4e-971a-45f5-831e-643d6ca77b20"));
     // WriteOperationRunner - GetForCores Id[357992994] Type[CoreCustomer] System[CrmSystem]
     // Creating: MappingKey { CoreEntity = CoreCustomer, CoreId = 357992994, System = CrmSystem, SystemId = 71c5db4e-971a-45f5-831e-643d6ca77b20 }
@@ -128,7 +128,7 @@ public abstract class BaseCtlRepositoryMappingsTests {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid) {
       TestingUtcDate.DoTick();
-      var c = new CoreEntity(coreid, CorrelationId.Build(system, sysid),  name, name, DateOnly.MinValue);
+      var c = new CoreEntity(coreid, CorrelationId.Build(system, C.SystemEntityName, sysid),  name, name, DateOnly.MinValue);
       await corestore.Upsert(C.CoreEntityName, [CoreEntityAndMeta.Create(system, systype, sysid, c, Helpers.TestingCoreEntityChecksum(c))]);
       await ctl.CreateSysMap(system, C.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
       return c;

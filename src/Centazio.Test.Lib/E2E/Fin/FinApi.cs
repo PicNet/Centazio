@@ -1,4 +1,6 @@
-﻿namespace Centazio.Test.Lib.E2E.Fin;
+﻿using Centazio.Core.Stage;
+
+namespace Centazio.Test.Lib.E2E.Fin;
 
 public class FinDb {
   public List<FinAccount> Accounts { get; } = [];
@@ -7,8 +9,14 @@ public class FinDb {
 
 public class FinApi(FinDb db) {
 
-  public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(db.Accounts.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
-  public Task<List<string>> GetInvoices(DateTime after) => Task.FromResult(db.Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
+  public Task<List<RawJsonDataWithCorrelationId>> GetAccounts(DateTime after) => Task.FromResult(db.Accounts
+      .Where(e => e.Updated > after)
+      .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId, e.LastUpdatedDate))
+      .ToList());
+  public Task<List<RawJsonDataWithCorrelationId>> GetInvoices(DateTime after) => Task.FromResult(db.Invoices
+      .Where(e => e.Updated > after)
+      .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId, e.LastUpdatedDate))
+      .ToList());
   
   public Task<List<FinAccount>> CreateAccounts(SimulationCtx ctx, List<FinAccount> news) { 
     var created = news.Select(c => c with { SystemId = ctx.NewIntSeid(), Updated = UtcDate.UtcNow }).ToList();

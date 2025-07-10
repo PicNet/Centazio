@@ -248,9 +248,10 @@ public class AbstractFunctionTests {
   
   private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> config) => GetListResult(config, null);
   
-  private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> _, DateTime? nextcheckpoint) => 
-      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), nextcheckpoint ?? UtcDate.UtcNow));
-  
-  
+  private static Task<ReadOperationResult> GetListResult(OperationStateAndConfig<ReadOperationConfig> _, DateTime? nextcheckpoint) {
+    var datas = F.TestingJsonDatas(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList());
+    return Task.FromResult<ReadOperationResult>(new ListReadOperationResult(datas, nextcheckpoint ?? UtcDate.UtcNow));
+  }
+
   private Task<ReadOperationResult> ThrowsError(OperationStateAndConfig<ReadOperationConfig> _) => throw new Exception();
 }

@@ -10,8 +10,6 @@ public class {{ it.SystemName }}ReadFunction(IStagedEntityRepository stager, ICt
     new ReadOperationConfig({{ it.SystemName }}Constants.{{ it.SystemName }}ExampleEntityName, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)
   ]);
 
-  private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) {
-    var entities = await api.GetExampleEntities(config.Checkpoint);        
-    return CreateResult(entities.Select(e => Json.Serialize(e)).ToList());
-  }
+  private async Task<ReadOperationResult> GetUpdatedTasks(OperationStateAndConfig<ReadOperationConfig> config) =>
+      CreateResult(await api.GetExampleEntities(config.Checkpoint));
 }

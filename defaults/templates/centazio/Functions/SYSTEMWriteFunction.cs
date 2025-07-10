@@ -11,7 +11,7 @@ public class {{ it.SystemName }}WriteFunction(ICoreStorage core, ICtlRepository 
   ]);
 
   private Task<ConvertCoresToSystemsResult> CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
-      Task.FromResult(CovertCoresToSystems<ExampleEntity>(tocreate, toupdate, (id, e) => new {{ it.SystemName }}ExampleEntity(id.Value, e.Name, UtcDate.ToMillis().ToString())));
+      Task.FromResult(CovertCoresToSystems<ExampleEntity>(tocreate, toupdate, (id, e) => new {{ it.SystemName }}ExampleEntity(id.Value, e.CorrelationId, e.Name, UtcDate.ToMillis().ToString())));
 
   private Task<WriteOperationResult> Write{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       WriteOperationResult.Create<ExampleEntity, {{ it.SystemName }}ExampleEntity>(tocreate, toupdate, CreateExampleEntities, UpdateExampleEntities);

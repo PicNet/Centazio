@@ -45,14 +45,14 @@ public class ReadOperationRunnerTests {
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity.Dto(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum).ToBase())));
+        staged.Select(s => new StagedEntity.Dto(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, C.IgnoreCorrId, s.StagedEntityChecksum).ToBase())));
     ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, UtcDate.UtcNow), actual);
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
     Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([], UtcDate.UtcNow));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([String.Empty], UtcDate.UtcNow));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([null!], UtcDate.UtcNow));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([F.TestingJsonData(String.Empty)], UtcDate.UtcNow));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([F.TestingJsonData(null!)], UtcDate.UtcNow));
   }
   
   private void ValidateResult(SystemState.Dto expss, OperationResult expected, OperationResult actual) {
@@ -68,6 +68,6 @@ public class ReadOperationRunnerTests {
   
 
   private Task<ReadOperationResult> GetListResults(OperationStateAndConfig<ReadOperationConfig> config) => 
-      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), UtcDate.UtcNow));
+      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => F.TestingJsonData(Guid.NewGuid().ToString())).ToList(), UtcDate.UtcNow));
 
 }

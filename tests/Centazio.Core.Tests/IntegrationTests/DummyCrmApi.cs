@@ -1,4 +1,5 @@
-﻿using Centazio.Test.Lib;
+﻿using Centazio.Core.Stage;
+using Centazio.Test.Lib;
 
 namespace Centazio.Core.Tests.IntegrationTests;
 
@@ -8,9 +9,13 @@ internal class DummyCrmApi {
   //    each second (utc.Now - TEST_START_DT) with the LastUpdate date being utc.Now 
   private readonly List<System1Entity> customers = [];
 
-  internal Task<List<string>> GetCustomersUpdatedSince(DateTime after) {
+  internal Task<List<RawJsonDataWithCorrelationId>> GetCustomersUpdatedSince(DateTime after) {
     UpdateCustomerList();
-    return Task.FromResult(customers.Where(c => c.LastUpdatedDate > after).Select(Json.Serialize).ToList());
+    var data = customers
+        .Where(c => c.LastUpdatedDate > after)
+        .Select(c => new RawJsonDataWithCorrelationId(Json.Serialize(c), c.CorrelationId, c.SystemId, c.LastUpdatedDate))
+        .ToList();
+    return Task.FromResult(data);
   }
 
   private void UpdateCustomerList() {
@@ -28,7 +33,7 @@ internal class DummyCrmApi {
   internal static System1Entity NewCust(int idx, DateTime? updated = null) {
     var sysid = Guid.Parse($"00000000-0000-0000-0000-{idx.ToString().PadLeft(12, '0')}");
     return new (sysid,
-        CorrelationId.Build(C.System1Name, new(sysid.ToString())), 
+        CorrelationId.Build(C.System1Name, C.SystemEntityName, new(sysid.ToString())), 
         idx.ToString(),
         idx.ToString(),
         DateOnly.FromDateTime(TestingDefaults.DefaultStartDt.AddYears(-idx)),

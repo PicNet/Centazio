@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.Read;
 
 namespace Centazio.Core.Stage;
 
@@ -78,3 +77,8 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
   public abstract ValueTask DisposeAsync();
 
 }
+
+public record RawJsonData(string Json, string? Id, DateTime? LastUpdatedUtc) {
+  public T Deserialise<T>() where T : ISystemEntity => Centazio.Core.Misc.Json.Deserialize<T>(Json);
+}
+public record RawJsonDataWithCorrelationId(string Json, CorrelationId CorrelationId, string? Id, DateTime? LastUpdatedUtc) : RawJsonData(Json, Id, LastUpdatedUtc);

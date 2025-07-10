@@ -29,7 +29,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmDb db) {
     var toadd = Enumerable.Range(0, count)
         .Select(idx => {
           var sysid = ctx.NewGuidSeid();
-          return new CrmCustomer(sysid, CorrelationId.Build(SC.CRM_SYSTEM, sysid), UtcDate.UtcNow, Rng.RandomItem(db.MembershipTypes).SystemId, ctx.NewName(nameof(CrmCustomer), db.Customers, idx));
+          return new CrmCustomer(sysid, CorrelationId.Build(SC.Crm.SYSTEM_NAME, SC.Crm.CUSTOMER, sysid), UtcDate.UtcNow, Rng.RandomItem(db.MembershipTypes).SystemId, ctx.NewName(nameof(CrmCustomer), db.Customers, idx));
         })
         .ToList();
     ctx.Debug($"CrmSimulation - AddCustomers[{count}]", toadd.Select(a => $"{a.Name}({a.SystemId})").ToList());
@@ -63,7 +63,7 @@ public class CrmSimulation(SimulationCtx ctx, CrmDb db) {
     var toadd = new List<CrmInvoice>();
     Enumerable.Range(0, count).ForEach(_ => {
       var sysid = ctx.NewGuidSeid();
-      toadd.Add(new CrmInvoice(sysid, CorrelationId.Build(SC.CRM_SYSTEM, sysid), UtcDate.UtcNow, Rng.RandomItem(db.Customers).SystemId, Rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)))));
+      toadd.Add(new CrmInvoice(sysid, CorrelationId.Build(SC.Crm.SYSTEM_NAME, SC.Crm.INVOICE, sysid), UtcDate.UtcNow, Rng.RandomItem(db.Customers).SystemId, Rng.Next(100, 10000), DateOnly.FromDateTime(UtcDate.UtcToday.AddDays(Rng.Next(-10, 60)))));
     });
     
     ctx.Debug($"CrmSimulation - AddInvoices[{count}]", toadd.Select(i => {

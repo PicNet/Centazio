@@ -73,7 +73,7 @@ public class JsonTests {
     Assert.That(ss2, Is.EqualTo(ss));
     
     // Centazio.Core.Ctl.Entities.StagedEntity+Dto
-    var se = new StagedEntity(Guid.NewGuid(), new(str), new(str), UtcDate.UtcNow, new("data"), new("checksum"));
+    var se = new StagedEntity(Guid.NewGuid(), new(str), new(str), UtcDate.UtcNow, new("data"), C.IgnoreCorrId, new("checksum"));
     var se2 = Json.Deserialize<StagedEntity>(Json.Serialize(se));
     Assert.That(se2, Is.EqualTo(se));
     

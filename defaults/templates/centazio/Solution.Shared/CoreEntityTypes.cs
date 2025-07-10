@@ -13,7 +13,7 @@ public record ExampleEntity : CoreEntityBase {
   
   private ExampleEntity() { Name = String.Empty; }
   
-  public ExampleEntity(CoreEntityId coreid, string name, bool completed) : base(coreid) {
+  public ExampleEntity(CoreEntityId coreid, CorrelationId corrid, string name, bool completed) : base(coreid, corrid) {
     Name = name;
     Completed = completed;
   }

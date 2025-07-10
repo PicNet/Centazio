@@ -45,7 +45,7 @@ public class ReadFunctionTests {
     // validate results
     var expjson = Json.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListReadOperationResult([expjson], UtcDate.UtcNow).ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListReadOperationResult(F.TestingJsonDatas(expjson), UtcDate.UtcNow).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -57,13 +57,13 @@ public class ReadFunctionTests {
     
     Assert.That(sys2.Single(), Is.EqualTo(SS(onetick)));
     Assert.That(obj2.Single(), Is.EqualTo(OS(onetick, onetick, 1)));
-    Assert.That(staged2.Single(), Is.EqualTo(SE(staged2.Single().Id)));
+    Assert.That(staged2.Single(), Is.EqualTo(SE(r2.PayloadList.Single().Id, staged2.Single().Id)));
     
     Assert.That(sys3.Single(), Is.EqualTo(SS(onetick)));
     Assert.That(obj3.Single(), Is.EqualTo(OS(onetick, onetick, 1)));
-    Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
+    Assert.That(staged3.Single(), Is.EqualTo(SE(r2.PayloadList.Single().Id, staged3.Single().Id)));
     
-    SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
+    SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, updated, nameof(ESystemStateStatus.Idle), updated, updated).ToBase();
     ObjectState OS(DateTime updated, DateTime nextcheckpoint, int len) => new(sys, stg, sysent, nextcheckpoint, true) {
       DateCreated = start,
       LastResult = EOperationResult.Success,
@@ -76,20 +76,22 @@ public class ReadFunctionTests {
       LastRunMessage = $"operation [{sys}/{stg}/{sysent}] completed [Success] message: " + 
           (len == 0 ? "EmptyReadOperationResult" : $"ListReadOperationResult[{len}]")
     };
-    StagedEntity SE(Guid? id = null) => new StagedEntity.Dto(id ?? Guid.CreateVersion7(), sys, sysent, onetick, expjson, Helpers.TestingStagedEntityChecksum(expjson)).ToBase();
+    StagedEntity SE(string? sysid, Guid seid) {
+      return new StagedEntity.Dto(seid, sys, sysent, onetick, expjson, CorrelationId.Build(sys, sysent, new(sysid ?? throw new Exception())), Helpers.TestingStagedEntityChecksum(expjson)).ToBase();
+    }
   }
 }
 
 public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl) {
 
-  private readonly DummyCrmApi crmApi = new();
+  private readonly DummyCrmApi api = new();
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, GetUpdatesCustomers)
   ]) { ChecksumAlgorithm = new Helpers.TestingHashcodeBasedChecksumAlgo() };
   
   public async Task<ReadOperationResult> GetUpdatesCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
-    var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
+    var customers = await api.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
         new ListReadOperationResult(customers, UtcDate.UtcNow)
         : new EmptyReadOperationResult();

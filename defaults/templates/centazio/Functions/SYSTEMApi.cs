@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using Centazio.Core.Stage;
+using System.Text.Json.Nodes;
 
 namespace {{ it.Namespace }};
 
@@ -10,8 +11,8 @@ public class {{ it.SystemName }}Api(Settings settings, Secrets secrets) {
   private readonly Settings settings = settings ?? throw new ArgumentNullException(nameof(settings));
   private readonly Secrets secrets = secrets ?? throw new ArgumentNullException(nameof(secrets));
   
-  public Task<List<object>> GetExampleEntities(DateTime after) {
-    return Task.FromResult<List<object>>(null!);
+  public Task<List<RawJsonData>> GetExampleEntities(DateTime after) {
+    return Task.FromResult<List<RawJsonData>>(null!);
   }
 
   public Task<string> CreateExampleEntity(string name) {
@@ -28,5 +29,3 @@ public class {{ it.SystemName }}Api(Settings settings, Secrets secrets) {
   };
 
 }
-
-public record TaskJsonAndDateUpdated(string Json, DateTime LastUpdated);

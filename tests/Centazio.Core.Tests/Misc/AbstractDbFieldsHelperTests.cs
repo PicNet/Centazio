@@ -8,6 +8,7 @@ public class AbstractDbFieldsHelperTests {
   [Test] public void Test_GetDbFields() {
     var expected = new List<DbFieldType> {
       new(nameof(StagedEntity.Id), typeof(Guid), String.Empty, true),
+      new(nameof(StagedEntity.CorrelationId), typeof(string), "128", true),
       new(nameof(StagedEntity.System), typeof(string), "32", true),
       new(nameof(StagedEntity.SystemEntityTypeName), typeof(string), "32", true),
       new(nameof(StagedEntity.DateStaged), typeof(DateTime), String.Empty, true),

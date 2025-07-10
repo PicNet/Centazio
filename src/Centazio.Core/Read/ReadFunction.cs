@@ -34,5 +34,3 @@ public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtl
   }
 }
 
-public record RawJsonData(string Json, string? Id, DateTime? LastUpdatedUtc);
-public record RawJsonDataWithCorrelationId(string Json, CorrelationId CorrelationId, string? Id, DateTime? LastUpdatedUtc) : RawJsonData(Json, Id, LastUpdatedUtc);

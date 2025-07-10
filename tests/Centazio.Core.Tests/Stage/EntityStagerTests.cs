@@ -18,24 +18,24 @@ public class EntityStagerTests {
   }
 
   [Test] public async Task Test_staging_a_single_record() {
-    await stager.StageSingleItem(C.System1Name, C.SystemEntityName, nameof(EntityStagerTests));
+    await stager.StageSingleItem(C.System1Name, C.SystemEntityName, F.TestingJsonData(nameof(EntityStagerTests), C.IgnoreCorrId));
     
     var results1 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow.AddMilliseconds(-1))).ToList();
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();
     
     var staged = results1.Single();
-    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(nameof(EntityStagerTests)), Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
+    Assert.That(staged, Is.EqualTo(new StagedEntity(staged.Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(nameof(EntityStagerTests)), C.IgnoreCorrId, Helpers.TestingStagedEntityChecksum(nameof(EntityStagerTests)))));
     Assert.That(results2, Is.Empty);
   }
 
   [Test] public async Task Test_staging_a_multiple_records() {
-    var datas = Enumerable.Range(0, 10).Select(i => i.ToString());
-    await stager.StageItems(C.System1Name, C.SystemEntityName, datas.ToList());
+    var datas = Enumerable.Range(0, 10).Select(i => i.ToString()).ToList();
+    await stager.StageItems(C.System1Name, C.SystemEntityName, F.TestingJsonDatas(datas));
     
     var results1 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow.AddMicroseconds(-1))).ToList();
     var results2 = (await stager.GetUnpromoted(C.System1Name, C.SystemEntityName, UtcDate.UtcNow)).ToList();
     
-    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(idx.ToString()), Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
+    var exp = Enumerable.Range(0, 10).Select(idx => new StagedEntity(results1.ElementAt(idx).Id, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(idx.ToString()), C.IgnoreCorrId, Helpers.TestingStagedEntityChecksum(idx.ToString()))).ToList();
     Assert.That(results1, Is.EqualTo(exp));
     Assert.That(results2, Is.Empty);
   }

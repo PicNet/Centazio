@@ -13,12 +13,14 @@ public class AwsStagedEntityRepositoryHelpers {
   public static string ToDynamoHashKey(SystemName system, SystemEntityTypeName systype) => $"{system.Value}|{systype.Value}";
   public static string ToDynamoRangeKey(DateTime staged, Guid suffix) => $"{staged:o}|{suffix}";
   
-  public static string ToS3Key(StagedEntity e) => $"{e.System.Value}/{e.SystemEntityTypeName.Value}/{e.DateStaged:o}_{e.StagedEntityChecksum}_{e.Id}";
+  public static string ToS3Key(StagedEntity e) => $"{e.System.Value}/{e.SystemEntityTypeName.Value}/{e.DateStaged:o}_{e.StagedEntityChecksum}_{e.Id}_{e.CorrelationId}";
   public static S3KeyComponents ParseS3Key(string key) {
     var (system, entity, rest, _) = key.Split('/');
-    var (stagedstr, checksum, idstr, _) = rest.Split('_');
-    return new S3KeyComponents(new(system), new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), new(checksum), Guid.Parse(idstr));
+    // corridparts is required as we cannot add corrid, as `Split` at most returns 4 out params
+    var (stagedstr, checksum, idstr, corridparts) = rest.Split('_');
+    var corrid = new CorrelationId(String.Join('_', corridparts));
+    return new S3KeyComponents(new(system), new(entity), DateTime.Parse(stagedstr).ToUniversalTime(), new(checksum), Guid.Parse(idstr), corrid);
   } 
 }
 
-public record S3KeyComponents(SystemName System, SystemEntityTypeName SystemEntityTypeName, DateTime DateStaged, StagedEntityChecksum StagedEntityChecksum, Guid Id);
+public record S3KeyComponents(SystemName System, SystemEntityTypeName SystemEntityTypeName, DateTime DateStaged, StagedEntityChecksum StagedEntityChecksum, Guid Id, CorrelationId CorrelationId);

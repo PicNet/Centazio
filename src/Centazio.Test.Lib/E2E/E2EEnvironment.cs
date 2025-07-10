@@ -125,32 +125,32 @@ public class E2EEnvironment(
   private async Task CompareMembershipTypes() {
     var core_types = (await ctx.CoreStore.GetMembershipTypes()).Select(m => ctx.Converter.CoreMembershipTypeToCrmMembershipType(SystemEntityId.DEFAULT_VALUE, m));
     
-    await ctx.Epoch.ValidateAdded<CoreMembershipType>((SC.CRM_SYSTEM, ctx.Epoch.Epoch == 0 ? crmdb.MembershipTypes : []));
-    await ctx.Epoch.ValidateUpdated<CoreMembershipType>((SC.CRM_SYSTEM, instructions.EditedCrmMemberships));
-    CompareByChecksumWithoutSysId(SC.CRM_SYSTEM, core_types, crmdb.MembershipTypes);
+    await ctx.Epoch.ValidateAdded<CoreMembershipType>((SC.Crm.SYSTEM_NAME, ctx.Epoch.Epoch == 0 ? crmdb.MembershipTypes : []));
+    await ctx.Epoch.ValidateUpdated<CoreMembershipType>((SC.Crm.SYSTEM_NAME, instructions.EditedCrmMemberships));
+    CompareByChecksumWithoutSysId(SC.Crm.SYSTEM_NAME, core_types, crmdb.MembershipTypes);
   }
   
   private async Task CompareCustomers() {
     var core_customers_for_crm = (await ctx.CoreStore.GetCustomers()).Select(c => ctx.Converter.CoreCustomerToCrmCustomer(SystemEntityId.DEFAULT_VALUE, c));
     var core_customers_for_fin = (await ctx.CoreStore.GetCustomers()).Select(c => ctx.Converter.CoreCustomerToFinAccount(SystemEntityId.DEFAULT_VALUE, c));
     
-    await ctx.Epoch.ValidateAdded<CoreCustomer>((SC.CRM_SYSTEM, instructions.AddedCrmCustomers), (SC.FIN_SYSTEM, instructions.AddedFinAccounts));
-    await ctx.Epoch.ValidateUpdated<CoreCustomer>((SC.CRM_SYSTEM, instructions.EditedCrmCustomers), (SC.FIN_SYSTEM, instructions.EditedFinAccounts));
-    CompareByChecksumWithoutSysId(SC.CRM_SYSTEM, core_customers_for_crm, crmdb.Customers);
-    CompareByChecksumWithoutSysId(SC.FIN_SYSTEM, core_customers_for_fin, findb.Accounts);
+    await ctx.Epoch.ValidateAdded<CoreCustomer>((SC.Crm.SYSTEM_NAME, instructions.AddedCrmCustomers), (SC.Fin.SYSTEM_NAME, instructions.AddedFinAccounts));
+    await ctx.Epoch.ValidateUpdated<CoreCustomer>((SC.Crm.SYSTEM_NAME, instructions.EditedCrmCustomers), (SC.Fin.SYSTEM_NAME, instructions.EditedFinAccounts));
+    CompareByChecksumWithoutSysId(SC.Crm.SYSTEM_NAME, core_customers_for_crm, crmdb.Customers);
+    CompareByChecksumWithoutSysId(SC.Fin.SYSTEM_NAME, core_customers_for_fin, findb.Accounts);
   }
   
   private async Task CompareInvoices() {
     var cores = await ctx.CoreStore.GetInvoices();
-    var crmmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SC.CRM_SYSTEM,  CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
-    var finmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SC.FIN_SYSTEM, CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var crmmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SC.Crm.SYSTEM_NAME,  CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
+    var finmaps = await ctx.CtlRepo.GetRelatedSystemIdsFromCores(SC.Fin.SYSTEM_NAME, CoreEntityTypeName.From<CoreCustomer>(), cores.Cast<ICoreEntity>().ToList(), nameof(CoreInvoice.CustomerCoreId));
     var core_invoices_for_crm = cores.Select(i => ctx.Converter.CoreInvoiceToCrmInvoice(SystemEntityId.DEFAULT_VALUE, i, crmmaps));
     var core_invoices_for_fin = cores.Select(i => ctx.Converter.CoreInvoiceToFinInvoice(SystemEntityId.DEFAULT_VALUE, i, finmaps));
     
-    await ctx.Epoch.ValidateAdded<CoreInvoice>((SC.CRM_SYSTEM, instructions.AddedCrmInvoices), (SC.FIN_SYSTEM, instructions.AddedFinInvoices));
-    await ctx.Epoch.ValidateUpdated<CoreInvoice>((SC.CRM_SYSTEM, instructions.EditedCrmInvoices), (SC.FIN_SYSTEM, instructions.EditedFinInvoices));
-    CompareByChecksumWithoutSysId(SC.CRM_SYSTEM, core_invoices_for_crm, crmdb.Invoices);
-    CompareByChecksumWithoutSysId(SC.FIN_SYSTEM, core_invoices_for_fin, findb.Invoices);
+    await ctx.Epoch.ValidateAdded<CoreInvoice>((SC.Crm.SYSTEM_NAME, instructions.AddedCrmInvoices), (SC.Fin.SYSTEM_NAME, instructions.AddedFinInvoices));
+    await ctx.Epoch.ValidateUpdated<CoreInvoice>((SC.Crm.SYSTEM_NAME, instructions.EditedCrmInvoices), (SC.Fin.SYSTEM_NAME, instructions.EditedFinInvoices));
+    CompareByChecksumWithoutSysId(SC.Crm.SYSTEM_NAME, core_invoices_for_crm, crmdb.Invoices);
+    CompareByChecksumWithoutSysId(SC.Fin.SYSTEM_NAME, core_invoices_for_fin, findb.Invoices);
   }
   
   [IgnoreNamingConventions] private void CompareByChecksumWithoutSysId(SystemName system, IEnumerable<ISystemEntity> fromcores, IEnumerable<ISystemEntity> targets) {
@@ -161,6 +161,6 @@ public class E2EEnvironment(
     
     // remove the SystemId from the checksum subset to make this validation simpler.  Otherwise above would need much more complex code to set the correct IDs
     //    from Map objects on every validation
-    string Describe(ISystemEntity e) => Json.Serialize(e.CreatedWithId(new (system == SC.CRM_SYSTEM ? Guid.Empty.ToString() : "0")).GetChecksumSubset());
+    string Describe(ISystemEntity e) => Json.Serialize(e.CreatedWithId(new (system == SC.Crm.SYSTEM_NAME ? Guid.Empty.ToString() : "0")).GetChecksumSubset());
   }
 }

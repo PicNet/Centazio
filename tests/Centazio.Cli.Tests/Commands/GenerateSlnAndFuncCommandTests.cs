@@ -15,6 +15,8 @@ namespace Centazio.Cli.Tests.Commands;
 /// </summary>
 public class GenerateSlnAndFuncCommandTests {
 
+  private readonly bool CLEAN_UP_TEST_DIR = true;
+  
   private readonly string properroot = Environment.CurrentDirectory;
   private readonly CommandRunner runner = new();
   private readonly string sln = nameof(GenerateSlnAndFuncCommandTests);
@@ -34,14 +36,14 @@ public class GenerateSlnAndFuncCommandTests {
     FsUtils.TestingCliRootDir = FsUtils.GetCentazioPath();
     Environment.CurrentDirectory = Directory.CreateDirectory(testdir).FullName;
     
-    if (Directory.Exists(sln)) Directory.Delete(sln, true);
+    if (CLEAN_UP_TEST_DIR && Directory.Exists(sln)) Directory.Delete(sln, true);
   }
 
   [TearDown] public void TearDown() {
     FsUtils.TestingCliRootDir = string.Empty;
     Environment.CurrentDirectory = properroot;
     Environment.SetEnvironmentVariable("IS_CLI", null);
-    if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
+    if (CLEAN_UP_TEST_DIR && Directory.Exists(testdir)) Directory.Delete(testdir, true);
   }
 
   [Test] public async Task Test_generate_solution_with_nugets() => 
@@ -67,7 +69,7 @@ public class GenerateSlnAndFuncCommandTests {
     var existsbefore = Directory.Exists(sln);
     await cmd.ExecuteImpl(new GenerateSlnCommand.Settings { SolutionName = sln, CoreStorageProvider = "Sqlite" });
 
-    Assert.That(existsbefore, Is.False);
+    if (CLEAN_UP_TEST_DIR) Assert.That(existsbefore, Is.False);
     Assert.That(Directory.Exists(sln), Is.True);
 
     Environment.CurrentDirectory = Path.Combine(testdir, sln);
