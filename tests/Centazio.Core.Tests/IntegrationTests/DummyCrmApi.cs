@@ -9,11 +9,11 @@ internal class DummyCrmApi {
   //    each second (utc.Now - TEST_START_DT) with the LastUpdate date being utc.Now 
   private readonly List<System1Entity> customers = [];
 
-  internal Task<List<RawJsonDataWithCorrelationId>> GetCustomersUpdatedSince(DateTime after) {
+  internal Task<List<RawJsonData>> GetCustomersUpdatedSince(DateTime after) {
     UpdateCustomerList();
     var data = customers
         .Where(c => c.LastUpdatedDate > after)
-        .Select(c => new RawJsonDataWithCorrelationId(Json.Serialize(c), c.CorrelationId, c.SystemId, c.LastUpdatedDate))
+        .Select(c => new RawJsonData(Json.Serialize(c), c.SystemId, c.LastUpdatedDate))
         .ToList();
     return Task.FromResult(data);
   }

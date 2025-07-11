@@ -16,7 +16,7 @@ public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(SC.Cr
   public async Task<ReadOperationResult> GetCrmCustomerUpdates(OperationStateAndConfig<ReadOperationConfig> config) => GetUpdatesImpl(config, await api.GetCustomers(config.Checkpoint));
   public async Task<ReadOperationResult> GetCrmInvoiceUpdates(OperationStateAndConfig<ReadOperationConfig> config) => GetUpdatesImpl(config, await api.GetInvoices(config.Checkpoint));
 
-  private ReadOperationResult GetUpdatesImpl(OperationStateAndConfig<ReadOperationConfig> config, List<RawJsonDataWithCorrelationId> updates) {
+  private ReadOperationResult GetUpdatesImpl(OperationStateAndConfig<ReadOperationConfig> config, List<RawJsonData> updates) {
     ctx.Debug($"CrmReadFunction.GetUpdatesAfterCheckpoint[{config.OpConfig.Object.Value}] Updates[{updates.Count}]", updates.Select(e => e.Json).ToList());
     return updates.Any() ? ReadOperationResult.Create(updates, UtcDate.UtcNow) : ReadOperationResult.EmptyResult();
   }

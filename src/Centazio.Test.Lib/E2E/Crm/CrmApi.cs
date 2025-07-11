@@ -10,19 +10,19 @@ public class CrmDb {
 
 public class CrmApi(CrmDb db) {
 
-  public Task<List<RawJsonDataWithCorrelationId>> GetMembershipTypes(DateTime after) => 
+  public Task<List<RawJsonData>> GetMembershipTypes(DateTime after) => 
       Task.FromResult(db.MembershipTypes.Where(e => e.Updated > after)
-          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .Select(e => new RawJsonData(Json.Serialize(e), e.SystemId.Value, e.LastUpdatedDate) )
           .ToList());
   
-  public Task<List<RawJsonDataWithCorrelationId>> GetCustomers(DateTime after) => 
+  public Task<List<RawJsonData>> GetCustomers(DateTime after) => 
       Task.FromResult(db.Customers.Where(e => e.Updated > after)
-          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .Select(e => new RawJsonData(Json.Serialize(e), e.SystemId.Value, e.LastUpdatedDate) )
           .ToList());
   
-  public Task<List<RawJsonDataWithCorrelationId>> GetInvoices(DateTime after) => 
+  public Task<List<RawJsonData>> GetInvoices(DateTime after) => 
       Task.FromResult(db.Invoices.Where(e => e.Updated > after)
-          .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId.Value, e.LastUpdatedDate) )
+          .Select(e => new RawJsonData(Json.Serialize(e), e.SystemId.Value, e.LastUpdatedDate) )
           .ToList());
 
   public Task<List<CrmCustomer>> CreateCustomers(SimulationCtx ctx, List<CrmCustomer> news) { 

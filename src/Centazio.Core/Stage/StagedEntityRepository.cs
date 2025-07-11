@@ -80,5 +80,7 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
 
 public record RawJsonData(string Json, string? Id, DateTime? LastUpdatedUtc) {
   public T Deserialise<T>() where T : ISystemEntity => Centazio.Core.Misc.Json.Deserialize<T>(Json);
+  
+  internal RawJsonDataWithCorrelationId AddCorrelation(CorrelationId corrid) => new(Json, corrid, Id, LastUpdatedUtc);
 }
 public record RawJsonDataWithCorrelationId(string Json, CorrelationId CorrelationId, string? Id, DateTime? LastUpdatedUtc) : RawJsonData(Json, Id, LastUpdatedUtc);

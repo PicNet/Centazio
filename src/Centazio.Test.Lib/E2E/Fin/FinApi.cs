@@ -9,13 +9,13 @@ public class FinDb {
 
 public class FinApi(FinDb db) {
 
-  public Task<List<RawJsonDataWithCorrelationId>> GetAccounts(DateTime after) => Task.FromResult(db.Accounts
+  public Task<List<RawJsonData>> GetAccounts(DateTime after) => Task.FromResult(db.Accounts
       .Where(e => e.Updated > after)
-      .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId, e.LastUpdatedDate))
+      .Select(e => new RawJsonData(Json.Serialize(e), e.SystemId, e.LastUpdatedDate))
       .ToList());
-  public Task<List<RawJsonDataWithCorrelationId>> GetInvoices(DateTime after) => Task.FromResult(db.Invoices
+  public Task<List<RawJsonData>> GetInvoices(DateTime after) => Task.FromResult(db.Invoices
       .Where(e => e.Updated > after)
-      .Select(e => new RawJsonDataWithCorrelationId(Json.Serialize(e), e.CorrelationId, e.SystemId, e.LastUpdatedDate))
+      .Select(e => new RawJsonData(Json.Serialize(e), e.SystemId, e.LastUpdatedDate))
       .ToList());
   
   public Task<List<FinAccount>> CreateAccounts(SimulationCtx ctx, List<FinAccount> news) { 
