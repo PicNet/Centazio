@@ -100,21 +100,14 @@ public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContex
     });
   }
   
-  protected async Task CreateSchema(IDbFieldsHelper dbf, AbstractCtlRepositoryDbContext db) {
-    await db.ExecSql(dbf.GenerateCreateTableScript(db.Settings.SchemaName, db.Settings.SystemStateTableName, dbf.GetDbFields<SystemState>(), [nameof(SystemState.System), nameof(SystemState.Stage)]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(db.Settings.SchemaName, db.Settings.ObjectStateTableName, dbf.GetDbFields<ObjectState>(), [nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object)],
-        [],
-        [new ForeignKey([nameof(SystemState.System), nameof(SystemState.Stage)], db.Settings.SchemaName, db.Settings.SystemStateTableName)]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(db.Settings.SchemaName, db.Settings.CoreToSysMapTableName, dbf.GetDbFields<Map.CoreToSysMap>(), 
-        [nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId)],
-        [[nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.SystemId)]]));
-    await db.ExecSql(dbf.GenerateCreateTableScript(db.Settings.SchemaName, db.Settings.EntityChangeTableName, dbf.GetDbFields<EntityChange>(), [nameof(EntityChange.CoreEntityTypeName), nameof(EntityChange.CoreId), nameof(EntityChange.ChangeDate)]));
+  protected async Task CreateSchema(AbstractCtlRepositoryDbContext db) {
+    if (await db.Database.EnsureCreatedAsync()) return;
+    throw new Exception("database was already created");
   }
-  
-  protected async Task DropTablesImpl(IDbFieldsHelper dbf, AbstractCtlRepositoryDbContext db) { 
-    await db.ExecSql(dbf.GenerateDropTableScript(db.Settings.SchemaName, db.Settings.CoreToSysMapTableName));
-    await db.ExecSql(dbf.GenerateDropTableScript(db.Settings.SchemaName, db.Settings.ObjectStateTableName));
-    await db.ExecSql(dbf.GenerateDropTableScript(db.Settings.SchemaName, db.Settings.SystemStateTableName));
-    await db.ExecSql(dbf.GenerateDropTableScript(db.Settings.SchemaName, db.Settings.EntityChangeTableName));
+
+  protected async Task DropTablesImpl(AbstractCtlRepositoryDbContext db) {
+    if (await db.Database.EnsureDeletedAsync()) return;
+    throw new Exception("database was already deleted");
   }
+
 }

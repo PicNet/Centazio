@@ -18,14 +18,17 @@ public abstract class AbstractCtlRepositoryDbContext(CtlRepositorySettings setti
       .Entity<SystemState.Dto>(e => {
         e.ToTable(Settings.SystemStateTableName);
         e.HasKey(nameof(SystemState.System), nameof(SystemState.Stage));
+        e.HasMany<ObjectState.Dto>();
       })
       .Entity<ObjectState.Dto>(e => {
         e.ToTable(Settings.ObjectStateTableName);
         e.HasKey(nameof(ObjectState.System), nameof(ObjectState.Stage), nameof(ObjectState.Object));
+        e.HasOne<SystemState.Dto>();
       })
       .Entity<Map.CoreToSysMap.Dto>(e => {
         e.ToTable(Settings.CoreToSysMapTableName);
         e.HasKey(nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.CoreId));
+        e.HasIndex(nameof(Map.CoreToSysMap.System), nameof(Map.CoreToSysMap.CoreEntityTypeName), nameof(Map.CoreToSysMap.SystemId)).IsUnique();
       })
       .Entity<EntityChange.Dto>(e => {
         e.ToTable(Settings.EntityChangeTableName);

@@ -7,9 +7,13 @@ namespace Centazio.Providers.EF;
 
 public abstract class CentazioDbContext : DbContext {
 
-  protected sealed override void OnConfiguring(DbContextOptionsBuilder builder) => 
-      ConfigureDbSpecificOptions(builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+  private static readonly bool DEBUG = false;
   
+  protected sealed override void OnConfiguring(DbContextOptionsBuilder builder) {
+    if (DEBUG) builder.LogTo(Log.Debug);
+    ConfigureDbSpecificOptions(builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+  }
+
   protected sealed override void OnModelCreating(ModelBuilder builder) {
     CreateCentazioModel(builder);
     

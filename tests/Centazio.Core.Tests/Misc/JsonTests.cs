@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Centazio.Core.Stage;
 
@@ -101,10 +100,10 @@ public class JsonTests {
   }
   
   [Test] public void Test_without_Dtos_Nullability() {
-    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");;
+    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");
     Assert.That(validstrings, Is.EqualTo(new TestValidStrings {Str1 = new("1"), Str2 = new("2") }));
     
-    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");;
+    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");
     Assert.That(subclasses, Is.EqualTo(new TestValidStringSubclasses { CoreId = new("1"), SystemId = new("2") }));
     
     

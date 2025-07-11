@@ -5,9 +5,12 @@ namespace Centazio.Providers.Sqlite;
 public class SqliteDbFieldsHelper : AbstractDbFieldsHelper {
 
   public override string GenerateCreateTableScript(string schema, string table, List<DbFieldType> fields, string[] pkfields, List<string[]>? uniques = null, List<ForeignKey>? fks = null) {
-    return $@"create table if not exists {TableName(schema, table)} (
+    var sql = $@"create table if not exists {TableName(schema, table)} (
   {String.Join(",\n    ", fields.Select(GetDbFieldTypeString))},
   primary key ({String.Join(", ", pkfields)}){GetUniquesSql()}{GetFksSql()})";
+
+    Console.WriteLine(sql);
+    return sql;
     
     string GetUniquesSql() {
       if (uniques is null || !uniques.Any()) return String.Empty;
