@@ -6,15 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public record EFStagedEntityRepositoryOptions(
+public record EfStagedEntityRepositoryOptions(
     int Limit, 
     Func<string, StagedEntityChecksum> StagedEntityDataChecksum,
     Func<AbstractStagedEntityRepositoryDbContext> Db);
 
-public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts, bool createschema) : 
+public sealed class EfStagedEntityRepository(EfStagedEntityRepositoryOptions opts, bool createschema) : 
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
   
-  protected readonly EFStagedEntityRepositoryOptions opts = opts;
   protected override async Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) {
     await using var db = opts.Db();
     var checksumstrs = newchecksums.Select(cs => cs.Value).ToList();
@@ -67,6 +66,12 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts, bool
     return this;
   }
   
-  public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
+  public override async ValueTask DisposeAsync() {
+    await using var db = opts.Db();
+    await DropTablesImpl(db);
+  }
+
+  private async Task DropTablesImpl(AbstractStagedEntityRepositoryDbContext db) => 
+      await db.DropDb([new (db.SchemaName, db.StagedEntityTableName)]);
 
 }

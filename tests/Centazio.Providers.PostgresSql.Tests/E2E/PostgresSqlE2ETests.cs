@@ -32,7 +32,7 @@ public class PostgresSqlSimulationStorage(string connstr, CtlRepositorySettings 
 
   public async Task Initialise(SimulationCtx ctx) {
     CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(ctlsetts)).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new PostgresSqlStagedEntityContext(stgsetts))).Initialise();
+    StageRepository = await new EfStagedEntityRepository(new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new PostgresSqlStagedEntityContext(stgsetts)), true).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new PostgresSqlSimulationDbContext(connstr), 
         ctx.Epoch).Initialise();

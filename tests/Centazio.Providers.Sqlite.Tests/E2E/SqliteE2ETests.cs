@@ -32,7 +32,7 @@ public class SqliteSimulationStorage : ISimulationStorage {
     var ctlsetts = settings.CtlRepository with { ConnectionString = ctl_db };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = staging_db };
     CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(ctlsetts)).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(stgsetts))).Initialise();
+    StageRepository = await new EfStagedEntityRepository(new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(stgsetts)), true).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationDbContext(core_db), ctx.Epoch).Initialise();
     
     string GetNewDbFileConnStr(string repo) {
