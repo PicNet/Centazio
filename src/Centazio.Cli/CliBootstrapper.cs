@@ -3,7 +3,6 @@ using Centazio.Cli.Commands;
 using Centazio.Cli.Infra.Aws;
 using Centazio.Cli.Infra.Az;
 using Centazio.Cli.Infra.Gen;
-using Centazio.Core.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
@@ -75,14 +74,11 @@ internal class CliBootstrapper {
             svcs.AddSingleton<ICentazioCommand>(prov => (ICentazioCommand) prov.GetRequiredService(t));
             svcs.AddSingleton(t);
           });
-    }
-    
-    bool DoesClassRequireSettings(Type cls) {
-      var ptypes = cls.GetConstructors()
-          .SelectMany(c => c.GetParameters().Select(p => p.ParameterType))
-          .ToList();
-      // todo: can we remove secrets from here?
-      return ptypes.Any(t => typeof(CentazioSettings).IsAssignableFrom(t) || typeof(CentazioSecrets).IsAssignableFrom(t) || devdeps.ContainsKey(t));
+      
+      bool DoesClassRequireSettings(Type cls) => 
+          cls.GetConstructors()
+              .SelectMany(c => c.GetParameters().Select(p => p.ParameterType))
+              .Any(t => typeof(CentazioSettings).IsAssignableFrom(t) || devdeps.ContainsKey(t));
     }
   }
 
