@@ -9,7 +9,7 @@ public class SqliteCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
   protected override async Task<ITestingCtlRepository> GetRepository() {
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = SqliteTestConstants.DEFAULT_CONNSTR };
     return (ITestingCtlRepository)await new TestingEfCtlRepository(() => 
-        new SqliteCtlRepositoryDbContext(settings)).Initialise();
+        new SqliteCtlRepositoryDbContext(settings), new SqliteDbFieldsHelper()).Initialise();
   }
 
 }

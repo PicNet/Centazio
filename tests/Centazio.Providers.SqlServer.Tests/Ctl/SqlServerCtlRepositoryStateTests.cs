@@ -9,6 +9,6 @@ public class SqlServerCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
   protected override async Task<ICtlRepository> GetRepository() {
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = connstr };
-    return await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings)).Initialise();
+    return await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings), new SqlServerDbFieldsHelper()).Initialise();
   }
 }
