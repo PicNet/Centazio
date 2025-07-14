@@ -12,8 +12,11 @@ public abstract class AbstractStagedEntityRepositoryDbContext(StagedEntityReposi
   
   public DbSet<StagedEntity.Dto> Staged { get; set; }
   
-  protected sealed override void CreateCentazioModel(ModelBuilder builder) => 
+  protected sealed override void CreateCentazioModel(ModelBuilder builder) =>
       builder
           .HasDefaultSchema(SchemaName)
-          .Entity<StagedEntity.Dto>(e => e.ToTable(StagedEntityTableName));
+          .Entity<StagedEntity.Dto>(e => {
+            e.ToTable(StagedEntityTableName);
+            e.HasIndex(nameof(StagedEntity.System), nameof(StagedEntity.SystemEntityTypeName), nameof(StagedEntity.DateStaged));
+          });
 }

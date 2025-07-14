@@ -31,12 +31,11 @@ public class PostgresSqlSimulationStorage(string connstr, CtlRepositorySettings 
   public int SimulationPostFunctionRunDelayMs => 100;
 
   public async Task Initialise(SimulationCtx ctx) {
-    var dbf = new PostgresSqlDbFieldsHelper();
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(ctlsetts), dbf).Initialise();
-    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new PostgresSqlStagedEntityContext(stgsetts)), dbf).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new PostgresSqlCtlRepositoryDbContext(ctlsetts)).Initialise();
+    StageRepository = await new TestingEfStagedEntityRepository(new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new PostgresSqlStagedEntityContext(stgsetts))).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new PostgresSqlSimulationDbContext(connstr), 
-        ctx.Epoch, dbf).Initialise();
+        ctx.Epoch).Initialise();
   }
   
   public async ValueTask DisposeAsync() {
@@ -48,8 +47,6 @@ public class PostgresSqlSimulationStorage(string connstr, CtlRepositorySettings 
 
 public class PostgresSqlSimulationDbContext(string connstr) : PostgresSqlDbContext(connstr) {
 
-  protected override void CreateCentazioModel(ModelBuilder builder) {
-    SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);
-  }
-
+  protected override void CreateCentazioModel(ModelBuilder builder) => 
+      SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);
 }

@@ -18,7 +18,6 @@ public abstract class AbstractCtlRepositoryDbContext(CtlRepositorySettings setti
       .Entity<SystemState.Dto>(e => {
         e.ToTable(Settings.SystemStateTableName);
         e.HasKey(nameof(SystemState.System), nameof(SystemState.Stage));
-        // e.HasMany<ObjectState.Dto>();
       })
       .Entity<ObjectState.Dto>(e => {
         e.ToTable(Settings.ObjectStateTableName);

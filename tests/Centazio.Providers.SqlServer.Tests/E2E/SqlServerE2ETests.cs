@@ -21,17 +21,16 @@ public class SqlServerSimulationStorage : ISimulationStorage {
   public int SimulationPostFunctionRunDelayMs => 500;
 
   public async Task Initialise(SimulationCtx ctx) {
-    var dbf = new SqlServerDbFieldsHelper();
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = await F.Settings();
     var ctlsetts = settings.CtlRepository with { ConnectionString = connstr };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = connstr };
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(ctlsetts), dbf).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(ctlsetts)).Initialise();
     StageRepository = await new TestingEfStagedEntityRepository(
-        new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(stgsetts)), dbf).Initialise();
+        new EFStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(stgsetts))).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SimulationSqlServerDbContext(connstr), 
-        ctx.Epoch, dbf).Initialise();
+        ctx.Epoch).Initialise();
   }
   
   public async ValueTask DisposeAsync() {
@@ -42,9 +41,7 @@ public class SqlServerSimulationStorage : ISimulationStorage {
 }
 
 public class SimulationSqlServerDbContext(string connstr) : SqlServerDbContext(connstr) {
-
   protected override void CreateCentazioModel(ModelBuilder builder) {
     SimulationEfCoreStorageRepository.CreateSimulationCoreStorageEfModel(builder);
   }
-
 }

@@ -10,7 +10,7 @@ public class PostgresSqlStagedEntityRepositoryTests : BaseStagedEntityRepository
   protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
     var connstr = await new PostgresSqlConnection().Init();
     var settings = (await F.Settings()).StagedEntityRepository with { ConnectionString = connstr };
-    return await new TestingEfStagedEntityRepository(new(limit, checksum, () => new PostgresSqlStagedEntityContext(settings)), new PostgresSqlDbFieldsHelper()).Initialise();
+    return await new TestingEfStagedEntityRepository(new(limit, checksum, () => new PostgresSqlStagedEntityContext(settings))).Initialise();
   }
 
 }

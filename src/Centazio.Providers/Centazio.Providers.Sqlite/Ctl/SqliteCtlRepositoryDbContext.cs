@@ -6,4 +6,6 @@ namespace Centazio.Providers.Sqlite.Ctl;
 
 public class SqliteCtlRepositoryDbContext(CtlRepositorySettings settings) : AbstractCtlRepositoryDbContext(settings) {
   protected override void ConfigureDbSpecificOptions(DbContextOptionsBuilder options) => SqliteDbContext.SetSqliteOnDbContextOpts(options, Settings.ConnectionString);
+  protected override string ToTableName(TableName table) => $"[{table.Table}]";
+
 }

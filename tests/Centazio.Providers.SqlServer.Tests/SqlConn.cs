@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Centazio.Core.Secrets;
 using DotNet.Testcontainers.Builders;
-using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
 
 namespace Centazio.Providers.SqlServer.Tests;
@@ -45,14 +44,6 @@ public class SqlConn {
       container = builder.Build();
       await container.StartAsync();
       return container.GetConnectionString();
-      
-      // note: the following causes problems when using `DbFieldsHelper.GenerateCreateTableScript` but is required
-      //    if we were to change to EnsureDatabaseDeleted/Created
-      
-      // return new SqlConnectionStringBuilder(container.GetConnectionString()) {
-      //   // do not use `master` database
-      //   InitialCatalog = Guid.NewGuid().ToString()
-      // }.ToString();
     }
   }
 

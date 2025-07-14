@@ -11,7 +11,7 @@ public record EFStagedEntityRepositoryOptions(
     Func<string, StagedEntityChecksum> StagedEntityDataChecksum,
     Func<AbstractStagedEntityRepositoryDbContext> Db);
 
-public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) : 
+public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts, bool createschema) : 
     AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
   
   protected readonly EFStagedEntityRepositoryOptions opts = opts;
@@ -57,7 +57,16 @@ public class EFStagedEntityRepository(EFStagedEntityRepositoryOptions opts) :
   private IQueryable<StagedEntity.Dto> Query(SystemName system, SystemEntityTypeName systype, AbstractStagedEntityRepositoryDbContext db) => 
       db.Staged.Where(e => e.System == system.Value && e.SystemEntityTypeName == systype.Value); 
   
-  public override Task<IStagedEntityRepository> Initialise() => Task.FromResult<IStagedEntityRepository>(this);
+  
+  public override async Task<IStagedEntityRepository> Initialise() {
+    if (!createschema) return this;
+    
+    await using var db = opts.Db();
+    await db.DropDb([new (db.SchemaName, db.StagedEntityTableName)]);
+    await db.CreateDb();
+    return this;
+  }
+  
   public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
 }

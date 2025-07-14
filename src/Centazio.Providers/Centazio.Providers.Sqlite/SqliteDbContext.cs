@@ -21,4 +21,7 @@ public abstract class SqliteDbContext(string connstr) : CentazioDbContext {
     }
     options.UseSqlite(memoryconnection);
   }
+
+  protected override string ToTableName(TableName table) => $"[{table.Table}]";
+
 }

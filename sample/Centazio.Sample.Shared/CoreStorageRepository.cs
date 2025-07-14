@@ -3,12 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Sample.Shared;
 
-public class CoreStorageRepository(Func<CentazioDbContext> getdb,  IDbFieldsHelper dbf) : AbstractCoreStorageEfRepository(getdb) {
+public class CoreStorageRepository(Func<CentazioDbContext> getdb) : AbstractCoreStorageEfRepository(getdb) {
   
   public async Task<CoreStorageRepository> Initialise() {
     return await UseDb(async db => {
-      await db.ExecSql(dbf.GenerateCreateTableScript("ctl", nameof(CoreStorageMeta).ToLower(), dbf.GetDbFields<CoreStorageMeta>(), [nameof(CoreStorageMeta.CoreEntityTypeName), nameof(CoreStorageMeta.CoreId)]));
-      await db.ExecSql(dbf.GenerateCreateTableScript("dbo", nameof(CoreTask).ToLower(), dbf.GetDbFields<CoreTask>(), [nameof(ICoreEntity.CoreId)]));
+      await db.DropDb(new ("ctl", nameof(CoreStorageMeta).ToLower()), new ("dbo", nameof(CoreTask).ToLower()));
+      await db.CreateDb();
 
       return this;
     });

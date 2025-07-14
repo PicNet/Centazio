@@ -46,8 +46,24 @@ public abstract class CentazioDbContext : DbContext {
     return await SaveChangesAsync();
   }
   
+  public async Task CreateDb() => 
+      await ExecSql(Database.GenerateCreateScript());
+
+  public async Task DropDb(params List<TableName> tables) {
+    var sql = String.Join(";\n", tables.Select(table => $"drop table if exists {ToTableName(table)}"));
+    await ExecSql(sql);
+  }
+  
+  protected abstract string ToTableName(TableName table); 
+  
   public async Task ExecSql(string sql) {
-    try { await Database.ExecuteSqlRawAsync(sql); }
+    try {
+      await sql.Split("\nGO\n").Select(async statement => {
+        await Database.ExecuteSqlRawAsync(statement);
+      }).Synchronous();
+    }
     catch (Exception e) { Log.Error($"error [{e.Message}] executing sql:\n\t" + sql); throw; }
   }
 }
+
+public record TableName(string Schema, string Table);

@@ -9,7 +9,7 @@ public class SqlServerCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTest
   protected override async Task<ITestingCtlRepository> GetRepository() {
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = connstr };
-    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings), new SqlServerDbFieldsHelper()).Initialise();
+    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings)).Initialise();
   }
 
 }

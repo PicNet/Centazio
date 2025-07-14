@@ -11,8 +11,6 @@ public class CheckOnlyAbstractRecordsCanHaveMagicStrings {
     { nameof(ObjectState), [nameof(ObjectState.LastRunMessage), nameof(ObjectState.LastRunException)] },
     { nameof(StagedEntity), [nameof(StagedEntity.IgnoreReason)] },
     { nameof(ValidCron), [nameof(ValidCron.Expression)] },
-    { nameof(DbFieldType), ["*"] },
-    { nameof(ForeignKey), ["*"] },
     { nameof(EntityChange), ["*"] },
     { nameof(FunctionConfig), [nameof(FunctionConfig.FunctionPollExpression)] },
     { nameof(TimerChangeTrigger), [nameof(TimerChangeTrigger.Expression)]},

@@ -12,7 +12,7 @@ public class SqlServerStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = (await F.Settings()).StagedEntityRepository with { ConnectionString = connstr };
     var opts = new EFStagedEntityRepositoryOptions(limit, checksum, () => new SqlServerStagedEntityContext(settings));
-    return await new TestingEfStagedEntityRepository(opts, new SqlServerDbFieldsHelper()).Initialise();
+    return await new TestingEfStagedEntityRepository(opts).Initialise();
   }
 
 }

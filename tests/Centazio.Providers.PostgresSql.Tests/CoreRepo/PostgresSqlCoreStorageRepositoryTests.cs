@@ -9,7 +9,7 @@ public class PostgresSqlCoreStorageRepositoryTests : BaseCoreStorageRepositoryTe
   
   protected override async Task<ITestingCoreStorage> GetRepository() {
     var connstr = await new PostgresSqlConnection().Init();
-    return await new TestingEfCoreStorageRepository(() => new PostgresSqlCoreStorageRepositoryTestsDbContext(connstr), new PostgresSqlDbFieldsHelper()).Initalise();
+    return await new TestingEfCoreStorageRepository(() => new PostgresSqlCoreStorageRepositoryTestsDbContext(connstr)).Initalise();
   }
 
 }
