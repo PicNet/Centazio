@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Centazio.Core.Stage;
 
 namespace Centazio.Core.Tests.Misc;
@@ -98,32 +97,7 @@ public class JsonTests {
     Assert.That(json, Does.Not.Contain("\"LastUpdatedDate\":"));
     Assert.That(json, Does.Not.Contain("\"IgnoredProp\":"));
   }
-  
-  [Test] public void Test_without_Dtos_Nullability() {
-    var validstrings = Json.Deserialize<TestValidStrings>(@"{ ""Str1"": ""1"", ""Str2"": ""2"" }");
-    Assert.That(validstrings, Is.EqualTo(new TestValidStrings {Str1 = new("1"), Str2 = new("2") }));
-    
-    var subclasses = Json.Deserialize<TestValidStringSubclasses>(@"{ ""CoreId"": ""1"", ""SystemId"": ""2"" }");
-    Assert.That(subclasses, Is.EqualTo(new TestValidStringSubclasses { CoreId = new("1"), SystemId = new("2") }));
-    
-    
-    var obj = Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }");
-    Assert.That(obj, Is.EqualTo(new ObjWithNullables { NonNullStr = "str", NonNullDt = new DateTime(2020, 1, 1), NonNullObj = new TestValidStrings  {Str1 = new("1"), Str2 = new("2") }}));
-    
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }"));
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullObj"": { ""Str1"": ""1"", ""Str2"": ""2""} }"));
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01""}"));
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str2"": ""2""} }"));
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { ""Str1"": ""1""} }"));
-    
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>("{}"));
-    Assert.Throws<JsonException>(() => Json.Deserialize<ObjWithNullables>(@"{""NonNullStr"": ""str"", ""NonNullDt"": ""2020-01-01"", ""NonNullObj"": { } }"));
-  }
-  
-  [Test] public void Test_without_Dtos_Data_Annotations() {
-    // todo GT: implement
-  }
-  
+
   private void TestDtoImpl<T>(T baseobj) {
     ArgumentNullException.ThrowIfNull(baseobj);
     

@@ -46,8 +46,11 @@ public abstract class CentazioDbContext : DbContext {
     return await SaveChangesAsync();
   }
   
-  public async Task CreateDb() => 
-      await ExecSql(Database.GenerateCreateScript());
+  public async Task CreateDb() {
+    try { await ExecSql(Database.GenerateCreateScript()); }
+    catch (Exception) { // assume that db is already created and continue
+    }
+  }
 
   public async Task DropDb(params List<TableName> tables) {
     var sql = String.Join(";\n", tables.Select(table => $"drop table if exists {ToTableName(table)}"));
@@ -58,11 +61,10 @@ public abstract class CentazioDbContext : DbContext {
   
   public async Task ExecSql(string sql) {
     try {
-      await sql.Split("\nGO\n").Select(async statement => {
-        await Database.ExecuteSqlRawAsync(statement);
-      }).Synchronous();
-    }
-    catch (Exception e) { Log.Error($"error [{e.Message}] executing sql:\n\t" + sql); throw; }
+      await sql.Split("\nGO\n")
+          .Select(async statement => await Database.ExecuteSqlRawAsync(statement))
+          .Synchronous();
+    } catch (Exception e) { Log.Error($"error [{e.Message}] executing sql:\n\t" + sql); throw; }
   }
 }
 

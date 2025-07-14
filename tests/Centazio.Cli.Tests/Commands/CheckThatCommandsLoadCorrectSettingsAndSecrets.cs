@@ -58,9 +58,8 @@ public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
   }
   
   private bool IsTestableType(Type type) {
-      var iscommand = typeof(ICentazioCommand).IsAssignableFrom(type) && type is { IsClass: true, IsAbstract: false };
-      var isinfra = type.Namespace!.StartsWith("Centazio.Cli.Infra") && type is { IsClass: true, IsAbstract: false };
-      return iscommand || isinfra;
-    }
-  
+    var iscommand = typeof(ICentazioCommand).IsAssignableFrom(type) && type is { IsClass: true, IsAbstract: false };
+    var isinfra = type.Namespace!.StartsWith("Centazio.Cli.Infra") && type is { IsClass: true, IsAbstract: false };
+    return iscommand || isinfra;
+  }
 }

@@ -46,14 +46,7 @@ public static class Json {
   
   internal static readonly JsonSerializerOptions DEFAULT_OPTS = new() {
     RespectNullableAnnotations = true,
-    PropertyNamingPolicy = null,
-    // todo GT: use `ValidString.AllSubclasses()`
-    Converters = {
-      new ValueObjectConverter<SystemName>(), 
-      new ValueObjectConverter<LifecycleStage>(), 
-      new ValueObjectConverter<ObjectName>(),
-      new ValueObjectConverter<ValidString>()
-    }
+    PropertyNamingPolicy = null
   };
   
   internal static readonly JsonSerializerOptions HTTP_CONTENT_WRITE_OPTS = new(DEFAULT_OPTS) {
