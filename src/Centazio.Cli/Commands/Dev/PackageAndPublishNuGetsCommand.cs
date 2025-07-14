@@ -23,7 +23,7 @@ public class PackageAndPublishNuGetsCommand(
     // publish 
     if (settings.NoPublish) return;
     var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty);
-    var apikey = secrets.NUGET_API_KEY ?? throw new ArgumentNullException(nameof(secrets.NUGET_API_KEY));
+    var apikey = secrets.NUGET_API_KEY;
     await cmd.DotNet($"nuget push ./{packagesdir}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);
   }
 

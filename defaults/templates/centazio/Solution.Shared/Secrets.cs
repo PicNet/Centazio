@@ -2,18 +2,14 @@ using Centazio.Core.Secrets;
 
 namespace {{ it.Namespace }};
 
+/// <summary>
+/// Add all your application specific secrets to this file.  The general pattern you should follow is:
+/// `public string SETTING_NAME { get; init; } = null!;`
+/// Where any `string` value will be validated and trimmed automatically.  If missing an error will be thrown when the secrets are loaded.
+/// If the secret is optional then mark it with `string?`, i.e. `public string? OPTIONAL_SETTING_NAME { get; init; };`
+/// Note: Do not add a constructor, and `init` is required for proper deserialisation.
+/// </summary>
 public record Secrets : CentazioSecrets {
-
-  public string ADDITIONAL_SAMPLE_SECRET { get; }
-  
-  public Secrets(CentazioSecrets centazio, string ADDITIONAL_SAMPLE_SECRET) : base(centazio) {
-    this.ADDITIONAL_SAMPLE_SECRET = ADDITIONAL_SAMPLE_SECRET;
-  }
-
-  public new record Dto :  CentazioSecrets.Dto, IDto<Secrets> {
-    public string? ADDITIONAL_SAMPLE_SECRET { get; init; }
-    
-    public new Secrets ToBase() => new(base.ToBase(), 
-        String.IsNullOrWhiteSpace(ADDITIONAL_SAMPLE_SECRET) ? throw new ArgumentNullException(nameof(ADDITIONAL_SAMPLE_SECRET)) : ADDITIONAL_SAMPLE_SECRET.Trim());
-  }
+  public string ADDITIONAL_SAMPLE_SECRET { get; init; } = null!;
+  public string? ADDITIONAL_OPTIONAL_SAMPLE_SECRET { get; init; }
 }
