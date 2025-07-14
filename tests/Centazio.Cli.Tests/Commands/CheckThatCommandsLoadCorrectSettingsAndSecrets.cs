@@ -8,25 +8,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Cli.Tests.Commands;
 
-// todo: change to instead check that CentazioSecrets is loaded using `ICliSecretsManager`
 public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
 
-  [Test] public void Go() {
+  [Test] public void Check_settings_useage_in_ctor() {
     var errors = new List<string>();
     typeof(Cli).Assembly.GetExportedTypes()
         .Where(IsTestableType)
         .ForEach(type => {
           type.GetConstructors()
-              .SelectMany(ctor => ctor.GetParameters().Where(ShouldUseKeyedService))
+              .SelectMany(ctor => ctor.GetParameters().Where(IsSettingsArgument))
               .ForEach(CheckArg(type));
         });
     Assert.That(errors, Is.Empty, String.Join("\n", errors));
 
-    bool IsTestableType(Type type) {
-      var iscommand = typeof(ICentazioCommand).IsAssignableFrom(type) && type is { IsClass: true, IsAbstract: false };
-      var isinfra = type.Namespace!.StartsWith("Centazio.Cli.Infra") && type is { IsClass: true, IsAbstract: false };
-      return iscommand || isinfra;
-    }
+    bool IsSettingsArgument(ParameterInfo arg) => 
+        arg.ParameterType.Namespace == "Centazio.Core.Settings" && ReflectionUtils.IsRecord(arg.ParameterType);
 
     Action<ParameterInfo> CheckArg(Type type) {
       return arg => {
@@ -43,9 +39,28 @@ public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
     }
   }
   
-  private bool ShouldUseKeyedService(ParameterInfo arg) {
-    return (arg.ParameterType.Namespace == "Centazio.Core.Settings" && ReflectionUtils.IsRecord(arg.ParameterType)) ||
-        typeof(CentazioSecrets).IsAssignableFrom(arg.ParameterType);
+  [Test] public void Check_secrets_usage_in_ctor() {
+    var errors = new List<string>();
+    typeof(Cli).Assembly.GetExportedTypes()
+        .Where(IsTestableType)
+        .ForEach(type => {
+          type.GetConstructors()
+              .SelectMany(ctor => ctor.GetParameters().Where(IsSecretsArgument))
+              .ForEach(CheckArg(type));
+        });
+    Assert.That(errors, Is.Empty, String.Join("\n", errors));
+    
+    bool IsSecretsArgument(ParameterInfo arg) => typeof(CentazioSecrets).IsAssignableFrom(arg.ParameterType);
+    
+    Action<ParameterInfo> CheckArg(Type type) => 
+        arg => 
+            errors.Add($"type[{type.FullName}] ctor arg[{arg.Name}] is a Secrets argument.  The CLI should only use `ICliSecretsManager` not the secrets type directly.");
   }
-
+  
+  private bool IsTestableType(Type type) {
+      var iscommand = typeof(ICentazioCommand).IsAssignableFrom(type) && type is { IsClass: true, IsAbstract: false };
+      var isinfra = type.Namespace!.StartsWith("Centazio.Cli.Infra") && type is { IsClass: true, IsAbstract: false };
+      return iscommand || isinfra;
+    }
+  
 }
