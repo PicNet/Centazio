@@ -29,7 +29,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ICliSecretsMa
   private async Task AddAzConfigJsonFilesToProject(CentazioSecrets secrets) {
     await AddTemplateFileToProject("host.json");
     await AddTemplateFileToProject("local.settings.json");
-    await AddTemplateFileToProject("local.settings.json", new { ApplicationInsightsConnectionString = secrets.AZ_APP_INSIGHT_CONNECTION_STRING ?? Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"),
+    await AddTemplateFileToProject("local.settings.json", new { ApplicationInsightsConnectionString = secrets.AZ_APP_INSIGHT_CONNECTION_STRING,
     });
     
     async Task AddTemplateFileToProject(string fname , object? data = null) {
