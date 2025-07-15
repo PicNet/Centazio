@@ -12,7 +12,6 @@ public class E2EEnvironment(
   
   private readonly bool SAVE_SIMULATION_STATE = false;
   
-  
   private readonly CrmDb crmdb = new();
   private readonly FinDb findb = new();
   
@@ -27,6 +26,8 @@ public class E2EEnvironment(
   private FinReadFunction fin_read = null!;
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
+  
+  private Task inittask = null!;
 
   public async Task Initialise() {
     InitLogger();
@@ -41,7 +42,7 @@ public class E2EEnvironment(
     notifier.Init([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
     runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
     runner.OnFunctionRunning += (_, _) => TestingUtcDate.DoTick();
-    _ = notifier.Run(runner);
+    inittask = notifier.Run(runner);
   }
 
   private static void InitLogger() {
@@ -108,7 +109,10 @@ public class E2EEnvironment(
     async Task RunFuncAndWait(IRunnableFunction func) {
       TestingUtcDate.DoTick();
       await runner.RunFunction(func, triggers);
-      await AsyncUtils.ConditionalDelay(() => runner.Running);
+      await AsyncUtils.ConditionalDelay(() => {
+        if (inittask.IsFaulted) throw new Exception("initial starter task failed:", inittask.Exception);
+        return runner.Running;
+      });
     }
   }
 

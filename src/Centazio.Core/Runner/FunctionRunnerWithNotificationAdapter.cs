@@ -24,8 +24,7 @@ public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChan
       return results;
     }
     
-    // todo GT: this is swallowing exceptions
-    _ = Task.Run(async () => {
+    await Task.Run(async () => {
       // notify in bg thread to ensre the current running function completes before new functions start
       try {
         await Task.Delay(1);
