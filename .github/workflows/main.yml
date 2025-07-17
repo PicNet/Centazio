@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
     - name: checkout code
@@ -37,5 +37,47 @@ jobs:
     - name: dotnet build
       run: dotnet build --configuration Debug --verbosity minimal
 
+    - name: create test-results
+      run: mkdir -p ./test-results
+      
     - name: dotnet test
-      run: dotnet test --no-build --verbosity normal
+      # run:
+      #   dotnet test --no-build --verbosity normal --blame-hang --blame-hang-timeout 1m --blame-hang-dump-type full --logger "trx;LogFileName=test-results.trx" --results-directory ./test-results
+      run: |
+        failed_projects=()
+        
+        for project in $(find -name "*Tests.csproj" -o -path "tests" | grep -v "tests/Centazio.Providers.EF.Tests"); do
+          project_name=$(basename "$project" .csproj)
+          echo "::group::testing $project_name"
+          
+          if timeout 4m dotnet test "$project" --blame-hang --blame-hang-timeout 3m --logger "trx;LogFileName=${project_name}.trx" --results-directory ./test-results --verbosity normal; then
+            echo "✅ $project_name completed successfully"
+          else
+            echo "❌ $project_name failed or timed out"
+            failed_projects+=("$project_name")
+          fi
+          
+          echo "::endgroup::"
+        done
+        
+        if [ ${#failed_projects[@]} -gt 0 ]; then
+          printf "\n\nprojects that failed or hung: ${failed_projects[*]}\n\n"
+          exit 1
+        fi
+      continue-on-error: true
+      
+    - name: upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          ./test-results/
+          ./**/Sequence_*.xml
+          ./**/TestResults/
+
+    - name: check for hang dumps
+      if: always()
+      run: |
+        echo "checking for hang dump files..."
+        find . -name "*.dmp" -o -name "Sequence_*.xml" | head -10

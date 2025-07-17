@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Centazio.Test.Lib\Centazio.Test.Lib.csproj" />
+      <ProjectReference Include="..\..\sample\Centazio.Sample.AppSheet\Centazio.Sample.AppSheet.csproj" />
+      <ProjectReference Include="..\..\sample\Centazio.Sample.ClickUp\Centazio.Sample.ClickUp.csproj" />
+      <ProjectReference Include="..\..\sample\Centazio.Sample.Shared\Centazio.Sample.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

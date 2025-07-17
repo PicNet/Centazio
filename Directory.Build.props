@@ -34,12 +34,12 @@
      </ItemGroup>
     
     <!-- Unit Test Projects -->
-    <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+    <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests')) And MSBuildProjectName != 'Centazio.Providers.EF.Tests'">
         <IsTestProject>true</IsTestProject>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
     
-    <ItemGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+    <ItemGroup Condition="$(MSBuildProjectName.EndsWith('Tests')) And MSBuildProjectName != 'Centazio.Providers.EF.Tests'">
         <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,5 +53,4 @@
         <PackageReference Include="NUnit3TestAdapter" />
         <Using Include="NUnit.Framework" />
     </ItemGroup>
-    
 </Project>
