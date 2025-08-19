@@ -10,6 +10,11 @@ public class LoginToAwsCommand(
   
   public override async Task ExecuteImpl(CommonSettings settings) {
     if (!Env.IsInDev) throw new Exception($"{GetType().Name} should not be accessible outside of the Centazio dev environment");
-    await cmd.Aws($"sso login --profile {coresettings.AccountName}");
+
+    try { await cmd.Aws($"sso login --profile {coresettings.AccountName}"); }
+    catch (Exception e) {
+      if (e.Message.Contains($"The config profile ({coresettings.AccountName}) could not be found")) throw new Exception($"Please run 'aws configure sso --profile {coresettings.AccountName}' first");
+      throw;
+    }
   }
 }
