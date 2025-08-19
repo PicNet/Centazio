@@ -1,5 +1,6 @@
 # Todo
 - aws/azure:
+  - `./centazio dev aws login`  which runs `aws sso login --profile picnet-centazio` fails
   - HIGH: `./centazio az func simulate Centazio.Sample.ClickUp` error: `AmazonClientException: Failed to resolve AWS credentials. The credential providers used to search for credentials returned the following errors`
   - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:
@@ -17,6 +18,9 @@
   - generators needs a bit of work
   - dotnet tool install testing
   - good tutorial
+
+- Remove dotnet tool
+- Remove sln/proj/func code generator.  Leave AWS/Azure function wrappers
 
 GT: 
 - E2E Core entities and system entities should have strong value type ids, such as CrmMembershipTypeId.  This will test
