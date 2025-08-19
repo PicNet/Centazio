@@ -1,7 +1,5 @@
 # Todo
 - aws/azure:
-  - `./centazio dev aws login`  which runs `aws sso login --profile picnet-centazio` fails
-  - HIGH: `./centazio az func simulate Centazio.Sample.ClickUp` error: `AmazonClientException: Failed to resolve AWS credentials. The credential providers used to search for credentials returned the following errors`
   - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:
     - MED: function-to-function triggers

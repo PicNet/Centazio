@@ -37,8 +37,18 @@ public class AzFunctionLocalSimulateCommand(
           UiHelpers.Progress("Building and publishing project", async () => await new DotNetCliProjectPublisher(coresettings, templater).PublishProject(project)))
           .Synchronous();
     }
+    
+    var result = await cmd.Aws($"configure export-credentials --format process --profile {coresettings.AwsSettings.AccountName}");
+    var cred = Json.Deserialize<AwsCredentails>(result.Out);
+    
     await Task.WhenAll(projects.Select(project => {
       var functions = settings.FunctionNames is null ? null : String.Join(" ", settings.FunctionNames.Split(','));
+
+      Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", cred.AccessKeyId);
+      Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", cred.SecretAccessKey);
+      Environment.SetEnvironmentVariable("AWS_SESSION_TOKEN", cred.SessionToken);
+      Environment.SetEnvironmentVariable("AWS_CREDENTIAL_EXPIRATION", cred.Expiration);
+      
       var funcstart = templater.ParseFromContent(coresettings.Defaults.ConsoleCommands.Func.LocalSimulateFunction, new { Functions = functions });
       return cmd.Func(funcstart, cwd: project.PublishPath, input: "1");
     }));
@@ -55,5 +65,12 @@ public class AzFunctionLocalSimulateCommand(
     
     [CommandOption("-g|--no-generate")] [DefaultValue(false)] public bool NoGenerate { get; set; }
     [CommandOption("-b|--no-build")] [DefaultValue(false)] public bool NoBuild { get; set; }
+  }
+  
+  public record AwsCredentails  {
+    public required string AccessKeyId { get; set; }
+    public required string SecretAccessKey { get; set; }
+    public required string SessionToken { get; set; }
+    public required string Expiration { get; set; }
   }
 }
