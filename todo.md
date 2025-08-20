@@ -5,6 +5,7 @@
     - MED: function-to-function triggers
     - HIGH: 
       - `./centazio az func logs Centazio.Sample.AppSheet` occurs `Unable to connect to Azure. Make sure you have the 'az' CLI or 'Az.Accounts' PowerShell module installed and logged in and try again`
+        - Need to login like `az login --scope "https://management.core.windows.net//.default"`          
       - Centazio.Sample.AppSheet deploy to Az shows logs 'EmptyFunction running', Empty should not be included
       - You can check logs with `./centazio az func logs Centazio.Sample.AppSheet`    
   - Aws: 
