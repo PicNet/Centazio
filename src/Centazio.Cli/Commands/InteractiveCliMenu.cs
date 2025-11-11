@@ -4,7 +4,9 @@ using Spectre.Console.Cli;
 namespace Centazio.Cli.Commands;
 
 public class InteractiveCliMenuCommand : AsyncCommand {
-  public override async Task<int> ExecuteAsync(CommandContext context) {
+  public override async Task<int> ExecuteAsync(CommandContext context, CancellationToken tok) {
+    if (tok.IsCancellationRequested) return 0;
+
     var menu = context.Data as InteractiveMenu ?? throw new UnreachableException();
     await menu.Show();
     return 0;

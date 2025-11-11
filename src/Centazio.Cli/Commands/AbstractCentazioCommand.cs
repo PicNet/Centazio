@@ -11,7 +11,9 @@ public abstract class AbstractCentazioCommand<S> : AsyncCommand<S>, ICentazioCom
   protected string CommandName { get; private set; } = null!;
   protected bool Interactive { get; private set; }
 
-  public override async Task<int> ExecuteAsync(CommandContext context, S settings) {
+  public override async Task<int> ExecuteAsync(CommandContext context, S settings, CancellationToken token) {
+    if (token.IsCancellationRequested) return 0;
+
     (Interactive, CommandName) = (false, context.Name);
     await ExecuteImpl(settings);
     UiHelpers.Log($"Centazio CLI command '{context.Name}' completed.");
