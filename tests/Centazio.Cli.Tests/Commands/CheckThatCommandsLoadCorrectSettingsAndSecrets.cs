@@ -27,7 +27,7 @@ public class CheckThatCommandsLoadCorrectSettingsAndSecrets {
     Action<ParameterInfo> CheckArg(Type type) {
       return arg => {
         var attribute = arg.GetCustomAttributes<FromKeyedServicesAttribute>().SingleOrDefault();
-        var key = attribute?.Key.ToString();
+        var key = attribute?.Key?.ToString();
         if (type.Namespace!.ToLower().Contains($".{CentazioConstants.Hosts.Aws}", StringComparison.OrdinalIgnoreCase)) {
           if (key is not CentazioConstants.Hosts.Aws) errors.Add($"type[{type.FullName}] ctor arg[{arg.Name}] should have [FromKeyedServices(CentazioConstants.Hosts.Aws)]");
         } else if (type.Namespace.ToLower().Contains($".{CentazioConstants.Hosts.Az}", StringComparison.OrdinalIgnoreCase)) {

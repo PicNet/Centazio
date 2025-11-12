@@ -19,7 +19,7 @@ jobs:
     - name: setup .net sdk
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
         dotnet-quality: preview
 
     - name: print docker version

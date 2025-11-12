@@ -16,7 +16,10 @@ public class AzResourceGroups(ICliSecretsManager loader) : AbstractAzCommunicato
   public async Task<List<(string Id, string Name, string State, string ManagedBy)>> ListResourceGroups() {
     var (secrets, client) = (await GetSecrets(), await GetClient());
     var subscription = client.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{secrets.AZ_SUBSCRIPTION_ID}"));
-    return subscription.GetResourceGroups().Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? String.Empty)).ToList();
+    return subscription.GetResourceGroups()
+        .ToList()
+        .Select(rg => (rg.Id.Name, rg.Data.Name, rg.Data.ResourceGroupProvisioningState, rg.Data.ManagedBy ?? String.Empty))
+        .ToList();
   }
     
   public async Task<string> AddResourceGroup(string name) {

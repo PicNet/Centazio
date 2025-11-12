@@ -1,11 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-
     <ItemGroup>
       <Reference Include="Serilog">
         <HintPath>..\..\..\..\..\.nuget\packages\serilog\4.2.0\lib\net9.0\Serilog.dll</HintPath>
