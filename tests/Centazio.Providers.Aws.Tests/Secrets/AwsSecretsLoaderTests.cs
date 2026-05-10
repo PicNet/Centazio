@@ -7,6 +7,8 @@ using Centazio.Providers.Aws.Secrets;
 using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Aws.Tests.Secrets;
+
+// todo: these tests should clean up after themselves and not leave testing buckets in AWS
 public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
 
   protected override async Task<ISecretsLoader> GetSecretsLoader() =>
