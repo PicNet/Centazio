@@ -34,8 +34,11 @@ jobs:
     - name: dotnet info
       run: dotnet --info
       
+    - name: dotnet restore (locked mode - enforce deterministic dependencies)
+      run: dotnet restore --locked-mode
+
     - name: dotnet build
-      run: dotnet build --configuration Debug --verbosity minimal
+      run: dotnet build --configuration Debug --verbosity minimal --no-restore
 
     - name: create test-results
       run: mkdir -p ./test-results
