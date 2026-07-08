@@ -1,0 +1,8 @@
+{
+  "extraKnownMarketplaces": {
+    "picnet": {
+      "source": { "source": "url", "url": "https://picnetdev@dev.azure.com/picnetdev/picnet_llm_config/_git/picnet_llm_config" }
+    }
+  },
+  "enabledPlugins": { "picnet@picnet": true }
+}
