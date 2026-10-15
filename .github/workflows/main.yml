@@ -6,6 +6,7 @@ on:
       - '**.cs'
       - '**.json'
       - '**/main.yml'
+  workflow_dispatch:
 
 jobs:
   build:
