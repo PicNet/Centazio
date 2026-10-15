@@ -265,13 +265,13 @@
           "AWSSDK.SecretsManager": "[4.0.3.1, )",
           "AWSSDK.SecretsManager.Caching": "[2.0.0, )",
           "Amazon.Extensions.Configuration.SystemsManager": "[7.0.1, )",
-          "Centazio.Core": "[0.1.30-beta, )"
+          "Centazio.Core": "[0.2.0, )"
         }
       },
       "centazio.providers.ef": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.0, )"
         }
@@ -279,8 +279,8 @@
       "centazio.test.lib": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
-          "Centazio.Providers.Aws": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
+          "Centazio.Providers.Aws": "[0.2.0, )",
           "Microsoft.NET.Test.Sdk": "[18.0.1, )",
           "NUnit": "[4.4.0, )"
         }

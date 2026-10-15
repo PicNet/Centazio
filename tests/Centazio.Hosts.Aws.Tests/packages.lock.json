@@ -87,8 +87,8 @@
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
-        "resolved": "2.6.2",
-        "contentHash": "7oWOcvnntmMKNzDLsdxAYqApt+AjpRpP2CShjMfIa3umZ42UQMvH0tl1qAliYPNYO6vTdcGMqnRrCPmsfzTI1w=="
+        "resolved": "2.7.0",
+        "contentHash": "U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw=="
       },
       "Docker.DotNet.Enhanced": {
         "type": "Transitive",
@@ -317,15 +317,6 @@
         "resolved": "1.0.1",
         "contentHash": "UdA5y8wpa6dHiV4+J9MveLr6GRDB1llTmb4c+MeRYRoWKVNC5Y+nTDcC16/QAyw1dRry+aPS1yAy6f57mS+Xfw=="
       },
-      "SSH.NET": {
-        "type": "Transitive",
-        "resolved": "2025.1.0",
-        "contentHash": "jrnbtf0ItVaXAe6jE8X/kSLa6uC+0C+7W1vepcnRQB/rD88qy4IxG7Lf1FIbWmkoc4iVXv0pKrz+Wc6J4ngmHw==",
-        "dependencies": {
-          "BouncyCastle.Cryptography": "2.6.2",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
-        }
-      },
       "Testcontainers": {
         "type": "Transitive",
         "resolved": "4.9.0",
@@ -361,7 +352,7 @@
           "AWSSDK.SQS": "[4.0.2.5, )",
           "Amazon.Lambda.Core": "[2.8.0, )",
           "Amazon.Lambda.RuntimeSupport": "[1.14.1, )",
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Serilog.Extensions.Hosting": "[9.0.0, )",
           "Serilog.Sinks.AwsCloudWatch": "[4.4.42, )"
         }
@@ -377,14 +368,14 @@
           "AWSSDK.SecretsManager": "[4.0.3.1, )",
           "AWSSDK.SecretsManager.Caching": "[2.0.0, )",
           "Amazon.Extensions.Configuration.SystemsManager": "[7.0.1, )",
-          "Centazio.Core": "[0.1.30-beta, )"
+          "Centazio.Core": "[0.2.0, )"
         }
       },
       "centazio.test.lib": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
-          "Centazio.Providers.Aws": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
+          "Centazio.Providers.Aws": "[0.2.0, )",
           "Microsoft.NET.Test.Sdk": "[18.0.1, )",
           "NUnit": "[4.4.0, )"
         }
@@ -570,10 +561,10 @@
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "CentralTransitive",
         "requested": "[10.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "g0UfujELzlLbHoVG8kPKVBaW470Ewi+jnptGS9KUi6jcb+k2StujtK3m26DFSGGwQ/+bVgZfsWqNzlP6YOejvw==",
+        "resolved": "10.0.0",
+        "contentHash": "FU/IfjDfwaMuKr414SSQNTIti/69bHEMb+QKrskRb26oVqpx3lNFXMjs/RC9ZUuhBhcwDM2BwOgoMw+PZ+beqQ==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0"
         }
       },
       "Serilog": {
@@ -629,6 +620,16 @@
         "requested": "[1.4.2, )",
         "resolved": "1.4.2",
         "contentHash": "yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A=="
+      },
+      "SSH.NET": {
+        "type": "CentralTransitive",
+        "requested": "[2026.0.0, )",
+        "resolved": "2026.0.0",
+        "contentHash": "Yu9dirPq8l3oaat0+OQ7K0nUf5MmYltpia5UGqsApTG4zTPvBC1cxbNnC3NERij26dUST0A3Ef1QdHSn5ArbWQ==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.7.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+        }
       }
     }
   }

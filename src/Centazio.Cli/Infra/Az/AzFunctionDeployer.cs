@@ -52,14 +52,14 @@ public class AzFunctionDeployer([FromKeyedServices(CentazioConstants.Hosts.Az)] 
   private WebSiteData CreateFunctionAppConfiguration(string location, ResourceIdentifier farmid, CentazioSecrets secrets) {
     var envvars = new List<AppServiceNameValuePair> {
       new() { Name = "FUNCTIONS_WORKER_RUNTIME", Value = "dotnet-isolated" },
-      new() { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "9" },
+      new() { Name = "FUNCTIONS_WORKER_RUNTIME_VERSION", Value = "10" },
       new() { Name = "FUNCTIONS_EXTENSION_VERSION", Value = "~4" },
       new() { Name = "AzureWebJobsStorage", Value = secrets.AZ_BLOB_STORAGE_ENDPOINT },
     };
     if (!String.IsNullOrWhiteSpace(secrets.AZ_APP_INSIGHT_CONNECTION_STRING)) { envvars.Add(new() { Name = "APPLICATIONINSIGHTS_CONNECTION_STRING", Value = secrets.AZ_APP_INSIGHT_CONNECTION_STRING }); }
     return new WebSiteData(location) {
       Kind = "functionapp",
-      SiteConfig = new SiteConfigProperties { NetFrameworkVersion = "v9.0", AppSettings = envvars },
+      SiteConfig = new SiteConfigProperties { NetFrameworkVersion = "v10.0", AppSettings = envvars },
       AppServicePlanId = farmid
     };
   }

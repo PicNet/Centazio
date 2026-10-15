@@ -2,10 +2,10 @@
     <!-- General Properties for all Projects -->
     <PropertyGroup>
         <Description>PicNet's Systems Integration, Workflow and Master Data Platform</Description>
-        <Version>0.1.30-beta</Version>
+        <Version>0.2.0</Version>
         <Authors>PicNet Pty Ltd</Authors>
         <Company>PicNet Pty Ltd</Company>
-        <RepositoryUrl>https://github.com/yourusername/centazio</RepositoryUrl>
+        <RepositoryUrl>https://github.com/PicNet/Centazio</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         
         <TargetFramework>net10.0</TargetFramework>
@@ -24,9 +24,9 @@
     <PropertyGroup Condition="!$(MSBuildProjectName.Contains('Test')) And $(MSBuildProjectFullPath.Contains('src'))">
         <PackageId>$(MSBuildProjectName)</PackageId>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/PicNet/Centazio</PackageProjectUrl>
+        <PackageProjectUrl>https://picnet.com.au/centazio/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/PicNet/Centazio</RepositoryUrl>
-        <PackageTags>picnet;integration</PackageTags>
+        <PackageTags>picnet;centazio;integration;data-integration;etl;workflow;master-data;dotnet;csharp;azure-functions;aws-lambda</PackageTags>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>

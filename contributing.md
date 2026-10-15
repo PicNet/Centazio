@@ -1,7 +1,7 @@
 # Developer Guidelines:
 
 ## Development Tools (Prerequisites)
-- [dotnet 9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [dotnet 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - [dotnet cli](https://learn.microsoft.com/en-us/dotnet/core/tools/)
 - [az cli](https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest)
 - [az core tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-csharp)
@@ -56,13 +56,19 @@
     to the `LogInitialiser.GetConsoleConfig` initialiser
 
 ## NuGet
-- Create: `rm packages/*; ./src/bump.sh; dotnet pack -v detailed -c Release -o packages`
-- Publish: `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
+- Pushing to GitHub does not publish anything; packages are published from a dev machine
+- `centazio dev publish` bumps the patch number in `Directory.Build.props`, packs every package into `packages/` and
+    pushes them with `NUGET_API_KEY` from the Centazio secrets.  `-b|--no-bump` publishes the version already in
+    `Directory.Build.props` (use it for planned releases such as `0.2.0`), `-p|--no-publish` only packs
+- Manual equivalent: `rm packages/*; dotnet pack -c Release -o packages` then
+    `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
+- A bump edits `Directory.Build.props` and the `packages.lock.json` files must follow it: run
+    `dotnet restore --force-evaluate` and commit both, or CI's locked-mode restore fails
 - Note: Publishing can take up to 15 minutes to get the new version
 
 ## Centazio Cli
 To work with a local version of the Centazio.Cli NuGet tool use:
-- `rm packages/*; src/bump.sh; dotnet pack -v detailed -c Release -o packages` -- note: bump IS required
+- `centazio dev publish --no-publish` -- packs into `packages/`; note: the bump it does IS required
 - `dotnet new tool-manifest`  -- required only once to set up local dotnet tools in a test dir outside of source tree 
 - `dotnet tool install --prerelease --local --add-source ../centazio3/packages/ Centazio.Cli`
 - `dotnet centazio [args]` -- run centazio cli

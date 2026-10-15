@@ -9,7 +9,7 @@ Centazio is a data integration platform created for .Net developers.  Centazio p
 - Guidance on best-practices for data integration
 
 <p align="center">
-  <a href="https://picnet.com.au/application-integration-services/">
+  <a href="https://picnet.com.au/centazio/">
     <img src="https://www.picnet.com.au/images/centazio-assets/centazio_cli.png" alt="Centazio CLI" width="460">
   </a>
 </p>
@@ -98,7 +98,7 @@ pipelines to control.
 
 # Prerequisites
 
-- [dotnet 9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [dotnet 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - [dotnet cli](https://learn.microsoft.com/en-us/dotnet/core/tools/)
 - [az cli](https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest)
 - [az core tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-csharp)
@@ -114,7 +114,7 @@ This simple getting started guide will guide you in creating a simple one-way in
 
 ## Installing Centazio
 
-- `dotnet tool install --prerelease --global Centazio.Cli`
+- `dotnet tool install --global Centazio.Cli`
 - Create a secrets file anywhere on your computer (outside of the current git directory).  Name this file `dev.env`
 
 ## Set up ClickUp
@@ -433,8 +433,8 @@ To enable KeyVault access for your Azure Function, follow these steps:
 
 ## Common CLI Commands
 
-- Install: `dotnet tool install --prerelease --global Centazio.Cli`
-- Update: `dotnet tool update --prerelease --global Centazio.Cli`
+- Install: `dotnet tool install --global Centazio.Cli`
+- Update: `dotnet tool update --global Centazio.Cli`
 - Remove: `dotnet tool uninstall --global Centazio.Cli`, `dotnet tool uninstall --local Centazio.Cli`
 - Check: `dotnet tool list --global`, `dotnet tool list --local`
 - Generate Solution: `centazio gen sln YourSolutionName`

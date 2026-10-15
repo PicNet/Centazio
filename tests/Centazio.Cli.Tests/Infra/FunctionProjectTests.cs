@@ -14,7 +14,7 @@ public class FunctionProjectTests {
     Assert.That(proj.ProjectDirPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az")));
     Assert.That(proj.CsprojFile, Is.EqualTo("Centazio.Cli.Tests.Az.csproj"));
     Assert.That(proj.SlnFilePath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az", "Centazio.Cli.Tests.Az.sln")));
-    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az", "bin", "Release", "net9.0", "publish")));
+    Assert.That(proj.PublishPath, Is.EqualTo(GenRel("Centazio.Cli.Tests.Az", "bin", "Release", "net10.0", "publish")));
     
     string GenRel(params List<string> steps) => FsUtils.GetCentazioPath(steps.Prepend(settings.Defaults.GeneratedCodeFolder).ToList()); 
   }

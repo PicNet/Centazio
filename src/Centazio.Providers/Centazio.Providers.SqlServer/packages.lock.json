@@ -271,11 +271,6 @@
         "resolved": "8.0.1",
         "contentHash": "BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg=="
       },
-      "System.Security.Cryptography.Pkcs": {
-        "type": "Transitive",
-        "resolved": "9.0.4",
-        "contentHash": "cUFTcMlz/Qw9s90b2wnWSCvHdjv51Bau9FQqhsr4TlwSe1OX+7SoXUqphis5G74MLOvMOCghxPPlEqOdCrVVGA=="
-      },
       "System.Security.Cryptography.ProtectedData": {
         "type": "Transitive",
         "resolved": "9.0.4",
@@ -298,7 +293,7 @@
       "centazio.providers.ef": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.0, )"
         }
@@ -412,6 +407,12 @@
         "dependencies": {
           "Serilog": "4.2.0"
         }
+      },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "CentralTransitive",
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "KD+oHoYIxwNCajjVe58WVwq9cRpum+Pg3tRveDRtkcaw6w3oc7sNBoMRtb5P5OehI3bgv1ucMpgjf8lpj5J96A=="
       }
     }
   }

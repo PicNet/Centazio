@@ -88,8 +88,8 @@
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
-        "resolved": "2.6.2",
-        "contentHash": "7oWOcvnntmMKNzDLsdxAYqApt+AjpRpP2CShjMfIa3umZ42UQMvH0tl1qAliYPNYO6vTdcGMqnRrCPmsfzTI1w=="
+        "resolved": "2.7.0",
+        "contentHash": "U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw=="
       },
       "Docker.DotNet.Enhanced": {
         "type": "Transitive",
@@ -682,41 +682,41 @@
       },
       "NuGet.Common": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "AegMASeOhhm2flGk53b/YtINs2H+zKMnV5fTs3rRo08JMQ3gqrbJUSjiEMOKt5d541IhVA+pHDWVsDCZ+5g7Fg==",
+        "resolved": "7.0.3",
+        "contentHash": "vFBP1TkmeFxUjOqlGn7M3QbZfsg+hyFcCUFy8hPCdmk9VPhFQPwUMH4zKZnd8Bf8x89CFnpRXb8EC6tmWfDgNA==",
         "dependencies": {
-          "NuGet.Frameworks": "7.0.1"
+          "NuGet.Frameworks": "7.0.3"
         }
       },
       "NuGet.Configuration": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "En8aIvZywOmgi+Q2Tv7VUELSYc3OCTwmzItr2N3j5pVIBQE92HbOa1b4+fJJbl9X/rAOkNon3fxjwYeqrdMRrw==",
+        "resolved": "7.0.3",
+        "contentHash": "DZC5/eP6X0qDU4FK1X318nT9gBmjbBOQxphEFnn67B5kKi1/ODRANGOlnNn0tUkZDFtPtLl7gC6bfnf/cM7j5Q==",
         "dependencies": {
-          "NuGet.Common": "7.0.1",
+          "NuGet.Common": "7.0.3",
           "System.Security.Cryptography.ProtectedData": "9.0.6"
         }
       },
       "NuGet.Frameworks": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "dUDwg8VYTyT+ZbLdC7hUUHFF530HeRl4jcxclKJY0o96f3nv0eZvojXwjRkq2HKzuyRCcVD4T24aEF83CUmBzA=="
+        "resolved": "7.0.3",
+        "contentHash": "JsV24AwAS93mQhlJr1Fx9zGHO6dVkexYp8ZZoDuoIBLyN9KwPEZOqo2SJVq0k2EPYO2oomj96Ue2yrO0hMOHrw=="
       },
       "NuGet.Packaging": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "hpC6Fx5VlMa42cSZDQ10TKDFHLoMpa8NbDwYSnCiGd4IPiG9+5ywWuxHjVbYYA7/PmJry5hs1GyJjvHV8bQmLw==",
+        "resolved": "7.0.3",
+        "contentHash": "eMdAeZU4ugSC5WwO2u9CcY+jBjt/E6YunQ25oO6M5mM5A5+5QM1AdfoZPtFfwCuIgb/tbY52ciGOAXpBAqLVDA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "NuGet.Configuration": "7.0.1",
-          "NuGet.Versioning": "7.0.1",
+          "NuGet.Configuration": "7.0.3",
+          "NuGet.Versioning": "7.0.3",
           "System.Security.Cryptography.Pkcs": "9.0.6"
         }
       },
       "NuGet.Versioning": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "tu68LnZqiLM/VyLQzPRqedopMi/M+5/6JqwB2Xkd0AWXRpUWewkVv77asVB7wgjMPVzQFK2sBy7AuxV49UzuvQ=="
+        "resolved": "7.0.3",
+        "contentHash": "jwZmJzau0kUTxUvtmjbEXyvhx0ui9wGPByDT8qV3qDSVK9rChgsSeZqb1Bybu258G9urdEcE9HqZCdRbi7h9BA=="
       },
       "OpenCli.Sources": {
         "type": "Transitive",
@@ -743,50 +743,22 @@
           "Serilog": "2.0.0"
         }
       },
-      "SixLabors.ImageSharp": {
-        "type": "Transitive",
-        "resolved": "3.1.12",
-        "contentHash": "iAg6zifihXEFS/t7fiHhZBGAdCp3FavsF4i2ZIDp0JfeYeDVzvmlbY1CNhhIKimaIzrzSi5M/NBFcWvZT2rB/A=="
-      },
       "SnapshotRestore.Registry": {
         "type": "Transitive",
         "resolved": "1.0.1",
         "contentHash": "UdA5y8wpa6dHiV4+J9MveLr6GRDB1llTmb4c+MeRYRoWKVNC5Y+nTDcC16/QAyw1dRry+aPS1yAy6f57mS+Xfw=="
       },
-      "SQLitePCLRaw.bundle_e_sqlite3": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "DC4nA7yWnf4UZdgJDF+9Mus4/cb0Y3Sfgi3gDnAoKNAIBwzkskNAbNbyu+u4atT0ruVlZNJfwZmwiEwE5oz9LQ==",
-        "dependencies": {
-          "SQLitePCLRaw.lib.e_sqlite3": "2.1.11",
-          "SQLitePCLRaw.provider.e_sqlite3": "2.1.11"
-        }
-      },
-      "SQLitePCLRaw.core": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "PK0GLFkfhZzLQeR3PJf71FmhtHox+U3vcY6ZtswoMjrefkB9k6ErNJEnwXqc5KgXDSjige2XXrezqS39gkpQKA=="
-      },
       "SQLitePCLRaw.lib.e_sqlite3": {
         "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "Ev2ytaXiOlWZ4b3R67GZBsemTINslLD1DCJr2xiacpn4tbapu0Q4dHEzSvZSMnVWeE5nlObU3VZN2p81q3XOYQ=="
+        "resolved": "2.1.13",
+        "contentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A=="
       },
       "SQLitePCLRaw.provider.e_sqlite3": {
         "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "Y/0ZkR+r0Cg3DQFuCl1RBnv/tmxpIZRU3HUvelPw6MVaKHwYYR8YNvgs0vuNuXCMvlyJ+Fh88U1D4tah1tt6qw==",
+        "resolved": "2.1.13",
+        "contentHash": "ZU60dSqoSNRe49KcQDUmOVgdRtjITOssVXFtiISs+zJXDI4D2Sndwpn2NOtzDQNPu0ZAvpoLPQ+GLKv6iEZn8Q==",
         "dependencies": {
-          "SQLitePCLRaw.core": "2.1.11"
-        }
-      },
-      "SSH.NET": {
-        "type": "Transitive",
-        "resolved": "2025.1.0",
-        "contentHash": "jrnbtf0ItVaXAe6jE8X/kSLa6uC+0C+7W1vepcnRQB/rD88qy4IxG7Lf1FIbWmkoc4iVXv0pKrz+Wc6J4ngmHw==",
-        "dependencies": {
-          "BouncyCastle.Cryptography": "2.6.2",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+          "SQLitePCLRaw.core": "2.1.13"
         }
       },
       "System.ClientModel": {
@@ -834,15 +806,15 @@
         "resolved": "4.7.0",
         "contentHash": "vMToiarpU81LR1/KZtnT7VDPvqAZfw9oOS5nY6pPP78nGYz3COLsQH3OfzbR+SjTgltd31R6KmKklz/zDpTmzw=="
       },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "ne1843evDugl0md7Fjzy6QjJrzsjh46ZKbhf8GwBXb5f/gw97J4bxMs0NQKifDuThh/f0bZ0e62NPl1jzTuRqA=="
+      },
       "System.Memory.Data": {
         "type": "Transitive",
         "resolved": "8.0.1",
         "contentHash": "BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg=="
-      },
-      "System.Security.Cryptography.Pkcs": {
-        "type": "Transitive",
-        "resolved": "9.0.6",
-        "contentHash": "Gny8p2mX0jc5rjh+PA4Gx5GG66sj2C+e+ro7+j/3IsKT/bmQ84tGRV+XKaG+5/CTCdwkSSKDWEQ1rJd0J5jE0Q=="
       },
       "System.Security.Cryptography.ProtectedData": {
         "type": "Transitive",
@@ -875,20 +847,20 @@
           "Azure.ResourceManager": "[1.13.2, )",
           "Azure.ResourceManager.AppService": "[1.4.1, )",
           "Azure.ResourceManager.Storage": "[1.6.0, )",
-          "Centazio.Core": "[0.1.30-beta, )",
-          "Centazio.Hosts.Aws": "[0.1.30-beta, )",
-          "Centazio.Hosts.Az": "[0.1.30-beta, )",
-          "Centazio.Hosts.Self": "[0.1.30-beta, )",
-          "Centazio.Providers.Aws": "[0.1.30-beta, )",
-          "Centazio.Providers.Az": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
+          "Centazio.Hosts.Aws": "[0.2.0, )",
+          "Centazio.Hosts.Az": "[0.2.0, )",
+          "Centazio.Hosts.Self": "[0.2.0, )",
+          "Centazio.Providers.Aws": "[0.2.0, )",
+          "Centazio.Providers.Az": "[0.2.0, )",
           "Docker.DotNet": "[3.125.15, )",
           "Microsoft.Data.SqlClient": "[6.1.3, )",
           "Microsoft.Data.Sqlite": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.0, )",
           "Microsoft.Extensions.DependencyInjection": "[10.0.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.0, )",
-          "NuGet.Protocol": "[7.0.1, )",
-          "Scriban": "[6.5.1, )",
+          "NuGet.Protocol": "[7.0.3, )",
+          "Scriban": "[7.5.0, )",
           "Serilog": "[4.3.0, )",
           "Serilog.Sinks.File": "[7.0.0, )",
           "SharpZipLib": "[1.4.2, )",
@@ -920,7 +892,7 @@
           "AWSSDK.SQS": "[4.0.2.5, )",
           "Amazon.Lambda.Core": "[2.8.0, )",
           "Amazon.Lambda.RuntimeSupport": "[1.14.1, )",
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Serilog.Extensions.Hosting": "[9.0.0, )",
           "Serilog.Sinks.AwsCloudWatch": "[4.4.42, )"
         }
@@ -928,7 +900,7 @@
       "centazio.hosts.az": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Microsoft.ApplicationInsights.WorkerService": "[2.23.0, )",
           "Microsoft.Azure.Functions.Worker": "[2.51.0, )",
           "Microsoft.Azure.Functions.Worker.ApplicationInsights": "[2.50.0, )",
@@ -939,7 +911,7 @@
       "centazio.hosts.self": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
           "Microsoft.Extensions.DependencyInjection": "[10.0.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.0, )",
           "Serilog": "[4.3.0, )"
@@ -956,7 +928,7 @@
           "AWSSDK.SecretsManager": "[4.0.3.1, )",
           "AWSSDK.SecretsManager.Caching": "[2.0.0, )",
           "Amazon.Extensions.Configuration.SystemsManager": "[7.0.1, )",
-          "Centazio.Core": "[0.1.30-beta, )"
+          "Centazio.Core": "[0.2.0, )"
         }
       },
       "centazio.providers.az": {
@@ -964,14 +936,14 @@
         "dependencies": {
           "Azure.Identity": "[1.17.1, )",
           "Azure.Security.KeyVault.Secrets": "[4.8.0, )",
-          "Centazio.Core": "[0.1.30-beta, )"
+          "Centazio.Core": "[0.2.0, )"
         }
       },
       "centazio.test.lib": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.1.30-beta, )",
-          "Centazio.Providers.Aws": "[0.1.30-beta, )",
+          "Centazio.Core": "[0.2.0, )",
+          "Centazio.Providers.Aws": "[0.2.0, )",
           "Microsoft.NET.Test.Sdk": "[18.0.1, )",
           "NUnit": "[4.4.0, )"
         }
@@ -1338,18 +1310,18 @@
       },
       "NuGet.Protocol": {
         "type": "CentralTransitive",
-        "requested": "[7.0.1, )",
-        "resolved": "7.0.1",
-        "contentHash": "bYPzTqgOSsXV8AxXXFCCPtAtlxwph0DVtdM8AlaKTGLClHDx7VAlL4cCIcVl2iEzQuG1uC79SvzllvKi1grcNw==",
+        "requested": "[7.0.3, )",
+        "resolved": "7.0.3",
+        "contentHash": "B9BwrQ0sOsSuCFijIL1LmX/hVVIhDf1WmI86neWak1yVvQ2r13TuFbMok6LXUM5htU8890XinB5ouE5hMHaxTA==",
         "dependencies": {
-          "NuGet.Packaging": "7.0.1"
+          "NuGet.Packaging": "7.0.3"
         }
       },
       "Scriban": {
         "type": "CentralTransitive",
-        "requested": "[6.5.1, )",
-        "resolved": "6.5.1",
-        "contentHash": "hWQnSJORmSbY7QrqjVYqFVL+PIYh1rDZmns+fV4QllXyUaG4+TOWBD0RuJ2dx57nbceeJWMNAS0CuSAjQhWT5w=="
+        "requested": "[7.5.0, )",
+        "resolved": "7.5.0",
+        "contentHash": "5Dk6VXG6dimWQFRtCs202cYYkdE1GeOqpUgCwNSp4C4NhpjeMaVNssxe6Ifb1Z3HCfabvrbk9XLbvQXeZXG91w=="
       },
       "Serilog": {
         "type": "CentralTransitive",
@@ -1415,6 +1387,15 @@
         "resolved": "1.4.2",
         "contentHash": "yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A=="
       },
+      "SixLabors.ImageSharp": {
+        "type": "CentralTransitive",
+        "requested": "[4.1.2, )",
+        "resolved": "4.1.2",
+        "contentHash": "AQ0oouhH/6qmXJC70/k50iVt7SiZRjCgd4tXXiC5ZrB5CvyBwA81HTqb5twcXz8CvTAFxUNV0TAcL83OhyRA1g==",
+        "dependencies": {
+          "System.IO.Hashing": "8.0.0"
+        }
+      },
       "Spectre.Console": {
         "type": "CentralTransitive",
         "requested": "[0.54.0, )",
@@ -1440,6 +1421,38 @@
           "SixLabors.ImageSharp": "3.1.12",
           "Spectre.Console": "0.54.0"
         }
+      },
+      "SQLitePCLRaw.bundle_e_sqlite3": {
+        "type": "CentralTransitive",
+        "requested": "[2.1.13, )",
+        "resolved": "2.1.13",
+        "contentHash": "NlDixlC7uHmo+ojXRgkNvN0tQtVGpLDZ3x2OpgNj+G07VHh5cXSszFDrAiC4BpUiPwkcaeuQkMV9WQ123xVtmQ==",
+        "dependencies": {
+          "SQLitePCLRaw.lib.e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.provider.e_sqlite3": "2.1.13"
+        }
+      },
+      "SQLitePCLRaw.core": {
+        "type": "CentralTransitive",
+        "requested": "[2.1.13, )",
+        "resolved": "2.1.13",
+        "contentHash": "2joofoinuHBFs0nMX3nKuXgxpXryRkCOdM2Ua6HBqQLLy6IW+5f28ZI+HAvMyF8vG7XfNz/lwfBfE6V4juru8Q=="
+      },
+      "SSH.NET": {
+        "type": "CentralTransitive",
+        "requested": "[2026.0.0, )",
+        "resolved": "2026.0.0",
+        "contentHash": "Yu9dirPq8l3oaat0+OQ7K0nUf5MmYltpia5UGqsApTG4zTPvBC1cxbNnC3NERij26dUST0A3Ef1QdHSn5ArbWQ==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.7.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+        }
+      },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "CentralTransitive",
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "KD+oHoYIxwNCajjVe58WVwq9cRpum+Pg3tRveDRtkcaw6w3oc7sNBoMRtb5P5OehI3bgv1ucMpgjf8lpj5J96A=="
       }
     }
   }

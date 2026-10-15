@@ -66,7 +66,7 @@ public abstract class AbstractFunctionProjectMeta(Assembly assembly, CentazioSet
   public string CsprojFile => $"{ProjectName}.csproj";
   public string CsprojPath => Path.Combine(ProjectDirPath, $"{ProjectName}.csproj");
   public string SlnFilePath => Path.Combine(SolutionDirPath, $"{ProjectName}.sln");
-  public string PublishPath => Path.Combine(ProjectDirPath, "bin", "Release", "net9.0", "publish");
+  public string PublishPath => Path.Combine(ProjectDirPath, "bin", "Release", "net10.0", "publish");
   public string DashedProjectName => ProjectName.Replace('.', '-');
 }
 

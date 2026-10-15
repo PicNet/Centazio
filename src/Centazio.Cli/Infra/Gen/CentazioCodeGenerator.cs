@@ -18,7 +18,7 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     await InstallCentazioNuGetsOrRefs(Path.Combine(slndir, shared), provider);
     return sln;
 
-    async Task CreateSlnFile() { await cmd.DotNet($"new sln --name {sln}", slndir); }
+    async Task CreateSlnFile() { await cmd.DotNet($"new sln --name {sln} --format sln", slndir); }
 
     async Task CreateEmptySharedProj() {
       var csproj = Path.Combine(shared, $"{shared}.csproj");
@@ -72,8 +72,8 @@ public class CentazioCodeGenerator(ICommandRunner cmd, ITemplater templater, boo
     if (usenuget) await InstallNuGets(); else await InstallRefs();
 
     async Task InstallNuGets() {
-      await cmd.DotNet("add package --prerelease Centazio.Core", projdir);
-      if (provider is not null) await cmd.DotNet($"add package --prerelease Centazio.Providers.{provider}", projdir);
+      await cmd.DotNet("add package Centazio.Core", projdir);
+      if (provider is not null) await cmd.DotNet($"add package Centazio.Providers.{provider}", projdir);
     }
 
     async Task InstallRefs() {

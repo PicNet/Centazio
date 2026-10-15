@@ -1,7 +1,7 @@
-﻿FROM public.ecr.aws/lambda/dotnet:9
+﻿FROM public.ecr.aws/lambda/dotnet:10
 
 WORKDIR /var/task
 
-COPY "bin/Release/net9.0/publish"  .
+COPY "bin/Release/net10.0/publish"  .
 
 CMD [ "{{it.FileName}}::{{it.AssemblyName}}.Aws.{{it.ClassName}}Handler::Handle" ]

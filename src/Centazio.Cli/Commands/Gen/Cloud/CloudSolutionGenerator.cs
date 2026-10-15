@@ -34,7 +34,7 @@ public abstract class CloudSolutionGenerator(
 
   public async Task GenerateProjects() {
     model.GlobalProperties.AddRange([
-      new("TargetFramework", "net9.0"),
+      new("TargetFramework", "net10.0"),
       new("OutputType", "Exe"),
       new("ImplicitUsings", "enable"),
       new("Nullable", "enable"),
