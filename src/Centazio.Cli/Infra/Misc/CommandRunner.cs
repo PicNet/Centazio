@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Centazio.Cli.Infra.Misc;
 
 public record CommandResults(Process? Process, string Command, string Args, string Dir, string Out, string Err) {
   public bool Success => String.IsNullOrWhiteSpace(Err);
-  public override string ToString() => $"{Command} {Args}";
+  public override string ToString() => $"{Command} {CommandRunner.Redact(Args)}";
 
 }
 
@@ -25,6 +26,9 @@ public class CommandRunner : ICommandRunner {
           : @"C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin\az.cmd";
 
   private readonly Dictionary<string, bool> installed = [];
+
+  // keeps credentials passed as arguments (eg: `nuget push --api-key <key>`) out of logs and exception messages
+  internal static string Redact(string args) => Regex.Replace(args, @"(--api-key|--password|--secret)(\s+|=)(""[^""]*""|\S+)", "$1$2***", RegexOptions.IgnoreCase);
   
   public Task<CommandResults> DotNet(string args, string? cwd = null, bool quiet = false, string? input = null) => Run("dotnet", args, cwd, quiet, input: input);
   public Task<CommandResults> Az(string args, string? cwd = null, bool quiet = false, string? input = null) => Run(AzCommand, args, cwd, quiet, input: input);
@@ -38,7 +42,7 @@ public class CommandRunner : ICommandRunner {
     cwd ??= Env.IsUnitTest ? FsUtils.GetCentazioPath() : Environment.CurrentDirectory;
     var results = new CommandResults(null, command, args, cwd, String.Empty, String.Empty);
     
-    if (!quiet) Log.Information($"running[{command}] args[{args}] cwd[{cwd}]");
+    if (!quiet) Log.Information($"running[{command}] args[{Redact(args)}] cwd[{cwd}]");
     if (checktool && !await CheckInstalled(command)) return results;
     
     var output = new StringBuilder();
@@ -63,7 +67,7 @@ public class CommandRunner : ICommandRunner {
     var err = error.ToString().Trim();
     var outp = output.ToString().Trim();
     // -1073741510 is CTRL+C so can be ignored
-    if (code != -1073741510 && (code != 0 || err.Length > 0)) throw new Exception($"cmd[{command}] args[{args}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
+    if (code != -1073741510 && (code != 0 || err.Length > 0)) throw new Exception($"cmd[{command}] args[{Redact(args)}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
     return results with { Process = p, Out = outp, Err = err };
   }
 

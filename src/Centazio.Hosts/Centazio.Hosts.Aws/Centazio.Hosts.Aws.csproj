@@ -1,12 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-      <Reference Include="Serilog">
-        <HintPath>..\..\..\..\..\.nuget\packages\serilog\4.2.0\lib\net9.0\Serilog.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\..\Centazio.Core\Centazio.Core.csproj" />
     </ItemGroup>
 

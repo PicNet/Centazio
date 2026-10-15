@@ -17,7 +17,7 @@ public class InteractiveMenu(CommandsTree tree) {
 
   public async Task Show() {
     await DisplayNode(tree.RootNode);
-    UiHelpers.Log("\nThank you for using [link=https://picnet.com.au/application-integration-services/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
+    UiHelpers.Log("\nThank you for using [link=https://picnet.com.au/centazio/][underline blue]Centazio[/][/] by [link=https://picnet.com.au][underline blue]PicNet[/][/]\n\n");
   }
 
   public async Task DisplayNode(Node? n) {
