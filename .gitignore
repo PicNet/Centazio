@@ -8,3 +8,5 @@ packages/
 *.db
 *.db-journal
 CLAUDE.md
+TestResult.xml
+TestResults/
