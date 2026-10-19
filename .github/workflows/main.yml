@@ -8,10 +8,14 @@ on:
       - '**/main.yml'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
-    runs-on: self-hosted
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: checkout code
@@ -22,6 +26,20 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
+    - name: aws login
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        aws-region: ap-southeast-2
+
+    - name: azure login
+      if: vars.AZURE_CLIENT_ID != ''
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
     - name: print docker version
       run: docker version    
  
@@ -30,7 +48,7 @@ jobs:
 #      run: az upgrade --yes
       
     - name: upgrade azure function core tools
-      run: sudo apt-get install azure-functions-core-tools-4
+      run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
 
     - name: dotnet info
       run: dotnet --info
