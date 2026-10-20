@@ -22,7 +22,8 @@ public class PackageAndPublishNuGetsCommand(
     
     // publish 
     if (settings.NoPublish) return;
-    var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty);
+    // the nuget key lives in its own 'publish' secrets environment so CI and dev tooling cannot read it
+    var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty, "publish");
     var apikey = secrets.NUGET_API_KEY;
     // nuget only expands the wildcard when the path uses the OS separator, so './packages/*.nupkg' fails on windows
     await cmd.DotNet($"nuget push {Path.Combine(packagesdir, "*.nupkg")} --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);

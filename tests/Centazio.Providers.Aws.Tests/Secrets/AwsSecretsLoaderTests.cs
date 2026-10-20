@@ -18,10 +18,11 @@ public class AwsSecretsLoaderTests : BaseSecretsLoaderTests {
     var (settings, json) = (await F.Settings(), Json.Serialize(secrets));
     var (id, client) = (settings.AwsSettings.GetSecretsStoreIdForEnvironment(environment), new AmazonSecretsManagerClient(settings.AwsSettings.GetRegionEndpoint()));
     
+    // update first so CI only needs PutSecretValue on the existing testing secrets
     try {
-      await client.CreateSecretAsync(new CreateSecretRequest { Name = id, SecretString = json });
-    } catch (ResourceExistsException) {
       await client.PutSecretValueAsync(new PutSecretValueRequest { SecretId = id, SecretString = json });
+    } catch (ResourceNotFoundException) {
+      await client.CreateSecretAsync(new CreateSecretRequest { Name = id, SecretString = json });
     }
   }
 
