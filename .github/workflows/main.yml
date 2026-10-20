@@ -48,7 +48,15 @@ jobs:
 #      run: az upgrade --yes
       
     - name: upgrade azure function core tools
-      run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+      run: sudo apt-get update -q && sudo apt-get install -y azure-functions-core-tools-4
+
+    - name: write file secrets
+      run: |
+        mkdir -p ../centazio3_secrets
+        aws secretsmanager get-secret-value --secret-id picnet/centazio/dev --query SecretString --output text > /tmp/dev.json
+        jq -r '.[] | "::add-mask::\(.)"' /tmp/dev.json
+        jq -r 'to_entries[] | "\(.key)=\(.value)"' /tmp/dev.json > ../centazio3_secrets/dev.env
+        rm /tmp/dev.json
 
     - name: dotnet info
       run: dotnet --info
