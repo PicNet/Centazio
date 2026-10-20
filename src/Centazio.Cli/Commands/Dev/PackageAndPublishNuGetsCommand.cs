@@ -8,6 +8,9 @@ public class PackageAndPublishNuGetsCommand(
     ICliSecretsManager loader, 
     ICommandRunner cmd) : AbstractCentazioCommand<PackageAndPublishNuGetsCommand.Settings> {
 
+  // the nuget key lives in its own secrets environment so CI and dev tooling cannot read it
+  public const string SECRETS_ENVIRONMENT = "publish";
+
   private readonly string packagesdir = "packages";
   
   public override Task<Settings> GetInteractiveSettings() => Task.FromResult(new Settings());
@@ -22,8 +25,7 @@ public class PackageAndPublishNuGetsCommand(
     
     // publish 
     if (settings.NoPublish) return;
-    // the nuget key lives in its own 'publish' secrets environment so CI and dev tooling cannot read it
-    var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty, "publish");
+    var secrets = await loader.LoadSecrets<CentazioSecrets>(String.Empty, SECRETS_ENVIRONMENT);
     var apikey = secrets.NUGET_API_KEY;
     // nuget only expands the wildcard when the path uses the OS separator, so './packages/*.nupkg' fails on windows
     await cmd.DotNet($"nuget push {Path.Combine(packagesdir, "*.nupkg")} --source https://api.nuget.org/v3/index.json --api-key {apikey}", cwd);

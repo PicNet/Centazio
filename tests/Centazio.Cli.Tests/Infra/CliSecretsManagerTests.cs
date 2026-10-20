@@ -1,3 +1,4 @@
+using Centazio.Cli.Commands.Dev;
 using Centazio.Core;
 using Centazio.Core.Secrets;
 using Centazio.Core.Settings;
@@ -40,6 +41,24 @@ public class CliSecretsManagerTests {
     Assert.That(loader is AzSecretsLoader);
   }
   
+  [Test] public async Task Test_publish_secrets_are_only_loaded_with_the_publish_environment() {
+    var dir = Directory.CreateTempSubdirectory().FullName;
+    try {
+      await File.WriteAllTextAsync(Path.Combine(dir, "dev.env"), "SQL_CONN_STR=from-dev");
+      await File.WriteAllTextAsync(Path.Combine(dir, $"{PackageAndPublishNuGetsCommand.SECRETS_ENVIRONMENT}.env"), "NUGET_API_KEY=from-publish");
+      var settings = new CentazioSettings.Dto { SecretsLoaderSettings = new SecretsLoaderSettings.Dto { Provider = "File", SecretsFolder = dir } }.ToBase();
+      var svcs = new ServiceCollection().AddKeyedSingleton("file", settings).BuildServiceProvider();
+      var cm = new CliSecretsManager(svcs);
+
+      var dev = await cm.LoadSecrets<CentazioSecrets>("file");
+      var publish = await cm.LoadSecrets<CentazioSecrets>("file", PackageAndPublishNuGetsCommand.SECRETS_ENVIRONMENT);
+
+      Assert.Catch(() => _ = dev.NUGET_API_KEY);
+      Assert.That(publish.NUGET_API_KEY, Is.EqualTo("from-publish"));
+      Assert.That(publish.SQL_CONN_STR, Is.EqualTo("from-dev"));
+    } finally { Directory.Delete(dir, true); }
+  }
+
   private static async Task<CliSecretsManager> LoadSecretsManager() {
     var svcs = new ServiceCollection();
     var conf = new SettingsLoaderConfig();
