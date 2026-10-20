@@ -11,6 +11,8 @@
   - MED: remove `continue-on-error: true` from the `dotnet test` step once the build is clean, failing tests currently 
     still report a green run
   - LOW: LocalStack is pinned to 4.14.0, the last release that runs without a licence
+  - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
+    (`ubuntu-latest`)
   - LOW: deregister the `dev-build-ubuntu` self-hosted runner once hosted runs are proven
 - aws/azure:
   - MED: better cloud settings management (env vars?) - including cron timers
