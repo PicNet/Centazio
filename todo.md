@@ -14,6 +14,14 @@
   - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
     (`ubuntu-latest`)
   - LOW: deregister the `dev-build-ubuntu` self-hosted runner once hosted runs are proven
+- security (ci review 2026-10-21, needs account owner):
+  - HIGH: CI role `github-actions-centazio` can read all of `picnet/centazio/dev`, including `NUGET_API_KEY` and a 
+    long-lived key for AWS account 780133770227. Move the values tests need into a CI-only secret, limit the role to it, 
+    and replace the NuGet key with one scoped to the Centazio packages
+  - MED: any branch of the repo can assume the CI role (6 people with write access). Consider trusting only `master`, or
+    a protected environment with reviewers, and running branch builds without secrets
+  - MED: name the exact test secrets in the role policy instead of `testing*` etc, and replace the `picnet/centazio/*` 
+    read wildcard so a future `picnet/centazio/prod` is not readable
 - aws/azure:
   - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:

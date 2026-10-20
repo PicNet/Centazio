@@ -20,7 +20,7 @@ public class AwsEventBridgeChangesNotifierTests {
 
   [Test] public async Task Test_setup_event_bridge() {
     var localstack = new LocalStackBuilder()
-        .WithImage("localstack/localstack:4.14.0")
+        .WithImage("localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a")
         .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
         .WithEnvironment("DEBUG", "1")
         .Build();

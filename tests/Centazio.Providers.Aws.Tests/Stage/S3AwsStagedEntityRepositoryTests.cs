@@ -21,7 +21,7 @@ public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests 
     container = new MinioBuilder()
         .WithNetwork(network)
         .WithNetworkAliases("minio")
-        .WithImage("cgr.dev/chainguard/minio:latest")
+        .WithImage("cgr.dev/chainguard/minio@sha256:32c504bea4574d8f29d719b37bc0dad920ecf3e22b81dc5cea0bb105af2ce10f")
         .Build();
     await container.StartAsync();
   }
