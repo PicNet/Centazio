@@ -11,13 +11,11 @@
     "picnet@picnet": true
   },
   "permissions": {
-    "deny": [
-      "Bash(git push *)",
-      "PowerShell(git push *)"
-    ],
     "allow": [
       "Bash(git commit *)",
-      "PowerShell(git commit *)"
+      "PowerShell(git commit *)",
+      "Bash(git push *)",
+      "PowerShell(git push *)"
     ]
   }
 }
