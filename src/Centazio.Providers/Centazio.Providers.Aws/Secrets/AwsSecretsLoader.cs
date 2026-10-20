@@ -17,6 +17,8 @@ public class AwsSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader
       var credentials = new BasicAWSCredentials( settings.SecretsLoaderSettings.ProviderKey, settings.SecretsLoaderSettings.ProviderSecret );
       return new AmazonSecretsManagerClient(credentials, settings.AwsSettings.GetRegionEndpoint());
     }
+    if (Env.HasAwsCredentials) return new AmazonSecretsManagerClient(settings.AwsSettings.GetRegionEndpoint());
+
     Environment.SetEnvironmentVariable("AWS_PROFILE", settings.AwsSettings.AccountName);
     Environment.SetEnvironmentVariable("AWS_SDK_LOAD_CONFIG", "1");
 

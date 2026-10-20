@@ -1,8 +1,21 @@
 {
   "extraKnownMarketplaces": {
     "picnet": {
-      "source": { "source": "url", "url": "https://picnetdev@dev.azure.com/picnetdev/picnet_llm_config/_git/picnet_llm_config" }
+      "source": {
+        "source": "url",
+        "url": "https://picnetdev@dev.azure.com/picnetdev/picnet_llm_config/_git/picnet_llm_config"
+      }
     }
   },
-  "enabledPlugins": { "picnet@picnet": true }
+  "enabledPlugins": {
+    "picnet@picnet": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git commit *)",
+      "PowerShell(git commit *)",
+      "Bash(git push *)",
+      "PowerShell(git push *)"
+    ]
+  }
 }

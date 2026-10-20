@@ -1,11 +1,14 @@
 ﻿using Centazio.Core.Misc;
 using Centazio.Core.Secrets;
 using Centazio.Providers.Az.Secrets;
+using Centazio.Test.Lib;
 using Centazio.Test.Lib.BaseProviderTests;
 
 namespace Centazio.Providers.Az.Tests.Secrets;
 
 public class AzSecretsLoaderTests: BaseSecretsLoaderTests {
+
+  [OneTimeSetUp] public Task Init() => AzTestingEnv.IgnoreIfVaultUnreachable();
 
   protected override async Task<ISecretsLoader> GetSecretsLoader() => 
       new AzSecretsLoaderFactory(await F.Settings()).GetService();

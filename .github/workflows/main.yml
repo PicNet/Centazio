@@ -8,10 +8,14 @@ on:
       - '**/main.yml'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
-    runs-on: self-hosted
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     steps:
     - name: checkout code
@@ -22,6 +26,20 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
+    - name: aws login
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        aws-region: ap-southeast-2
+
+    - name: azure login
+      if: vars.AZURE_CLIENT_ID != ''
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
     - name: print docker version
       run: docker version    
  
@@ -30,7 +48,15 @@ jobs:
 #      run: az upgrade --yes
       
     - name: upgrade azure function core tools
-      run: sudo apt-get install azure-functions-core-tools-4
+      run: sudo apt-get update -q && sudo apt-get install -y azure-functions-core-tools-4
+
+    - name: write file secrets
+      run: |
+        mkdir -p ../centazio3_secrets
+        aws secretsmanager get-secret-value --secret-id picnet/centazio/dev --query SecretString --output text > /tmp/dev.json
+        jq -r '.[] | "::add-mask::\(.)"' /tmp/dev.json
+        jq -r 'to_entries[] | "\(.key)=\(.value)"' /tmp/dev.json > ../centazio3_secrets/dev.env
+        rm /tmp/dev.json
 
     - name: dotnet info
       run: dotnet --info

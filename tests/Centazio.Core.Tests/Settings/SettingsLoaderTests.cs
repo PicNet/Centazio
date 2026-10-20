@@ -25,7 +25,7 @@ public class SettingsLoaderTests {
     TestSettings(await CreateLoadAndDeleteSettings("..", String.Empty));
     TestSettings(await CreateLoadAndDeleteSettings("../..", String.Empty));
     
-    void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "To be overriden", String.Empty, String.Empty)));
+    void TestSettings(TestSettingsObj loaded) => Assert.That(loaded, Is.EqualTo(new TestSettingsObj("Testing content", "To be overriden", String.Empty, null)));
   }
   
   [Test] public async Task Test_loading_of_settings_with_overriding_environment_file() {

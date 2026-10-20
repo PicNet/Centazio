@@ -1,4 +1,19 @@
 # Todo
+- ci (github-hosted runners):
+  - HIGH: generated Az function projects fail to restore (NU1608). `AddLatestNuGetReferencesToProject` takes the latest 
+    of every package, and latest `Microsoft.ApplicationInsights.WorkerService` (3.x) conflicts with latest 
+    `Serilog.Sinks.ApplicationInsights` (needs ApplicationInsights < 3). Breaks `Test_Az_GenerateSolution`, 
+    `Test_CreateFunctionAppZip`, `Test_DotNetCliProjectBuilder_BuildProject` and the cli itself
+  - MED: Azure test resources are gone: Key Vault `CentazioDevKeyVault` no longer resolves and the `AZ_CLIENT_ID` app in 
+    the `picnet/centazio/dev` secret is not in the tenant. Az tests are skipped via `AzTestingEnv.IgnoreIfVaultUnreachable`
+    until recreated; then add `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` repo variables (OIDC) to 
+    enable the `azure login` workflow step
+  - MED: remove `continue-on-error: true` from the `dotnet test` step once the build is clean, failing tests currently 
+    still report a green run
+  - LOW: LocalStack is pinned to 4.14.0, the last release that runs without a licence
+  - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
+    (`ubuntu-latest`)
+  - LOW: deregister the `dev-build-ubuntu` self-hosted runner once hosted runs are proven
 - aws/azure:
   - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:
