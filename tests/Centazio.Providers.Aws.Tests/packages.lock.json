@@ -80,6 +80,15 @@
           "Testcontainers": "4.9.0"
         }
       },
+      "Testcontainers.LocalStack": {
+        "type": "Direct",
+        "requested": "[4.9.0, )",
+        "resolved": "4.9.0",
+        "contentHash": "aY1kqLDP4Q6ag+iTDd2f2VfZrIj0U82/TXbcvjpwBpfuHnhzH9wKAP0U09pW0r9b8uLdmh9wI99BJPifRTvwOg==",
+        "dependencies": {
+          "Testcontainers": "4.9.0"
+        }
+      },
       "Testcontainers.Minio": {
         "type": "Direct",
         "requested": "[4.9.0, )",

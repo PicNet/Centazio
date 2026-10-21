@@ -13,19 +13,14 @@
   - LOW: LocalStack is pinned to 4.14.0, the last release that runs without a licence
   - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
     (`ubuntu-latest`)
-  - LOW: deregister the `dev-build-ubuntu` self-hosted runner once hosted runs are proven
-- security (ci review 2026-10-21, needs account owner):
-  - HIGH: CI role `github-actions-centazio` can read `NUGET_API_KEY` in `picnet/centazio/dev`. The publish command now 
-    reads it from `picnet/centazio/publish`. In this order: limit the role's read access to exact ARNs (interim policy) 
-    and confirm it cannot read `publish`; store a new nuget.org key scoped to `Centazio.*` in `picnet/centazio/publish`; 
-    merge; apply the final policy (no `CreateSecret`); remove `NUGET_API_KEY` from `dev`; revoke the old nuget.org key 
-    (older versions of `dev` still hold it)
+- security (ci review 2026-10-21):
+  - MED: any branch of the repo can assume the CI role `github-actions-centazio` (6 people with write access), which 
+    reads `picnet/centazio/dev` (ClickUp, AppSheet, SQL connection string). Consider trusting only `master`, or a 
+    protected environment with reviewers, and running branch builds without secrets
   - LOW: `AWS_KEY`/`AWS_SECRET` in `picnet/centazio/dev` belong to account 780133770227, which has no IAM users or root 
-    keys, so they are dead. Remove them along with the assertion in `SampleSecretsLoaderTests`
-  - MED: any branch of the repo can assume the CI role (6 people with write access). Consider trusting only `master`, or
-    a protected environment with reviewers, and running branch builds without secrets
-  - MED: name the exact test secrets in the role policy instead of `testing*` etc, and replace the `picnet/centazio/*` 
-    read wildcard so a future `picnet/centazio/prod` is not readable
+    keys, so they are dead. The cli AWS commands (`AbstractAwsCommunicator`, `AwsFunctionDeployer`) use them, so AWS 
+    deploys from the cli need a working credential (preferably the SSO profile) before the keys and the assertion in 
+    `SampleSecretsLoaderTests` are removed
 - aws/azure:
   - MED: better cloud settings management (env vars?) - including cron timers
   - Azure:

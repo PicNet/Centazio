@@ -5,6 +5,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="Minio" />
         <PackageReference Include="Testcontainers.DynamoDb" />
+        <PackageReference Include="Testcontainers.LocalStack" />
         <PackageReference Include="Testcontainers.Minio" />
     </ItemGroup>
     

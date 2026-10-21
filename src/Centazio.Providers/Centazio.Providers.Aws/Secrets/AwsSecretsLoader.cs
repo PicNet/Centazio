@@ -8,9 +8,9 @@ using Centazio.Core.Settings;
 
 namespace Centazio.Providers.Aws.Secrets;
 
-public class AwsSecretsLoader(CentazioSettings settings) : AbstractSecretsLoader {
+public class AwsSecretsLoader(CentazioSettings settings, IAmazonSecretsManager client) : AbstractSecretsLoader {
 
-  private readonly IAmazonSecretsManager client = InitializeClient(settings);
+  public AwsSecretsLoader(CentazioSettings settings) : this(settings, InitializeClient(settings)) {}
 
   private static IAmazonSecretsManager InitializeClient(CentazioSettings settings) {
     if (settings.SecretsLoaderSettings.ProviderKey is not null && settings.SecretsLoaderSettings.ProviderSecret is not null) {
