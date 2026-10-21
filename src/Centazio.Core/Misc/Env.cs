@@ -9,7 +9,7 @@ public static class Env {
   public static bool IsHostedEnv => IsSelfHost || IsCloudHost;
   
   public static bool IsGitHubActions => VarIsTrue("GITHUB_ACTIONS");
-  public static bool HasAwsCredentials => ContainsVar("AWS_ACCESS_KEY_ID");
+  public static bool HasAwsCredentials => ContainsVar("AWS_ACCESS_KEY_ID") && ContainsVar("AWS_SECRET_ACCESS_KEY");
   public static bool IsUnitTest => VarIsTrue("IS_UNIT_TEST");
   public static bool IsCli => VarIsTrue("IS_CLI");
   public static bool IsInDev => FsUtils.FindFileDirectory(FsUtils.TEST_DEV_FILE) is not null;

@@ -5,15 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Centazio.Cli.Infra;
 
 public interface ICliSecretsManager {
-  Task<T> LoadSecrets<T>(string settingskey);
+  Task<T> LoadSecrets<T>(string settingskey, params List<string> environments);
 }
 
 public class CliSecretsManager(IServiceProvider prov) : ICliSecretsManager {
 
-  public async Task<T> LoadSecrets<T>(string settingskey) {
+  public async Task<T> LoadSecrets<T>(string settingskey, params List<string> environments) {
     if (!Env.IsInDev) throw new Exception();
     var settings = GetSettingsFromKey(settingskey);
-    return await GetSecretsLoader(settings).Load<T>(CentazioConstants.DEFAULT_ENVIRONMENT);
+    return await GetSecretsLoader(settings).Load<T>([CentazioConstants.DEFAULT_ENVIRONMENT, ..environments]);
   }
 
   internal CentazioSettings GetSettingsFromKey(string settingskey) => 

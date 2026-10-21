@@ -1,66 +1,68 @@
 name: .NET CI
 
 on:
-  push:    
+  push:
     paths:
       - '**.cs'
       - '**.json'
-      - '**/main.yml'
+      - '.github/**'
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
     - name: checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        persist-credentials: false
 
     - name: setup .net sdk
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
       with:
         dotnet-version: 10.0.x
 
     - name: aws login
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
       with:
         role-to-assume: ${{ vars.AWS_ROLE_ARN }}
         aws-region: ap-southeast-2
 
     - name: azure login
       if: vars.AZURE_CLIENT_ID != ''
-      uses: azure/login@v2
+      uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
       with:
         client-id: ${{ vars.AZURE_CLIENT_ID }}
         tenant-id: ${{ vars.AZURE_TENANT_ID }}
         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
     - name: print docker version
-      run: docker version    
- 
-#    not working since .Net 10 upgrade      
+      run: docker version
+
+#    not working since .Net 10 upgrade
 #    - name: upgrade azure cli
 #      run: az upgrade --yes
-      
+
     - name: upgrade azure function core tools
       run: sudo apt-get update -q && sudo apt-get install -y azure-functions-core-tools-4
 
     - name: write file secrets
       run: |
         mkdir -p ../centazio3_secrets
-        aws secretsmanager get-secret-value --secret-id picnet/centazio/dev --query SecretString --output text > /tmp/dev.json
-        jq -r '.[] | "::add-mask::\(.)"' /tmp/dev.json
-        jq -r 'to_entries[] | "\(.key)=\(.value)"' /tmp/dev.json > ../centazio3_secrets/dev.env
-        rm /tmp/dev.json
+        aws secretsmanager get-secret-value --secret-id picnet/centazio/dev --query SecretString --output text \
+          | bash .github/scripts/write-file-secrets.sh ../centazio3_secrets/dev.env
 
     - name: dotnet info
       run: dotnet --info
-      
+
     - name: dotnet restore (locked mode - enforce deterministic dependencies)
       run: dotnet restore --locked-mode
 
@@ -69,45 +71,71 @@ jobs:
 
     - name: create test-results
       run: mkdir -p ./test-results
-      
+
     - name: dotnet test
-      # run:
-      #   dotnet test --no-build --verbosity normal --blame-hang --blame-hang-timeout 1m --blame-hang-dump-type full --logger "trx;LogFileName=test-results.trx" --results-directory ./test-results
+      # hang dumps would capture secrets held in memory, and artifacts of a public repo are downloadable by anyone
       run: |
         failed_projects=()
-        
-        for project in $(find -name "*Tests.csproj" -o -path "tests" | grep -v "tests/Centazio.Providers.EF.Tests"); do
+
+        for project in $(find -name "*Tests.csproj" -o -path "tests" | grep -v "tests/Centazio.Providers.EF.Tests\|tests/Centazio.Hosts.Aws.Tests"); do
           project_name=$(basename "$project" .csproj)
           echo "::group::testing $project_name"
-          
-          if timeout 4m dotnet test "$project" --blame-hang --blame-hang-timeout 3m --logger "trx;LogFileName=${project_name}.trx" --results-directory ./test-results --verbosity normal; then
+
+          if timeout 4m dotnet test "$project" --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none --logger "trx;LogFileName=${project_name}.trx" --results-directory ./test-results --verbosity normal; then
             echo "✅ $project_name completed successfully"
           else
             echo "❌ $project_name failed or timed out"
             failed_projects+=("$project_name")
           fi
-          
+
           echo "::endgroup::"
         done
-        
+
         if [ ${#failed_projects[@]} -gt 0 ]; then
           printf "\n\nprojects that failed or hung: ${failed_projects[*]}\n\n"
           exit 1
         fi
       continue-on-error: true
-      
+
     - name: upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: always()
       with:
         name: test-results
         path: |
-          ./test-results/
-          ./**/Sequence_*.xml
-          ./**/TestResults/
+          ./test-results/*.trx
+          ./test-results/**/Sequence_*.xml
 
-    - name: check for hang dumps
-      if: always()
+  # LocalStack is given the docker socket, so it runs without cloud credentials or secrets
+  emulator-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        persist-credentials: false
+
+    - name: test file secrets script
+      run: bash .github/scripts/write-file-secrets.test.sh
+
+    - name: setup .net sdk
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+      with:
+        dotnet-version: 10.0.x
+
+    - name: dotnet test
       run: |
-        echo "checking for hang dump files..."
-        find . -name "*.dmp" -o -name "Sequence_*.xml" | head -10
+        dotnet restore tests/Centazio.Hosts.Aws.Tests --locked-mode
+        timeout 6m dotnet test tests/Centazio.Hosts.Aws.Tests --no-restore --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none --logger "trx;LogFileName=Centazio.Hosts.Aws.Tests.trx" --results-directory ./test-results --verbosity normal
+      continue-on-error: true
+
+    - name: upload test results
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      if: always()
+      with:
+        name: emulator-test-results
+        path: |
+          ./test-results/*.trx
+          ./test-results/**/Sequence_*.xml
