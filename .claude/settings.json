@@ -16,6 +16,10 @@
       "PowerShell(git commit *)",
       "Bash(git push *)",
       "PowerShell(git push *)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "PowerShell(git push *)"
     ]
   }
 }
