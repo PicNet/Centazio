@@ -1,0 +1,11 @@
+{
+  "StagedEntityRepository": {
+    "Provider": "InMemory"
+  },
+  "CtlRepository": {
+    "Provider": "InMemory"
+  },
+  "SecretsLoaderSettings": {
+    "Provider": "InMemory"
+  }
+}
