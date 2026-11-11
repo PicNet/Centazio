@@ -245,7 +245,7 @@ public record TaskJsonAndDateUpdated(string Json, DateTime LastUpdated);
 
 #### ClickUp Read Function
 ```
-public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, ClickUpApi api) : ReadFunction(ClickUpConstants.ClickUpSystemName, stager, ctl) {
+public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, TimeProvider clock, ClickUpApi api) : ReadFunction(ClickUpConstants.ClickUpSystemName, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(ClickUpConstants.ClickUpTaskEntityName, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)
@@ -364,7 +364,7 @@ specific systems.  Say we are reading incident management data from the 'Inciden
 the following `ImsReadFunc.cs` function:
 
 ```
-public class ImsReadFunc(ImsApi api) : ReadFunction(sysname, stager, ctl) {
+public class ImsReadFunc(ImsApi api) : ReadFunction(sysname, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => 
       new FunctionConfig([
@@ -385,7 +385,7 @@ of concerns can add benefits:
 
 ```
 public class ImsReadIncidentsFunc(ImsApi api) 
-    : ReadFunction(sysname, stager, ctl) {
+    : ReadFunction(sysname, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => 
       new FunctionConfig([

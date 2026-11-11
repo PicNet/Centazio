@@ -4,6 +4,14 @@
     of every package, and latest `Microsoft.ApplicationInsights.WorkerService` (3.x) conflicts with latest 
     `Serilog.Sinks.ApplicationInsights` (needs ApplicationInsights < 3). Breaks `Test_Az_GenerateSolution`, 
     `Test_CreateFunctionAppZip`, `Test_DotNetCliProjectBuilder_BuildProject` and the cli itself
+  - HIGH: generated Az and Aws projects also fail with NU1202 (found 2026-11-11): the same "latest of every package" 
+    now picks `Microsoft.EntityFrameworkCore(.Sqlite)` 11.0.0, which targets net11.0. Also breaks 
+    `Test_Aws_GenerateSolution`. Pin the generated package versions to the ones in `Directory.Packages.props`
+  - MED: `CommandRunner.RunProcess` hangs on Linux: `WaitForExit()` with redirected output waits for every process 
+    holding the pipe, and `dotnet build` leaves a reused MSBuild node and the Roslyn compiler server running. 
+    `Centazio.Cli.Tests` (generator tests) hangs until the node idles out unless run with 
+    `MSBUILDDISABLENODEREUSE=1 UseSharedCompilation=false`. Pass `-nodeReuse:false` / `-p:UseSharedCompilation=false` 
+    to the builds the cli runs, or wait for the process exit rather than for the streams to close
   - MED: Azure test resources are gone: Key Vault `CentazioDevKeyVault` no longer resolves and the `AZ_CLIENT_ID` app in 
     the `picnet/centazio/dev` secret is not in the tenant. Az tests are skipped via `AzTestingEnv.IgnoreIfVaultUnreachable`
     until recreated; then add `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` repo variables (OIDC) to 
@@ -28,10 +36,12 @@
     pending maps saved before the write and/or idempotency keys, plus per-entity write results 
     (Success/Error/MissingTarget/Ignore) with controlled retry of errored entities. `PendingUpdate.Error(...)` exists 
     but is never called. Drive the design from the simulation crash-point tests below
-  - MED: `SelfHost.RegisterHostSpecificServices` creates `InProcessChangesNotifier` with `using var`, which may dispose 
-    (complete the channel of) the notifier as soon as registration returns
-  - MED: `FunctionConfigDefaults.DefaultFirstTimeCheckpoint` is evaluated once at type init, so it does not follow the 
-    current (or test) clock
+  - MED: the stager's cursor is a bare `DateTime after` with a strict `DateStaged > after` 
+    (`StagedEntityRepository.cs`), and a whole read batch shares one `DateStaged`. When more rows share a `DateStaged` 
+    than `Limit` allows, the rows beyond the limit are never returned, and which rows fall inside the limit is 
+    provider defined. Needs a (DateStaged, Id) cursor. The E2E simulation runs with `Limit` 0 so it is not affected
+  - LOW: `ComparingCtlRepository.Invoke` calls `repo1` for both repositories, so it compares a repository with itself 
+    (the class is currently unused)
   - MED: `tests/Centazio.Sample.Tests` calls the real ClickUp/AppSheet apis (and deletes real tasks). Move to simulated 
     systems, keep a small opt-in contract test against the real apis
   - LOW: sample api clients (`ClickUpApi`, `AppSheetApi`) use a `private static HttpClient` and never check the response 
@@ -65,45 +75,41 @@
 - HIGH: simulation testing framework. Goal: unit tests that simulate real environments (api latency, failures, rate 
   limits, crashes, multiple systems syncing over days of simulated time), deterministic and replayable from a seed. 
   Grow `Centazio.Test.Lib/E2E` (CRM/Fin epochs, `RandomSimulation`, `EpochTracker`) rather than start again. Breaking 
-  changes are fine. Phases:
-  - 1. determinism seams (prerequisite):
-    - replace static `UtcDate`/`TestingUtcDate` with an injected `TimeProvider` (`FakeTimeProvider` in tests), per 
-      engine, not process wide. Update the `DateTimeUsageTests` inspection accordingly
-    - remove wall clock waits from the run path: `AsyncUtils.ConditionalDelay`, `Task.Run`/`Task.Delay(1)` in 
-      `FunctionRunnerWithNotificationAdapter`, `InProcessChangesNotifier` background loop, `Synchronous(throttle)`
-    - one seeded random source per simulation (replace static `Rng` and the unseeded `Random` in 
-      `GlobalEnumerableExtensionMethods`), deterministic id generation
-    - in-memory provider factory so a real `CentazioEngine` (DI, integrations, settings) can be built in tests
-    - remove other statics that leak between tests (`FunctionConfigDefaults.ThrowExceptions`, `AzHost.impl`, ...)
-  - 2. simulated time host: evaluates function crons against the simulated clock, runs due functions, dispatches 
+  changes are fine. Determinism seams are done (2026-11-11): time comes from an injected `TimeProvider`, the run path 
+  has no waits, randomness and ids come from the simulation seed, an `InMemoryCentazioEngine` builds a real engine on 
+  the in-memory repos, and `BaseE2ETests` checks that a seed replays identically. Remaining phases:
+  - 1. simulated time host: evaluates function crons against the simulated clock, runs due functions, dispatches 
     func-to-func triggers, runs until quiescent. `RunFor(TimeSpan.FromDays(3))` should take milliseconds. Must support 
     overlapping runs (timer + trigger at once, long running function) to test the running/stuck guards
-  - 3. simulated systems kit: reusable `SimulatedSystem` (in-memory state + endpoints + business rules + a log of every 
+  - 2. simulated systems kit: reusable `SimulatedSystem` (in-memory state + endpoints + business rules + a log of every 
     mutation received) served through an `HttpMessageHandler`, so the real api client code (paging, auth, rate limit 
     handling) is under test. Also a lighter interface level fake for pure function logic tests. Contract tests 
     (opt-in, against sandboxes) to stop fakes drifting from the real apis
-  - 4. fault library, configurable by rate, time window or rule, latency advancing the simulated clock:
+  - 3. fault library, configurable by rate, time window or rule, latency advancing the simulated clock:
     - latency distributions, timeouts, connection resets, 5xx
     - 429 with `Retry-After` and rate limit usage headers
     - applied server side but response lost (the duplicate write case)
     - eventual consistency (written entity not readable for N seconds)
     - data changing while paging, out of order updated timestamps, clock skew between systems
     - malformed and very large responses
-  - 5. crash points: named hooks in the framework (e.g. after api write, before map save; mid batch; during promote 
+  - 4. crash points: named hooks in the framework (e.g. after api write, before map save; mid batch; during promote 
     transaction) where the simulator kills the run, then restarts it. Drives the `WriteFunction` HIGH in core above
-  - 6. invariant based validation, checked after quiescence: systems converge per mapping rules, no external side 
+  - 5. invariant based validation, checked after quiescence: systems converge per mapping rules, no external side 
     effect applied twice, no lost updates, checkpoints monotonic, nothing left `Running`, every error recorded. 
     Randomised runs over many seeds x fault profiles; on failure print the seed and a timeline so it replays exactly
-  - 7. scenario DSL for targeted tests, e.g. 
+  - 6. scenario DSL for targeted tests, e.g. 
     `sim.At(t0).In(Crm).Create(customer); sim.Between(t1, t2).In(Fin).Fault(429, rate: 0.3); sim.RunFor(3.Days())`. 
     Optional: scenarios as csv/excel tables
-  - 8. port the existing E2E CRM/Fin tests onto the framework, including the func-to-func trigger test:
-    - all hosts
+  - 7. port the existing E2E CRM/Fin tests onto the framework, including the func-to-func trigger test:
+    - all hosts. Evaluate emulators before real cloud resources: LocalStack (already used, pinned 4.14.0) for Lambda + 
+      EventBridge, and Azurite / Azure Functions Core Tools / the Service Bus emulator through Testcontainers for the 
+      Az host. Check what each can and cannot run first. The instance `AzHost`/`AwsHost` (2026-11-11) have only been 
+      verified by building and by adapter unit tests, not by a deployed or emulated run
     - func reads csv with instructions 
     - test confirms only correct triggers received 
     - confirm only required operations run
     - simple test that func-to-func triggers are working and working efficiently
-  - 9. use it for the cyca migration (below), cyca production bugs become regression scenarios
+  - 8. use it for the cyca migration (below), cyca production bugs become regression scenarios
 
 - HIGH: migrate `../cyca-piomp` to this version of Centazio. Currently runs on an old vendored copy of Centazio 
   (`infra/centazio*`: sync EF Core over SQL Server, db-first `[Infra]` schema, Service Bus chaining via codegen'd 
