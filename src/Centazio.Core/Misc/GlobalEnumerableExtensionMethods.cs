@@ -2,6 +2,7 @@
 
 public static class GlobalMiscExtensionMethods {
   public static long ToMillis(this DateTime dt) => new DateTimeOffset(dt).ToUnixTimeMilliseconds();
+  public static DateTime UtcNow(this TimeProvider clock) => clock.GetUtcNow().UtcDateTime;
 }
 
 public static class GlobalEnumerableExtensionMethods {

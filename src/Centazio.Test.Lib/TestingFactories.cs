@@ -7,10 +7,13 @@ using Centazio.Core.Stage;
 using Centazio.Core.Write;
 using Centazio.Providers.Aws.Secrets;
 using Centazio.Test.Lib.InMemRepos;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
+  
+  public static FakeTimeProvider Clock() => new(new DateTimeOffset(TestingDefaults.DefaultStartDt));
   
   public static async Task<CentazioSettings> Settings(params List<string> environments) => await Settings<CentazioSettings>(environments);
   public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
