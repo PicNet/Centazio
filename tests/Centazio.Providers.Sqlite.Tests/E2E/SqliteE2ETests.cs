@@ -6,6 +6,7 @@ using Centazio.Providers.EF.Tests.E2E;
 using Centazio.Providers.Sqlite.Ctl;
 using Centazio.Providers.Sqlite.Stage;
 using Centazio.Test.Lib.E2E;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.Sqlite.Tests.E2E;
@@ -33,6 +34,8 @@ public class SqliteSimulationStorage : ISimulationStorage {
     
     string GetNewDbFileConnStr(string repo) {
       var dbfile = $"{TestContext.CurrentContext.Test.Name}_{repo}.db";
+      // a test can run several simulations, pooled (shared cache) connections would still point at the deleted file
+      SqliteConnection.ClearAllPools();
       if (File.Exists(dbfile)) File.Delete(dbfile);
       return $"Data Source={dbfile};Cache=Shared;";
     }

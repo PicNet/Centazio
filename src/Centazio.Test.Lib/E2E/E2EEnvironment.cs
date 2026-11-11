@@ -21,6 +21,7 @@ public class E2EEnvironment(
   private FinApi fin = null!;
   
   private FunctionRunnerWithNotificationAdapter runner = null!;
+  private RecordingFunctionRunner recorder = null!;
   private CrmReadFunction crm_read = null!;
   private CrmPromoteFunction crm_promote = null!;
   private CrmWriteFunction crm_write = null!;
@@ -39,7 +40,8 @@ public class E2EEnvironment(
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
     notifier.Init([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
-    runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings, ctx.Clock, true), notifier);
+    recorder = new RecordingFunctionRunner(new FunctionRunner(ctx.CtlRepo, ctx.Settings, ctx.Clock, true));
+    runner = new FunctionRunnerWithNotificationAdapter(recorder, notifier);
     runner.OnFunctionRunning += (_, _) => ctx.Clock.Tick();
     // the in-process notifier is drained explicitly after each function run (see `RunFuncAndWait`), its background
     //    `Run` loop would process notifications on another thread
@@ -56,14 +58,18 @@ public class E2EEnvironment(
     return true;
   }
 
-  public async Task RunSimulation() {
+  /// <returns>the fingerprint of the simulation: a running hash of its state after each epoch</returns>
+  public async Task<List<string>> RunSimulation() {
     await Initialise();
 
+    var fingerprint = new List<string>();
     for (var epoch = 0; epoch < Int32.MaxValue; epoch++) {
       if (!instructions.HasMoreEpochs(epoch)) break;
       await RunEpoch(epoch);
+      fingerprint.Add(SimulationFingerprint.Next(fingerprint.LastOrDefault() ?? String.Empty, await CaptureState()));
     }
     await SaveCompletedSimluationState();
+    return fingerprint;
 
     async Task SaveCompletedSimluationState() {
       if (!SAVE_SIMULATION_STATE) return;
@@ -111,6 +117,66 @@ public class E2EEnvironment(
       ctx.Clock.Tick();
       await runner.RunFunction(func, triggers);
       if (notifier is InProcessChangesNotifier inproc) await inproc.ProcessPending(runner);
+    }
+  }
+
+  // everything is read through the storage interfaces and sorted, so the result does not depend on store ordering
+  private async Task<object> CaptureState() {
+    var since = TestingDefaults.DefaultStartDt.AddYears(-1);
+    var functions = new List<IRunnableFunction> { crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write };
+    var pairs = new List<(SystemName System, SystemEntityTypeName SystemType, CoreEntityTypeName CoreType, List<SystemEntityId> SystemIds)> {
+      (SimulationConstants.CRM_SYSTEM, SystemEntityTypeName.From<CrmMembershipType>(), CoreEntityTypeName.From<CoreMembershipType>(), crmdb.MembershipTypes.Select(e => e.SystemId).ToList()),
+      (SimulationConstants.CRM_SYSTEM, SystemEntityTypeName.From<CrmCustomer>(), CoreEntityTypeName.From<CoreCustomer>(), crmdb.Customers.Select(e => e.SystemId).ToList()),
+      (SimulationConstants.CRM_SYSTEM, SystemEntityTypeName.From<CrmInvoice>(), CoreEntityTypeName.From<CoreInvoice>(), crmdb.Invoices.Select(e => e.SystemId).ToList()),
+      (SimulationConstants.FIN_SYSTEM, SystemEntityTypeName.From<FinAccount>(), CoreEntityTypeName.From<CoreCustomer>(), findb.Accounts.Select(e => e.SystemId).ToList()),
+      (SimulationConstants.FIN_SYSTEM, SystemEntityTypeName.From<FinInvoice>(), CoreEntityTypeName.From<CoreInvoice>(), findb.Invoices.Select(e => e.SystemId).ToList())
+    };
+    var coretypes = pairs.Select(p => p.CoreType).Distinct().ToList();
+    
+    return new {
+      Runs = recorder.TakeRuns(),
+      Crm = new { MembershipTypes = Sorted(crmdb.MembershipTypes), Customers = Sorted(crmdb.Customers), Invoices = Sorted(crmdb.Invoices) },
+      Fin = new { Accounts = Sorted(findb.Accounts), Invoices = Sorted(findb.Invoices) },
+      Core = await coretypes.Select(CoreEntities).Synchronous(),
+      Staged = await pairs.Select(async p => (await ctx.StageRepository.GetAll(p.System, p.SystemType, since))
+          .Select(s => new { s.Id, s.DateStaged, s.DatePromoted, Checksum = s.StagedEntityChecksum.Value })
+          .OrderBy(s => s.Id.ToString("D"), StringComparer.Ordinal)
+          .ToList()).Synchronous(),
+      States = await functions.Select(FunctionStates).Synchronous(),
+      Changes = await coretypes.Select(async coretype => (await ctx.CtlRepo.GetEntityChanges(coretype, since))
+          .Select(DtoHelpers.ToDto<EntityChange, EntityChange.Dto>)
+          .OrderBy(c => c.ChangeDate).ThenBy(c => Json.Serialize(c), StringComparer.Ordinal)
+          .ToList()).Synchronous(),
+      Maps = await pairs.Select(async p => (await ctx.CtlRepo.GetMapsFromSystemIds(p.System, p.CoreType, p.SystemIds))
+          .Select(DtoHelpers.ToDto<Map.CoreToSysMap, Map.CoreToSysMap.Dto>)
+          .OrderBy(m => m.SystemId, StringComparer.Ordinal)
+          .ToList()).Synchronous()
+    };
+    
+    List<string> Sorted<T>(List<T> sysents) where T : ISystemEntity => sysents
+        .OrderBy(e => e.SystemId.Value, StringComparer.Ordinal)
+        .Select(e => Json.Serialize(e))
+        .ToList();
+    
+    async Task<List<string>> CoreEntities(CoreEntityTypeName coretype) {
+      var coreids = coretype.Value switch {
+        nameof(CoreMembershipType) => (await ctx.CoreStore.GetMembershipTypes()).Select(e => e.CoreId).ToList(),
+        nameof(CoreCustomer) => (await ctx.CoreStore.GetCustomers()).Select(e => e.CoreId).ToList(),
+        _ => (await ctx.CoreStore.GetInvoices()).Select(e => e.CoreId).ToList()
+      };
+      return (await ctx.CoreStore.GetExistingEntities(coretype, coreids))
+          .Select(e => Json.Serialize(e.ToDtos()))
+          .Order(StringComparer.Ordinal)
+          .ToList();
+    }
+    
+    async Task<object> FunctionStates(IRunnableFunction func) {
+      var system = await ctx.CtlRepo.GetSystemState(func.System, func.Stage) ?? throw new Exception();
+      var objects = await func.Config.Operations.Select(async op => await ctx.CtlRepo.GetObjectState(system, op.Object)).Synchronous();
+      return new { 
+        System = DtoHelpers.ToDto<SystemState, SystemState.Dto>(system), 
+        Objects = objects.Select(o => o is null ? null : DtoHelpers.ToDto<ObjectState, ObjectState.Dto>(o)).ToList() 
+      };
     }
   }
 
