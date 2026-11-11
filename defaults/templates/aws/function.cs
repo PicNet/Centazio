@@ -11,15 +11,14 @@ using Serilog;
 
 namespace {{it.FunctionNamespace}}.Aws;
 
-public class {{it.ClassName}}Handler : IAwsFunctionHandler {
+public class {{it.ClassName}}Handler(AwsHost host) : IAwsFunctionHandler {
 
   public async Task<string> Handle(ILambdaContext context) {
-    var start = UtcDate.UtcNow;
+    var start = TimeProvider.System.GetTimestamp();
     Log.Information("{{it.ClassName}} running");
     try {
-      await AwsHost.Init({{it.Environments}}, this, typeof({{it.ClassName}}));
-      await AwsHost.RunFunction([new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]);
+      await host.RunFunction([new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]);
       return $"{{it.ClassName}} executed successfully";
-    } finally { Log.Information($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
+    } finally { Log.Information($"{{it.ClassName}} completed, took {TimeProvider.System.GetElapsedTime(start).TotalSeconds:N0}s"); }
   }
 }

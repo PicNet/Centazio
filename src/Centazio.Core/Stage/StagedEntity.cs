@@ -5,7 +5,7 @@ namespace Centazio.Core.Stage;
 
 public record StagedEntity {
   
-  public static StagedEntity Create(SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum) => new(Guid.CreateVersion7(), system, systype, staged, data, checksum);
+  public static StagedEntity Create(SystemName system, SystemEntityTypeName systype, DateTime staged, ValidString data, StagedEntityChecksum checksum, Guid id) => new(id, system, systype, staged, data, checksum);
   
   public StagedEntity Promote(DateTime promoted) => this with { DatePromoted = promoted };
   public StagedEntity Ignore(ValidString reason) => this with { IgnoreReason = reason };

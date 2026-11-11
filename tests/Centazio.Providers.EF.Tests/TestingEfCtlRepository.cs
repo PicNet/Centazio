@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF.Tests;
 
-public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractEFCtlRepository(getdb), ITestingCtlRepository {
+public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, TimeProvider clock) : AbstractEFCtlRepository(getdb, clock), ITestingCtlRepository {
 
   public async Task<List<Map.CoreToSysMap>> GetAllMaps() => 
       await UseDb(async db => 
@@ -27,7 +27,7 @@ public class TestingEfCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) 
 
 }
 
-public class TestingEfCtlSimulationRepository(EpochTracker epoch, Func<AbstractCtlRepositoryDbContext> getdb) : TestingEfCtlRepository(getdb) {
+public class TestingEfCtlSimulationRepository(EpochTracker epoch, Func<AbstractCtlRepositoryDbContext> getdb, TimeProvider clock) : TestingEfCtlRepository(getdb, clock) {
   
   
   protected override Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {

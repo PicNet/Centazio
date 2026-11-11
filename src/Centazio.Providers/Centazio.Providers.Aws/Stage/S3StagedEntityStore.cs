@@ -8,8 +8,8 @@ using Serilog;
 
 namespace Centazio.Providers.Aws.Stage;
 
-public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum) 
-    : AbstractStagedEntityRepository(limit, checksum) {
+public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) 
+    : AbstractStagedEntityRepository(limit, checksum, clock, ids) {
 
   internal const string DATE_PROMOTED_META_KEY = "x-amz-meta-date-promoted";
   internal const string IGNORE_META_KEY = "x-amz-meta-ignore";
@@ -56,6 +56,7 @@ public class S3AwsStagedEntityRepository(IAmazonS3 client, string bucket, int li
           .ChunkedSynchronousCall(5);
     var notignored = objs
           .Where(r => r.Metadata[IGNORE_META_KEY] is null && (incpromoted || r.Metadata[DATE_PROMOTED_META_KEY] is null))
+          .OrderBy(r => AwsStagedEntityRepositoryHelpers.ParseS3Key(r.Key).DateStaged)
           .Take(Limit)
           .ToList();
     return (await Task.WhenAll(notignored.Select(r => r.FromS3Response()))).OrderBy(se => se.DateStaged).ToList();

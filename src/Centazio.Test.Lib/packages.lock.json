@@ -177,7 +177,7 @@
           "AWSSDK.SecretsManager": "[4.0.3.1, )",
           "AWSSDK.SecretsManager.Caching": "[2.0.0, )",
           "Amazon.Extensions.Configuration.SystemsManager": "[7.0.1, )",
-          "Centazio.Core": "[0.2.0, )"
+          "Centazio.Core": "[0.3.0, )"
         }
       },
       "Amazon.Extensions.Configuration.SystemsManager": {

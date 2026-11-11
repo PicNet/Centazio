@@ -1,14 +1,24 @@
 ﻿using Centazio.Core.Settings;
 using Centazio.Core.Stage;
+using Microsoft.Extensions.Time.Testing;
 using Serilog;
 using Serilog.Events;
-using SC = Centazio.Test.Lib.E2E.SimulationConstants;
 
 namespace Centazio.Test.Lib.E2E;
 
+/// <summary>
+/// Holds everything a replay of a simulation depends on: the seed, the clock, the random source and the id
+/// generator.  Two simulations with the same seed and storage type produce the same results.
+/// </summary>
 public class SimulationCtx : IAsyncDisposable {
   
   private readonly ISimulationStorage storage;
+  
+  public int Seed { get; }
+  public FakeTimeProvider Clock { get; }
+  public SimulationRandom Rng { get; }
+  public IGuidGenerator Ids { get; }
+  public bool Silent { get; }
   
   public ICtlRepository CtlRepo { get; set; } = null!;
   public IStagedEntityRepository StageRepository { get; set; } = null!;
@@ -19,9 +29,11 @@ public class SimulationCtx : IAsyncDisposable {
   public EpochTracker Epoch { get; set; }
   public EntityConverter Converter { get; set; } = null!;
 
-  public SimulationCtx(ISimulationStorage storage, CentazioSettings settings) {
+  public SimulationCtx(ISimulationStorage storage, CentazioSettings settings, int seed, bool silent) {
     this.storage = storage;
     
+    var random = new Random(seed);
+    (Seed, Clock, Rng, Ids, Silent) = (seed, F.Clock(), new SimulationRandom(random), new SeededGuidGenerator(random), silent);
     Settings = settings;
     ChecksumAlg = new Sha256ChecksumAlgorithm();
     Epoch = new(this);
@@ -34,12 +46,12 @@ public class SimulationCtx : IAsyncDisposable {
     StageRepository = storage.StageRepository;
     CoreStore = storage.CoreStore;
     
-    Converter = new(CtlRepo);
+    Converter = new(CtlRepo, Clock);
   }
   
  
   public void Debug(string message, List<string>? details = null) {
-    if (SC.SILENCE_SIMULATION) return;
+    if (Silent) return;
     if (LogInitialiser.LevelSwitch.MinimumLevel < LogEventLevel.Fatal) Log.Information(message + DetailsToString(details));
     else DevelDebug.WriteLine(message);
   }

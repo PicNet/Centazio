@@ -5,12 +5,15 @@ namespace Centazio.Core.Write;
 
 public delegate ISystemEntity ConvertCoreToSystemEntityForWritingHandler<E>(SystemEntityId systemid, E coreent) where E : ICoreEntity;
 
-public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, ctl) {
+public abstract class WriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl, TimeProvider clock) : 
+    AbstractFunction<WriteOperationConfig>(system, LifecycleStage.Defaults.Write, ctl, clock) {
 
   public override async Task<OperationResult> RunOperation(OperationStateAndConfig<WriteOperationConfig> op) {
     var coretype = op.State.Object.ToCoreEntityTypeName;
-    var pending = await core.GetEntitiesToWrite(op.State.System, coretype, op.Checkpoint);
+    // core storage does not define an order, and target systems assign their ids in the order entities are written
+    var pending = (await core.GetEntitiesToWrite(op.State.System, coretype, op.Checkpoint))
+        .OrderBy(e => e.CoreEntity.CoreId.Value, StringComparer.Ordinal)
+        .ToList();
     var (tocreate, toupdate) = await ctl.GetNewAndExistingMapsFromCores(op.State.System, coretype, pending.Select(t => t.CoreEntity).ToList());
     if (!tocreate.Any() && !toupdate.Any()) return new SuccessWriteOperationResult([], []);
     

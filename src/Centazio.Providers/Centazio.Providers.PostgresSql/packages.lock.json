@@ -135,7 +135,7 @@
       "centazio.providers.ef": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.2.0, )",
+          "Centazio.Core": "[0.3.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.0, )"
         }

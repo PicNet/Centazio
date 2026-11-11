@@ -26,8 +26,8 @@ public record EntityChange {
     ChangeDetails = changedetails;
   }
 
-  public static EntityChange Create(CoreEntityTypeName coretype, CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid, ICoreEntity? old, ICoreEntity @new) =>
-      new (coretype, coreid, system, systype, sysid, UtcDate.UtcNow, old is null ? EChangeType.Create : EChangeType.Update, GetChangesStr(old, @new));
+  public static EntityChange Create(CoreEntityTypeName coretype, CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid, ICoreEntity? old, ICoreEntity @new, DateTime now) =>
+      new (coretype, coreid, system, systype, sysid, now, old is null ? EChangeType.Create : EChangeType.Update, GetChangesStr(old, @new));
 
   private static string GetChangesStr(ICoreEntity? old, ICoreEntity @new) => 
       old is null ? String.Empty : Json.Serialize(GetChanges(old, @new));

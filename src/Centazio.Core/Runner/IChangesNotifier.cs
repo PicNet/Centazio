@@ -10,10 +10,6 @@ public interface IChangesNotifier {
   Task Setup(IRunnableFunction func);
 }
 
-public interface IMonitorableChangesNotifier : IChangesNotifier {
-  bool Running { get; }
-}
-
 public static class NotifierUtils {
   public static List<FunctionBeingTriggered> GetFunctionsThatAreTriggeredByTriggers(List<ObjectChangeTrigger> triggers, List<IRunnableFunction> functions) {
     var totrigger = new Dictionary<IRunnableFunction, FunctionBeingTriggered>();

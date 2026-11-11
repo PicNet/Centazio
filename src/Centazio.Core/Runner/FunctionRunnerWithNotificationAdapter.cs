@@ -2,37 +2,18 @@
 
 public class FunctionRunnerWithNotificationAdapter(IFunctionRunner runner, IChangesNotifier notifier) : IFunctionRunner {
   
-  private int trackerid;
-  private bool running;
-  public bool Running => running 
-      || ((notifier as IMonitorableChangesNotifier)?.Running ?? false)
-      || runner.Running;
   public event EventHandler<FunctionRunningEventArgs>? OnFunctionRunning;
   
   public async Task<FunctionRunResults> RunFunction(IRunnableFunction func, List<FunctionTrigger> triggers) {
-    var thisid = ++trackerid;
-    running = true;
     await notifier.Setup(func);
 
     OnFunctionRunning?.Invoke(this, new FunctionRunningEventArgs(func.GetType(), triggers));
   
+    // the inner runner has completed and saved the function state, so dependants triggered by this
+    //    notification always start after this function has finished
     var results = await runner.RunFunction(func, triggers);
-    var wcounts = results.OpResults.Where(r => r.Result.ChangedCount > 0).ToList();
-    if (!wcounts.Any()) {
-      if (thisid == trackerid) running = false;
-      running = false;
-      return results;
-    }
-    
-    await Task.Run(async () => {
-      // notify in bg thread to ensre the current running function completes before new functions start
-      try {
-        await Task.Delay(1);
-        await notifier.Notify(func.System, func.Stage, wcounts.Select(c => c.Object).Distinct().ToList());
-      } finally {
-        if (thisid == trackerid) running = false;
-      }
-    });
+    var changed = results.OpResults.Where(r => r.Result.ChangedCount > 0).Select(c => c.Object).Distinct().ToList();
+    if (changed.Any()) await notifier.Notify(func.System, func.Stage, changed);
     return results;
   }
   

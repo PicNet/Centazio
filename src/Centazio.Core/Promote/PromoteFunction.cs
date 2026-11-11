@@ -4,11 +4,11 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : 
-    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, ctl) {
+public abstract class PromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, TimeProvider clock) : 
+    AbstractFunction<PromoteOperationConfig>(system, LifecycleStage.Defaults.Promote, ctl, clock) {
 
   public override async Task<OperationResult> RunOperation(OperationStateAndConfig<PromoteOperationConfig> op) {
-    var steps = new PromotionSteps(core, ctl, op);
+    var steps = new PromotionSteps(core, ctl, op, Clock);
     await steps.LoadPendingStagedEntities(stage);
     await steps.LoadExistingCoreEntities();
     await steps.ApplyChangesToCoreEntities();

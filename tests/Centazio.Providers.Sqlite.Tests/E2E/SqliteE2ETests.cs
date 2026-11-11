@@ -21,18 +21,14 @@ public class SqliteSimulationStorage : ISimulationStorage {
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
-  
-  // sqlite is terrible with multithreading and needs a delay during the simulation when using an async notifier
-  public int SimulationPostFunctionRunDelayMs => 500;  
-
   public async Task Initialise(SimulationCtx ctx) {
     var (ctl_db, staging_db, core_db) = (GetNewDbFileConnStr("ctl"), GetNewDbFileConnStr("staging"), GetNewDbFileConnStr("core"));
     
     var settings = await F.Settings(); 
     var ctlsetts = settings.CtlRepository with { ConnectionString = ctl_db };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = staging_db };
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(ctlsetts)).Initialise();
-    StageRepository = await new EfStagedEntityRepository(new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(stgsetts)), true).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqliteCtlRepositoryDbContext(ctlsetts), ctx.Clock).Initialise();
+    StageRepository = await new EfStagedEntityRepository(new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqliteStagedEntityContext(stgsetts), ctx.Clock, ctx.Ids), true).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(() => new SqliteSimulationDbContext(core_db), ctx.Epoch).Initialise();
     
     string GetNewDbFileConnStr(string repo) {

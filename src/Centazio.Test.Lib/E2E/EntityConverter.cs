@@ -1,6 +1,6 @@
 ﻿namespace Centazio.Test.Lib.E2E;
 
-public class EntityConverter(ICtlRepository ctl) {
+public class EntityConverter(ICtlRepository ctl, TimeProvider clock) {
   
   private int ceidcounter;
   private readonly Dictionary<SystemEntityId, CoreEntityId> systocoreids = [];
@@ -44,15 +44,15 @@ public class EntityConverter(ICtlRepository ctl) {
           ? new(NewCoreEntityId<CoreMembershipType>(SimulationConstants.CRM_SYSTEM, m.SystemId), m.Name)
           : existing with { Name = m.Name };
 
-  public CrmMembershipType CoreMembershipTypeToCrmMembershipType(SystemEntityId systemid, CoreMembershipType m) => new(systemid, UtcDate.UtcNow, m.Name);
-  public CrmCustomer CoreCustomerToCrmCustomer(SystemEntityId systemid, CoreCustomer c) => new(systemid, UtcDate.UtcNow, coretosysids[c.MembershipCoreId], c.Name);
+  public CrmMembershipType CoreMembershipTypeToCrmMembershipType(SystemEntityId systemid, CoreMembershipType m) => new(systemid, clock.UtcNow(), m.Name);
+  public CrmCustomer CoreCustomerToCrmCustomer(SystemEntityId systemid, CoreCustomer c) => new(systemid, clock.UtcNow(), coretosysids[c.MembershipCoreId], c.Name);
 
   public CrmInvoice CoreInvoiceToCrmInvoice(SystemEntityId systemid, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> custmaps) => 
-      new(systemid, UtcDate.UtcNow, custmaps[i.CustomerCoreId], i.Cents, i.DueDate, i.PaidDate);
+      new(systemid, clock.UtcNow(), custmaps[i.CustomerCoreId], i.Cents, i.DueDate, i.PaidDate);
   
-  public FinAccount CoreCustomerToFinAccount(SystemEntityId systemid, CoreCustomer c) => new(systemid, c.Name, UtcDate.UtcNow);
+  public FinAccount CoreCustomerToFinAccount(SystemEntityId systemid, CoreCustomer c) => new(systemid, c.Name, clock.UtcNow());
   
   public FinInvoice CoreInvoiceToFinInvoice(SystemEntityId systemid, CoreInvoice i, Dictionary<CoreEntityId, SystemEntityId> accmaps) => 
-      new(systemid, accmaps[i.CustomerCoreId], i.Cents / 100.0m, UtcDate.UtcNow, i.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), i.PaidDate);
+      new(systemid, accmaps[i.CustomerCoreId], i.Cents / 100.0m, clock.UtcNow(), i.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), i.PaidDate);
   
 }

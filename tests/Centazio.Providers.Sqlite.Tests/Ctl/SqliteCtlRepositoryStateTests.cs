@@ -6,8 +6,8 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Providers.Sqlite.Tests.Ctl;
 
 public class SqliteCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
-  protected override async Task<ICtlRepository> GetRepository() {
+  protected override async Task<ICtlRepository> GetRepository(TimeProvider clock) {
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = SqliteTestConstants.DEFAULT_CONNSTR };
-    return await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(settings)).Initialise();
+    return await new TestingEfCtlRepository(() => new SqliteCtlRepositoryDbContext(settings), clock).Initialise();
   }
 }

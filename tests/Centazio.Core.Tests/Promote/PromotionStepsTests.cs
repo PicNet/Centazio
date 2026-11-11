@@ -8,16 +8,17 @@ namespace Centazio.Core.Tests.Promote;
 
 public class PromotionStepsTests {
 
-  private readonly StagedEntity DUMMY = new(Guid.Empty, C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new("{}"), new("{}"));
+  private readonly FakeTimeProvider clock = F.Clock();
+  private readonly StagedEntity DUMMY = new(Guid.Empty, C.System1Name, C.SystemEntityName, TestingDefaults.DefaultStartDt, new("{}"), new("{}"));
   
   [Test] public void Test_IgnoreMultipleUpdatesToSameEntity() {
     var steps = GetSteps(C.System1Name);
     var id = Guid.NewGuid();
     steps.bags = [
-      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N1", "N1", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N2", "N2", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N3", "N3", DateOnly.MinValue, TestingUtcDate.DoTick()) },
-      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(Guid.NewGuid(), "N4", "N4", DateOnly.MinValue, TestingUtcDate.DoTick()) }
+      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N1", "N1", DateOnly.MinValue, clock.Tick()) },
+      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N2", "N2", DateOnly.MinValue, clock.Tick()) },
+      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(id, "N3", "N3", DateOnly.MinValue, clock.Tick()) },
+      new(DUMMY, typeof(System1Entity)) { SystemEntity = new System1Entity(Guid.NewGuid(), "N4", "N4", DateOnly.MinValue, clock.Tick()) }
     ];
     
     steps.IgnoreUpdatesToSameEntityInBatch();
@@ -28,16 +29,16 @@ public class PromotionStepsTests {
   [Test] public void Test_IgnoreEntitiesBouncingBack() {
     var (steps1, steps2) = (GetSteps(C.System1Name), GetSteps(C.System2Name));
     steps1.bags = [
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), clock.UtcNow()), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), clock.UtcNow()), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) }
     ];
     steps2.bags = [
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum) },
-      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), UtcDate.UtcNow), Helpers.TestingCoreEntityChecksum) }
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("1"), new CoreEntity(new("1"), "1", "1", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("3"), new CoreEntity2(new("3"), clock.UtcNow()), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new("2"), new CoreEntity(new("2"), "2", "2", DateOnly.MinValue), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) },
+      new(DUMMY, typeof(System1Entity)) { UpdatedCoreEntityAndMeta = CoreEntityAndMeta.Create(C.System2Name, C.SystemEntityName, new("4"), new CoreEntity2(new("4"), clock.UtcNow()), Helpers.TestingCoreEntityChecksum, clock.UtcNow()) }
     ];
     
     steps1.IgnoreEntitiesBouncingBack(); steps2.IgnoreEntitiesBouncingBack();
@@ -48,12 +49,12 @@ public class PromotionStepsTests {
 
   
   private PromotionSteps GetSteps(SystemName system) {
-    return new PromotionSteps(F.CoreRepo(), F.CtlRepo(), GetOpConfig(system));
+    return new PromotionSteps(F.CoreRepo(), F.CtlRepo(clock), GetOpConfig(system), clock);
   }
   
   private OperationStateAndConfig<PromoteOperationConfig> GetOpConfig(SystemName system) {
     var opconf = new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(system, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
+        ObjectState.Create(system, LifecycleStage.Defaults.Promote, C.CoreEntityName, clock.UtcNow(), clock.UtcNow()),
         F.EmptyFunctionConfig(),
         new PromoteOperationConfig(system, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, PromoteOperationRunnerTests.ErrorConvertingToCore), DateTime.MinValue);
     return opconf;

@@ -6,9 +6,9 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Providers.PostgresSql.Tests.Ctl;
 
 public class PostgresSqlCtlRepositoryStateTests : BaseCtlRepositoryStateTests {
-  protected override async Task<ICtlRepository> GetRepository() {
+  protected override async Task<ICtlRepository> GetRepository(TimeProvider clock) {
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = await new PostgresSqlConnection().Init() };
-    return await new TestingEfCtlRepository(() => new PostgresSqlCtlRepositoryDbContext(settings)).Initialise();
+    return await new TestingEfCtlRepository(() => new PostgresSqlCtlRepositoryDbContext(settings), clock).Initialise();
   }
 
 }

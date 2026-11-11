@@ -20,7 +20,7 @@ namespace Centazio.Providers.Aws.Stage;
 /// Batch inserting is done by first querying the GSI for all duplicate `System|Object` + `Checksums`.
 ///    We then filter these out before doing a BatchWriteItem operation
 /// </summary>
-public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
+public class DynamoAwsStagedEntityRepository(IAmazonDynamoDB client, string table, int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) : AbstractStagedEntityRepository(limit, checksum, clock, ids) {
   
   protected IAmazonDynamoDB Client => client;
   

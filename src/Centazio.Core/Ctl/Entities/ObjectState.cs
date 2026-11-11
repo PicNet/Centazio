@@ -5,38 +5,38 @@ namespace Centazio.Core.Ctl.Entities;
 
 public record ObjectState : ILoggable {
   
-  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName name, DateTime nextcheckpoint, bool active = true) => new(system, stage, name, nextcheckpoint, active);
+  public static ObjectState Create(SystemName system, LifecycleStage stage, ObjectName name, DateTime nextcheckpoint, DateTime now, bool active = true) => new(system, stage, name, nextcheckpoint, active, now);
   
-  public ObjectState Success(DateTime nextcheckpoint, DateTime start, EOperationAbortVote abort, string message) {
+  public ObjectState Success(DateTime nextcheckpoint, DateTime start, EOperationAbortVote abort, string message, DateTime now) {
     return this with {
-      DateUpdated = UtcDate.UtcNow,
+      DateUpdated = now,
       NextCheckpoint = nextcheckpoint,
       
       LastStart = start,
-      LastCompleted = UtcDate.UtcNow,
+      LastCompleted = now,
       LastResult = EOperationResult.Success,
       LastAbortVote = abort,
       LastRunMessage = message,
       LastSuccessStart = start,
-      LastSuccessCompleted = UtcDate.UtcNow
+      LastSuccessCompleted = now
     };
   }
-  public ObjectState Error(DateTime start, EOperationAbortVote abort, string message, string? exception) {
+  public ObjectState Error(DateTime start, EOperationAbortVote abort, string message, string? exception, DateTime now) {
     return this with {
-      DateUpdated = UtcDate.UtcNow,
+      DateUpdated = now,
       // NextCheckpoint is not changed as the error needs to be managed before moving on
       
       LastStart = start,
-      LastCompleted = UtcDate.UtcNow,
+      LastCompleted = now,
       LastResult = EOperationResult.Error,
       LastAbortVote = abort,
       LastRunMessage = message,
       LastRunException = exception
     };
   }
-  public ObjectState SetActive(bool active) {
+  public ObjectState SetActive(bool active, DateTime now) {
     return this with {
-      DateUpdated = UtcDate.UtcNow,
+      DateUpdated = now,
       Active = active
     };
   }
@@ -60,7 +60,7 @@ public record ObjectState : ILoggable {
   [MaxLength(1024)] public string? LastRunMessage { get; internal init; } 
   [MaxLength(4000)] public string? LastRunException { get; internal init; }
   
-  internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, DateTime nextcheckpoint, bool active) {
+  internal ObjectState(SystemName system, LifecycleStage stage, ObjectName obj, DateTime nextcheckpoint, bool active, DateTime now) {
     System = system;
     Stage = stage;
     Object = obj;
@@ -68,7 +68,7 @@ public record ObjectState : ILoggable {
     ObjectIsSystemEntityType = obj is SystemEntityTypeName;
     NextCheckpoint = nextcheckpoint;
     Active = active;
-    DateCreated = DateUpdated = UtcDate.UtcNow;
+    DateCreated = DateUpdated = now;
   }
   
   public record Dto : IDto<ObjectState> {
@@ -96,11 +96,11 @@ public record ObjectState : ILoggable {
         new(Stage ?? throw new ArgumentNullException(nameof(Stage))),
         SafeObjectName(),
         NextCheckpoint ?? throw new ArgumentNullException(nameof(NextCheckpoint)),
-        Active ?? throw new ArgumentNullException(nameof(Active))) {
+        Active ?? throw new ArgumentNullException(nameof(Active)),
+        DateCreated ?? throw new ArgumentNullException(nameof(DateCreated))) {
       
       LastResult =  Enum.Parse<EOperationResult>(LastResult ?? throw new ArgumentNullException(nameof(LastResult))),
       LastAbortVote = Enum.Parse<EOperationAbortVote>(LastAbortVote ?? throw new ArgumentNullException(nameof(LastAbortVote))),
-      DateCreated = DateCreated ?? throw new ArgumentNullException(nameof(DateCreated)),
       DateUpdated = DateUpdated ?? throw new ArgumentNullException(nameof(DateUpdated)),
       
       LastStart = LastStart,

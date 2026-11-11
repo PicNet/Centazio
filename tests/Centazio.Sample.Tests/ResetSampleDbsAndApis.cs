@@ -1,4 +1,5 @@
 ﻿using Centazio.Core.Misc;
+using Centazio.Test.Lib;
 using Centazio.Sample.AppSheet;
 using Centazio.Sample.ClickUp;
 using Centazio.Sample.Shared;
@@ -23,7 +24,7 @@ public class ResetSampleDbsAndApis {
   }
 
   private static async Task DeleteClickUpTasks(ClickUpApi clickup) {
-    var tasks = (await clickup.GetTasksAfter(UtcDate.UtcNow.AddYears(-10)))
+    var tasks = (await clickup.GetTasksAfter(TestingDefaults.DefaultStartDt.AddYears(-10)))
         .Select(json => Json.Deserialize<ClickUpTask>(json.Json))
         .Where(t => t.id != ClickUpApiTests.TEST_TASK_ID)
         .ToList();

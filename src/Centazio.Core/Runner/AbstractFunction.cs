@@ -13,7 +13,8 @@ public interface IRunnableFunction : IDisposable {
   bool Running { get; }
   FunctionConfig Config { get; }
   
-  Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults);
+  // whether exceptions are thrown or logged and returned as error results, resolved by the runner from `FunctionConfig.ThrowExceptions` and the host default
+  Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggers, List<OpResultAndObject> runningresults, bool throws);
   
   bool IsTriggeredBy(ObjectChangeTrigger trigger);
   
@@ -36,48 +37,51 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
   public bool Running { get; private set; }
   
   protected readonly ICtlRepository ctl;
+  protected TimeProvider Clock { get; }
+  protected DateTime UtcNow => Clock.UtcNow();
   protected DateTime FunctionStartTime { get; private set; }
   
   private readonly List<ObjectChangeTrigger> triggers;
   
-  protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl) {
-    (System, Stage, this.ctl) = (system, stage, ctl);
+  protected AbstractFunction(SystemName system, LifecycleStage stage, ICtlRepository ctl, TimeProvider clock) {
+    (System, Stage, this.ctl, Clock) = (system, stage, ctl, clock);
     Config = GetFunctionConfiguration();
     triggers = Config.Operations.SelectMany(op => op.Triggers).Distinct().ToList();
   }
 
   protected abstract FunctionConfig GetFunctionConfiguration();
 
-  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults) {
+  public virtual async Task RunFunctionOperations(SystemState sys, List<FunctionTrigger> triggeredby, List<OpResultAndObject> runningresults, bool throws) {
     if (Running) throw new Exception("function is already running");
-    (FunctionStartTime, Running) = (UtcDate.UtcNow, true);
+    (FunctionStartTime, Running) = (UtcNow, true);
     try {
-      var opstates = await LoadOperationsStates(Config, sys, ctl);
-      var readyops = GetReadyOperations(opstates, triggeredby);
-      await RunOperationsTillAbort(readyops, runningresults, Config.ThrowExceptions);
+      var opstates = await LoadOperationsStates(Config, sys, ctl, FunctionStartTime);
+      var readyops = GetReadyOperations(opstates, triggeredby, FunctionStartTime);
+      await RunOperationsTillAbort(readyops, runningresults, throws);
     } finally { Running = false; }
   }
   
   public bool IsTriggeredBy(ObjectChangeTrigger trigger) => 
       triggers.Any(functrigger => functrigger.Matches(trigger));
 
-  internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig conf, SystemState system, ICtlRepository ctl) {
+  // used to resolve the first time checkpoint when neither the operation nor the function configure one, defaults to one month before `now`
+  internal static async Task<List<OperationStateAndConfig<C>>> LoadOperationsStates(FunctionConfig conf, SystemState system, ICtlRepository ctl, DateTime now) {
     return (await conf.Operations
             .Cast<C>()
             .Select(async op => {
-      var state = await ctl.GetOrCreateObjectState(system, op.Object, op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint);
+      var state = await ctl.GetOrCreateObjectState(system, op.Object, op.FirstTimeCheckpoint ?? conf.DefaultFirstTimeCheckpoint ?? now.AddMonths(-1));
       return new OperationStateAndConfig<C>(state, conf, op, state.NextCheckpoint);
     }).Synchronous())
     .Where(op => op.State.Active)
     .ToList();
   }
 
-  internal static List<OperationStateAndConfig<C>> GetReadyOperations(List<OperationStateAndConfig<C>> states, List<FunctionTrigger> triggeredby) {
+  internal static List<OperationStateAndConfig<C>> GetReadyOperations(List<OperationStateAndConfig<C>> states, List<FunctionTrigger> triggeredby, DateTime now) {
     bool IsOperationReady(OperationStateAndConfig<C> op) {
       var objtriggers = triggeredby.OfType<ObjectChangeTrigger>().ToList();
       if (objtriggers.Any() && !op.OpConfig.ShouldRunBasedOnTriggers(objtriggers)) return false;
       var next = op.OpConfig.Cron.Value.GetNextOccurrence(op.State.LastCompleted ?? DateTime.MinValue.ToUniversalTime());
-      return next <= UtcDate.UtcNow;
+      return next <= now;
     }
     return states.Where(IsOperationReady).ToList();
   }
@@ -88,13 +92,13 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
         .Synchronous(r => r.Result.AbortVote == EOperationAbortVote.Abort);
 
     async Task<OpResultAndObject> RunAndSaveOp(OperationStateAndConfig<C> op) {
-      var opstart = UtcDate.UtcNow;
+      var opstart = UtcNow;
       Log.Information("operation started - [{@System}/{@Stage}/{@Object}] checkpoint[{@Checkpoint}]", op.State.System, op.State.Stage, op.State.Object, op.Checkpoint);
       
       var result = await RunOp(op);
       await SaveOp(op, opstart, result);
       
-      Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcDate.UtcNow - opstart).TotalMilliseconds, result.Result.Message);
+      Log.Information("operation completed - [{@System}/{@Stage}/{@Object}] took[{@Took:0}ms] - {@Result}", op.State.System, op.State.Stage, op.State.Object, (UtcNow - opstart).TotalMilliseconds, result.Result.Message);
       
       return result;
     }
@@ -119,8 +123,8 @@ public abstract class AbstractFunction<C> : IRunnableFunction where C : Operatio
       var res = result.Result;
       var message = $"operation [{op.State.System}/{op.State.Stage}/{op.State.Object}] completed [{res.Result}] message: {res.Message}";
       var newstate = res.Result == EOperationResult.Success ? 
-          op.State.Success(res.NextCheckpoint ?? start, start, res.AbortVote, message) :
-          op.State.Error(start, res.AbortVote, message, res.Exception?.ToString());
+          op.State.Success(res.NextCheckpoint ?? start, start, res.AbortVote, message, UtcNow) :
+          op.State.Error(start, res.AbortVote, message, res.Exception?.ToString(), UtcNow);
       await ctl.SaveObjectState(newstate);
     }
   }

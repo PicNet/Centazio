@@ -4,7 +4,7 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, AppSheetApi api) : ReadFunction(AppSheetConstants.AppSheetSystemName, stager, ctl) {
+public class AppSheetReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, TimeProvider clock, AppSheetApi api) : ReadFunction(AppSheetConstants.AppSheetSystemName, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(AppSheetConstants.AppSheetTaskEntityName, CronExpressionsHelper.EveryXSeconds(10), GetSheetTasks)

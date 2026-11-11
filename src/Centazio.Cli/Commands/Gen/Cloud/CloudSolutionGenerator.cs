@@ -71,7 +71,7 @@ public abstract class CloudSolutionGenerator(
   
   private async Task AddCentazioProvidersAndRelatedNugetsToProject(Dictionary<string, bool> added) {
     var providers = new [] { settings.StagedEntityRepository.Provider, settings.CtlRepository.Provider }.Distinct().ToList();
-    var provasses = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov).Assembly).Distinct().ToList();
+    var provasses = providers.Select(prov => IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<IStagedEntityRepository>>(prov, ReflectionUtils.GetProviderAssemblies()).Assembly).Distinct().ToList();
     
     provasses.ForEach(ass => AddReferenceIfRequired(ass, added));
     

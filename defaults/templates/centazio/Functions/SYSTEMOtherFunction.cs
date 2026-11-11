@@ -3,7 +3,7 @@ using Centazio.Core.Runner;
 
 namespace {{ it.Namespace }};
 
-public class {{ it.SystemName }}OtherFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, new LifecycleStage("Other"), ctl) {
+public class {{ it.SystemName }}OtherFunction(ICtlRepository ctl, TimeProvider clock) : AbstractFunction<EmptyFunctionOperationConfig>({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, new LifecycleStage("Other"), ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof({{ it.SystemName }}OtherFunction))

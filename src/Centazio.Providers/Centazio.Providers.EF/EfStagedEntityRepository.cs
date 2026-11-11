@@ -9,10 +9,12 @@ namespace Centazio.Providers.EF;
 public record EfStagedEntityRepositoryOptions(
     int Limit, 
     Func<string, StagedEntityChecksum> StagedEntityDataChecksum,
-    Func<AbstractStagedEntityRepositoryDbContext> Db);
+    Func<AbstractStagedEntityRepositoryDbContext> Db,
+    TimeProvider Clock,
+    IGuidGenerator Ids);
 
 public sealed class EfStagedEntityRepository(EfStagedEntityRepositoryOptions opts, bool createschema) : 
-    AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum) {
+    AbstractStagedEntityRepository(opts.Limit, opts.StagedEntityDataChecksum, opts.Clock, opts.Ids) {
   
   protected override async Task<List<StagedEntityChecksum>> GetDuplicateChecksums(SystemName system, SystemEntityTypeName systype, List<StagedEntityChecksum> newchecksums) {
     await using var db = opts.Db();
@@ -42,8 +44,9 @@ public sealed class EfStagedEntityRepository(EfStagedEntityRepositoryOptions opt
     await using var db = opts.Db();
     var query = Query(system, systype, db).Where(e => e.DateStaged > after && String.IsNullOrEmpty(e.IgnoreReason));
     if (!incpromoted) query = query.Where(e => !e.DatePromoted.HasValue);
+    query = query.OrderBy(e => e.DateStaged);
     if (Limit is > 0 and < Int32.MaxValue) query = query.Take(Limit);
-    return query.OrderBy(e => e.DateStaged).ToList().Select(dto => dto.ToBase()).ToList();
+    return (await query.ToListAsync()).Select(dto => dto.ToBase()).ToList();
   }
 
   protected override async Task DeleteBeforeImpl(SystemName system, SystemEntityTypeName systype, DateTime before, bool promoted) {

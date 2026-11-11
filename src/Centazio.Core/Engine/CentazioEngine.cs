@@ -13,13 +13,21 @@ namespace Centazio.Core.Engine;
 /// Specific Hosts (AWS/Azure/Self) should inherit from this class and implement their own wiring between the
 /// host and the Centazio engine.  This 'wiring-up' should be done by implementing the `RegisterHostSpecificServices`
 /// method.
+///
+/// The `clock` is the only source of time for this engine and everything it creates (functions, repositories,
+/// runners), so tests and simulations can run several engines in one process, each with its own time.
 /// </summary>
-public abstract class CentazioEngine(List<string> environments) {
+public abstract class CentazioEngine(List<string> environments, TimeProvider clock) {
 
   private readonly CentazioServicesRegistrar registrar = new (new ServiceCollection());
   private ServiceProvider? prov;
   
   protected abstract void RegisterHostSpecificServices(CentazioServicesRegistrar registrar);
+  
+  /// <summary>
+  /// The assemblies searched for the `IServiceFactory` implementations named by the settings `Provider` values 
+  /// </summary>
+  protected virtual List<Assembly> ProviderAssemblies => ReflectionUtils.GetProviderAssemblies();
   
   public async Task<ServiceProvider> Init(List<Type> functions) {
     if (prov is not null) throw new Exception("CentazioEngine.Init has already been called");
@@ -32,6 +40,7 @@ public abstract class CentazioEngine(List<string> environments) {
       var settings = SettingsLoader.RegisterSettingsHierarchy(await new SettingsLoader().Load<CentazioSettings>(environments), registrar);
       RegisterCoreServices(settings);
       RegisterHostSpecificServices(registrar);
+      registrar.Register<IGuidGenerator, Version7GuidGenerator>(); // only if the host did not register its own
       return await RegisterAvailableFunctionsAndIntegrations(functions);
     }
 
@@ -54,13 +63,15 @@ public abstract class CentazioEngine(List<string> environments) {
         $"\n\tStagedEntityRepository [{settings.StagedEntityRepository.Provider}]" +
         $"\n\tCtlRepository [{settings.CtlRepository.Provider}]");
     
+    registrar.Register(clock);
+    var assemblies = ProviderAssemblies;
     AddCoreService<IServiceFactory<ISecretsLoader>, ISecretsLoader>(settings.SecretsLoaderSettings.Provider);
     
     AddCoreService<IServiceFactory<IStagedEntityRepository>, IStagedEntityRepository>(settings.StagedEntityRepository.Provider);
     AddCoreService<IServiceFactory<ICtlRepository>, ICtlRepository>(settings.CtlRepository.Provider);
     
     void AddCoreService<SF, I>(string provider) where SF : IServiceFactory<I> where I : class {
-      registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider));
+      registrar.RegisterServiceTypeFactory(typeof(SF), IntegrationsAssemblyInspector.GetCoreServiceFactoryType<SF>(provider, assemblies));
       registrar.Register<I>(svcs => svcs.GetRequiredService<SF>().GetService());
     }
   }

@@ -56,21 +56,21 @@ public class JsonTests {
     var str = nameof(Test_real_dtos);
     
     // Centazio.Core.Ctl.Entities.ObjectState+Dto
-    var oscet = new ObjectState(new(str), new(str), new CoreEntityTypeName(str), UtcDate.UtcNow, true);
+    var oscet = new ObjectState(new(str), new(str), new CoreEntityTypeName(str), TestingDefaults.DefaultStartDt, true, TestingDefaults.DefaultStartDt);
     var oscet2 = Json.Deserialize<ObjectState>(Json.Serialize(oscet));
     Assert.That(oscet2, Is.EqualTo(oscet));
     
-    var osset = new ObjectState(new(str), new(str), new SystemEntityTypeName(str), UtcDate.UtcNow, true);
+    var osset = new ObjectState(new(str), new(str), new SystemEntityTypeName(str), TestingDefaults.DefaultStartDt, true, TestingDefaults.DefaultStartDt);
     var osset2 = Json.Deserialize<ObjectState>(Json.Serialize(osset));
     Assert.That(osset2, Is.EqualTo(osset));
     
     // Centazio.Core.Ctl.Entities.SystemState+Dto
-    var ss = SystemState.Create(new(str), new(str));
+    var ss = SystemState.Create(new(str), new(str), TestingDefaults.DefaultStartDt);
     var ss2 = Json.Deserialize<SystemState>(Json.Serialize(ss));
     Assert.That(ss2, Is.EqualTo(ss));
     
     // Centazio.Core.Ctl.Entities.StagedEntity+Dto
-    var se = new StagedEntity(Guid.NewGuid(), new(str), new(str), UtcDate.UtcNow, new("data"), new("checksum"));
+    var se = new StagedEntity(Guid.NewGuid(), new(str), new(str), TestingDefaults.DefaultStartDt, new("data"), new("checksum"));
     var se2 = Json.Deserialize<StagedEntity>(Json.Serialize(se));
     Assert.That(se2, Is.EqualTo(se));
     
@@ -204,7 +204,7 @@ public class JsonTests {
     // these three fields should be ignored during serialisation
     public string DisplayName => Prop;
     public SystemEntityId SystemId { get; } = new(Id.ToString());
-    public DateTime LastUpdatedDate { get; } = UtcDate.UtcNow;
+    public DateTime LastUpdatedDate { get; } = TestingDefaults.DefaultStartDt;
     
     public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { Id = Guid.Parse(newid.Value) };
     public object GetChecksumSubset() => throw new Exception();

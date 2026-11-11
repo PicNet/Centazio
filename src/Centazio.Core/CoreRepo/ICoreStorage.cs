@@ -48,17 +48,17 @@ public record CoreEntityAndMetaDtos<D>(D CoreEntityDto, CoreStorageMeta.Dto Meta
 
 public record CoreEntityAndMeta(ICoreEntity CoreEntity, CoreStorageMeta Meta) { 
   public E As<E>() => (E) CoreEntity;
-  public static CoreEntityAndMeta Create(SystemName system, SystemEntityTypeName systype, SystemEntityId sysentid, ICoreEntity coreent, CoreEntityChecksum checksum) => 
-      new(coreent, new CoreStorageMeta(system, systype, sysentid, new(coreent.GetType().Name), coreent.CoreId, checksum, UtcDate.UtcNow, UtcDate.UtcNow, system, sysentid));
+  public static CoreEntityAndMeta Create(SystemName system, SystemEntityTypeName systype, SystemEntityId sysentid, ICoreEntity coreent, CoreEntityChecksum checksum, DateTime now) => 
+      new(coreent, new CoreStorageMeta(system, systype, sysentid, new(coreent.GetType().Name), coreent.CoreId, checksum, now, now, system, sysentid));
   
-  public static CoreEntityAndMeta Create(SystemName system, SystemEntityTypeName systype, SystemEntityId sysentid, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg) => 
-      Create(system, systype, sysentid, coreent, checksumalg(coreent));
+  public static CoreEntityAndMeta Create(SystemName system, SystemEntityTypeName systype, SystemEntityId sysentid, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg, DateTime now) => 
+      Create(system, systype, sysentid, coreent, checksumalg(coreent), now);
 
-  public CoreEntityAndMeta Update(SystemName system, ICoreEntity coreent, CoreEntityChecksum checksum) => 
-      new(coreent, Meta with { DateUpdated = UtcDate.UtcNow, LastUpdateSystem = system, CoreEntityChecksum = checksum });
+  public CoreEntityAndMeta Update(SystemName system, ICoreEntity coreent, CoreEntityChecksum checksum, DateTime now) => 
+      new(coreent, Meta with { DateUpdated = now, LastUpdateSystem = system, CoreEntityChecksum = checksum });
   
-  public CoreEntityAndMeta Update(SystemName system, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg) =>
-      Update(system, coreent, checksumalg(coreent));
+  public CoreEntityAndMeta Update(SystemName system, ICoreEntity coreent, Func<ICoreEntity, CoreEntityChecksum> checksumalg, DateTime now) =>
+      Update(system, coreent, checksumalg(coreent), now);
   
   public CoreEntityAndMetaDtos ToDtos() => new(DtoHelpers.ToDto(CoreEntity), DtoHelpers.ToDto<CoreStorageMeta, CoreStorageMeta.Dto>(Meta));
   

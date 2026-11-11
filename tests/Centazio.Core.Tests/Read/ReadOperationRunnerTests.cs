@@ -7,12 +7,14 @@ namespace Centazio.Core.Tests.Read;
 
 public class ReadOperationRunnerTests {
 
+  private FakeTimeProvider clock;
   private TestingStagedEntityRepository repository;
   private TestingInMemoryBaseCtlRepository repo;
 
   [SetUp] public void SetUp() {
-    repository = new TestingStagedEntityRepository();
-    repo = F.CtlRepo();
+    clock = F.Clock();
+    repository = F.SeRepo(clock);
+    repo = F.CtlRepo(clock);
   }
   
   [TearDown] public async Task TearDown() {
@@ -21,9 +23,9 @@ public class ReadOperationRunnerTests {
   } 
   
   [Test] public async Task Test_FailedRead_operations_are_not_staged() {
-    var runner = F.ReadFunc(repository);
+    var runner = F.ReadFunc(clock, repository);
     try { 
-      await runner.RunOperation(await F.CreateErroringOpStateAndConf(repo));
+      await runner.RunOperation(await F.CreateErroringOpStateAndConf(clock, repo));
       Assert.Fail();
     } catch {
       Assert.That(repository.Contents, Is.Empty);
@@ -31,28 +33,28 @@ public class ReadOperationRunnerTests {
   }
   
   [Test] public async Task Test_empty_results_are_not_staged() {
-    var runner = F.ReadFunc(repository);
+    var runner = F.ReadFunc(clock, repository);
     var opcfg = await CreateReadOpStateAndConf(EOperationResult.Success, _ => Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult()));
     var actual = await runner.RunOperation(opcfg);
     
     Assert.That(repository.Contents, Is.Empty);
-    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new EmptyReadOperationResult(), actual);
+    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, clock.UtcNow(), clock.UtcNow(), nameof(ESystemStateStatus.Idle)), new EmptyReadOperationResult(), actual);
   }
 
   [Test] public async Task Test_valid_List_results_are_staged() {
-    var runner = F.ReadFunc(repository);
+    var runner = F.ReadFunc(clock, repository);
     var actual = (ListReadOperationResult) await runner.RunOperation(await CreateReadOpStateAndConf(EOperationResult.Success, GetListResults));
     
     var staged = repository.Contents;
     Assert.That(staged, Is.EquivalentTo(
-        staged.Select(s => new StagedEntity.Dto(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), UtcDate.UtcNow, s.Data, s.StagedEntityChecksum).ToBase())));
-    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, UtcDate.UtcNow, UtcDate.UtcNow, nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, UtcDate.UtcNow), actual);
+        staged.Select(s => new StagedEntity.Dto(s.Id, nameof(EOperationResult.Success), nameof(EOperationResult.Success), clock.UtcNow(), s.Data, s.StagedEntityChecksum).ToBase())));
+    ValidateResult(new SystemState.Dto(nameof(EOperationResult.Success), nameof(EOperationResult.Success), true, clock.UtcNow(), clock.UtcNow(), nameof(ESystemStateStatus.Idle)), new ListReadOperationResult(actual.PayloadList, clock.UtcNow()), actual);
   }
   
   [Test] public void Test_results_cannot_be_invalid_PayloadLength() {
-    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([], UtcDate.UtcNow));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([String.Empty], UtcDate.UtcNow));
-    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([null!], UtcDate.UtcNow));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([], clock.UtcNow()));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([String.Empty], clock.UtcNow()));
+    Assert.Throws<ArgumentNullException>(() => _ = new ListReadOperationResult([null!], clock.UtcNow()));
   }
   
   private void ValidateResult(SystemState.Dto expss, OperationResult expected, OperationResult actual) {
@@ -62,12 +64,12 @@ public class ReadOperationRunnerTests {
   
   private async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(EOperationResult result, GetUpdatesAfterCheckpointHandler impl) 
     => new (
-        await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString()), UtcDate.UtcNow),
+        await repo.CreateObjectState(await repo.CreateSystemState(new(result.ToString()), new(result.ToString())), new SystemEntityTypeName(result.ToString()), clock.UtcNow()),
         F.EmptyFunctionConfig(),
         new (new SystemEntityTypeName(result.ToString()), TestingDefaults.CRON_EVERY_SECOND, impl), DateTime.MinValue);
   
 
   private Task<ReadOperationResult> GetListResults(OperationStateAndConfig<ReadOperationConfig> config) => 
-      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), UtcDate.UtcNow));
+      Task.FromResult<ReadOperationResult>(new ListReadOperationResult(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid().ToString()).ToList(), clock.UtcNow()));
 
 }

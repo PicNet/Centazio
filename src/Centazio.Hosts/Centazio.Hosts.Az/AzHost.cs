@@ -8,27 +8,14 @@ using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 namespace Centazio.Hosts.Az;
 
-public static class AzHost {
-
-  private static AzHostImpl? impl;
-
-  public static async Task Init(List<string> environments, List<Type> functions) {
-    if (impl is not null) throw new Exception("AzHost.Init already called");
-    impl = new(environments, functions);
-    await impl.Init();
-  }
-
-  public static async Task RunFunction(Type type, List<FunctionTrigger> triggers) {
-    if (impl is null) throw new Exception("AzHost.Init has not been called");
-    await impl.RunFunction(type, triggers);
-  }
-
-}
-
-public class AzHostImpl(List<string> environments, List<Type> functions) {
+/// <summary>
+/// Created once by the generated function app `Program`, which owns it.  `Init` registers this instance in the
+/// Functions worker services so the generated function classes receive it by injection.
+/// </summary>
+public class AzHost(List<string> environments, List<Type> functions) {
 
   private readonly string? APP_INSIGHTS_CONN_STR = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")?.Trim();
-  private AzHostCentazioEngineAdapter centazio = new(environments);
+  private readonly AzHostCentazioEngineAdapter centazio = new(environments);
 
   public async Task Init() {
     InitLogger();
@@ -45,6 +32,7 @@ public class AzHostImpl(List<string> environments, List<Type> functions) {
       .UseSerilog()
       .ConfigureFunctionsWorkerDefaults()
       .ConfigureServices((_, svcs) => svcs
+          .AddSingleton(this)
           .InitialiseAppInsights(APP_INSIGHTS_CONN_STR)
           .AddLogging(builder => builder.AddSerilog(dispose: true)))
       .Build()

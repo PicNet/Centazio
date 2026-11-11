@@ -23,14 +23,14 @@ public class PromotionBag(StagedEntity staged, Type setype) {
     IgnoreReason = reason;
   } 
   
-  public void MarkPromote(SystemName system, CoreEntityAndMeta coreent, IChecksumAlgorithm checksum) {
+  public void MarkPromote(SystemName system, CoreEntityAndMeta coreent, IChecksumAlgorithm checksum, DateTime now) {
     UpdatedCoreEntityAndMeta = CheckAndSetInternalState();
     
     CoreEntityAndMeta CheckAndSetInternalState() => coreent with {
       Meta = coreent.Meta with {
-        DateUpdated = UtcDate.UtcNow,
+        DateUpdated = now,
         LastUpdateSystem = system,
-        DateCreated = IsCreating ? UtcDate.UtcNow : coreent.Meta.DateCreated,
+        DateCreated = IsCreating ? now : coreent.Meta.DateCreated,
         OriginalSystem = IsCreating ? system : coreent.Meta.OriginalSystem,
         CoreEntityChecksum = checksum.Checksum(coreent.CoreEntity)
       }
@@ -47,7 +47,7 @@ public class PromotionBag(StagedEntity staged, Type setype) {
     }; 
   }
 
-  public Map.Created MarkCreated(IChecksumAlgorithm checksum) => Ctl.Entities.Map.Create(CoreEntityAndMeta.Meta.OriginalSystem, CoreEntityAndMeta.CoreEntity)
+  public Map.Created MarkCreated(IChecksumAlgorithm checksum, DateTime now) => Ctl.Entities.Map.Create(CoreEntityAndMeta.Meta.OriginalSystem, CoreEntityAndMeta.CoreEntity, now)
       .SuccessCreate(CoreEntityAndMeta.Meta.OriginalSystemId, checksum.Checksum(SystemEntity));
   public Map.Updated MarkUpdated(IChecksumAlgorithm checksum) => (Map ?? throw new Exception()).Update().SuccessUpdate(checksum.Checksum(SystemEntity));
   

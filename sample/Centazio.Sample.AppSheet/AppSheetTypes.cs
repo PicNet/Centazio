@@ -22,7 +22,8 @@ public record AppSheetTask : ISystemEntity {
   [JsonIgnore] public bool Completed { get; set; }
   
   public SystemEntityId SystemId => new(RowId ?? throw new Exception());
-  public DateTime LastUpdatedDate => UtcDate.UtcNow;
+  // AppSheet has no updated date, this is only used to order duplicates of an entity within a single promotion batch
+  public DateTime LastUpdatedDate => DateTime.MinValue;
   public string DisplayName => Task ?? String.Empty;
 
   public ISystemEntity CreatedWithId(SystemEntityId newid) => this with { RowId = newid.Value };

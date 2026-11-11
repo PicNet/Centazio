@@ -9,14 +9,16 @@ public class PromoteOperationRunnerTests {
 
   private readonly int RECORDS_COUNT = 100;
   
+  private FakeTimeProvider clock;
   private TestingStagedEntityRepository stager;
   private TestingInMemoryBaseCtlRepository ctl;
   private TestingInMemoryCoreStorageRepository core;
   private PromoteFunction promoter;
 
   [SetUp] public void SetUp() {
-    (stager, ctl, core) = (F.SeRepo(), F.CtlRepo(), F.CoreRepo());
-    promoter = F.PromoteFunc(stager, ctl, core);
+    clock = F.Clock();
+    (stager, ctl, core) = (F.SeRepo(clock), F.CtlRepo(clock), F.CoreRepo());
+    promoter = F.PromoteFunc(clock, stager, ctl, core);
   }
   
   [TearDown] public async Task TearDown() {
@@ -37,10 +39,10 @@ public class PromoteOperationRunnerTests {
   }
   
   [Test] public async Task Todo_RunOperation_will_update_staged_entities_and_core_storage() {
-    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
+    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), clock.UtcNow())).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
+        ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, clock.UtcNow(), clock.UtcNow()),
         F.EmptyFunctionConfig(),
         new PromoteOperationConfig(C.System1Name, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, SuccessfulConversionToCore), DateTime.MinValue));
     var saved = (await core.GetAllCoreEntities()).ToDictionary(c => c.FirstName);
@@ -48,7 +50,7 @@ public class PromoteOperationRunnerTests {
     Assert.That(stager.Contents, Has.Count.EqualTo(RECORDS_COUNT));
     stager.Contents.ForEach((se, idx) => {
       if (idx % 2 == 0) {
-        Assert.That(se.DatePromoted, Is.EqualTo(UtcDate.UtcNow));
+        Assert.That(se.DatePromoted, Is.EqualTo(clock.UtcNow()));
         Assert.That(se.IgnoreReason, Is.Null);
         Assert.That(saved.ContainsKey(idx.ToString()), Is.True);
       } else {
@@ -60,11 +62,11 @@ public class PromoteOperationRunnerTests {
   }
   
   [Test] public async Task Todo_RunOperation_will_not_do_anything_on_error() {
-    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), UtcDate.UtcNow)).ToList();
+    var ses = Enumerable.Range(0, RECORDS_COUNT).Select(idx => new System1Entity(Guid.NewGuid(), idx.ToString(), idx.ToString(), new DateOnly(2000, 1, 1), clock.UtcNow())).ToList();
     await stager.Stage(C.System1Name, C.SystemEntityName, ses.Select(Json.Serialize).ToList());
     try {
       await promoter.RunOperation(new OperationStateAndConfig<PromoteOperationConfig>(
-          ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, UtcDate.UtcNow),
+          ObjectState.Create(C.System1Name, LifecycleStage.Defaults.Promote, C.CoreEntityName, clock.UtcNow(), clock.UtcNow()),
           F.EmptyFunctionConfig() with { ThrowExceptions = false },
           new PromoteOperationConfig(C.System1Name, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, TestingDefaults.CRON_EVERY_SECOND, ErrorConvertingToCore), DateTime.MinValue));
       Assert.Fail();
@@ -81,10 +83,11 @@ public class PromoteOperationRunnerTests {
   }
   
   internal static Task<List<EntityEvaluationResult>> SuccessfulConversionToCore(OperationStateAndConfig<PromoteOperationConfig> config, List<EntityForPromotionEvaluation> toeval) {
-    var results = toeval.Select((eval, idx) => {
-      if (idx % 2 == 1) return eval.MarkForIgnore(new($"Ignore: {idx}"));
-      var ce = eval.SystemEntity.To<System1Entity>().ToCoreEntity();
-      return eval.MarkForPromotion(ce);
+    // ignores by the entity, not by its position in `toeval`, as the promotion order is not the staging order
+    var results = toeval.Select(eval => {
+      var sysent = eval.SystemEntity.To<System1Entity>();
+      var idx = Int32.Parse(sysent.FirstName);
+      return idx % 2 == 1 ? eval.MarkForIgnore(new($"Ignore: {idx}")) : eval.MarkForPromotion(sysent.ToCoreEntity());
     }).ToList();
     return Task.FromResult(results);
   }

@@ -18,16 +18,14 @@ public class SqlServerSimulationStorage : ISimulationStorage {
   public ICtlRepository CtlRepo { get; private set; } = null!;
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
-  public int SimulationPostFunctionRunDelayMs => 500;
-
   public async Task Initialise(SimulationCtx ctx) {
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = await F.Settings();
     var ctlsetts = settings.CtlRepository with { ConnectionString = connstr };
     var stgsetts = settings.StagedEntityRepository with { ConnectionString = connstr };
-    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(ctlsetts)).Initialise();
+    CtlRepo = await new TestingEfCtlSimulationRepository(ctx.Epoch, () => new SqlServerCtlRepositoryDbContext(ctlsetts), ctx.Clock).Initialise();
     StageRepository = await new EfStagedEntityRepository(
-        new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(stgsetts)), true).Initialise();
+        new EfStagedEntityRepositoryOptions(0, ctx.ChecksumAlg.Checksum, () => new SqlServerStagedEntityContext(stgsetts), ctx.Clock, ctx.Ids), true).Initialise();
     CoreStore = await new SimulationEfCoreStorageRepository(
         () => new SimulationSqlServerDbContext(connstr), 
         ctx.Epoch).Initialise();

@@ -11,18 +11,20 @@ public record EntityForPromotionEvaluation {
   public bool IsNewEntity => ExistingCoreEntityAndMeta is null;
   
   private IChecksumAlgorithm ChecksumAlgo { get; }
+  private DateTime Now { get; }
   
-  public EntityForPromotionEvaluation(SystemName system, ISystemEntity sysent, CoreEntityAndMeta? coreent, IChecksumAlgorithm checksum) {
+  public EntityForPromotionEvaluation(SystemName system, ISystemEntity sysent, CoreEntityAndMeta? coreent, IChecksumAlgorithm checksum, DateTime now) {
     System = system;
     SystemEntity = sysent;
     ExistingCoreEntityAndMeta = coreent;
     ChecksumAlgo = checksum;
+    Now = now;
   }
   
   public EntityEvaluationResult MarkForPromotion(ICoreEntity core) {
     return new EntityToPromote(SystemEntity,
-        ExistingCoreEntityAndMeta?.Update(System, core, ChecksumAlgo.Checksum)
-        ?? CoreEntityAndMeta.Create(System, SystemEntityTypeName.From(SystemEntity), SystemEntity.SystemId, core, ChecksumAlgo.Checksum));
+        ExistingCoreEntityAndMeta?.Update(System, core, ChecksumAlgo.Checksum, Now)
+        ?? CoreEntityAndMeta.Create(System, SystemEntityTypeName.From(SystemEntity), SystemEntity.SystemId, core, ChecksumAlgo.Checksum, Now));
   }
 
   public EntityEvaluationResult MarkForIgnore(ValidString reason) => new EntityToIgnore(SystemEntity, reason);

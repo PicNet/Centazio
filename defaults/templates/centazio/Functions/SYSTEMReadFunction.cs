@@ -4,7 +4,7 @@ using Centazio.Core.Stage;
 
 namespace {{ it.Namespace }};
 
-public class {{ it.SystemName }}ReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, {{ it.SystemName }}Api api) : ReadFunction({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, stager, ctl) {
+public class {{ it.SystemName }}ReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, TimeProvider clock, {{ it.SystemName }}Api api) : ReadFunction({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig({{ it.SystemName }}Constants.{{ it.SystemName }}ExampleEntityName, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)

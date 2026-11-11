@@ -4,14 +4,14 @@ using Centazio.Core.Write;
 
 namespace {{ it.Namespace }};
 
-public class {{ it.SystemName }}WriteFunction(ICoreStorage core, ICtlRepository ctl, {{ it.SystemName }}Api api) : WriteFunction({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, core, ctl) {
+public class {{ it.SystemName }}WriteFunction(ICoreStorage core, ICtlRepository ctl, TimeProvider clock, {{ it.SystemName }}Api api) : WriteFunction({{ it.SystemName }}Constants.{{ it.SystemName }}SystemName, core, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new WriteOperationConfig(System, CoreEntityTypes.ExampleEntity, CronExpressionsHelper.EveryXSeconds(5), CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities, Write{{ it.SystemName }}ExampleEntities)
   ]);
 
   private Task<ConvertCoresToSystemsResult> CovertExampleEntitiesTo{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
-      Task.FromResult(CovertCoresToSystems<ExampleEntity>(tocreate, toupdate, (id, e) => new {{ it.SystemName }}ExampleEntity(id.Value, e.Name, UtcDate.ToMillis().ToString())));
+      Task.FromResult(CovertCoresToSystems<ExampleEntity>(tocreate, toupdate, (id, e) => new {{ it.SystemName }}ExampleEntity(id.Value, e.Name, UtcDate.ToMillis(UtcNow).ToString())));
 
   private Task<WriteOperationResult> Write{{ it.SystemName }}ExampleEntities(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       WriteOperationResult.Create<ExampleEntity, {{ it.SystemName }}ExampleEntity>(tocreate, toupdate, CreateExampleEntities, UpdateExampleEntities);

@@ -6,11 +6,11 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Promote;
 
-public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStateAndConfig<PromoteOperationConfig> op) {
+public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStateAndConfig<PromoteOperationConfig> op, TimeProvider clock) {
 
   private readonly SystemName system = op.State.System;
   private readonly CoreEntityTypeName corename = op.State.Object.ToCoreEntityTypeName;
-  private readonly DateTime start = UtcDate.UtcNow;
+  private readonly DateTime start = clock.UtcNow();
   internal List<PromotionBag> bags = [];
   
   public async Task LoadPendingStagedEntities(IStagedEntityRepository stagestore) {
@@ -33,16 +33,17 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
   
   public async Task ApplyChangesToCoreEntities() {
     if (IsEmpty()) return;
+    var now = clock.UtcNow();
     var list = await CallEvaluator();
     list.ForEach(result => {
       var bag = bags.Single(b => b.SystemEntity.SystemId == result.SystemEntity.SystemId);
-      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.CoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm); 
+      if (result is EntityToPromote topromote) bag.MarkPromote(system, topromote.CoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm, now); 
       else if (result is EntityToIgnore toignore) bag.MarkIgnore(toignore.IgnoreReason);
       else throw new NotSupportedException(result.GetType().Name);
     });
 
     async Task<List<EntityEvaluationResult>> CallEvaluator() => 
-        await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(system, bag.SystemEntity, bag.PreExistingCoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm)).ToList());
+        await op.OpConfig.BuildCoreEntities(op, bags.Select(bag => new EntityForPromotionEvaluation(system, bag.SystemEntity, bag.PreExistingCoreEntityAndMeta, op.FuncConfig.ChecksumAlgorithm, now)).ToList());
   }
   
   public void IgnoreUpdatesToSameEntityInBatch() {
@@ -133,14 +134,15 @@ public class PromotionSteps(ICoreStorage core, ICtlRepository ctl, OperationStat
     await using var t1 = await core.BeginTransaction();
     await using var t2 = await ctl.BeginTransaction(); 
     
+    var now = clock.UtcNow();
     await core.Upsert(corename, ToPromote().Select(bag => bag.UpdatedCoreEntityAndMeta ?? throw new Exception()).ToList());
-    await ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm)).ToList());
+    await ctl.CreateSysMap(system, corename, ToCreate().Select(bag => bag.MarkCreated(op.FuncConfig.ChecksumAlgorithm, now)).ToList());
     await ctl.UpdateSysMap(system, corename, ToUpdate().Select(bag => bag.MarkUpdated(op.FuncConfig.ChecksumAlgorithm)).ToList());
     await ctl.SaveEntityChanges(ToPromote().Select(BagToEntityChange).ToList());
 
     EntityChange BagToEntityChange(PromotionBag bag) {
       var (meta, old, @new) = (bag.CoreEntityAndMeta.Meta, bag.PreExistingCoreEntityAndMeta?.CoreEntity, bag.CoreEntityAndMeta.CoreEntity);
-      return EntityChange.Create(bag.CoreEntityAndMeta.Meta.CoreEntityTypeName, meta.CoreId, meta.LastUpdateSystem, meta.OriginalSystemType, meta.LastUpdateSystemId, old, @new);
+      return EntityChange.Create(bag.CoreEntityAndMeta.Meta.CoreEntityTypeName, meta.CoreId, meta.LastUpdateSystem, meta.OriginalSystemType, meta.LastUpdateSystemId, old, @new, now);
     }
   }
   

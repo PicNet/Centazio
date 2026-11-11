@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Centazio.Core.Ctl;
 using Centazio.Core.Read;
 using Centazio.Core.Runner;
 using Centazio.Core.Stage;
@@ -13,39 +12,41 @@ public class ReadFunctionTests {
   private readonly LifecycleStage stg = LifecycleStage.Defaults.Read;
   private readonly SystemEntityTypeName sysent = C.SystemEntityName;
   
+  private FakeTimeProvider clock = null!;
+  
   [SetUp] public void SetUp() {
-    UtcDate.Utc = new TestingUtcDate();
+    clock = F.Clock();
   }
   
   [Test] public async Task Test_standalone_read_function() {
     // set up
-    var (start, ctl, stager) = (UtcDate.UtcNow, F.CtlRepo(), F.SeRepo());
-    var func = new ReadFunctionWithSingleReadCustomerOperation(stager, ctl);
+    var (start, ctl, stager) = (clock.UtcNow(), F.CtlRepo(clock), F.SeRepo(clock));
+    var func = new ReadFunctionWithSingleReadCustomerOperation(stager, ctl, clock);
     
     // run scenarios
     var (sys0, obj0) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged0 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
+    var staged0 = (await stager.GetUnpromoted(sys, sysent, clock.UtcNow().AddYears(-1))).ToList();
     
-    // this run should be empty as no TestingUtcDate.DoTick
-    var r1 = (await F.RunFunc(func, ctl)).OpResults.Single().Result;
+    // this run should be empty as the clock has not ticked
+    var r1 = (await F.RunFunc(clock, func, ctl)).OpResults.Single().Result;
     var (sys1, obj1) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged1 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
+    var staged1 = (await stager.GetUnpromoted(sys, sysent, clock.UtcNow().AddYears(-1))).ToList();
     
     // this should include the single customer added as a List result type
-    var onetick = TestingUtcDate.DoTick();
-    var r2 = (ListReadOperationResult) (await F.RunFunc(func, ctl)).OpResults.Single().Result;
+    var onetick = clock.Tick();
+    var r2 = (ListReadOperationResult) (await F.RunFunc(clock, func, ctl)).OpResults.Single().Result;
     var (sys2, obj2) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged2 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
+    var staged2 = (await stager.GetUnpromoted(sys, sysent, clock.UtcNow().AddYears(-1))).ToList();
     
     // should be empty as no time has passed and Cron expects max 1/sec
-    var r3 = (await F.RunFunc(func, ctl)).OpResults; 
+    var r3 = (await F.RunFunc(clock, func, ctl)).OpResults; 
     var (sys3, obj3) = (ctl.Systems.Values.ToList(), ctl.Objects.Values.ToList());
-    var staged3 = (await stager.GetUnpromoted(sys, sysent, UtcDate.UtcNow.AddYears(-1))).ToList();
+    var staged3 = (await stager.GetUnpromoted(sys, sysent, clock.UtcNow().AddYears(-1))).ToList();
     
     // validate results
     var expjson = Json.Serialize(DummyCrmApi.NewCust(0, onetick));
     Assert.That(r1, Is.EqualTo(new EmptyReadOperationResult()));
-    Assert.That(r2.ToString(), Is.EqualTo(new ListReadOperationResult([expjson], UtcDate.UtcNow).ToString()));
+    Assert.That(r2.ToString(), Is.EqualTo(new ListReadOperationResult([expjson], clock.UtcNow()).ToString()));
     Assert.That(r3, Is.Empty);
     
     // validate sys/obj states and staged entities
@@ -64,7 +65,7 @@ public class ReadFunctionTests {
     Assert.That(staged3.Single(), Is.EqualTo(SE(staged3.Single().Id)));
     
     SystemState SS(DateTime updated) => new SystemState.Dto(sys, stg, true, start, updated, ESystemStateStatus.Idle.ToString(), updated, updated).ToBase();
-    ObjectState OS(DateTime updated, DateTime nextcheckpoint, int len) => new(sys, stg, sysent, nextcheckpoint, true) {
+    ObjectState OS(DateTime updated, DateTime nextcheckpoint, int len) => new(sys, stg, sysent, nextcheckpoint, true, start) {
       DateCreated = start,
       LastResult = EOperationResult.Success,
       LastAbortVote = EOperationAbortVote.Continue,
@@ -80,9 +81,9 @@ public class ReadFunctionTests {
   }
 }
 
-public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl) : ReadFunction(C.System1Name, stager, ctl) {
+public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository stager, ICtlRepository ctl, TimeProvider clock) : ReadFunction(C.System1Name, stager, ctl, clock) {
 
-  private readonly DummyCrmApi crmApi = new();
+  private readonly DummyCrmApi crmApi = new(clock);
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(C.SystemEntityName, TestingDefaults.CRON_EVERY_SECOND, GetUpdatesCustomers)
@@ -91,7 +92,7 @@ public class ReadFunctionWithSingleReadCustomerOperation(IStagedEntityRepository
   public async Task<ReadOperationResult> GetUpdatesCustomers(OperationStateAndConfig<ReadOperationConfig> config) {
     var customers = await crmApi.GetCustomersUpdatedSince(config.Checkpoint);
     return customers.Any() ? 
-        new ListReadOperationResult(customers, UtcDate.UtcNow)
+        new ListReadOperationResult(customers, UtcNow)
         : new EmptyReadOperationResult();
   }
 }

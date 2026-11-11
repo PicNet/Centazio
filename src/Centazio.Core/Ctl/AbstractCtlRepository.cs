@@ -1,6 +1,9 @@
 ﻿namespace Centazio.Core.Ctl;
 
-public abstract class AbstractCtlRepository : ICtlRepository {
+// stamps the state and map records this repository creates and saves
+public abstract class AbstractCtlRepository(TimeProvider clock) : ICtlRepository {
+
+  protected DateTime Now => clock.UtcNow();
 
   public abstract Task<IDbTransactionWrapper> BeginTransaction(IDbTransactionWrapper? reuse = null);
   
@@ -30,7 +33,8 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   public async Task<List<Map.Created>> CreateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Created> tocreate) {
     if (!tocreate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, tocreate, true);
-    var created = await CreateMapImpl(system, coretype, tocreate);
+    var now = Now;
+    var created = await CreateMapImpl(system, coretype, tocreate.Select(m => m with { DateUpdated = now, DateLastSuccess = now }).ToList());
     if (created.Count != tocreate.Count) throw new Exception($"created maps({created.Count}) does not match expected number ({tocreate.Count}).  This chould mean that some pre-existing maps were attempted to be created.");
     return created;
   }
@@ -38,9 +42,14 @@ public abstract class AbstractCtlRepository : ICtlRepository {
   public async Task<List<Map.Updated>> UpdateSysMap(SystemName system, CoreEntityTypeName coretype, List<Map.Updated> toupdate) {
     if (!toupdate.Any()) return [];
     ValidateMapsToUpsert(system, coretype, toupdate, false);
-    var updated = await UpdateMapImpl(system, coretype, toupdate);
+    var now = Now;
+    var updated = await UpdateMapImpl(system, coretype, toupdate.Select(Stamp).ToList());
     if (updated.Count != toupdate.Count) throw new Exception($"updated maps({updated.Count}) does not match expected number ({toupdate.Count}).  This chould mean that some maps may not have existed already in the repository.");
     return updated;
+    
+    Map.Updated Stamp(Map.Updated map) => map.Status == EEntityMappingStatus.Error 
+        ? map with { DateUpdated = now, DateLastError = now } 
+        : map with { DateUpdated = now, DateLastSuccess = now };
   }
 
   public async Task<List<EntityChange>> SaveEntityChanges(List<EntityChange> changes) {
@@ -70,9 +79,10 @@ public abstract class AbstractCtlRepository : ICtlRepository {
     ValidateCoreEntitiesForQuery(coretype, coreents, true);
     
     var maps = await GetExistingMapsByIds(system, coretype, coreents.Select(e => e.CoreId).ToList());
+    var now = Now;
     coreents.ForEach(c => {
       var map = maps.SingleOrDefault(kvp => kvp.Key.CoreEntityTypeName == CoreEntityTypeName.From(c) && kvp.Key.CoreId == c.CoreId && kvp.Key.System == system);
-      if (map is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(system, c)));
+      if (map is null) news.Add(new CoreAndPendingCreateMap(c, Map.Create(system, c, now)));
       else updates.Add(new CoreAndPendingUpdateMap(c, map.Update()));
     });
     return (news, updates);

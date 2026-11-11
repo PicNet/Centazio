@@ -3,7 +3,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpOtherFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(ClickUpConstants.ClickUpSystemName, new LifecycleStage("Other"), ctl) {
+public class ClickUpOtherFunction(ICtlRepository ctl, TimeProvider clock) : AbstractFunction<EmptyFunctionOperationConfig>(ClickUpConstants.ClickUpSystemName, new LifecycleStage("Other"), ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(ClickUpOtherFunction))

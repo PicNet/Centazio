@@ -14,7 +14,7 @@ public interface ICoreToSysMap {
 public static class Map {
   public record Key(CoreEntityTypeName CoreEntityTypeName, CoreEntityId CoreId, SystemName System, SystemEntityId SystemId);
   
-  public static PendingCreate Create(SystemName system, ICoreEntity e) => new(e, system);
+  public static PendingCreate Create(SystemName system, ICoreEntity e, DateTime now) => new(e, system, now);
   
   public record CoreToSysMap : ICoreToSysMap {
     internal CoreToSysMap(
@@ -44,7 +44,7 @@ public static class Map {
     public DateTime? DateLastError { get; internal init; }
     [MaxLength(1024)] public string? LastError { get; internal init; }
     
-    public PendingUpdate Update() => new(this) { DateUpdated = UtcDate.UtcNow };
+    public PendingUpdate Update() => new(this);
     
     public record Dto : IDto<CoreToSysMap> {
       public string? CoreEntityTypeName { get; init; }
@@ -82,43 +82,35 @@ public static class Map {
     public SystemName System { get; } 
     public DateTime DateCreated { get; }
     
-    internal PendingCreate(ICoreEntity e, SystemName system) {
+    internal PendingCreate(ICoreEntity e, SystemName system, DateTime now) {
       CoreEntityTypeName = CoreEntityTypeName.From(e);
       CoreId = e.CoreId;
       System = system;
-      DateCreated = UtcDate.UtcNow;
+      DateCreated = now;
     }
     
-    public Created SuccessCreate(SystemEntityId systemid, SystemEntityChecksum checksum) => new(this, systemid, checksum) {
-      DateCreated = DateCreated,
-      DateUpdated = UtcDate.UtcNow,
-      DateLastSuccess = UtcDate.UtcNow
-    };
+    /// <summary>
+    /// Note: `DateUpdated` and `DateLastSuccess` are stamped by the `ICtlRepository` when the map is saved
+    /// </summary>
+    public Created SuccessCreate(SystemEntityId systemid, SystemEntityChecksum checksum) => new(this, systemid, checksum) { DateCreated = DateCreated };
   }
   
   public record Created : CoreToSysMap {
-    internal Created(PendingCreate e, SystemEntityId systemid, SystemEntityChecksum checksum) : base(e.CoreEntityTypeName, e.CoreId, e.System, systemid, EEntityMappingStatus.SuccessCreate, checksum) {
-      DateUpdated = UtcDate.UtcNow;
-      DateLastSuccess = UtcDate.UtcNow;
-    }
+    internal Created(PendingCreate e, SystemEntityId systemid, SystemEntityChecksum checksum) : base(e.CoreEntityTypeName, e.CoreId, e.System, systemid, EEntityMappingStatus.SuccessCreate, checksum) {}
   }
 
   public record PendingUpdate : CoreToSysMap {
     public PendingUpdate(CoreToSysMap e) : base(e) {}
     
-    public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { 
-      Status = EEntityMappingStatus.SuccessUpdate, 
-      DateUpdated = UtcDate.UtcNow, 
-      DateLastSuccess = UtcDate.UtcNow,
-      SystemEntityChecksum = checksum
-    });
+    /// <summary>
+    /// Note: `DateUpdated` and `DateLastSuccess` are stamped by the `ICtlRepository` when the map is saved
+    /// </summary>
+    public Updated SuccessUpdate(SystemEntityChecksum checksum) => new(this with { Status = EEntityMappingStatus.SuccessUpdate, SystemEntityChecksum = checksum });
     
-    public Updated Error(string? error) => new(this with {
-      Status = EEntityMappingStatus.Error,
-      DateUpdated = UtcDate.UtcNow,
-      DateLastError = UtcDate.UtcNow,
-      LastError = error
-    });
+    /// <summary>
+    /// Note: `DateUpdated` and `DateLastError` are stamped by the `ICtlRepository` when the map is saved
+    /// </summary>
+    public Updated Error(string? error) => new(this with { Status = EEntityMappingStatus.Error, LastError = error });
   }
 
   public record Updated : CoreToSysMap {

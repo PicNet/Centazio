@@ -10,7 +10,7 @@ public record ObjectStateKey(SystemName System, LifecycleStage Stage, ObjectName
   public override string ToString() => $"{System.Value}/{Stage.Value}/{Object.Value}";
 }
 
-public class InMemoryBaseCtlRepository : AbstractCtlRepository {
+public class InMemoryBaseCtlRepository(TimeProvider clock) : AbstractCtlRepository(clock) {
 
   protected readonly Dictionary<SystemStateKey, SystemState> systems = [];
   protected readonly Dictionary<ObjectStateKey, ObjectState> objects = [];
@@ -29,7 +29,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
   public override Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) {
     var key = new SystemStateKey(system, stage);
     if (systems.ContainsKey(key)) throw new Exception($"SystemState [{key}] already exists");
-    return Task.FromResult(systems[key] = SystemState.Create(system, stage));
+    return Task.FromResult(systems[key] = SystemState.Create(system, stage, Now));
   }
   
   public override Task<ObjectState?> GetObjectState(SystemState system, ObjectName obj) {
@@ -47,7 +47,7 @@ public class InMemoryBaseCtlRepository : AbstractCtlRepository {
   public override Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) {
     var key = new ObjectStateKey(system.System, system.Stage, obj);
     if (objects.ContainsKey(key)) throw new Exception($"ObjectState [{key}] already exists");
-    var state = new ObjectState(system.System, system.Stage, obj, nextcheckpoint, true);
+    var state = ObjectState.Create(system.System, system.Stage, obj, nextcheckpoint, Now);
     return Task.FromResult(objects[key] = state);
   }
   

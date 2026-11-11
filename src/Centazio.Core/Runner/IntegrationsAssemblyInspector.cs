@@ -17,8 +17,7 @@ public static class IntegrationsAssemblyInspector {
     }
   }
 
-  public static Type GetCoreServiceFactoryType<F>(string provider) {
-    var asses = U.GetProviderAssemblies();
+  public static Type GetCoreServiceFactoryType<F>(string provider, List<Assembly> asses) {
     var potentials = asses.SelectMany(ass => U.GetAllTypesThatImplement(typeof(F), ass)).ToList();
     return ValidateCoreServiceFound<F>(provider, potentials);
   }

@@ -2,7 +2,7 @@
 
 namespace Centazio.Test.Lib.InMemRepos;
 
-public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : AbstractStagedEntityRepository(limit, checksum) {
+public class InMemoryStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) : AbstractStagedEntityRepository(limit, checksum, clock, ids) {
 
   private readonly Dictionary<StagedEntityChecksum, bool> checksums = [];
   protected readonly List<StagedEntity> saved = [];

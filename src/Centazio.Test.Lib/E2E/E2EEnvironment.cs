@@ -8,7 +8,8 @@ namespace Centazio.Test.Lib.E2E;
 public class E2EEnvironment(
     IChangesNotifier notifier,
     ISimulationInstructions instructions,
-    ISimulationStorage storage) : IAsyncDisposable {
+    ISimulationStorage storage,
+    int? seed = null) : IAsyncDisposable {
   
   private readonly bool SAVE_SIMULATION_STATE = false;
   
@@ -26,33 +27,33 @@ public class E2EEnvironment(
   private FinReadFunction fin_read = null!;
   private FinPromoteFunction fin_promote = null!;
   private FinWriteFunction fin_write = null!;
-  
-  private Task inittask = null!;
 
   public async Task Initialise() {
-    InitLogger();
-    ctx = new (storage, await F.Settings());
+    var silent = InitLogger();
+    ctx = new (storage, await F.Settings(), seed ?? SimulationConstants.RANDOM_SEED, silent);
     await ctx.Initialise();
     
-    (crm, fin) = (new CrmApi(crmdb), new FinApi(findb));
+    (crm, fin) = (new CrmApi(crmdb, ctx.Clock), new FinApi(findb, ctx.Clock));
     instructions.Init(ctx, crmdb, findb);
     
     (crm_read, crm_promote, crm_write) = (new CrmReadFunction(ctx, crm), new CrmPromoteFunction(ctx), new CrmWriteFunction(ctx, crm));
     (fin_read, fin_promote, fin_write) = (new FinReadFunction(ctx, fin), new FinPromoteFunction(ctx), new FinWriteFunction(ctx, fin));
     notifier.Init([crm_read, crm_promote, crm_write, fin_read, fin_promote, fin_write]);
-    runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings), notifier);
-    runner.OnFunctionRunning += (_, _) => TestingUtcDate.DoTick();
-    inittask = notifier.Run(runner);
+    runner = new FunctionRunnerWithNotificationAdapter(new FunctionRunner(ctx.CtlRepo, ctx.Settings, ctx.Clock, true), notifier);
+    runner.OnFunctionRunning += (_, _) => ctx.Clock.Tick();
+    // the in-process notifier is drained explicitly after each function run (see `RunFuncAndWait`), its background
+    //    `Run` loop would process notifications on another thread
+    if (notifier is not InProcessChangesNotifier) await notifier.Run(runner);
   }
 
-  private static void InitLogger() {
+  private static bool InitLogger() {
     Log.Logger = LogInitialiser
           .GetConsoleConfig(template: "{Message}{NewLine}", filters: SimulationConstants.LOGGING_FILTERS)
           .CreateLogger();
-    if (!Env.IsGitHubActions && !SimulationConstants.SILENCE_LOGGING) return;
+    if (!Env.IsGitHubActions && !SimulationConstants.SILENCE_LOGGING) return false;
 
-    SimulationConstants.SILENCE_SIMULATION = true;
     LogInitialiser.LevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+    return true;
   }
 
   public async Task RunSimulation() {
@@ -75,7 +76,7 @@ public class E2EEnvironment(
         CrmDb = crmdb,
         FinDb = findb
       };
-      await File.WriteAllTextAsync(FsUtils.GetCentazioPath($"simulation_state_{DateTime.Now:yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
+      await File.WriteAllTextAsync(FsUtils.GetCentazioPath($"simulation_state_{ctx.Clock.UtcNow():yyyyMMddHHmmss}.json"), Json.Serialize(completedstate));
     }
   }
 
@@ -84,7 +85,7 @@ public class E2EEnvironment(
   private async Task RunEpoch(int epoch) {
     ctx.Epoch.SetEpoch(epoch);
     RandomTimeStep();
-    ctx.Debug($"Epoch: [{epoch}] starting - running simulation step [{UtcDate.UtcNow:yy-MM-dd HH:mm:ss}]");
+    ctx.Debug($"Epoch: [{epoch}] starting - running simulation step [{ctx.Clock.UtcNow():yy-MM-dd HH:mm:ss}]");
     
     instructions.Step(epoch);
     
@@ -107,16 +108,13 @@ public class E2EEnvironment(
     await ValidateEpoch();
 
     async Task RunFuncAndWait(IRunnableFunction func) {
-      TestingUtcDate.DoTick();
+      ctx.Clock.Tick();
       await runner.RunFunction(func, triggers);
-      await AsyncUtils.ConditionalDelay(() => {
-        if (inittask.IsFaulted) throw new Exception("initial starter task failed:", inittask.Exception);
-        return runner.Running;
-      });
+      if (notifier is InProcessChangesNotifier inproc) await inproc.ProcessPending(runner);
     }
   }
 
-  private void RandomTimeStep() => TestingUtcDate.DoTick(new TimeSpan(Rng.Next(0, 2), Rng.Next(0, 24), Rng.Next(0, 60), Rng.Next(0, 60)));
+  private void RandomTimeStep() => ctx.Clock.Tick(new TimeSpan(ctx.Rng.Next(0, 2), ctx.Rng.Next(0, 24), ctx.Rng.Next(0, 60), ctx.Rng.Next(0, 60)));
 
   private async Task ValidateEpoch() {
     await CompareMembershipTypes();

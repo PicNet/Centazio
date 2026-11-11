@@ -26,10 +26,10 @@ public class RandomSimulation : ISimulationInstructions {
     finsim = new FinSimulation(ctx, findb);
     
     crmdb.MembershipTypes.AddRange([
-      new(SimulationConstants.PENDING_MEMBERSHIP_TYPE_ID, UtcDate.UtcNow, "Pending:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Standard:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Silver:0"),
-      new(ctx.NewGuidSeid(), UtcDate.UtcNow, "Gold:0")
+      new(SimulationConstants.PENDING_MEMBERSHIP_TYPE_ID, ctx.Clock.UtcNow(), "Pending:0"),
+      new(ctx.NewGuidSeid(), ctx.Clock.UtcNow(), "Standard:0"),
+      new(ctx.NewGuidSeid(), ctx.Clock.UtcNow(), "Silver:0"),
+      new(ctx.NewGuidSeid(), ctx.Clock.UtcNow(), "Gold:0")
     ]);
   }
 

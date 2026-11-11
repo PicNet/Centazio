@@ -3,7 +3,7 @@
 public class DateSerialisationTests {
 
   [Test] public void Test_serialisation_of_dates() {
-    var now = UtcDate.UtcNow;
+    var now = TestingDefaults.DefaultStartDt;
     var parsed = DateTime.Parse($"{now:o}").ToUniversalTime();
     
     Assert.That(parsed, Is.EqualTo(now));

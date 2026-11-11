@@ -3,7 +3,7 @@ using Centazio.Core.Runner;
 
 namespace Centazio.Test.Lib.E2E.Crm;
 
-public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CtlRepo) {
+public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(SimulationConstants.CRM_SYSTEM, ctx.StageRepository, ctx.CtlRepo, ctx.Clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(SystemEntityTypeName.From<CrmMembershipType>(), TestingDefaults.CRON_EVERY_SECOND, GetCrmMembershipTypeUpdates),
@@ -17,6 +17,6 @@ public class CrmReadFunction(SimulationCtx ctx, CrmApi api) : ReadFunction(Simul
 
   private ReadOperationResult GetUpdatesImpl(OperationStateAndConfig<ReadOperationConfig> config, List<string> updates) {
     ctx.Debug($"CrmReadFunction.GetUpdatesAfterCheckpoint[{config.OpConfig.Object.Value}] Updates[{updates.Count}]", updates);
-    return updates.Any() ? ReadOperationResult.Create(updates, UtcDate.UtcNow) : ReadOperationResult.EmptyResult();
+    return updates.Any() ? ReadOperationResult.Create(updates, UtcNow) : ReadOperationResult.EmptyResult();
   }
 }

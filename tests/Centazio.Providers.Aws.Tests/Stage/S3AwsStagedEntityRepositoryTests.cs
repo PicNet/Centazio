@@ -2,6 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Centazio.Core.Checksum;
+using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib;
@@ -31,13 +32,13 @@ public class S3AwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests 
     await container.DisposeAsync();
   }
   
-  protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) {
     var config = new AmazonS3Config { ServiceURL = container.GetConnectionString(), ForcePathStyle = true };
     var client = new AmazonS3Client(container.GetAccessKey(), container.GetSecretKey(), config);
-    return await new TestingS3AwsStagedEntityRepository(client, limit).Initalise();
+    return await new TestingS3AwsStagedEntityRepository(client, limit, clock, ids).Initalise();
   }
 
-  class TestingS3AwsStagedEntityRepository(IAmazonS3 client, int limit = 100) : S3AwsStagedEntityRepository(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum) {
+  class TestingS3AwsStagedEntityRepository(IAmazonS3 client, int limit, TimeProvider clock, IGuidGenerator ids) : S3AwsStagedEntityRepository(client, BUCKET_NAME, limit, Helpers.TestingStagedEntityChecksum, clock, ids) {
     
     private static readonly string BUCKET_NAME = nameof(TestingS3AwsStagedEntityRepository).ToLower(CultureInfo.InvariantCulture);
 

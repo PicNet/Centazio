@@ -56,6 +56,9 @@ public class UiTestsCommand : AbstractCentazioCommand<CommonSettings> {
     void Title(string title) => UiHelpers.Log($"\n[white]{title}[/]\n");
   }
   
-  private Color RandCol() => Color.FromConsoleColor(Enum.GetValues<ConsoleColor>().Random());
+  private Color RandCol() {
+    var colours = Enum.GetValues<ConsoleColor>();
+    return Color.FromConsoleColor(colours[Random.Shared.Next(colours.Length)]);
+  }
 
 }

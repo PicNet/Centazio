@@ -4,7 +4,7 @@ using Centazio.Core.Write;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetWriteFunction(CoreStorageRepository core, ICtlRepository ctl, AppSheetApi api) : WriteFunction(AppSheetConstants.AppSheetSystemName, core, ctl) {
+public class AppSheetWriteFunction(CoreStorageRepository core, ICtlRepository ctl, TimeProvider clock, AppSheetApi api) : WriteFunction(AppSheetConstants.AppSheetSystemName, core, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new WriteOperationConfig(System, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToAppSheetTasks, WriteAppSheetTasks)

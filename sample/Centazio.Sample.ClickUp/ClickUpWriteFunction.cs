@@ -4,14 +4,14 @@ using Centazio.Core.Write;
 
 namespace Centazio.Sample.ClickUp;
 
-public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, ClickUpApi api) : WriteFunction(ClickUpConstants.ClickUpSystemName, core, ctl) {
+public class ClickUpWriteFunction(ICoreStorage core, ICtlRepository ctl, TimeProvider clock, ClickUpApi api) : WriteFunction(ClickUpConstants.ClickUpSystemName, core, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new WriteOperationConfig(System, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), CovertCoreTasksToClickUpTasks, WriteClickUpTasks)
   ]);
 
   private Task<ConvertCoresToSystemsResult> CovertCoreTasksToClickUpTasks(WriteOperationConfig config, List<CoreAndPendingCreateMap> tocreate, List<CoreAndPendingUpdateMap> toupdate) =>
-      Task.FromResult(CovertCoresToSystems<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, new(ClickUpApi.CLICK_UP_OPEN_STATUS), UtcDate.ToMillis().ToString())));
+      Task.FromResult(CovertCoresToSystems<CoreTask>(tocreate, toupdate, (id, e) => new ClickUpTask(id.Value, e.Name, new(ClickUpApi.CLICK_UP_OPEN_STATUS), UtcDate.ToMillis(UtcNow).ToString())));
 
   private Task<WriteOperationResult> WriteClickUpTasks(WriteOperationConfig config, List<CoreSystemAndPendingCreateMap> tocreate, List<CoreSystemAndPendingUpdateMap> toupdate) => 
       WriteOperationResult.Create<CoreTask, ClickUpTask>(tocreate, toupdate, CreateTasks, UpdateTasks);

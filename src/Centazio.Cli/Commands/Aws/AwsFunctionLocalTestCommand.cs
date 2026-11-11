@@ -14,8 +14,11 @@ public class AwsFunctionLocalTestCommand([FromKeyedServices(CentazioConstants.Ho
   public override async Task ExecuteImpl(Settings cmdsetts) {
     cmdsetts.EnvironmentsList.AddIfNotExists(CentazioConstants.Hosts.Aws);
     cmdsetts.EnvironmentsList.AddIfNotExists(nameof(SelfHost).ToLower());
-    await host.RunHost(settings, cmdsetts, new AwsHostCentazioEngineAdapter(settings, cmdsetts.EnvironmentsList));
+    await host.RunHost(settings, cmdsetts, CreateEngine(settings, cmdsetts.EnvironmentsList));
   }
+  
+  // runs under the self host, which throws function exceptions to the console
+  public static AwsHostCentazioEngineAdapter CreateEngine(CentazioSettings settings, List<string> environments) => new(settings, environments, true);
   
   public class Settings : CommonSettings, IHostConfiguration {
     [CommandArgument(0, "[ASSEMBLY_NAME]")] public required string AssemblyNames { get; init; }

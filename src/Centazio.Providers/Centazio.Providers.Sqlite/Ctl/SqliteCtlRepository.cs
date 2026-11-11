@@ -5,13 +5,13 @@ using Centazio.Providers.EF;
 
 namespace Centazio.Providers.Sqlite.Ctl;
 
-public class SqliteCtlRepositoryFactory(CtlRepositorySettings settings) : IServiceFactory<ICtlRepository> {
-  public ICtlRepository GetService() => new SqliteCtlRepository(Getdb, settings.CreateSchema);
+public class SqliteCtlRepositoryFactory(CtlRepositorySettings settings, TimeProvider clock) : IServiceFactory<ICtlRepository> {
+  public ICtlRepository GetService() => new SqliteCtlRepository(Getdb, settings.CreateSchema, clock);
 
   private AbstractCtlRepositoryDbContext Getdb() => new SqliteCtlRepositoryDbContext(settings);
 }
 
-public class SqliteCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, bool createschema) : AbstractEFCtlRepository(getdb) {
+public class SqliteCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, bool createschema, TimeProvider clock) : AbstractEFCtlRepository(getdb, clock) {
   
   public override async Task<ICtlRepository> Initialise() {
     if (!createschema) return this;

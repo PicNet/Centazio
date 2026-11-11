@@ -7,12 +7,12 @@ using Centazio.Hosts.Az;
 
 namespace {{it.NewAssemblyName}};
 
-public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log) {
+public class {{it.ClassName}}Azure(ILogger<{{it.ClassName}}Azure> log, AzHost host) {
   [Function(nameof({{it.ClassName}}))] public async Task Run([TimerTrigger("{{ it.FunctionTimerCronExpr }}")] TimerInfo timer) {    
-    var start = UtcDate.UtcNow;
+    var start = TimeProvider.System.GetTimestamp();
     log.LogInformation("{{it.ClassName}} running");
     try { 
-      await AzHost.RunFunction(typeof({{it.ClassName}}), [new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]); 
-    } finally { log.LogInformation($"{{it.ClassName}} completed, took {(UtcDate.UtcNow - start).TotalSeconds:N0}s"); }
+      await host.RunFunction(typeof({{it.ClassName}}), [new TimerChangeTrigger("{{ it.FunctionTimerCronExpr }}")]); 
+    } finally { log.LogInformation($"{{it.ClassName}} completed, took {TimeProvider.System.GetElapsedTime(start).TotalSeconds:N0}s"); }
   }
 }

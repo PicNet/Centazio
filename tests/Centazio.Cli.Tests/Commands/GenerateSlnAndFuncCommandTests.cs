@@ -8,10 +8,9 @@ using Settings = Centazio.Cli.Commands.Gen.Centazio.GenerateFunctionCommand.Sett
 namespace Centazio.Cli.Tests.Commands;
 
 /// <summary>
-/// Not: Generated functions use the latest Centazio nuget packages, so this test can fail if the
-/// NuGet packages are out of sync with current version of the generated code.  To generate
-/// new versions of NuGets run `./centazio dev publish`.  After publishing new versions of NuGets, it
-/// is possible for the register to take up to 30 minutes to be ready. 
+/// The 'nugets' cases build the generated code against Centazio packages packed from this checkout into a local
+/// feed (see `CreateLocalPackageFeed`), so the templates and the packages always match and nothing needs to be
+/// published first.  The 'refs' cases use project references.
 /// </summary>
 public class GenerateSlnAndFuncCommandTests {
 
@@ -25,6 +24,50 @@ public class GenerateSlnAndFuncCommandTests {
   private CentazioCodeGenerator nugetgen;
   private CentazioCodeGenerator refgen; 
   
+  // the generator installs `Centazio.Core` and the core storage provider, which brings its own Centazio dependency
+  private readonly List<string> PACKED_PROJECTS = [
+    Path.Combine("Centazio.Core"),
+    Path.Combine("Centazio.Providers", "Centazio.Providers.EF"),
+    Path.Combine("Centazio.Providers", "Centazio.Providers.Sqlite")
+  ];
+  
+  // nuget-mode solutions are generated under a directory holding a `nuget.config` that serves `Centazio.*` from the
+  //    local feed and uses its own packages folder, so locally packed versions never reach the machine's global cache.
+  //    ref-mode solutions are generated elsewhere so the restore of the referenced `src` projects is not affected
+  private string WorkDir(bool usenuget) => Path.Combine(testdir, usenuget ? "nugets" : "refs");
+  
+  [OneTimeSetUp] public async Task CreateLocalPackageFeed() {
+    if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
+    var (nugetdir, feed) = (Directory.CreateDirectory(WorkDir(true)).FullName, Directory.CreateDirectory(Path.Combine(testdir, "feed")).FullName);
+    await PACKED_PROJECTS.Select(proj => runner.DotNet($"pack {FsUtils.GetCentazioPath("src", proj)} -c Release -o {feed}")).Synchronous();
+    await File.WriteAllTextAsync(Path.Combine(nugetdir, "nuget.config"), 
+        $"""
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <config>
+            <add key="globalPackagesFolder" value="{Path.Combine(testdir, "packages")}" />
+          </config>
+          <packageSources>
+            <clear />
+            <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            <add key="centazio-local" value="{feed}" />
+          </packageSources>
+          <packageSourceMapping>
+            <packageSource key="nuget.org">
+              <package pattern="*" />
+            </packageSource>
+            <packageSource key="centazio-local">
+              <package pattern="Centazio.*" />
+            </packageSource>
+          </packageSourceMapping>
+        </configuration>
+        """);
+  }
+  
+  [OneTimeTearDown] public void DeleteTestDir() {
+    if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
+  }
+  
 
   [SetUp] public async Task SetUp() {
     var settings = await F.Settings();
@@ -32,16 +75,14 @@ public class GenerateSlnAndFuncCommandTests {
     refgen = new(new CommandRunner(), new Templater(settings), false);
     Environment.SetEnvironmentVariable("IS_CLI", "true");
     FsUtils.TestingCliRootDir = FsUtils.GetCentazioPath();
-    Environment.CurrentDirectory = Directory.CreateDirectory(testdir).FullName;
-    
-    if (Directory.Exists(sln)) Directory.Delete(sln, true);
   }
 
+  // only the generated solutions are removed, the feed and its packages folder are kept for the whole fixture
   [TearDown] public void TearDown() {
     FsUtils.TestingCliRootDir = string.Empty;
     Environment.CurrentDirectory = properroot;
     Environment.SetEnvironmentVariable("IS_CLI", null);
-    if (Directory.Exists(testdir)) Directory.Delete(testdir, true);
+    new List<bool> { true, false }.Select(usenuget => Path.Combine(WorkDir(usenuget), sln)).Where(Directory.Exists).ForEach(dir => Directory.Delete(dir, true));
   }
 
   [Test] public async Task Test_generate_solution_with_nugets() => 
@@ -63,6 +104,7 @@ public class GenerateSlnAndFuncCommandTests {
       await GenerateProjInExistingAssemblyImpl(false);
   
   private async Task GenerateSlnTestImpl(bool usenuget) {
+    Environment.CurrentDirectory = Directory.CreateDirectory(WorkDir(usenuget)).FullName;
     var cmd = new GenerateSlnCommand(GetGen(usenuget));
     var existsbefore = Directory.Exists(sln);
     await cmd.ExecuteImpl(new GenerateSlnCommand.Settings { SolutionName = sln, CoreStorageProvider = "Sqlite" });
@@ -70,7 +112,7 @@ public class GenerateSlnAndFuncCommandTests {
     Assert.That(existsbefore, Is.False);
     Assert.That(Directory.Exists(sln), Is.True);
 
-    Environment.CurrentDirectory = Path.Combine(testdir, sln);
+    Environment.CurrentDirectory = Path.Combine(WorkDir(usenuget), sln);
     Assert.That(File.Exists(slnfile), Is.True);
     await ValidateProjectExistsInSln($"{sln}.Shared");
 
@@ -79,7 +121,7 @@ public class GenerateSlnAndFuncCommandTests {
   
   private async Task GenerateFuncInOwnDirImpl(bool usenuget) {
     await GenerateSlnTestImpl(usenuget);
-    Environment.CurrentDirectory = Path.Combine(testdir, sln);
+    Environment.CurrentDirectory = Path.Combine(WorkDir(usenuget), sln);
     var cmd = new GenerateFunctionCommand(GetGen(usenuget));
 
     var modes = new[] { nameof(Settings.Read), nameof(Settings.Promote), nameof(Settings.Write), nameof(Settings.Other) };
@@ -118,7 +160,7 @@ public class GenerateSlnAndFuncCommandTests {
   private async Task GenerateProjInExistingAssemblyImpl(bool usenuget) {
     await GenerateSlnTestImpl(usenuget);
     
-    Environment.CurrentDirectory = Path.Combine(testdir, sln);
+    Environment.CurrentDirectory = Path.Combine(WorkDir(usenuget), sln);
 
     var cmd = new GenerateFunctionCommand(GetGen(usenuget));
     var sett = new Settings { SystemName = SYSTEM_NAME, Read = true };

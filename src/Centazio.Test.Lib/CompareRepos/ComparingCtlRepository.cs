@@ -3,7 +3,7 @@ using Centazio.Test.Lib.InMemRepos;
 
 namespace Centazio.Test.Lib.CompareRepos;
 
-public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepository repo2) : AbstractCtlRepository {
+public class ComparingCtlRepository(AbstractCtlRepository repo1, AbstractCtlRepository repo2, TimeProvider clock) : AbstractCtlRepository(clock) {
 
   
   public override async Task<SystemState?> GetSystemState(SystemName system, LifecycleStage stage) {

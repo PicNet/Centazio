@@ -21,7 +21,7 @@ public interface IStagedEntityRepository : IEntityStager {
   Task DeleteStagedBefore(SystemName system, SystemEntityTypeName systype, DateTime before);
 }
 
-public abstract class AbstractStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum) : IStagedEntityRepository {
+public abstract class AbstractStagedEntityRepository(int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) : IStagedEntityRepository {
 
   private int lim = limit;
   
@@ -36,8 +36,8 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
   }
 
   public async Task<List<StagedEntity>> Stage(SystemName system, SystemEntityTypeName systype, List<string> datas) {
-    var now = UtcDate.UtcNow; // ensure all staged entities in this batch have the same `DateStaged`
-    var tostage = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data), checksum(data))).ToList();
+    var now = clock.UtcNow(); // ensure all staged entities in this batch have the same `DateStaged`
+    var tostage = datas.Distinct().Select(data => StagedEntity.Create(system, systype, now, new(data), checksum(data), ids.NewGuid())).ToList();
     if (!tostage.Any()) return tostage;
     if (tostage.Any(e => e.System != system || e.SystemEntityTypeName != systype)) throw new Exception();
     var checksums = tostage.Select(s => s.StagedEntityChecksum).ToList();
@@ -61,13 +61,21 @@ public abstract class AbstractStagedEntityRepository(int limit, Func<string, Sta
 
   public abstract Task UpdateImpl(SystemName system, SystemEntityTypeName systype, List<StagedEntity> staged);
 
-  public Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, true);
-  public Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after) => GetImpl(system, systype, after, false);
+  public async Task<List<StagedEntity>> GetAll(SystemName system, SystemEntityTypeName systype, DateTime after) => Sort(await GetImpl(system, systype, after, true));
+  public async Task<List<StagedEntity>> GetUnpromoted(SystemName system, SystemEntityTypeName systype, DateTime after) => Sort(await GetImpl(system, systype, after, false));
 
+  // entities staged in one batch share a `DateStaged`, so the id breaks ties.  This is done here, not in the stores,
+  //    as the stores do not agree on guid ordering and promotion order must be the same on every provider
+  private static List<StagedEntity> Sort(List<StagedEntity> staged) => staged
+      .OrderBy(s => s.DateStaged)
+      .ThenBy(s => s.Id.ToString("D"), StringComparer.Ordinal)
+      .ToList();
+  
   /// <summary>
   /// Implementing providers must ensure the following:
   /// - Only data where DateStaged > after is returned
-  /// - Data is returned sorted in ascending order by DateStaged (oldest to newest)
+  /// - Data is sorted in ascending order by DateStaged (oldest to newest) before `Limit` is applied.  Ties are
+  ///   ordered by the base class.
   /// - If Limit is specified, at most that number of records is returned.  Note: This is a performance
   ///   feature and the provider should ensure they only query the underlying data source for maximum this
   ///   amount of records. 

@@ -42,7 +42,7 @@ public class TestFunctionIntegration(params List<string> environments) : Integra
 
 }
 
-public class EmptyFunction(ICtlRepository ctl) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl) {
+public class EmptyFunction(ICtlRepository ctl, TimeProvider clock) : AbstractFunction<EmptyFunctionOperationConfig>(Constants.System, Constants.Stage, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new EmptyFunctionOperationConfig(nameof(EmptyFunctionOperationConfig)) 

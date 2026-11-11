@@ -1,6 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Centazio.Core.Checksum;
+using Centazio.Core.Misc;
 using Centazio.Core.Stage;
 using Centazio.Providers.Aws.Stage;
 using Centazio.Test.Lib.BaseProviderTests;
@@ -25,12 +26,12 @@ public class DynamoAwsStagedEntityRepositoryTests : BaseStagedEntityRepositoryTe
     await container.DisposeAsync();
   }
 
-  protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) {
+  protected override async Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) {
     var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = container.GetConnectionString() });
-    return await new TestingDynamoAwsStagedEntityRepository(client, limit, checksum).Initalise();
+    return await new TestingDynamoAwsStagedEntityRepository(client, limit, checksum, clock, ids).Initalise();
   }
 
-  class TestingDynamoAwsStagedEntityRepository(IAmazonDynamoDB client, int limit, Func<string, StagedEntityChecksum> checksum) : DynamoAwsStagedEntityRepository(client, TABLE_NAME, limit, checksum) {
+  class TestingDynamoAwsStagedEntityRepository(IAmazonDynamoDB client, int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) : DynamoAwsStagedEntityRepository(client, TABLE_NAME, limit, checksum, clock, ids) {
     private const string TABLE_NAME = nameof(TestingDynamoAwsStagedEntityRepository);
 
     public override async ValueTask DisposeAsync() {

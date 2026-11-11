@@ -6,45 +6,27 @@ using Type = System.Type;
 
 namespace Centazio.Hosts.Aws;
 
-public static class AwsHost {
+/// <summary>
+/// Created once by the generated lambda `Program`, which owns it and passes it to the function handler.  `Init` 
+/// initialises the engine and then runs the lambda bootstrap, which calls the handler for each invocation.
+/// </summary>
+public class AwsHost(List<string> environments, Type func) {
 
-  private static AwsHostImpl? impl;
-
-  public static async Task Init(List<string> environments, IAwsFunctionHandler handler, Type func) {
-    if (impl is not null) {
-      Log.Information("AwsHost.Init already called");
-      return;
-    }
-    
-    impl = new(environments, func);
-    Log.Information("impl initialised");
-    await impl.Init(handler);
-    Log.Information("impl.Init called");
-  }
-
-  public static async Task RunFunction(List<FunctionTrigger> triggers) {
-    Log.Information("AwsHost RunFunction called");
-    if (impl is null) throw new Exception("AwsHost.Init has not been called");
-
-    await impl.RunFunction(triggers);
-    Log.Information("impl.RunFunction called");
-  }
-
-}
-
-public class AwsHostImpl(List<string> environments, Type func) {
-
-  private AwsHostCentazioEngineAdapter centazio = null!;
+  private AwsHostCentazioEngineAdapter? centazio;
 
   public async Task Init(IAwsFunctionHandler handler) {
+    if (centazio is not null) throw new Exception("AwsHost.Init already called");
     InitLogger();
 
     var settings = await new SettingsLoader().Load<CentazioSettings>(environments);
-    centazio = new(settings, environments);
+    centazio = CreateEngine(settings, environments);
     await centazio.Init([func]);
     await InitAwsLambdaFunctionHost(handler);
     Log.Information("InitAwsLambdaFunctionHost called");
   }
+
+  // lambda logs function exceptions and returns an error result
+  public static AwsHostCentazioEngineAdapter CreateEngine(CentazioSettings settings, List<string> environments) => new(settings, environments, false);
 
   private void InitLogger() {
     Log.Logger = new LoggerConfiguration()
@@ -60,7 +42,9 @@ public class AwsHostImpl(List<string> environments, Type func) {
     await bootstrap.RunAsync();
   }
 
-  public async Task<FunctionRunResults> RunFunction(List<FunctionTrigger> triggers) =>
-      await centazio.RunFunction(func, triggers);
+  public async Task<FunctionRunResults> RunFunction(List<FunctionTrigger> triggers) {
+    if (centazio is null) throw new Exception("AwsHost.Init has not been called");
+    return await centazio.RunFunction(func, triggers);
+  }
 
 }

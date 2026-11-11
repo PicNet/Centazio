@@ -6,7 +6,7 @@ namespace Centazio.Core.Tests.Misc;
 public class DtoHelpersTests {
 
   [Test] public void Test_ToDto() {
-    var se = new StagedEntity(Guid.NewGuid(), C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(Guid.NewGuid().ToString()), new(Guid.NewGuid().ToString()));
+    var se = new StagedEntity(Guid.NewGuid(), C.System1Name, C.SystemEntityName, TestingDefaults.DefaultStartDt, new(Guid.NewGuid().ToString()), new(Guid.NewGuid().ToString()));
     Assert.That(DtoHelpers.ToDto(se), Is.EqualTo(OriginalToDto(se)));
     Assert.That((DtoHelpers.ToDto(se) as StagedEntity.Dto ?? throw new Exception()).ToBase(), Is.EqualTo(se));
     
@@ -23,7 +23,7 @@ public class DtoHelpersTests {
   }
   
   [Test] public void Test_Generic_ToDto() {
-    var se = new StagedEntity(Guid.NewGuid(), C.System1Name, C.SystemEntityName, UtcDate.UtcNow, new(Guid.NewGuid().ToString()), new(Guid.NewGuid().ToString()));
+    var se = new StagedEntity(Guid.NewGuid(), C.System1Name, C.SystemEntityName, TestingDefaults.DefaultStartDt, new(Guid.NewGuid().ToString()), new(Guid.NewGuid().ToString()));
     Assert.That(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>(se), Is.EqualTo(OriginalToDto(se)));
     Assert.That(DtoHelpers.ToDto<StagedEntity, StagedEntity.Dto>(se).ToBase(), Is.EqualTo(se));
     

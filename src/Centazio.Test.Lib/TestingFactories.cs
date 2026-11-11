@@ -13,7 +13,10 @@ namespace Centazio.Test.Lib;
 
 public static class TestingFactories {
   
+  // every factory that builds a repository, runner or function takes the test's clock, a silently created second
+  //    clock would let parts of one test see different times
   public static FakeTimeProvider Clock() => new(new DateTimeOffset(TestingDefaults.DefaultStartDt));
+  public static IGuidGenerator Ids() => new SeededGuidGenerator(new Random(TestingDefaults.SEED));
   
   public static async Task<CentazioSettings> Settings(params List<string> environments) => await Settings<CentazioSettings>(environments);
   public static async Task<E> Settings<E>(params List<string> environments) => await new SettingsLoader().Load<E>(environments.Any() ? environments : [CentazioConstants.DEFAULT_ENVIRONMENT]);
@@ -21,47 +24,49 @@ public static class TestingFactories {
   public static async Task<CentazioSecrets> Secrets() => await Secrets<CentazioSecrets>();
   public static async Task<E> Secrets<E>() => await new AwsSecretsLoader(await Settings()).Load<E>(CentazioConstants.DEFAULT_ENVIRONMENT);
   
-  public static TestingStagedEntityRepository SeRepo() => new(); 
-  public static TestingInMemoryBaseCtlRepository CtlRepo() => new();
+  public static TestingStagedEntityRepository SeRepo(TimeProvider clock) => new(clock); 
+  public static TestingInMemoryBaseCtlRepository CtlRepo(TimeProvider clock) => new(clock);
   public static TestingInMemoryCoreStorageRepository CoreRepo() => new();
-  public static async Task<FunctionRunResults> RunFunc<OC>(AbstractFunction<OC> func, ICtlRepository ctl) where OC : OperationConfig => 
-      await (await FuncRunner(ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
-  public static async Task<FunctionRunner> FuncRunner(ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(), await Settings()); 
+  public static async Task<FunctionRunResults> RunFunc<OC>(TimeProvider clock, AbstractFunction<OC> func, ICtlRepository ctl) where OC : OperationConfig => 
+      await (await FuncRunner(clock, ctl)).RunFunction(func, [new TimerChangeTrigger(func.Config.FunctionPollExpression ?? String.Empty)]);
+  public static async Task<FunctionRunner> FuncRunner(TimeProvider clock, ICtlRepository? ctl = null) => new(ctl ?? CtlRepo(clock), await Settings(), clock, true); 
   public static ReadFunction ReadFunc(
+      TimeProvider clock,
       IEntityStager? stager = null, 
-      ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(), ctl ?? CtlRepo());
+      ICtlRepository? ctl = null) => new EmptyReadFunction(new (nameof(TestingFactories)), stager ?? SeRepo(clock), ctl ?? CtlRepo(clock), clock);
   public static FunctionConfig EmptyFunctionConfig() => new([new ReadOperationConfig(new(nameof(TestingFactories)), CronExpressionsHelper.EverySecond(), _ => null!)]);
       
   public static PromoteFunction PromoteFunc(
+      TimeProvider clock,
       IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(), core ?? CoreRepo(), ctl ?? CtlRepo());
+      new EmptyPromoteFunction(new (nameof(TestingFactories)), serepo ?? SeRepo(clock), core ?? CoreRepo(), ctl ?? CtlRepo(clock), clock);
 
   public static WriteFunction WriteFunc(
+      TimeProvider clock,
       IStagedEntityRepository? serepo = null, 
       ICtlRepository? ctl = null, 
       ICoreStorage? core = null) => 
-      new EmptyWriteFunction(new (nameof(TestingFactories)), core ?? CoreRepo(), ctl ?? CtlRepo());
+      new EmptyWriteFunction(new (nameof(TestingFactories)), core ?? CoreRepo(), ctl ?? CtlRepo(clock), clock);
   
-  public static CoreEntityAndMeta NewCoreEntity(string first, string last, CoreEntityId? id = null) {
-    id ??= new(Guid.NewGuid().ToString());
+  public static CoreEntityAndMeta NewCoreEntity(string first, string last, DateTime now, CoreEntityId id) {
     var dob = DateOnly.MinValue;
     var core = new CoreEntity(id, first, last, dob);
-    return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core));
+    return CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, new (id.Value), core, Helpers.TestingCoreEntityChecksum(core), now);
   }
 
-  public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(ICtlRepository repo) {
+  public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateReadOpStateAndConf(TimeProvider clock, ICtlRepository repo) {
     var success = nameof(EOperationResult.Success);
-    return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), UtcDate.UtcNow),
+    return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(success), new(success)), new SystemEntityTypeName(success), clock.UtcNow()),
         EmptyFunctionConfig(),
         new(new SystemEntityTypeName(success), TestingDefaults.CRON_EVERY_SECOND, GetEmptyResult),
         DateTime.MinValue);
   }
 
-  public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateErroringOpStateAndConf(ICtlRepository repo) {
+  public static async Task<OperationStateAndConfig<ReadOperationConfig>> CreateErroringOpStateAndConf(TimeProvider clock, ICtlRepository repo) {
     var error = nameof(EOperationResult.Error);
-    return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(error), new(error)), new SystemEntityTypeName(error), UtcDate.UtcNow),
+    return new OperationStateAndConfig<ReadOperationConfig>(await repo.CreateObjectState(await repo.CreateSystemState(new(error), new(error)), new SystemEntityTypeName(error), clock.UtcNow()),
         EmptyFunctionConfig() with { ThrowExceptions = false },
         new(new SystemEntityTypeName(error), TestingDefaults.CRON_EVERY_SECOND, _ => throw new Exception(error)),
         DateTime.MinValue);
@@ -71,9 +76,9 @@ public static class TestingFactories {
       Task.FromResult<ReadOperationResult>(new EmptyReadOperationResult());
 }
 
-public class TestingStagedEntityRepository() : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum) { public List<StagedEntity> Contents => saved.ToList(); }
+public class TestingStagedEntityRepository(TimeProvider clock) : InMemoryStagedEntityRepository(0, Helpers.TestingStagedEntityChecksum, clock, F.Ids()) { public List<StagedEntity> Contents => saved.ToList(); }
 
-public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITestingCtlRepository {
+public class TestingInMemoryBaseCtlRepository(TimeProvider clock) : InMemoryBaseCtlRepository(clock), ITestingCtlRepository {
   public Dictionary<SystemStateKey, SystemState> Systems => systems;
   public Dictionary<ObjectStateKey, ObjectState> Objects => objects;
   public Dictionary<Map.Key, string> Maps => maps;
@@ -82,7 +87,7 @@ public class TestingInMemoryBaseCtlRepository : InMemoryBaseCtlRepository, ITest
       Task.FromResult(maps.Values.Select(Deserialize).Cast<Map.CoreToSysMap>().ToList());
 }
 
-public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : ReadFunction(system, stager, ctl) {
+public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, TimeProvider clock) : ReadFunction(system, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(C.SystemEntityName, CronExpressionsHelper.EverySecond(), GetUpdatesAfterCheckpoint)
@@ -93,7 +98,7 @@ public class EmptyReadFunction(SystemName system, IEntityStager stager, ICtlRepo
 
 }
 
-public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl) : PromoteFunction(system, stage, core, ctl) {
+public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository stage, ICoreStorage core, ICtlRepository ctl, TimeProvider clock) : PromoteFunction(system, stage, core, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new PromoteOperationConfig(System, typeof(System1Entity), C.SystemEntityName, C.CoreEntityName, CronExpressionsHelper.EverySecond(), BuildCoreEntities)
@@ -104,7 +109,7 @@ public class EmptyPromoteFunction(SystemName system, IStagedEntityRepository sta
 
 }
 
-public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl) : WriteFunction(system, core, ctl) {
+public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlRepository ctl, TimeProvider clock) : WriteFunction(system, core, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new WriteOperationConfig(System, C.CoreEntityName, CronExpressionsHelper.EverySecond(), null!, null!)
@@ -113,8 +118,6 @@ public class EmptyWriteFunction(SystemName system, ICoreStorage core, ICtlReposi
 
 public class NoOpChangeNotifier : IChangesNotifier {
 
-  public bool Running => false;
-  
   public List<ObjectChangeTrigger> Notifications { get; set; } = [];
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
   public void Init(List<IRunnableFunction> functions) {}
@@ -128,14 +131,12 @@ public class NoOpChangeNotifier : IChangesNotifier {
 
 }
 
-public class InstantChangesNotifier : IMonitorableChangesNotifier {
+public class InstantChangesNotifier : IChangesNotifier {
 
   public Task Setup(IRunnableFunction func) => Task.CompletedTask;
 
   private IFunctionRunner? runner;
   private List<IRunnableFunction> functions = null!;
-  
-  public bool Running { get; private set; }
 
   public void Init(List<IRunnableFunction> funcs) {
     functions = funcs;
@@ -151,8 +152,6 @@ public class InstantChangesNotifier : IMonitorableChangesNotifier {
     
     var triggers = objs.Distinct().Select(obj => new ObjectChangeTrigger(system, stage, obj)).ToList();
     var totrigger = NotifierUtils.GetFunctionsThatAreTriggeredByTriggers(triggers, functions);
-    Running = true;
-    try { await totrigger.Select(func => runner.RunFunction(func.Function, func.ResponsibleTriggers)).Synchronous(); } 
-    finally { Running = false; }
+    await totrigger.Select(func => runner.RunFunction(func.Function, func.ResponsibleTriggers)).Synchronous();
   }
 }

@@ -1,4 +1,5 @@
 ﻿using Centazio.Test.Lib.InMemRepos;
+using Microsoft.Extensions.Time.Testing;
 using NUnit.Framework;
 
 namespace Centazio.Test.Lib.BaseProviderTests;
@@ -10,10 +11,13 @@ public abstract class BaseCtlRepositoryMappingsTests {
   
   private TestingInMemoryCoreStorageRepository corestore = null!;
   private ITestingCtlRepository ctl = null!;
+  private FakeTimeProvider clock = null!;
+  private IGuidGenerator ids = null!;
   
   [SetUp] public async Task SetUp() {
+    (clock, ids) = (F.Clock(), F.Ids());
     corestore = F.CoreRepo();
-    ctl = await GetRepository();
+    ctl = await GetRepository(clock);
   }
 
   [TearDown] public async Task TearDown() {
@@ -22,37 +26,49 @@ public abstract class BaseCtlRepositoryMappingsTests {
   }
 
   [Test] public async Task Test_upsert_single() {
-    var core = F.NewCoreEntity(FIRST_NAME, FIRST_NAME);
-    var original =  Map.Create(C.System1Name, core.CoreEntity);
-    TestingUtcDate.DoTick();
+    var core = NewCore(FIRST_NAME, FIRST_NAME);
+    var (start, original) = (clock.UtcNow(), Map.Create(C.System1Name, core.CoreEntity, clock.UtcNow()));
+    var createdat = clock.Tick();
     var created = (await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [original.SuccessCreate(C.Sys1Id1, SCS())])).Single();
     var err = created.Update().Error("Error");
     
     var list1 = await ctl.GetAllMaps();
     
-    TestingUtcDate.DoTick();
+    var updatedat = clock.Tick();
     var updated = (await ctl.UpdateSysMap(C.System1Name, C.CoreEntityName, [err])).Single();
     var list2 = await ctl.GetAllMaps();
+    var exp = err with { DateUpdated = updatedat, DateLastError = updatedat };
     
     Assert.That(Json.ValidateJsonEqual(list1.Single(), created));
-    Assert.That(updated, Is.EqualTo(err));
-    Assert.That(Json.ValidateJsonEqual(list2.Single(), err));
+    Assert.That((created.DateCreated, created.DateUpdated, created.DateLastSuccess), Is.EqualTo((start, createdat, createdat)));
+    Assert.That(updated, Is.EqualTo(exp));
+    Assert.That((updated.DateCreated, updated.DateUpdated, updated.DateLastSuccess, updated.DateLastError), Is.EqualTo((start, updatedat, createdat, updatedat)));
+    Assert.That(Json.ValidateJsonEqual(list2.Single(), exp));
+  }
+  
+  [Test] public async Task Test_successful_update_is_stamped_with_the_repository_clock() {
+    var created = (await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS())])).Single();
+    var updatedat = clock.Tick(TimeSpan.FromDays(1));
+    var updated = (await ctl.UpdateSysMap(C.System1Name, C.CoreEntityName, [created.Update().SuccessUpdate(SCS())])).Single();
+    
+    Assert.That((updated.DateUpdated, updated.DateLastSuccess, updated.DateLastError), Is.EqualTo((updatedat, updatedat, (DateTime?) null)));
+    Assert.That(Json.ValidateJsonEqual((await ctl.GetAllMaps()).Single(), updated));
   }
   
   [Test] public async Task Test_upsert_enum() {
     var original = new List<Map.Created> { 
-      Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME).CoreEntity).SuccessCreate(C.Sys1Id1, SCS()),
-      Map.Create(C.System1Name, F.NewCoreEntity(LAST_NAME, LAST_NAME).CoreEntity).SuccessCreate(C.Sys1Id2, SCS())
+      Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS()),
+      Map.Create(C.System1Name, NewCore(LAST_NAME, LAST_NAME).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id2, SCS())
     }; 
-    TestingUtcDate.DoTick();
+    clock.Tick();
     var created = (await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, original)).ToList();
     var list1 = await ctl.GetAllMaps();
     
-    TestingUtcDate.DoTick();
+    var updatedat = clock.Tick();
     var updatecmd = created.Select(e => e.Update().Error("Error")).ToList();
     var updated2 = (await ctl.UpdateSysMap(C.System1Name, C.CoreEntityName, updatecmd)).ToList();
     var list2 = await ctl.GetAllMaps();
-    var exp = created.Select(e => e.Update().Error("Error")).ToList();
+    var exp = created.Select(e => e.Update().Error("Error") with { DateUpdated = updatedat, DateLastError = updatedat }).ToList();
         
     Assert.That(Json.ValidateJsonEquivalent(list1, created));
     Assert.That(updated2, Is.EquivalentTo(exp));
@@ -60,48 +76,48 @@ public abstract class BaseCtlRepositoryMappingsTests {
   }
   
   [Test] public async Task Test_creating_unique_by_SystemId_works() {
-    var map1 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME).CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
-    var map2 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME).CoreEntity).SuccessCreate(C.Sys1Id2, SCS());
+    var map1 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
+    var map2 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id2, SCS());
     
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map1]);
-    TestingUtcDate.DoTick();
+    clock.Tick();
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map2]);
   }
   
   [Test] public async Task Test_creating_duplicates_by_SystemId_throws_error() {
-    var map1 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
-    var map2 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME, C.CoreE1Id2).CoreEntity).SuccessCreate(C.Sys1Id1, SCS()); // same SystemId
+    var map1 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
+    var map2 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME, C.CoreE1Id2).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS()); // same SystemId
     
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map1]);
-    TestingUtcDate.DoTick();
+    clock.Tick();
     await AssertException(() => ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map2]));
   }
   
   [Test] public async Task Test_creating_duplicates_by_CoreId_throws_error() {
-    var map1 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
-    var map2 = Map.Create(C.System1Name, F.NewCoreEntity(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity).SuccessCreate(C.Sys1Id2, SCS()); 
+    var map1 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
+    var map2 = Map.Create(C.System1Name, NewCore(FIRST_NAME, FIRST_NAME, C.CoreE1Id1).CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id2, SCS()); 
     
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map1]);
-    TestingUtcDate.DoTick();
+    clock.Tick();
     await AssertException(() => ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map2]));
   }
   
   [Test] public async Task Test_updating_with_no_missing_works() {
-    var entity = F.NewCoreEntity(FIRST_NAME, FIRST_NAME);
-    var map = Map.Create(C.System1Name, entity.CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
+    var entity = NewCore(FIRST_NAME, FIRST_NAME);
+    var map = Map.Create(C.System1Name, entity.CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
     
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map]);
-    TestingUtcDate.DoTick();
+    clock.Tick();
     await ctl.UpdateSysMap(C.System1Name, C.CoreEntityName, [map.Update().SuccessUpdate(new("newchecksum"))]);
   }
   
   [Test] public async Task Test_updating_missing_by_CoreId_throws_error() {
-    var entity1 = F.NewCoreEntity(FIRST_NAME, FIRST_NAME);
-    var entity2 = F.NewCoreEntity(FIRST_NAME, FIRST_NAME);
-    var map1 = Map.Create(C.System1Name, entity1.CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
-    var map2 = Map.Create(C.System1Name, entity2.CoreEntity).SuccessCreate(C.Sys1Id1, SCS());
+    var entity1 = NewCore(FIRST_NAME, FIRST_NAME);
+    var entity2 = NewCore(FIRST_NAME, FIRST_NAME);
+    var map1 = Map.Create(C.System1Name, entity1.CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
+    var map2 = Map.Create(C.System1Name, entity2.CoreEntity, clock.UtcNow()).SuccessCreate(C.Sys1Id1, SCS());
     await ctl.CreateSysMap(C.System1Name, C.CoreEntityName, [map1]);
-    TestingUtcDate.DoTick();
+    clock.Tick();
     await AssertException(() => ctl.UpdateSysMap(C.System1Name, C.CoreEntityName, [map2.Update().SuccessUpdate(new("newchecksum"))]));
   }
 
@@ -127,15 +143,15 @@ public abstract class BaseCtlRepositoryMappingsTests {
   [Test] public async Task Reproduce_duplicate_mappings_found_in_simulation() {
     var name = nameof(Reproduce_duplicate_mappings_found_in_simulation);
     async Task<CoreEntity> SimulatePromoteOperationRunner(CoreEntityId coreid, SystemName system, SystemEntityTypeName systype, SystemEntityId sysid) {
-      TestingUtcDate.DoTick();
+      clock.Tick();
       var c = new CoreEntity(coreid, name, name, DateOnly.MinValue);
-      await corestore.Upsert(C.CoreEntityName, [CoreEntityAndMeta.Create(system, systype, sysid, c, Helpers.TestingCoreEntityChecksum(c))]);
-      await ctl.CreateSysMap(system, C.CoreEntityName, [ Map.Create(system, c).SuccessCreate(sysid, SCS())]);
+      await corestore.Upsert(C.CoreEntityName, [CoreEntityAndMeta.Create(system, systype, sysid, c, Helpers.TestingCoreEntityChecksum(c), clock.UtcNow())]);
+      await ctl.CreateSysMap(system, C.CoreEntityName, [ Map.Create(system, c, clock.UtcNow()).SuccessCreate(sysid, SCS())]);
       return c;
     }
     
     async Task<CoreEntity> SimulatePromoteOperationRunnerFixed(SystemName system, CoreEntityTypeName coretype, List<CoreEntityAndMeta> dups) {
-      TestingUtcDate.DoTick();
+      clock.Tick();
       var map = await ctl.GetMapsFromSystemIds(system, coretype, dups.Select(e => e.Meta.OriginalSystemId).ToList());
       return (await corestore.GetExistingEntities(C.CoreEntityName, [map.Single().CoreId])).Single().As<CoreEntity>();
     }
@@ -147,8 +163,8 @@ public abstract class BaseCtlRepositoryMappingsTests {
     
     // Centazio writes C1 to System2
     // Centazio creates map [System2:C1-E2]
-    TestingUtcDate.DoTick();
-    await ctl.CreateSysMap(C.System2Name, C.CoreEntityName, [ Map.Create(C.System2Name, c1).SuccessCreate(C.Sys1Id2, SCS())]);
+    clock.Tick();
+    await ctl.CreateSysMap(C.System2Name, C.CoreEntityName, [ Map.Create(C.System2Name, c1, clock.UtcNow()).SuccessCreate(C.Sys1Id2, SCS())]);
     
     // System2 creates E2 
     // Centazio reads/promotes E2/C2
@@ -158,13 +174,14 @@ public abstract class BaseCtlRepositoryMappingsTests {
     
     // Instead, the promote function should check for System2:E2 and realise that its the same core
     //    entity and ignore it if checksum matches
-    var c2cem = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id1, name, name, DateOnly.MinValue), Helpers.TestingCoreEntityChecksum);
+    var c2cem = CoreEntityAndMeta.Create(C.System1Name, C.SystemEntityName, C.Sys1Id2, new CoreEntity(C.CoreE1Id1, name, name, DateOnly.MinValue), Helpers.TestingCoreEntityChecksum, clock.UtcNow());
     var c2 = await SimulatePromoteOperationRunnerFixed(C.System2Name, C.CoreEntityName, [c2cem]);
     Assert.That(Helpers.TestingCoreEntityChecksum(c1), Is.EqualTo(Helpers.TestingCoreEntityChecksum(c2))); 
   }
   
-  protected abstract Task<ITestingCtlRepository> GetRepository();
-  private SystemEntityChecksum SCS() => new(Guid.NewGuid().ToString());
+  protected abstract Task<ITestingCtlRepository> GetRepository(TimeProvider clock);
+  private SystemEntityChecksum SCS() => new(ids.NewGuid().ToString());
+  private CoreEntityAndMeta NewCore(string first, string last, CoreEntityId? coreid = null) => F.NewCoreEntity(first, last, clock.UtcNow(), coreid ?? new(ids.NewGuid().ToString()));
   
   private async Task AssertException(Func<Task> action) {
     try {

@@ -3,8 +3,8 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Core.Read;
 
-public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl) : 
-    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, ctl) {
+public abstract class ReadFunction(SystemName system, IEntityStager stager, ICtlRepository ctl, TimeProvider clock) : 
+    AbstractFunction<ReadOperationConfig>(system, LifecycleStage.Defaults.Read, ctl, clock) {
   
   protected ReadOperationResult CreateResult(List<string> results, DateTime? nextcheckpointutc = null, EOperationAbortVote abort = EOperationAbortVote.Continue) => !results.Any() ? 
       ReadOperationResult.EmptyResult(abort) : 

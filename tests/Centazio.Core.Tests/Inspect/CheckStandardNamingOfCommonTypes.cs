@@ -1,5 +1,4 @@
 ﻿using Centazio.Core.Checksum;
-using Centazio.Core.Ctl;
 
 namespace Centazio.Core.Tests.Inspect;
 

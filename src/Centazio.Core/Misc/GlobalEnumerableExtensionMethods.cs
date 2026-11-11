@@ -74,10 +74,9 @@ public static class GlobalEnumerableExtensionMethods {
     foreach (var task in tasks) await task;
   }
   
-  public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null, int throttlemillis = 0) {
+  public static async Task<List<T>> Synchronous<T>(this IEnumerable<Task<T>> tasks, Func<T, bool>? abort = null) {
     var results = new List<T>();
     foreach (var task in tasks) {
-      if (throttlemillis > 0) await Task.Delay(throttlemillis);
       var res = await task; 
       results.Add(res);
       if (abort is not null && abort(res)) { return results; }
@@ -96,7 +95,4 @@ public static class GlobalEnumerableExtensionMethods {
   
   public static async Task<List<T>> ChunkedSynchronousCall<T>(this IEnumerable<Task<T>> ops, int chunksz = 25) => 
       (await ops.Chunk(chunksz).Select(Task.WhenAll).Synchronous()).SelectMany(lst => lst).ToList();
-  
-  private static Random rng { get; } = new();
-  public static T Random<T>(this ICollection<T> values) => values.ElementAt(rng.Next(values.Count));
 }

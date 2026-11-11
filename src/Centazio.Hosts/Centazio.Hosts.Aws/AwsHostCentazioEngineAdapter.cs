@@ -11,7 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Centazio.Hosts.Aws;
 
-public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments) : CentazioEngine(environments) {
+// `throws` is the runner default: false in Lambda, true when run locally under the self host
+public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string> environments, bool throws) : CentazioEngine(environments, TimeProvider.System) {
   private readonly List<string> environments = environments;
 
   protected override void RegisterHostSpecificServices(CentazioServicesRegistrar registrar) {
@@ -26,7 +27,7 @@ public class AwsHostCentazioEngineAdapter(CentazioSettings settings, List<string
     
     registrar.Register(notifier);
     registrar.Register<IFunctionRunner>(prov => {
-      var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings);
+      var inner = new FunctionRunner(prov.GetRequiredService<ICtlRepository>(), settings, prov.GetRequiredService<TimeProvider>(), throws);
       return new FunctionRunnerWithNotificationAdapter(inner, notifier);
     });
 

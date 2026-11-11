@@ -6,7 +6,7 @@ public class CrmDb {
   internal List<CrmInvoice> Invoices { get; } = [];
 }
 
-public class CrmApi(CrmDb db) {
+public class CrmApi(CrmDb db, TimeProvider clock) {
 
   public Task<List<string>> GetMembershipTypes(DateTime after) => 
       Task.FromResult(db.MembershipTypes.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
@@ -18,7 +18,7 @@ public class CrmApi(CrmDb db) {
       Task.FromResult(db.Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
 
   public Task<List<CrmCustomer>> CreateCustomers(SimulationCtx ctx, List<CrmCustomer> news) { 
-    var created = news.Select(c => c with { SystemId = ctx.NewGuidSeid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { SystemId = ctx.NewGuidSeid(), Updated = clock.UtcNow() }).ToList();
     db.Customers.AddRange(created);
     return Task.FromResult(created);
   }
@@ -27,13 +27,13 @@ public class CrmApi(CrmDb db) {
     return Task.FromResult(updates.Select(c => {
       var idx = db.Customers.FindIndex(c2 => c2.SystemId == c.SystemId);
       if (idx < 0) throw new Exception();
-      var update = c with { Updated = UtcDate.UtcNow };
+      var update = c with { Updated = clock.UtcNow() };
       return db.Customers[idx] = update;
     }).ToList());
   }
 
   public Task<List<CrmInvoice>> CreateInvoices(SimulationCtx ctx, List<CrmInvoice> news) {
-    var created = news.Select(i => i with { SystemId = ctx.NewGuidSeid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { SystemId = ctx.NewGuidSeid(), Updated = clock.UtcNow() }).ToList();
     db.Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -42,7 +42,7 @@ public class CrmApi(CrmDb db) {
     return Task.FromResult(updates.Select(i => {
       var idx = db.Invoices.FindIndex(i2 => i2.SystemId == i.SystemId);
       if (idx < 0) throw new Exception();
-      var update = i with { Updated = UtcDate.UtcNow };
+      var update = i with { Updated = clock.UtcNow() };
       return db.Invoices[idx] = update;
     }).ToList());
   }

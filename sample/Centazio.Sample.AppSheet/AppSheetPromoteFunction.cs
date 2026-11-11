@@ -4,7 +4,7 @@ using Centazio.Core.Stage;
 
 namespace Centazio.Sample.AppSheet;
 
-public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl) : PromoteFunction(AppSheetConstants.AppSheetSystemName, stager, corestg, ctl) {
+public class AppSheetPromoteFunction(IStagedEntityRepository stager, ICoreStorage corestg, ICtlRepository ctl, TimeProvider clock) : PromoteFunction(AppSheetConstants.AppSheetSystemName, stager, corestg, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new PromoteOperationConfig(System, typeof(AppSheetTask), AppSheetConstants.AppSheetTaskEntityName, CoreEntityTypes.Task, CronExpressionsHelper.EveryXSeconds(5), PromoteTasks) 

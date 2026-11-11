@@ -6,6 +6,6 @@ using Centazio.Test.Lib.InMemRepos;
 namespace Centazio.Core.Tests.Stage;
 
 public class InMemoryStagedEntityRepositoryTests : BaseStagedEntityRepositoryTests {
-  protected override Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum) => 
-      Task.FromResult<IStagedEntityRepository>(new InMemoryStagedEntityRepository(limit, checksum));
+  protected override Task<IStagedEntityRepository> GetRepository(int limit, Func<string, StagedEntityChecksum> checksum, TimeProvider clock, IGuidGenerator ids) => 
+      Task.FromResult<IStagedEntityRepository>(new InMemoryStagedEntityRepository(limit, checksum, clock, ids));
 }

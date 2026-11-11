@@ -6,10 +6,10 @@ using Centazio.Test.Lib.BaseProviderTests;
 namespace Centazio.Providers.SqlServer.Tests.Ctl;
 
 public class SqlServerCtlRepositoryMappingsTests : BaseCtlRepositoryMappingsTests {
-  protected override async Task<ITestingCtlRepository> GetRepository() {
+  protected override async Task<ITestingCtlRepository> GetRepository(TimeProvider clock) {
     var connstr = (await SqlConn.GetInstance(false, await F.Secrets())).ConnStr;
     var settings = (await F.Settings()).CtlRepository with { ConnectionString = connstr };
-    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings)).Initialise();
+    return (ITestingCtlRepository) await new TestingEfCtlRepository(() => new SqlServerCtlRepositoryDbContext(settings), clock).Initialise();
   }
 
 }

@@ -1,5 +1,4 @@
-﻿using Centazio.Core.Ctl;
-using Centazio.Core.Stage;
+﻿using Centazio.Core.Stage;
 using Centazio.Test.Lib.E2E;
 using Centazio.Test.Lib.InMemRepos;
 
@@ -11,11 +10,9 @@ public class InMemorySimulationStorage : ISimulationStorage {
   public IStagedEntityRepository StageRepository { get; private set; } = null!;
   public ISimulationCoreStorageRepository CoreStore { get; private set; } = null!;
   
-  public int SimulationPostFunctionRunDelayMs => 100;
-
   public Task Initialise(SimulationCtx ctx) {
-    CtlRepo = new InMemorySimulationCtlRepository(ctx.Epoch);
-    StageRepository = new InMemoryStagedEntityRepository(0, ctx.ChecksumAlg.Checksum);
+    CtlRepo = new InMemorySimulationCtlRepository(ctx.Epoch, ctx.Clock);
+    StageRepository = new InMemoryStagedEntityRepository(0, ctx.ChecksumAlg.Checksum, ctx.Clock, ctx.Ids);
     CoreStore = new InMemorySimulationCoreStorageRepository(ctx.Epoch, ctx.ChecksumAlg.Checksum);
     
     return Task.CompletedTask;
@@ -28,7 +25,7 @@ public class InMemorySimulationStorage : ISimulationStorage {
   }
 }
 
-public class InMemorySimulationCtlRepository(EpochTracker epoch) : InMemoryBaseCtlRepository {
+public class InMemorySimulationCtlRepository(EpochTracker epoch, TimeProvider clock) : InMemoryBaseCtlRepository(clock) {
   protected override Task<List<EntityChange>> SaveEntityChangesImpl(List<EntityChange> batch) {
     epoch.EntityChangesUpdated(batch);
     return base.SaveEntityChangesImpl(batch);

@@ -5,13 +5,13 @@ public class FinDb {
   public List<FinInvoice> Invoices { get; } = [];
 }
 
-public class FinApi(FinDb db) {
+public class FinApi(FinDb db, TimeProvider clock) {
 
   public Task<List<string>> GetAccounts(DateTime after) => Task.FromResult(db.Accounts.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   public Task<List<string>> GetInvoices(DateTime after) => Task.FromResult(db.Invoices.Where(e => e.Updated > after).Select(Json.Serialize).ToList());
   
   public Task<List<FinAccount>> CreateAccounts(SimulationCtx ctx, List<FinAccount> news) { 
-    var created = news.Select(c => c with { SystemId = ctx.NewIntSeid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(c => c with { SystemId = ctx.NewIntSeid(), Updated = clock.UtcNow() }).ToList();
     db.Accounts.AddRange(created);
     return Task.FromResult(created);
   }
@@ -20,13 +20,13 @@ public class FinApi(FinDb db) {
     return Task.FromResult(updates.Select(c => {
       var idx = db.Accounts.FindIndex(c2 => c2.SystemId == c.SystemId);
       if (idx < 0) throw new Exception();
-      var update = c with { Updated = UtcDate.UtcNow };
+      var update = c with { Updated = clock.UtcNow() };
       return db.Accounts[idx] = update;
     }).ToList());
   }
 
   public Task<List<FinInvoice>> CreateInvoices(SimulationCtx ctx, List<FinInvoice> news) {
-    var created = news.Select(i => i with { SystemId = ctx.NewIntSeid(), Updated = UtcDate.UtcNow }).ToList();
+    var created = news.Select(i => i with { SystemId = ctx.NewIntSeid(), Updated = clock.UtcNow() }).ToList();
     db.Invoices.AddRange(created);
     return Task.FromResult(created);
   }
@@ -35,7 +35,7 @@ public class FinApi(FinDb db) {
     return Task.FromResult(updates.Select(i => {
       var idx = db.Invoices.FindIndex(i2 => i2.SystemId == i.SystemId);
       if (idx < 0) throw new Exception();
-      var update = i with { Updated = UtcDate.UtcNow };
+      var update = i with { Updated = clock.UtcNow() };
       return db.Invoices[idx] = update;
     }).ToList());
   }

@@ -24,7 +24,7 @@ public class CliSecretsManager(IServiceProvider prov) : ICliSecretsManager {
   internal ISecretsLoader GetSecretsLoader(CentazioSettings settings) {
     if (!Enum.TryParse<ESecretsProviderType>(settings.SecretsLoaderSettings.Provider, out var provider)) throw new ArgumentException($"Unknown secrets provider: {settings.SecretsLoaderSettings.Provider}");
     
-    var type = IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<ISecretsLoader>>(provider.ToString());
+    var type = IntegrationsAssemblyInspector.GetCoreServiceFactoryType<IServiceFactory<ISecretsLoader>>(provider.ToString(), ReflectionUtils.GetProviderAssemblies());
     var factory = (IServiceFactory<ISecretsLoader>) (Activator.CreateInstance(type, settings) ?? throw new Exception());
     return factory.GetService();
   }

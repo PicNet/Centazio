@@ -12,7 +12,7 @@ public class ClickUpApiTests {
   
   
   [Test] public async Task Test_print_task_list() {
-    var tasks = await (await GetApi()).GetTasksAfter(UtcDate.UtcNow.AddYears(-10));
+    var tasks = await (await GetApi()).GetTasksAfter(DateTime.UtcNow.AddYears(-10));
     DevelDebug.WriteLine("TASKS:\n\t" + String.Join("\n\t", tasks.Select(t => t.Json)));
   }
   

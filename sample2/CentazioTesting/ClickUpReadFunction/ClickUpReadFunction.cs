@@ -4,7 +4,7 @@ using Centazio.Core.Stage;
 
 namespace CentazioTesting.ClickUp;
 
-public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, ClickUpApi api) : ReadFunction(ClickUpConstants.ClickUpSystemName, stager, ctl) {
+public class ClickUpReadFunction(IStagedEntityRepository stager, ICtlRepository ctl, TimeProvider clock, ClickUpApi api) : ReadFunction(ClickUpConstants.ClickUpSystemName, stager, ctl, clock) {
 
   protected override FunctionConfig GetFunctionConfiguration() => new([
     new ReadOperationConfig(ClickUpConstants.ClickUpExampleEntityName, CronExpressionsHelper.EveryXSeconds(5), GetUpdatedTasks)

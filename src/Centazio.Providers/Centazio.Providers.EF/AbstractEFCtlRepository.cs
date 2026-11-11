@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Centazio.Providers.EF;
 
-public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb) : AbstractCtlRepository {
+public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContext> getdb, TimeProvider clock) : AbstractCtlRepository(clock) {
   
   private readonly EfTransactionManager<AbstractCtlRepositoryDbContext> mgr = new(getdb);
   
@@ -28,7 +28,7 @@ public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContex
 
   public override async Task<SystemState> CreateSystemState(SystemName system, LifecycleStage stage) => 
       await UseDb(async db => {
-        var created = SystemState.Create(system, stage);
+        var created = SystemState.Create(system, stage, Now);
         db.SystemStates.Add(DtoHelpers.ToDto<SystemState, SystemState.Dto>(created));
         var count = await db.SaveChangesAsync();
         if (count != 1) throw new Exception($"Error creating SystemState");
@@ -47,7 +47,7 @@ public abstract class AbstractEFCtlRepository(Func<AbstractCtlRepositoryDbContex
 
   public override async Task<ObjectState> CreateObjectState(SystemState system, ObjectName obj, DateTime nextcheckpoint) => 
       await UseDb(async db => {
-        var created = ObjectState.Create(system.System, system.Stage, obj, nextcheckpoint);
+        var created = ObjectState.Create(system.System, system.Stage, obj, nextcheckpoint, Now);
         db.ObjectStates.Add(DtoHelpers.ToDto<ObjectState, ObjectState.Dto>(created));
         var count = await db.SaveChangesAsync();
         if (count != 1) throw new Exception($"Error creating ObjectState");
