@@ -15,7 +15,7 @@ internal class AzCloudSolutionGenerator(CentazioSettings settings, ICliSecretsMa
   }
 
   private Task AddAzNuGetReferencesToProject(Dictionary<string, bool> added) =>
-      AddLatestNuGetReferencesToProject([
+      AddNuGetReferencesToProject([
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Azure.Functions.Worker.Extensions.Timer",
         "Microsoft.Azure.Functions.Worker.Sdk",

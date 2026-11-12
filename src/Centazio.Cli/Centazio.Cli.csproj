@@ -59,4 +59,24 @@
       <ProjectReference Include="..\Centazio.Providers\Centazio.Providers.Aws\Centazio.Providers.Aws.csproj" />
       <ProjectReference Include="..\Centazio.Providers\Centazio.Providers.Az\Centazio.Providers.Az.csproj" />
     </ItemGroup>
+    <!-- packages the generated cloud projects need beyond the central versions in Directory.Packages.props -->
+    <ItemGroup>
+      <GeneratedPackageVersion Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.5" />
+      <GeneratedPackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
+      <GeneratedPackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" />
+      <GeneratedPackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+      <GeneratedPackageVersion Include="Serilog.Extensions.Logging" Version="9.0.0" />
+      <GeneratedPackageVersion Include="System.ClientModel" Version="1.8.0" />
+    </ItemGroup>
+
+    <!-- generated projects use these pinned versions, see NugetHelpers.PinnedVersions -->
+    <Target Name="EmbedPinnedPackageVersions" BeforeTargets="GetAssemblyAttributes">
+      <ItemGroup>
+        <PinnedPackageVersion Include="@(PackageVersion);@(GeneratedPackageVersion)" />
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+          <_Parameter1>package:%(PinnedPackageVersion.Identity)</_Parameter1>
+          <_Parameter2>%(PinnedPackageVersion.Version)</_Parameter2>
+        </AssemblyAttribute>
+      </ItemGroup>
+    </Target>
 </Project>

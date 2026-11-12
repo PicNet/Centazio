@@ -84,7 +84,7 @@ public abstract class CloudSolutionGenerator(
     var nugets = references.Where(name => !name.StartsWith($"{nameof(Centazio)}.")).ToList();
 
     centazios.ForEach(name => AddReferenceIfRequired(ReflectionUtils.LoadAssembly(name), added));
-    await AddLatestNuGetReferencesToProject(nugets, added);
+    await AddNuGetReferencesToProject(nugets, added);
   }
 
   void AddReferenceIfRequired(Assembly ass, Dictionary<string, bool> added) {
@@ -95,7 +95,7 @@ public abstract class CloudSolutionGenerator(
   }
   
   private Task AddCentazioNuGetReferencesToProject(Dictionary<string, bool> added) {
-    return AddLatestNuGetReferencesToProject([
+    return AddNuGetReferencesToProject([
       "Serilog",
       "Serilog.Sinks.Console",
       "Serilog.Extensions.Logging",
@@ -126,8 +126,8 @@ public abstract class CloudSolutionGenerator(
     });
   }
   
-  protected async Task AddLatestNuGetReferencesToProject(List<string> packages, Dictionary<string, bool> added) =>
-      (await NugetHelpers.GetLatestStableVersions(packages))
+  protected async Task AddNuGetReferencesToProject(List<string> packages, Dictionary<string, bool> added) =>
+      (await NugetHelpers.GetVersions(packages))
       .ForEach(p => {
         if (!added.TryAdd(p.name, true)) return;
         model.NuGetReferences.Add(new(p.name, p.version));

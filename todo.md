@@ -1,12 +1,7 @@
 # Todo
 - ci (github-hosted runners):
-  - HIGH: generated Az function projects fail to restore (NU1608). `AddLatestNuGetReferencesToProject` takes the latest 
-    of every package, and latest `Microsoft.ApplicationInsights.WorkerService` (3.x) conflicts with latest 
-    `Serilog.Sinks.ApplicationInsights` (needs ApplicationInsights < 3). Breaks `Test_Az_GenerateSolution`, 
-    `Test_CreateFunctionAppZip`, `Test_DotNetCliProjectBuilder_BuildProject` and the cli itself
-  - HIGH: generated Az and Aws projects also fail with NU1202 (found 2026-11-11): the same "latest of every package" 
-    now picks `Microsoft.EntityFrameworkCore(.Sqlite)` 11.0.0, which targets net11.0. Also breaks 
-    `Test_Aws_GenerateSolution`. Pin the generated package versions to the ones in `Directory.Packages.props`
+  - HIGH: verify generated Az projects restore (NU1608) now that the cli pins package versions (2026-11-13). Aws is
+    verified; `Test_Az_GenerateSolution` needs the AWS secrets, so confirm it on CI or after `aws sso login`
   - MED: `CommandRunner.RunProcess` hangs on Linux: `WaitForExit()` with redirected output waits for every process 
     holding the pipe, and `dotnet build` leaves a reused MSBuild node and the Roslyn compiler server running. 
     `Centazio.Cli.Tests` (generator tests) hangs until the node idles out unless run with 
