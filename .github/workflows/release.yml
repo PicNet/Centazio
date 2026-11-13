@@ -1,0 +1,144 @@
+name: Release
+
+# dispatched by the monitoring publish page once a release candidate is approved, or by hand from the actions tab.
+#   the candidate commit already carries the version in Directory.Build.props and a CHANGELOG.md section for it
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'commit to release (full sha, must be on master)'
+        required: true
+      version:
+        description: 'version to release, must match Directory.Build.props (eg: 0.3.1)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # the nuget environment only deploys from master, and the nuget.org trusted publishing policy requires it
+    environment: nuget
+    permissions:
+      id-token: write
+      contents: write
+      actions: read
+    # an explicit bash shell adds pipefail, so a failed command in a pipe fails the step
+    defaults:
+      run:
+        shell: bash
+    env:
+      SHA: ${{ inputs.sha }}
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+    - name: validate inputs
+      run: |
+        [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::sha must be a full 40 character commit sha [$SHA]"; exit 1; }
+        # nuget's normalised form (lowercase, no leading zeros), so one version cannot be reserved under two spellings
+        [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9a-z.]+)?$ ]] || { 
+          echo "::error::version must be major.minor.patch[-prerelease], lowercase without leading zeros [$VERSION]"; exit 1; }
+
+    - name: checkout code
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        ref: ${{ inputs.sha }}
+        fetch-depth: 0
+        persist-credentials: false
+
+    # the v<version> tag reserves a version for one commit: it is created before anything is pushed to nuget.org, so a
+    #   rerun can only finish the release of the same commit
+    - name: check the release candidate
+      run: |
+        git merge-base --is-ancestor "$SHA" origin/master || { echo "::error::$SHA is not on master"; exit 1; }
+        
+        # an interrupted `gh release create` leaves a draft, which the release step replaces. a failed lookup fails the 
+        #   run rather than reading as no release
+        drafts=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"v$VERSION\") | .draft")
+        if grep -qx false <<< "$drafts"; then echo "::error::v$VERSION is already released"; exit 1; fi
+        
+        tagged=$(git ls-remote --tags origin "refs/tags/v$VERSION" | cut -f1)
+        if [ -n "$tagged" ] && [ "$tagged" != "$SHA" ]; then
+          echo "::error::v$VERSION is reserved for $tagged, not $SHA"; exit 1
+        fi
+        [ -n "$tagged" ] && echo "RESUMING=true" >> "$GITHUB_ENV"
+        
+        # creating a tag on a commit whose workflows differ from master's needs a token with the workflows permission
+        if [ -z "$tagged" ] && ! git diff --quiet "$SHA" origin/master -- .github/workflows; then
+          echo "::error::the workflows changed on master since $SHA, release a newer commit"; exit 1
+        fi
+        
+        propsver=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+        [ "$propsver" = "$VERSION" ] || { echo "::error::Directory.Build.props has version [$propsver], not [$VERSION]"; exit 1; }
+        
+        awk -v h="## [$VERSION]" 'index($0, h) == 1 {found=1; next} found && /^## \[/ {exit} found {print}' CHANGELOG.md > release-notes.md
+        [ -s release-notes.md ] || { echo "::error::CHANGELOG.md has no section for [$VERSION]"; exit 1; }
+        
+        passed=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow main.yml --commit "$SHA" --status success --limit 1 --json databaseId --jq length)
+        [ "$passed" -gt 0 ] || { echo "::error::no successful .NET CI run for $SHA"; exit 1; }
+
+    - name: setup .net sdk
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+      with:
+        dotnet-version: 10.0.x
+
+    - name: dotnet restore (locked mode)
+      run: dotnet restore --locked-mode
+
+    - name: dotnet pack
+      run: dotnet pack --configuration Release --no-restore --output packages
+
+    # only the packed packages are available, so this never installs a cli already on nuget.org
+    - name: smoke test the cli tool
+      run: |
+        cat > "$RUNNER_TEMP/nuget.config" <<EOF
+        <configuration><packageSources><clear /><add key="release" value="$PWD/packages" /></packageSources></configuration>
+        EOF
+        dotnet tool install --tool-path "$RUNNER_TEMP/tool" --configfile "$RUNNER_TEMP/nuget.config" Centazio.Cli --version "$VERSION"
+        cd "$RUNNER_TEMP"
+        ./tool/centazio --help > /dev/null
+
+    - name: reserve the version
+      run: |
+        if [ "${RESUMING:-}" = "true" ]; then echo "resuming the release of $SHA"; exit 0; fi
+        
+        for pkg in packages/*.nupkg; do
+          id=$(basename "$pkg" ".$VERSION.nupkg" | tr '[:upper:]' '[:lower:]')
+          code=$(curl -s -o versions.json -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/$id/index.json")
+          [ "$code" = "404" ] && continue
+          [ "$code" = "200" ] || { echo "::error::nuget.org returned [$code] for $id"; exit 1; }
+          if jq -e --arg v "$VERSION" '.versions | index($v)' versions.json > /dev/null; then
+            echo "::error::$id $VERSION is already on nuget.org without a v$VERSION tag"; exit 1
+          fi
+        done
+        
+        gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$SHA" > /dev/null
+
+    # the temporary api key lasts an hour and is used once, so log in right before the push
+    - name: nuget login
+      id: login
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+      with:
+        user: ${{ vars.NUGET_USER }}
+
+    # --skip-duplicate lets a rerun (of the same commit, see the version reservation) finish a push that failed part way
+    - name: nuget push
+      run: dotnet nuget push "packages/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      env:
+        NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+
+    - name: github release
+      run: |
+        prerelease=$([[ "$VERSION" == *-* ]] && echo "--prerelease" || true)
+        # deletes draft releases only (by id, which keeps the tag)
+        gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"v$VERSION\" and .draft) | .id" \
+          | while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"; done
+        gh release create "v$VERSION" packages/*.nupkg --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Centazio $VERSION" --notes-file release-notes.md $prerelease

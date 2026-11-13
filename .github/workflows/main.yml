@@ -1,11 +1,9 @@
 name: .NET CI
 
+# every commit is tested: a release (release.yml) requires a successful run for its exact commit
 on:
   push:
-    paths:
-      - '**.cs'
-      - '**.json'
-      - '.github/**'
+    branches: ['**']
   workflow_dispatch:
 
 permissions:

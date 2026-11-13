@@ -59,14 +59,16 @@
     to the `LogInitialiser.GetConsoleConfig` initialiser
 
 ## NuGet
-- Pushing to GitHub does not publish anything; packages are published from a dev machine
-- `centazio dev publish` bumps the patch number in `Directory.Build.props`, packs every package into `packages/` and
-    pushes them with `NUGET_API_KEY` from the Centazio secrets.  `-b|--no-bump` publishes the version already in
-    `Directory.Build.props` (use it for planned releases such as `0.2.0`), `-p|--no-publish` only packs
-- Manual equivalent: `rm packages/*; dotnet pack -c Release -o packages` then
-    `dotnet nuget push ./packages/*.nupkg --source https://api.nuget.org/v3/index.json --api-key <api-key>`
+- Releases are published by `.github/workflows/release.yml`, never from a dev machine. It is dispatched with a commit
+    `sha` and `version` (by the monitoring publish page once a release candidate is approved, or from the Actions tab)
+- The release candidate commit must be on `master`, have a successful `.NET CI` run, carry the version in
+    `Directory.Build.props` and have a `## [<version>]` section in `CHANGELOG.md` (it becomes the GitHub release notes)
+- The workflow packs every package, smoke tests the cli tool, pushes to nuget.org with a short-lived key from
+    nuget.org Trusted Publishing (the `nuget` environment, which only deploys from `master`, and the `NUGET_USER`
+    variable) and creates the `v<version>` tag and GitHub release
 - A bump edits `Directory.Build.props` and the `packages.lock.json` files must follow it: run
     `dotnet restore --force-evaluate` and commit both, or CI's locked-mode restore fails
+- `centazio dev publish --no-publish` packs into `packages/` for local testing (see below)
 - Note: Publishing can take up to 15 minutes to get the new version
 
 ## Centazio Cli
