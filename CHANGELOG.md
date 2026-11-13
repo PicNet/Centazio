@@ -2,7 +2,7 @@
 
 All notable changes to Centazio are listed here. Each release's section becomes its GitHub release notes.
 
-## [Unreleased]
+## [0.3.1] - 2026-11-13
 
 ### Fixed
 - `centazio` generated Azure and AWS function projects restore again: they use the package versions Centazio is built 

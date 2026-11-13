@@ -183,7 +183,7 @@
       "centazio.providers.ef": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
           "Microsoft.EntityFrameworkCore": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.0, )"
         }
@@ -191,8 +191,8 @@
       "centazio.providers.sqlite": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.3.0, )",
-          "Centazio.Providers.EF": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
+          "Centazio.Providers.EF": "[0.3.1, )",
           "Microsoft.Data.Sqlite": "[10.0.0, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.0, )"
         }
@@ -324,4 +324,4 @@
       }
     }
   }
-}
+}

@@ -847,12 +847,12 @@
           "Azure.ResourceManager": "[1.13.2, )",
           "Azure.ResourceManager.AppService": "[1.4.1, )",
           "Azure.ResourceManager.Storage": "[1.6.0, )",
-          "Centazio.Core": "[0.3.0, )",
-          "Centazio.Hosts.Aws": "[0.3.0, )",
-          "Centazio.Hosts.Az": "[0.3.0, )",
-          "Centazio.Hosts.Self": "[0.3.0, )",
-          "Centazio.Providers.Aws": "[0.3.0, )",
-          "Centazio.Providers.Az": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
+          "Centazio.Hosts.Aws": "[0.3.1, )",
+          "Centazio.Hosts.Az": "[0.3.1, )",
+          "Centazio.Hosts.Self": "[0.3.1, )",
+          "Centazio.Providers.Aws": "[0.3.1, )",
+          "Centazio.Providers.Az": "[0.3.1, )",
           "Docker.DotNet": "[3.125.15, )",
           "Microsoft.Data.SqlClient": "[6.1.3, )",
           "Microsoft.Data.Sqlite": "[10.0.0, )",
@@ -892,7 +892,7 @@
           "AWSSDK.SQS": "[4.0.2.5, )",
           "Amazon.Lambda.Core": "[2.8.0, )",
           "Amazon.Lambda.RuntimeSupport": "[1.14.1, )",
-          "Centazio.Core": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
           "Serilog.Extensions.Hosting": "[9.0.0, )",
           "Serilog.Sinks.AwsCloudWatch": "[4.4.42, )"
         }
@@ -900,7 +900,7 @@
       "centazio.hosts.az": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
           "Microsoft.ApplicationInsights.WorkerService": "[2.23.0, )",
           "Microsoft.Azure.Functions.Worker": "[2.51.0, )",
           "Microsoft.Azure.Functions.Worker.ApplicationInsights": "[2.50.0, )",
@@ -911,7 +911,7 @@
       "centazio.hosts.self": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
           "Microsoft.Extensions.DependencyInjection": "[10.0.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.0, )",
           "Serilog": "[4.3.0, )"
@@ -928,7 +928,7 @@
           "AWSSDK.SecretsManager": "[4.0.3.1, )",
           "AWSSDK.SecretsManager.Caching": "[2.0.0, )",
           "Amazon.Extensions.Configuration.SystemsManager": "[7.0.1, )",
-          "Centazio.Core": "[0.3.0, )"
+          "Centazio.Core": "[0.3.1, )"
         }
       },
       "centazio.providers.az": {
@@ -936,14 +936,14 @@
         "dependencies": {
           "Azure.Identity": "[1.17.1, )",
           "Azure.Security.KeyVault.Secrets": "[4.8.0, )",
-          "Centazio.Core": "[0.3.0, )"
+          "Centazio.Core": "[0.3.1, )"
         }
       },
       "centazio.test.lib": {
         "type": "Project",
         "dependencies": {
-          "Centazio.Core": "[0.3.0, )",
-          "Centazio.Providers.Aws": "[0.3.0, )",
+          "Centazio.Core": "[0.3.1, )",
+          "Centazio.Providers.Aws": "[0.3.1, )",
           "Microsoft.Extensions.TimeProvider.Testing": "[10.0.0, )",
           "Microsoft.NET.Test.Sdk": "[18.0.1, )",
           "NUnit": "[4.4.0, )"
@@ -1463,4 +1463,4 @@
       }
     }
   }
-}
+}
