@@ -61,11 +61,11 @@ public class CommandRunnerTests {
   [Test] public async Task Test_returns_when_a_left_running_child_holds_the_output_open() {
     if (!Env.IsLinux) Assert.Ignore("uses sh");
     
-    var start = DateTime.UtcNow;
-    var results = await cmd.Run("sh", "-c \"sleep 30 & echo done\"", checktool: false);
-    
-    Assert.That(results.Out, Is.EqualTo("done"));
-    Assert.That(DateTime.UtcNow - start, Is.LessThan(TimeSpan.FromSeconds(15)));
+    var run = cmd.Run("sh", "-c \"sleep 30 & echo done\"", checktool: false);
+    var first = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(15)));
+
+    Assert.That(first, Is.SameAs(run));
+    Assert.That((await run).Out, Is.EqualTo("done"));
   }
   
   [Test] public void Test_non_zero_exit_code_throws() {
