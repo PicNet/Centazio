@@ -7,6 +7,13 @@
   - LOW: LocalStack is pinned to 4.14.0, the last release that runs without a licence
   - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
     (`ubuntu-latest`)
+- release (found 2026-11-13):
+  - MED: `dotnet pack` publishes `Centazio.Sample.*` and `Centazio.TestFunctions` to nuget.org. Set `IsPackable` false
+    for them (check `Centazio.Test.Lib` too), and unlist the stale `Centazio.Host` and `Centazio.Sample` betas
+  - LOW: 0.3.0 was published from a dev machine with no tag or GitHub release. It was most likely packed from
+    `51b407f0` (checked out when `packages/` was built on 2026-11-12); tag it `v0.3.0` once confirmed
+  - LOW: after the first release from `release.yml`, delete the nuget.org API key and remove `NUGET_API_KEY` from the
+    Centazio secrets; `centazio dev publish` can then only pack
 - security (ci review 2026-10-21):
   - MED: any branch of the repo can assume the CI role `github-actions-centazio` (6 people with write access), which 
     reads `picnet/centazio/dev` (ClickUp, AppSheet, SQL connection string). Consider trusting only `master`, or a 
