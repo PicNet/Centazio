@@ -1,4 +1,4 @@
-using Centazio.Cli.Infra.Misc;
+﻿using Centazio.Cli.Infra.Misc;
 using Centazio.Core.Misc;
 
 namespace Centazio.Cli.Tests.Infra.Misc; 
@@ -49,6 +49,21 @@ public class CommandRunnerTests {
     Assert.That(results.Out, Is.Not.Null);
   }
 
+  [Test] public async Task Test_stderr_with_zero_exit_code_succeeds() {
+    if (!Env.IsLinux) Assert.Ignore("uses sh");
+    
+    var results = await cmd.Run("sh", "-c \"echo warning 1>&2\"", checktool: false);
+    
+    Assert.That(results.Success);
+    Assert.That(results.Err, Is.EqualTo("warning"));
+  }
+  
+  [Test] public void Test_non_zero_exit_code_throws() {
+    if (!Env.IsLinux) Assert.Ignore("uses sh");
+    
+    Assert.ThrowsAsync<Exception>(() => cmd.Run("sh", "-c \"exit 3\"", checktool: false));
+  }
+
   [Test] public void Test_Redact_hides_credentials() {
     Assert.That(CommandRunner.Redact("nuget push packages\\*.nupkg --source https://api.nuget.org/v3/index.json --api-key abc123"),
         Is.EqualTo("nuget push packages\\*.nupkg --source https://api.nuget.org/v3/index.json --api-key ***"));
@@ -58,7 +73,7 @@ public class CommandRunnerTests {
   }
 
   [Test] public void Test_ToString_redacts_args() {
-    var results = new CommandResults(null, "dotnet", "nuget push x.nupkg --api-key abc123", ".", String.Empty, String.Empty);
+    var results = new CommandResults(null, "dotnet", "nuget push x.nupkg --api-key abc123", ".", String.Empty, String.Empty, 0);
     Assert.That(results.ToString(), Is.EqualTo("dotnet nuget push x.nupkg --api-key ***"));
   }
 }

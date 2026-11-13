@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace Centazio.Cli.Infra.Misc;
 
-public record CommandResults(Process? Process, string Command, string Args, string Dir, string Out, string Err) {
-  public bool Success => String.IsNullOrWhiteSpace(Err);
+// tools write warnings and progress to stderr (eg: `az` update notices), so only the exit code signals failure
+public record CommandResults(Process? Process, string Command, string Args, string Dir, string Out, string Err, int Code) {
+  public bool Success => Code == 0;
   public override string ToString() => $"{Command} {CommandRunner.Redact(Args)}";
 
 }
@@ -40,7 +41,7 @@ public class CommandRunner : ICommandRunner {
     // if (newwindow && input is not null) throw new ArgumentException($"CommandRunner does not support `input` when `newwindow=true`"); // at least on linux
     
     cwd ??= Env.IsUnitTest ? FsUtils.GetCentazioPath() : Environment.CurrentDirectory;
-    var results = new CommandResults(null, command, args, cwd, String.Empty, String.Empty);
+    var results = new CommandResults(null, command, args, cwd, String.Empty, String.Empty, -1);
     
     if (!quiet) Log.Information($"running[{command}] args[{Redact(args)}] cwd[{cwd}]");
     if (checktool && !await CheckInstalled(command)) return results;
@@ -67,8 +68,8 @@ public class CommandRunner : ICommandRunner {
     var err = error.ToString().Trim();
     var outp = output.ToString().Trim();
     // -1073741510 is CTRL+C so can be ignored
-    if (code != -1073741510 && (code != 0 || err.Length > 0)) throw new Exception($"cmd[{command}] args[{Redact(args)}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
-    return results with { Process = p, Out = outp, Err = err };
+    if (code != -1073741510 && code != 0) throw new Exception($"cmd[{command}] args[{Redact(args)}] cwd[{cwd}] exitcode[{code}] output:\n{outp}\n\nerror:\n{err}");
+    return results with { Process = p, Out = outp, Err = err, Code = code };
   }
 
   private async Task<bool> CheckInstalled(string command) {
@@ -76,7 +77,7 @@ public class CommandRunner : ICommandRunner {
     if (installed.TryGetValue(tool, out var isinstalled)) { return isinstalled; }
     
     var results = await Run(command, "--version", quiet: true, checktool: false, cwd: Environment.CurrentDirectory);
-    isinstalled = String.IsNullOrWhiteSpace(results.Err);
+    isinstalled = results.Success;
     if (!isinstalled) {
       Console.WriteLine($"tool '{tool}' is not installed.");
     }
