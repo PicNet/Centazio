@@ -58,6 +58,16 @@ public class CommandRunnerTests {
     Assert.That(results.Err, Is.EqualTo("warning"));
   }
   
+  [Test] public async Task Test_returns_when_a_left_running_child_holds_the_output_open() {
+    if (!Env.IsLinux) Assert.Ignore("uses sh");
+    
+    var start = DateTime.UtcNow;
+    var results = await cmd.Run("sh", "-c \"sleep 30 & echo done\"", checktool: false);
+    
+    Assert.That(results.Out, Is.EqualTo("done"));
+    Assert.That(DateTime.UtcNow - start, Is.LessThan(TimeSpan.FromSeconds(15)));
+  }
+  
   [Test] public void Test_non_zero_exit_code_throws() {
     if (!Env.IsLinux) Assert.Ignore("uses sh");
     
