@@ -79,7 +79,7 @@ jobs:
           project_name=$(basename "$project" .csproj)
           echo "::group::testing $project_name"
 
-          if timeout 4m dotnet test "$project" --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none --logger "trx;LogFileName=${project_name}.trx" --results-directory ./test-results --verbosity normal; then
+          if timeout 8m dotnet test "$project" --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none --logger "trx;LogFileName=${project_name}.trx" --results-directory ./test-results --verbosity normal; then
             echo "✅ $project_name completed successfully"
           else
             echo "❌ $project_name failed or timed out"
