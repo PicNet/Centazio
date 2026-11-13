@@ -95,7 +95,6 @@ jobs:
           printf "\n\nprojects that failed or hung: ${failed_projects[*]}\n\n"
           exit 1
         fi
-      continue-on-error: true
 
     - name: upload test results
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -129,7 +128,6 @@ jobs:
       run: |
         dotnet restore tests/Centazio.Hosts.Aws.Tests --locked-mode
         timeout 6m dotnet test tests/Centazio.Hosts.Aws.Tests --no-restore --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none --logger "trx;LogFileName=Centazio.Hosts.Aws.Tests.trx" --results-directory ./test-results --verbosity normal
-      continue-on-error: true
 
     - name: upload test results
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

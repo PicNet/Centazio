@@ -1,16 +1,9 @@
 # Todo
 - ci (github-hosted runners):
-  - MED: `CommandRunner.RunProcess` hangs on Linux: `WaitForExit()` with redirected output waits for every process 
-    holding the pipe, and `dotnet build` leaves a reused MSBuild node and the Roslyn compiler server running. 
-    `Centazio.Cli.Tests` (generator tests) hangs until the node idles out unless run with 
-    `MSBUILDDISABLENODEREUSE=1 UseSharedCompilation=false`. Pass `-nodeReuse:false` / `-p:UseSharedCompilation=false` 
-    to the builds the cli runs, or wait for the process exit rather than for the streams to close
   - MED: Azure test resources are gone: Key Vault `CentazioDevKeyVault` no longer resolves and the `AZ_CLIENT_ID` app in 
     the `picnet/centazio/dev` secret is not in the tenant. Az tests are skipped via `AzTestingEnv.IgnoreIfVaultUnreachable`
     until recreated; then add `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` repo variables (OIDC) to 
     enable the `azure login` workflow step
-  - MED: remove `continue-on-error: true` from the `dotnet test` step once the build is clean, failing tests currently 
-    still report a green run
   - LOW: LocalStack is pinned to 4.14.0, the last release that runs without a licence
   - LOW: runner is pinned to `ubuntu-24.04`, Microsoft does not yet publish `azure-functions-core-tools-4` for 26.04 
     (`ubuntu-latest`)
